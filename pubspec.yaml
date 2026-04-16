@@ -1,0 +1,9 @@
+name: la_juana_workspace
+publish_to: none
+
+workspace:
+  - apps/mobile
+  - packages/mobile_core
+  - packages/mobile_domain
+  - packages/mobile_mocks
+  - packages/mobile_ui
