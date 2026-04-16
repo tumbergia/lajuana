@@ -1,58 +1,52 @@
-# La Juana Monorepo
+# La Juana
 
-Monorepo principal del sistema de La Juana.
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-7.x-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Pydantic](https://img.shields.io/badge/Pydantic-2.x-E92063?logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
+[![SQLite](https://img.shields.io/badge/SQLite-3.x-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 
 ## Objetivo
 
-Centralizar frontend móvil y backend en un único repositorio con reglas claras de estructura, desarrollo y evolución técnica.
+La Juana es una plataforma de digitalización operativa para la gestión integral de experiencias turísticas. Centraliza el flujo comercial y operativo completo: desde el primer contacto con el cliente hasta la ejecución del tour, pasando por cotización, pago, confirmación, logística, asignación de guías y bitácora de operación.
 
-Este repositorio se construye bajo estas decisiones base:
+La reserva es la entidad principal del sistema. Toda acción relevante gira alrededor de ella.
 
-- app móvil como punto principal de operación;
-- backend como fuente de verdad y coordinador de reglas críticas;
-- enfoque mobile-first y offline-first;
-- la reserva como entidad principal del sistema;
-- trazabilidad y centralización como criterios obligatorios.
+El sistema opera bajo un enfoque **mobile-first** y **offline-first**, con la app móvil como nodo operativo principal y el backend como fuente de verdad para validaciones críticas y sincronización.
 
 ## Estructura
 
-- `apps/mobile`: aplicación Flutter
-- `apps/api`: backend FastAPI
-- `packages/`: paquetes internos reutilizables del frontend
-- `docs/`: decisiones, arquitectura y setup
-- `tooling/`: scripts y automatización común
-- `.github/workflows/`: CI futuro
+```
+la-juana/
+├── apps/
+│   ├── mobile/        # Aplicación Flutter (nodo operativo principal)
+│   └── api/           # Backend FastAPI + MongoDB
+├── packages/
+│   ├── mobile_core/   # Utilidades base del frontend
+│   ├── mobile_domain/ # Modelos y contratos de dominio Flutter
+│   ├── mobile_mocks/  # Fixtures y fakes para desarrollo
+│   └── mobile_ui/     # Design system y componentes reutilizables
+├── docs/              # Arquitectura, decisiones y setup
+└── tooling/           # Scripts y automatización
+```
 
-## Principios de organización
+## Cómo iniciar
 
-1. No mezclar lógica de negocio con UI.
-2. No acoplar frontend directamente a detalles de infraestructura.
-3. No crear una carpeta `shared` falsa entre Python y Dart.
-4. Los contratos entre frontend y backend se comparten por especificación, no por copiar modelos.
-5. Toda decisión relevante debe quedar documentada en `docs/decisions`.
+### Requisitos previos
 
-## Convenciones iniciales
-
-- rama principal: `main`
-- ramas de trabajo: `feat/*`, `fix/*`, `chore/*`, `docs/*`
-- commits recomendados:
-  - `feat: ...`
-  - `fix: ...`
-  - `chore: ...`
-  - `docs: ...`
-  - `refactor: ...`
-  - `test: ...`
-
-## Bootstrapping
+- Flutter 3.x
+- Python 3.11+
+- MongoDB 7.x (local o Atlas)
 
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <repo-url>
-cd la-juana
+git clone https://github.com/tumbergia/lajuana.git
+cd lajuana
 ```
 
-### 2. Inicializar frontend Flutter
+### 2. Inicializar la app Flutter
 
 ```bash
 cd apps/mobile
@@ -60,27 +54,24 @@ flutter create .
 cd ../..
 ```
 
-### 3. Inicializar backend Python
+### 3. Inicializar el backend Python
 
 ```bash
 cd apps/api
 python -m venv .venv
 source .venv/bin/activate
 pip install -U pip
-pip install "fastapi[standard]" pytest ruff mypy
+pip install "fastapi[standard]" beanie pydantic pytest ruff mypy
 cd ../..
 ```
 
-### 4. Comandos rápidos
+### 4. Comandos disponibles
 
 ```bash
-make mobile-run
-make mobile-test
-make api-dev
-make api-test
-make api-lint
+make api-dev        # Levanta el backend en modo desarrollo
+make api-test       # Corre los tests del backend
+make api-lint       # Linting con ruff
+make mobile-run     # Corre la app Flutter
+make mobile-test    # Tests del frontend
+make bootstrap      # Inicializa todo el entorno desde cero
 ```
-
-## Estado actual
-
-Este repositorio arranca con estructura base y placeholders. La implementación funcional se hará sobre vertical slices centrados en la reserva y sus flujos principales.
