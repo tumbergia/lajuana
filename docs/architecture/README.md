@@ -1,16 +1,13 @@
 # Arquitectura
 
-Aquí se documenta la arquitectura efectiva del sistema y su evolución.
+Documentos de arquitectura vigentes.
 
-## Contenido esperado
+## Archivos
 
-- visión general del monorepo
-- fronteras entre frontend y backend
-- principio offline-first
-- centralidad de la reserva
-- sincronización y restricciones de acciones críticas
-- manejo de archivos y metadatos
-- módulos relevantes
+- `monorepo.md`
+- `mobile.md`
+- `api.md`
+- `design-system.md`
 
 ## Regla
 

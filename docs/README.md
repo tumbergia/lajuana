@@ -1,13 +1,14 @@
-# Documentación interna
+# Documentación
 
-Esta carpeta contiene la documentación operativa y técnica del repositorio.
+Esta carpeta contiene la documentación técnica y operativa del repositorio.
 
-## Subcarpetas
+## Secciones
 
-- `architecture/`: definiciones estructurales del sistema
+- `architecture/`: estructura y funcionamiento del sistema
+- `conventions/`: reglas de desarrollo y organización
 - `decisions/`: decisiones técnicas registradas
-- `setup/`: instrucciones operativas de instalación y uso
+- `setup/`: instalación y uso local
 
 ## Regla
 
-La documentación debe explicar decisiones y operación real. No se usa para marketing interno ni para inflar el proyecto con texto vacío.
+La documentación debe describir estado real, decisiones reales y reglas ejecutables. No se usa para inflar el proyecto con texto innecesario.

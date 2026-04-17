@@ -2,18 +2,13 @@
 
 Cada decisión importante debe quedar registrada aquí.
 
-## Formato sugerido
+## Archivos
 
-- contexto
-- decisión
-- impacto
-- alternativas descartadas
-- riesgos
+- `0001-monorepo.md`
+- `0002-design-system.md`
+- `0003-voice-navigation.md`
+- `0004-mobile-ui-package.md`
 
-## Primeras decisiones a registrar
+## Regla
 
-- monorepo backend + frontend
-- Flutter como app principal
-- FastAPI como backend
-- paquetes internos del frontend
-- ausencia de carpeta shared entre Python y Dart
+Registrar decisiones reales con contexto, decisión, impacto y riesgos.

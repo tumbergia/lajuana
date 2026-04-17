@@ -2,14 +2,11 @@
 
 Instrucciones concretas para poner a correr el proyecto en un entorno local.
 
-## Debe incluir
+## Archivos
 
-- prerequisitos
-- instalación de Flutter
-- instalación de Python
-- creación del entorno virtual
-- comandos make
-- solución de problemas frecuentes
+- `local-dev.md`
+- `mobile.md`
+- `api.md`
 
 ## Regla
 
