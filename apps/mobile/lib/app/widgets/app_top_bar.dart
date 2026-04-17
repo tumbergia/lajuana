@@ -23,9 +23,11 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final surfaceColor = theme.appBarTheme.backgroundColor ?? const Color(0xFF131313);
+    final foregroundColor = theme.appBarTheme.foregroundColor ?? Colors.white;
 
     return Material(
-      color: const Color(0xFF131313),
+      color: surfaceColor,
       child: SafeArea(
         bottom: false,
         child: SizedBox(
@@ -44,7 +46,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                         child: SvgPicture.asset(
                           logoAssetPath,
                           fit: BoxFit.contain,
-                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                          colorFilter: ColorFilter.mode(foregroundColor, BlendMode.srcIn),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -59,7 +61,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                             fontWeight: FontWeight.w800,
                             height: 1.4,
                             letterSpacing: 2,
-                            color: Colors.white,
+                            color: foregroundColor,
                           ),
                         ),
                       ),
@@ -70,10 +72,12 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _TopBarIconButton(
-                      icon: Icons.light_mode_rounded,
+                      icon: theme.brightness == Brightness.dark 
+                          ? Icons.light_mode_rounded 
+                          : Icons.dark_mode_rounded,
                       onTap: onThemeToggleTap,
                       showDot: false,
-                      iconColor: Colors.white,
+                      iconColor: foregroundColor,
                       backgroundColor: Colors.transparent,
                     ),
                     const SizedBox(width: 8),
@@ -81,7 +85,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                       icon: Icons.notifications_none_rounded,
                       onTap: onNotificationsTap,
                       showDot: showNotificationDot,
-                      iconColor: Colors.white,
+                      iconColor: foregroundColor,
                       backgroundColor: Colors.transparent,
                     ),
                   ],

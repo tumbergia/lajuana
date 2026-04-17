@@ -35,36 +35,37 @@ class AppBadge extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    final _BadgeColors colors = switch (tone) {
-      AppBadgeTone.neutral => _BadgeColors(
+    final ({Color background, Color foreground, Color border}) colors =
+        switch (tone) {
+      AppBadgeTone.neutral => (
           background: scheme.surfaceContainerHigh,
           foreground: scheme.onSurfaceVariant,
-          border: scheme.outlineVariant.withValues(alpha: 0.35),
+          border: scheme.outlineVariant.withOpacity(0.35),
         ),
-      AppBadgeTone.primary => _BadgeColors(
+      AppBadgeTone.primary => (
           background: scheme.primary,
           foreground: scheme.onPrimary,
           border: Colors.transparent,
         ),
-      AppBadgeTone.success => const _BadgeColors(
-          background: Color(0xFF00A431),
+      AppBadgeTone.success => (
+          background: const Color(0xFF00A431),
           foreground: Colors.white,
           border: Colors.transparent,
         ),
-      AppBadgeTone.danger => _BadgeColors(
-          background: const Color(0xFF93000A),
-          foreground: const Color(0xFFFFDAD6),
-          border: Colors.transparent,
-        ),
-      AppBadgeTone.warning => const _BadgeColors(
-          background: Color(0xFF9A6700),
+      AppBadgeTone.danger => (
+          background: const Color(0xFFB3261E),
           foreground: Colors.white,
           border: Colors.transparent,
         ),
-      AppBadgeTone.ghost => _BadgeColors(
+      AppBadgeTone.warning => (
+          background: const Color(0xFF9A6700),
+          foreground: Colors.white,
+          border: Colors.transparent,
+        ),
+      AppBadgeTone.ghost => (
           background: Colors.transparent,
           foreground: scheme.onSurfaceVariant,
-          border: scheme.outlineVariant.withValues(alpha: 0.4),
+          border: scheme.outlineVariant.withOpacity(0.4),
         ),
     };
 
@@ -73,7 +74,7 @@ class AppBadge extends StatelessWidget {
         ? const EdgeInsets.symmetric(horizontal: 8, vertical: 2)
         : const EdgeInsets.symmetric(horizontal: 10, vertical: 4);
 
-    final TextStyle textStyle = (isSm
+    final TextStyle style = (isSm
             ? theme.textTheme.labelSmall
             : theme.textTheme.labelMedium)
         ?.copyWith(
@@ -105,22 +106,10 @@ class AppBadge extends StatelessWidget {
           ],
           Text(
             uppercase ? label.toUpperCase() : label,
-            style: textStyle,
+            style: style,
           ),
         ],
       ),
     );
   }
-}
-
-class _BadgeColors {
-  final Color background;
-  final Color foreground;
-  final Color border;
-
-  const _BadgeColors({
-    required this.background,
-    required this.foreground,
-    required this.border,
-  });
 }

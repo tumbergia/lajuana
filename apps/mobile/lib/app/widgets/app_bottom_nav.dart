@@ -20,8 +20,12 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = isDark ? const Color(0xFF131313) : theme.colorScheme.surface;
+
     return Material(
-      color: const Color(0xFF131313),
+      color: backgroundColor,
       child: SafeArea(
         top: false,
         child: SizedBox(
@@ -104,8 +108,16 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = isActive ? const Color(0xFF131313) : const Color(0xFFC6C6C6);
-    final bg = isActive ? Colors.white : Colors.transparent;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final fg = isActive 
+        ? (isDark ? const Color(0xFF131313) : theme.colorScheme.onPrimary) 
+        : (isDark ? const Color(0xFFC6C6C6) : theme.colorScheme.onSurfaceVariant);
+    
+    final bg = isActive 
+        ? (isDark ? Colors.white : theme.colorScheme.primary) 
+        : Colors.transparent;
 
     return Material(
       color: Colors.transparent,
@@ -138,13 +150,14 @@ class _NavButton extends StatelessWidget {
                 label.toUpperCase(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   height: 1.5,
                   letterSpacing: 0.5,
-                ).copyWith(color: fg),
+                  color: fg,
+                ),
               ),
             ],
           ),

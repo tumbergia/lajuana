@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/theme_extensions.dart';
 
 enum AppSectionHeaderVariant {
   hero,
@@ -27,12 +26,10 @@ class AppSectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = theme.appTokens;
     final scheme = theme.colorScheme;
+    final bool isHero = variant == AppSectionHeaderVariant.hero;
 
-    final bool hero = variant == AppSectionHeaderVariant.hero;
-
-    final titleStyle = hero
+    final TextStyle? titleStyle = isHero
         ? theme.textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.w800,
             height: 1.0,
@@ -46,40 +43,46 @@ class AppSectionHeader extends StatelessWidget {
 
     return Padding(
       padding: padding ?? EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (eyebrow != null)
-            Padding(
-              padding: EdgeInsets.only(bottom: hero ? 6 : 4),
-              child: Text(
-                eyebrow!.toUpperCase(),
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: hero ? 0.7 : 0.5,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (eyebrow != null)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: isHero ? 6 : 4),
+                    child: Text(
+                      eyebrow!.toUpperCase(),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: isHero ? 0.7 : 0.5,
+                      ),
+                    ),
+                  ),
+                Text(
+                  title.toUpperCase(),
+                  style: titleStyle,
                 ),
-              ),
+                if (subtitle != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      subtitle!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          Text(
-            title.toUpperCase(),
-            style: titleStyle,
           ),
-          if (subtitle != null)
-            Padding(
-              padding: EdgeInsets.only(top: tokens.spaceSm),
-              child: Text(
-                subtitle!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          if (trailing != null)
-            Padding(
-              padding: EdgeInsets.only(top: tokens.spaceLg),
-              child: trailing!,
-            ),
+          if (trailing != null) ...[
+            const SizedBox(width: 16),
+            trailing!,
+          ],
         ],
       ),
     );

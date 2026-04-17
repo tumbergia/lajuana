@@ -12,30 +12,19 @@ class AppBreadcrumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final style = Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        );
 
     return Wrap(
       spacing: 6,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         for (int i = 0; i < items.length; i++) ...[
-          Text(
-            items[i].toUpperCase(),
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
-          ),
-          if (i != items.length - 1)
-            Text(
-              separator,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+          Text(items[i].toUpperCase(), style: style),
+          if (i != items.length - 1) Text(separator, style: style),
         ],
       ],
     );

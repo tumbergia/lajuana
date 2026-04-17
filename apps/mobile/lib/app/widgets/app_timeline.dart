@@ -5,6 +5,7 @@ enum AppTimelineNodeState {
   active,
   completed,
   cancelled,
+  error,
   neutral,
 }
 
@@ -22,8 +23,6 @@ class AppTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Padding(
       padding: padding ?? EdgeInsets.zero,
       child: Stack(
@@ -34,12 +33,10 @@ class AppTimeline extends StatelessWidget {
             bottom: 0,
             child: Container(
               width: 1.5,
-              color: scheme.outlineVariant,
+              color: Theme.of(context).colorScheme.outlineVariant,
             ),
           ),
-          Column(
-            children: children,
-          ),
+          Column(children: children),
         ],
       ),
     );
@@ -64,30 +61,31 @@ class AppTimelineItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDimmed = state == AppTimelineNodeState.error || state == AppTimelineNodeState.cancelled;
+    
+    Widget content = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: lineLeft * 2 + nodeSize / 2,
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: Transform.translate(
+              offset: Offset(lineLeft - nodeSize / 2, 0),
+              child: _TimelineNode(state: state, size: nodeSize),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: isDimmed ? Opacity(opacity: 0.5, child: child) : child,
+        ),
+      ],
+    );
+
     return Padding(
       padding: margin ?? const EdgeInsets.only(bottom: 24),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: lineLeft * 2 + nodeSize / 2,
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Transform.translate(
-                offset: Offset(lineLeft - nodeSize / 2, 0),
-                child: _TimelineNode(state: state, size: nodeSize),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Opacity(
-              opacity: state == AppTimelineNodeState.cancelled ? 0.5 : 1.0,
-              child: child,
-            ),
-          ),
-        ],
-      ),
+      child: content,
     );
   }
 }
@@ -136,7 +134,7 @@ class AppTimelineEntryCard extends StatelessWidget {
                   ),
                 ),
               ),
-              ?badge,
+              if (badge != null) badge!,
             ],
           ),
           const SizedBox(height: 8),
@@ -195,7 +193,7 @@ class AppTimelineMetrics extends StatelessWidget {
 
     return Row(
       children: items.map((item) {
-        final bool isLast = item == items.last;
+        final isLast = item == items.last;
         return Expanded(
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -204,7 +202,7 @@ class AppTimelineMetrics extends StatelessWidget {
                   ? null
                   : Border(
                       right: BorderSide(
-                        color: scheme.outlineVariant.withValues(alpha: 0.3),
+                        color: scheme.outlineVariant.withOpacity(0.2),
                       ),
                     ),
             ),
@@ -256,75 +254,59 @@ class _TimelineNode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _NodeColors colors = switch (state) {
-      AppTimelineNodeState.active => const _NodeColors(
-          outer: Colors.white,
-          inner: Colors.black,
-          icon: null,
-        ),
-      AppTimelineNodeState.completed => const _NodeColors(
-          outer: Color(0xFF3A3C3C),
-          inner: Color(0xFF3A3C3C),
-          icon: Colors.white,
-        ),
-      AppTimelineNodeState.cancelled => const _NodeColors(
-          outer: Color(0xFFB00008),
-          inner: Color(0xFFB00008),
-          icon: Colors.white,
-        ),
-      AppTimelineNodeState.neutral => const _NodeColors(
-          outer: Color(0xFF474747),
-          inner: Color(0xFF474747),
-          icon: Colors.white,
-        ),
-    };
-
-    final Widget center = switch (state) {
-      AppTimelineNodeState.active => Container(
-          width: size * 0.42,
-          height: size * 0.42,
-          decoration: const BoxDecoration(
-            color: Colors.black,
+    final scheme = Theme.of(context).colorScheme;
+    switch (state) {
+      case AppTimelineNodeState.active:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: scheme.onSurface,
+            shape: BoxShape.circle,
+            border: Border.all(color: scheme.onSurface, width: 2),
+          ),
+          child: Center(
+            child: Container(
+              width: size * 0.4,
+              height: size * 0.4,
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        );
+      case AppTimelineNodeState.completed:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest,
             shape: BoxShape.circle,
           ),
-        ),
-      AppTimelineNodeState.completed => Icon(
-          Icons.check,
-          size: size * 0.6,
-          color: colors.icon,
-        ),
-      AppTimelineNodeState.cancelled => Icon(
-          Icons.close,
-          size: size * 0.6,
-          color: colors.icon,
-        ),
-      AppTimelineNodeState.neutral => Icon(
-          Icons.remove,
-          size: size * 0.6,
-          color: colors.icon,
-        ),
-    };
-
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: colors.outer,
-        shape: BoxShape.circle,
-      ),
-      child: Center(child: center),
-    );
+          child: Icon(Icons.check, size: size * 0.6, color: scheme.onSurfaceVariant),
+        );
+      case AppTimelineNodeState.error:
+      case AppTimelineNodeState.cancelled:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: scheme.error,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.close, size: size * 0.6, color: scheme.onError),
+        );
+      case AppTimelineNodeState.neutral:
+        return Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.remove, size: size * 0.6, color: scheme.onSurfaceVariant),
+        );
+    }
   }
-}
-
-class _NodeColors {
-  final Color outer;
-  final Color inner;
-  final Color? icon;
-
-  const _NodeColors({
-    required this.outer,
-    required this.inner,
-    required this.icon,
-  });
 }

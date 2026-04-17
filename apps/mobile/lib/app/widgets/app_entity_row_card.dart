@@ -25,12 +25,13 @@ class AppEntityRowCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final scheme = Theme.of(context).colorScheme;
+    final Color background =
+        selected ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow;
 
     final content = Container(
       decoration: BoxDecoration(
-        color: selected ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+        color: background,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
@@ -40,7 +41,7 @@ class AppEntityRowCard extends StatelessWidget {
               width: 4,
               height: 69,
               decoration: BoxDecoration(
-                color: accentColor ?? Colors.white,
+                color: accentColor ?? scheme.onSurface,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(4),
                   bottomLeft: Radius.circular(4),
@@ -70,22 +71,27 @@ class AppEntityRowCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 title.toUpperCase(),
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: scheme.onSurface,
+                                    ),
                               ),
                             ),
-                            ?badge,
-                            ?trailing,
+                            if (badge != null) badge!,
+                            if (trailing != null) trailing!,
                           ],
                         ),
                         const SizedBox(height: 2),
                         Text(
                           subtitle.toUpperCase(),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                         ),
                       ],
                     ),

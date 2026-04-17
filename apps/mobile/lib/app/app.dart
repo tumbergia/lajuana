@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../home/home_page.dart';
+import '../playground/design_system_playground.dart';
 import 'theme/app_theme.dart';
 
 class LaJuanaApp extends StatefulWidget {
@@ -10,15 +10,11 @@ class LaJuanaApp extends StatefulWidget {
 }
 
 class _LaJuanaAppState extends State<LaJuanaApp> {
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = ThemeMode.dark;
 
   void _toggleTheme() {
     setState(() {
-      _themeMode = switch (_themeMode) {
-        ThemeMode.light => ThemeMode.dark,
-        ThemeMode.dark => ThemeMode.light,
-        ThemeMode.system => ThemeMode.dark,
-      };
+      _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     });
   }
 
@@ -30,7 +26,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: _themeMode,
-      home: HomePage(
+      home: DesignSystemPlayground(
         onThemeToggleTap: _toggleTheme,
       ),
     );

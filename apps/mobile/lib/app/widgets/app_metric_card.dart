@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 enum AppMetricCardTone {
   defaultTone,
   danger,
@@ -28,125 +29,101 @@ class AppMetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
 
-    final _MetricToneColors colors = switch (tone) {
-      AppMetricCardTone.defaultTone => _MetricToneColors(
-          background: scheme.surfaceContainerHighest,
-          title: scheme.onSurfaceVariant,
-          value: scheme.onSurface,
-          supporting: scheme.onSurfaceVariant,
-          icon: scheme.onSurfaceVariant,
+    final ({Color background, Color title, Color value, Color supporting, Color icon})
+        colors = switch (tone) {
+      AppMetricCardTone.defaultTone => (
+          background: theme.colorScheme.surfaceContainerHighest,
+          title: theme.colorScheme.onSurfaceVariant,
+          value: theme.colorScheme.onSurface,
+          supporting: theme.colorScheme.onSurfaceVariant,
+          icon: theme.colorScheme.onSurfaceVariant,
         ),
-      AppMetricCardTone.danger => const _MetricToneColors(
-          background: Color(0xFFB00008),
-          title: Color(0xFFFFDAD6),
-          value: Colors.white,
-          supporting: Color(0xFFFFDAD6),
-          icon: Color(0xFFFFDAD6),
+      AppMetricCardTone.danger => (
+          background: theme.colorScheme.error,
+          title: theme.colorScheme.onError,
+          value: theme.colorScheme.onError,
+          supporting: theme.colorScheme.onError,
+          icon: theme.colorScheme.onError,
         ),
-      AppMetricCardTone.inverse => const _MetricToneColors(
-          background: Colors.white,
-          title: Color(0xFF1A1C1C),
-          value: Color(0xFF1A1C1C),
-          supporting: Color(0xFF3A3C3C),
-          icon: Color(0xFF1A1C1C),
+      AppMetricCardTone.inverse => (
+          background: theme.colorScheme.inverseSurface,
+          title: theme.colorScheme.onInverseSurface,
+          value: theme.colorScheme.onInverseSurface,
+          supporting: theme.colorScheme.onInverseSurface.withOpacity(0.8),
+          icon: theme.colorScheme.onInverseSurface,
         ),
     };
 
-    final EdgeInsets padding = compact
-        ? const EdgeInsets.all(20)
-        : const EdgeInsets.all(24);
-
     return Container(
-      padding: padding,
+      padding: EdgeInsets.all(compact ? 20 : 24),
       decoration: BoxDecoration(
         color: colors.background,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: DefaultTextStyle(
-        style: theme.textTheme.bodyMedium ?? const TextStyle(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    title.toUpperCase(),
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: colors.title,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8,
-                    ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: colors.title,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
                   ),
-                ),
-                if (icon != null)
-                  Icon(
-                    icon,
-                    color: colors.icon,
-                    size: 28,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.end,
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                Text(
-                  value,
-                  style: theme.textTheme.displayLarge?.copyWith(
-                    color: colors.value,
-                    fontWeight: FontWeight.w800,
-                    fontSize: compact ? 56 : 64,
-                    height: 0.95,
-                  ),
-                ),
-                if (suffix != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      suffix!,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: colors.supporting,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            if (supportingText != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                supportingText!,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: colors.supporting,
-                  fontWeight: FontWeight.w500,
                 ),
               ),
+              if (icon != null)
+                Icon(
+                  icon,
+                  color: colors.icon,
+                  size: 28,
+                ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.end,
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              Text(
+                value,
+                style: theme.textTheme.displayLarge?.copyWith(
+                  color: colors.value,
+                  fontWeight: FontWeight.w800,
+                  fontSize: compact ? 56 : 64,
+                  height: 0.95,
+                ),
+              ),
+              if (suffix != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    suffix!,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: colors.supporting,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (supportingText != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              supportingText!,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colors.supporting,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
-}
-
-class _MetricToneColors {
-  final Color background;
-  final Color title;
-  final Color value;
-  final Color supporting;
-  final Color icon;
-
-  const _MetricToneColors({
-    required this.background,
-    required this.title,
-    required this.value,
-    required this.supporting,
-    required this.icon,
-  });
 }
