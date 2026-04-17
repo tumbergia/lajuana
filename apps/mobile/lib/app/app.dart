@@ -30,7 +30,9 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: _themeMode,
-      home: const HomePage(),
+      home: HomePage(
+        onThemeToggleTap: _toggleTheme,
+      ),
     );
   }
 }

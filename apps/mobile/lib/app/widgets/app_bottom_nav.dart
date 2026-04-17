@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 enum AppNavItem {
@@ -21,65 +20,68 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF353535).withValues(alpha: 0.4),
-          ),
-          child: SafeArea(
-            top: false,
-            child: SizedBox(
-              height: 65,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _NavButton(
+    return Material(
+      color: const Color(0xFF131313),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 65,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Expanded(
+                  child: _NavButton(
                     item: AppNavItem.inicio,
                     current: current,
                     label: 'Inicio',
                     icon: Icons.grid_view_rounded,
                     onTap: onTap,
                   ),
-                  _NavButton(
+                ),
+                Expanded(
+                  child: _NavButton(
                     item: AppNavItem.reservas,
                     current: current,
                     label: 'Reservas',
                     icon: Icons.calendar_today_rounded,
                     onTap: onTap,
                   ),
-                  _NavButton(
+                ),
+                Expanded(
+                  child: _NavButton(
                     item: AppNavItem.equinos,
                     current: current,
                     label: 'Equinos',
                     icon: Icons.hail_rounded,
                     onTap: onTap,
                   ),
-                  _NavButton(
+                ),
+                Expanded(
+                  child: _NavButton(
                     item: AppNavItem.clientes,
                     current: current,
                     label: 'Clientes',
                     icon: Icons.groups_2_rounded,
                     onTap: onTap,
                   ),
-                  _NavButton(
+                ),
+                Expanded(
+                  child: _NavButton(
                     item: AppNavItem.mas,
                     current: current,
                     label: 'Más',
                     icon: Icons.menu_rounded,
                     onTap: onTap,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
 
@@ -135,7 +137,7 @@ class _NavButton extends StatelessWidget {
               Text(
                 label.toUpperCase(),
                 maxLines: 1,
-                overflow: TextOverflow.visible,
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 10,

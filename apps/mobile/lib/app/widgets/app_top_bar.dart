@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onNotificationsTap;
+  final VoidCallback? onThemeToggleTap;
   final String title;
   final String logoAssetPath;
   final bool showNotificationDot;
@@ -12,6 +13,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     required this.logoAssetPath,
     this.title = 'LA JUANA',
     this.onNotificationsTap,
+    this.onThemeToggleTap,
     this.showNotificationDot = false,
   });
 
@@ -33,37 +35,56 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: SvgPicture.asset(
+                          logoAssetPath,
+                          fit: BoxFit.contain,
+                          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontFamily: 'Manrope',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            height: 1.4,
+                            letterSpacing: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: SvgPicture.asset(
-                        logoAssetPath,
-                        fit: BoxFit.contain,
-                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                      ),
+                    _TopBarIconButton(
+                      icon: Icons.light_mode_rounded,
+                      onTap: onThemeToggleTap,
+                      showDot: false,
+                      iconColor: Colors.white,
+                      backgroundColor: Colors.transparent,
                     ),
-                    const SizedBox(width: 16),
-                    Text(
-                      title,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontFamily: 'Manrope',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        height: 1.4,
-                        letterSpacing: 2,
-                        color: Colors.white,
-                      ),
+                    const SizedBox(width: 8),
+                    _TopBarIconButton(
+                      icon: Icons.notifications_none_rounded,
+                      onTap: onNotificationsTap,
+                      showDot: showNotificationDot,
+                      iconColor: Colors.white,
+                      backgroundColor: Colors.transparent,
                     ),
                   ],
-                ),
-                _TopBarIconButton(
-                  icon: Icons.notifications_none_rounded,
-                  onTap: onNotificationsTap,
-                  showDot: showNotificationDot,
-                  iconColor: Colors.white,
-                  backgroundColor: Colors.transparent,
                 ),
               ],
             ),
