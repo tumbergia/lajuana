@@ -214,14 +214,21 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
                   title: 'Cosaco 24',
                   subtitle: 'Criollo · 11 anos',
                   selected: true,
-                  badge: AppBadge(label: 'Paso fino', tone: AppBadgeTone.primary),
-                  image: NetworkImage('https://picsum.photos/seed/equino1/360/220'),
+                  badge: AppBadge(
+                    label: 'Paso fino',
+                    tone: AppBadgeTone.primary,
+                  ),
+                  image: NetworkImage(
+                    'https://picsum.photos/seed/equino1/360/220',
+                  ),
                 ),
                 SizedBox(width: 12),
                 AppImageFeatureCard(
                   title: 'Juana',
                   subtitle: 'Criolla · 6 anos',
-                  image: NetworkImage('https://picsum.photos/seed/equino2/360/220'),
+                  image: NetworkImage(
+                    'https://picsum.photos/seed/equino2/360/220',
+                  ),
                 ),
               ],
             ),
@@ -239,9 +246,17 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
             children: const [
               Row(
                 children: [
-                  Expanded(child: _MiniStat(label: 'Edad', value: '11', suffix: 'anos')),
+                  Expanded(
+                    child: _MiniStat(
+                      label: 'Edad',
+                      value: '11',
+                      suffix: 'anos',
+                    ),
+                  ),
                   SizedBox(width: 12),
-                  Expanded(child: _MiniStat(label: 'Peso', value: '300', suffix: 'kg')),
+                  Expanded(
+                    child: _MiniStat(label: 'Peso', value: '300', suffix: 'kg'),
+                  ),
                 ],
               ),
             ],
@@ -384,9 +399,9 @@ class _MiniStat extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           RichText(
@@ -401,9 +416,9 @@ class _MiniStat extends StatelessWidget {
                 ),
                 TextSpan(
                   text: ' $suffix',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: scheme.onSurface,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(color: scheme.onSurface),
                 ),
               ],
             ),

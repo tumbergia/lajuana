@@ -31,7 +31,9 @@ class AppSelectableCard extends StatelessWidget {
     final radius = borderRadius ?? tokens.radiusLg;
     final bg =
         backgroundColor ??
-        (selected ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow);
+        (selected
+            ? scheme.surfaceContainerHighest
+            : scheme.surfaceContainerLow);
 
     final content = ClipRRect(
       borderRadius: radius,
@@ -69,11 +71,7 @@ class AppSelectableCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       borderRadius: radius,
-      child: InkWell(
-        borderRadius: radius,
-        onTap: onTap,
-        child: content,
-      ),
+      child: InkWell(borderRadius: radius, onTap: onTap, child: content),
     );
   }
 }

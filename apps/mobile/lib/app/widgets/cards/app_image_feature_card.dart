@@ -60,8 +60,7 @@ class AppImageFeatureCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (badge != null)
-                Positioned(top: 12, left: 12, child: badge!),
+              if (badge != null) Positioned(top: 12, left: 12, child: badge!),
             ],
           ),
           Padding(
