@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../theme/app_theme_notifier.dart';
 
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onNotificationsTap;
@@ -23,8 +24,13 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final surfaceColor = theme.appBarTheme.backgroundColor ?? const Color(0xFF131313);
+    final surfaceColor =
+        theme.appBarTheme.backgroundColor ?? const Color(0xFF131313);
     final foregroundColor = theme.appBarTheme.foregroundColor ?? Colors.white;
+
+    // Use provided callback or fall back to AppThemeNotifier
+    final effectiveThemeToggle =
+        onThemeToggleTap ?? AppThemeNotifier.maybeOf(context)?.onToggle;
 
     return Material(
       color: surfaceColor,
@@ -46,7 +52,10 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                         child: SvgPicture.asset(
                           logoAssetPath,
                           fit: BoxFit.contain,
-                          colorFilter: ColorFilter.mode(foregroundColor, BlendMode.srcIn),
+                          colorFilter: ColorFilter.mode(
+                            foregroundColor,
+                            BlendMode.srcIn,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -72,10 +81,10 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _TopBarIconButton(
-                      icon: theme.brightness == Brightness.dark 
-                          ? Icons.light_mode_rounded 
+                      icon: theme.brightness == Brightness.dark
+                          ? Icons.light_mode_rounded
                           : Icons.dark_mode_rounded,
-                      onTap: onThemeToggleTap,
+                      onTap: effectiveThemeToggle,
                       showDot: false,
                       iconColor: foregroundColor,
                       backgroundColor: Colors.transparent,
@@ -129,19 +138,9 @@ class _TopBarIconButton extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               const Center(),
-              Center(
-                child: Icon(
-                  icon,
-                  size: 22,
-                  color: iconColor,
-                ),
-              ),
+              Center(child: Icon(icon, size: 22, color: iconColor)),
               if (showDot)
-                const Positioned(
-                  right: 3,
-                  top: 5,
-                  child: _NotificationDot(),
-                ),
+                const Positioned(right: 3, top: 5, child: _NotificationDot()),
             ],
           ),
         ),

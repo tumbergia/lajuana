@@ -26,15 +26,15 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
   });
 
   const AppThemeTokens.base()
-      : radiusSm = AppRadii.radiusDefault,
-        radiusMd = AppRadii.radiusLg,
-        radiusLg = AppRadii.radiusXl,
-        radiusXl = AppRadii.radiusFull,
-        spaceXs = 4,
-        spaceSm = 8,
-        spaceMd = 12,
-        spaceLg = 16,
-        spaceXl = 24;
+    : radiusSm = AppRadii.radiusDefault,
+      radiusMd = AppRadii.radiusLg,
+      radiusLg = AppRadii.radiusXl,
+      radiusXl = AppRadii.radiusFull,
+      spaceXs = 4,
+      spaceSm = 8,
+      spaceMd = 12,
+      spaceLg = 16,
+      spaceXl = 24;
 
   @override
   AppThemeTokens copyWith({

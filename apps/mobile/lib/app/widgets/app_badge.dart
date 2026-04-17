@@ -1,18 +1,8 @@
 import 'package:flutter/material.dart';
 
-enum AppBadgeTone {
-  neutral,
-  primary,
-  success,
-  danger,
-  warning,
-  ghost,
-}
+enum AppBadgeTone { neutral, primary, success, danger, warning, ghost }
 
-enum AppBadgeSize {
-  sm,
-  md,
-}
+enum AppBadgeSize { sm, md }
 
 class AppBadge extends StatelessWidget {
   final String label;
@@ -37,47 +27,46 @@ class AppBadge extends StatelessWidget {
 
     final ({Color background, Color foreground, Color border}) colors =
         switch (tone) {
-      AppBadgeTone.neutral => (
-          background: scheme.surfaceContainerHigh,
-          foreground: scheme.onSurfaceVariant,
-          border: scheme.outlineVariant.withOpacity(0.35),
-        ),
-      AppBadgeTone.primary => (
-          background: scheme.primary,
-          foreground: scheme.onPrimary,
-          border: Colors.transparent,
-        ),
-      AppBadgeTone.success => (
-          background: const Color(0xFF00A431),
-          foreground: Colors.white,
-          border: Colors.transparent,
-        ),
-      AppBadgeTone.danger => (
-          background: const Color(0xFFB3261E),
-          foreground: Colors.white,
-          border: Colors.transparent,
-        ),
-      AppBadgeTone.warning => (
-          background: const Color(0xFF9A6700),
-          foreground: Colors.white,
-          border: Colors.transparent,
-        ),
-      AppBadgeTone.ghost => (
-          background: Colors.transparent,
-          foreground: scheme.onSurfaceVariant,
-          border: scheme.outlineVariant.withOpacity(0.4),
-        ),
-    };
+          AppBadgeTone.neutral => (
+            background: scheme.surfaceContainerHigh,
+            foreground: scheme.onSurfaceVariant,
+            border: scheme.outlineVariant.withValues(alpha: 0.35),
+          ),
+          AppBadgeTone.primary => (
+            background: scheme.primary,
+            foreground: scheme.onPrimary,
+            border: Colors.transparent,
+          ),
+          AppBadgeTone.success => (
+            background: const Color(0xFF00A431),
+            foreground: Colors.white,
+            border: Colors.transparent,
+          ),
+          AppBadgeTone.danger => (
+            background: const Color(0xFFB3261E),
+            foreground: Colors.white,
+            border: Colors.transparent,
+          ),
+          AppBadgeTone.warning => (
+            background: const Color(0xFF9A6700),
+            foreground: Colors.white,
+            border: Colors.transparent,
+          ),
+          AppBadgeTone.ghost => (
+            background: Colors.transparent,
+            foreground: scheme.onSurfaceVariant,
+            border: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+        };
 
     final bool isSm = size == AppBadgeSize.sm;
     final EdgeInsets padding = isSm
         ? const EdgeInsets.symmetric(horizontal: 8, vertical: 2)
         : const EdgeInsets.symmetric(horizontal: 10, vertical: 4);
 
-    final TextStyle style = (isSm
-            ? theme.textTheme.labelSmall
-            : theme.textTheme.labelMedium)
-        ?.copyWith(
+    final TextStyle style =
+        (isSm ? theme.textTheme.labelSmall : theme.textTheme.labelMedium)
+            ?.copyWith(
               color: colors.foreground,
               fontWeight: FontWeight.w700,
               letterSpacing: isSm ? 0.6 : 0.9,
@@ -104,10 +93,7 @@ class AppBadge extends StatelessWidget {
             Icon(icon, size: isSm ? 12 : 14, color: colors.foreground),
             const SizedBox(width: 4),
           ],
-          Text(
-            uppercase ? label.toUpperCase() : label,
-            style: style,
-          ),
+          Text(uppercase ? label.toUpperCase() : label, style: style),
         ],
       ),
     );

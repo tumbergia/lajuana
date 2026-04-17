@@ -64,7 +64,9 @@ class AppTextField extends StatelessWidget {
 
     // ── Borders ────────────────────────────────────────────────────────────
     InputBorder underline(Color color, [double width = 1.0]) =>
-        UnderlineInputBorder(borderSide: BorderSide(color: color, width: width));
+        UnderlineInputBorder(
+          borderSide: BorderSide(color: color, width: width),
+        );
 
     InputBorder outline(Color color, [double width = 1.0]) =>
         OutlineInputBorder(
@@ -74,27 +76,27 @@ class AppTextField extends StatelessWidget {
 
     final (enabledBorder, focusedBorder, baseBorder) = switch (variant) {
       AppTextFieldVariant.underlined => (
-          underline(scheme.outlineVariant),
-          underline(scheme.primary, 1.4),
-          underline(scheme.outlineVariant),
-        ),
+        underline(scheme.outlineVariant),
+        underline(scheme.primary, 1.4),
+        underline(scheme.outlineVariant),
+      ),
       AppTextFieldVariant.filled => (
-          outline(scheme.outlineVariant),
-          outline(scheme.primary, 1.2),
-          outline(scheme.outlineVariant),
-        ),
+        outline(scheme.outlineVariant),
+        outline(scheme.primary, 1.2),
+        outline(scheme.outlineVariant),
+      ),
     };
 
     // ── Content padding ────────────────────────────────────────────────────
     final isMultiline = maxLines == null || maxLines! > 1;
     final contentPadding = switch (variant) {
       AppTextFieldVariant.underlined => EdgeInsets.symmetric(
-          vertical: isMultiline ? tokens.spaceLg : 12,
-        ),
+        vertical: isMultiline ? tokens.spaceLg : 12,
+      ),
       AppTextFieldVariant.filled => EdgeInsets.symmetric(
-          horizontal: tokens.spaceLg,
-          vertical: isMultiline ? tokens.spaceLg : 14,
-        ),
+        horizontal: tokens.spaceLg,
+        vertical: isMultiline ? tokens.spaceLg : 14,
+      ),
     };
 
     return Column(

@@ -72,8 +72,7 @@ class AppCard extends StatefulWidget {
   State<AppCard> createState() => _AppCardState();
 }
 
-class _AppCardState extends State<AppCard>
-    with SingleTickerProviderStateMixin {
+class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
   @override
@@ -139,9 +138,7 @@ class _AppCardState extends State<AppCard>
           color: _resolveBg(scheme),
           borderRadius: radius,
           border: widget.outlined
-              ? Border.all(
-                  color: scheme.outlineVariant.withValues(alpha: 0.4),
-                )
+              ? Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4))
               : null,
         ),
         child: IntrinsicHeight(
@@ -152,8 +149,7 @@ class _AppCardState extends State<AppCard>
                 Container(width: 4, color: widget.accentColor),
               Expanded(
                 child: Padding(
-                  padding:
-                      widget.padding ?? EdgeInsets.all(tokens.spaceLg),
+                  padding: widget.padding ?? EdgeInsets.all(tokens.spaceLg),
                   child: content,
                 ),
               ),

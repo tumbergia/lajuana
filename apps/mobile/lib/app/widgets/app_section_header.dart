@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum AppSectionHeaderVariant {
-  hero,
-  compact,
-}
+enum AppSectionHeaderVariant { hero, compact }
 
 class AppSectionHeader extends StatelessWidget {
   final String title;
@@ -62,10 +59,7 @@ class AppSectionHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                Text(
-                  title.toUpperCase(),
-                  style: titleStyle,
-                ),
+                Text(title.toUpperCase(), style: titleStyle),
                 if (subtitle != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -79,10 +73,7 @@ class AppSectionHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 16),
-            trailing!,
-          ],
+          if (trailing != null) ...[const SizedBox(width: 16), trailing!],
         ],
       ),
     );

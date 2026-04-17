@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../playground/design_system_playground.dart';
 import 'theme/app_theme.dart';
+import 'theme/app_theme_notifier.dart';
 
 class LaJuanaApp extends StatefulWidget {
   const LaJuanaApp({super.key});
@@ -14,20 +15,23 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
 
   void _toggleTheme() {
     setState(() {
-      _themeMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      _themeMode = _themeMode == ThemeMode.dark
+          ? ThemeMode.light
+          : ThemeMode.dark;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'La Juana',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      themeMode: _themeMode,
-      home: DesignSystemPlayground(
-        onThemeToggleTap: _toggleTheme,
+    return AppThemeNotifier(
+      onToggle: _toggleTheme,
+      child: MaterialApp(
+        title: 'La Juana',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: _themeMode,
+        home: const DesignSystemPlayground(),
       ),
     );
   }

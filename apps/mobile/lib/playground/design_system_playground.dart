@@ -12,12 +12,7 @@ import '../app/widgets/app_top_bar.dart';
 import '../app/widgets/app_bottom_nav.dart';
 
 class DesignSystemPlayground extends StatefulWidget {
-  final VoidCallback? onThemeToggleTap;
-
-  const DesignSystemPlayground({
-    super.key,
-    this.onThemeToggleTap,
-  });
+  const DesignSystemPlayground({super.key});
 
   @override
   State<DesignSystemPlayground> createState() => _DesignSystemPlaygroundState();
@@ -29,10 +24,9 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      appBar: AppTopBar(
+      appBar: const AppTopBar(
         logoAssetPath: 'assets/branding/lajuana.svg',
         title: 'LA JUANA',
-        onThemeToggleTap: widget.onThemeToggleTap,
       ),
       bottomNavigationBar: AppBottomNav(
         current: AppNavItem.inicio,
@@ -48,9 +42,7 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
           ),
           const SizedBox(height: 24),
 
-          const AppBreadcrumb(
-            items: ['Gestión', 'Experiencias'],
-          ),
+          const AppBreadcrumb(items: ['Gestión', 'Experiencias']),
           const SizedBox(height: 24),
 
           AppSectionHeader(
@@ -69,11 +61,7 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
             spacing: 12,
             runSpacing: 12,
             children: [
-              AppButton(
-                label: 'Primario',
-                onPressed: () {},
-                icon: Icons.check,
-              ),
+              AppButton(label: 'Primario', onPressed: () {}, icon: Icons.check),
               AppButton(
                 label: 'Secundario',
                 onPressed: () {},
@@ -156,10 +144,7 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
               });
             },
             items: const [
-              AppSegmentedFilterItem(
-                label: 'Pendientes',
-                value: 'pendientes',
-              ),
+              AppSegmentedFilterItem(label: 'Pendientes', value: 'pendientes'),
               AppSegmentedFilterItem(
                 label: 'Confirmadas',
                 value: 'confirmadas',
@@ -183,28 +168,19 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
             title: 'Elena Rodriguez',
             subtitle: 'EXP: INTERMEDIO • 68KG',
             selected: true,
-            badge: AppBadge(
-              label: 'Alto riesgo',
-              tone: AppBadgeTone.danger,
-            ),
+            badge: AppBadge(label: 'Alto riesgo', tone: AppBadgeTone.danger),
           ),
           const SizedBox(height: 12),
           const AppEntityRowCard(
             title: 'Marcus Thorne',
             subtitle: 'EXP: AVANZADO • 82KG',
-            badge: AppBadge(
-              label: 'Perfecto',
-              tone: AppBadgeTone.success,
-            ),
+            badge: AppBadge(label: 'Perfecto', tone: AppBadgeTone.success),
           ),
           const SizedBox(height: 12),
           const AppEntityRowCard(
             title: 'Sarah Jenkins',
             subtitle: 'EXP: PRINCIPIANTE • 55KG',
-            badge: AppBadge(
-              label: 'Perfecto',
-              tone: AppBadgeTone.success,
-            ),
+            badge: AppBadge(label: 'Perfecto', tone: AppBadgeTone.success),
           ),
           const SizedBox(height: 32),
 
@@ -222,10 +198,7 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
                 child: AppTimelineEntryCard(
                   date: 'Oct 24, 2026 • 09:00 AM',
                   title: 'Monta Controlada',
-                  badge: AppBadge(
-                    label: 'Pendiente',
-                    tone: AppBadgeTone.ghost,
-                  ),
+                  badge: AppBadge(label: 'Pendiente', tone: AppBadgeTone.ghost),
                   description:
                       'Monta natural realizada con yegua en condiciones controladas. Se verifica comportamiento del burro, respuesta reproductiva y ausencia de incidentes durante el proceso.',
                 ),

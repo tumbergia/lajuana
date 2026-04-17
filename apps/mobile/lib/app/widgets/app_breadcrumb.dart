@@ -4,19 +4,15 @@ class AppBreadcrumb extends StatelessWidget {
   final List<String> items;
   final String separator;
 
-  const AppBreadcrumb({
-    super.key,
-    required this.items,
-    this.separator = '>',
-  });
+  const AppBreadcrumb({super.key, required this.items, this.separator = '>'});
 
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-        );
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.5,
+    );
 
     return Wrap(
       spacing: 6,

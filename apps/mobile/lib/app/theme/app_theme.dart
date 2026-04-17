@@ -14,9 +14,7 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       textTheme: textTheme,
-      extensions: const [
-        AppThemeTokens.base(),
-      ],
+      extensions: const [AppThemeTokens.base()],
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,
@@ -101,8 +99,9 @@ abstract final class AppTheme {
         secondarySelectedColor: scheme.secondaryContainer,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         labelStyle: textTheme.labelMedium!.copyWith(color: scheme.onSurface),
-        secondaryLabelStyle:
-            textTheme.labelMedium!.copyWith(color: scheme.onSecondaryContainer),
+        secondaryLabelStyle: textTheme.labelMedium!.copyWith(
+          color: scheme.onSecondaryContainer,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.all(Radius.circular(12)),
           side: BorderSide(color: scheme.outlineVariant),
@@ -133,9 +132,7 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       textTheme: textTheme,
-      extensions: const [
-        AppThemeTokens.base(),
-      ],
+      extensions: const [AppThemeTokens.base()],
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,
@@ -220,8 +217,9 @@ abstract final class AppTheme {
         secondarySelectedColor: scheme.secondaryContainer,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         labelStyle: textTheme.labelMedium!.copyWith(color: scheme.onSurface),
-        secondaryLabelStyle:
-            textTheme.labelMedium!.copyWith(color: scheme.onSecondaryContainer),
+        secondaryLabelStyle: textTheme.labelMedium!.copyWith(
+          color: scheme.onSecondaryContainer,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: const BorderRadius.all(Radius.circular(12)),
           side: BorderSide(color: scheme.outlineVariant),

@@ -31,11 +31,10 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     final children = widget.items.map((item) {
       final selected = item.value == widget.value;
-      final theme = Theme.of(context);
-      final scheme = theme.colorScheme;
 
       final child = InkWell(
         borderRadius: BorderRadius.circular(4),
@@ -46,7 +45,9 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
           height: 36,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: selected ? scheme.surfaceContainerHighest : Colors.transparent,
+            color: selected
+                ? scheme.surfaceContainerHighest
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(4),
           ),
           alignment: Alignment.center,
@@ -84,8 +85,5 @@ class AppSegmentedFilterItem<T> {
   final String label;
   final T value;
 
-  const AppSegmentedFilterItem({
-    required this.label,
-    required this.value,
-  });
+  const AppSegmentedFilterItem({required this.label, required this.value});
 }

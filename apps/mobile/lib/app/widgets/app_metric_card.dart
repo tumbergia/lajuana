@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum AppMetricCardTone {
-  defaultTone,
-  danger,
-  inverse,
-}
+enum AppMetricCardTone { defaultTone, danger, inverse }
 
 class AppMetricCard extends StatelessWidget {
   final String title;
@@ -30,29 +26,35 @@ class AppMetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final ({Color background, Color title, Color value, Color supporting, Color icon})
-        colors = switch (tone) {
+    final ({
+      Color background,
+      Color title,
+      Color value,
+      Color supporting,
+      Color icon,
+    })
+    colors = switch (tone) {
       AppMetricCardTone.defaultTone => (
-          background: theme.colorScheme.surfaceContainerHighest,
-          title: theme.colorScheme.onSurfaceVariant,
-          value: theme.colorScheme.onSurface,
-          supporting: theme.colorScheme.onSurfaceVariant,
-          icon: theme.colorScheme.onSurfaceVariant,
-        ),
+        background: theme.colorScheme.surfaceContainerHighest,
+        title: theme.colorScheme.onSurfaceVariant,
+        value: theme.colorScheme.onSurface,
+        supporting: theme.colorScheme.onSurfaceVariant,
+        icon: theme.colorScheme.onSurfaceVariant,
+      ),
       AppMetricCardTone.danger => (
-          background: theme.colorScheme.error,
-          title: theme.colorScheme.onError,
-          value: theme.colorScheme.onError,
-          supporting: theme.colorScheme.onError,
-          icon: theme.colorScheme.onError,
-        ),
+        background: const Color(0xFFBA1A1A), // Light logic error color
+        title: Colors.white,
+        value: Colors.white,
+        supporting: Colors.white,
+        icon: Colors.white,
+      ),
       AppMetricCardTone.inverse => (
-          background: theme.colorScheme.inverseSurface,
-          title: theme.colorScheme.onInverseSurface,
-          value: theme.colorScheme.onInverseSurface,
-          supporting: theme.colorScheme.onInverseSurface.withOpacity(0.8),
-          icon: theme.colorScheme.onInverseSurface,
-        ),
+        background: theme.colorScheme.inverseSurface,
+        title: theme.colorScheme.onInverseSurface,
+        value: theme.colorScheme.onInverseSurface,
+        supporting: theme.colorScheme.onInverseSurface.withValues(alpha: 0.8),
+        icon: theme.colorScheme.onInverseSurface,
+      ),
     };
 
     return Container(
@@ -76,12 +78,7 @@ class AppMetricCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (icon != null)
-                Icon(
-                  icon,
-                  color: colors.icon,
-                  size: 28,
-                ),
+              if (icon != null) Icon(icon, color: colors.icon, size: 28),
             ],
           ),
           const SizedBox(height: 12),

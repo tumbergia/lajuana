@@ -23,13 +23,7 @@ class AppScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = Padding(
-      padding: padding ??
-          const EdgeInsets.fromLTRB(
-            16,
-            16,
-            16,
-            32,
-          ),
+      padding: padding ?? const EdgeInsets.fromLTRB(16, 16, 16, 32),
       child: child,
     );
 

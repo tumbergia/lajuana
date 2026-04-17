@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app_badge.dart';
 
-enum AppTimelineNodeState {
-  active,
-  completed,
-  cancelled,
-  error,
-  neutral,
-}
+enum AppTimelineNodeState { active, completed, cancelled, error, neutral }
 
 class AppTimeline extends StatelessWidget {
   final List<Widget> children;
@@ -61,8 +55,10 @@ class AppTimelineItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDimmed = state == AppTimelineNodeState.error || state == AppTimelineNodeState.cancelled;
-    
+    final bool isDimmed =
+        state == AppTimelineNodeState.error ||
+        state == AppTimelineNodeState.cancelled;
+
     Widget content = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -77,9 +73,7 @@ class AppTimelineItem extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: isDimmed ? Opacity(opacity: 0.5, child: child) : child,
-        ),
+        Expanded(child: isDimmed ? Opacity(opacity: 0.5, child: child) : child),
       ],
     );
 
@@ -134,7 +128,7 @@ class AppTimelineEntryCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (badge != null) badge!,
+              ?badge,
             ],
           ),
           const SizedBox(height: 8),
@@ -168,10 +162,7 @@ class AppTimelineEntryCard extends StatelessWidget {
               child: highlightedContent,
             ),
           ],
-          if (footer != null) ...[
-            const SizedBox(height: 16),
-            footer!,
-          ],
+          if (footer != null) ...[const SizedBox(height: 16), footer!],
         ],
       ),
     );
@@ -181,10 +172,7 @@ class AppTimelineEntryCard extends StatelessWidget {
 class AppTimelineMetrics extends StatelessWidget {
   final List<AppTimelineMetricItem> items;
 
-  const AppTimelineMetrics({
-    super.key,
-    required this.items,
-  });
+  const AppTimelineMetrics({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +190,7 @@ class AppTimelineMetrics extends StatelessWidget {
                   ? null
                   : Border(
                       right: BorderSide(
-                        color: scheme.outlineVariant.withOpacity(0.2),
+                        color: scheme.outlineVariant.withValues(alpha: 0.2),
                       ),
                     ),
             ),
@@ -237,20 +225,14 @@ class AppTimelineMetricItem {
   final String value;
   final String label;
 
-  const AppTimelineMetricItem({
-    required this.value,
-    required this.label,
-  });
+  const AppTimelineMetricItem({required this.value, required this.label});
 }
 
 class _TimelineNode extends StatelessWidget {
   final AppTimelineNodeState state;
   final double size;
 
-  const _TimelineNode({
-    required this.state,
-    required this.size,
-  });
+  const _TimelineNode({required this.state, required this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -284,7 +266,11 @@ class _TimelineNode extends StatelessWidget {
             color: scheme.surfaceContainerHighest,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.check, size: size * 0.6, color: scheme.onSurfaceVariant),
+          child: Icon(
+            Icons.check,
+            size: size * 0.6,
+            color: scheme.onSurfaceVariant,
+          ),
         );
       case AppTimelineNodeState.error:
       case AppTimelineNodeState.cancelled:
@@ -305,7 +291,11 @@ class _TimelineNode extends StatelessWidget {
             color: scheme.surfaceContainerHigh,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.remove, size: size * 0.6, color: scheme.onSurfaceVariant),
+          child: Icon(
+            Icons.remove,
+            size: size * 0.6,
+            color: scheme.onSurfaceVariant,
+          ),
         );
     }
   }

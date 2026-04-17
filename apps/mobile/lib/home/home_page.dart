@@ -12,12 +12,7 @@ import '../app/widgets/app_entity_row_card.dart';
 import '../app/widgets/app_breadcrumb.dart';
 
 class HomePage extends StatefulWidget {
-  final VoidCallback? onThemeToggleTap;
-
-  const HomePage({
-    super.key,
-    this.onThemeToggleTap,
-  });
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -29,12 +24,10 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return AppScaffold(
-      appBar: AppTopBar(
+      appBar: const AppTopBar(
         logoAssetPath: 'assets/branding/lajuana.svg',
         title: 'LA JUANA',
-        onThemeToggleTap: widget.onThemeToggleTap,
       ),
       bottomNavigationBar: AppBottomNav(
         current: _currentNav,
@@ -58,7 +51,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 24),
-          
+
           AppSegmentedFilter<String>(
             value: _filterValue,
             onChanged: (v) {
@@ -68,8 +61,14 @@ class _HomePageState extends State<HomePage> {
             },
             items: const [
               AppSegmentedFilterItem(label: 'Pendientes', value: 'pendientes'),
-              AppSegmentedFilterItem(label: 'Confirmadas', value: 'confirmadas'),
-              AppSegmentedFilterItem(label: 'Finalizadas', value: 'finalizadas'),
+              AppSegmentedFilterItem(
+                label: 'Confirmadas',
+                value: 'confirmadas',
+              ),
+              AppSegmentedFilterItem(
+                label: 'Finalizadas',
+                value: 'finalizadas',
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -99,7 +98,8 @@ class _HomePageState extends State<HomePage> {
                     label: 'Pendiente',
                     tone: AppBadgeTone.neutral,
                   ),
-                  description: 'Monta natural realizada en yegua en condiciones controladas.',
+                  description:
+                      'Monta natural realizada en yegua en condiciones controladas.',
                 ),
               ),
               AppTimelineItem(
@@ -107,11 +107,9 @@ class _HomePageState extends State<HomePage> {
                 child: AppTimelineEntryCard(
                   date: 'Oct 10, 2026',
                   title: 'Traslado suspendido',
-                  badge: AppBadge(
-                    label: 'Error',
-                    tone: AppBadgeTone.danger,
-                  ),
-                  description: 'Vehículo averiado, no se pudo realizar el traslado del equino.',
+                  badge: AppBadge(label: 'Error', tone: AppBadgeTone.danger),
+                  description:
+                      'Vehículo averiado, no se pudo realizar el traslado del equino.',
                 ),
               ),
               AppTimelineItem(
@@ -123,7 +121,8 @@ class _HomePageState extends State<HomePage> {
                     label: 'Completado',
                     tone: AppBadgeTone.ghost,
                   ),
-                  description: 'Aplicación de vacuna contra influenza y tétanos.',
+                  description:
+                      'Aplicación de vacuna contra influenza y tétanos.',
                   footer: Row(
                     children: [
                       Icon(Icons.medical_services_outlined, size: 16),
@@ -143,27 +142,19 @@ class _HomePageState extends State<HomePage> {
           ),
 
           const SizedBox(height: 16),
-          const AppBreadcrumb(
-            items: ['Gestión', 'Experiencias'],
-          ),
+          const AppBreadcrumb(items: ['Gestión', 'Experiencias']),
           const SizedBox(height: 12),
           const AppEntityRowCard(
             title: 'Elena Rodriguez',
             subtitle: 'EXP: INTERMEDIO • 68KG',
             selected: true,
-            badge: AppBadge(
-              label: 'Alto Riesgo',
-              tone: AppBadgeTone.danger,
-            ),
+            badge: AppBadge(label: 'Alto Riesgo', tone: AppBadgeTone.danger),
           ),
           const SizedBox(height: 12),
           const AppEntityRowCard(
             title: 'Marcus Thorne',
             subtitle: 'EXP: AVANZADO • 82KG',
-            badge: AppBadge(
-              label: 'Perfecto',
-              tone: AppBadgeTone.success,
-            ),
+            badge: AppBadge(label: 'Perfecto', tone: AppBadgeTone.success),
           ),
         ],
       ),
