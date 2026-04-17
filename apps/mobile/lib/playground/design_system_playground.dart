@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../app/widgets/app_badge.dart';
 import '../app/widgets/app_breadcrumb.dart';
 import '../app/widgets/app_button.dart';
+import '../app/widgets/cards/app_image_feature_card.dart';
+import '../app/widgets/cards/app_selectable_card.dart';
+import '../app/widgets/cards/app_stats_card.dart';
 import '../app/widgets/app_entity_row_card.dart';
 import '../app/widgets/app_metric_card.dart';
 import '../app/widgets/app_scaffold.dart';
@@ -164,6 +167,87 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
           ),
           const SizedBox(height: 16),
 
+          const AppSectionHeader(
+            eyebrow: 'Cards',
+            title: 'Nueva familia',
+            variant: AppSectionHeaderVariant.compact,
+          ),
+          const SizedBox(height: 16),
+
+          AppSelectableCard(
+            selected: true,
+            onTap: () {},
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'COSACO 24',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'CRIOLLO • 11 ANOS',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const AppBadge(
+                  label: 'Seleccionado',
+                  tone: AppBadgeTone.primary,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          SizedBox(
+            height: 260,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: const [
+                AppImageFeatureCard(
+                  title: 'Cosaco 24',
+                  subtitle: 'Criollo · 11 anos',
+                  selected: true,
+                  badge: AppBadge(label: 'Paso fino', tone: AppBadgeTone.primary),
+                  image: NetworkImage('https://picsum.photos/seed/equino1/360/220'),
+                ),
+                SizedBox(width: 12),
+                AppImageFeatureCard(
+                  title: 'Juana',
+                  subtitle: 'Criolla · 6 anos',
+                  image: NetworkImage('https://picsum.photos/seed/equino2/360/220'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          AppStatsCard(
+            eyebrow: 'Estadisticas vitales',
+            title: 'Cosaco 24',
+            selected: true,
+            topRight: const AppBadge(
+              label: 'No disponible',
+              tone: AppBadgeTone.warning,
+            ),
+            children: const [
+              Row(
+                children: [
+                  Expanded(child: _MiniStat(label: 'Edad', value: '11', suffix: 'anos')),
+                  SizedBox(width: 12),
+                  Expanded(child: _MiniStat(label: 'Peso', value: '300', suffix: 'kg')),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
           const AppEntityRowCard(
             title: 'Elena Rodriguez',
             subtitle: 'EXP: INTERMEDIO • 68KG',
@@ -268,6 +352,62 @@ class _DesignSystemPlaygroundState extends State<DesignSystemPlayground> {
             ],
           ),
           const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final String suffix;
+
+  const _MiniStat({
+    required this.label,
+    required this.value,
+    required this.suffix,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: value,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                TextSpan(
+                  text: ' $suffix',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
