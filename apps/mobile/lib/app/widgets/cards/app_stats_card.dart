@@ -51,7 +51,7 @@ class AppStatsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (topRight != null) topRight!,
+              ?topRight,
             ],
           ),
           const SizedBox(height: 20),

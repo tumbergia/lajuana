@@ -48,7 +48,7 @@ class AppImageFeatureCard extends StatelessWidget {
                   width: width,
                   height: imageHeight,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     width: width,
                     height: imageHeight,
                     color: scheme.surfaceContainerHigh,

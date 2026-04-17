@@ -25,7 +25,7 @@ source .venv/bin/activate
 
 ```bash
 pip install -U pip
-pip install "fastapi[standard]" beanie pydantic pytest ruff mypy
+pip install -e ".[dev]"
 ```
 
 ## Ejecutar API
@@ -40,4 +40,20 @@ O desde apps/api:
 
 ```bash
 uvicorn app.main:app --reload
+```
+
+## Validación de calidad
+
+```bash
+cd apps/api
+source .venv/bin/activate
+ruff check .
+ruff format --check .
+pytest
+```
+
+## Endpoint base
+
+```bash
+GET /api/v1/health
 ```

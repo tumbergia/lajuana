@@ -65,7 +65,7 @@ cd apps/api
 python -m venv .venv
 source .venv/bin/activate
 pip install -U pip
-pip install "fastapi[standard]" beanie pydantic pytest ruff mypy
+pip install -e ".[dev]"
 cd ../..
 ```
 
@@ -75,7 +75,10 @@ cd ../..
 make api-dev        # Levanta el backend en modo desarrollo
 make api-test       # Corre los tests del backend
 make api-lint       # Linting con ruff
+make api-format-check # Verifica formato con ruff
+make api-quality    # Corre lint + format-check + tests API
 make mobile-run     # Corre la app Flutter
 make mobile-test    # Tests del frontend
+make mobile-quality # Format-check + analyze + tests mobile
 make bootstrap      # Inicializa todo el entorno desde cero
 ```
