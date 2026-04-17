@@ -1,6 +1,9 @@
 name: la_juana_workspace
 publish_to: none
 
+environment:
+  sdk: '^3.11.5'
+
 workspace:
   - apps/mobile
   - packages/mobile_core

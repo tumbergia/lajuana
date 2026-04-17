@@ -2,17 +2,29 @@
 
 Aplicación Flutter principal de La Juana.
 
-## Rol
+## Comandos
 
-Actúa como nodo operativo principal del sistema. Debe soportar operación local, persistencia en dispositivo y futura sincronización con backend.
+```bash
+flutter pub get
+flutter run
+flutter test
+```
 
-## Estado
+## Objetivo actual
 
-Placeholder inicial. La aplicación será creada con `flutter create .`.
+Dejar una base mínima, estable y extensible para evolucionar hacia una app mobile-first y offline-first.
 
-## Reglas iniciales
+## Estructura
 
-- no mezclar mocks con UI productiva;
-- no acoplar widgets a transporte HTTP;
-- no modelar la app por pantallas sueltas;
-- la lógica de negocio se construye por vertical slices centrados en la reserva.
+```
+lib/
+├─ main.dart            # Punto de entrada — delega a bootstrap()
+├─ app/
+│  ├─ app.dart          # Widget raíz (LaJuanaApp)
+│  ├─ router.dart       # Configuración de rutas (pendiente)
+│  └─ theme.dart        # Definición del tema (pendiente)
+├─ bootstrap/
+│  └─ bootstrap.dart    # Inicialización de bindings + runApp
+└─ src/
+   └─ .gitkeep          # Carpeta reservada para features
+```
