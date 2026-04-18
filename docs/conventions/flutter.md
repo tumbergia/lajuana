@@ -24,3 +24,10 @@ Un widget reusable debe:
 - evitar dependencias innecesarias;
 - mantener parámetros controlados;
 - no resolver demasiados patrones distintos a la vez.
+
+## Arranque
+
+- La splash nativa solo cubre el arranque del motor Flutter y debe ser estatica, minima y coherente con marca.
+- La splash nativa no debe incluir animaciones ni loaders simulados.
+- Si la app necesita bootstrap real, se implementa en una StartupScreen de Flutter, no en la splash nativa.
+- El arranque debe priorizar estado local (configuracion, sesion, storage, colas pendientes) y no bloquear por red.

@@ -66,33 +66,43 @@ class _VoiceVisualizerState extends State<VoiceVisualizer>
 
   @override
   Widget build(BuildContext context) {
+    final totalWidth =
+        (widget.barCount * widget.barWidth) + ((widget.barCount - 1) * widget.gap);
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (_, _) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: List.generate(widget.barCount, (index) {
-            // When inactive (paused), all bars drop to minHeight
-            final height = widget.isActive
-                ? _barHeight(index, _controller.value)
-                : widget.minHeight;
-            return Padding(
-              padding: EdgeInsets.only(
-                right: index == widget.barCount - 1 ? 0 : widget.gap,
-              ),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOut,
-                width: widget.barWidth,
-                height: height,
-                decoration: BoxDecoration(
-                  color: widget.color,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            );
-          }),
+        return SizedBox(
+          width: totalWidth,
+          height: widget.maxHeight,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(widget.barCount, (index) {
+                // Keep a fixed visualizer box so surrounding content does not shift.
+                final height = widget.isActive
+                    ? _barHeight(index, _controller.value)
+                    : widget.minHeight;
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: index == widget.barCount - 1 ? 0 : widget.gap,
+                  ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOut,
+                    width: widget.barWidth,
+                    height: height,
+                    decoration: BoxDecoration(
+                      color: widget.color,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
         );
       },
     );

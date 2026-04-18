@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_badge.dart';
+import '../theme/app_colors.dart';
 
 enum AppTimelineNodeState { active, completed, cancelled, error, neutral }
 
@@ -7,6 +8,8 @@ class AppTimeline extends StatelessWidget {
   final List<Widget> children;
   final double lineLeft;
   final EdgeInsetsGeometry? padding;
+  static const double _lineThickness = 1.5;
+  static const double _startIndicatorSize = 9;
 
   const AppTimeline({
     super.key,
@@ -17,17 +20,35 @@ class AppTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: padding ?? EdgeInsets.zero,
       child: Stack(
         children: [
           Positioned(
-            left: lineLeft,
+            left: lineLeft - (_lineThickness / 2),
             top: 0,
             bottom: 0,
             child: Container(
-              width: 1.5,
-              color: Theme.of(context).colorScheme.outlineVariant,
+              width: _lineThickness,
+              color: scheme.outlineVariant,
+            ),
+          ),
+          Positioned(
+            left: lineLeft - (_startIndicatorSize / 2),
+            bottom: 0,
+            child: Container(
+              width: _startIndicatorSize,
+              height: _startIndicatorSize,
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: scheme.outlineVariant,
+                  width: _lineThickness,
+                ),
+              ),
             ),
           ),
           Column(children: children),
@@ -278,10 +299,14 @@ class _TimelineNode extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: scheme.error,
+            color: AppColors.danger,
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.close, size: size * 0.6, color: scheme.onError),
+          child: Icon(
+            Icons.close,
+            size: size * 0.6,
+            color: AppColors.lightColorScheme.onError,
+          ),
         );
       case AppTimelineNodeState.neutral:
         return Container(

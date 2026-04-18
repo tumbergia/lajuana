@@ -18,7 +18,6 @@ class AppBottomNav extends StatefulWidget {
 class _AppBottomNavState extends State<AppBottomNav>
     with TickerProviderStateMixin {
   static const Duration _holdDelay = Duration(milliseconds: 320);
-  static const double _launchCircleRadius = 36;
 
   AppNavItem? _pressedItem;
   AppNavItem? _voiceLaunchingItem;
@@ -28,7 +27,7 @@ class _AppBottomNavState extends State<AppBottomNav>
     widget.onTap?.call(item);
   }
 
-  void _onLongPressStart(AppNavItem item, Offset globalPosition) {
+  void _onLongPressStart(AppNavItem item) {
     _holdTimer?.cancel();
 
     setState(() {
@@ -49,8 +48,6 @@ class _AppBottomNavState extends State<AppBottomNav>
       await openVoiceScreen(
         context,
         voiceContext: contextVoice,
-        origin: globalPosition,
-        initialRadius: _launchCircleRadius,
       );
 
       if (!mounted) return;
@@ -193,7 +190,7 @@ class _NavButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final ValueChanged<AppNavItem>? onTap;
-  final void Function(AppNavItem, Offset)? onHoldStart;
+  final ValueChanged<AppNavItem>? onHoldStart;
   final VoidCallback? onHoldEnd;
   final bool pressed;
   final bool launchingVoice;
@@ -233,8 +230,7 @@ class _NavButton extends StatelessWidget {
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onLongPressStart: (details) =>
-          onHoldStart?.call(item, details.globalPosition),
+      onLongPressStart: (_) => onHoldStart?.call(item),
       onLongPressEnd: (_) => onHoldEnd?.call(),
       onLongPressCancel: onHoldEnd,
       child: Material(
@@ -242,6 +238,11 @@ class _NavButton extends StatelessWidget {
         child: InkWell(
           onTap: () => onTap?.call(item),
           borderRadius: BorderRadius.circular(isActive && !voiceMode ? 2 : 6),
+          splashFactory: NoSplash.splashFactory,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          focusColor: Colors.transparent,
           child: Container(
             color: Colors.transparent,
             width: double.infinity,
@@ -254,34 +255,44 @@ class _NavButton extends StatelessWidget {
                   scale: circleScale,
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOutCubic,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOutCubic,
-                    width: voiceMode ? 44 : (isActive ? double.infinity : 0),
-                    height: voiceMode ? 44 : (isActive ? 48 : 0),
-                    constraints: BoxConstraints(minWidth: voiceMode ? 0 : 58),
-                    decoration: BoxDecoration(
-                      color: voiceMode
-                          ? (isDark ? Colors.white : theme.colorScheme.primary)
-                          : bg,
-                      borderRadius: BorderRadius.circular(
-                        voiceMode ? 999 : (isActive ? 2 : 6),
-                      ),
-                      boxShadow: voiceMode
-                          ? [
-                              BoxShadow(
-                                color:
-                                    (isDark
-                                            ? Colors.white
-                                            : theme.colorScheme.primary)
-                                        .withValues(alpha: 0.18),
-                                blurRadius: 18,
-                                spreadRadius: 0,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                          : null,
-                    ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final activeWidth = constraints.maxWidth;
+                      final targetWidth = voiceMode
+                          ? 44.0
+                          : (isActive ? activeWidth : 0.0);
+
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOutCubic,
+                        width: targetWidth,
+                        height: voiceMode ? 44 : (isActive ? 48 : 0),
+                        decoration: BoxDecoration(
+                          color: voiceMode
+                              ? (isDark
+                                    ? Colors.white
+                                    : theme.colorScheme.primary)
+                              : bg,
+                          borderRadius: BorderRadius.circular(
+                            voiceMode ? 999 : (isActive ? 2 : 6),
+                          ),
+                          boxShadow: voiceMode
+                              ? [
+                                  BoxShadow(
+                                    color:
+                                        (isDark
+                                                ? Colors.white
+                                                : theme.colorScheme.primary)
+                                            .withValues(alpha: 0.18),
+                                    blurRadius: 18,
+                                    spreadRadius: 0,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 Column(
