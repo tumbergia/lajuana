@@ -5,7 +5,9 @@ import 'voice_screen.dart';
 const String voiceRouteName = '/voice';
 
 void closeAllVoiceScreens(BuildContext context) {
-  Navigator.of(context).popUntil((route) => route.settings.name != voiceRouteName);
+  Navigator.of(
+    context,
+  ).popUntil((route) => route.settings.name != voiceRouteName);
 }
 
 MaterialPageRoute<void> _buildVoiceRoute(VoiceContext voiceContext) {
@@ -21,7 +23,9 @@ Future<void> openVoiceScreen(
 }) {
   final currentRouteName = ModalRoute.of(context)?.settings.name;
   if (currentRouteName == voiceRouteName) {
-    return Navigator.of(context).pushReplacement(_buildVoiceRoute(voiceContext));
+    return Navigator.of(
+      context,
+    ).pushReplacement(_buildVoiceRoute(voiceContext));
   }
 
   return Navigator.of(context).push(_buildVoiceRoute(voiceContext));

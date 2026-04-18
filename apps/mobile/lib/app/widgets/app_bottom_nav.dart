@@ -45,10 +45,7 @@ class _AppBottomNavState extends State<AppBottomNav>
 
       final contextVoice = _mapNavToVoice(item);
 
-      await openVoiceScreen(
-        context,
-        voiceContext: contextVoice,
-      );
+      await openVoiceScreen(context, voiceContext: contextVoice);
 
       if (!mounted) return;
       setState(() {

@@ -67,7 +67,8 @@ class _VoiceVisualizerState extends State<VoiceVisualizer>
   @override
   Widget build(BuildContext context) {
     final totalWidth =
-        (widget.barCount * widget.barWidth) + ((widget.barCount - 1) * widget.gap);
+        (widget.barCount * widget.barWidth) +
+        ((widget.barCount - 1) * widget.gap);
 
     return AnimatedBuilder(
       animation: _controller,
