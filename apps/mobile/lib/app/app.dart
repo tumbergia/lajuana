@@ -12,12 +12,35 @@ class LaJuanaApp extends StatefulWidget {
 
 class _LaJuanaAppState extends State<LaJuanaApp> {
   ThemeMode _themeMode = ThemeMode.dark;
+  Color _themeVeilColor = Colors.black;
+  bool _isThemeTransitioning = false;
 
-  void _toggleTheme() {
+  Future<void> _toggleTheme() async {
+    if (_isThemeTransitioning) return;
+
+    final nextMode = _themeMode == ThemeMode.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
+
     setState(() {
-      _themeMode = _themeMode == ThemeMode.dark
-          ? ThemeMode.light
-          : ThemeMode.dark;
+      _isThemeTransitioning = true;
+      _themeVeilColor = nextMode == ThemeMode.light
+          ? Colors.white
+          : Colors.black;
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 16));
+    if (!mounted) return;
+
+    setState(() {
+      _themeMode = nextMode;
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 220));
+    if (!mounted) return;
+
+    setState(() {
+      _isThemeTransitioning = false;
     });
   }
 
@@ -31,6 +54,25 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: _themeMode,
+        themeAnimationDuration: const Duration(milliseconds: 220),
+        themeAnimationCurve: Curves.easeInOut,
+        builder: (context, child) {
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              if (child != null) child,
+              IgnorePointer(
+                ignoring: true,
+                child: AnimatedOpacity(
+                  opacity: _isThemeTransitioning ? 0.18 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  child: ColoredBox(color: _themeVeilColor),
+                ),
+              ),
+            ],
+          );
+        },
         home: const DesignSystemPlayground(),
       ),
     );

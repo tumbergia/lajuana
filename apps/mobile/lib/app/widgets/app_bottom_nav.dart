@@ -18,6 +18,7 @@ class AppBottomNav extends StatefulWidget {
 class _AppBottomNavState extends State<AppBottomNav>
     with TickerProviderStateMixin {
   static const Duration _holdDelay = Duration(milliseconds: 320);
+  static const double _launchCircleRadius = 36;
 
   AppNavItem? _pressedItem;
   AppNavItem? _voiceLaunchingItem;
@@ -41,8 +42,6 @@ class _AppBottomNavState extends State<AppBottomNav>
       setState(() {
         _voiceLaunchingItem = item;
       });
-
-      await Future.delayed(const Duration(milliseconds: 160));
       if (!mounted) return;
 
       final contextVoice = _mapNavToVoice(item);
@@ -51,6 +50,7 @@ class _AppBottomNavState extends State<AppBottomNav>
         context,
         voiceContext: contextVoice,
         origin: globalPosition,
+        initialRadius: _launchCircleRadius,
       );
 
       if (!mounted) return;

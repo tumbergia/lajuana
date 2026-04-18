@@ -7,18 +7,19 @@ Future<void> openVoiceScreen(
   BuildContext context, {
   required VoiceContext voiceContext,
   required Offset origin,
+  double initialRadius = 0,
 }) {
   return Navigator.of(context).push(
     PageRouteBuilder(
-      transitionDuration: const Duration(milliseconds: 380),
-      reverseTransitionDuration: const Duration(milliseconds: 280),
-      opaque:
-          false, // Allow seeing the background slightly if needed, or opaque
+      transitionDuration: const Duration(milliseconds: 460),
+      reverseTransitionDuration: const Duration(milliseconds: 320),
+      opaque: true,
       pageBuilder: (_, _, _) => VoiceScreen(voiceContext: voiceContext),
       transitionsBuilder: (context, animation, _, child) {
         return _CircularRevealTransition(
           animation: animation,
           origin: origin,
+          initialRadius: initialRadius,
           child: child,
         );
       },
@@ -28,11 +29,13 @@ Future<void> openVoiceScreen(
 
 class _CircularRevealTransition extends AnimatedWidget {
   final Offset origin;
+  final double initialRadius;
   final Widget child;
 
   const _CircularRevealTransition({
     required Animation<double> animation,
     required this.origin,
+    required this.initialRadius,
     required this.child,
   }) : super(listenable: animation);
 
@@ -40,37 +43,36 @@ class _CircularRevealTransition extends AnimatedWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeIn,
-        reverseCurve: Curves.easeOut,
+    return ClipPath(
+      clipper: _CircularRevealClipper(
+        origin: origin,
+        initialRadius: initialRadius,
+        fraction: CurvedAnimation(
+          parent: animation,
+          curve: Curves.fastOutSlowIn,
+          reverseCurve: Curves.easeInCubic,
+        ).value,
       ),
-      child: ClipPath(
-        clipper: _CircularRevealClipper(
-          origin: origin,
-          fraction: CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-            reverseCurve: Curves.easeInCubic,
-          ).value,
-        ),
-        child: child,
-      ),
+      child: child,
     );
   }
 }
 
 class _CircularRevealClipper extends CustomClipper<Path> {
   final Offset origin;
+  final double initialRadius;
   final double fraction;
 
-  _CircularRevealClipper({required this.origin, required this.fraction});
+  _CircularRevealClipper({
+    required this.origin,
+    required this.initialRadius,
+    required this.fraction,
+  });
 
   @override
   Path getClip(Size size) {
     final maxRadius = _calcMaxRadius(size, origin);
-    final radius = maxRadius * fraction;
+    final radius = initialRadius + (maxRadius - initialRadius) * fraction;
 
     return Path()..addOval(Rect.fromCircle(center: origin, radius: radius));
   }
@@ -83,6 +85,8 @@ class _CircularRevealClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(_CircularRevealClipper oldClipper) {
-    return oldClipper.origin != origin || oldClipper.fraction != fraction;
+    return oldClipper.origin != origin ||
+        oldClipper.initialRadius != initialRadius ||
+        oldClipper.fraction != fraction;
   }
 }
