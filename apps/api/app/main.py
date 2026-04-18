@@ -1,8 +1,12 @@
 from fastapi import FastAPI
 
-app = FastAPI(title="La Juana API")
+from app.api.router import api_router
+from app.core.config import settings
+from app.core.lifespan import lifespan
 
-
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+    lifespan=lifespan,
+)
+app.include_router(api_router)

@@ -1,0 +1,19 @@
+name: mobile_mocks
+description: Fake implementations and shared test fixtures for La Juana mobile.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.5
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mobile_domain: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

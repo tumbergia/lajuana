@@ -1,5 +1,9 @@
 # La Juana
 
+<p align="center">
+  <img src="apps/mobile/assets/branding/lajuana.svg" alt="La Juana" width="200" />
+</p>
+
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](https://flutter.dev/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-7.x-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
@@ -61,7 +65,7 @@ cd apps/api
 python -m venv .venv
 source .venv/bin/activate
 pip install -U pip
-pip install "fastapi[standard]" beanie pydantic pytest ruff mypy
+pip install -e ".[dev]"
 cd ../..
 ```
 
@@ -71,7 +75,10 @@ cd ../..
 make api-dev        # Levanta el backend en modo desarrollo
 make api-test       # Corre los tests del backend
 make api-lint       # Linting con ruff
+make api-format-check # Verifica formato con ruff
+make api-quality    # Corre lint + format-check + tests API
 make mobile-run     # Corre la app Flutter
 make mobile-test    # Tests del frontend
+make mobile-quality # Format-check + analyze + tests mobile
 make bootstrap      # Inicializa todo el entorno desde cero
 ```
