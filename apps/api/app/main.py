@@ -7,7 +7,6 @@ from app.core.lifespan import lifespan
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    debug=settings.app_debug,
     lifespan=lifespan,
 )
 app.include_router(api_router)

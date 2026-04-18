@@ -25,23 +25,25 @@ mobile-quality:
 	$(MAKE) mobile-packages-analyze
 	$(MAKE) mobile-test
 
+API_PY := $(shell if [ -x apps/api/.venv/Scripts/python.exe ]; then echo .venv/Scripts/python.exe; else echo .venv/bin/python; fi)
+
 api-dev:
-	cd apps/api && source .venv/bin/activate && uvicorn app.main:app --reload
+	cd apps/api && $(API_PY) -m uvicorn app.main:app --reload
 
 api-test:
-	cd apps/api && source .venv/bin/activate && pytest
+	cd apps/api && $(API_PY) -m pytest
 
 api-lint:
-	cd apps/api && source .venv/bin/activate && ruff check .
+	cd apps/api && $(API_PY) -m ruff check .
 
 api-format:
-	cd apps/api && source .venv/bin/activate && ruff format .
+	cd apps/api && $(API_PY) -m ruff format .
 
 api-format-check:
-	cd apps/api && source .venv/bin/activate && ruff format --check .
+	cd apps/api && $(API_PY) -m ruff format --check .
 
 api-typecheck:
-	cd apps/api && source .venv/bin/activate && mypy app
+	cd apps/api && $(API_PY) -m mypy app
 
 api-quality:
 	$(MAKE) api-lint
