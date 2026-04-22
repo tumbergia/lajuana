@@ -52,5 +52,11 @@ api-quality:
 	$(MAKE) api-format-check
 	$(MAKE) api-test
 
+api-install:
+	cd apps/api && $(API_PY) -m pip install -e ".[dev]"
+
+api-uninstall:
+	cd apps/api && $(API_PY) -m pip uninstall -e ".[dev]"
+
 bootstrap:
 	bash tooling/scripts/bootstrap.sh

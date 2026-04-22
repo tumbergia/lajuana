@@ -1,7 +1,16 @@
 from pymongo import AsyncMongoClient
 
 from app.core.config import settings
-from app.documents.ping_document import PingDocument
+from app.documents import (
+    AppConfigDocument,
+    ExperienceDocument,
+    ParticipantDocument,
+    PaymentProofDocument,
+    PingDocument,
+    ReservationDocument,
+    ScheduleDocument,
+    UserDocument,
+)
 
 
 class Database:
@@ -12,6 +21,9 @@ db = Database()
 
 
 async def init_db() -> None:
+    if settings.app_skip_db_init:
+        return
+
     db.client = AsyncMongoClient(settings.mongodb_uri)
     database = db.client[settings.mongodb_db_name]
 
@@ -19,7 +31,16 @@ async def init_db() -> None:
 
     await init_beanie(
         database=database,
-        document_models=[PingDocument],
+        document_models=[
+            PingDocument,
+            UserDocument,
+            ExperienceDocument,
+            ScheduleDocument,
+            ReservationDocument,
+            ParticipantDocument,
+            PaymentProofDocument,
+            AppConfigDocument,
+        ],
     )
 
 

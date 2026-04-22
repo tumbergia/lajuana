@@ -1,0 +1,10 @@
+class ErrorCode:
+    AUTH_INVALID_CREDENTIALS = "auth.invalid_credentials"
+    AUTH_FORBIDDEN = "auth.forbidden"
+    RESERVATION_INVALID_STATUS_TRANSITION = "reservation.invalid_status_transition"
+    RESERVATION_MIN_NOTICE_VIOLATION = "reservation.min_notice_violation"
+    RESERVATION_NO_AVAILABILITY = "reservation.no_availability"
+    RESERVATION_PAYMENT_REQUIRED = "reservation.payment_required"
+    PARTICIPANT_INCOMPLETE = "participant.incomplete"
+    SCHEDULE_NOT_OPEN = "schedule.not_open"
+    FILE_STORAGE_REQUIRED = "file.storage_required"
