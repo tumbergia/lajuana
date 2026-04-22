@@ -33,6 +33,12 @@ Incluye:
 - `core`: configuracion, seguridad JWT, manejo de errores.
 - `common`: enums, permisos, constantes y codigos de error.
 
+## Seed operativo reproducible
+
+- Script: `apps/api/app/seed_reproducible.py`.
+- Ejecucion: `cd apps/api && python -m app.seed_reproducible`.
+- Orquestacion fija: reset total, catalogos base, schedules, reservas, comprobantes, participantes, asignaciones, logs y validacion automatica final.
+
 ## Contrato de errores de negocio
 
 Desde esta fase se centraliza en una fuente unica:
