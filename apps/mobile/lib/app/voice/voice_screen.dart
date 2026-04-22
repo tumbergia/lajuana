@@ -4,6 +4,7 @@ import '../widgets/app_scaffold.dart';
 import '../widgets/app_top_bar.dart';
 import '../widgets/app_voice_fab.dart';
 import 'voice_context.dart';
+import 'voice_route.dart';
 import 'voice_visualizer.dart';
 
 enum VoiceRecordState { listening, paused, ready }
@@ -31,15 +32,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
   }
 
   void _onReset() {
-    // Cancel/pop in both listening and paused states
-    if (_state == VoiceRecordState.listening ||
-        _state == VoiceRecordState.paused) {
-      Navigator.of(context).pop();
-    } else {
-      setState(() {
-        _state = VoiceRecordState.listening;
-      });
-    }
+    closeAllVoiceScreens(context);
   }
 
   void _onSend() {

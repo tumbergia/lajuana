@@ -1,0 +1,138 @@
+from enum import StrEnum
+
+
+class UserRole(StrEnum):
+    ADMIN = "admin"
+    GUIDE = "guide"
+    UNASSIGNED = "unassigned"
+
+
+class ReservationStatus(StrEnum):
+    CONTACT = "contact"
+    QUOTED = "quoted"
+    PENDING_PAYMENT = "pending_payment"
+    PAYMENT_RECEIVED = "payment_received"
+    CONFIRMED = "confirmed"
+    CANCELLED = "cancelled"
+    COMPLETED = "completed"
+
+
+class ScheduleStatus(StrEnum):
+    OPEN = "open"
+    CLOSED = "closed"
+    FULL = "full"
+
+
+class ExperienceLevel(StrEnum):
+    BASIC = "basic"
+    INTERMEDIATE = "intermediate"
+    ADVANCED = "advanced"
+
+
+class Channel(StrEnum):
+    FACEBOOK = "facebook"
+    INSTAGRAM = "instagram"
+    WHATSAPP = "whatsapp"
+    EMAIL = "email"
+
+
+class PaymentStatus(StrEnum):
+    PENDING = "pending"
+    RECEIVED = "received"
+    VERIFIED = "verified"
+    REJECTED = "rejected"
+
+
+class AssignmentPriority(StrEnum):
+    STANDARD = "standard"
+    CHILD_SAFETY = "child_safety"
+    SENIOR_SAFETY = "senior_safety"
+
+
+class Permission(StrEnum):
+    AUTH_SELF_READ = "auth.self.read"
+    AUTH_SELF_UPDATE_PASSWORD = "auth.self.update_password"
+
+    USER_READ = "user.read"
+    USER_CREATE = "user.create"
+    USER_UPDATE = "user.update"
+    USER_DELETE = "user.delete"
+
+    EXPERIENCE_READ = "experience.read"
+    EXPERIENCE_CREATE = "experience.create"
+    EXPERIENCE_UPDATE = "experience.update"
+    EXPERIENCE_DELETE = "experience.delete"
+
+    SCHEDULE_READ = "schedule.read"
+    SCHEDULE_CREATE = "schedule.create"
+    SCHEDULE_UPDATE = "schedule.update"
+    SCHEDULE_DELETE = "schedule.delete"
+    SCHEDULE_CONFIRM_EFFECT = "schedule.confirm.effect"
+
+    RESERVATION_READ = "reservation.read"
+    RESERVATION_CREATE = "reservation.create"
+    RESERVATION_UPDATE = "reservation.update"
+    RESERVATION_CONFIRM = "reservation.confirm"
+    RESERVATION_CANCEL = "reservation.cancel"
+
+    PARTICIPANT_READ = "participant.read"
+    PARTICIPANT_CREATE = "participant.create"
+    PARTICIPANT_UPDATE = "participant.update"
+
+    PAYMENT_PROOF_READ = "payment_proof.read"
+    PAYMENT_PROOF_CREATE = "payment_proof.create"
+    PAYMENT_VERIFY = "payment.verify"
+
+    EQUINE_READ = "equine.read"
+    EQUINE_CREATE = "equine.create"
+    EQUINE_UPDATE = "equine.update"
+
+    SADDLE_READ = "saddle.read"
+    SADDLE_CREATE = "saddle.create"
+    SADDLE_UPDATE = "saddle.update"
+
+    ASSIGNMENT_READ = "assignment.read"
+    ASSIGNMENT_CREATE = "assignment.create"
+    ASSIGNMENT_UPDATE = "assignment.update"
+
+    LOG_READ = "log.read"
+    LOG_CREATE = "log.create"
+    LOG_UPDATE = "log.update"
+
+    PROVIDER_READ = "provider.read"
+    PROVIDER_CREATE = "provider.create"
+    PROVIDER_UPDATE = "provider.update"
+    PROVIDER_DELETE = "provider.delete"
+
+    POLICY_READ = "policy.read"
+    POLICY_CREATE = "policy.create"
+    POLICY_UPDATE = "policy.update"
+
+    CONFIG_READ = "config.read"
+    CONFIG_UPDATE = "config.update"
+
+
+ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
+    UserRole.ADMIN: set(Permission),
+    UserRole.GUIDE: {
+        Permission.AUTH_SELF_READ,
+        Permission.AUTH_SELF_UPDATE_PASSWORD,
+        Permission.EXPERIENCE_READ,
+        Permission.SCHEDULE_READ,
+        Permission.RESERVATION_READ,
+        Permission.PARTICIPANT_READ,
+        Permission.EQUINE_READ,
+        Permission.SADDLE_READ,
+        Permission.ASSIGNMENT_READ,
+        Permission.ASSIGNMENT_CREATE,
+        Permission.ASSIGNMENT_UPDATE,
+        Permission.LOG_READ,
+        Permission.LOG_CREATE,
+        Permission.LOG_UPDATE,
+        Permission.POLICY_READ,
+    },
+    UserRole.UNASSIGNED: {
+        Permission.AUTH_SELF_READ,
+        Permission.AUTH_SELF_UPDATE_PASSWORD,
+    },
+}

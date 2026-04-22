@@ -7,6 +7,7 @@ Documentos de arquitectura vigentes.
 - `monorepo.md`
 - `mobile.md`
 - `api.md`
+- `api-endpoints.md`
 - `design-system.md`
 
 ## Regla

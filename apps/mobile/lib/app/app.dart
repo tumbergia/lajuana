@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../playground/design_system_playground.dart';
+import '../home/home_page.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_theme_notifier.dart';
 
@@ -12,12 +12,40 @@ class LaJuanaApp extends StatefulWidget {
 
 class _LaJuanaAppState extends State<LaJuanaApp> {
   ThemeMode _themeMode = ThemeMode.dark;
+  Color _themeVeilColor = const Color(0xFF131313);
+  bool _isThemeTransitioning = false;
+  static const Duration _themeTransitionDuration = Duration(milliseconds: 320);
+  static const Duration _themeVeilVisibleDuration = Duration(milliseconds: 500);
+  static const Duration _themeVeilFadeDuration = Duration(milliseconds: 180);
+  static const double _themeVeilOpacity = 1.0;
 
-  void _toggleTheme() {
+  Future<void> _toggleTheme() async {
+    if (_isThemeTransitioning) return;
+
+    final nextMode = _themeMode == ThemeMode.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
+
     setState(() {
-      _themeMode = _themeMode == ThemeMode.dark
-          ? ThemeMode.light
-          : ThemeMode.dark;
+      _isThemeTransitioning = true;
+      _themeVeilColor = nextMode == ThemeMode.light
+          ? Colors.white
+          : const Color(0xFF131313);
+    });
+
+    // Wait until veil fade-in completes so color changes happen fully covered.
+    await Future<void>.delayed(_themeVeilFadeDuration);
+    if (!mounted) return;
+
+    setState(() {
+      _themeMode = nextMode;
+    });
+
+    await Future<void>.delayed(_themeVeilVisibleDuration);
+    if (!mounted) return;
+
+    setState(() {
+      _isThemeTransitioning = false;
     });
   }
 
@@ -31,7 +59,29 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: _themeMode,
-        home: const DesignSystemPlayground(),
+        themeAnimationDuration: _themeTransitionDuration,
+        themeAnimationCurve: Curves.easeInOutCubicEmphasized,
+        builder: (context, child) {
+          final content = child ?? const SizedBox.shrink();
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              content,
+              IgnorePointer(
+                ignoring: true,
+                child: AnimatedOpacity(
+                  opacity: _isThemeTransitioning ? _themeVeilOpacity : 0,
+                  duration: _themeVeilFadeDuration,
+                  curve: Curves.easeOutCubic,
+                  child: ColoredBox(color: _themeVeilColor),
+                ),
+              ),
+            ],
+          );
+        },
+        // If startup bootstrap becomes async, route first to a dedicated
+        // StartupScreen and navigate to HomePage when local init finishes.
+        home: const HomePage(),
       ),
     );
   }

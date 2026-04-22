@@ -2,47 +2,28 @@
 
 Backend FastAPI de La Juana.
 
-## Rol
+## Estado actual (Fase 2)
 
-Centraliza lógica de negocio, validaciones críticas, sincronización, integraciones y consistencia global del sistema.
+La API implementa:
 
-## Estado
+- autenticación JWT (`access + refresh`) con registro público en rol `unassigned`;
+- autorización por permisos explícitos (`Permission` + `ROLE_PERMISSIONS`);
+- gestión administrativa de usuarios (`/users`, admin-only, baja lógica);
+- flujo central de reservas, participantes, pagos y configuración;
+- módulos operativos extendidos: equines, saddles, assignments, logs, providers y policies;
+- contrato unificado de errores `ApiErrorResponse`;
+- documentación OpenAPI en `/docs`.
 
-Base mínima ejecutable con:
+## Estructura
 
-- configuración por entorno;
-- wiring centralizado por router;
-- endpoint de salud versionado;
-- lifecycle base para crecimiento.
+- `app/api/endpoints`: routers HTTP
+- `app/services`: reglas de negocio
+- `app/documents`: persistencia Beanie/Mongo
+- `app/schemas`: contratos request/response
+- `app/core`: config, seguridad, errores y DB
+- `app/common`: enums, constantes y códigos de error
 
-## Estructura interna
-
-- `app/api`: routers
-- `app/core`: configuración, errores, utilidades transversales
-- `app/domain`: entidades y reglas de dominio
-- `app/repositories`: acceso a persistencia
-- `app/schemas`: contratos de entrada y salida
-- `app/services`: casos de uso y coordinación
-
-## Regla
-
-No meter toda la lógica en `main.py`. Ese archivo solo arranca la aplicación.
-
-## Qué incluye hoy
-
-- `FastAPI` con `lifespan` base;
-- `APIRouter` principal con prefijo configurable (`/api/v1` por defecto);
-- endpoint `GET /api/v1/health`;
-- configuración con `pydantic-settings` desde `.env`;
-- test básico de salud y tooling de calidad (`ruff`, `pytest`, `mypy`).
-
-## Qué no incluye todavía
-
-- modelos de negocio de reservas;
-- casos de uso de cotización, pago o logística;
-- repositorios y servicios funcionales.
-
-## Setup rápido
+## Comandos
 
 ```bash
 cd apps/api
@@ -50,27 +31,14 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -U pip
 pip install -e ".[dev]"
-```
-
-## Ejecutar API
-
-```bash
-cd apps/api
-source .venv/bin/activate
 uvicorn app.main:app --reload
 ```
 
-## Calidad local
+Calidad local:
 
 ```bash
 cd apps/api
-source .venv/bin/activate
 ruff check .
 ruff format --check .
 pytest
 ```
-
-## Versionado de API
-
-El versionado se define en configuración (`API_PREFIX` y `API_VERSION`) y se aplica en routing.
-No se usa versionado en la estructura de carpetas.
