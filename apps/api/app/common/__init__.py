@@ -6,10 +6,12 @@ from app.common.constants import (
     MAX_PAGE_SIZE,
 )
 from app.common.enums import (
+    ROLE_PERMISSIONS,
     AssignmentPriority,
     Channel,
     ExperienceLevel,
     PaymentStatus,
+    Permission,
     ReservationStatus,
     ScheduleStatus,
     UserRole,
@@ -26,8 +28,10 @@ __all__ = [
     "ErrorCode",
     "ExperienceLevel",
     "MAX_PAGE_SIZE",
+    "Permission",
     "PaymentStatus",
     "ReservationStatus",
+    "ROLE_PERMISSIONS",
     "ScheduleStatus",
     "UserRole",
 ]

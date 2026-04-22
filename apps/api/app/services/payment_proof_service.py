@@ -28,19 +28,19 @@ class PaymentProofService:
         if reservation is None:
             raise ApiError(
                 status_code=404,
-                code="reservation.not_found",
+                code=ErrorCode.RESERVATION_NOT_FOUND,
                 message="Reserva no encontrada.",
             )
         if not payload.content_base64:
             raise ApiError(
-                status_code=422,
-                code=ErrorCode.FILE_STORAGE_REQUIRED,
+                status_code=400,
+                code=ErrorCode.PAYMENT_PROOF_STORAGE_KEY_REQUIRED,
                 message="Se requiere contenido para almacenar el comprobante.",
             )
         if payload.content_type not in ALLOWED_CONTENT_TYPES:
             raise ApiError(
-                status_code=422,
-                code="payment_proof.invalid_content_type",
+                status_code=400,
+                code=ErrorCode.PAYMENT_PROOF_INVALID_CONTENT_TYPE,
                 message="El tipo de contenido no está permitido.",
             )
 

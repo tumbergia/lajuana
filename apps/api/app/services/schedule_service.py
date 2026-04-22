@@ -1,6 +1,7 @@
 from datetime import date
 
 from app.common.enums import ScheduleStatus
+from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument, ScheduleDocument
 from app.schemas.schedule import ScheduleCreateSchema, ScheduleUpdateSchema
@@ -16,8 +17,8 @@ def compute_available_slots(
     available = capacity_total - reserved_slots - blocked_slots - internal_slots
     if available < 0:
         raise ApiError(
-            status_code=422,
-            code="schedule.invalid_capacity",
+            status_code=400,
+            code=ErrorCode.SCHEDULE_NEGATIVE_AVAILABILITY,
             message="Los cupos resultan en un valor negativo.",
         )
     return available
@@ -29,7 +30,7 @@ class ScheduleService:
         if experience is None:
             raise ApiError(
                 status_code=404,
-                code="experience.not_found",
+                code=ErrorCode.EXPERIENCE_NOT_FOUND,
                 message="Experiencia no encontrada.",
             )
 
@@ -75,7 +76,7 @@ class ScheduleService:
         if doc is None:
             raise ApiError(
                 status_code=404,
-                code="schedule.not_found",
+                code=ErrorCode.SCHEDULE_NOT_FOUND,
                 message="Agenda no encontrada.",
             )
         return doc

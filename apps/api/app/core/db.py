@@ -1,14 +1,21 @@
 from pymongo import AsyncMongoClient
 
+from app.common.collections import Collections
 from app.core.config import settings
 from app.documents import (
     AppConfigDocument,
+    AssignmentDocument,
+    EquineDocument,
     ExperienceDocument,
     ParticipantDocument,
     PaymentProofDocument,
     PingDocument,
+    PolicyDocument,
+    ProviderDocument,
     ReservationDocument,
+    SaddleDocument,
     ScheduleDocument,
+    ServiceLogDocument,
     UserDocument,
 )
 
@@ -26,6 +33,10 @@ async def init_db() -> None:
 
     db.client = AsyncMongoClient(settings.mongodb_uri)
     database = db.client[settings.mongodb_db_name]
+    await database[Collections.USERS].update_many(
+        {"role": "staff"},
+        {"$set": {"role": "guide"}},
+    )
 
     from beanie import init_beanie
 
@@ -40,6 +51,12 @@ async def init_db() -> None:
             ParticipantDocument,
             PaymentProofDocument,
             AppConfigDocument,
+            EquineDocument,
+            SaddleDocument,
+            AssignmentDocument,
+            ServiceLogDocument,
+            ProviderDocument,
+            PolicyDocument,
         ],
     )
 

@@ -1,12 +1,20 @@
+from app.schemas.assignment import (
+    AssignmentCreateSchema,
+    AssignmentResponseSchema,
+    AssignmentUpdateSchema,
+)
 from app.schemas.auth import (
+    RegisterRequest,
     TokenResponseSchema,
     UserChangePasswordSchema,
     UserCreateSchema,
     UserLoginSchema,
     UserResponseSchema,
+    UserUpdateSchema,
 )
 from app.schemas.common import ApiErrorResponse
 from app.schemas.config import ReservationRulesSchema, ReservationRulesUpdateSchema
+from app.schemas.equine import EquineCreateSchema, EquineResponseSchema, EquineUpdateSchema
 from app.schemas.experience import (
     ExperienceCreateSchema,
     ExperienceResponseSchema,
@@ -19,6 +27,8 @@ from app.schemas.participant import (
     ParticipantUpdateSchema,
 )
 from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofResponseSchema
+from app.schemas.policy import PolicyCreateSchema, PolicyResponseSchema, PolicyUpdateSchema
+from app.schemas.provider import ProviderCreateSchema, ProviderResponseSchema, ProviderUpdateSchema
 from app.schemas.reservation import (
     ReservationCancelSchema,
     ReservationConfirmSchema,
@@ -28,11 +38,23 @@ from app.schemas.reservation import (
     ReservationStatusTransitionSchema,
     ReservationUpdateSchema,
 )
+from app.schemas.saddle import SaddleCreateSchema, SaddleResponseSchema, SaddleUpdateSchema
 from app.schemas.schedule import ScheduleCreateSchema, ScheduleResponseSchema, ScheduleUpdateSchema
+from app.schemas.service_log import (
+    ServiceLogCreateSchema,
+    ServiceLogResponseSchema,
+    ServiceLogUpdateSchema,
+)
 
 __all__ = [
     "ApiErrorResponse",
+    "AssignmentCreateSchema",
+    "AssignmentResponseSchema",
+    "AssignmentUpdateSchema",
     "EmergencyContactSchema",
+    "EquineCreateSchema",
+    "EquineResponseSchema",
+    "EquineUpdateSchema",
     "ExperienceCreateSchema",
     "ExperienceResponseSchema",
     "ExperienceUpdateSchema",
@@ -41,6 +63,12 @@ __all__ = [
     "ParticipantUpdateSchema",
     "PaymentProofCreateSchema",
     "PaymentProofResponseSchema",
+    "PolicyCreateSchema",
+    "PolicyResponseSchema",
+    "PolicyUpdateSchema",
+    "ProviderCreateSchema",
+    "ProviderResponseSchema",
+    "ProviderUpdateSchema",
     "ReservationCancelSchema",
     "ReservationConfirmSchema",
     "ReservationCreateSchema",
@@ -50,12 +78,20 @@ __all__ = [
     "ReservationRulesUpdateSchema",
     "ReservationStatusTransitionSchema",
     "ReservationUpdateSchema",
+    "SaddleCreateSchema",
+    "SaddleResponseSchema",
+    "SaddleUpdateSchema",
     "ScheduleCreateSchema",
     "ScheduleResponseSchema",
     "ScheduleUpdateSchema",
+    "ServiceLogCreateSchema",
+    "ServiceLogResponseSchema",
+    "ServiceLogUpdateSchema",
+    "RegisterRequest",
     "TokenResponseSchema",
     "UserChangePasswordSchema",
     "UserCreateSchema",
     "UserLoginSchema",
     "UserResponseSchema",
+    "UserUpdateSchema",
 ]

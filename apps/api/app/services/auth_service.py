@@ -1,3 +1,5 @@
+"""Servicios de autenticacion y sesion."""
+
 from datetime import UTC, datetime
 
 from app.common.enums import UserRole
@@ -12,35 +14,37 @@ from app.core.security import (
 )
 from app.documents import UserDocument
 from app.schemas.auth import (
+    RegisterRequest,
     TokenResponseSchema,
     UserChangePasswordSchema,
-    UserCreateSchema,
     UserLoginSchema,
 )
+from app.services.mappers import user_to_response
 
 
 class AuthService:
-    async def register(self, payload: UserCreateSchema) -> UserDocument:
-        existing = await UserDocument.find_one(UserDocument.email == payload.email)
+    """Gestiona login/logout, registro publico y credenciales del usuario."""
+
+    async def register(self, payload: RegisterRequest) -> UserDocument:
+        existing = await UserDocument.find_one({"email": payload.email})
         if existing is not None:
             raise ApiError(
                 status_code=409,
-                code="auth.email_already_exists",
+                code=ErrorCode.USER_EMAIL_ALREADY_EXISTS,
                 message="Ya existe un usuario con este correo.",
             )
-
         user = UserDocument(
             email=payload.email,
             password_hash=hash_password(payload.password),
             full_name=payload.full_name,
-            role=payload.role or UserRole.STAFF,
+            role=UserRole.UNASSIGNED,
             is_active=True,
         )
         await user.insert()
         return user
 
     async def login(self, payload: UserLoginSchema) -> tuple[UserDocument, TokenResponseSchema]:
-        user = await UserDocument.find_one(UserDocument.email == payload.email)
+        user = await UserDocument.find_one({"email": payload.email})
         if user is None or not verify_password(payload.password, user.password_hash):
             raise ApiError(
                 status_code=401,
@@ -49,8 +53,8 @@ class AuthService:
             )
         if not user.is_active:
             raise ApiError(
-                status_code=403,
-                code=ErrorCode.AUTH_FORBIDDEN,
+                status_code=401,
+                code=ErrorCode.AUTH_INACTIVE_USER,
                 message="El usuario está inactivo.",
             )
 
@@ -59,27 +63,32 @@ class AuthService:
         user.last_login_at = datetime.now(UTC)
         user.refresh_token_hash = hash_password(refresh_token)
         await user.save()
-        return user, TokenResponseSchema(access_token=access_token, refresh_token=refresh_token)
+        token = TokenResponseSchema(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            user=user_to_response(user),
+        )
+        return user, token
 
     async def refresh(self, refresh_token: str) -> TokenResponseSchema:
         payload = decode_token(refresh_token)
         if payload.get("type") != "refresh":
             raise ApiError(
                 status_code=401,
-                code=ErrorCode.AUTH_INVALID_CREDENTIALS,
+                code=ErrorCode.AUTH_INVALID_TOKEN,
                 message="Token de refresco inválido.",
             )
         user = await UserDocument.get(payload.get("sub"))
         if user is None or user.refresh_token_hash is None:
             raise ApiError(
                 status_code=401,
-                code=ErrorCode.AUTH_INVALID_CREDENTIALS,
+                code=ErrorCode.AUTH_INVALID_TOKEN,
                 message="Token de refresco inválido.",
             )
         if not verify_password(refresh_token, user.refresh_token_hash):
             raise ApiError(
                 status_code=401,
-                code=ErrorCode.AUTH_INVALID_CREDENTIALS,
+                code=ErrorCode.AUTH_INVALID_TOKEN,
                 message="Token de refresco inválido.",
             )
 
@@ -87,7 +96,11 @@ class AuthService:
         new_refresh = create_refresh_token(str(user.id))
         user.refresh_token_hash = hash_password(new_refresh)
         await user.save()
-        return TokenResponseSchema(access_token=new_access, refresh_token=new_refresh)
+        return TokenResponseSchema(
+            access_token=new_access,
+            refresh_token=new_refresh,
+            user=user_to_response(user),
+        )
 
     async def logout(self, user_id: str) -> None:
         user = await UserDocument.get(user_id)
@@ -101,13 +114,13 @@ class AuthService:
         if user is None:
             raise ApiError(
                 status_code=404,
-                code="auth.user_not_found",
+                code=ErrorCode.USER_NOT_FOUND,
                 message="Usuario no encontrado.",
             )
         if not verify_password(payload.current_password, user.password_hash):
             raise ApiError(
-                status_code=401,
-                code=ErrorCode.AUTH_INVALID_CREDENTIALS,
+                status_code=400,
+                code=ErrorCode.AUTH_PASSWORD_MISMATCH,
                 message="La contraseña actual no es válida.",
             )
         user.password_hash = hash_password(payload.new_password)

@@ -1,3 +1,4 @@
+from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument
 from app.schemas.experience import ExperienceCreateSchema, ExperienceUpdateSchema
@@ -7,8 +8,8 @@ class ExperienceService:
     async def create(self, payload: ExperienceCreateSchema) -> ExperienceDocument:
         if payload.duration_hours is None and payload.duration_days is None:
             raise ApiError(
-                status_code=422,
-                code="experience.duration_required",
+                status_code=400,
+                code=ErrorCode.EXPERIENCE_INVALID_DURATION,
                 message="Debes informar duración en horas o días.",
             )
         doc = ExperienceDocument(**payload.model_dump())
@@ -25,7 +26,7 @@ class ExperienceService:
         if doc is None:
             raise ApiError(
                 status_code=404,
-                code="experience.not_found",
+                code=ErrorCode.EXPERIENCE_NOT_FOUND,
                 message="Experiencia no encontrada.",
             )
         return doc
@@ -41,8 +42,8 @@ class ExperienceService:
             setattr(doc, field, value)
         if doc.duration_hours is None and doc.duration_days is None:
             raise ApiError(
-                status_code=422,
-                code="experience.duration_required",
+                status_code=400,
+                code=ErrorCode.EXPERIENCE_INVALID_DURATION,
                 message="Debes informar duración en horas o días.",
             )
         await doc.save()

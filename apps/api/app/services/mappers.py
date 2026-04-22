@@ -1,17 +1,29 @@
 from app.documents import (
+    AssignmentDocument,
+    EquineDocument,
     ExperienceDocument,
     ParticipantDocument,
     PaymentProofDocument,
+    PolicyDocument,
+    ProviderDocument,
     ReservationDocument,
+    SaddleDocument,
     ScheduleDocument,
+    ServiceLogDocument,
     UserDocument,
 )
+from app.schemas.assignment import AssignmentResponseSchema
 from app.schemas.auth import UserResponseSchema
+from app.schemas.equine import EquineResponseSchema
 from app.schemas.experience import ExperienceResponseSchema
 from app.schemas.participant import ParticipantResponseSchema
 from app.schemas.payment_proof import PaymentProofResponseSchema
+from app.schemas.policy import PolicyResponseSchema
+from app.schemas.provider import ProviderResponseSchema
 from app.schemas.reservation import ReservationListItemSchema, ReservationResponseSchema
+from app.schemas.saddle import SaddleResponseSchema
 from app.schemas.schedule import ScheduleResponseSchema
+from app.schemas.service_log import ServiceLogResponseSchema
 
 
 def user_to_response(user: UserDocument) -> UserResponseSchema:
@@ -123,4 +135,86 @@ def payment_proof_to_response(doc: PaymentProofDocument) -> PaymentProofResponse
         sha256=doc.sha256,
         status=doc.status,
         uploaded_at=doc.uploaded_at,
+    )
+
+
+def equine_to_response(doc: EquineDocument) -> EquineResponseSchema:
+    return EquineResponseSchema(
+        id=str(doc.id),
+        name=doc.name,
+        approximate_birth_date=doc.approximate_birth_date,
+        approximate_age_years=doc.approximate_age_years,
+        weight_kg=doc.weight_kg,
+        sex=doc.sex,
+        breed=doc.breed,
+        gait=doc.gait,
+        is_available=doc.is_available,
+        availability_notes=doc.availability_notes,
+    )
+
+
+def saddle_to_response(doc: SaddleDocument) -> SaddleResponseSchema:
+    return SaddleResponseSchema(
+        id=str(doc.id),
+        code=doc.code,
+        name=doc.name,
+        is_available=doc.is_available,
+        notes=doc.notes,
+    )
+
+
+def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseSchema:
+    return AssignmentResponseSchema(
+        id=str(doc.id),
+        reservation_id=str(doc.reservation_id),
+        participant_id=str(doc.participant_id),
+        equine_id=str(doc.equine_id),
+        saddle_id=str(doc.saddle_id) if doc.saddle_id else None,
+        priority=doc.priority,
+        assigned_manually=doc.assigned_manually,
+        notes=doc.notes,
+        created_at=doc.created_at,
+    )
+
+
+def service_log_to_response(doc: ServiceLogDocument) -> ServiceLogResponseSchema:
+    return ServiceLogResponseSchema(
+        id=str(doc.id),
+        reservation_id=str(doc.reservation_id),
+        event_type=doc.event_type,
+        happened_at=doc.happened_at,
+        checkpoint_name=doc.checkpoint_name,
+        notes=doc.notes,
+        related_participant_id=(
+            str(doc.related_participant_id) if doc.related_participant_id else None
+        ),
+        related_equine_id=str(doc.related_equine_id) if doc.related_equine_id else None,
+        created_at=doc.created_at,
+    )
+
+
+def provider_to_response(doc: ProviderDocument) -> ProviderResponseSchema:
+    return ProviderResponseSchema(
+        id=str(doc.id),
+        name=doc.name,
+        provider_type=doc.provider_type,
+        contact_name=doc.contact_name,
+        phone=doc.phone,
+        email=doc.email,
+        location=doc.location,
+        capacity_notes=doc.capacity_notes,
+        rate_notes=doc.rate_notes,
+        is_active=doc.is_active,
+    )
+
+
+def policy_to_response(doc: PolicyDocument) -> PolicyResponseSchema:
+    return PolicyResponseSchema(
+        id=str(doc.id),
+        reservation_id=str(doc.reservation_id),
+        provider_id=str(doc.provider_id) if doc.provider_id else None,
+        policy_number=doc.policy_number,
+        issued_at=doc.issued_at,
+        expires_at=doc.expires_at,
+        notes=doc.notes,
     )

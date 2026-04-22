@@ -23,6 +23,16 @@ REQUIRED_FIELDS_FOR_OPERATIONAL_COMPLETION = (
 
 
 class ParticipantService:
+    async def get(self, participant_id: str) -> ParticipantDocument:
+        doc = await ParticipantDocument.get(participant_id)
+        if doc is None:
+            raise ApiError(
+                status_code=404,
+                code=ErrorCode.PARTICIPANT_NOT_FOUND,
+                message="Participante no encontrado.",
+            )
+        return doc
+
     async def create(
         self,
         reservation_id: str,
@@ -32,13 +42,13 @@ class ParticipantService:
         if reservation is None:
             raise ApiError(
                 status_code=404,
-                code="reservation.not_found",
+                code=ErrorCode.RESERVATION_NOT_FOUND,
                 message="Reserva no encontrada.",
             )
         if payload.birth_date >= datetime.now(UTC).date():
             raise ApiError(
-                status_code=422,
-                code="participant.invalid_birth_date",
+                status_code=400,
+                code=ErrorCode.PARTICIPANT_INVALID_BIRTH_DATE,
                 message="La fecha de nacimiento debe ser anterior a hoy.",
             )
 
@@ -54,18 +64,12 @@ class ParticipantService:
         participant_id: str,
         payload: ParticipantUpdateSchema,
     ) -> ParticipantDocument:
-        doc = await ParticipantDocument.get(participant_id)
-        if doc is None:
-            raise ApiError(
-                status_code=404,
-                code="participant.not_found",
-                message="Participante no encontrado.",
-            )
+        doc = await self.get(participant_id)
         updates = payload.model_dump(exclude_none=True)
         if "birth_date" in updates and updates["birth_date"] >= datetime.now(UTC).date():
             raise ApiError(
-                status_code=422,
-                code="participant.invalid_birth_date",
+                status_code=400,
+                code=ErrorCode.PARTICIPANT_INVALID_BIRTH_DATE,
                 message="La fecha de nacimiento debe ser anterior a hoy.",
             )
         for field, value in updates.items():
@@ -86,6 +90,6 @@ class ParticipantService:
         if not participant.is_completed:
             raise ApiError(
                 status_code=422,
-                code=ErrorCode.PARTICIPANT_INCOMPLETE,
+                code=ErrorCode.PARTICIPANT_OPERATIONALLY_INCOMPLETE,
                 message="El participante no tiene completitud operativa.",
             )

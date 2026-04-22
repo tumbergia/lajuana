@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from beanie import Indexed
-from pydantic import EmailStr
+from pydantic import EmailStr, Field
 
 from app.common.collections import Collections
 from app.common.enums import UserRole
@@ -11,8 +11,8 @@ from app.documents.base import AuditDocument
 class UserDocument(AuditDocument):
     email: Indexed(EmailStr, unique=True)  # type: ignore[valid-type]
     password_hash: str
-    full_name: str
-    role: UserRole
+    full_name: str = Field(min_length=3, max_length=120)
+    role: UserRole = UserRole.UNASSIGNED
     is_active: bool = True
     last_login_at: datetime | None = None
     refresh_token_hash: str | None = None
