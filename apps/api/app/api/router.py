@@ -9,6 +9,7 @@ from app.api.endpoints.experiences import router as experiences_router
 from app.api.endpoints.health import router as health_router
 from app.api.endpoints.logs import router as logs_router
 from app.api.endpoints.participants import router as participants_router
+from app.api.endpoints.payment_proofs import router as payment_proofs_router
 from app.api.endpoints.policies import router as policies_router
 from app.api.endpoints.providers import router as providers_router
 from app.api.endpoints.reservations import router as reservations_router
@@ -25,6 +26,7 @@ api_router.include_router(users_router)
 api_router.include_router(experiences_router)
 api_router.include_router(schedules_router)
 api_router.include_router(reservations_router)
+api_router.include_router(payment_proofs_router)
 api_router.include_router(participants_router)
 api_router.include_router(config_router)
 api_router.include_router(equines_router)

@@ -1,13 +1,37 @@
 from app.common.constants import DEFAULT_RESERVATION_MIN_DAYS
 from app.common.labels import ErrorCode
+from app.config.emergency_contacts import EMERGENCY_CONTACTS
 from app.core.errors import ApiError
 from app.documents import AppConfigDocument, ReservationRules
-from app.schemas.config import ReservationRulesSchema, ReservationRulesUpdateSchema
+from app.schemas.config import (
+    EmergencyCatalogContactSchema,
+    EmergencyContactsResponseSchema,
+    ReservationRulesSchema,
+    ReservationRulesUpdateSchema,
+)
 
 RESERVATION_RULES_KEY = "reservation_rules"
 
 
 class ConfigService:
+    async def get_emergency_contacts(self) -> EmergencyContactsResponseSchema:
+        """
+        Retorna el catalogo de numeros de emergencia nacionales.
+
+        Reglas:
+        - retorna un conjunto estatico o configurado de contactos de emergencia;
+        - los codigos son estables para consumo del frontend;
+        - los numeros se normalizan en formato string;
+        - el orden prioriza contactos principales.
+
+        No debe:
+        - depender de la base de datos si no es necesario;
+        - cambiar codigos entre versiones;
+        - devolver numeros regionales sin etiquetarlos.
+        """
+        items = [EmergencyCatalogContactSchema.model_validate(item) for item in EMERGENCY_CONTACTS]
+        return EmergencyContactsResponseSchema(items=items)
+
     async def get_reservation_rules(self) -> ReservationRulesSchema:
         config = await AppConfigDocument.find_one(AppConfigDocument.key == RESERVATION_RULES_KEY)
         if config is None or config.reservation_rules is None:

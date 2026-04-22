@@ -100,3 +100,9 @@ class ScheduleService:
 
         await doc.save()
         return doc
+
+    async def deactivate(self, schedule_id: str) -> ScheduleDocument:
+        doc = await self.get(schedule_id)
+        doc.status = ScheduleStatus.CLOSED
+        await doc.save()
+        return doc

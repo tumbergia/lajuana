@@ -4,7 +4,7 @@ from app.common.enums import PaymentStatus
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import PaymentProofDocument, ReservationDocument
-from app.schemas.payment_proof import PaymentProofCreateSchema
+from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofUpdateSchema
 from app.services.storage import LocalStorageAdapter
 
 ALLOWED_CONTENT_TYPES = {
@@ -64,4 +64,41 @@ class PaymentProofService:
         reservation.payment_proof_ids.append(doc.id)
         reservation.payment_status = PaymentStatus.RECEIVED
         await reservation.save()
+        return doc
+
+    async def get(self, payment_proof_id: str) -> PaymentProofDocument:
+        doc = await PaymentProofDocument.get(payment_proof_id)
+        if doc is None:
+            raise ApiError(
+                status_code=404,
+                code=ErrorCode.PAYMENT_PROOF_NOT_FOUND,
+                message="Comprobante no encontrado.",
+            )
+        return doc
+
+    async def update(
+        self,
+        payment_proof_id: str,
+        payload: PaymentProofUpdateSchema,
+    ) -> PaymentProofDocument:
+        doc = await self.get(payment_proof_id)
+        updates = payload.model_dump(exclude_none=True)
+        if "reservation_id" in updates:
+            reservation = await ReservationDocument.get(updates["reservation_id"])
+            if reservation is None:
+                raise ApiError(
+                    status_code=404,
+                    code=ErrorCode.RESERVATION_NOT_FOUND,
+                    message="Reserva no encontrada.",
+                )
+            if reservation.id != doc.reservation_id:
+                raise ApiError(
+                    status_code=409,
+                    code=ErrorCode.PAYMENT_PROOF_RESERVATION_MISMATCH,
+                    message="El comprobante no coincide con la reserva informada.",
+                )
+        for field in ("status", "filename", "content_type", "size_bytes", "sha256"):
+            if field in updates:
+                setattr(doc, field, updates[field])
+        await doc.save()
         return doc

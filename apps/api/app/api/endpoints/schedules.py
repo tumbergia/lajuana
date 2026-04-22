@@ -4,14 +4,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import require_permissions
-from app.api.docs import COMMON_AUTH_RESPONSES
+from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission, ScheduleStatus
 from app.documents import UserDocument
 from app.schemas.schedule import ScheduleCreateSchema, ScheduleResponseSchema, ScheduleUpdateSchema
 from app.services import ScheduleService
 from app.services.mappers import schedule_to_response
 
-router = APIRouter(prefix="/schedules", tags=["Schedules"])
+router = APIRouter(prefix="/schedules", tags=["Fechas operativas"])
 service = ScheduleService()
 
 
@@ -19,10 +19,10 @@ service = ScheduleService()
     "",
     response_model=ScheduleResponseSchema,
     status_code=status.HTTP_201_CREATED,
-    summary="Crear fecha operativa",
-    description="Crea un schedule con capacidad y disponibilidad inicial.",
+    summary=ENDPOINT_DOCS["schedules_create"]["summary"],
+    description=endpoint_description("schedules_create"),
     operation_id="createSchedule",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("schedules_create"),
 )
 async def create_schedule(
     payload: ScheduleCreateSchema,
@@ -35,10 +35,10 @@ async def create_schedule(
 @router.get(
     "",
     response_model=list[ScheduleResponseSchema],
-    summary="Listar fechas operativas",
-    description="Lista fechas operativas con filtros.",
+    summary=ENDPOINT_DOCS["schedules_list"]["summary"],
+    description=endpoint_description("schedules_list"),
     operation_id="listSchedules",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("schedules_list"),
 )
 async def list_schedules(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SCHEDULE_READ))],
@@ -59,10 +59,10 @@ async def list_schedules(
 @router.get(
     "/{schedule_id}",
     response_model=ScheduleResponseSchema,
-    summary="Consultar fecha operativa",
-    description="Obtiene detalle de un schedule.",
+    summary=ENDPOINT_DOCS["schedules_get"]["summary"],
+    description=endpoint_description("schedules_get"),
     operation_id="getScheduleById",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("schedules_get"),
 )
 async def get_schedule(
     schedule_id: str,
@@ -72,11 +72,34 @@ async def get_schedule(
     return schedule_to_response(doc)
 
 
-@router.patch("/{schedule_id}", response_model=ScheduleResponseSchema)
+@router.patch(
+    "/{schedule_id}",
+    response_model=ScheduleResponseSchema,
+    summary=ENDPOINT_DOCS["schedules_update"]["summary"],
+    description=endpoint_description("schedules_update"),
+    operation_id="updateScheduleById",
+    responses=endpoint_responses("schedules_update"),
+)
 async def update_schedule(
     schedule_id: str,
     payload: ScheduleUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SCHEDULE_UPDATE))],
 ) -> ScheduleResponseSchema:
     doc = await service.update(schedule_id, payload)
+    return schedule_to_response(doc)
+
+
+@router.delete(
+    "/{schedule_id}",
+    response_model=ScheduleResponseSchema,
+    summary=ENDPOINT_DOCS["schedules_delete"]["summary"],
+    description=endpoint_description("schedules_delete"),
+    operation_id="deactivateScheduleById",
+    responses=endpoint_responses("schedules_delete"),
+)
+async def deactivate_schedule(
+    schedule_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.SCHEDULE_DELETE))],
+) -> ScheduleResponseSchema:
+    doc = await service.deactivate(schedule_id)
     return schedule_to_response(doc)

@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import require_permissions
-from app.api.docs import COMMON_AUTH_RESPONSES
+from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
 from app.schemas.participant import ParticipantCreateSchema, ParticipantResponseSchema
@@ -25,7 +25,7 @@ from app.services.mappers import (
     reservation_to_response,
 )
 
-router = APIRouter(prefix="/reservations", tags=["Reservations"])
+router = APIRouter(prefix="/reservations", tags=["Reservas"])
 reservation_service = ReservationService()
 participant_service = ParticipantService()
 payment_proof_service = PaymentProofService()
@@ -35,10 +35,10 @@ payment_proof_service = PaymentProofService()
     "",
     response_model=ReservationResponseSchema,
     status_code=status.HTTP_201_CREATED,
-    summary="Crear reserva",
-    description="Crea una reserva dentro del flujo comercial y operativo.",
+    summary=ENDPOINT_DOCS["reservations_create"]["summary"],
+    description=endpoint_description("reservations_create"),
     operation_id="createReservation",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("reservations_create"),
 )
 async def create_reservation(
     payload: ReservationCreateSchema,
@@ -54,10 +54,10 @@ async def create_reservation(
 @router.get(
     "",
     response_model=list[ReservationListItemSchema],
-    summary="Listar reservas",
-    description="Lista reservas según alcance permitido por permisos.",
+    summary=ENDPOINT_DOCS["reservations_list"]["summary"],
+    description=endpoint_description("reservations_list"),
     operation_id="listReservations",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("reservations_list"),
 )
 async def list_reservations(
     current_user: Annotated[
@@ -72,10 +72,10 @@ async def list_reservations(
 @router.get(
     "/{reservation_id}",
     response_model=ReservationResponseSchema,
-    summary="Consultar reserva",
-    description="Obtiene detalle consolidado de una reserva.",
+    summary=ENDPOINT_DOCS["reservations_get"]["summary"],
+    description=endpoint_description("reservations_get"),
     operation_id="getReservationById",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("reservations_get"),
 )
 async def get_reservation(
     reservation_id: str,
@@ -91,10 +91,10 @@ async def get_reservation(
 @router.patch(
     "/{reservation_id}",
     response_model=ReservationResponseSchema,
-    summary="Actualizar reserva",
-    description="Actualiza campos editables de la reserva.",
+    summary=ENDPOINT_DOCS["reservations_update"]["summary"],
+    description=endpoint_description("reservations_update"),
     operation_id="updateReservationById",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("reservations_update"),
 )
 async def update_reservation(
     reservation_id: str,
@@ -115,10 +115,10 @@ async def update_reservation(
 @router.post(
     "/{reservation_id}/confirm",
     response_model=ReservationResponseSchema,
-    summary="Confirmar reserva",
-    description="Confirma reserva aplicando reglas de negocio críticas.",
+    summary=ENDPOINT_DOCS["reservations_confirm"]["summary"],
+    description=endpoint_description("reservations_confirm"),
     operation_id="confirmReservationById",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("reservations_confirm"),
 )
 async def confirm_reservation(
     reservation_id: str,
@@ -135,10 +135,10 @@ async def confirm_reservation(
 @router.post(
     "/{reservation_id}/status",
     response_model=ReservationResponseSchema,
-    summary="Transicionar estado de reserva",
-    description="Cambia estado de reserva respetando máquina de estados.",
+    summary=ENDPOINT_DOCS["reservations_transition"]["summary"],
+    description=endpoint_description("reservations_transition"),
     operation_id="transitionReservationStatusById",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("reservations_transition"),
 )
 async def transition_reservation_status(
     reservation_id: str,
@@ -159,10 +159,10 @@ async def transition_reservation_status(
 @router.post(
     "/{reservation_id}/cancel",
     response_model=ReservationResponseSchema,
-    summary="Cancelar reserva",
-    description="Cancela reserva y revierte cupos si corresponde.",
+    summary=ENDPOINT_DOCS["reservations_cancel"]["summary"],
+    description=endpoint_description("reservations_cancel"),
     operation_id="cancelReservationById",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("reservations_cancel"),
 )
 async def cancel_reservation(
     reservation_id: str,
@@ -180,10 +180,10 @@ async def cancel_reservation(
     "/{reservation_id}/payment-proofs",
     response_model=PaymentProofResponseSchema,
     status_code=status.HTTP_201_CREATED,
-    summary="Adjuntar comprobante de pago",
-    description="Asocia un comprobante de pago a la reserva.",
+    summary=ENDPOINT_DOCS["reservation_payment_proofs_create"]["summary"],
+    description=endpoint_description("reservation_payment_proofs_create"),
     operation_id="createPaymentProofForReservation",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("reservation_payment_proofs_create"),
 )
 async def add_payment_proof(
     reservation_id: str,
@@ -201,10 +201,10 @@ async def add_payment_proof(
     "/{reservation_id}/participants",
     response_model=ParticipantResponseSchema,
     status_code=status.HTTP_201_CREATED,
-    summary="Registrar participante en reserva",
-    description="Crea participante vinculado a una reserva específica.",
+    summary=ENDPOINT_DOCS["participants_create"]["summary"],
+    description=endpoint_description("participants_create"),
     operation_id="createParticipantForReservation",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("participants_create"),
 )
 async def create_participant(
     reservation_id: str,

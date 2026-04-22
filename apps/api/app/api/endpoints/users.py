@@ -5,29 +5,25 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import require_permissions
-from app.api.docs import COMMON_AUTH_RESPONSES
+from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
 from app.schemas.auth import UserCreateSchema, UserResponseSchema, UserUpdateSchema
-from app.schemas.common import ApiErrorResponse
 from app.services import UserService
 from app.services.mappers import user_to_response
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(prefix="/users", tags=["Usuarios"])
 service = UserService()
 
 
 @router.post(
     "",
-    summary="Crear usuario interno",
-    description="Crea un usuario interno con rol operativo asignado por administrador.",
+    summary=ENDPOINT_DOCS["users_create"]["summary"],
+    description=endpoint_description("users_create"),
     response_model=UserResponseSchema,
     status_code=status.HTTP_201_CREATED,
     operation_id="createUser",
-    responses={
-        **COMMON_AUTH_RESPONSES,
-        409: {"model": ApiErrorResponse, "description": "El correo ya existe."},
-    },
+    responses=endpoint_responses("users_create"),
 )
 async def create_user(
     payload: UserCreateSchema,
@@ -39,12 +35,12 @@ async def create_user(
 
 @router.get(
     "",
-    summary="Listar usuarios internos",
-    description="Lista usuarios internos del sistema. Solo administración.",
+    summary=ENDPOINT_DOCS["users_list"]["summary"],
+    description=endpoint_description("users_list"),
     response_model=list[UserResponseSchema],
     status_code=status.HTTP_200_OK,
     operation_id="listUsers",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("users_list"),
 )
 async def list_users(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.USER_READ))],
@@ -55,15 +51,12 @@ async def list_users(
 
 @router.get(
     "/{user_id}",
-    summary="Consultar usuario",
-    description="Obtiene el detalle de un usuario interno por identificador.",
+    summary=ENDPOINT_DOCS["users_get"]["summary"],
+    description=endpoint_description("users_get"),
     response_model=UserResponseSchema,
     status_code=status.HTTP_200_OK,
     operation_id="getUserById",
-    responses={
-        **COMMON_AUTH_RESPONSES,
-        404: {"model": ApiErrorResponse, "description": "Usuario no encontrado."},
-    },
+    responses=endpoint_responses("users_get"),
 )
 async def get_user(
     user_id: str,
@@ -75,15 +68,12 @@ async def get_user(
 
 @router.patch(
     "/{user_id}",
-    summary="Actualizar usuario",
-    description="Actualiza datos de usuario y asignación de rol (admin-only).",
+    summary=ENDPOINT_DOCS["users_update"]["summary"],
+    description=endpoint_description("users_update"),
     response_model=UserResponseSchema,
     status_code=status.HTTP_200_OK,
     operation_id="updateUserById",
-    responses={
-        **COMMON_AUTH_RESPONSES,
-        404: {"model": ApiErrorResponse, "description": "Usuario no encontrado."},
-    },
+    responses=endpoint_responses("users_update"),
 )
 async def update_user(
     user_id: str,
@@ -96,15 +86,11 @@ async def update_user(
 
 @router.delete(
     "/{user_id}",
-    summary="Desactivar usuario",
-    description="Realiza baja lógica de usuario (`is_active=false`).",
-    status_code=status.HTTP_204_NO_CONTENT,
+    summary=ENDPOINT_DOCS["users_delete"]["summary"],
+    description=endpoint_description("users_delete"),
+    status_code=status.HTTP_200_OK,
     operation_id="softDeleteUserById",
-    responses={
-        **COMMON_AUTH_RESPONSES,
-        404: {"model": ApiErrorResponse, "description": "Usuario no encontrado."},
-        409: {"model": ApiErrorResponse, "description": "No se permite auto-desactivación."},
-    },
+    responses=endpoint_responses("users_delete"),
 )
 async def delete_user(
     user_id: str,

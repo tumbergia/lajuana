@@ -3,24 +3,24 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from app.api.deps import require_permissions
-from app.api.docs import COMMON_AUTH_RESPONSES
+from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
 from app.schemas.participant import ParticipantResponseSchema, ParticipantUpdateSchema
 from app.services import ParticipantService
 from app.services.mappers import participant_to_response
 
-router = APIRouter(prefix="/participants", tags=["Participants"])
+router = APIRouter(prefix="/participants", tags=["Participantes"])
 service = ParticipantService()
 
 
 @router.get(
     "/{participant_id}",
     response_model=ParticipantResponseSchema,
-    summary="Consultar participante",
-    description="Retorna detalle de participante.",
+    summary=ENDPOINT_DOCS["participants_get"]["summary"],
+    description=endpoint_description("participants_get"),
     operation_id="getParticipantById",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("participants_get"),
 )
 async def get_participant(
     participant_id: str,
@@ -30,7 +30,14 @@ async def get_participant(
     return participant_to_response(doc)
 
 
-@router.patch("/{participant_id}", response_model=ParticipantResponseSchema)
+@router.patch(
+    "/{participant_id}",
+    response_model=ParticipantResponseSchema,
+    summary=ENDPOINT_DOCS["participants_update"]["summary"],
+    description=endpoint_description("participants_update"),
+    operation_id="updateParticipantById",
+    responses=endpoint_responses("participants_update"),
+)
 async def update_participant(
     participant_id: str,
     payload: ParticipantUpdateSchema,

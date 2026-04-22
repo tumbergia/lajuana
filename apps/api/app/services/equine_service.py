@@ -29,3 +29,9 @@ class EquineService:
             setattr(doc, field, value)
         await doc.save()
         return doc
+
+    async def deactivate(self, equine_id: str) -> EquineDocument:
+        doc = await self.get(equine_id)
+        doc.is_available = False
+        await doc.save()
+        return doc

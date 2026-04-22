@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import require_permissions
-from app.api.docs import COMMON_AUTH_RESPONSES
+from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
 from app.schemas.experience import (
@@ -14,7 +14,7 @@ from app.schemas.experience import (
 from app.services import ExperienceService
 from app.services.mappers import experience_to_response
 
-router = APIRouter(prefix="/experiences", tags=["Experiences"])
+router = APIRouter(prefix="/experiences", tags=["Experiencias"])
 service = ExperienceService()
 
 
@@ -22,10 +22,10 @@ service = ExperienceService()
     "",
     response_model=ExperienceResponseSchema,
     status_code=status.HTTP_201_CREATED,
-    summary="Crear experiencia",
-    description="Crea una experiencia del catálogo operativo.",
+    summary=ENDPOINT_DOCS["experiences_create"]["summary"],
+    description=endpoint_description("experiences_create"),
     operation_id="createExperience",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("experiences_create"),
 )
 async def create_experience(
     payload: ExperienceCreateSchema,
@@ -38,10 +38,10 @@ async def create_experience(
 @router.get(
     "",
     response_model=list[ExperienceResponseSchema],
-    summary="Listar experiencias",
-    description="Lista experiencias del catálogo.",
+    summary=ENDPOINT_DOCS["experiences_list"]["summary"],
+    description=endpoint_description("experiences_list"),
     operation_id="listExperiences",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("experiences_list"),
 )
 async def list_experiences(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_READ))],
@@ -54,10 +54,10 @@ async def list_experiences(
 @router.get(
     "/{experience_id}",
     response_model=ExperienceResponseSchema,
-    summary="Consultar experiencia",
-    description="Obtiene detalle de experiencia.",
+    summary=ENDPOINT_DOCS["experiences_get"]["summary"],
+    description=endpoint_description("experiences_get"),
     operation_id="getExperienceById",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("experiences_get"),
 )
 async def get_experience(
     experience_id: str,
@@ -70,10 +70,10 @@ async def get_experience(
 @router.patch(
     "/{experience_id}",
     response_model=ExperienceResponseSchema,
-    summary="Actualizar experiencia",
-    description="Actualiza datos de experiencia del catálogo.",
+    summary=ENDPOINT_DOCS["experiences_update"]["summary"],
+    description=endpoint_description("experiences_update"),
     operation_id="updateExperienceById",
-    responses=COMMON_AUTH_RESPONSES,
+    responses=endpoint_responses("experiences_update"),
 )
 async def update_experience(
     experience_id: str,
@@ -81,4 +81,20 @@ async def update_experience(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_UPDATE))],
 ) -> ExperienceResponseSchema:
     doc = await service.update(experience_id, payload)
+    return experience_to_response(doc)
+
+
+@router.delete(
+    "/{experience_id}",
+    response_model=ExperienceResponseSchema,
+    summary=ENDPOINT_DOCS["experiences_delete"]["summary"],
+    description=endpoint_description("experiences_delete"),
+    operation_id="deactivateExperienceById",
+    responses=endpoint_responses("experiences_delete"),
+)
+async def deactivate_experience(
+    experience_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_DELETE))],
+) -> ExperienceResponseSchema:
+    doc = await service.deactivate(experience_id)
     return experience_to_response(doc)

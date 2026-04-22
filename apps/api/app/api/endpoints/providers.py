@@ -5,14 +5,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import require_permissions
-from app.api.docs import COMMON_AUTH_RESPONSES
+from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
 from app.schemas.provider import ProviderCreateSchema, ProviderResponseSchema, ProviderUpdateSchema
 from app.services import ProviderService
 from app.services.mappers import provider_to_response
 
-router = APIRouter(prefix="/providers", tags=["Providers"])
+router = APIRouter(prefix="/providers", tags=["Proveedores"])
 service = ProviderService()
 
 
@@ -20,7 +20,10 @@ service = ProviderService()
     "",
     response_model=ProviderResponseSchema,
     status_code=status.HTTP_201_CREATED,
-    responses=COMMON_AUTH_RESPONSES,
+    summary=ENDPOINT_DOCS["providers_create"]["summary"],
+    description=endpoint_description("providers_create"),
+    operation_id="createProvider",
+    responses=endpoint_responses("providers_create"),
 )
 async def create_provider(
     payload: ProviderCreateSchema,
@@ -32,7 +35,10 @@ async def create_provider(
 @router.get(
     "/{provider_id}",
     response_model=ProviderResponseSchema,
-    responses=COMMON_AUTH_RESPONSES,
+    summary=ENDPOINT_DOCS["providers_get"]["summary"],
+    description=endpoint_description("providers_get"),
+    operation_id="getProviderById",
+    responses=endpoint_responses("providers_get"),
 )
 async def get_provider(
     provider_id: str,
@@ -44,7 +50,10 @@ async def get_provider(
 @router.patch(
     "/{provider_id}",
     response_model=ProviderResponseSchema,
-    responses=COMMON_AUTH_RESPONSES,
+    summary=ENDPOINT_DOCS["providers_update"]["summary"],
+    description=endpoint_description("providers_update"),
+    operation_id="updateProviderById",
+    responses=endpoint_responses("providers_update"),
 )
 async def update_provider(
     provider_id: str,
@@ -56,8 +65,11 @@ async def update_provider(
 
 @router.delete(
     "/{provider_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses=COMMON_AUTH_RESPONSES,
+    status_code=status.HTTP_200_OK,
+    summary=ENDPOINT_DOCS["providers_delete"]["summary"],
+    description=endpoint_description("providers_delete"),
+    operation_id="deactivateProviderById",
+    responses=endpoint_responses("providers_delete"),
 )
 async def delete_provider(
     provider_id: str,

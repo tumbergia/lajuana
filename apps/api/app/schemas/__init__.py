@@ -13,7 +13,12 @@ from app.schemas.auth import (
     UserUpdateSchema,
 )
 from app.schemas.common import ApiErrorResponse
-from app.schemas.config import ReservationRulesSchema, ReservationRulesUpdateSchema
+from app.schemas.config import (
+    EmergencyCatalogContactSchema,
+    EmergencyContactsResponseSchema,
+    ReservationRulesSchema,
+    ReservationRulesUpdateSchema,
+)
 from app.schemas.equine import EquineCreateSchema, EquineResponseSchema, EquineUpdateSchema
 from app.schemas.experience import (
     ExperienceCreateSchema,
@@ -26,7 +31,11 @@ from app.schemas.participant import (
     ParticipantResponseSchema,
     ParticipantUpdateSchema,
 )
-from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofResponseSchema
+from app.schemas.payment_proof import (
+    PaymentProofCreateSchema,
+    PaymentProofResponseSchema,
+    PaymentProofUpdateSchema,
+)
 from app.schemas.policy import PolicyCreateSchema, PolicyResponseSchema, PolicyUpdateSchema
 from app.schemas.provider import ProviderCreateSchema, ProviderResponseSchema, ProviderUpdateSchema
 from app.schemas.reservation import (
@@ -51,7 +60,9 @@ __all__ = [
     "AssignmentCreateSchema",
     "AssignmentResponseSchema",
     "AssignmentUpdateSchema",
+    "EmergencyCatalogContactSchema",
     "EmergencyContactSchema",
+    "EmergencyContactsResponseSchema",
     "EquineCreateSchema",
     "EquineResponseSchema",
     "EquineUpdateSchema",
@@ -63,6 +74,7 @@ __all__ = [
     "ParticipantUpdateSchema",
     "PaymentProofCreateSchema",
     "PaymentProofResponseSchema",
+    "PaymentProofUpdateSchema",
     "PolicyCreateSchema",
     "PolicyResponseSchema",
     "PolicyUpdateSchema",

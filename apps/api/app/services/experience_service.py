@@ -1,3 +1,5 @@
+from pymongo.errors import DuplicateKeyError
+
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument
@@ -5,15 +7,36 @@ from app.schemas.experience import ExperienceCreateSchema, ExperienceUpdateSchem
 
 
 class ExperienceService:
+    @staticmethod
+    def _raise_conflict_from_duplicate(exc: DuplicateKeyError) -> None:
+        details = exc.details if isinstance(exc.details, dict) else {}
+        key_pattern = details.get("keyPattern", {})
+        if "slug" in key_pattern or "slug_1" in str(exc):
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.EXPERIENCE_SLUG_ALREADY_EXISTS,
+                message="Ya existe una experiencia con ese slug.",
+                details={"field": "slug"},
+            ) from exc
+        raise ApiError(
+            status_code=409,
+            code=ErrorCode.CONFLICT,
+            message="Existe un conflicto al guardar la experiencia.",
+            details={"collection": "experiences"},
+        ) from exc
+
     async def create(self, payload: ExperienceCreateSchema) -> ExperienceDocument:
         if payload.duration_hours is None and payload.duration_days is None:
             raise ApiError(
                 status_code=400,
                 code=ErrorCode.EXPERIENCE_INVALID_DURATION,
-                message="Debes informar duración en horas o días.",
+                message="Debes informar duracion en horas o dias.",
             )
         doc = ExperienceDocument(**payload.model_dump())
-        await doc.insert()
+        try:
+            await doc.insert()
+        except DuplicateKeyError as exc:
+            self._raise_conflict_from_duplicate(exc)
         return doc
 
     async def list(self, is_active: bool | None = None) -> list[ExperienceDocument]:
@@ -44,7 +67,17 @@ class ExperienceService:
             raise ApiError(
                 status_code=400,
                 code=ErrorCode.EXPERIENCE_INVALID_DURATION,
-                message="Debes informar duración en horas o días.",
+                message="Debes informar duracion en horas o dias.",
             )
+        try:
+            await doc.save()
+        except DuplicateKeyError as exc:
+            self._raise_conflict_from_duplicate(exc)
+        return doc
+
+    async def deactivate(self, experience_id: str) -> ExperienceDocument:
+        doc = await self.get(experience_id)
+        doc.is_active = False
         await doc.save()
         return doc
+

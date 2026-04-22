@@ -29,4 +29,5 @@ class ProviderService:
 
     async def delete(self, provider_id: str) -> None:
         doc = await self.get(provider_id)
-        await doc.delete()
+        doc.is_active = False
+        await doc.save()
