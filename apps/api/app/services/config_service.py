@@ -44,10 +44,7 @@ class ConfigService:
     async def update_reservation_rules(
         self, payload: ReservationRulesUpdateSchema
     ) -> ReservationRulesSchema:
-        if (
-            payload.min_days_in_advance is not None
-            and payload.min_days_in_advance < 0
-        ):
+        if payload.min_days_in_advance is not None and payload.min_days_in_advance < 0:
             raise ApiError(
                 status_code=400,
                 code=ErrorCode.CONFIG_INVALID_MIN_DAYS,

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/auth/application/sign_in_use_case.dart';
-import 'package:mobile/auth/domain/auth_enums.dart';
-import 'package:mobile/auth/domain/auth_models.dart';
+import 'package:mobile/features/auth/application/sign_in_use_case.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
 
 import 'test_fakes.dart';
 
@@ -13,7 +13,6 @@ void main() {
     final result = await useCase(
       email: 'test@lajuana.co',
       password: 'secreto123',
-      connectivity: ConnectivityState.online,
     );
 
     expect(result.authState, LocalAuthState.signedInVerified);
@@ -33,7 +32,6 @@ void main() {
       () => useCase(
         email: 'x@x.com',
         password: 'bad',
-        connectivity: ConnectivityState.online,
       ),
       throwsA(
         isA<AuthFailure>().having(

@@ -8,14 +8,11 @@ enum ReservationsSubroute {
   bitacora,
 }
 
+/// Subrutas del módulo Reservas (selector en [ModuleSubrouteHeader]).
 class ReservationsController extends ChangeNotifier {
   ReservationsSubroute _subroute = ReservationsSubroute.resumen;
-  String _filterValue = 'pendientes';
-  int _visibleReservationCount = 4;
 
   ReservationsSubroute get subroute => _subroute;
-  String get filterValue => _filterValue;
-  int get visibleReservationCount => _visibleReservationCount;
 
   void selectSubrouteByIndex(int index) {
     final next = ReservationsSubroute.values[index];
@@ -24,28 +21,9 @@ class ReservationsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setFilterValue(String value) {
-    if (_filterValue == value && _visibleReservationCount == 4) return;
-    _filterValue = value;
-    _visibleReservationCount = 4;
-    notifyListeners();
-  }
-
-  void loadMore({int step = 4}) {
-    _visibleReservationCount += step;
-    notifyListeners();
-  }
-
   void reset() {
-    final shouldReset =
-        _subroute != ReservationsSubroute.resumen ||
-        _filterValue != 'pendientes' ||
-        _visibleReservationCount != 4;
-    if (!shouldReset) return;
-
+    if (_subroute == ReservationsSubroute.resumen) return;
     _subroute = ReservationsSubroute.resumen;
-    _filterValue = 'pendientes';
-    _visibleReservationCount = 4;
     notifyListeners();
   }
 }

@@ -1,8 +1,11 @@
-import 'package:mobile/auth/domain/auth_enums.dart';
-import 'package:mobile/auth/domain/auth_models.dart';
-import 'package:mobile/auth/domain/auth_repository.dart';
-import 'package:mobile/auth/infrastructure/connectivity_service.dart';
 import 'dart:async';
+
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
+import 'package:mobile/features/auth/domain/auth_repository.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/backend_reachability_service.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/connectivity_service.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 
 class FakeAuthRepository implements AuthRepository {
   AuthSessionSnapshot bootstrapResult = AuthSessionSnapshot(
@@ -30,16 +33,17 @@ class FakeAuthRepository implements AuthRepository {
   UserLocal? currentUser;
   AuthFailure? signInFailure;
   AuthFailure? changePasswordFailure;
-  ConnectivityState? lastConnectivity;
+  AuthFailure? bootstrapFailure;
   bool didLogout = false;
   bool didChangePassword = false;
   Duration signInDelay = Duration.zero;
+  int bootstrapCalls = 0;
+  int refreshCalls = 0;
 
   @override
-  Future<AuthSessionSnapshot> bootstrapSession({
-    required ConnectivityState connectivity,
-  }) async {
-    lastConnectivity = connectivity;
+  Future<AuthSessionSnapshot> bootstrapSession() async {
+    bootstrapCalls++;
+    if (bootstrapFailure != null) throw bootstrapFailure!;
     return bootstrapResult;
   }
 
@@ -47,11 +51,14 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
-    required ConnectivityState connectivity,
   }) async {
-    lastConnectivity = connectivity;
     didChangePassword = true;
     if (changePasswordFailure != null) throw changePasswordFailure!;
+  }
+
+  @override
+  Future<AuthSessionSnapshot> syncProfileFromRemote() async {
+    return refreshResult;
   }
 
   @override
@@ -72,8 +79,7 @@ class FakeAuthRepository implements AuthRepository {
   Future<SessionLocal?> getCurrentLocalSession() async => currentSession;
 
   @override
-  Future<void> logout({required ConnectivityState connectivity}) async {
-    lastConnectivity = connectivity;
+  Future<void> logout() async {
     didLogout = true;
   }
 
@@ -82,14 +88,11 @@ class FakeAuthRepository implements AuthRepository {
     required String fullName,
     required String email,
     required String password,
-    required ConnectivityState connectivity,
   }) async {}
 
   @override
-  Future<AuthSessionSnapshot> refreshSession({
-    required ConnectivityState connectivity,
-  }) async {
-    lastConnectivity = connectivity;
+  Future<AuthSessionSnapshot> refreshSession() async {
+    refreshCalls++;
     return refreshResult;
   }
 
@@ -97,33 +100,43 @@ class FakeAuthRepository implements AuthRepository {
   Future<AuthSessionSnapshot> signIn({
     required String email,
     required String password,
-    required ConnectivityState connectivity,
   }) async {
     if (signInDelay > Duration.zero) {
       await Future<void>.delayed(signInDelay);
     }
-    lastConnectivity = connectivity;
     if (signInFailure != null) throw signInFailure!;
     return signInResult;
   }
 }
 
 class FakeConnectivityService implements ConnectivityService {
-  FakeConnectivityService(this.initial);
+  FakeConnectivityService(this._link);
 
-  final ConnectivityState initial;
-  final StreamController<ConnectivityState> _controller =
-      StreamController<ConnectivityState>.broadcast();
-
-  @override
-  Future<ConnectivityState> current() async => initial;
+  LinkType _link;
+  final StreamController<LinkType> _controller =
+      StreamController<LinkType>.broadcast();
 
   @override
-  Stream<ConnectivityState> observe() => _controller.stream;
+  Future<LinkType> currentLinkType() async => _link;
 
-  void emit(ConnectivityState value) => _controller.add(value);
+  @override
+  Stream<LinkType> observeLinkType() => _controller.stream;
+
+  void emit(LinkType value) {
+    _link = value;
+    _controller.add(value);
+  }
 
   Future<void> dispose() async {
     await _controller.close();
   }
+}
+
+class FakeBackendReachabilityService implements BackendReachabilityService {
+  FakeBackendReachabilityService(this.result);
+
+  BackendReachability result;
+
+  @override
+  Future<BackendReachability> check() async => result;
 }

@@ -104,9 +104,7 @@ class SyncOperationExecutor:
                 },
             )
 
-    async def _execute_doc(
-        self, *, current_user: UserDocument, operation: SyncPushOperationSchema
-    ):
+    async def _execute_doc(self, *, current_user: UserDocument, operation: SyncPushOperationSchema):
         entity = operation.entity_type
         op_type = operation.operation_type
 
@@ -229,12 +227,12 @@ class SyncService:
         return {
             "server_time": datetime.now(UTC),
             "user": user_to_response(current_user).model_dump(mode="json"),
-            "reservation_rules": (
-                await self.config_service.get_reservation_rules()
-            ).model_dump(mode="json"),
-            "emergency_contacts": (
-                await self.config_service.get_emergency_contacts()
-            ).model_dump(mode="json"),
+            "reservation_rules": (await self.config_service.get_reservation_rules()).model_dump(
+                mode="json"
+            ),
+            "emergency_contacts": (await self.config_service.get_emergency_contacts()).model_dump(
+                mode="json"
+            ),
             "experiences": [
                 experience_to_response(item).model_dump(mode="json") for item in experiences
             ],

@@ -34,6 +34,12 @@ pip install -e ".[dev]"
 uvicorn app.main:app --reload
 ```
 
+Para probar desde un **móvil físico** en la misma red, expón el servidor en todas las interfaces (y usa la IP LAN del equipo en la app, v. `apps/mobile/README.md`):
+
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
 Calidad local:
 
 ```bash

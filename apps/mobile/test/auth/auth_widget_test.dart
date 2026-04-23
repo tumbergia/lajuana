@@ -3,21 +3,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/app/widgets/app_button.dart';
 import 'package:mobile/app/widgets/app_card.dart';
 import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/auth/application/bootstrap_session_use_case.dart';
-import 'package:mobile/auth/application/change_password_use_case.dart';
-import 'package:mobile/auth/application/enter_local_mode_use_case.dart';
-import 'package:mobile/auth/application/get_current_local_session_use_case.dart';
-import 'package:mobile/auth/application/logout_use_case.dart';
-import 'package:mobile/auth/application/refresh_session_use_case.dart';
-import 'package:mobile/auth/application/register_use_case.dart';
-import 'package:mobile/auth/application/sign_in_use_case.dart';
-import 'package:mobile/auth/domain/auth_enums.dart';
-import 'package:mobile/auth/domain/auth_models.dart';
-import 'package:mobile/auth/presentation/auth_controller.dart';
-import 'package:mobile/auth/presentation/auth_routes.dart';
-import 'package:mobile/auth/presentation/screens/login_screen.dart';
-import 'package:mobile/auth/presentation/screens/register_screen.dart';
-import 'package:mobile/auth/presentation/screens/session_gate_screen.dart';
+import 'package:mobile/features/auth/application/bootstrap_session_use_case.dart';
+import 'package:mobile/features/auth/application/change_password_use_case.dart';
+import 'package:mobile/features/auth/application/enter_local_mode_use_case.dart';
+import 'package:mobile/features/auth/application/get_current_local_session_use_case.dart';
+import 'package:mobile/features/auth/application/logout_use_case.dart';
+import 'package:mobile/features/auth/application/refresh_session_use_case.dart';
+import 'package:mobile/features/auth/application/register_use_case.dart';
+import 'package:mobile/features/auth/application/sign_in_use_case.dart';
+import 'package:mobile/features/auth/application/sync_profile_from_remote_use_case.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_status_resolver.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/auth/presentation/auth_routes.dart';
+import 'package:mobile/features/auth/presentation/screens/login_screen.dart';
+import 'package:mobile/features/auth/presentation/screens/register_screen.dart';
+import 'package:mobile/app/bootstrap/startup_gate.dart';
 
 import 'test_fakes.dart';
 
@@ -26,6 +29,11 @@ void main() {
     FakeAuthRepository repo,
     FakeConnectivityService connectivity,
   ) {
+    final networkStatusResolver = NetworkStatusResolver(
+      connectivityService: connectivity,
+      backendReachabilityService:
+          FakeBackendReachabilityService(BackendReachability.reachable),
+    );
     return AuthController(
       bootstrapSessionUseCase: BootstrapSessionUseCase(repo),
       signInUseCase: SignInUseCase(repo),
@@ -33,9 +41,10 @@ void main() {
       logoutUseCase: LogoutUseCase(repo),
       registerUseCase: RegisterUseCase(repo),
       changePasswordUseCase: ChangePasswordUseCase(repo),
+      syncProfileFromRemoteUseCase: SyncProfileFromRemoteUseCase(repo),
       getCurrentLocalSessionUseCase: GetCurrentLocalSessionUseCase(repo),
       enterLocalModeUseCase: EnterLocalModeUseCase(repo),
-      connectivityService: connectivity,
+      networkStatusResolver: networkStatusResolver,
     );
   }
 
@@ -48,7 +57,7 @@ void main() {
         hasPendingSync: false,
         isOfflineRestricted: false,
       );
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(
@@ -58,7 +67,7 @@ void main() {
           AuthRoutes.login: (_) => const Scaffold(body: Text('login-screen')),
           AuthRoutes.home: (_) => const Scaffold(body: Text('home-screen')),
         },
-        home: SessionGateScreen(controller: controller),
+        home: StartupGate(controller: controller),
       ),
     );
     await tester.pumpAndSettle();
@@ -72,7 +81,7 @@ void main() {
     tester,
   ) async {
     final repo = FakeAuthRepository();
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(
@@ -93,15 +102,13 @@ void main() {
     expect(find.byType(AppCard), findsNothing);
     expect(find.text('Acceso operativo'), findsNothing);
     expect(find.text('Sesion verificada'), findsNothing);
-    expect(repo.lastConnectivity, isNull);
-
     await connectivity.dispose();
     controller.dispose();
   });
 
   testWidgets('Login centra logo y titulo con logo arriba', (tester) async {
     final repo = FakeAuthRepository();
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(
@@ -141,7 +148,7 @@ void main() {
     tester,
   ) async {
     final repo = FakeAuthRepository();
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
     controller.hasLocalSession = true;
 
@@ -169,7 +176,7 @@ void main() {
     tester,
   ) async {
     final repo = FakeAuthRepository();
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(
@@ -200,7 +207,7 @@ void main() {
     tester,
   ) async {
     final repo = FakeAuthRepository();
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(
@@ -225,7 +232,7 @@ void main() {
 
   testWidgets('Register centra logo y titulo con logo arriba', (tester) async {
     final repo = FakeAuthRepository();
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(
@@ -262,7 +269,7 @@ void main() {
 
   testWidgets('Register muestra link de login y navega', (tester) async {
     final repo = FakeAuthRepository();
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(
@@ -293,7 +300,7 @@ void main() {
   testWidgets('Login muestra loader durante envío', (tester) async {
     final repo = FakeAuthRepository()
       ..signInDelay = const Duration(milliseconds: 400);
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(
@@ -325,7 +332,7 @@ void main() {
     tester,
   ) async {
     final repo = FakeAuthRepository();
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(
@@ -363,7 +370,7 @@ void main() {
         message: 'La contraseña actual no es válida.',
         statusCode: 400,
       );
-    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity);
 
     await tester.pumpWidget(

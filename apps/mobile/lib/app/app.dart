@@ -1,33 +1,38 @@
 import 'package:flutter/material.dart';
 
-import '../auth/application/bootstrap_session_use_case.dart';
-import '../auth/application/change_password_use_case.dart';
-import '../auth/application/enter_local_mode_use_case.dart';
-import '../auth/application/get_current_local_session_use_case.dart';
-import '../auth/application/logout_use_case.dart';
-import '../auth/application/refresh_session_use_case.dart';
-import '../auth/application/register_use_case.dart';
-import '../auth/application/sign_in_use_case.dart';
-import '../auth/domain/auth_enums.dart';
-import '../auth/infrastructure/auth_repository_impl.dart';
-import '../auth/infrastructure/connectivity_service.dart';
-import '../auth/infrastructure/local/auth_database.dart';
-import '../auth/infrastructure/local/session_local_data_source.dart';
-import '../auth/infrastructure/local/user_local_data_source.dart';
-import '../auth/infrastructure/remote/auth_api_client.dart';
-import '../auth/presentation/auth_controller.dart';
-import '../auth/presentation/auth_routes.dart';
-import '../auth/presentation/screens/authenticated_home_screen.dart';
-import '../auth/presentation/screens/change_password_screen.dart';
-import '../auth/presentation/screens/login_screen.dart';
-import '../auth/presentation/screens/register_screen.dart';
-import '../auth/presentation/screens/session_gate_screen.dart';
-import '../auth/presentation/screens/session_view_screen.dart';
+import '../features/auth/application/bootstrap_session_use_case.dart';
+import '../features/auth/application/change_password_use_case.dart';
+import '../features/auth/application/enter_local_mode_use_case.dart';
+import '../features/auth/application/get_current_local_session_use_case.dart';
+import '../features/auth/application/logout_use_case.dart';
+import '../features/auth/application/refresh_session_use_case.dart';
+import '../features/auth/application/register_use_case.dart';
+import '../features/auth/application/sign_in_use_case.dart';
+import '../features/auth/application/sync_profile_from_remote_use_case.dart';
+import '../features/auth/domain/auth_enums.dart';
+import '../features/auth/infrastructure/connectivity/backend_reachability_service.dart';
+import '../features/auth/infrastructure/connectivity/connectivity_service.dart';
+import '../features/auth/infrastructure/connectivity/network_status_resolver.dart';
+import '../features/auth/infrastructure/local/auth_database.dart';
+import '../features/auth/infrastructure/repositories/auth_repository_impl.dart';
+import '../features/auth/infrastructure/local/session_local_data_source.dart';
+import '../features/auth/infrastructure/local/user_local_data_source.dart';
+import '../features/auth/infrastructure/remote/auth_api_client.dart';
+import '../features/auth/presentation/auth_controller.dart';
+import '../features/auth/presentation/auth_routes.dart';
+import '../features/auth/presentation/screens/change_password_screen.dart';
+import '../features/auth/presentation/screens/login_screen.dart';
+import '../features/auth/presentation/screens/register_screen.dart';
+import '../features/auth/presentation/screens/session_view_screen.dart';
+import 'bootstrap/startup_gate.dart';
+import 'shell/authenticated_shell.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_theme_notifier.dart';
 
 class LaJuanaApp extends StatefulWidget {
-  const LaJuanaApp({super.key});
+  const LaJuanaApp({super.key, required this.apiBaseUrl});
+
+  final String apiBaseUrl;
 
   @override
   State<LaJuanaApp> createState() => _LaJuanaAppState();
@@ -43,17 +48,28 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
   static const double _themeVeilOpacity = 1.0;
 
   late final AuthController _authController;
+  late final AuthApiClient _apiClient;
 
   @override
   void initState() {
     super.initState();
+    _apiClient = AuthApiClient(baseUrl: widget.apiBaseUrl);
     final database = AuthDatabase.instance;
     final sessionDs = SessionLocalDataSource(database);
     final userDs = UserLocalDataSource(database);
     final repository = AuthRepositoryImpl(
-      apiClient: AuthApiClient(),
+      apiClient: _apiClient,
       sessionLocalDataSource: sessionDs,
       userLocalDataSource: userDs,
+    );
+
+    final connectivityService = ConnectivityPlusService();
+    final reachabilityService = HttpBackendReachabilityService(
+      baseUrl: widget.apiBaseUrl,
+    );
+    final networkStatusResolver = NetworkStatusResolver(
+      connectivityService: connectivityService,
+      backendReachabilityService: reachabilityService,
     );
 
     _authController = AuthController(
@@ -63,9 +79,10 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
       logoutUseCase: LogoutUseCase(repository),
       registerUseCase: RegisterUseCase(repository),
       changePasswordUseCase: ChangePasswordUseCase(repository),
+      syncProfileFromRemoteUseCase: SyncProfileFromRemoteUseCase(repository),
       getCurrentLocalSessionUseCase: GetCurrentLocalSessionUseCase(repository),
       enterLocalModeUseCase: EnterLocalModeUseCase(repository),
-      connectivityService: ConnectivityPlusService(),
+      networkStatusResolver: networkStatusResolver,
     );
   }
 
@@ -116,7 +133,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
 
     switch (routeName) {
       case AuthRoutes.sessionGate:
-        screen = SessionGateScreen(controller: _authController);
+        screen = StartupGate(controller: _authController);
         break;
       case AuthRoutes.login:
         screen = LoginScreen(controller: _authController);
@@ -126,7 +143,10 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
         break;
       case AuthRoutes.home:
         screen = canAccessAuthenticated
-            ? AuthenticatedHomeScreen(controller: _authController)
+            ? AuthenticatedShell(
+                authController: _authController,
+                contactsApiClient: _apiClient,
+              )
             : LoginScreen(controller: _authController);
         break;
       case AuthRoutes.sessionView:
@@ -140,7 +160,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
             : LoginScreen(controller: _authController);
         break;
       default:
-        screen = SessionGateScreen(controller: _authController);
+        screen = StartupGate(controller: _authController);
     }
 
     return MaterialPageRoute<void>(builder: (_) => screen, settings: settings);

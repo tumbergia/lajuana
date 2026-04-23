@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/auth/application/bootstrap_session_use_case.dart';
-import 'package:mobile/auth/domain/auth_enums.dart';
-import 'package:mobile/auth/domain/auth_models.dart';
+import 'package:mobile/features/auth/application/bootstrap_session_use_case.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
 
 import 'test_fakes.dart';
 
@@ -17,13 +17,14 @@ void main() {
       );
     final useCase = BootstrapSessionUseCase(repo);
 
-    final result = await useCase(ConnectivityState.offline);
+    final result = await useCase();
 
     expect(result.authState, LocalAuthState.signedOut);
     expect(result.hasLocalSession, isFalse);
+    expect(repo.bootstrapCalls, 1);
   });
 
-  test('sesión local + offline -> signed_in_local_unverified', () async {
+  test('delega en repositorio (sesión local simulada en fake)', () async {
     final repo = FakeAuthRepository()
       ..bootstrapResult = AuthSessionSnapshot(
         authState: LocalAuthState.signedInLocalUnverified,
@@ -34,13 +35,14 @@ void main() {
       );
     final useCase = BootstrapSessionUseCase(repo);
 
-    final result = await useCase(ConnectivityState.offline);
+    final result = await useCase();
 
     expect(result.authState, LocalAuthState.signedInLocalUnverified);
     expect(result.hasLocalSession, isTrue);
+    expect(repo.bootstrapCalls, 1);
   });
 
-  test('sesión local + online -> signed_in_verified', () async {
+  test('bootstrap verificado cuando el fake devuelve verified', () async {
     final repo = FakeAuthRepository()
       ..bootstrapResult = AuthSessionSnapshot(
         authState: LocalAuthState.signedInVerified,
@@ -51,9 +53,9 @@ void main() {
       );
     final useCase = BootstrapSessionUseCase(repo);
 
-    final result = await useCase(ConnectivityState.online);
+    final result = await useCase();
 
     expect(result.authState, LocalAuthState.signedInVerified);
-    expect(repo.lastConnectivity, ConnectivityState.online);
+    expect(repo.bootstrapCalls, 1);
   });
 }

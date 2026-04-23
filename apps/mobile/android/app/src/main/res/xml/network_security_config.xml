@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HTTP en claro para API local (emulador, localhost, IP LAN vía dart-define).
+     En producción usar HTTPS y restringir cleartext (p. ej. solo dominios conocidos). -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

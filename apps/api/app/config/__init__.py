@@ -1,2 +1,1 @@
 """Configuraciones estaticas de aplicacion."""
-

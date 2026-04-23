@@ -56,6 +56,8 @@ class ReservationResponseSchema(AuditMetadataSchema):
     confirmed_at: datetime | None
     cancelled_at: datetime | None
     completed_at: datetime | None
+
+
 class ReservationListItemSchema(AuditMetadataSchema):
     id: str
     code: str

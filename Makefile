@@ -1,7 +1,16 @@
 MOBILE_JAVA_HOME ?= /c/Program Files/Java/jdk-17
 
+# Base URL del API (opcional). Debe ser URL completa con esquema, p. ej. http://192.168.1.10:8000/api/v1
+# Vacío = heurística: emulador → 10.0.2.2; Android físico → 127.0.0.1 (requiere adb reverse o ver abajo).
+# Wi‑Fi físico: MOBILE_API_BASE_URL=http://<IP-de-tu-PC>:8000/api/v1 make mobile-profile (API con --host 0.0.0.0).
+MOBILE_API_BASE_URL ?=
+MOBILE_DART_DEFINES := $(if $(strip $(MOBILE_API_BASE_URL)),--dart-define=API_BASE_URL=$(MOBILE_API_BASE_URL),)
+
 mobile-run:
-	cd apps/mobile && JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH" DART_VM_OPTIONS=--old_gen_heap_size=2048 flutter run
+	cd apps/mobile && JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH" DART_VM_OPTIONS=--old_gen_heap_size=2048 flutter run $(MOBILE_DART_DEFINES)
+
+mobile-profile:
+	cd apps/mobile && JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH" DART_VM_OPTIONS=--old_gen_heap_size=2048 flutter run --profile $(MOBILE_DART_DEFINES)
 
 mobile-test:
 	cd apps/mobile && JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH" DART_VM_OPTIONS=--old_gen_heap_size=2048 flutter test
@@ -27,10 +36,14 @@ mobile-quality:
 	$(MAKE) mobile-packages-analyze
 	$(MAKE) mobile-test
 
-API_PY := $(shell if [ -x apps/api/.venv/Scripts/python.exe ]; then echo .venv/Scripts/python.exe; else echo .venv/bin/python; fi)
+ifeq ($(OS),Windows_NT)
+API_PY := .venv\\Scripts\\python.exe
+else
+API_PY := .venv/bin/python
+endif
 
 api-dev:
-	cd apps/api && $(API_PY) -m uvicorn app.main:app --reload
+	cd apps/api && $(API_PY) -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 api-test:
 	cd apps/api && $(API_PY) -m pytest
