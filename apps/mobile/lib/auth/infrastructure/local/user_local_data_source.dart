@@ -23,6 +23,9 @@ class UserLocalDataSource {
       'conflict_state': user.conflictState,
       'version_remote': user.versionRemote,
       'updated_at_local': dt(user.updatedAtLocal),
+      'created_at_remote': user.createdAtRemote == null
+          ? null
+          : dt(user.createdAtRemote!),
       'updated_at_remote': user.updatedAtRemote == null
           ? null
           : dt(user.updatedAtRemote!),

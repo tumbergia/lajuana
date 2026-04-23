@@ -16,7 +16,6 @@ import '../auth/infrastructure/local/session_local_data_source.dart';
 import '../auth/infrastructure/local/user_local_data_source.dart';
 import '../auth/infrastructure/remote/auth_api_client.dart';
 import '../auth/presentation/auth_controller.dart';
-import '../auth/presentation/auth_feature_flags.dart';
 import '../auth/presentation/auth_routes.dart';
 import '../auth/presentation/screens/authenticated_home_screen.dart';
 import '../auth/presentation/screens/change_password_screen.dart';
@@ -123,11 +122,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
         screen = LoginScreen(controller: _authController);
         break;
       case AuthRoutes.register:
-        if (!AuthFeatureFlags.enableRegister) {
-          screen = LoginScreen(controller: _authController);
-        } else {
-          screen = RegisterScreen(controller: _authController);
-        }
+        screen = RegisterScreen(controller: _authController);
         break;
       case AuthRoutes.home:
         screen = canAccessAuthenticated

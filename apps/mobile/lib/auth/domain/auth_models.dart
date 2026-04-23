@@ -39,6 +39,7 @@ class UserLocal {
     required this.conflictState,
     required this.versionRemote,
     required this.updatedAtLocal,
+    required this.createdAtRemote,
     required this.updatedAtRemote,
   });
 
@@ -53,6 +54,7 @@ class UserLocal {
   final String conflictState;
   final int? versionRemote;
   final DateTime updatedAtLocal;
+  final DateTime? createdAtRemote;
   final DateTime? updatedAtRemote;
 }
 

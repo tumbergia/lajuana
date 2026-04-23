@@ -13,6 +13,7 @@ class UserDto {
     required this.role,
     required this.isActive,
     required this.version,
+    required this.createdAt,
     required this.updatedAt,
   });
 
@@ -22,6 +23,7 @@ class UserDto {
   final String role;
   final bool isActive;
   final int? version;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
 
   factory UserDto.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,9 @@ class UserDto {
       role: json['role'] as String,
       isActive: (json['is_active'] as bool?) ?? true,
       version: json['version'] as int?,
+      createdAt: json['created_at'] == null
+          ? null
+          : DateTime.parse(json['created_at'] as String).toUtc(),
       updatedAt: json['updated_at'] == null
           ? null
           : DateTime.parse(json['updated_at'] as String).toUtc(),
@@ -58,6 +63,38 @@ class TokenDto {
       refreshToken: (json['refresh_token'] as String?) ?? '',
       tokenType: (json['token_type'] as String?) ?? 'bearer',
       user: UserDto.fromJson(json['user'] as Map<String, dynamic>),
+    );
+  }
+}
+
+class EmergencyCatalogContactDto {
+  EmergencyCatalogContactDto({
+    required this.code,
+    required this.name,
+    required this.description,
+    required this.phoneNumber,
+    required this.category,
+    required this.isPrimary,
+    required this.isNational,
+  });
+
+  final String code;
+  final String name;
+  final String description;
+  final String phoneNumber;
+  final String category;
+  final bool isPrimary;
+  final bool isNational;
+
+  factory EmergencyCatalogContactDto.fromJson(Map<String, dynamic> json) {
+    return EmergencyCatalogContactDto(
+      code: json['code'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String,
+      phoneNumber: json['phone_number'] as String,
+      category: json['category'] as String,
+      isPrimary: (json['is_primary'] as bool?) ?? false,
+      isNational: (json['is_national'] as bool?) ?? true,
     );
   }
 }

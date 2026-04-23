@@ -241,8 +241,6 @@ class AuthController extends ChangeNotifier {
         return 'Datos invalidos';
       case 'network.unavailable':
         return 'Sin conexion';
-      case 'network.timeout':
-        return 'La solicitud tardo demasiado';
       case 'auth.requires_internet':
         return 'Requiere internet';
       case 'auth.session_expired':

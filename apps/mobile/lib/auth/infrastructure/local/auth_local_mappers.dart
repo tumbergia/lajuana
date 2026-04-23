@@ -61,6 +61,9 @@ UserLocal userFromRow(Map<String, Object?> row) => UserLocal(
   conflictState: row['conflict_state'] as String,
   versionRemote: row['version_remote'] as int?,
   updatedAtLocal: parseDt(row['updated_at_local'] as String),
+  createdAtRemote: row['created_at_remote'] == null
+      ? null
+      : parseDt(row['created_at_remote'] as String),
   updatedAtRemote: row['updated_at_remote'] == null
       ? null
       : parseDt(row['updated_at_remote'] as String),

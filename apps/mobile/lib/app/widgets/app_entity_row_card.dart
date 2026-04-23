@@ -72,6 +72,8 @@ class AppEntityRowCard extends StatelessWidget {
                               ),
                             ),
                             ?badge,
+                            if (badge != null && trailing != null)
+                              const SizedBox(width: 8),
                             ?trailing,
                           ],
                         ),

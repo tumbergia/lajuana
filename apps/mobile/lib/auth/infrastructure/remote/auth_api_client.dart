@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -99,6 +98,31 @@ class AuthApiClient {
     );
   }
 
+  Future<List<EmergencyCatalogContactDto>> getEmergencyContacts() async {
+    final response = await _get('/config/emergency-contacts');
+    final data = _decodeBody(response.body);
+    final rawItems = data['items'];
+    if (rawItems is! List) {
+      throw AuthFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload invalido',
+      );
+    }
+    return rawItems
+        .map((item) {
+          if (item is! Map) {
+            throw AuthFailure(
+              code: 'network.invalid_payload',
+              message: 'Payload invalido',
+            );
+          }
+          return EmergencyCatalogContactDto.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          );
+        })
+        .toList(growable: false);
+  }
+
   Future<http.Response> _get(String path, {String? bearer}) async {
     final uri = Uri.parse('$_baseUrl$path');
     final response = await _execute(() {
@@ -134,12 +158,7 @@ class AuthApiClient {
 
   Future<http.Response> _execute(Future<http.Response> Function() block) async {
     try {
-      return await block().timeout(const Duration(seconds: 8));
-    } on TimeoutException {
-      throw AuthFailure(
-        code: 'network.timeout',
-        message: 'La solicitud tardó demasiado',
-      );
+      return await block().timeout(const Duration(seconds: 12));
     } on SocketException {
       throw AuthFailure(code: 'network.unavailable', message: 'Sin conexión');
     } on HttpException {

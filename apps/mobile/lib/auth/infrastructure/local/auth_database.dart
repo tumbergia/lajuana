@@ -18,7 +18,7 @@ class AuthDatabase {
     final path = p.join(databasesPath, 'la_juana_auth_v1.db');
     _database = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE session_local (
@@ -47,9 +47,17 @@ class AuthDatabase {
             conflict_state TEXT NOT NULL,
             version_remote INTEGER NULL,
             updated_at_local TEXT NOT NULL,
+            created_at_remote TEXT NULL,
             updated_at_remote TEXT NULL
           );
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE user_local ADD COLUMN created_at_remote TEXT NULL;',
+          );
+        }
       },
     );
     return _database!;

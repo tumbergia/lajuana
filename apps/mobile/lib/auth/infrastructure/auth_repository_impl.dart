@@ -231,6 +231,7 @@ class AuthRepositoryImpl implements AuthRepository {
         conflictState: 'none',
         versionRemote: me.version,
         updatedAtLocal: now,
+        createdAtRemote: me.createdAt,
         updatedAtRemote: me.updatedAt,
       ),
     );
