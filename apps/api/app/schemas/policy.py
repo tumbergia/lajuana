@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from app.schemas.common import AuditMetadataSchema
+
 
 class PolicyCreateSchema(BaseModel):
     reservation_id: str
@@ -20,7 +22,7 @@ class PolicyUpdateSchema(BaseModel):
     notes: str | None = None
 
 
-class PolicyResponseSchema(BaseModel):
+class PolicyResponseSchema(AuditMetadataSchema):
     id: str
     reservation_id: str
     provider_id: str | None

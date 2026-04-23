@@ -51,7 +51,7 @@ PROTECTED_ENDPOINTS = [
     ("patch", f"/api/v1/reservations/{FAKE_ID}", {"participant_count": 3}),
     ("post", f"/api/v1/reservations/{FAKE_ID}/confirm", {}),
     ("post", f"/api/v1/reservations/{FAKE_ID}/cancel", {}),
-    ("post", f"/api/v1/reservations/{FAKE_ID}/payment-proofs", {"filename": "comprobante.pdf", "content_type": "application/pdf", "size_bytes": 1000, "sha256": "abc", "content_base64": "SG9sYQ=="}),
+    ("post", f"/api/v1/reservations/{FAKE_ID}/payment-proofs", {"filename": "comprobante.pdf", "content_type": "application/pdf", "size_bytes": 1000, "sha256": "abc", "storage_key": "payment_proof/mock.pdf"}),
     ("post", f"/api/v1/reservations/{FAKE_ID}/participants", {"first_name": "Ana", "last_name": "Perez", "birth_date": "2000-01-01", "document_type": "cc", "document_number": "1", "phone": "3000000000", "country": "CO", "city": "Bogota", "height_cm": 165, "weight_kg": 60, "experience_level": "basic", "emergency_contact": {"name": "Luis", "phone": "3001111111"}, "accepted_data_processing": True}),
     ("get", f"/api/v1/payment-proofs/{FAKE_ID}", None),
     ("patch", f"/api/v1/payment-proofs/{FAKE_ID}", {"status": "verified"}),
@@ -81,6 +81,11 @@ PROTECTED_ENDPOINTS = [
     ("patch", f"/api/v1/policies/{FAKE_ID}", {"notes": "Revisada"}),
     ("get", "/api/v1/config/reservation-rules", None),
     ("patch", "/api/v1/config/reservation-rules", {"min_days_in_advance": 7}),
+    ("get", "/api/v1/sync/bootstrap", None),
+    ("post", "/api/v1/sync/pull", {"streams": [{"name": "reservations", "cursor": ""}]}),
+    ("post", "/api/v1/sync/push", {"operations": []}),
+    ("post", "/api/v1/files/init-upload", {"context": "payment_proof", "filename": "proof.pdf", "mime_type": "application/pdf", "size_bytes": 1200, "sha256_hash": "abc"}),
+    ("post", f"/api/v1/files/{FAKE_ID}/complete", None),
 ]
 
 GUIDE_FORBIDDEN_ENDPOINTS = [
@@ -106,6 +111,8 @@ VALIDATION_ENDPOINTS = [
     ("post", "/api/v1/logs", {}),
     ("post", "/api/v1/providers", {}),
     ("post", "/api/v1/policies", {}),
+    ("post", "/api/v1/sync/pull", {}),
+    ("post", "/api/v1/files/init-upload", {}),
 ]
 
 
@@ -151,6 +158,7 @@ def _path_template(path: str) -> str:
     path = re.sub(r"/logs/\{id\}", "/logs/{log_id}", path)
     path = re.sub(r"/providers/\{id\}", "/providers/{provider_id}", path)
     path = re.sub(r"/policies/\{id\}", "/policies/{policy_id}", path)
+    path = re.sub(r"/files/\{id\}", "/files/{upload_id}", path)
     return path
 
 

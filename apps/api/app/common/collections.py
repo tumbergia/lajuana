@@ -13,3 +13,6 @@ class Collections:
     POLICIES = "policies"
     SUPPLIES = "supplies"
     APP_CONFIG = "app_config"
+    SYNC_CHANGES = "sync_changes"
+    SYNC_OPERATION_RECEIPTS = "sync_operation_receipts"
+    FILE_UPLOADS = "file_uploads"

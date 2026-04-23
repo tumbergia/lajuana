@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
 from app.common.enums import ExperienceLevel
+from app.schemas.common import AuditMetadataSchema
 
 
 class ExperienceCreateSchema(BaseModel):
@@ -24,7 +25,7 @@ class ExperienceUpdateSchema(BaseModel):
     is_active: bool | None = None
 
 
-class ExperienceResponseSchema(BaseModel):
+class ExperienceResponseSchema(AuditMetadataSchema):
     id: str
     name: str
     slug: str

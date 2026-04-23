@@ -3,6 +3,7 @@ from datetime import date, time
 from pydantic import BaseModel, Field
 
 from app.common.enums import ScheduleStatus
+from app.schemas.common import AuditMetadataSchema
 
 
 class ScheduleCreateSchema(BaseModel):
@@ -27,7 +28,7 @@ class ScheduleUpdateSchema(BaseModel):
     status: ScheduleStatus | None = None
 
 
-class ScheduleResponseSchema(BaseModel):
+class ScheduleResponseSchema(AuditMetadataSchema):
     id: str
     experience_id: str
     date: date

@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import settings
@@ -30,10 +31,26 @@ app = FastAPI(
         {"name": "Proveedores", "description": "Proveedores externos."},
         {"name": "Polizas", "description": "Polizas asociadas a reservas."},
         {"name": "Comprobantes de pago", "description": "Consulta y validacion de comprobantes."},
+        {"name": "Sync", "description": "Sincronizacion incremental offline-first."},
+        {"name": "Files", "description": "Inicializacion y consolidacion de uploads."},
         {"name": "health", "description": "Salud y diagnostico."},
         {"name": "diagnostics", "description": "Diagnosticos tecnicos."},
     ],
     lifespan=lifespan,
 )
 register_error_handlers(app)
+
+
+def _parse_cors_origins(raw: str) -> list[str]:
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_parse_cors_origins(settings.cors_allowed_origins),
+    allow_origin_regex=settings.cors_allow_origin_regex,
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(api_router)

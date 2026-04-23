@@ -671,4 +671,13 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_404": ("B404-013",),
         "cases_409": (),
     },
+    ("GET", "/api/v1/sync/bootstrap"): {"cases_400": (), "cases_404": (), "cases_409": ()},
+    ("POST", "/api/v1/sync/pull"): {"cases_400": (), "cases_404": (), "cases_409": ()},
+    ("POST", "/api/v1/sync/push"): {"cases_400": (), "cases_404": (), "cases_409": ()},
+    ("POST", "/api/v1/files/init-upload"): {"cases_400": (), "cases_404": (), "cases_409": ()},
+    ("POST", "/api/v1/files/{upload_id}/complete"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
 }

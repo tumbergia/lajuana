@@ -2,6 +2,7 @@ from app.documents.app_config_document import AppConfigDocument, ReservationRule
 from app.documents.assignment_document import AssignmentDocument
 from app.documents.equine_document import EquineDocument
 from app.documents.experience_document import ExperienceDocument
+from app.documents.file_upload_document import FileUploadDocument
 from app.documents.participant_document import EmergencyContact, ParticipantDocument
 from app.documents.payment_proof_document import PaymentProofDocument
 from app.documents.ping_document import PingDocument
@@ -11,6 +12,8 @@ from app.documents.reservation_document import ReservationDocument
 from app.documents.saddle_document import SaddleDocument
 from app.documents.schedule_document import ScheduleDocument
 from app.documents.service_log_document import ServiceLogDocument, ServiceLogEventType
+from app.documents.sync_change_document import SyncChangeDocument
+from app.documents.sync_operation_receipt_document import SyncOperationReceiptDocument
 from app.documents.user_document import UserDocument
 
 __all__ = [
@@ -19,6 +22,7 @@ __all__ = [
     "EmergencyContact",
     "EquineDocument",
     "ExperienceDocument",
+    "FileUploadDocument",
     "ParticipantDocument",
     "PaymentProofDocument",
     "PingDocument",
@@ -31,5 +35,7 @@ __all__ = [
     "ScheduleDocument",
     "ServiceLogDocument",
     "ServiceLogEventType",
+    "SyncChangeDocument",
+    "SyncOperationReceiptDocument",
     "UserDocument",
 ]

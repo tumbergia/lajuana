@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from app.schemas.common import AuditMetadataSchema
+
 
 class SaddleCreateSchema(BaseModel):
     code: str
@@ -15,7 +17,7 @@ class SaddleUpdateSchema(BaseModel):
     notes: str | None = None
 
 
-class SaddleResponseSchema(BaseModel):
+class SaddleResponseSchema(AuditMetadataSchema):
     id: str
     code: str
     name: str | None
