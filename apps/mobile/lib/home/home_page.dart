@@ -10,6 +10,7 @@ import '../app/widgets/app_metric_card.dart';
 import '../app/widgets/app_scaffold.dart';
 import '../app/widgets/app_section_header.dart';
 import '../app/widgets/app_segmented_filter.dart';
+import '../app/widgets/app_status_banner.dart';
 import '../app/widgets/app_text_field.dart';
 import '../app/widgets/app_timeline.dart';
 import '../app/widgets/app_top_bar.dart';
@@ -17,6 +18,12 @@ import '../auth/domain/auth_enums.dart';
 import '../auth/infrastructure/remote/auth_api_client.dart';
 import '../auth/infrastructure/remote/auth_dtos.dart';
 import '../auth/presentation/auth_controller.dart';
+import '../features/dashboard/presentation/controllers/dashboard_controller.dart';
+import '../features/equines/presentation/controllers/equines_controller.dart';
+import '../features/participants/presentation/controllers/participants_controller.dart';
+import '../features/reservations/presentation/controllers/reservations_controller.dart';
+import '../features/reservations/presentation/models/reservation_view_models.dart';
+import '../features/reservations/presentation/screens/reservation_detail_screen.dart';
 
 enum _MoreDestination { menu, profile, contacts, changePassword }
 
@@ -52,9 +59,43 @@ class _HomePageState extends State<HomePage> {
     'DIC',
   ];
 
-  String _filterValue = 'pendientes';
+  static const List<ReservationRecord> _reservations =
+      ReservationPresentationFixtures.reservations;
+  static const List<ReservationParticipantRecord> _participants =
+      ReservationPresentationFixtures.participants;
+  static const List<ReservationPaymentProofRecord> _paymentProofs =
+      ReservationPresentationFixtures.paymentProofs;
+  static const List<ReservationAssignmentRecord> _assignments =
+      ReservationPresentationFixtures.assignments;
+
+  static const List<_EquineRecord> _equines = <_EquineRecord>[
+    _EquineRecord(
+      name: 'Cosaco 24',
+      summary: 'Disponible hoy 09:00-13:00',
+      statusLabel: 'Disponible',
+      statusTone: AppBadgeTone.success,
+    ),
+    _EquineRecord(
+      name: 'Amanecer',
+      summary: 'En servicio 11:30',
+      statusLabel: 'Asignado',
+      statusTone: AppBadgeTone.primary,
+    ),
+    _EquineRecord(
+      name: 'Marte',
+      summary: 'Observacion veterinaria activa',
+      statusLabel: 'Cuidado',
+      statusTone: AppBadgeTone.warning,
+    ),
+  ];
+
   AppNavItem _currentNav = AppNavItem.inicio;
   _MoreDestination _moreDestination = _MoreDestination.menu;
+  late final DashboardController _dashboardController;
+  late final ReservationsController _reservationsController;
+  late final EquinesController _equinesController;
+  late final ParticipantsController _participantsController;
+
   Future<List<_EmergencyContact>>? _contactsFuture;
   late final AuthApiClient _contactsApiClient;
   late final Future<bool> Function(String phone) _onCallRequested;
@@ -70,6 +111,10 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _contactsApiClient = widget.contactsApiClient ?? AuthApiClient();
     _onCallRequested = widget.onCallRequested ?? _callNativeDialer;
+    _dashboardController = DashboardController();
+    _reservationsController = ReservationsController();
+    _equinesController = EquinesController();
+    _participantsController = ParticipantsController();
   }
 
   @override
@@ -77,13 +122,23 @@ class _HomePageState extends State<HomePage> {
     _currentPasswordCtrl.dispose();
     _newPasswordCtrl.dispose();
     _confirmPasswordCtrl.dispose();
+    _dashboardController.dispose();
+    _reservationsController.dispose();
+    _equinesController.dispose();
+    _participantsController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: widget.controller,
+      animation: Listenable.merge(<Listenable>[
+        widget.controller,
+        _dashboardController,
+        _reservationsController,
+        _equinesController,
+        _participantsController,
+      ]),
       builder: (context, _) {
         return AppScaffold(
           appBar: const AppTopBar(
@@ -103,9 +158,9 @@ class _HomePageState extends State<HomePage> {
 
   void _onBottomNavTap(AppNavItem item) {
     setState(() {
-      if (_currentNav == AppNavItem.mas && item == AppNavItem.mas) {
+      if (item != AppNavItem.mas) {
         _moreDestination = _MoreDestination.menu;
-      } else if (item != AppNavItem.mas) {
+      } else if (_currentNav == AppNavItem.mas) {
         _moreDestination = _MoreDestination.menu;
       }
       _currentNav = item;
@@ -122,136 +177,599 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCurrentView() {
-    if (_currentNav == AppNavItem.mas) {
-      return _buildMoreView();
+    switch (_currentNav) {
+      case AppNavItem.inicio:
+        return _buildDashboardView();
+      case AppNavItem.reservas:
+        return _buildReservationsView();
+      case AppNavItem.equinos:
+        return _buildEquinesView();
+      case AppNavItem.clientes:
+        return _buildClientsView();
+      case AppNavItem.mas:
+        return _buildMoreView();
+      case AppNavItem.none:
+        return _buildDashboardView();
     }
-    return _buildInicioView();
   }
 
-  Widget _buildInicioView() {
+  Widget _buildDashboardView() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppSectionHeader(
+        _buildModuleHeader(
           eyebrow: 'Inicio',
-          title: 'Supervision Operacional',
+          title: 'Tablero operativo',
+          subtitle: 'Operacion de reservas y estado del dia',
+          subrouteLabels: const ['Resumen', 'Pendientes', 'Salidas', 'Sync'],
+          currentSubrouteIndex: _dashboardController.subroute.index,
+          onSubrouteTap: _dashboardController.selectSubrouteByIndex,
+          trailing: AppButton(
+            label: 'Ir a reservas',
+            icon: Icons.arrow_forward_rounded,
+            variant: AppButtonVariant.secondary,
+            onPressed: () => _onBottomNavTap(AppNavItem.reservas),
+          ),
+        ),
+        const SizedBox(height: 20),
+        _buildDashboardSubrouteContent(),
+      ],
+    );
+  }
+
+  Widget _buildDashboardSubrouteContent() {
+    switch (_dashboardController.subroute) {
+      case DashboardSubroute.resumen:
+        final pendingCount = _reservations
+            .where((item) => item.status == 'pendientes')
+            .length;
+        final todayCount = _reservations.where((item) {
+          return item.slotLabel.startsWith('24 Oct 2026');
+        }).length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppMetricCard(
+              title: 'Reservas pendientes',
+              value: pendingCount.toString().padLeft(2, '0'),
+              suffix: 'CASOS',
+              supportingText: 'Requieren accion operativa',
+            ),
+            const SizedBox(height: 12),
+            AppMetricCard(
+              title: 'Salidas proximas',
+              value: todayCount.toString().padLeft(2, '0'),
+              suffix: 'HOY',
+              tone: AppMetricCardTone.inverse,
+            ),
+            const SizedBox(height: 16),
+            AppEntityRowCard(
+              title: 'Abrir reservas',
+              subtitle: 'Gestion de detalle, participantes y pagos',
+              trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+              onTap: () => _onBottomNavTap(AppNavItem.reservas),
+            ),
+            const SizedBox(height: 10),
+            AppEntityRowCard(
+              title: 'Abrir equinos',
+              subtitle: 'Disponibilidad y asignaciones en campo',
+              trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+              onTap: () => _onBottomNavTap(AppNavItem.equinos),
+            ),
+            const SizedBox(height: 10),
+            AppEntityRowCard(
+              title: 'Abrir participantes',
+              subtitle: 'Completitud y validaciones por reserva',
+              trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+              onTap: () => _onBottomNavTap(AppNavItem.clientes),
+            ),
+          ],
+        );
+      case DashboardSubroute.pendientes:
+        final pending = _reservations
+            .where((item) => item.status == 'pendientes')
+            .toList(growable: false);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < pending.length; i++) ...[
+              _buildReservationRow(
+                pending[i],
+                subtitle: '${pending[i].equineName} - ${pending[i].slotLabel}',
+                highlightIfPending: true,
+                openDetailsOnTap: true,
+              ),
+              if (i != pending.length - 1) const SizedBox(height: 10),
+            ],
+          ],
+        );
+      case DashboardSubroute.salidas:
+        final ordered = _reservations
+            .where((item) => item.status != 'finalizadas')
+            .take(4)
+            .toList(growable: false);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < ordered.length; i++) ...[
+              AppEntityRowCard(
+                title: ordered[i].slotLabel,
+                subtitle: '${ordered[i].clientName} - ${ordered[i].equineName}',
+                badge: _reservationStatusBadge(ordered[i].status),
+                leading: const Icon(Icons.schedule_rounded, size: 18),
+              ),
+              if (i != ordered.length - 1) const SizedBox(height: 10),
+            ],
+          ],
+        );
+      case DashboardSubroute.sync:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppEntityRowCard(
+              title: 'Cambios pendientes',
+              subtitle: widget.controller.hasPendingSync
+                  ? 'Hay cambios locales por enviar'
+                  : 'No hay cambios pendientes',
+              badge: AppBadge(
+                label: widget.controller.hasPendingSync ? 'Pendiente' : 'OK',
+                tone: widget.controller.hasPendingSync
+                    ? AppBadgeTone.warning
+                    : AppBadgeTone.success,
+                uppercase: false,
+              ),
+            ),
+            const SizedBox(height: 10),
+            AppEntityRowCard(
+              title: 'Conflictos de sincronizacion',
+              subtitle: _reservations.any((item) => item.hasSyncError)
+                  ? 'Hay reservas con error de sync'
+                  : 'Sin conflictos detectados',
+              badge: AppBadge(
+                label: _reservations.any((item) => item.hasSyncError)
+                    ? 'Revisar'
+                    : 'Limpio',
+                tone: _reservations.any((item) => item.hasSyncError)
+                    ? AppBadgeTone.danger
+                    : AppBadgeTone.success,
+                uppercase: false,
+              ),
+            ),
+          ],
+        );
+    }
+  }
+
+  Widget _buildReservationsView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildModuleHeader(
+          eyebrow: 'Reservas',
+          title: 'Operacion de reservas',
+          subtitle: 'Local primero, sync visible y acciones por estado',
+          subrouteLabels: const [
+            'Resumen',
+            'Participantes',
+            'Pagos',
+            'Asignaciones',
+            'Bitacora',
+          ],
+          currentSubrouteIndex: _reservationsController.subroute.index,
+          onSubrouteTap: _reservationsController.selectSubrouteByIndex,
           trailing: AppButton(
             label: 'Crear',
             icon: Icons.add,
             onPressed: () {},
           ),
         ),
-        const SizedBox(height: 24),
-        AppSegmentedFilter<String>(
-          value: _filterValue,
-          onChanged: (v) {
-            setState(() {
-              _filterValue = v;
-            });
-          },
-          items: const [
-            AppSegmentedFilterItem(label: 'Pendientes', value: 'pendientes'),
-            AppSegmentedFilterItem(label: 'Confirmadas', value: 'confirmadas'),
-            AppSegmentedFilterItem(label: 'Finalizadas', value: 'finalizadas'),
+        const SizedBox(height: 20),
+        _buildReservationsSubrouteContent(),
+      ],
+    );
+  }
+
+  Widget _buildReservationsSubrouteContent() {
+    switch (_reservationsController.subroute) {
+      case ReservationsSubroute.resumen:
+        final filtered = _filterReservations();
+        final visible = filtered
+            .take(_reservationsController.visibleReservationCount)
+            .toList(growable: false);
+        final canLoadMore = visible.length < filtered.length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppSegmentedFilter<String>(
+              value: _reservationsController.filterValue,
+              onChanged: _reservationsController.setFilterValue,
+              items: const [
+                AppSegmentedFilterItem(
+                  label: 'Pendientes',
+                  value: 'pendientes',
+                ),
+                AppSegmentedFilterItem(
+                  label: 'Confirmadas',
+                  value: 'confirmadas',
+                ),
+                AppSegmentedFilterItem(
+                  label: 'Finalizadas',
+                  value: 'finalizadas',
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            if (visible.isEmpty)
+              const AppEntityRowCard(
+                title: 'Sin resultados',
+                subtitle: 'No hay reservas para el filtro seleccionado',
+                selected: true,
+              )
+            else
+              for (int i = 0; i < visible.length; i++) ...[
+                _buildReservationRow(
+                  visible[i],
+                  subtitle:
+                      '${visible[i].equineName} - ${visible[i].slotLabel}',
+                  highlightIfPending: true,
+                  openDetailsOnTap: true,
+                ),
+                if (i != visible.length - 1) const SizedBox(height: 10),
+              ],
+            if (canLoadMore) ...[
+              const SizedBox(height: 12),
+              AppButton(
+                label: 'Cargar mas',
+                variant: AppButtonVariant.ghost,
+                expanded: true,
+                onPressed: () {
+                  _reservationsController.loadMore();
+                },
+              ),
+            ],
           ],
-        ),
-        const SizedBox(height: 16),
-        const AppMetricCard(
-          title: 'Total SKU de productos',
-          value: '124',
-          suffix: 'ITEMS',
-        ),
-        const SizedBox(height: 16),
-        const AppMetricCard(
-          title: 'Stock critico',
-          value: '08',
-          supportingText: 'SE RECOMIENDA COMPRAR',
-          tone: AppMetricCardTone.danger,
-          icon: Icons.warning_amber_rounded,
-        ),
-        const SizedBox(height: 32),
-        const AppTimeline(
+        );
+      case ReservationsSubroute.participantes:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < _participants.length; i++) ...[
+              AppEntityRowCard(
+                title: _participants[i].fullName,
+                subtitle: 'Reserva ${_participants[i].reservationCode}',
+                badge: AppBadge(
+                  label: _participants[i].completionLabel,
+                  tone: _participants[i].isComplete
+                      ? AppBadgeTone.success
+                      : AppBadgeTone.warning,
+                  uppercase: false,
+                ),
+                leading: const Icon(Icons.person_outline_rounded, size: 18),
+              ),
+              if (i != _participants.length - 1) const SizedBox(height: 10),
+            ],
+          ],
+        );
+      case ReservationsSubroute.pagos:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < _paymentProofs.length; i++) ...[
+              AppEntityRowCard(
+                title: _paymentProofs[i].proofCode,
+                subtitle: 'Reserva ${_paymentProofs[i].reservationCode}',
+                badge: AppBadge(
+                  label: _paymentProofs[i].statusLabel,
+                  tone: _paymentProofs[i].statusTone,
+                  uppercase: false,
+                ),
+                leading: const Icon(Icons.receipt_long_rounded, size: 18),
+              ),
+              if (i != _paymentProofs.length - 1) const SizedBox(height: 10),
+            ],
+          ],
+        );
+      case ReservationsSubroute.asignaciones:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < _assignments.length; i++) ...[
+              AppEntityRowCard(
+                title: _assignments[i].equine,
+                subtitle:
+                    'Reserva ${_assignments[i].reservationCode} - ${_assignments[i].rider}',
+                badge: AppBadge(
+                  label: _assignments[i].statusLabel,
+                  tone: _assignments[i].statusTone,
+                  uppercase: false,
+                ),
+                leading: const Icon(Icons.shield_moon_outlined, size: 18),
+              ),
+              if (i != _assignments.length - 1) const SizedBox(height: 10),
+            ],
+          ],
+        );
+      case ReservationsSubroute.bitacora:
+        return const AppTimeline(
           children: [
             AppTimelineItem(
               state: AppTimelineNodeState.active,
               child: AppTimelineEntryCard(
-                date: 'Oct 24, 2026 - 09:00 AM',
-                title: 'Monta Controlada',
-                badge: AppBadge(label: 'Pendiente', tone: AppBadgeTone.neutral),
-                description:
-                    'Monta natural realizada en yegua en condiciones controladas.',
-              ),
-            ),
-            AppTimelineItem(
-              state: AppTimelineNodeState.cancelled,
-              child: AppTimelineEntryCard(
-                date: 'Oct 10, 2026',
-                title: 'Traslado suspendido',
-                badge: AppBadge(label: 'Error', tone: AppBadgeTone.danger),
-                description:
-                    'Vehiculo averiado, no se pudo realizar el traslado del equino.',
+                date: '24 Oct 2026 - 10:05',
+                title: 'Cambio de horario',
+                badge: AppBadge(label: 'Pendiente', tone: AppBadgeTone.warning),
+                description: 'Se ajusto salida por condicion de pista.',
               ),
             ),
             AppTimelineItem(
               state: AppTimelineNodeState.completed,
               child: AppTimelineEntryCard(
-                date: 'Sep 15, 2026',
-                title: 'Vacunacion anual',
-                badge: AppBadge(label: 'Completado', tone: AppBadgeTone.ghost),
-                description: 'Aplicacion de vacuna contra influenza y tetanos.',
-                footer: Row(
-                  children: [
-                    Icon(Icons.medical_services_outlined, size: 16),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'SERVICIOS VETERINARIOS',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
+                date: '24 Oct 2026 - 09:15',
+                title: 'Participante validado',
+                badge: AppBadge(label: 'OK', tone: AppBadgeTone.success),
+                description: 'Documento y consentimiento verificados.',
+              ),
+            ),
+            AppTimelineItem(
+              state: AppTimelineNodeState.error,
+              child: AppTimelineEntryCard(
+                date: '24 Oct 2026 - 08:58',
+                title: 'Fallo en carga de comprobante',
+                badge: AppBadge(label: 'Error', tone: AppBadgeTone.danger),
+                description: 'Se guardo localmente para reintento de sync.',
               ),
             ),
           ],
+        );
+    }
+  }
+
+  Widget _buildEquinesView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildModuleHeader(
+          eyebrow: 'Equinos',
+          title: 'Gestion de equinos',
+          subtitle: 'Disponibilidad, historial y cuidado operativo',
+          subrouteLabels: const [
+            'Resumen',
+            'Historial',
+            'Disponibilidad',
+            'Cuidado',
+          ],
+          currentSubrouteIndex: _equinesController.subroute.index,
+          onSubrouteTap: _equinesController.selectSubrouteByIndex,
         ),
-        const SizedBox(height: 16),
-        const AppBreadcrumb(items: ['Gestion', 'Experiencias']),
-        const SizedBox(height: 12),
-        const AppEntityRowCard(
-          title: 'Elena Rodriguez',
-          subtitle: 'EXP: INTERMEDIO - 68KG',
-          selected: true,
-          badge: AppBadge(label: 'Alto Riesgo', tone: AppBadgeTone.danger),
-        ),
-        const SizedBox(height: 12),
-        const AppEntityRowCard(
-          title: 'Marcus Thorne',
-          subtitle: 'EXP: AVANZADO - 82KG',
-          badge: AppBadge(label: 'Perfecto', tone: AppBadgeTone.success),
-        ),
+        const SizedBox(height: 20),
+        _buildEquinesSubrouteContent(),
       ],
     );
   }
 
+  Widget _buildEquinesSubrouteContent() {
+    switch (_equinesController.subroute) {
+      case EquinesSubroute.resumen:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < _equines.length; i++) ...[
+              AppEntityRowCard(
+                title: _equines[i].name,
+                subtitle: _equines[i].summary,
+                badge: AppBadge(
+                  label: _equines[i].statusLabel,
+                  tone: _equines[i].statusTone,
+                  uppercase: false,
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+              ),
+              if (i != _equines.length - 1) const SizedBox(height: 10),
+            ],
+          ],
+        );
+      case EquinesSubroute.historial:
+        return const AppTimeline(
+          children: [
+            AppTimelineItem(
+              state: AppTimelineNodeState.completed,
+              child: AppTimelineEntryCard(
+                date: '23 Oct 2026',
+                title: 'Cosaco 24 - Servicio finalizado',
+                badge: AppBadge(label: 'OK', tone: AppBadgeTone.success),
+                description: 'Actividad completada sin novedades.',
+              ),
+            ),
+            AppTimelineItem(
+              state: AppTimelineNodeState.neutral,
+              child: AppTimelineEntryCard(
+                date: '22 Oct 2026',
+                title: 'Marte - Revision veterinaria',
+                badge: AppBadge(
+                  label: 'Observacion',
+                  tone: AppBadgeTone.warning,
+                ),
+                description: 'Control preventivo por fatiga leve.',
+              ),
+            ),
+          ],
+        );
+      case EquinesSubroute.disponibilidad:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            AppEntityRowCard(
+              title: 'COSACO 24',
+              subtitle: 'Disponible: 09:00 - 13:00',
+              badge: AppBadge(
+                label: 'Disponible',
+                tone: AppBadgeTone.success,
+                uppercase: false,
+              ),
+            ),
+            SizedBox(height: 10),
+            AppEntityRowCard(
+              title: 'AMANECER',
+              subtitle: 'Asignado: 11:30 - 14:00',
+              badge: AppBadge(
+                label: 'Asignado',
+                tone: AppBadgeTone.primary,
+                uppercase: false,
+              ),
+            ),
+          ],
+        );
+      case EquinesSubroute.cuidado:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            AppEntityRowCard(
+              title: 'MARTE',
+              subtitle: 'Control veterinario en curso',
+              badge: AppBadge(
+                label: 'Requiere seguimiento',
+                tone: AppBadgeTone.warning,
+                uppercase: false,
+              ),
+            ),
+            SizedBox(height: 10),
+            AppEntityRowCard(
+              title: 'PRADERA',
+              subtitle: 'Sin alertas activas',
+              badge: AppBadge(
+                label: 'Estable',
+                tone: AppBadgeTone.success,
+                uppercase: false,
+              ),
+            ),
+          ],
+        );
+    }
+  }
+
+  Widget _buildClientsView() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildModuleHeader(
+          eyebrow: 'Participantes',
+          title: 'Gestion de participantes',
+          subtitle: 'Completitud de datos y validaciones por reserva',
+          subrouteLabels: const ['Resumen', 'Participantes', 'Historial'],
+          currentSubrouteIndex: _participantsController.subroute.index,
+          onSubrouteTap: _participantsController.selectSubrouteByIndex,
+        ),
+        const SizedBox(height: 20),
+        _buildClientsSubrouteContent(),
+      ],
+    );
+  }
+
+  Widget _buildClientsSubrouteContent() {
+    switch (_participantsController.subroute) {
+      case ParticipantsSubroute.resumen:
+        final pending = _participants
+            .where((item) => !item.isComplete)
+            .length
+            .toString()
+            .padLeft(2, '0');
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppMetricCard(
+              title: 'Participantes incompletos',
+              value: pending,
+              suffix: 'CASOS',
+              tone: AppMetricCardTone.danger,
+              icon: Icons.warning_amber_rounded,
+            ),
+            const SizedBox(height: 12),
+            const AppEntityRowCard(
+              title: 'Consentimientos',
+              subtitle: 'Verifica antes de confirmar reserva',
+              badge: AppBadge(
+                label: 'Critico',
+                tone: AppBadgeTone.warning,
+                uppercase: false,
+              ),
+            ),
+          ],
+        );
+      case ParticipantsSubroute.participantes:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (int i = 0; i < _participants.length; i++) ...[
+              AppEntityRowCard(
+                title: _participants[i].fullName,
+                subtitle:
+                    'Reserva ${_participants[i].reservationCode} - Completitud ${_participants[i].completionLabel}',
+                badge: AppBadge(
+                  label: _participants[i].isComplete
+                      ? 'Completo'
+                      : 'Incompleto',
+                  tone: _participants[i].isComplete
+                      ? AppBadgeTone.success
+                      : AppBadgeTone.warning,
+                  uppercase: false,
+                ),
+              ),
+              if (i != _participants.length - 1) const SizedBox(height: 10),
+            ],
+          ],
+        );
+      case ParticipantsSubroute.historial:
+        return const AppTimeline(
+          children: [
+            AppTimelineItem(
+              state: AppTimelineNodeState.completed,
+              child: AppTimelineEntryCard(
+                date: '24 Oct 2026 - 08:45',
+                title: 'Consentimiento firmado',
+                badge: AppBadge(label: 'OK', tone: AppBadgeTone.success),
+                description: 'Reserva RV-1042 consolidada.',
+              ),
+            ),
+            AppTimelineItem(
+              state: AppTimelineNodeState.active,
+              child: AppTimelineEntryCard(
+                date: '24 Oct 2026 - 07:58',
+                title: 'Documento pendiente',
+                badge: AppBadge(label: 'Pendiente', tone: AppBadgeTone.warning),
+                description: 'Falta identificacion de participante.',
+              ),
+            ),
+          ],
+        );
+    }
+  }
+
   Widget _buildMoreView() {
-    return switch (_moreDestination) {
-      _MoreDestination.menu => _buildMoreMenu(),
-      _MoreDestination.profile => _buildProfileView(),
-      _MoreDestination.contacts => _buildContactsView(),
-      _MoreDestination.changePassword => _buildChangePasswordView(),
-    };
+    switch (_moreDestination) {
+      case _MoreDestination.menu:
+        return _buildMoreMenu();
+      case _MoreDestination.profile:
+        return _buildProfileView();
+      case _MoreDestination.contacts:
+        return _buildContactsView();
+      case _MoreDestination.changePassword:
+        return _buildChangePasswordView();
+    }
   }
 
   Widget _buildMoreMenu() {
+    final statusBanners = _buildGlobalStatusBanners();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _RouteHeader.fromSegments([
           'Mas',
         ], currentLabel: 'Opciones adicionales'),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
+        ...statusBanners,
+        if (statusBanners.isNotEmpty) const SizedBox(height: 12),
         AppEntityRowCard(
           title: 'Perfil',
           subtitle: 'Datos del usuario y estado de cuenta',
@@ -270,6 +788,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildProfileView() {
+    final statusBanners = _buildGlobalStatusBanners();
     final user = widget.controller.currentUser;
     final statusBadge = _profileStatusBadge(widget.controller.authState);
     final isUserActive = user?.isActive ?? false;
@@ -286,7 +805,9 @@ class _HomePageState extends State<HomePage> {
           'Mas',
           'Perfil',
         ], onBack: () => _openMoreDestination(_MoreDestination.menu)),
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
+        ...statusBanners,
+        if (statusBanners.isNotEmpty) const SizedBox(height: 12),
         if (user == null)
           const AppEntityRowCard(
             title: 'Perfil no disponible',
@@ -325,28 +846,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-        ),
-        if (widget.controller.hasPendingSync ||
-            widget.controller.isOfflineRestricted)
-          const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
-          children: [
-            if (widget.controller.hasPendingSync)
-              const AppBadge(
-                label: 'Sincronizacion pendiente',
-                tone: AppBadgeTone.warning,
-                uppercase: false,
-              ),
-            if (widget.controller.isOfflineRestricted)
-              const AppBadge(
-                label: 'Modo local',
-                tone: AppBadgeTone.warning,
-                uppercase: false,
-              ),
-          ],
         ),
         const SizedBox(height: 16),
         AppEntityRowCard(
@@ -562,6 +1061,212 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  List<Widget> _buildGlobalStatusBanners() {
+    final banners = <Widget>[];
+    final authState = widget.controller.authState;
+    final connectivityState = widget.controller.connectivityState;
+
+    if (connectivityState == ConnectivityState.offline) {
+      banners.add(
+        const AppStatusBanner(
+          title: 'Sin conexion',
+          message:
+              'Se trabaja en modo local. Se sincronizara cuando regrese red.',
+          tone: AppStatusBannerTone.warning,
+          icon: Icons.wifi_off_rounded,
+          badgeLabel: 'Offline',
+        ),
+      );
+    } else if (connectivityState == ConnectivityState.unstable) {
+      banners.add(
+        const AppStatusBanner(
+          title: 'Conexion inestable',
+          message:
+              'Puede haber retrasos de sincronizacion en algunas acciones.',
+          tone: AppStatusBannerTone.info,
+          icon: Icons.network_check_rounded,
+          badgeLabel: 'Inestable',
+        ),
+      );
+    }
+
+    if (widget.controller.hasPendingSync) {
+      banners.add(
+        const AppStatusBanner(
+          title: 'Cambios pendientes',
+          message: 'Hay actualizaciones locales esperando envio al backend.',
+          tone: AppStatusBannerTone.warning,
+          icon: Icons.sync_problem_rounded,
+          badgeLabel: 'Pendiente',
+        ),
+      );
+    }
+
+    if (widget.controller.isOfflineRestricted) {
+      banners.add(
+        const AppStatusBanner(
+          title: 'Sesion local',
+          message:
+              'Acciones criticas online-only estan temporalmente bloqueadas.',
+          tone: AppStatusBannerTone.info,
+          icon: Icons.lock_clock_outlined,
+          badgeLabel: 'Modo local',
+        ),
+      );
+    }
+
+    if (authState == LocalAuthState.refreshRequired ||
+        authState == LocalAuthState.invalid) {
+      banners.add(
+        AppStatusBanner(
+          title: 'Sesion requiere validacion',
+          message:
+              'Verifica internet y actualiza sesion para habilitar acciones.',
+          tone: AppStatusBannerTone.danger,
+          icon: Icons.warning_amber_rounded,
+          badgeLabel: 'Atencion',
+          onTap: widget.controller.isLoading
+              ? null
+              : () {
+                  widget.controller.refreshRequested();
+                },
+        ),
+      );
+    }
+
+    return banners;
+  }
+
+  Widget _buildModuleHeader({
+    required String eyebrow,
+    required String title,
+    required List<String> subrouteLabels,
+    required int currentSubrouteIndex,
+    required ValueChanged<int> onSubrouteTap,
+    Widget? trailing,
+    String? subtitle,
+  }) {
+    final banners = _buildGlobalStatusBanners();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSectionHeader(
+          eyebrow: eyebrow,
+          title: title,
+          subtitle: subtitle,
+          trailing: trailing,
+        ),
+        const SizedBox(height: 12),
+        AppBreadcrumb(
+          items: subrouteLabels,
+          currentIndex: currentSubrouteIndex,
+          onItemTap: onSubrouteTap,
+        ),
+        if (banners.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          for (int i = 0; i < banners.length; i++) ...[
+            banners[i],
+            if (i != banners.length - 1) const SizedBox(height: 10),
+          ],
+        ],
+      ],
+    );
+  }
+
+  List<ReservationRecord> _filterReservations() {
+    return _reservations
+        .where((item) => item.status == _reservationsController.filterValue)
+        .toList(growable: false);
+  }
+
+  Widget _buildReservationRow(
+    ReservationRecord reservation, {
+    required String subtitle,
+    required bool highlightIfPending,
+    bool openDetailsOnTap = false,
+  }) {
+    final syncBadge = reservation.hasSyncError
+        ? const AppBadge(
+            label: 'Sync error',
+            tone: AppBadgeTone.danger,
+            uppercase: false,
+          )
+        : reservation.hasPendingSync
+        ? const AppBadge(
+            label: 'Pendiente',
+            tone: AppBadgeTone.warning,
+            uppercase: false,
+          )
+        : const AppBadge(
+            label: 'OK',
+            tone: AppBadgeTone.success,
+            uppercase: false,
+          );
+
+    return AppEntityRowCard(
+      title: reservation.clientName,
+      subtitle: '$subtitle - ${reservation.code}',
+      selected: highlightIfPending && reservation.status == 'pendientes',
+      badge: _reservationStatusBadge(reservation.status),
+      trailing: syncBadge,
+      onTap: openDetailsOnTap
+          ? () => _openReservationDetail(reservation)
+          : null,
+    );
+  }
+
+  void _openReservationDetail(ReservationRecord reservation) {
+    final participants = _participants
+        .where((item) => item.reservationCode == reservation.code)
+        .toList(growable: false);
+    final paymentProofs = _paymentProofs
+        .where((item) => item.reservationCode == reservation.code)
+        .toList(growable: false);
+    final assignments = _assignments
+        .where((item) => item.reservationCode == reservation.code)
+        .toList(growable: false);
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => ReservationDetailScreen(
+          reservation: reservation,
+          participants: participants,
+          paymentProofs: paymentProofs,
+          assignments: assignments,
+        ),
+      ),
+    );
+  }
+
+  AppBadge _reservationStatusBadge(String status) {
+    switch (status) {
+      case 'pendientes':
+        return const AppBadge(
+          label: 'Pendiente',
+          tone: AppBadgeTone.warning,
+          uppercase: false,
+        );
+      case 'confirmadas':
+        return const AppBadge(
+          label: 'Confirmada',
+          tone: AppBadgeTone.primary,
+          uppercase: false,
+        );
+      case 'finalizadas':
+        return const AppBadge(
+          label: 'Finalizada',
+          tone: AppBadgeTone.success,
+          uppercase: false,
+        );
+      default:
+        return const AppBadge(
+          label: 'Sin estado',
+          tone: AppBadgeTone.neutral,
+          uppercase: false,
+        );
+    }
+  }
+
   Future<List<_EmergencyContact>> _loadEmergencyContacts() async {
     final contacts = await _contactsApiClient.getEmergencyContacts();
     return contacts.map(_mapEmergencyContact).toList(growable: false);
@@ -750,4 +1455,18 @@ class _EmergencyContact {
   final String phone;
   final String detail;
   final AppBadgeTone tone;
+}
+
+class _EquineRecord {
+  const _EquineRecord({
+    required this.name,
+    required this.summary,
+    required this.statusLabel,
+    required this.statusTone,
+  });
+
+  final String name;
+  final String summary;
+  final String statusLabel;
+  final AppBadgeTone statusTone;
 }

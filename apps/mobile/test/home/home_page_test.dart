@@ -230,4 +230,35 @@ void main() {
     await connectivity.dispose();
     controller.dispose();
   });
+
+  testWidgets('Reservas abre detalle en navegacion terciaria', (tester) async {
+    final repo = FakeAuthRepository();
+    final connectivity = FakeConnectivityService(ConnectivityState.online);
+    final controller = buildController(repo, connectivity)
+      ..connectivityState = ConnectivityState.online;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark(),
+        home: AuthenticatedHomeScreen(
+          controller: controller,
+          contactsApiClient: buildContactsApiClient(),
+          onCallRequested: (_) async => true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.calendar_today_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ELENA RODRIGUEZ').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('DETALLE RV-1042'), findsOneWidget);
+    expect(find.text('RESUMEN'), findsWidgets);
+    expect(find.text('VOLVER'), findsOneWidget);
+
+    await connectivity.dispose();
+    controller.dispose();
+  });
 }
