@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.documents import (
     AppConfigDocument,
     AssignmentDocument,
+    ChatCheckpointDocument,
     EquineDocument,
     ExperienceDocument,
     ParticipantDocument,
@@ -57,6 +58,7 @@ async def init_db() -> None:
             ServiceLogDocument,
             ProviderDocument,
             PolicyDocument,
+            ChatCheckpointDocument,
         ],
     )
 

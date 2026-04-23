@@ -13,3 +13,4 @@ class Collections:
     POLICIES = "policies"
     SUPPLIES = "supplies"
     APP_CONFIG = "app_config"
+    CHAT_CHECKPOINTS = "chat_checkpoints"

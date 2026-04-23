@@ -23,6 +23,13 @@ class Settings(BaseSettings):
     storage_local_root: str = "./storage"
     storage_local_payment_proofs_prefix: str = "payment-proofs"
 
+    chat_llm_model: str = "stub-extractor-v1"
+    chat_enable_rag: bool = True
+    chat_enable_booking: bool = True
+    chat_vector_top_k: int = 3
+    chat_checkpoint_collection: str = "chat_checkpoints"
+    chat_default_channel: str = "whatsapp"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

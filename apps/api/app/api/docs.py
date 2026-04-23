@@ -576,6 +576,27 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "error_codes": ["auth.unauthorized", "auth.forbidden", "config.not_found", "config.invalid_min_days", "common.validation_error"],
         "service_docstring": "Actualiza configuración validando min_days_in_advance.",
     },
+    "chat_create": {
+        "summary": "Enviar mensaje al orquestador",
+        "description": (
+            "Procesa un turno de conversación según el rol del usuario autenticado. "
+            "La conversación se persiste por conversation_id para permitir continuidad."
+        ),
+        "permissions": ["auth.self.read"],
+        "responses": {
+            200: "Mensaje procesado correctamente.",
+            401: "No autenticado.",
+            422: "Datos inválidos.",
+        },
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.invalid_token",
+            "auth.expired_token",
+            "auth.inactive_user",
+            "common.validation_error",
+        ],
+        "service_docstring": "Orquesta ramas operativa/turista y persiste estado conversacional.",
+    },
 }
 
 
@@ -642,6 +663,7 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "config_emergency_contacts": ("GET", "/api/v1/config/emergency-contacts"),
     "config_get": ("GET", "/api/v1/config/reservation-rules"),
     "config_update": ("PATCH", "/api/v1/config/reservation-rules"),
+    "chat_create": ("POST", "/api/v1/chat"),
 }
 
 for endpoint_key, route in ENDPOINT_ROUTE_MAP.items():

@@ -1,5 +1,6 @@
 from app.documents.app_config_document import AppConfigDocument, ReservationRules
 from app.documents.assignment_document import AssignmentDocument
+from app.documents.chat_checkpoint_document import ChatCheckpointDocument
 from app.documents.equine_document import EquineDocument
 from app.documents.experience_document import ExperienceDocument
 from app.documents.participant_document import EmergencyContact, ParticipantDocument
@@ -16,6 +17,7 @@ from app.documents.user_document import UserDocument
 __all__ = [
     "AssignmentDocument",
     "AppConfigDocument",
+    "ChatCheckpointDocument",
     "EmergencyContact",
     "EquineDocument",
     "ExperienceDocument",

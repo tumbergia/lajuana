@@ -671,4 +671,9 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_404": ("B404-013",),
         "cases_409": (),
     },
+    ("POST", "/api/v1/chat"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
 }
