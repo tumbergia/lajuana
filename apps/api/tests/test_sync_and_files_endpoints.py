@@ -1,3 +1,4 @@
+import asyncio
 import os
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -7,7 +8,10 @@ from fastapi.testclient import TestClient
 os.environ["APP_SKIP_DB_INIT"] = "true"
 
 from app.api.deps import get_current_user
+from app.common.enums import UserRole
 from app.main import app
+from app.schemas.sync import SyncPushOperationSchema
+from app.services.sync_service import SyncOperationExecutor
 
 client = TestClient(app)
 
@@ -15,7 +19,15 @@ client = TestClient(app)
 def _admin_user() -> SimpleNamespace:
     return SimpleNamespace(
         id="660000000000000000000001",
-        role="admin",
+        role=UserRole.ADMIN,
+        is_active=True,
+    )
+
+
+def _guide_user() -> SimpleNamespace:
+    return SimpleNamespace(
+        id="660000000000000000000002",
+        role=UserRole.GUIDE,
         is_active=True,
     )
 
@@ -72,3 +84,30 @@ def test_files_init_upload_contract(monkeypatch) -> None:
     body = response.json()
     assert body["upload_id"] == "up-1"
     assert body["storage_key"].startswith("payment_proof/")
+
+
+def test_sync_executor_rejects_catalog_write_for_guide() -> None:
+    operation = SyncPushOperationSchema(
+        operation_id="op-1",
+        entity_type="experience",
+        entity_local_id="local-experience-1",
+        operation_type="create",
+        idempotency_key="idem-op-1",
+        payload={
+            "name": "Ruta de prueba",
+            "slug": "ruta-prueba",
+            "description": "Descripcion",
+            "level": "basic",
+            "duration_hours": 2,
+        },
+    )
+    executor = SyncOperationExecutor()
+    result = asyncio.run(
+        executor.execute(
+            current_user=_guide_user(),
+            operation=operation,
+        )
+    )
+    assert result.status == "rejected"
+    assert result.error is not None
+    assert result.error.code == "auth.forbidden"

@@ -15,6 +15,8 @@ import '../../../auth/infrastructure/remote/auth_dtos.dart';
 import '../../../auth/presentation/auth_controller.dart';
 import '../../../auth/presentation/auth_routes.dart';
 import '../../../auth/presentation/user_role_display.dart';
+import '../../../catalogs/catalogs_module.dart';
+import '../../../catalogs/presentation/pages/catalogs_home_page.dart';
 import '../../../providers/presentation/screens/providers_module_screen.dart';
 
 enum _MoreDestination { menu, profile, contacts, changePassword, providers }
@@ -24,11 +26,13 @@ class MoreFlowScreen extends StatefulWidget {
     super.key,
     required this.controller,
     required this.contactsApiClient,
+    this.catalogsModule,
     this.onCallRequested,
   });
 
   final AuthController controller;
   final AuthApiClient contactsApiClient;
+  final CatalogsModule? catalogsModule;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -159,6 +163,24 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.providers),
         ),
+        if (widget.catalogsModule != null) ...[
+          const SizedBox(height: 12),
+          AppEntityRowCard(
+            title: 'Catalogos',
+            subtitle: 'Experiencias, fechas, reglas y emergencias',
+            trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => CatalogsHomePage(
+                    module: widget.catalogsModule!,
+                    authController: widget.controller,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ],
     );
   }

@@ -33,8 +33,7 @@ async def pull_sync_changes(
     body: SyncPullRequestSchema,
     current_user: Annotated[UserDocument, Depends(get_current_user)],
 ) -> SyncPullResponseSchema:
-    _ = current_user
-    return await service.pull_changes(body=body)
+    return await service.pull_changes(current_user=current_user, body=body)
 
 
 @router.post(

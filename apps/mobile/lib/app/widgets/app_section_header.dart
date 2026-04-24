@@ -38,43 +38,72 @@ class AppSectionHeader extends StatelessWidget {
             letterSpacing: -0.4,
           );
 
+    Widget titleBlock() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (eyebrow != null)
+            Padding(
+              padding: EdgeInsets.only(bottom: isHero ? 6 : 4),
+              child: Text(
+                eyebrow!.toUpperCase(),
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: isHero ? 0.7 : 0.5,
+                ),
+              ),
+            ),
+          Text(title.toUpperCase(), style: titleStyle),
+          if (subtitle != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                subtitle!,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+
     return Padding(
       padding: padding ?? EdgeInsets.zero,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final useStackedLayout =
+              trailing != null && constraints.maxWidth < 640;
+
+          if (useStackedLayout) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (eyebrow != null)
-                  Padding(
-                    padding: EdgeInsets.only(bottom: isHero ? 6 : 4),
-                    child: Text(
-                      eyebrow!.toUpperCase(),
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: isHero ? 0.7 : 0.5,
-                      ),
-                    ),
-                  ),
-                Text(title.toUpperCase(), style: titleStyle),
-                if (subtitle != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      subtitle!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
+                titleBlock(),
+                const SizedBox(height: 12),
+                Align(alignment: Alignment.centerLeft, child: trailing!),
               ],
-            ),
-          ),
-          if (trailing != null) ...[const SizedBox(width: 16), trailing!],
-        ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(child: titleBlock()),
+              if (trailing != null) ...[
+                const SizedBox(width: 16),
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: Align(
+                    alignment: Alignment.bottomRight,
+                    child: trailing!,
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
       ),
     );
   }

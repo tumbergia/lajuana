@@ -24,6 +24,8 @@ import '../features/auth/presentation/screens/change_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/session_view_screen.dart';
+import '../features/catalogs/catalogs.dart';
+import 'bootstrap/dev_loader_screen.dart';
 import 'bootstrap/startup_gate.dart';
 import 'shell/authenticated_shell.dart';
 import 'theme/app_theme.dart';
@@ -49,6 +51,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
 
   late final AuthController _authController;
   late final AuthApiClient _apiClient;
+  late final CatalogsModule _catalogsModule;
 
   @override
   void initState() {
@@ -84,6 +87,21 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
       enterLocalModeUseCase: EnterLocalModeUseCase(repository),
       networkStatusResolver: networkStatusResolver,
     );
+
+    final catalogsApi = CatalogsSyncApi(
+      baseUrl: widget.apiBaseUrl,
+      readAccessToken: () async =>
+          (await sessionDs.getCurrentSession())?.accessToken,
+      refreshSession: () async {
+        await _authController.refreshRequested();
+        return _authController.authState == LocalAuthState.signedInVerified;
+      },
+    );
+    final catalogsRepository = CatalogsRepository(
+      database: CatalogsDatabase.instance,
+      api: catalogsApi,
+    );
+    _catalogsModule = CatalogsModule(catalogsRepository);
   }
 
   @override
@@ -132,6 +150,9 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
     late final Widget screen;
 
     switch (routeName) {
+      case AuthRoutes.devLoader:
+        screen = const DevLoaderScreen();
+        break;
       case AuthRoutes.sessionGate:
         screen = StartupGate(controller: _authController);
         break;
@@ -146,6 +167,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
             ? AuthenticatedShell(
                 authController: _authController,
                 contactsApiClient: _apiClient,
+                catalogsModule: _catalogsModule,
               )
             : LoginScreen(controller: _authController);
         break;

@@ -12,6 +12,7 @@ STREAM_BY_COLLECTION = {
     "equines": "equines",
     "experiences": "experiences",
     "users": "users",
+    "app_config": "config",
 }
 
 

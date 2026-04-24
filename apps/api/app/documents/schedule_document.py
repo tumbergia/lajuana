@@ -11,6 +11,7 @@ class ScheduleDocument(AuditDocument):
     experience_id: PydanticObjectId
     date: date
     start_time: time
+    is_active: bool = True
     capacity_total: int
     reserved_slots: int = 0
     internal_slots: int = 0

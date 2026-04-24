@@ -5,6 +5,9 @@ import '../../../../app/widgets/app_segmented_filter.dart';
 import '../../../../app/widgets/app_entity_row_card.dart';
 import '../../../../app/widgets/app_timeline.dart';
 import '../../../../app/widgets/app_badge.dart';
+import '../../../auth/presentation/auth_controller.dart';
+import '../../../catalogs/catalogs_module.dart';
+import '../../../catalogs/schedules/presentation/pages/schedules_page.dart';
 import '../controllers/reservations_controller.dart';
 import '../controllers/reservations_list_controller.dart';
 import '../models/reservation_view_models.dart';
@@ -13,7 +16,14 @@ import 'reservation_detail_shell_screen.dart';
 import '../../../shared/presentation/widgets/module_subroute_header.dart';
 
 class ReservationsModuleScreen extends StatefulWidget {
-  const ReservationsModuleScreen({super.key});
+  const ReservationsModuleScreen({
+    super.key,
+    this.catalogsModule,
+    this.authController,
+  });
+
+  final CatalogsModule? catalogsModule;
+  final AuthController? authController;
 
   @override
   State<ReservationsModuleScreen> createState() =>
@@ -100,9 +110,26 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen> {
                 currentSubrouteIndex: _subrouteController.subroute.index,
                 onSubrouteTap: _subrouteController.selectSubrouteByIndex,
                 trailing: AppButton(
-                  label: 'Crear',
-                  icon: Icons.add,
-                  onPressed: () {},
+                  label: widget.catalogsModule == null ? 'Crear' : 'Fechas',
+                  icon: widget.catalogsModule == null
+                      ? Icons.add
+                      : Icons.calendar_today_rounded,
+                  onPressed: widget.catalogsModule == null
+                      ? () {}
+                      : () {
+                          if (widget.catalogsModule == null ||
+                              widget.authController == null) {
+                            return;
+                          }
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => SchedulesPage(
+                                module: widget.catalogsModule!,
+                                authController: widget.authController!,
+                              ),
+                            ),
+                          );
+                        },
                 ),
               ),
               const SizedBox(height: 20),
@@ -157,15 +184,16 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen> {
                 itemCount: visible.length,
                 itemBuilder: (context, i) {
                   return Padding(
-                    padding: EdgeInsets.only(bottom: i < visible.length - 1 ? 10 : 0),
+                    padding: EdgeInsets.only(
+                      bottom: i < visible.length - 1 ? 10 : 0,
+                    ),
                     child: ReservationRowCard(
                       reservation: visible[i],
                       subtitle:
                           '${visible[i].equineName} - ${visible[i].slotLabel}',
                       highlightIfPending: true,
                       openDetailsOnTap: true,
-                      onOpenDetail: () =>
-                          _openReservationDetail(visible[i]),
+                      onOpenDetail: () => _openReservationDetail(visible[i]),
                     ),
                   );
                 },

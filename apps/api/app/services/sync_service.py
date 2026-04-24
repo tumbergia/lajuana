@@ -2,21 +2,27 @@ from datetime import UTC, datetime
 
 from beanie import PydanticObjectId
 
+from app.common.enums import ROLE_PERMISSIONS, Permission
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import (
+    AppConfigDocument,
     AssignmentDocument,
+    ExperienceDocument,
     ParticipantDocument,
     PaymentProofDocument,
     PolicyDocument,
     ProviderDocument,
     ReservationDocument,
+    ScheduleDocument,
     ServiceLogDocument,
     SyncChangeDocument,
     SyncOperationReceiptDocument,
     UserDocument,
 )
 from app.schemas.assignment import AssignmentCreateSchema, AssignmentUpdateSchema
+from app.schemas.config import ReservationRulesUpdateSchema
+from app.schemas.experience import ExperienceCreateSchema, ExperienceUpdateSchema
 from app.schemas.participant import ParticipantCreateSchema, ParticipantUpdateSchema
 from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofUpdateSchema
 from app.schemas.policy import PolicyCreateSchema, PolicyUpdateSchema
@@ -25,6 +31,7 @@ from app.schemas.reservation import (
     ReservationCreateSchema,
     ReservationUpdateSchema,
 )
+from app.schemas.schedule import ScheduleCreateSchema, ScheduleUpdateSchema
 from app.schemas.service_log import ServiceLogCreateSchema, ServiceLogUpdateSchema
 from app.schemas.sync import (
     SyncPullRequestSchema,
@@ -36,7 +43,7 @@ from app.schemas.sync import (
     SyncPushResultSchema,
 )
 from app.services.assignment_service import AssignmentService
-from app.services.config_service import ConfigService
+from app.services.config_service import RESERVATION_RULES_KEY, ConfigService
 from app.services.equine_service import EquineService
 from app.services.experience_service import ExperienceService
 from app.services.mappers import (
@@ -63,6 +70,9 @@ from app.services.service_log_service import ServiceLogService
 
 class SyncOperationExecutor:
     def __init__(self) -> None:
+        self.config_service = ConfigService()
+        self.experience_service = ExperienceService()
+        self.schedule_service = ScheduleService()
         self.reservation_service = ReservationService()
         self.participant_service = ParticipantService()
         self.payment_proof_service = PaymentProofService()
@@ -75,6 +85,7 @@ class SyncOperationExecutor:
         self, *, current_user: UserDocument, operation: SyncPushOperationSchema
     ) -> SyncPushResultSchema:
         try:
+            _ensure_operation_permission(current_user=current_user, operation=operation)
             doc = await self._execute_doc(current_user=current_user, operation=operation)
             return SyncPushResultSchema(
                 operation_id=operation.operation_id,
@@ -108,6 +119,50 @@ class SyncOperationExecutor:
         entity = operation.entity_type
         op_type = operation.operation_type
 
+        if entity == "experience" and op_type == "create":
+            schema = ExperienceCreateSchema(**operation.payload)
+            return await self.experience_service.create(schema)
+        if entity == "experience" and op_type == "update":
+            _require_remote_id(operation)
+            await _ensure_base_version(
+                ExperienceDocument,
+                operation.entity_remote_id,
+                operation.base_version,
+            )
+            schema = ExperienceUpdateSchema(**operation.payload)
+            return await self.experience_service.update(operation.entity_remote_id, schema)
+        if entity == "experience" and op_type == "delete":
+            _require_remote_id(operation)
+            await _ensure_base_version(
+                ExperienceDocument,
+                operation.entity_remote_id,
+                operation.base_version,
+            )
+            return await self.experience_service.deactivate(operation.entity_remote_id)
+        if entity == "schedule" and op_type == "create":
+            schema = ScheduleCreateSchema(**operation.payload)
+            return await self.schedule_service.create(schema)
+        if entity == "schedule" and op_type == "update":
+            _require_remote_id(operation)
+            await _ensure_base_version(
+                ScheduleDocument,
+                operation.entity_remote_id,
+                operation.base_version,
+            )
+            schema = ScheduleUpdateSchema(**operation.payload)
+            return await self.schedule_service.update(operation.entity_remote_id, schema)
+        if entity == "schedule" and op_type == "delete":
+            _require_remote_id(operation)
+            await _ensure_base_version(
+                ScheduleDocument,
+                operation.entity_remote_id,
+                operation.base_version,
+            )
+            return await self.schedule_service.deactivate(operation.entity_remote_id)
+        if entity == "reservation_rules" and op_type == "update":
+            await _ensure_reservation_rules_base_version(operation.base_version)
+            schema = ReservationRulesUpdateSchema(**operation.payload)
+            return await self.config_service.update_reservation_rules_document(schema)
         if entity == "reservation" and op_type == "create":
             schema = ReservationCreateSchema(**operation.payload)
             return await self.reservation_service.create(
@@ -220,15 +275,20 @@ class SyncService:
         self.executor = SyncOperationExecutor()
 
     async def build_bootstrap(self, *, current_user: UserDocument) -> dict:
+        can_read_config = Permission.CONFIG_READ in ROLE_PERMISSIONS[current_user.role]
         experiences = await self.experience_service.list()
         schedules = await self.schedule_service.list()
         equines = await self.equine_service.list()
         cursors = await _latest_stream_cursors()
+        if not can_read_config:
+            cursors.pop("config", None)
         return {
             "server_time": datetime.now(UTC),
             "user": user_to_response(current_user).model_dump(mode="json"),
-            "reservation_rules": (await self.config_service.get_reservation_rules()).model_dump(
-                mode="json"
+            "reservation_rules": (
+                (await self.config_service.get_reservation_rules()).model_dump(mode="json")
+                if can_read_config
+                else None
             ),
             "emergency_contacts": (await self.config_service.get_emergency_contacts()).model_dump(
                 mode="json"
@@ -241,9 +301,21 @@ class SyncService:
             "cursors": cursors,
         }
 
-    async def pull_changes(self, *, body: SyncPullRequestSchema) -> SyncPullResponseSchema:
+    async def pull_changes(
+        self, *, current_user: UserDocument, body: SyncPullRequestSchema
+    ) -> SyncPullResponseSchema:
+        can_read_config = Permission.CONFIG_READ in ROLE_PERMISSIONS[current_user.role]
         streams: list[SyncPullStreamResponseSchema] = []
         for stream_cursor in body.streams:
+            if stream_cursor.name == "config" and not can_read_config:
+                streams.append(
+                    SyncPullStreamResponseSchema(
+                        name=stream_cursor.name,
+                        next_cursor=stream_cursor.cursor or "",
+                        changes=[],
+                    )
+                )
+                continue
             query = SyncChangeDocument.find(SyncChangeDocument.stream == stream_cursor.name)
             if stream_cursor.cursor:
                 try:
@@ -342,6 +414,25 @@ async def _ensure_base_version(
         )
 
 
+async def _ensure_reservation_rules_base_version(base_version: int | None) -> None:
+    if base_version is None:
+        return
+    config = await AppConfigDocument.find_one(AppConfigDocument.key == RESERVATION_RULES_KEY)
+    if config is None:
+        return
+    if base_version != config.version:
+        raise ApiError(
+            status_code=409,
+            code=ErrorCode.SYNC_STALE_VERSION,
+            message="Entity version is outdated.",
+            details={
+                "entity_id": str(config.id),
+                "expected_version": config.version,
+                "received_version": base_version,
+            },
+        )
+
+
 def _require_remote_id(operation: SyncPushOperationSchema) -> None:
     if not operation.entity_remote_id:
         raise ApiError(
@@ -362,7 +453,57 @@ def _require_field(payload: dict, key: str) -> str:
     return str(value)
 
 
+SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
+    ("experience", "create"): Permission.EXPERIENCE_CREATE,
+    ("experience", "update"): Permission.EXPERIENCE_UPDATE,
+    ("experience", "delete"): Permission.EXPERIENCE_DELETE,
+    ("schedule", "create"): Permission.SCHEDULE_CREATE,
+    ("schedule", "update"): Permission.SCHEDULE_UPDATE,
+    ("schedule", "delete"): Permission.SCHEDULE_DELETE,
+    ("reservation_rules", "update"): Permission.CONFIG_UPDATE,
+    ("reservation", "create"): Permission.RESERVATION_CREATE,
+    ("reservation", "update"): Permission.RESERVATION_UPDATE,
+    ("participant", "create"): Permission.PARTICIPANT_CREATE,
+    ("participant", "update"): Permission.PARTICIPANT_UPDATE,
+    ("payment_proof", "create"): Permission.PAYMENT_PROOF_CREATE,
+    ("payment_proof", "update"): Permission.PAYMENT_VERIFY,
+    ("assignment", "create"): Permission.ASSIGNMENT_CREATE,
+    ("assignment", "update"): Permission.ASSIGNMENT_UPDATE,
+    ("service_log", "create"): Permission.LOG_CREATE,
+    ("service_log", "update"): Permission.LOG_UPDATE,
+    ("provider", "create"): Permission.PROVIDER_CREATE,
+    ("provider", "update"): Permission.PROVIDER_UPDATE,
+    ("policy", "create"): Permission.POLICY_CREATE,
+    ("policy", "update"): Permission.POLICY_UPDATE,
+}
+
+
+def _ensure_operation_permission(
+    *, current_user: UserDocument, operation: SyncPushOperationSchema
+) -> None:
+    required = SYNC_REQUIRED_PERMISSION.get((operation.entity_type, operation.operation_type))
+    if required is None:
+        return
+    user_permissions = ROLE_PERMISSIONS[current_user.role]
+    if required in user_permissions:
+        return
+    raise ApiError(
+        status_code=403,
+        code=ErrorCode.AUTH_FORBIDDEN,
+        message="No tiene permisos para realizar esta accion.",
+        details={"missing_permissions": [required.value]},
+    )
+
+
 def _entity_to_response_dict(entity_type: str, doc) -> dict:
+    if entity_type == "experience":
+        return experience_to_response(doc).model_dump(mode="json")
+    if entity_type == "schedule":
+        return schedule_to_response(doc).model_dump(mode="json")
+    if entity_type == "reservation_rules":
+        if isinstance(doc, AppConfigDocument) and doc.reservation_rules is not None:
+            return doc.reservation_rules.model_dump(mode="json")
+        return {}
     if entity_type == "reservation":
         return reservation_to_response(doc).model_dump(mode="json")
     if entity_type == "participant":
@@ -387,7 +528,9 @@ async def _latest_stream_cursors() -> dict[str, str]:
         "payment_proofs",
         "assignments",
         "logs",
+        "experiences",
         "schedules",
+        "config",
         "equines",
         "providers",
         "policies",

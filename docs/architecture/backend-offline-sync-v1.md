@@ -30,6 +30,16 @@ Definir y dejar implementado el contrato backend para operacion offline-first de
 - `push` usa idempotencia por `idempotency_key` y conserva recibos para reintentos seguros.
 - Las operaciones de `push` delegan en servicios existentes de dominio; no existe logica paralela.
 - `base_version` se valida en updates para evitar merges silenciosos (`sync.stale_version` en conflicto).
+- `push` soporta catalogos operativos: `experience` (`create|update|delete`),
+  `schedule` (`create|update|delete`) y `reservation_rules` (`update`).
+- Se incluye stream `config` para propagar cambios de `reservation_rules` por `sync/pull`.
+
+## Cambios de catalogos operativos (2026-04-24)
+
+- `Schedule` separa estado operativo (`status`) de activacion (`is_active`).
+- `DELETE /schedules/{id}` desactiva (`is_active=false`) y conserva `status=closed`.
+- `GET /schedules` admite filtro `is_active`.
+- Confirmacion de reserva valida que la fecha operativa este activa y abierta.
 
 ## Archivos y comprobantes
 

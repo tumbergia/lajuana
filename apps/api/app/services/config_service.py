@@ -33,7 +33,7 @@ class ConfigService:
         return EmergencyContactsResponseSchema(items=items)
 
     async def get_reservation_rules(self) -> ReservationRulesSchema:
-        config = await AppConfigDocument.find_one(AppConfigDocument.key == RESERVATION_RULES_KEY)
+        config = await self.get_reservation_rules_document()
         if config is None or config.reservation_rules is None:
             return ReservationRulesSchema(
                 min_days_in_advance=DEFAULT_RESERVATION_MIN_DAYS,
@@ -41,16 +41,30 @@ class ConfigService:
             )
         return ReservationRulesSchema.model_validate(config.reservation_rules.model_dump())
 
+    async def get_reservation_rules_document(self) -> AppConfigDocument | None:
+        return await AppConfigDocument.find_one(AppConfigDocument.key == RESERVATION_RULES_KEY)
+
     async def update_reservation_rules(
         self, payload: ReservationRulesUpdateSchema
     ) -> ReservationRulesSchema:
+        config = await self.update_reservation_rules_document(payload)
+        if config.reservation_rules is None:
+            return ReservationRulesSchema(
+                min_days_in_advance=DEFAULT_RESERVATION_MIN_DAYS,
+                require_payment_proof_for_confirmation=True,
+            )
+        return ReservationRulesSchema.model_validate(config.reservation_rules.model_dump())
+
+    async def update_reservation_rules_document(
+        self, payload: ReservationRulesUpdateSchema
+    ) -> AppConfigDocument:
         if payload.min_days_in_advance is not None and payload.min_days_in_advance < 0:
             raise ApiError(
                 status_code=400,
                 code=ErrorCode.CONFIG_INVALID_MIN_DAYS,
                 message="min_days_in_advance no puede ser negativo.",
             )
-        config = await AppConfigDocument.find_one(AppConfigDocument.key == RESERVATION_RULES_KEY)
+        config = await self.get_reservation_rules_document()
         current = await self.get_reservation_rules()
         updated = current.model_copy(update=payload.model_dump(exclude_none=True))
 
@@ -60,8 +74,8 @@ class ConfigService:
                 reservation_rules=ReservationRules(**updated.model_dump()),
             )
             await config.insert()
-            return updated
+            return config
 
         config.reservation_rules = ReservationRules(**updated.model_dump())
         await config.save()
-        return updated
+        return config

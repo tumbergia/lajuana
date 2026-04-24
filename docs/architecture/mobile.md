@@ -50,6 +50,7 @@ Cada modulo principal mantiene su estado de subruta y carga local/remota:
 - Equinos (`features/equines/presentation/screens/equines_module_screen.dart`)
 - Participantes (`features/participants/presentation/screens/participants_module_screen.dart`)
 - Mas / configuracion (`features/configuration/presentation/screens/more_flow_screen.dart`)
+- Catalogos operativos (`features/catalogs/`) con persistencia local, cola offline y sync/push.
 
 Implementacion base de controladores:
 
@@ -104,10 +105,21 @@ Se muestran como componentes transversales reutilizables:
 6. proveedores y configuracion operativa;
 7. endurecimiento de estados vacios/error/conflictos y optimizacion.
 
+## Catalogos offline-first
+
+- Escrituras de experiencias, fechas operativas y reglas de reserva via `sync/push`.
+- Lectura y reconciliacion via `sync/bootstrap` + `sync/pull`.
+- Cola local persistente con estados `pending`, `conflict`, `rejected`, `synced`.
+- Acceso principal desde `Mas > Catalogos` y acceso rapido a fechas operativas desde Reservas.
+
 ## Reglas de composicion
 
 - local-first para pintar rapido;
 - refresh remoto en segundo plano cuando aplique;
+- rutas no deben bloquear UI esperando red si ya existe data local;
+- separar estados de vista: `isInitialLoading`, `isRefreshing`, `isSyncing`, `hasLocalData`;
+- evitar metodos ambiguos tipo `load()` en controladores/repositorios de catalogos;
+- preferir nombres explicitos: `loadLocalThenRefresh`, `refresh*FromServer`, `syncNow`;
 - listas largas con carga incremental (`ListView.builder`, `loadMore` donde aplique);
 - no mezclar reglas de negocio de feature en widgets globales;
 - no mover widgets de feature al design system sin evidencia de reuso real;

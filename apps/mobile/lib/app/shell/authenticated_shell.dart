@@ -1,9 +1,12 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 
 import '../../features/auth/domain/auth_enums.dart';
 import '../../features/auth/infrastructure/connectivity/network_models.dart';
 import '../../features/auth/infrastructure/remote/auth_api_client.dart';
 import '../../features/auth/presentation/auth_controller.dart';
+import '../../features/catalogs/catalogs_module.dart';
 import '../navigation/shell_navigation_controller.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_top_bar.dart';
@@ -19,11 +22,13 @@ class AuthenticatedShell extends StatefulWidget {
     super.key,
     required this.authController,
     required this.contactsApiClient,
+    this.catalogsModule,
     this.onCallRequested,
   });
 
   final AuthController authController;
   final AuthApiClient contactsApiClient;
+  final CatalogsModule? catalogsModule;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -34,6 +39,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
   late final ShellNavigationController _shellNav;
   final Map<AppNavItem, GlobalKey<NavigatorState>> _navigatorKeys = {};
   final Set<AppNavItem> _visitedTabs = {};
+  bool _wasBackendReachable = false;
 
   @override
   void initState() {
@@ -72,7 +78,10 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           onNavigateToTab: _onBottomNavTap,
         );
       case AppNavItem.reservas:
-        return const ReservationsModuleScreen();
+        return ReservationsModuleScreen(
+          catalogsModule: widget.catalogsModule,
+          authController: widget.authController,
+        );
       case AppNavItem.equinos:
         return const EquinesModuleScreen();
       case AppNavItem.clientes:
@@ -81,6 +90,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         return MoreFlowScreen(
           controller: widget.authController,
           contactsApiClient: widget.contactsApiClient,
+          catalogsModule: widget.catalogsModule,
           onCallRequested: widget.onCallRequested,
         );
       case AppNavItem.none:
@@ -93,6 +103,15 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
     return AnimatedBuilder(
       animation: Listenable.merge([widget.authController, _shellNav]),
       builder: (context, _) {
+        final canReachBackend =
+            widget.authController.networkStatus.canReachBackend;
+        if (canReachBackend &&
+            !_wasBackendReachable &&
+            widget.catalogsModule != null) {
+          unawaited(widget.catalogsModule!.repository.autoSync());
+        }
+        _wasBackendReachable = canReachBackend;
+
         final showReconnectOverlay =
             widget.authController.isLoading &&
             widget.authController.authState ==

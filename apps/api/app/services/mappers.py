@@ -64,6 +64,7 @@ def schedule_to_response(doc: ScheduleDocument) -> ScheduleResponseSchema:
         experience_id=str(doc.experience_id),
         date=doc.date,
         start_time=doc.start_time,
+        is_active=doc.is_active,
         capacity_total=doc.capacity_total,
         reserved_slots=doc.reserved_slots,
         internal_slots=doc.internal_slots,
