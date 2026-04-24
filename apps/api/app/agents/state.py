@@ -4,7 +4,7 @@ from langgraph.graph import MessagesState
 
 
 class GraphState(MessagesState):
-    role: Literal["admin", "guide", "customer"]
+    role: Literal["admin", "guide", "unassigned"]
     user_id: str
     conversation_id: str
     extracted_data: dict[str, Any]

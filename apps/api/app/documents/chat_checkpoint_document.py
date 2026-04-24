@@ -13,7 +13,7 @@ class ChatCheckpointDocument(AuditDocument):
     conversation_id: Indexed(str)  # type: ignore[valid-type]
     user_id: Indexed(str)  # type: ignore[valid-type]
     messages: list[dict[str, Any]] = Field(default_factory=list)
-    role: str = "customer"
+    role: str = "unassigned"
     extracted_data: dict[str, Any] = Field(default_factory=dict)
     rag_context: str = ""
     booking_intent: bool = False
