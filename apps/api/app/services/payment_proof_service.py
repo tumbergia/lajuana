@@ -3,9 +3,8 @@ from beanie import PydanticObjectId
 from app.common.enums import PaymentStatus
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-from app.documents import PaymentProofDocument, ReservationDocument
+from app.documents import FileUploadDocument, PaymentProofDocument, ReservationDocument
 from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofUpdateSchema
-from app.services.storage import LocalStorageAdapter
 
 ALLOWED_CONTENT_TYPES = {
     "image/jpeg",
@@ -15,9 +14,6 @@ ALLOWED_CONTENT_TYPES = {
 
 
 class PaymentProofService:
-    def __init__(self) -> None:
-        self.storage = LocalStorageAdapter()
-
     async def create(
         self,
         reservation_id: str,
@@ -31,28 +27,31 @@ class PaymentProofService:
                 code=ErrorCode.RESERVATION_NOT_FOUND,
                 message="Reserva no encontrada.",
             )
-        if not payload.content_base64:
+        if not payload.storage_key:
             raise ApiError(
                 status_code=400,
                 code=ErrorCode.PAYMENT_PROOF_STORAGE_KEY_REQUIRED,
-                message="Se requiere contenido para almacenar el comprobante.",
+                message="Se requiere storage_key para almacenar el comprobante.",
             )
         if payload.content_type not in ALLOWED_CONTENT_TYPES:
             raise ApiError(
                 status_code=400,
                 code=ErrorCode.PAYMENT_PROOF_INVALID_CONTENT_TYPE,
-                message="El tipo de contenido no está permitido.",
+                message="El tipo de contenido no esta permitido.",
             )
-
-        storage_key = await self.storage.store_base64(
-            reservation_id=reservation_id,
-            filename=payload.filename,
-            content_base64=payload.content_base64,
+        upload = await FileUploadDocument.find_one(
+            FileUploadDocument.storage_key == payload.storage_key
         )
+        if upload is None or upload.status != "ready":
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.FILE_UPLOAD_NOT_READY,
+                message="El archivo del comprobante no esta listo para consolidar.",
+            )
 
         doc = PaymentProofDocument(
             reservation_id=reservation.id,
-            storage_key=storage_key,
+            storage_key=payload.storage_key,
             filename=payload.filename,
             content_type=payload.content_type,
             size_bytes=payload.size_bytes,

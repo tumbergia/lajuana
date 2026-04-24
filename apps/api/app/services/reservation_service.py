@@ -127,6 +127,13 @@ class ReservationService:
                 code=ErrorCode.SCHEDULE_NOT_FOUND,
                 message="Agenda no encontrada.",
             )
+        if not schedule.is_active:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.SCHEDULE_NOT_OPEN,
+                message="La agenda esta desactivada para confirmar.",
+                details={"schedule_id": str(schedule.id), "status": "inactive"},
+            )
         if schedule.status != ScheduleStatus.OPEN:
             raise ApiError(
                 status_code=409,

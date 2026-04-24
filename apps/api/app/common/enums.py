@@ -29,6 +29,24 @@ class ExperienceLevel(StrEnum):
     ADVANCED = "advanced"
 
 
+class ExperienceDifficulty(StrEnum):
+    BASIC = "basic"
+    INTERMEDIATE = "intermediate"
+    ADVANCED = "advanced"
+
+
+class ExperienceCategory(StrEnum):
+    ROUTE = "route"
+    EXPERIENCE = "experience"
+    PRIVATE = "private"
+
+
+class ExperienceStatus(StrEnum):
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+
 class Channel(StrEnum):
     FACEBOOK = "facebook"
     INSTAGRAM = "instagram"

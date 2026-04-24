@@ -1,9 +1,10 @@
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, EmailStr, Field
 
 from app.common.enums import ExperienceLevel
+from app.schemas.common import AuditMetadataSchema
 
 
 class EmergencyContactSchema(BaseModel):
@@ -57,7 +58,7 @@ class ParticipantUpdateSchema(BaseModel):
     accepted_media_usage: bool | None = None
 
 
-class ParticipantResponseSchema(BaseModel):
+class ParticipantResponseSchema(AuditMetadataSchema):
     id: str
     reservation_id: str
     first_name: str
@@ -75,4 +76,3 @@ class ParticipantResponseSchema(BaseModel):
     accepted_data_processing: bool
     accepted_media_usage: bool | None
     is_completed: bool
-    created_at: datetime

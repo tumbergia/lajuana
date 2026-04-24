@@ -4,6 +4,7 @@ from decimal import Decimal
 from pydantic import BaseModel, EmailStr, Field
 
 from app.common.enums import Channel, PaymentStatus, ReservationStatus
+from app.schemas.common import AuditMetadataSchema
 
 
 class ReservationCreateSchema(BaseModel):
@@ -37,7 +38,7 @@ class ReservationStatusTransitionSchema(BaseModel):
     target_status: ReservationStatus
 
 
-class ReservationResponseSchema(BaseModel):
+class ReservationResponseSchema(AuditMetadataSchema):
     id: str
     code: str
     experience_id: str
@@ -55,13 +56,11 @@ class ReservationResponseSchema(BaseModel):
     confirmed_at: datetime | None
     cancelled_at: datetime | None
     completed_at: datetime | None
-    created_at: datetime
 
 
-class ReservationListItemSchema(BaseModel):
+class ReservationListItemSchema(AuditMetadataSchema):
     id: str
     code: str
     status: ReservationStatus
     participant_count: int
     payment_status: PaymentStatus
-    created_at: datetime

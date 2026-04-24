@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 
 from app.documents import ProviderType
+from app.schemas.common import AuditMetadataSchema
 
 
 class ProviderCreateSchema(BaseModel):
@@ -27,7 +28,7 @@ class ProviderUpdateSchema(BaseModel):
     is_active: bool | None = None
 
 
-class ProviderResponseSchema(BaseModel):
+class ProviderResponseSchema(AuditMetadataSchema):
     id: str
     name: str
     provider_type: ProviderType

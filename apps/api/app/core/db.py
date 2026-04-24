@@ -7,6 +7,7 @@ from app.documents import (
     AssignmentDocument,
     EquineDocument,
     ExperienceDocument,
+    FileUploadDocument,
     ParticipantDocument,
     PaymentProofDocument,
     PingDocument,
@@ -16,6 +17,8 @@ from app.documents import (
     SaddleDocument,
     ScheduleDocument,
     ServiceLogDocument,
+    SyncChangeDocument,
+    SyncOperationReceiptDocument,
     UserDocument,
 )
 
@@ -57,6 +60,9 @@ async def init_db() -> None:
             ServiceLogDocument,
             ProviderDocument,
             PolicyDocument,
+            SyncChangeDocument,
+            SyncOperationReceiptDocument,
+            FileUploadDocument,
         ],
     )
 

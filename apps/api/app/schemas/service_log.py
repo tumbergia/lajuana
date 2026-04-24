@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.documents import ServiceLogEventType
+from app.schemas.common import AuditMetadataSchema
 
 
 class ServiceLogCreateSchema(BaseModel):
@@ -24,7 +25,7 @@ class ServiceLogUpdateSchema(BaseModel):
     related_equine_id: str | None = None
 
 
-class ServiceLogResponseSchema(BaseModel):
+class ServiceLogResponseSchema(AuditMetadataSchema):
     id: str
     reservation_id: str
     event_type: ServiceLogEventType
@@ -33,4 +34,3 @@ class ServiceLogResponseSchema(BaseModel):
     notes: str | None
     related_participant_id: str | None
     related_equine_id: str | None
-    created_at: datetime

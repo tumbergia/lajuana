@@ -47,6 +47,7 @@ Este documento lista todos los endpoints expuestos por `apps/api` según el esqu
 | GET | `/api/v1/experiences/{experience_id}` | `getExperienceById` | — | `200 ExperienceResponseSchema` | `200, 401, 404, 422` |
 | PATCH | `/api/v1/experiences/{experience_id}` | `updateExperienceById` | `ExperienceUpdateSchema` | `200 ExperienceResponseSchema` | `200, 400, 401, 403, 404, 409, 422` |
 | DELETE | `/api/v1/experiences/{experience_id}` | `deactivateExperienceById` | — | `200 ExperienceResponseSchema` | `200, 401, 403, 404, 422` |
+| POST | `/api/v1/experiences/{experience_id}/quote` | `quoteExperienceById` | `ExperienceQuoteRequestSchema` | `200 ExperienceQuoteResponseSchema` | `200, 400, 401, 404, 422` |
 
 ## Fechas Operativas (Schedules)
 

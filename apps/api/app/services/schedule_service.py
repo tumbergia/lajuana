@@ -40,7 +40,10 @@ class ScheduleService:
             blocked_slots=payload.blocked_slots,
             internal_slots=payload.internal_slots,
         )
-        status = ScheduleStatus.FULL if available_slots == 0 else ScheduleStatus.OPEN
+        if not payload.is_active:
+            status = ScheduleStatus.CLOSED
+        else:
+            status = ScheduleStatus.FULL if available_slots == 0 else ScheduleStatus.OPEN
 
         doc = ScheduleDocument(
             **payload.model_dump(),
@@ -57,6 +60,7 @@ class ScheduleService:
         date_from: date | None = None,
         date_to: date | None = None,
         status: ScheduleStatus | None = None,
+        is_active: bool | None = None,
     ) -> list[ScheduleDocument]:
         query = []
         if experience_id:
@@ -67,6 +71,8 @@ class ScheduleService:
             query.append(ScheduleDocument.date <= date_to)
         if status:
             query.append(ScheduleDocument.status == status)
+        if is_active is not None:
+            query.append(ScheduleDocument.is_active == is_active)
         if not query:
             return await ScheduleDocument.find_all().to_list()
         return await ScheduleDocument.find(*query).to_list()
@@ -93,7 +99,9 @@ class ScheduleService:
             blocked_slots=doc.blocked_slots,
             internal_slots=doc.internal_slots,
         )
-        if doc.available_slots == 0:
+        if doc.is_active is False:
+            doc.status = ScheduleStatus.CLOSED
+        elif doc.available_slots == 0:
             doc.status = ScheduleStatus.FULL
         elif doc.status == ScheduleStatus.FULL:
             doc.status = ScheduleStatus.OPEN
@@ -103,6 +111,7 @@ class ScheduleService:
 
     async def deactivate(self, schedule_id: str) -> ScheduleDocument:
         doc = await self.get(schedule_id)
+        doc.is_active = False
         doc.status = ScheduleStatus.CLOSED
         await doc.save()
         return doc

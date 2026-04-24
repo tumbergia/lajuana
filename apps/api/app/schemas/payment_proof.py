@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from app.common.enums import PaymentStatus
+from app.schemas.common import AuditMetadataSchema
 
 
 class PaymentProofCreateSchema(BaseModel):
@@ -10,7 +11,7 @@ class PaymentProofCreateSchema(BaseModel):
     content_type: str
     size_bytes: int = Field(gt=0)
     sha256: str
-    content_base64: str
+    storage_key: str
 
 
 class PaymentProofUpdateSchema(BaseModel):
@@ -22,7 +23,7 @@ class PaymentProofUpdateSchema(BaseModel):
     sha256: str | None = None
 
 
-class PaymentProofResponseSchema(BaseModel):
+class PaymentProofResponseSchema(AuditMetadataSchema):
     id: str
     reservation_id: str
     storage_key: str

@@ -9,6 +9,10 @@ class AppScaffold extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final Color? backgroundColor;
 
+  /// Evita que el [Scaffold] redimensione el cuerpo al abrir el teclado.
+  /// Útil con formularios donde `adjustResize` / insets disparan cierre del IME.
+  final bool resizeToAvoidBottomInset;
+
   const AppScaffold({
     super.key,
     required this.child,
@@ -18,6 +22,7 @@ class AppScaffold extends StatelessWidget {
     this.scrollable = true,
     this.padding,
     this.backgroundColor,
+    this.resizeToAvoidBottomInset = true,
   });
 
   @override
@@ -28,6 +33,7 @@ class AppScaffold extends StatelessWidget {
     );
 
     return Scaffold(
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       backgroundColor: backgroundColor ?? Theme.of(context).colorScheme.surface,
       appBar: appBar,
       bottomNavigationBar: bottomNavigationBar,

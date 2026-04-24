@@ -39,6 +39,7 @@ class AppTextField extends StatelessWidget {
   final bool autofocus;
   final bool readOnly;
   final VoidCallback? onTap;
+  final bool obscureText;
 
   const AppTextField({
     super.key,
@@ -54,6 +55,7 @@ class AppTextField extends StatelessWidget {
     this.autofocus = false,
     this.readOnly = false,
     this.onTap,
+    this.obscureText = false,
   });
 
   @override
@@ -61,6 +63,8 @@ class AppTextField extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tokens = theme.appTokens;
+    final effectiveKeyboardType =
+        keyboardType ?? (obscureText ? TextInputType.visiblePassword : null);
 
     // ── Borders ────────────────────────────────────────────────────────────
     InputBorder underline(Color color, [double width = 1.0]) =>
@@ -122,8 +126,11 @@ class AppTextField extends StatelessWidget {
           autofocus: autofocus,
           readOnly: readOnly,
           onTap: onTap,
+          obscureText: obscureText,
+          autocorrect: !obscureText,
+          enableSuggestions: !obscureText,
           maxLines: maxLines,
-          keyboardType: keyboardType,
+          keyboardType: effectiveKeyboardType,
           onChanged: onChanged,
           style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
           decoration: InputDecoration(

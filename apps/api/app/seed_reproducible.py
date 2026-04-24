@@ -338,6 +338,7 @@ async def seed_schedules(
             "experience_id": experiences_by_slug[item.experience_slug].id,
             "date": datetime.combine(day, time.min, tzinfo=UTC),
             "start_time": "08:00:00",
+            "is_active": True,
             "capacity_total": item.capacity,
             "reserved_slots": reserved,
             "internal_slots": 0,
@@ -355,6 +356,7 @@ async def seed_schedules(
             experience_id=experiences_by_slug[item.experience_slug].id,
             date=day,
             start_time=time(hour=8, minute=0),
+            is_active=True,
             capacity_total=item.capacity,
             reserved_slots=reserved,
             internal_slots=0,
@@ -710,18 +712,11 @@ async def _refresh_schedule_occupancy_from_confirmed(
         reserved = load_by_schedule.get(str(schedule.id), schedule.reserved_slots)
         available_slots = max(
             0,
-            schedule.capacity_total
-            - reserved
-            - schedule.internal_slots
-            - schedule.blocked_slots,
+            schedule.capacity_total - reserved - schedule.internal_slots - schedule.blocked_slots,
         )
         status = schedule.status
-        if schedule.status != ScheduleStatus.CLOSED:
-            status = (
-                ScheduleStatus.FULL
-                if available_slots == 0
-                else ScheduleStatus.OPEN
-            )
+        if schedule.is_active and schedule.status != ScheduleStatus.CLOSED:
+            status = ScheduleStatus.FULL if available_slots == 0 else ScheduleStatus.OPEN
         await collection.update_one(
             {"_id": ObjectId(str(schedule.id))},
             {

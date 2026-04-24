@@ -1,0 +1,130 @@
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+
+import '../../../../../app/widgets/cards/app_image_feature_card.dart';
+import '../../domain/experience.dart';
+import 'experience_status_badge.dart';
+
+class ExperienceCard extends StatelessWidget {
+  const ExperienceCard({super.key, required this.experience, this.onTap});
+
+  final CatalogExperience experience;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final activityDuration = experience.duration != null
+        ? '${experience.duration!.activityMinutes} min'
+        : 'Sin duracion';
+
+    final routeDuration = experience.duration != null
+        ? '${experience.duration!.routeMinutes} min recorrido'
+        : null;
+
+    final priceLabel =
+        experience.pricing != null && experience.pricing!.tiers.isNotEmpty
+        ? _priceFromTier(experience)
+        : null;
+
+    final subtitleParts = <String?>[
+      priceLabel,
+      activityDuration,
+      routeDuration,
+    ].whereType<String>();
+
+    return AppImageFeatureCard(
+      title: experience.name,
+      subtitle: subtitleParts.join(' | '),
+      image: _resolveImageProvider(experience.imageUrl),
+      badge: experienceStatusBadgeFor(experience),
+      width: double.infinity,
+      imageHeight: 190,
+      onTap: onTap,
+    );
+  }
+
+  String _priceFromTier(CatalogExperience experience) {
+    final firstTier = experience.pricing!.tiers.first;
+    final currency = experience.pricing!.currency;
+    return '$currency ${firstTier.pricePerPerson} por persona';
+  }
+
+  ImageProvider _resolveImageProvider(String? imageUrl) {
+    final sanitized = imageUrl?.trim() ?? '';
+    if (sanitized.isNotEmpty) {
+      return NetworkImage(sanitized);
+    }
+    return MemoryImage(_transparentImage);
+  }
+}
+
+final Uint8List _transparentImage = Uint8List.fromList(const <int>[
+  0x89,
+  0x50,
+  0x4E,
+  0x47,
+  0x0D,
+  0x0A,
+  0x1A,
+  0x0A,
+  0x00,
+  0x00,
+  0x00,
+  0x0D,
+  0x49,
+  0x48,
+  0x44,
+  0x52,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x08,
+  0x06,
+  0x00,
+  0x00,
+  0x00,
+  0x1F,
+  0x15,
+  0xC4,
+  0x89,
+  0x00,
+  0x00,
+  0x00,
+  0x0A,
+  0x49,
+  0x44,
+  0x41,
+  0x54,
+  0x78,
+  0x9C,
+  0x63,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x05,
+  0x00,
+  0x01,
+  0x0D,
+  0x0A,
+  0x2D,
+  0xB4,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x49,
+  0x45,
+  0x4E,
+  0x44,
+  0xAE,
+  0x42,
+  0x60,
+  0x82,
+]);

@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 from app.common.constants import TOKEN_TYPE_BEARER
 from app.common.enums import UserRole
+from app.schemas.common import AuditMetadataSchema
 
 PASSWORD_MIN_LENGTH = 8
 
@@ -39,7 +40,7 @@ class UserChangePasswordSchema(BaseModel):
     new_password: str = Field(min_length=PASSWORD_MIN_LENGTH)
 
 
-class UserResponseSchema(BaseModel):
+class UserResponseSchema(AuditMetadataSchema):
     id: str
     email: EmailStr
     full_name: str

@@ -22,8 +22,15 @@ from app.schemas.config import (
 from app.schemas.equine import EquineCreateSchema, EquineResponseSchema, EquineUpdateSchema
 from app.schemas.experience import (
     ExperienceCreateSchema,
+    ExperienceQuoteRequestSchema,
+    ExperienceQuoteResponseSchema,
     ExperienceResponseSchema,
     ExperienceUpdateSchema,
+)
+from app.schemas.file_upload import (
+    FileCompleteUploadResponseSchema,
+    FileInitUploadRequestSchema,
+    FileInitUploadResponseSchema,
 )
 from app.schemas.participant import (
     EmergencyContactSchema,
@@ -54,6 +61,18 @@ from app.schemas.service_log import (
     ServiceLogResponseSchema,
     ServiceLogUpdateSchema,
 )
+from app.schemas.sync import (
+    SyncChangeSchema,
+    SyncOperationErrorSchema,
+    SyncPullRequestSchema,
+    SyncPullResponseSchema,
+    SyncPullStreamResponseSchema,
+    SyncPushOperationSchema,
+    SyncPushRequestSchema,
+    SyncPushResponseSchema,
+    SyncPushResultSchema,
+    SyncStreamCursorSchema,
+)
 
 __all__ = [
     "ApiErrorResponse",
@@ -67,8 +86,13 @@ __all__ = [
     "EquineResponseSchema",
     "EquineUpdateSchema",
     "ExperienceCreateSchema",
+    "ExperienceQuoteRequestSchema",
+    "ExperienceQuoteResponseSchema",
     "ExperienceResponseSchema",
     "ExperienceUpdateSchema",
+    "FileCompleteUploadResponseSchema",
+    "FileInitUploadRequestSchema",
+    "FileInitUploadResponseSchema",
     "ParticipantCreateSchema",
     "ParticipantResponseSchema",
     "ParticipantUpdateSchema",
@@ -99,6 +123,16 @@ __all__ = [
     "ServiceLogCreateSchema",
     "ServiceLogResponseSchema",
     "ServiceLogUpdateSchema",
+    "SyncChangeSchema",
+    "SyncOperationErrorSchema",
+    "SyncPullRequestSchema",
+    "SyncPullResponseSchema",
+    "SyncPullStreamResponseSchema",
+    "SyncPushOperationSchema",
+    "SyncPushRequestSchema",
+    "SyncPushResponseSchema",
+    "SyncPushResultSchema",
+    "SyncStreamCursorSchema",
     "RegisterRequest",
     "TokenResponseSchema",
     "UserChangePasswordSchema",

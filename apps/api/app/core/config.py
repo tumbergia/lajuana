@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     app_env: str = "local"
     app_debug: bool = True
+    cors_allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:8080"
+    cors_allow_origin_regex: str = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
+    cors_allow_credentials: bool = False
 
     api_prefix: str = "/api"
     api_version: str = "v1"
@@ -22,6 +25,12 @@ class Settings(BaseSettings):
 
     storage_local_root: str = "./storage"
     storage_local_payment_proofs_prefix: str = "payment-proofs"
+    storage_s3_bucket: str = "lajuana-files"
+    storage_s3_region: str = "us-east-1"
+    storage_s3_endpoint_url: str | None = None
+    storage_s3_access_key_id: str | None = None
+    storage_s3_secret_access_key: str | None = None
+    storage_s3_presign_expiration_seconds: int = 900
 
     model_config = SettingsConfigDict(
         env_file=".env",

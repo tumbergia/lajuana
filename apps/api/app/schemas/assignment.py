@@ -1,8 +1,7 @@
-from datetime import datetime
-
 from pydantic import BaseModel
 
 from app.common.enums import AssignmentPriority
+from app.schemas.common import AuditMetadataSchema
 
 
 class AssignmentCreateSchema(BaseModel):
@@ -23,7 +22,7 @@ class AssignmentUpdateSchema(BaseModel):
     notes: str | None = None
 
 
-class AssignmentResponseSchema(BaseModel):
+class AssignmentResponseSchema(AuditMetadataSchema):
     id: str
     reservation_id: str
     participant_id: str
@@ -32,4 +31,3 @@ class AssignmentResponseSchema(BaseModel):
     priority: AssignmentPriority
     assigned_manually: bool
     notes: str | None
-    created_at: datetime

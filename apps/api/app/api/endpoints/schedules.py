@@ -46,12 +46,14 @@ async def list_schedules(
     date_from: date | None = None,
     date_to: date | None = None,
     status: ScheduleStatus | None = None,
+    is_active: bool | None = None,
 ) -> list[ScheduleResponseSchema]:
     docs = await service.list(
         experience_id=experience_id,
         date_from=date_from,
         date_to=date_to,
         status=status,
+        is_active=is_active,
     )
     return [schedule_to_response(doc) for doc in docs]
 

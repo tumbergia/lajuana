@@ -33,6 +33,10 @@ def user_to_response(user: UserDocument) -> UserResponseSchema:
         full_name=user.full_name,
         role=user.role,
         is_active=user.is_active,
+        version=user.version,
+        created_at=user.created_at,
+        updated_at=user.updated_at,
+        deleted_at=user.deleted_at,
     )
 
 
@@ -41,12 +45,28 @@ def experience_to_response(doc: ExperienceDocument) -> ExperienceResponseSchema:
         id=str(doc.id),
         name=doc.name,
         slug=doc.slug,
+        subtitle=doc.subtitle,
         description=doc.description,
+        image_url=doc.image_url,
         level=doc.level,
+        difficulty=doc.difficulty,
+        category=doc.category,
+        status=doc.status,
         duration_hours=doc.duration_hours,
         duration_days=doc.duration_days,
         base_capacity=doc.base_capacity,
+        duration=doc.duration,
+        route_details=doc.route_details,
+        pricing=doc.pricing,
+        inclusions=doc.inclusions,
+        standard_max_participants=doc.standard_max_participants,
+        min_participants=doc.min_participants,
+        tags=doc.tags,
         is_active=doc.is_active,
+        version=doc.version,
+        created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
     )
 
 
@@ -56,6 +76,7 @@ def schedule_to_response(doc: ScheduleDocument) -> ScheduleResponseSchema:
         experience_id=str(doc.experience_id),
         date=doc.date,
         start_time=doc.start_time,
+        is_active=doc.is_active,
         capacity_total=doc.capacity_total,
         reserved_slots=doc.reserved_slots,
         internal_slots=doc.internal_slots,
@@ -64,6 +85,10 @@ def schedule_to_response(doc: ScheduleDocument) -> ScheduleResponseSchema:
         status=doc.status,
         custom_request_only=doc.custom_request_only,
         notes=doc.notes,
+        version=doc.version,
+        created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
     )
 
 
@@ -87,6 +112,9 @@ def reservation_to_response(doc: ReservationDocument) -> ReservationResponseSche
         cancelled_at=doc.cancelled_at,
         completed_at=doc.completed_at,
         created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
+        version=doc.version,
     )
 
 
@@ -98,6 +126,9 @@ def reservation_to_list_item(doc: ReservationDocument) -> ReservationListItemSch
         participant_count=doc.participant_count,
         payment_status=doc.payment_status,
         created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
+        version=doc.version,
     )
 
 
@@ -121,6 +152,9 @@ def participant_to_response(doc: ParticipantDocument) -> ParticipantResponseSche
         accepted_media_usage=doc.accepted_media_usage,
         is_completed=doc.is_completed,
         created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
+        version=doc.version,
     )
 
 
@@ -135,6 +169,10 @@ def payment_proof_to_response(doc: PaymentProofDocument) -> PaymentProofResponse
         sha256=doc.sha256,
         status=doc.status,
         uploaded_at=doc.uploaded_at,
+        created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
+        version=doc.version,
     )
 
 
@@ -150,6 +188,10 @@ def equine_to_response(doc: EquineDocument) -> EquineResponseSchema:
         gait=doc.gait,
         is_available=doc.is_available,
         availability_notes=doc.availability_notes,
+        version=doc.version,
+        created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
     )
 
 
@@ -160,6 +202,10 @@ def saddle_to_response(doc: SaddleDocument) -> SaddleResponseSchema:
         name=doc.name,
         is_available=doc.is_available,
         notes=doc.notes,
+        version=doc.version,
+        created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
     )
 
 
@@ -174,6 +220,9 @@ def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseSchema:
         assigned_manually=doc.assigned_manually,
         notes=doc.notes,
         created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
+        version=doc.version,
     )
 
 
@@ -190,6 +239,9 @@ def service_log_to_response(doc: ServiceLogDocument) -> ServiceLogResponseSchema
         ),
         related_equine_id=str(doc.related_equine_id) if doc.related_equine_id else None,
         created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
+        version=doc.version,
     )
 
 
@@ -205,6 +257,10 @@ def provider_to_response(doc: ProviderDocument) -> ProviderResponseSchema:
         capacity_notes=doc.capacity_notes,
         rate_notes=doc.rate_notes,
         is_active=doc.is_active,
+        version=doc.version,
+        created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
     )
 
 
@@ -217,4 +273,8 @@ def policy_to_response(doc: PolicyDocument) -> PolicyResponseSchema:
         issued_at=doc.issued_at,
         expires_at=doc.expires_at,
         notes=doc.notes,
+        version=doc.version,
+        created_at=doc.created_at,
+        updated_at=doc.updated_at,
+        deleted_at=doc.deleted_at,
     )

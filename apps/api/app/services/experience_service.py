@@ -1,9 +1,18 @@
+from __future__ import annotations
+
 from pymongo.errors import DuplicateKeyError
 
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-from app.documents import ExperienceDocument
-from app.schemas.experience import ExperienceCreateSchema, ExperienceUpdateSchema
+from app.documents import ExperienceDocument, ScheduleDocument
+from app.schemas.experience import (
+    ExperienceCreateSchema,
+    ExperiencePricingSchema,
+    ExperiencePricingTierSchema,
+    ExperienceQuoteRequestSchema,
+    ExperienceQuoteResponseSchema,
+    ExperienceUpdateSchema,
+)
 
 
 class ExperienceService:
@@ -25,14 +34,175 @@ class ExperienceService:
             details={"collection": "experiences"},
         ) from exc
 
-    async def create(self, payload: ExperienceCreateSchema) -> ExperienceDocument:
-        if payload.duration_hours is None and payload.duration_days is None:
+    def _validate_duration(
+        self,
+        *,
+        duration_hours: int | None,
+        duration_days: int | None,
+        duration: object | None,
+    ) -> None:
+        if duration is None and duration_hours is None and duration_days is None:
             raise ApiError(
                 status_code=400,
                 code=ErrorCode.EXPERIENCE_INVALID_DURATION,
-                message="Debes informar duracion en horas o dias.",
+                message="Debes informar duracion estructurada o duracion en horas/dias.",
             )
+
+    def _validate_pricing(self, pricing: ExperiencePricingSchema | None) -> None:
+        if pricing is None:
+            return
+        tiers = sorted(
+            pricing.tiers,
+            key=lambda tier: (tier.min_participants, tier.max_participants),
+        )
+        if not tiers:
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.EXPERIENCE_PRICING_TIERS_REQUIRED,
+                message="La experiencia debe definir al menos un rango tarifario.",
+            )
+        previous: ExperiencePricingTierSchema | None = None
+        for tier in tiers:
+            if tier.min_participants > tier.max_participants:
+                raise ApiError(
+                    status_code=400,
+                    code=ErrorCode.EXPERIENCE_PRICING_TIER_INVALID_RANGE,
+                    message="Rango tarifario invalido: min_participants supera max_participants.",
+                    details={
+                        "min_participants": tier.min_participants,
+                        "max_participants": tier.max_participants,
+                    },
+                )
+            if previous is not None:
+                if tier.min_participants <= previous.max_participants:
+                    raise ApiError(
+                        status_code=400,
+                        code=ErrorCode.EXPERIENCE_PRICING_TIERS_OVERLAP,
+                        message="Los rangos tarifarios no pueden solaparse.",
+                    )
+                if (
+                    pricing.require_contiguous_tiers
+                    and tier.min_participants > previous.max_participants + 1
+                ):
+                    raise ApiError(
+                        status_code=400,
+                        code=ErrorCode.EXPERIENCE_PRICING_TIERS_GAP,
+                        message="Los rangos tarifarios deben ser continuos sin saltos.",
+                    )
+            previous = tier
+
+    def _validate_route_duration(self, duration: object | None) -> None:
+        if duration is None:
+            return
+        activity_minutes = getattr(duration, "activity_minutes", None)
+        route_minutes = getattr(duration, "route_minutes", None)
+        if (
+            isinstance(activity_minutes, int)
+            and isinstance(route_minutes, int)
+            and route_minutes > activity_minutes
+        ):
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.EXPERIENCE_ROUTE_DURATION_EXCEEDS_ACTIVITY_DURATION,
+                message=(
+                    "La duracion del recorrido no puede superar la duracion total de la actividad."
+                ),
+                details={
+                    "activity_minutes": activity_minutes,
+                    "route_minutes": route_minutes,
+                },
+            )
+
+    def _validate_capacity_covered_by_tiers(
+        self,
+        *,
+        standard_max_participants: int | None,
+        pricing: ExperiencePricingSchema | None,
+    ) -> None:
+        if standard_max_participants is None or pricing is None or not pricing.tiers:
+            return
+        for tier in pricing.tiers:
+            if tier.min_participants <= standard_max_participants <= tier.max_participants:
+                return
+        raise ApiError(
+            status_code=400,
+            code=ErrorCode.EXPERIENCE_STANDARD_CAPACITY_OUT_OF_PRICING_RANGE,
+            message="La capacidad estandar debe estar cubierta por algun rango tarifario.",
+            details={"standard_max_participants": standard_max_participants},
+        )
+
+    def _validate_inclusions(self, inclusions: object | None) -> None:
+        if inclusions is None:
+            return
+        items = getattr(inclusions, "items", None)
+        if not isinstance(items, list) or len(items) == 0:
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.EXPERIENCE_INCLUSIONS_REQUIRED,
+                message="La experiencia debe tener al menos un item incluido.",
+            )
+
+    def _validate_experience_payload(
+        self, payload: ExperienceCreateSchema | ExperienceUpdateSchema
+    ) -> None:
+        self._validate_duration(
+            duration_hours=payload.duration_hours,
+            duration_days=payload.duration_days,
+            duration=payload.duration,
+        )
+        self._validate_pricing(payload.pricing)
+        self._validate_route_duration(payload.duration)
+        standard_capacity = (
+            payload.standard_max_participants
+            if payload.standard_max_participants is not None
+            else payload.base_capacity
+        )
+        self._validate_capacity_covered_by_tiers(
+            standard_max_participants=standard_capacity,
+            pricing=payload.pricing,
+        )
+        self._validate_inclusions(payload.inclusions)
+
+    def _validate_document_state(self, doc: ExperienceDocument) -> None:
+        self._validate_duration(
+            duration_hours=getattr(doc, "duration_hours", None),
+            duration_days=getattr(doc, "duration_days", None),
+            duration=getattr(doc, "duration", None),
+        )
+        pricing = getattr(doc, "pricing", None)
+        if isinstance(pricing, ExperiencePricingSchema):
+            pricing_value = pricing
+        else:
+            pricing_value = None
+            if pricing is not None:
+                try:
+                    pricing_value = ExperiencePricingSchema.model_validate(pricing)
+                except Exception:
+                    pricing_value = None
+        self._validate_pricing(pricing_value)
+        self._validate_route_duration(getattr(doc, "duration", None))
+        standard_capacity = getattr(doc, "standard_max_participants", None)
+        if standard_capacity is None:
+            standard_capacity = getattr(doc, "base_capacity", None)
+        self._validate_capacity_covered_by_tiers(
+            standard_max_participants=standard_capacity,
+            pricing=pricing_value,
+        )
+        self._validate_inclusions(getattr(doc, "inclusions", None))
+
+    async def create(self, payload: ExperienceCreateSchema) -> ExperienceDocument:
+        self._validate_experience_payload(payload)
         doc = ExperienceDocument(**payload.model_dump())
+        try:
+            if doc.standard_max_participants is None:
+                doc.standard_max_participants = doc.base_capacity
+        except AttributeError:
+            pass
+        try:
+            if doc.min_participants is None:
+                doc.min_participants = 1
+        except AttributeError:
+            pass
         try:
             await doc.insert()
         except DuplicateKeyError as exc:
@@ -63,12 +233,18 @@ class ExperienceService:
         updates = payload.model_dump(exclude_none=True)
         for field, value in updates.items():
             setattr(doc, field, value)
-        if doc.duration_hours is None and doc.duration_days is None:
-            raise ApiError(
-                status_code=400,
-                code=ErrorCode.EXPERIENCE_INVALID_DURATION,
-                message="Debes informar duracion en horas o dias.",
-            )
+
+        self._validate_document_state(doc)
+        try:
+            if doc.standard_max_participants is None:
+                doc.standard_max_participants = doc.base_capacity
+        except AttributeError:
+            pass
+        try:
+            if doc.min_participants is None:
+                doc.min_participants = 1
+        except AttributeError:
+            pass
         try:
             await doc.save()
         except DuplicateKeyError as exc:
@@ -81,3 +257,75 @@ class ExperienceService:
         await doc.save()
         return doc
 
+    async def quote(
+        self,
+        experience_id: str,
+        payload: ExperienceQuoteRequestSchema,
+    ) -> ExperienceQuoteResponseSchema:
+        doc = await self.get(experience_id)
+        if doc.pricing is None or not doc.pricing.tiers:
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.EXPERIENCE_PRICING_TIERS_REQUIRED,
+                message="La experiencia no tiene una tabla de tarifas configurada.",
+            )
+        if payload.schedule_id:
+            schedule = await ScheduleDocument.get(payload.schedule_id)
+            if schedule is None:
+                raise ApiError(
+                    status_code=404,
+                    code=ErrorCode.SCHEDULE_NOT_FOUND,
+                    message="Fecha operativa no encontrada.",
+                )
+            if str(schedule.experience_id) != str(doc.id):
+                raise ApiError(
+                    status_code=400,
+                    code=ErrorCode.RESERVATION_SCHEDULE_MISMATCH,
+                    message="La fecha operativa no pertenece a esta experiencia.",
+                    details={
+                        "experience_id": str(doc.id),
+                        "schedule_id": payload.schedule_id,
+                    },
+                )
+        tier = self._find_tier_for_participants(
+            doc.pricing.tiers,
+            payload.participants_count,
+        )
+        if tier is None:
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.EXPERIENCE_STANDARD_CAPACITY_OUT_OF_PRICING_RANGE,
+                message="No existe tarifa para la cantidad de participantes solicitada.",
+                details={"participants_count": payload.participants_count},
+            )
+        unit_price = tier.price_per_person
+        subtotal = unit_price * payload.participants_count
+        return ExperienceQuoteResponseSchema(
+            experience_id=str(doc.id),
+            participants_count=payload.participants_count,
+            unit_price=unit_price,
+            subtotal=subtotal,
+            currency=doc.pricing.currency,
+            pricing_tier=ExperiencePricingTierSchema(
+                min_participants=tier.min_participants,
+                max_participants=tier.max_participants,
+                price_per_person=tier.price_per_person,
+            ),
+            notes=doc.pricing.pricing_notes,
+        )
+
+    @staticmethod
+    def _find_tier_for_participants(
+        tiers: list[object],
+        participants_count: int,
+    ) -> object | None:
+        for tier in tiers:
+            min_participants = getattr(tier, "min_participants", None)
+            max_participants = getattr(tier, "max_participants", None)
+            if (
+                isinstance(min_participants, int)
+                and isinstance(max_participants, int)
+                and min_participants <= participants_count <= max_participants
+            ):
+                return tier
+        return None

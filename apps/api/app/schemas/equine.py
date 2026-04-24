@@ -3,6 +3,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from app.schemas.common import AuditMetadataSchema
+
 
 class EquineCreateSchema(BaseModel):
     name: str
@@ -28,7 +30,7 @@ class EquineUpdateSchema(BaseModel):
     availability_notes: str | None = None
 
 
-class EquineResponseSchema(BaseModel):
+class EquineResponseSchema(AuditMetadataSchema):
     id: str
     name: str
     approximate_birth_date: date | None
