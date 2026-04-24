@@ -8,8 +8,8 @@ class NetworkStatusResolver {
   NetworkStatusResolver({
     required ConnectivityService connectivityService,
     required BackendReachabilityService backendReachabilityService,
-  })  : _connectivityService = connectivityService,
-        _backendReachabilityService = backendReachabilityService;
+  }) : _connectivityService = connectivityService,
+       _backendReachabilityService = backendReachabilityService;
 
   final ConnectivityService _connectivityService;
   final BackendReachabilityService _backendReachabilityService;
@@ -25,18 +25,15 @@ class NetworkStatusResolver {
     }
 
     final reachability = await _backendReachabilityService.check();
-    return NetworkStatus(
-      linkType: linkType,
-      backendReachability: reachability,
-    );
+    return NetworkStatus(linkType: linkType, backendReachability: reachability);
   }
 
   Stream<NetworkStatus> observe() async* {
     yield await current();
     NetworkStatus? previous;
-    await for (final status in _connectivityService
-        .observeLinkType()
-        .asyncMap((_) => current())) {
+    await for (final status in _connectivityService.observeLinkType().asyncMap(
+      (_) => current(),
+    )) {
       if (previous != status) {
         previous = status;
         yield status;

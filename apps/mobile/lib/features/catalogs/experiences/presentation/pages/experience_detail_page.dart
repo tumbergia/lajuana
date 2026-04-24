@@ -4,6 +4,7 @@ import '../../../../../app/widgets/app_button.dart';
 import '../../../../../app/widgets/app_centered_loader.dart';
 import '../../../../../app/widgets/app_entity_row_card.dart';
 import '../../../../../app/widgets/app_section_header.dart';
+import '../../../../../app/widgets/cards/app_pricing_tiers_table.dart';
 import '../../../../auth/presentation/auth_controller.dart';
 import '../../../catalogs_module.dart';
 import '../../domain/experience.dart';
@@ -78,7 +79,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage> {
         children: [
           AppSectionHeader(
             eyebrow: 'Catalogos > Experiencias',
-            title: 'Detalle',
+            title: 'Detalle de experiencia',
             trailing: AppButton(
               label: 'Volver',
               icon: Icons.arrow_back_rounded,
@@ -105,17 +106,67 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage> {
                           badge: experienceStatusBadgeFor(experience),
                           selected: true,
                         ),
+                        if ((experience.subtitle ?? '').isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          AppEntityRowCard(
+                            title: 'Subtitulo',
+                            subtitle: experience.subtitle!,
+                          ),
+                        ],
                         const SizedBox(height: 10),
                         AppEntityRowCard(
-                          title: 'Nivel ${experience.level}',
-                          subtitle:
-                              'Duracion h:${experience.durationHours ?? '-'} d:${experience.durationDays ?? '-'}',
+                          title: 'Identificador URL',
+                          subtitle: experience.slug,
                         ),
-                        const SizedBox(height: 10),
-                        AppEntityRowCard(
-                          title: 'Capacidad base',
-                          subtitle: '${experience.baseCapacity ?? 0}',
-                        ),
+                        if (experience.standardMaxParticipants != null) ...[
+                          const SizedBox(height: 10),
+                          AppEntityRowCard(
+                            title: 'Capacidad estandar',
+                            subtitle: '${experience.standardMaxParticipants}',
+                          ),
+                        ],
+                        if (experience.duration != null) ...[
+                          const SizedBox(height: 10),
+                          AppEntityRowCard(
+                            title: 'Duraciones',
+                            subtitle:
+                                'Experiencia ${experience.duration!.activityMinutes} min | Recorrido ${experience.duration!.routeMinutes} min',
+                          ),
+                        ],
+                        if (experience.routeDetails != null) ...[
+                          const SizedBox(height: 10),
+                          AppEntityRowCard(
+                            title: 'Ruta',
+                            subtitle:
+                                '${experience.routeDetails!.terrain} | ${experience.routeDetails!.distanceKm ?? '-'} km',
+                          ),
+                        ],
+                        if (experience.pricing != null &&
+                            experience.pricing!.tiers.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          AppPricingTiersTable(
+                            currency: experience.pricing!.currency,
+                            pricesAreNet: experience.pricing!.pricesAreNet,
+                            notes: experience.pricing!.pricingNotes,
+                            tiers: experience.pricing!.tiers
+                                .map(
+                                  (tier) => AppPricingTierData(
+                                    minParticipants: tier.minParticipants,
+                                    maxParticipants: tier.maxParticipants,
+                                    pricePerPerson: tier.pricePerPerson,
+                                  ),
+                                )
+                                .toList(growable: false),
+                          ),
+                        ],
+                        if (experience.inclusions != null &&
+                            experience.inclusions!.items.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          AppEntityRowCard(
+                            title: 'Incluye',
+                            subtitle: experience.inclusions!.items.join(', '),
+                          ),
+                        ],
                         if (_isAdmin) ...[
                           const SizedBox(height: 16),
                           AppButton(

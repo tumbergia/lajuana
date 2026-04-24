@@ -23,6 +23,17 @@ class ErrorCode:
     EXPERIENCE_SLUG_ALREADY_EXISTS = "experience.slug_already_exists"
     EXPERIENCE_INVALID_DURATION = "experience.invalid_duration"
     EXPERIENCE_INVALID_CAPACITY = "experience.invalid_capacity"
+    EXPERIENCE_PRICING_TIERS_REQUIRED = "experience.pricing_tiers_required"
+    EXPERIENCE_PRICING_TIER_INVALID_RANGE = "experience.pricing_tier_invalid_range"
+    EXPERIENCE_PRICING_TIERS_OVERLAP = "experience.pricing_tiers_overlap"
+    EXPERIENCE_PRICING_TIERS_GAP = "experience.pricing_tiers_gap"
+    EXPERIENCE_ROUTE_DURATION_EXCEEDS_ACTIVITY_DURATION = (
+        "experience.route_duration_exceeds_activity_duration"
+    )
+    EXPERIENCE_STANDARD_CAPACITY_OUT_OF_PRICING_RANGE = (
+        "experience.standard_capacity_out_of_pricing_range"
+    )
+    EXPERIENCE_INCLUSIONS_REQUIRED = "experience.inclusions_required"
 
     SCHEDULE_NOT_FOUND = "schedule.not_found"
     SCHEDULE_INVALID_CAPACITY = "schedule.invalid_capacity"

@@ -37,7 +37,7 @@ mobile-quality:
 	$(MAKE) mobile-test
 
 ifeq ($(OS),Windows_NT)
-API_PY := .venv\\Scripts\\python.exe
+API_PY := .venv/Scripts/python.exe
 else
 API_PY := .venv/bin/python
 endif

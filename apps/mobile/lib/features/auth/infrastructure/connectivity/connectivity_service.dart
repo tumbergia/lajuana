@@ -13,7 +13,7 @@ abstract class ConnectivityService {
 
 class ConnectivityPlusService implements ConnectivityService {
   ConnectivityPlusService({Connectivity? connectivity})
-      : _connectivity = connectivity ?? Connectivity();
+    : _connectivity = connectivity ?? Connectivity();
 
   final Connectivity _connectivity;
 

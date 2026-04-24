@@ -6,9 +6,7 @@ import '../widgets/app_bottom_nav.dart';
 typedef FeatureRootBuilder = Widget Function(BuildContext context);
 
 class FeatureRouteRegistry {
-  const FeatureRouteRegistry({
-    required this.builders,
-  });
+  const FeatureRouteRegistry({required this.builders});
 
   final Map<AppNavItem, FeatureRootBuilder> builders;
 

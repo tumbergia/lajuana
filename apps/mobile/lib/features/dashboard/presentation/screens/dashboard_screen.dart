@@ -77,8 +77,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
-        final pendingCount =
-            _reservations.where((item) => item.status == 'pendientes').length;
+        final pendingCount = _reservations
+            .where((item) => item.status == 'pendientes')
+            .length;
         final todayCount = _reservations.where((item) {
           return item.slotLabel.startsWith('24 Oct 2026');
         }).length;
@@ -113,20 +114,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildSubroute({
-    required int pendingCount,
-    required int todayCount,
-  }) {
+  Widget _buildSubroute({required int pendingCount, required int todayCount}) {
     switch (_controller.subroute) {
       case DashboardSubroute.resumen:
         return DashboardSummaryBlock(
           pendingCount: pendingCount,
           todayCount: todayCount,
-          onOpenReservations: () =>
-              widget.onNavigateToTab(AppNavItem.reservas),
+          onOpenReservations: () => widget.onNavigateToTab(AppNavItem.reservas),
           onOpenEquines: () => widget.onNavigateToTab(AppNavItem.equinos),
-          onOpenParticipants: () =>
-              widget.onNavigateToTab(AppNavItem.clientes),
+          onOpenParticipants: () => widget.onNavigateToTab(AppNavItem.clientes),
         );
       case DashboardSubroute.pendientes:
         return DashboardPendingBlock(

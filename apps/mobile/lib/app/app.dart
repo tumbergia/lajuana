@@ -151,7 +151,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
 
     switch (routeName) {
       case AuthRoutes.devLoader:
-        screen = const DevLoaderScreen();
+        screen = const DevWidgetCatalogScreen();
         break;
       case AuthRoutes.sessionGate:
         screen = StartupGate(controller: _authController);

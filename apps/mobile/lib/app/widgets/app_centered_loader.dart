@@ -7,8 +7,6 @@ class AppCenteredLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(
-      child: Center(child: CircularProgressIndicator(strokeWidth: strokeWidth)),
-    );
+    return Center(child: CircularProgressIndicator(strokeWidth: strokeWidth));
   }
 }

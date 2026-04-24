@@ -20,7 +20,9 @@ Incluye:
 
 - Las validaciones de negocio viven en `services/`.
 - Los routers no contienen logica de confirmacion ni negocio critico.
+- `Experience` representa la plantilla comercial-operativa y `Schedule` la salida fechada con cupos/estado; no se mezclan.
 - La confirmacion de reserva solo se ejecuta en backend.
+- La cotizacion oficial de experiencias se calcula en backend (`POST /api/v1/experiences/{experience_id}/quote`).
 - Los comprobantes guardan metadatos y referencia externa (`storage_key`), no binarios en MongoDB.
 - `guide` no accede a funciones administrativas ni comerciales sensibles.
 

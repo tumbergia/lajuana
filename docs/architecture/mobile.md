@@ -111,6 +111,10 @@ Se muestran como componentes transversales reutilizables:
 - Lectura y reconciliacion via `sync/bootstrap` + `sync/pull`.
 - Cola local persistente con estados `pending`, `conflict`, `rejected`, `synced`.
 - Acceso principal desde `Mas > Catalogos` y acceso rapido a fechas operativas desde Reservas.
+- `Experience` se guarda como plantilla comercial-operativa (duracion/ruta/tarifas/inclusiones);
+  `Schedule` mantiene fecha/hora/cupos/estado y no se mezcla con la ficha base.
+- `experiences_local` version 2 persiste bloques estructurados en JSON (`duration_json`,
+  `route_details_json`, `pricing_json`, `inclusions_json`, `tags_json`) para mantener paridad con backend.
 
 ## Reglas de composicion
 

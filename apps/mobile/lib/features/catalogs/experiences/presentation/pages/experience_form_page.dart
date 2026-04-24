@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../../app/widgets/app_badge.dart';
 import '../../../../../app/widgets/app_button.dart';
 import '../../../../../app/widgets/app_section_header.dart';
+import '../../../../../app/widgets/app_term_help.dart';
 import '../../../../../app/widgets/app_text_field.dart';
 import '../../../../auth/presentation/auth_controller.dart';
 import '../../../catalogs_module.dart';
@@ -28,92 +29,178 @@ class ExperienceFormPage extends StatefulWidget {
 class _ExperienceFormPageState extends State<ExperienceFormPage> {
   final ExperienceFormController _controller = ExperienceFormController();
 
-  late final TextEditingController _nameCtrl;
-  late final TextEditingController _slugCtrl;
-  late final TextEditingController _descriptionCtrl;
-  late final TextEditingController _durationHoursCtrl;
-  late final TextEditingController _durationDaysCtrl;
-  late final TextEditingController _capacityCtrl;
+  late final TextEditingController _nombreCtrl;
+  late final TextEditingController _identificadorUrlCtrl;
+  late final TextEditingController _subtituloCtrl;
+  late final TextEditingController _descripcionCtrl;
+  late final TextEditingController _imagenCtrl;
+
+  late final TextEditingController _duracionExperienciaCtrl;
+  late final TextEditingController _duracionRecorridoCtrl;
+  late final TextEditingController _textoDuracionCtrl;
+
+  late final TextEditingController _distanciaCtrl;
+  late final TextEditingController _terrenoCtrl;
+  late final TextEditingController _notasTerrenoCtrl;
+
+  late final TextEditingController _monedaCtrl;
+  late final TextEditingController _notasTarifaCtrl;
+  final TextEditingController _tarifaMinCtrl = TextEditingController();
+  final TextEditingController _tarifaMaxCtrl = TextEditingController();
+  final TextEditingController _tarifaValorCtrl = TextEditingController();
+
+  final TextEditingController _incluyeInputCtrl = TextEditingController();
+  late final TextEditingController _incluyeTextoCtrl;
 
   String? _error;
-  bool _isSaving = false;
+  bool _guardando = false;
 
-  bool get _isEditing => widget.editing != null;
+  bool get _esEdicion => widget.editing != null;
 
   @override
   void initState() {
     super.initState();
-    final editing = widget.editing;
-    if (editing != null) {
-      _controller
-        ..name = editing.name
-        ..slug = editing.slug
-        ..description = editing.description
-        ..level = editing.level
-        ..durationHours = editing.durationHours
-        ..durationDays = editing.durationDays
-        ..baseCapacity = editing.baseCapacity
-        ..isActive = editing.isActive;
+    if (_esEdicion) {
+      _controller.loadFromExperience(widget.editing!);
     }
-    _nameCtrl = TextEditingController(text: _controller.name);
-    _slugCtrl = TextEditingController(text: _controller.slug);
-    _descriptionCtrl = TextEditingController(text: _controller.description);
-    _durationHoursCtrl = TextEditingController(
-      text: _controller.durationHours?.toString() ?? '',
+    _nombreCtrl = TextEditingController(text: _controller.nombre);
+    _identificadorUrlCtrl = TextEditingController(
+      text: _controller.identificadorUrl,
     );
-    _durationDaysCtrl = TextEditingController(
-      text: _controller.durationDays?.toString() ?? '',
+    _subtituloCtrl = TextEditingController(text: _controller.subtitulo ?? '');
+    _descripcionCtrl = TextEditingController(text: _controller.descripcion);
+    _imagenCtrl = TextEditingController(text: _controller.urlImagen ?? '');
+
+    _duracionExperienciaCtrl = TextEditingController(
+      text: _controller.duracionExperienciaMinutos?.toString() ?? '',
     );
-    _capacityCtrl = TextEditingController(
-      text: _controller.baseCapacity?.toString() ?? '',
+    _duracionRecorridoCtrl = TextEditingController(
+      text: _controller.duracionRecorridoMinutos?.toString() ?? '',
+    );
+    _textoDuracionCtrl = TextEditingController(
+      text: _controller.textoDuracionVisible ?? '',
+    );
+
+    _distanciaCtrl = TextEditingController(
+      text: _controller.distanciaKm?.toString() ?? '',
+    );
+    _terrenoCtrl = TextEditingController(text: _controller.terreno);
+    _notasTerrenoCtrl = TextEditingController(
+      text: _controller.notasTerreno ?? '',
+    );
+
+    _monedaCtrl = TextEditingController(text: _controller.moneda);
+    _notasTarifaCtrl = TextEditingController(
+      text: _controller.notasTarifa ?? '',
+    );
+    _incluyeTextoCtrl = TextEditingController(
+      text: _controller.textoIncluyeVisible ?? '',
     );
   }
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _slugCtrl.dispose();
-    _descriptionCtrl.dispose();
-    _durationHoursCtrl.dispose();
-    _durationDaysCtrl.dispose();
-    _capacityCtrl.dispose();
+    _nombreCtrl.dispose();
+    _identificadorUrlCtrl.dispose();
+    _subtituloCtrl.dispose();
+    _descripcionCtrl.dispose();
+    _imagenCtrl.dispose();
+
+    _duracionExperienciaCtrl.dispose();
+    _duracionRecorridoCtrl.dispose();
+    _textoDuracionCtrl.dispose();
+    _distanciaCtrl.dispose();
+    _terrenoCtrl.dispose();
+    _notasTerrenoCtrl.dispose();
+
+    _monedaCtrl.dispose();
+    _notasTarifaCtrl.dispose();
+    _tarifaMinCtrl.dispose();
+    _tarifaMaxCtrl.dispose();
+    _tarifaValorCtrl.dispose();
+    _incluyeInputCtrl.dispose();
+    _incluyeTextoCtrl.dispose();
+
     _controller.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _agregarTarifa() {
+    final min = int.tryParse(_tarifaMinCtrl.text.trim());
+    final max = int.tryParse(_tarifaMaxCtrl.text.trim());
+    final valor = int.tryParse(_tarifaValorCtrl.text.trim());
+
+    if (min == null || max == null || valor == null) {
+      setState(() {
+        _error =
+            'Completa personas desde, personas hasta y valor por persona para agregar la tarifa.';
+      });
+      return;
+    }
+
+    _controller.agregarTarifa(
+      ExperiencePricingTierDraft(
+        minParticipants: min,
+        maxParticipants: max,
+        pricePerPerson: valor,
+      ),
+    );
+    _tarifaMinCtrl.clear();
+    _tarifaMaxCtrl.clear();
+    _tarifaValorCtrl.clear();
     setState(() {
-      _error = _controller.validate();
+      _error = null;
+    });
+  }
+
+  void _agregarIncluye() {
+    _controller.agregarIncluye(_incluyeInputCtrl.text);
+    _incluyeInputCtrl.clear();
+  }
+
+  Future<void> _guardar() async {
+    setState(() {
+      _error = _controller.validar();
     });
     if (_error != null) return;
 
     setState(() {
-      _isSaving = true;
+      _guardando = true;
     });
     try {
-      if (_isEditing) {
+      if (_esEdicion) {
         await widget.module.experiences.update(
           id: widget.editing!.id,
-          name: _controller.name.trim(),
-          description: _controller.description.trim(),
-          level: _controller.level,
-          isActive: _controller.isActive,
-          durationHours: _controller.durationHours,
-          durationDays: _controller.durationDays,
-          baseCapacity: _controller.baseCapacity,
+          name: _controller.nombre.trim(),
+          slug: _controller.identificadorUrl.trim(),
+          description: _controller.descripcion.trim(),
+          level: _controller.nivel,
+          subtitle: _controller.subtitulo,
+          imageUrl: _controller.urlImagen,
+          difficulty: _controller.dificultad,
+          duration: _controller.buildDuration(),
+          routeDetails: _controller.buildRouteDetails(),
+          pricing: _controller.buildPricing(),
+          inclusions: _controller.buildInclusions(),
+          isActive: _controller.activa,
         );
       } else {
         await widget.module.experiences.create(
-          name: _controller.name.trim(),
-          slug: _controller.slug.trim(),
-          description: _controller.description.trim(),
-          level: _controller.level,
-          durationHours: _controller.durationHours,
-          durationDays: _controller.durationDays,
-          baseCapacity: _controller.baseCapacity,
-          isActive: _controller.isActive,
+          name: _controller.nombre.trim(),
+          slug: _controller.identificadorUrl.trim(),
+          description: _controller.descripcion.trim(),
+          level: _controller.nivel,
+          subtitle: _controller.subtitulo,
+          imageUrl: _controller.urlImagen,
+          difficulty: _controller.dificultad,
+          duration: _controller.buildDuration(),
+          routeDetails: _controller.buildRouteDetails(),
+          pricing: _controller.buildPricing(),
+          inclusions: _controller.buildInclusions(),
+          isActive: _controller.activa,
         );
       }
+
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (e) {
@@ -123,7 +210,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     } finally {
       if (mounted) {
         setState(() {
-          _isSaving = false;
+          _guardando = false;
         });
       }
     }
@@ -131,110 +218,626 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppSectionHeader(
+                eyebrow: 'Catalogos > Experiencias',
+                title: _esEdicion ? 'Editar experiencia' : 'Nueva experiencia',
+                subtitle:
+                    'Completa la ficha comercial y operativa base de la experiencia.',
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView(
+                  children: [
+                    _FormBlock(
+                      title: 'Informacion principal',
+                      children: [
+                        AppTextField(
+                          controller: _nombreCtrl,
+                          label: 'Nombre de la experiencia',
+                          hintText: 'Ej: Sendero de pino y bosque alto',
+                          onChanged: _controller.actualizarNombre,
+                        ),
+                        const SizedBox(height: 10),
+                        _HelpLabel(
+                          label: 'Identificador URL',
+                          helpTitle: 'Identificador URL',
+                          helpMessage:
+                              'Es una version corta del nombre para enlaces y para sincronizacion tecnica. Puedes editarlo cuando lo necesites.',
+                        ),
+                        AppTextField(
+                          controller: _identificadorUrlCtrl,
+                          label: null,
+                          hintText: 'ejemplo-sendero-pino',
+                          onChanged: _controller.actualizarIdentificadorUrl,
+                        ),
+                        const SizedBox(height: 10),
+                        AppTextField(
+                          controller: _subtituloCtrl,
+                          label: 'Subtitulo (opcional)',
+                          hintText: 'Frase corta para resaltar la experiencia',
+                          onChanged: _controller.actualizarSubtitulo,
+                        ),
+                        const SizedBox(height: 10),
+                        AppTextField(
+                          controller: _descripcionCtrl,
+                          label: 'Descripcion',
+                          hintText:
+                              'Describe de forma clara que hara el cliente.',
+                          maxLines: 3,
+                          onChanged: _controller.actualizarDescripcion,
+                        ),
+                        const SizedBox(height: 10),
+                        AppTextField(
+                          controller: _imagenCtrl,
+                          label: 'URL de imagen (opcional)',
+                          hintText: 'https://...',
+                          onChanged: _controller.actualizarUrlImagen,
+                        ),
+                      ],
+                    ),
+                    _FormBlock(
+                      title: 'Duraciones',
+                      children: [
+                        _InfoText(
+                          text:
+                              'Solo necesitas dos tiempos: duracion total de experiencia y duracion del recorrido.',
+                        ),
+                        const SizedBox(height: 10),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isWide = constraints.maxWidth >= 680;
+                            if (!isWide) {
+                              return Column(
+                                children: [
+                                  AppTextField(
+                                    controller: _duracionExperienciaCtrl,
+                                    label: 'Duracion experiencia (minutos)',
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) => _controller
+                                        .actualizarDuracionExperiencia(
+                                          int.tryParse(value.trim()),
+                                        ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  AppTextField(
+                                    controller: _duracionRecorridoCtrl,
+                                    label: 'Duracion recorrido (minutos)',
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) =>
+                                        _controller.actualizarDuracionRecorrido(
+                                          int.tryParse(value.trim()),
+                                        ),
+                                  ),
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: AppTextField(
+                                    controller: _duracionExperienciaCtrl,
+                                    label: 'Duracion experiencia (minutos)',
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) => _controller
+                                        .actualizarDuracionExperiencia(
+                                          int.tryParse(value.trim()),
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: AppTextField(
+                                    controller: _duracionRecorridoCtrl,
+                                    label: 'Duracion recorrido (minutos)',
+                                    keyboardType: TextInputType.number,
+                                    onChanged: (value) =>
+                                        _controller.actualizarDuracionRecorrido(
+                                          int.tryParse(value.trim()),
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        AppTextField(
+                          controller: _textoDuracionCtrl,
+                          label: 'Texto visible de duracion (opcional)',
+                          hintText:
+                              'Ej: Actividad 5 horas aprox. Recorrido 2 horas aprox.',
+                          maxLines: 2,
+                          onChanged: _controller.actualizarTextoDuracionVisible,
+                        ),
+                      ],
+                    ),
+                    _FormBlock(
+                      title: 'Ruta',
+                      children: [
+                        AppTextField(
+                          controller: _terrenoCtrl,
+                          label: 'Terreno',
+                          hintText: 'Ej: Camino destapado entre bosque de pino',
+                          onChanged: _controller.actualizarTerreno,
+                        ),
+                        const SizedBox(height: 10),
+                        AppTextField(
+                          controller: _distanciaCtrl,
+                          label: 'Distancia en kilometros (opcional)',
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          onChanged: (value) =>
+                              _controller.actualizarDistanciaKm(
+                                double.tryParse(
+                                  value.trim().replaceAll(',', '.'),
+                                ),
+                              ),
+                        ),
+                        const SizedBox(height: 10),
+                        AppTextField(
+                          controller: _notasTerrenoCtrl,
+                          label: 'Notas de ruta (opcional)',
+                          maxLines: 2,
+                          onChanged: _controller.actualizarNotasTerreno,
+                        ),
+                      ],
+                    ),
+                    _FormBlock(
+                      title: 'Tarifas por numero de personas',
+                      children: [
+                        _InfoText(
+                          text:
+                              'Agrega rangos sin cruces. Ejemplo: 1 a 2 personas, luego 3 a 4 personas.',
+                        ),
+                        const SizedBox(height: 10),
+                        _HelpLabel(
+                          label: 'Moneda y tipo de tarifa',
+                          helpTitle: 'Tarifa neta',
+                          helpMessage:
+                              'Tarifa neta es el valor base por persona definido por operacion, antes de ajustes comerciales manuales.',
+                        ),
+                        AppTextField(
+                          controller: _monedaCtrl,
+                          label: null,
+                          hintText: 'COP',
+                          onChanged: _controller.actualizarMoneda,
+                        ),
+                        const SizedBox(height: 10),
+                        _FormSwitch(
+                          label: 'Las tarifas estan en valor neto',
+                          value: _controller.tarifasNetas,
+                          onChanged: _controller.actualizarTarifasNetas,
+                        ),
+                        const SizedBox(height: 10),
+                        AppTextField(
+                          controller: _notasTarifaCtrl,
+                          label: 'Notas de tarifa (opcional)',
+                          maxLines: 2,
+                          onChanged: _controller.actualizarNotasTarifa,
+                        ),
+                        const SizedBox(height: 10),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isWide = constraints.maxWidth >= 760;
+                            if (!isWide) {
+                              return Column(
+                                children: [
+                                  AppTextField(
+                                    controller: _tarifaMinCtrl,
+                                    label: 'Personas desde',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  AppTextField(
+                                    controller: _tarifaMaxCtrl,
+                                    label: 'Personas hasta',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  AppTextField(
+                                    controller: _tarifaValorCtrl,
+                                    label: 'Valor por persona',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: AppTextField(
+                                    controller: _tarifaMinCtrl,
+                                    label: 'Personas desde',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: AppTextField(
+                                    controller: _tarifaMaxCtrl,
+                                    label: 'Personas hasta',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: AppTextField(
+                                    controller: _tarifaValorCtrl,
+                                    label: 'Valor por persona',
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        AppButton(
+                          label: 'Agregar tarifa',
+                          icon: Icons.add_rounded,
+                          variant: AppButtonVariant.secondary,
+                          expanded: true,
+                          onPressed: _agregarTarifa,
+                        ),
+                        const SizedBox(height: 12),
+                        if (_controller.tarifas.isEmpty)
+                          const _InfoText(text: 'Aun no has agregado tarifas.'),
+                        ..._controller.tarifas.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final item = entry.value;
+                          final valueLabel =
+                              '${_controller.moneda} ${item.pricePerPerson}';
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _LineItem(
+                              text:
+                                  '${item.minParticipants}-${item.maxParticipants} personas | $valueLabel por persona',
+                              onRemove: () => _controller.eliminarTarifa(index),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                    _FormBlock(
+                      title: 'Incluye',
+                      children: [
+                        _InfoText(
+                          text:
+                              'Cada item debe representar algo concreto que recibe el cliente.',
+                        ),
+                        const SizedBox(height: 10),
+                        AppTextField(
+                          controller: _incluyeInputCtrl,
+                          label: 'Nuevo item incluido',
+                          hintText: 'Ej: Almuerzo tradicional campesino',
+                        ),
+                        const SizedBox(height: 10),
+                        AppButton(
+                          label: 'Agregar item',
+                          icon: Icons.add_rounded,
+                          variant: AppButtonVariant.secondary,
+                          expanded: true,
+                          onPressed: _agregarIncluye,
+                        ),
+                        const SizedBox(height: 10),
+                        if (_controller.incluye.isEmpty)
+                          const _InfoText(
+                            text: 'Aun no has agregado items en Incluye.',
+                          ),
+                        ..._controller.incluye.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _LineItem(
+                              text: entry.value,
+                              onRemove: () =>
+                                  _controller.eliminarIncluye(index),
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 10),
+                        AppTextField(
+                          controller: _incluyeTextoCtrl,
+                          label: 'Texto visible de incluye (opcional)',
+                          maxLines: 2,
+                          onChanged: _controller.actualizarTextoIncluyeVisible,
+                        ),
+                      ],
+                    ),
+                    _FormBlock(
+                      title: 'Estado y nivel',
+                      children: [
+                        _SelectField(
+                          label: 'Nivel recomendado',
+                          value: _controller.nivel,
+                          onChanged: _controller.actualizarNivel,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'basic',
+                              child: Text('Basico'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'intermediate',
+                              child: Text('Intermedio'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'advanced',
+                              child: Text('Avanzado'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        _SelectField(
+                          label: 'Dificultad del recorrido',
+                          value: _controller.dificultad,
+                          onChanged: _controller.actualizarDificultad,
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'basic',
+                              child: Text('Basica'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'intermediate',
+                              child: Text('Intermedia'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'advanced',
+                              child: Text('Avanzada'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        _FormSwitch(
+                          label: 'Experiencia activa',
+                          value: _controller.activa,
+                          onChanged: _controller.actualizarActiva,
+                        ),
+                      ],
+                    ),
+                    if (_error != null) ...[
+                      AppBadge(
+                        label: _error!,
+                        tone: AppBadgeTone.danger,
+                        uppercase: false,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    _ActionButtons(
+                      guardando: _guardando,
+                      onGuardar: _guardando ? null : _guardar,
+                      onCancelar: () => Navigator.of(context).pop(),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FormBlock extends StatelessWidget {
+  const _FormBlock({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSectionHeader(
-            eyebrow: 'Catalogos > Experiencias',
-            title: _isEditing ? 'Editar experiencia' : 'Crear experiencia',
-            trailing: AppButton(
-              label: 'Volver',
-              icon: Icons.arrow_back_rounded,
-              variant: AppButtonVariant.ghost,
-              onPressed: () => Navigator.of(context).pop(),
+          Text(
+            title.toUpperCase(),
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.7,
             ),
           ),
-          const SizedBox(height: 14),
-          AppTextField(
-            controller: _nameCtrl,
-            label: 'Nombre',
-            onChanged: _controller.updateName,
-          ),
           const SizedBox(height: 10),
-          AppTextField(
-            controller: _slugCtrl,
-            label: 'Slug',
-            onChanged: _controller.updateSlug,
-          ),
-          const SizedBox(height: 10),
-          AppTextField(
-            controller: _descriptionCtrl,
-            label: 'Descripcion',
-            maxLines: 3,
-            onChanged: _controller.updateDescription,
-          ),
-          const SizedBox(height: 10),
-          AppTextField(
-            controller: _durationHoursCtrl,
-            label: 'Duracion horas',
-            keyboardType: TextInputType.number,
-            onChanged: (value) =>
-                _controller.updateDurationHours(int.tryParse(value.trim())),
-          ),
-          const SizedBox(height: 10),
-          AppTextField(
-            controller: _durationDaysCtrl,
-            label: 'Duracion dias',
-            keyboardType: TextInputType.number,
-            onChanged: (value) =>
-                _controller.updateDurationDays(int.tryParse(value.trim())),
-          ),
-          const SizedBox(height: 10),
-          AppTextField(
-            controller: _capacityCtrl,
-            label: 'Capacidad base',
-            keyboardType: TextInputType.number,
-            onChanged: (value) =>
-                _controller.updateBaseCapacity(int.tryParse(value.trim())),
-          ),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<String>(
-            initialValue: _controller.level,
-            decoration: const InputDecoration(labelText: 'Nivel recomendado'),
-            items: const [
-              DropdownMenuItem(value: 'basic', child: Text('Basic')),
-              DropdownMenuItem(
-                value: 'intermediate',
-                child: Text('Intermediate'),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _HelpLabel extends StatelessWidget {
+  const _HelpLabel({
+    required this.label,
+    required this.helpTitle,
+    required this.helpMessage,
+  });
+
+  final String label;
+  final String helpTitle;
+  final String helpMessage;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Flexible(
+            child: Text(
+              label.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.8,
               ),
-              DropdownMenuItem(value: 'advanced', child: Text('Advanced')),
-            ],
-            onChanged: (value) {
-              if (value == null) return;
-              setState(() {
-                _controller.updateLevel(value);
-              });
-            },
-          ),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Experiencia activa'),
-            value: _controller.isActive,
-            onChanged: (value) {
-              setState(() {
-                _controller.updateIsActive(value);
-              });
-            },
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 8),
-            AppBadge(
-              label: _error!,
-              tone: AppBadgeTone.danger,
-              uppercase: false,
             ),
-          ],
-          const SizedBox(height: 12),
-          AppButton(
-            label: _isSaving ? 'Guardando...' : 'Guardar',
-            expanded: true,
-            onPressed: _isSaving ? null : _submit,
+          ),
+          const SizedBox(width: 6),
+          AppTermHelp(title: helpTitle, message: helpMessage),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoText extends StatelessWidget {
+  const _InfoText({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+}
+
+class _FormSwitch extends StatelessWidget {
+  const _FormSwitch({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(label),
+      value: value,
+      onChanged: onChanged,
+    );
+  }
+}
+
+class _LineItem extends StatelessWidget {
+  const _LineItem({required this.text, required this.onRemove});
+
+  final String text;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text(text)),
+          IconButton(
+            onPressed: onRemove,
+            icon: const Icon(Icons.close_rounded, size: 16),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SelectField extends StatelessWidget {
+  const _SelectField({
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final List<DropdownMenuItem<String>> items;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      decoration: InputDecoration(labelText: label),
+      items: items,
+      onChanged: (next) {
+        if (next == null) return;
+        onChanged(next);
+      },
+    );
+  }
+}
+
+class _ActionButtons extends StatelessWidget {
+  const _ActionButtons({
+    required this.guardando,
+    required this.onGuardar,
+    required this.onCancelar,
+  });
+
+  final bool guardando;
+  final VoidCallback? onGuardar;
+  final VoidCallback onCancelar;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 520;
+        if (!isWide) {
+          return Column(
+            children: [
+              AppButton(
+                label: guardando ? 'Guardando...' : 'Guardar experiencia',
+                expanded: true,
+                onPressed: onGuardar,
+              ),
+              const SizedBox(height: 10),
+              AppButton(
+                label: 'Cancelar',
+                expanded: true,
+                variant: AppButtonVariant.ghost,
+                onPressed: onCancelar,
+              ),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                label: 'Cancelar',
+                expanded: true,
+                variant: AppButtonVariant.ghost,
+                onPressed: onCancelar,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: AppButton(
+                label: guardando ? 'Guardando...' : 'Guardar experiencia',
+                expanded: true,
+                onPressed: onGuardar,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

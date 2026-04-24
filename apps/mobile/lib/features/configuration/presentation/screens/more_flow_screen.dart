@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_button.dart';
+import '../../../../app/widgets/app_centered_loader.dart';
 import '../../../../app/widgets/app_entity_row_card.dart';
 import '../../../../app/widgets/app_section_header.dart';
 import '../../../../app/widgets/app_text_field.dart';
@@ -439,16 +440,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
           future: _contactsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const AppEntityRowCard(
-                title: 'Cargando contactos',
-                subtitle: 'Consultando catalogo de emergencia',
-                selected: true,
-                trailing: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              );
+              return const AppCenteredLoader();
             }
 
             if (snapshot.hasError) {

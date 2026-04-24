@@ -1,74 +1,290 @@
 import 'package:flutter/foundation.dart';
 
-class ExperienceFormController extends ChangeNotifier {
-  String name = '';
-  String slug = '';
-  String description = '';
-  String level = 'basic';
-  int? durationHours;
-  int? durationDays;
-  int? baseCapacity;
-  bool isActive = true;
+import '../../domain/experience.dart';
 
-  String? validate() {
-    if (name.trim().isEmpty) return 'El nombre es obligatorio.';
-    if (slug.trim().isEmpty) return 'El slug es obligatorio.';
-    if ((durationHours == null || durationHours! <= 0) &&
-        (durationDays == null || durationDays! <= 0)) {
-      return 'Debes ingresar duracion en horas o dias.';
+class ExperiencePricingTierDraft {
+  const ExperiencePricingTierDraft({
+    required this.minParticipants,
+    required this.maxParticipants,
+    required this.pricePerPerson,
+  });
+
+  final int minParticipants;
+  final int maxParticipants;
+  final int pricePerPerson;
+}
+
+class ExperienceFormController extends ChangeNotifier {
+  String nombre = '';
+  String identificadorUrl = '';
+  String descripcion = '';
+  String? subtitulo;
+  String? urlImagen;
+
+  String nivel = 'basic';
+  String dificultad = 'basic';
+  bool activa = true;
+
+  int? duracionExperienciaMinutos;
+  int? duracionRecorridoMinutos;
+  String? textoDuracionVisible;
+
+  double? distanciaKm;
+  String terreno = '';
+  String? notasTerreno;
+
+  String moneda = 'COP';
+  bool tarifasNetas = true;
+  String? notasTarifa;
+  final List<ExperiencePricingTierDraft> tarifas =
+      <ExperiencePricingTierDraft>[];
+
+  final List<String> incluye = <String>[];
+  String? textoIncluyeVisible;
+
+  void loadFromExperience(CatalogExperience value) {
+    nombre = value.name;
+    identificadorUrl = value.slug;
+    descripcion = value.description;
+    subtitulo = value.subtitle;
+    urlImagen = value.imageUrl;
+    nivel = value.level;
+    dificultad = value.difficulty ?? value.level;
+    activa = value.isActive;
+
+    duracionExperienciaMinutos = value.duration?.activityMinutes;
+    duracionRecorridoMinutos = value.duration?.routeMinutes;
+    textoDuracionVisible = value.duration?.displayText;
+
+    distanciaKm = value.routeDetails?.distanceKm;
+    terreno = value.routeDetails?.terrain ?? '';
+    notasTerreno = value.routeDetails?.terrainNotes;
+
+    moneda = value.pricing?.currency ?? 'COP';
+    tarifasNetas = value.pricing?.pricesAreNet ?? true;
+    notasTarifa = value.pricing?.pricingNotes;
+    tarifas
+      ..clear()
+      ..addAll(
+        (value.pricing?.tiers ?? const <CatalogExperiencePricingTier>[]).map(
+          (tier) => ExperiencePricingTierDraft(
+            minParticipants: tier.minParticipants,
+            maxParticipants: tier.maxParticipants,
+            pricePerPerson: tier.pricePerPerson,
+          ),
+        ),
+      );
+
+    incluye
+      ..clear()
+      ..addAll(value.inclusions?.items ?? const <String>[]);
+    textoIncluyeVisible = value.inclusions?.displayText;
+  }
+
+  String? validar() {
+    if (nombre.trim().isEmpty) return 'Escribe el nombre de la experiencia.';
+    if (identificadorUrl.trim().isEmpty) {
+      return 'Escribe el identificador URL.';
     }
+    if (descripcion.trim().isEmpty) return 'Escribe una descripcion.';
+    if ((duracionExperienciaMinutos ?? 0) <= 0) {
+      return 'Ingresa la duracion de la experiencia en minutos.';
+    }
+    if ((duracionRecorridoMinutos ?? 0) <= 0) {
+      return 'Ingresa la duracion del recorrido en minutos.';
+    }
+    if (duracionRecorridoMinutos! > duracionExperienciaMinutos!) {
+      return 'La duracion del recorrido no puede ser mayor a la experiencia.';
+    }
+    if (tarifas.isEmpty) {
+      return 'Agrega al menos una tarifa por cantidad de personas.';
+    }
+    final ordenadas = List<ExperiencePricingTierDraft>.from(tarifas)
+      ..sort((a, b) => a.minParticipants.compareTo(b.minParticipants));
+    ExperiencePricingTierDraft? previa;
+    for (final tarifa in ordenadas) {
+      if (tarifa.minParticipants > tarifa.maxParticipants) {
+        return 'Hay una tarifa con rango invalido.';
+      }
+      if (previa != null && tarifa.minParticipants <= previa.maxParticipants) {
+        return 'Los rangos de tarifas no pueden superponerse.';
+      }
+      previa = tarifa;
+    }
+    if (incluye.isEmpty) return 'Agrega al menos un item en "Incluye".';
     return null;
   }
 
-  void updateName(String value) {
-    name = value;
-    if (slug.trim().isEmpty) {
-      slug = _slugify(value);
+  void actualizarNombre(String value) {
+    nombre = value;
+    if (identificadorUrl.trim().isEmpty) {
+      identificadorUrl = _slugify(value);
     }
     notifyListeners();
   }
 
-  void updateSlug(String value) {
-    slug = value.trim();
+  void actualizarIdentificadorUrl(String value) {
+    identificadorUrl = value.trim();
     notifyListeners();
   }
 
-  void updateDescription(String value) {
-    description = value;
+  void actualizarDescripcion(String value) {
+    descripcion = value;
     notifyListeners();
   }
 
-  void updateLevel(String value) {
-    level = value;
+  void actualizarSubtitulo(String value) {
+    subtitulo = _nullable(value);
     notifyListeners();
   }
 
-  void updateDurationHours(int? value) {
-    durationHours = value;
+  void actualizarUrlImagen(String value) {
+    urlImagen = _nullable(value);
     notifyListeners();
   }
 
-  void updateDurationDays(int? value) {
-    durationDays = value;
+  void actualizarNivel(String value) {
+    nivel = value;
     notifyListeners();
   }
 
-  void updateBaseCapacity(int? value) {
-    baseCapacity = value;
+  void actualizarDificultad(String value) {
+    dificultad = value;
     notifyListeners();
   }
 
-  void updateIsActive(bool value) {
-    isActive = value;
+  void actualizarActiva(bool value) {
+    activa = value;
     notifyListeners();
+  }
+
+  void actualizarDuracionExperiencia(int? value) {
+    duracionExperienciaMinutos = value;
+    notifyListeners();
+  }
+
+  void actualizarDuracionRecorrido(int? value) {
+    duracionRecorridoMinutos = value;
+    notifyListeners();
+  }
+
+  void actualizarTextoDuracionVisible(String value) {
+    textoDuracionVisible = _nullable(value);
+    notifyListeners();
+  }
+
+  void actualizarDistanciaKm(double? value) {
+    distanciaKm = value;
+    notifyListeners();
+  }
+
+  void actualizarTerreno(String value) {
+    terreno = value;
+    notifyListeners();
+  }
+
+  void actualizarNotasTerreno(String value) {
+    notasTerreno = _nullable(value);
+    notifyListeners();
+  }
+
+  void actualizarMoneda(String value) {
+    moneda = value.trim().toUpperCase();
+    notifyListeners();
+  }
+
+  void actualizarTarifasNetas(bool value) {
+    tarifasNetas = value;
+    notifyListeners();
+  }
+
+  void actualizarNotasTarifa(String value) {
+    notasTarifa = _nullable(value);
+    notifyListeners();
+  }
+
+  void actualizarTextoIncluyeVisible(String value) {
+    textoIncluyeVisible = _nullable(value);
+    notifyListeners();
+  }
+
+  void agregarTarifa(ExperiencePricingTierDraft value) {
+    tarifas.add(value);
+    notifyListeners();
+  }
+
+  void eliminarTarifa(int index) {
+    if (index < 0 || index >= tarifas.length) return;
+    tarifas.removeAt(index);
+    notifyListeners();
+  }
+
+  void agregarIncluye(String value) {
+    final cleaned = value.trim();
+    if (cleaned.isEmpty) return;
+    incluye.add(cleaned);
+    notifyListeners();
+  }
+
+  void eliminarIncluye(int index) {
+    if (index < 0 || index >= incluye.length) return;
+    incluye.removeAt(index);
+    notifyListeners();
+  }
+
+  CatalogExperienceDuration buildDuration() {
+    return CatalogExperienceDuration(
+      activityMinutes: duracionExperienciaMinutos!,
+      routeMinutes: duracionRecorridoMinutos!,
+      displayText: textoDuracionVisible,
+    );
+  }
+
+  CatalogExperienceRouteDetails? buildRouteDetails() {
+    if (terreno.trim().isEmpty && distanciaKm == null && notasTerreno == null) {
+      return null;
+    }
+    return CatalogExperienceRouteDetails(
+      distanceKm: distanciaKm,
+      terrain: terreno.trim().isEmpty ? 'No especificado' : terreno.trim(),
+      terrainNotes: notasTerreno,
+    );
+  }
+
+  CatalogExperiencePricing buildPricing() {
+    return CatalogExperiencePricing(
+      currency: moneda.trim().isEmpty ? 'COP' : moneda,
+      pricesAreNet: tarifasNetas,
+      pricingNotes: notasTarifa,
+      tiers: tarifas
+          .map(
+            (tier) => CatalogExperiencePricingTier(
+              minParticipants: tier.minParticipants,
+              maxParticipants: tier.maxParticipants,
+              pricePerPerson: tier.pricePerPerson,
+            ),
+          )
+          .toList(growable: false),
+    );
+  }
+
+  CatalogExperienceInclusions buildInclusions() {
+    return CatalogExperienceInclusions(
+      items: List<String>.from(incluye),
+      displayText: textoIncluyeVisible,
+    );
   }
 
   String _slugify(String value) {
     final lowered = value.toLowerCase().trim();
-    final normalized = lowered
+    return lowered
         .replaceAll(RegExp(r'[^a-z0-9\s-]'), '')
         .replaceAll(RegExp(r'\s+'), '-')
         .replaceAll(RegExp(r'-+'), '-');
-    return normalized;
+  }
+
+  String? _nullable(String value) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 }

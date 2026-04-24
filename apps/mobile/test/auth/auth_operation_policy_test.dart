@@ -8,13 +8,7 @@ void main() {
     expect(policy.register, OperationMode.requiresBackend);
     expect(policy.changePassword, OperationMode.requiresBackend);
     expect(policy.logout, OperationMode.canFallbackToLocal);
-    expect(
-      policy.modeForBootstrap(false),
-      OperationMode.requiresBackend,
-    );
-    expect(
-      policy.modeForBootstrap(true),
-      OperationMode.canFallbackToLocal,
-    );
+    expect(policy.modeForBootstrap(false), OperationMode.requiresBackend);
+    expect(policy.modeForBootstrap(true), OperationMode.canFallbackToLocal);
   });
 }

@@ -48,11 +48,7 @@ class _ParticipantsModuleScreenState extends State<ParticipantsModuleScreen> {
                 eyebrow: 'Participantes',
                 title: 'Gestion de participantes',
                 subtitle: 'Completitud de datos y validaciones por reserva',
-                subrouteLabels: const [
-                  'Resumen',
-                  'Listado',
-                  'Historial',
-                ],
+                subrouteLabels: const ['Resumen', 'Listado', 'Historial'],
                 currentSubrouteIndex: _controller.subroute.index,
                 onSubrouteTap: _controller.selectSubrouteByIndex,
               ),

@@ -22,6 +22,8 @@ from app.schemas.config import (
 from app.schemas.equine import EquineCreateSchema, EquineResponseSchema, EquineUpdateSchema
 from app.schemas.experience import (
     ExperienceCreateSchema,
+    ExperienceQuoteRequestSchema,
+    ExperienceQuoteResponseSchema,
     ExperienceResponseSchema,
     ExperienceUpdateSchema,
 )
@@ -84,6 +86,8 @@ __all__ = [
     "EquineResponseSchema",
     "EquineUpdateSchema",
     "ExperienceCreateSchema",
+    "ExperienceQuoteRequestSchema",
+    "ExperienceQuoteResponseSchema",
     "ExperienceResponseSchema",
     "ExperienceUpdateSchema",
     "FileCompleteUploadResponseSchema",

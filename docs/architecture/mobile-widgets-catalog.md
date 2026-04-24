@@ -534,6 +534,35 @@ AppStatsCard(
 )
 ```
 
+### `AppExperienceCard`
+Archivo: `apps/mobile/lib/app/widgets/cards/app_experience_card.dart`
+
+```dart
+const AppExperienceCard({
+  super.key,
+  required this.data,
+  this.variant = AppExperienceCardVariant.commercial,
+  this.primaryActionLabel,
+  this.onTap,
+  this.onPrimaryAction,
+  this.enabled = true,
+  this.selected = false,
+});
+```
+
+### `AppPricingTiersTable`
+Archivo: `apps/mobile/lib/app/widgets/cards/app_pricing_tiers_table.dart`
+
+```dart
+const AppPricingTiersTable({
+  super.key,
+  required this.tiers,
+  this.currency = 'COP',
+  this.pricesAreNet = true,
+  this.notes,
+});
+```
+
 ## Tipos de apoyo usados por los widgets
 
 ```dart
@@ -542,6 +571,7 @@ enum AppBadgeSize { sm, md }
 enum AppButtonVariant { primary, secondary, ghost }
 enum AppCardTone { surface, high, low, error }
 enum AppMetricCardTone { defaultTone, danger, inverse }
+enum AppExperienceCardVariant { compact, commercial, operational }
 enum AppSectionHeaderVariant { hero, compact }
 enum AppTextFieldVariant { filled, underlined }
 enum AppTimelineNodeState { active, completed, cancelled, error, neutral }
@@ -559,5 +589,33 @@ class AppTimelineMetricItem {
   final String value;
   final String label;
   const AppTimelineMetricItem({required this.value, required this.label});
+}
+
+class AppOperationalBadgeData {
+  final String label;
+  final IconData? icon;
+  final AppBadgeTone tone;
+}
+
+class AppExperienceCardData {
+  final String title;
+  final String description;
+  final ImageProvider? image;
+  final String? priceLabel;
+  final String? priceCaption;
+  final String activityDurationLabel;
+  final String routeDurationLabel;
+  final String? distanceLabel;
+  final String? terrainLabel;
+  final String difficultyLabel;
+  final String? capacityLabel;
+  final List<String> inclusions;
+  final List<AppOperationalBadgeData> badges;
+}
+
+class AppPricingTierData {
+  final int minParticipants;
+  final int maxParticipants;
+  final int pricePerPerson;
 }
 ```

@@ -313,6 +313,18 @@ class CatalogsRepository {
     required String slug,
     required String description,
     required String level,
+    String? subtitle,
+    String? imageUrl,
+    String? difficulty,
+    String? category,
+    String? status,
+    Map<String, dynamic>? duration,
+    Map<String, dynamic>? routeDetails,
+    Map<String, dynamic>? pricing,
+    Map<String, dynamic>? inclusions,
+    int? standardMaxParticipants,
+    int? minParticipants,
+    List<String>? tags,
     int? durationHours,
     int? durationDays,
     int? baseCapacity,
@@ -330,6 +342,18 @@ class CatalogsRepository {
       'duration_hours': durationHours,
       'duration_days': durationDays,
       'base_capacity': baseCapacity,
+      'subtitle': subtitle,
+      'image_url': imageUrl,
+      'difficulty': difficulty,
+      'category': category,
+      'status': status,
+      'duration_json': _encodeNullableJson(duration),
+      'route_details_json': _encodeNullableJson(routeDetails),
+      'pricing_json': _encodeNullableJson(pricing),
+      'inclusions_json': _encodeNullableJson(inclusions),
+      'standard_max_participants': standardMaxParticipants,
+      'min_participants': minParticipants,
+      'tags_json': _encodeNullableJson(tags),
       'is_active': isActive ? 1 : 0,
       'sync_status': catalogSyncStatusToDb(CatalogSyncStatus.pending),
       'sync_error': null,
@@ -345,6 +369,18 @@ class CatalogsRepository {
         'slug': slug,
         'description': description,
         'level': level,
+        'subtitle': subtitle,
+        'image_url': imageUrl,
+        'difficulty': difficulty,
+        'category': category,
+        'status': status,
+        'duration': duration,
+        'route_details': routeDetails,
+        'pricing': pricing,
+        'inclusions': inclusions,
+        'standard_max_participants': standardMaxParticipants,
+        'min_participants': minParticipants,
+        'tags': tags,
         'duration_hours': durationHours,
         'duration_days': durationDays,
         'base_capacity': baseCapacity,
@@ -357,9 +393,22 @@ class CatalogsRepository {
   Future<void> updateExperience({
     required String id,
     required String name,
+    required String slug,
     required String description,
     required String level,
     required bool isActive,
+    String? subtitle,
+    String? imageUrl,
+    String? difficulty,
+    String? category,
+    String? status,
+    Map<String, dynamic>? duration,
+    Map<String, dynamic>? routeDetails,
+    Map<String, dynamic>? pricing,
+    Map<String, dynamic>? inclusions,
+    int? standardMaxParticipants,
+    int? minParticipants,
+    List<String>? tags,
     int? durationHours,
     int? durationDays,
     int? baseCapacity,
@@ -379,11 +428,24 @@ class CatalogsRepository {
       'experiences_local',
       {
         'name': name,
+        'slug': slug,
         'description': description,
         'level': level,
         'duration_hours': durationHours,
         'duration_days': durationDays,
         'base_capacity': baseCapacity,
+        'subtitle': subtitle,
+        'image_url': imageUrl,
+        'difficulty': difficulty,
+        'category': category,
+        'status': status,
+        'duration_json': _encodeNullableJson(duration),
+        'route_details_json': _encodeNullableJson(routeDetails),
+        'pricing_json': _encodeNullableJson(pricing),
+        'inclusions_json': _encodeNullableJson(inclusions),
+        'standard_max_participants': standardMaxParticipants,
+        'min_participants': minParticipants,
+        'tags_json': _encodeNullableJson(tags),
         'is_active': isActive ? 1 : 0,
         'sync_status': catalogSyncStatusToDb(CatalogSyncStatus.pending),
         'sync_error': null,
@@ -399,8 +461,21 @@ class CatalogsRepository {
       baseVersion: version,
       payload: {
         'name': name,
+        'slug': slug,
         'description': description,
         'level': level,
+        'subtitle': subtitle,
+        'image_url': imageUrl,
+        'difficulty': difficulty,
+        'category': category,
+        'status': status,
+        'duration': duration,
+        'route_details': routeDetails,
+        'pricing': pricing,
+        'inclusions': inclusions,
+        'standard_max_participants': standardMaxParticipants,
+        'min_participants': minParticipants,
+        'tags': tags,
         'duration_hours': durationHours,
         'duration_days': durationDays,
         'base_capacity': baseCapacity,
@@ -979,7 +1054,19 @@ class CatalogsRepository {
       'name': payload['name'] as String? ?? '',
       'slug': payload['slug'] as String? ?? '',
       'description': payload['description'] as String? ?? '',
+      'subtitle': payload['subtitle'] as String?,
+      'image_url': payload['image_url'] as String?,
       'level': payload['level'] as String? ?? 'basic',
+      'difficulty': payload['difficulty'] as String?,
+      'category': payload['category'] as String?,
+      'status': payload['status'] as String?,
+      'duration_json': _encodeNullableJson(payload['duration']),
+      'route_details_json': _encodeNullableJson(payload['route_details']),
+      'pricing_json': _encodeNullableJson(payload['pricing']),
+      'inclusions_json': _encodeNullableJson(payload['inclusions']),
+      'standard_max_participants': payload['standard_max_participants'] as int?,
+      'min_participants': payload['min_participants'] as int?,
+      'tags_json': _encodeNullableJson(payload['tags']),
       'duration_hours': payload['duration_hours'] as int?,
       'duration_days': payload['duration_days'] as int?,
       'base_capacity': payload['base_capacity'] as int?,
@@ -1149,6 +1236,94 @@ class CatalogsRepository {
     }
   }
 
+  String? _encodeNullableJson(Object? value) {
+    if (value == null) return null;
+    return jsonEncode(value);
+  }
+
+  Map<String, dynamic>? _decodeMapJson(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final decoded = jsonDecode(value);
+    if (decoded is! Map) return null;
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  List<dynamic>? _decodeListJson(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final decoded = jsonDecode(value);
+    if (decoded is! List) return null;
+    return decoded;
+  }
+
+  CatalogExperienceDuration? _durationFromMap(Map<String, dynamic>? map) {
+    if (map == null) return null;
+    final activity = map['activity_minutes'] as int?;
+    final route = map['route_minutes'] as int?;
+    if (activity == null || route == null) return null;
+    return CatalogExperienceDuration(
+      activityMinutes: activity,
+      routeMinutes: route,
+      displayText: map['display_text'] as String?,
+    );
+  }
+
+  CatalogExperienceRouteDetails? _routeDetailsFromMap(
+    Map<String, dynamic>? map,
+  ) {
+    if (map == null) return null;
+    final terrain = map['terrain'] as String?;
+    if (terrain == null || terrain.trim().isEmpty) return null;
+    return CatalogExperienceRouteDetails(
+      distanceKm: (map['distance_km'] as num?)?.toDouble(),
+      terrain: terrain,
+      terrainNotes: map['terrain_notes'] as String?,
+    );
+  }
+
+  CatalogExperiencePricing? _pricingFromMap(Map<String, dynamic>? map) {
+    if (map == null) return null;
+    final tiersRaw = map['tiers'];
+    if (tiersRaw is! List) return null;
+    final tiers = <CatalogExperiencePricingTier>[];
+    for (final raw in tiersRaw) {
+      if (raw is! Map) continue;
+      final item = Map<String, dynamic>.from(raw);
+      final minParticipants = item['min_participants'] as int?;
+      final maxParticipants = item['max_participants'] as int?;
+      final pricePerPerson = item['price_per_person'] as int?;
+      if (minParticipants == null ||
+          maxParticipants == null ||
+          pricePerPerson == null) {
+        continue;
+      }
+      tiers.add(
+        CatalogExperiencePricingTier(
+          minParticipants: minParticipants,
+          maxParticipants: maxParticipants,
+          pricePerPerson: pricePerPerson,
+        ),
+      );
+    }
+    return CatalogExperiencePricing(
+      currency: (map['currency'] as String?) ?? 'COP',
+      pricesAreNet: (map['prices_are_net'] as bool?) ?? true,
+      pricingNotes: map['pricing_notes'] as String?,
+      tiers: tiers,
+    );
+  }
+
+  CatalogExperienceInclusions? _inclusionsFromMap(Map<String, dynamic>? map) {
+    if (map == null) return null;
+    final itemsRaw = map['items'];
+    final items = itemsRaw is List
+        ? itemsRaw.whereType<String>().toList(growable: false)
+        : const <String>[];
+    return CatalogExperienceInclusions(
+      items: items,
+      displayText: map['display_text'] as String?,
+    );
+  }
+
   int _availableSlots({
     required int capacityTotal,
     required int reservedSlots,
@@ -1174,13 +1349,35 @@ class CatalogsRepository {
   }
 
   CatalogExperience _experienceFromRow(Map<String, Object?> row) {
+    final durationMap = _decodeMapJson(row['duration_json'] as String?);
+    final routeDetailsMap = _decodeMapJson(
+      row['route_details_json'] as String?,
+    );
+    final pricingMap = _decodeMapJson(row['pricing_json'] as String?);
+    final inclusionsMap = _decodeMapJson(row['inclusions_json'] as String?);
+    final tagsRaw = _decodeListJson(row['tags_json'] as String?);
+
     return CatalogExperience(
       id: row['id'] as String,
       remoteId: row['remote_id'] as String?,
       name: row['name'] as String,
       slug: row['slug'] as String,
       description: row['description'] as String,
+      subtitle: row['subtitle'] as String?,
+      imageUrl: row['image_url'] as String?,
       level: row['level'] as String,
+      difficulty: row['difficulty'] as String?,
+      category: row['category'] as String?,
+      status: row['status'] as String?,
+      duration: _durationFromMap(durationMap),
+      routeDetails: _routeDetailsFromMap(routeDetailsMap),
+      pricing: _pricingFromMap(pricingMap),
+      inclusions: _inclusionsFromMap(inclusionsMap),
+      standardMaxParticipants: row['standard_max_participants'] as int?,
+      minParticipants: row['min_participants'] as int?,
+      tags: tagsRaw == null
+          ? const <String>[]
+          : tagsRaw.whereType<String>().toList(growable: false),
       durationHours: row['duration_hours'] as int?,
       durationDays: row['duration_days'] as int?,
       baseCapacity: row['base_capacity'] as int?,

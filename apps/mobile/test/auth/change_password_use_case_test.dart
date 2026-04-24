@@ -14,16 +14,9 @@ void main() {
     final useCase = ChangePasswordUseCase(repo);
 
     expect(
-      () => useCase(
-        currentPassword: 'old',
-        newPassword: 'new_password',
-      ),
+      () => useCase(currentPassword: 'old', newPassword: 'new_password'),
       throwsA(
-        isA<AuthFailure>().having(
-          (e) => e.code,
-          'code',
-          'network.unavailable',
-        ),
+        isA<AuthFailure>().having((e) => e.code, 'code', 'network.unavailable'),
       ),
     );
   });

@@ -8,6 +8,8 @@ from app.common.enums import Permission
 from app.documents import UserDocument
 from app.schemas.experience import (
     ExperienceCreateSchema,
+    ExperienceQuoteRequestSchema,
+    ExperienceQuoteResponseSchema,
     ExperienceResponseSchema,
     ExperienceUpdateSchema,
 )
@@ -98,3 +100,21 @@ async def deactivate_experience(
 ) -> ExperienceResponseSchema:
     doc = await service.deactivate(experience_id)
     return experience_to_response(doc)
+
+
+@router.post(
+    "/{experience_id}/quote",
+    response_model=ExperienceQuoteResponseSchema,
+    summary="Cotizar experiencia",
+    description=(
+        "Calcula la cotizacion oficial para una experiencia segun cantidad "
+        "de participantes y tabla tarifaria vigente."
+    ),
+    operation_id="quoteExperienceById",
+)
+async def quote_experience(
+    experience_id: str,
+    payload: ExperienceQuoteRequestSchema,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_READ))],
+) -> ExperienceQuoteResponseSchema:
+    return await service.quote(experience_id, payload)

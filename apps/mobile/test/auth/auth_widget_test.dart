@@ -31,8 +31,9 @@ void main() {
   ) {
     final networkStatusResolver = NetworkStatusResolver(
       connectivityService: connectivity,
-      backendReachabilityService:
-          FakeBackendReachabilityService(BackendReachability.reachable),
+      backendReachabilityService: FakeBackendReachabilityService(
+        BackendReachability.reachable,
+      ),
     );
     return AuthController(
       bootstrapSessionUseCase: BootstrapSessionUseCase(repo),

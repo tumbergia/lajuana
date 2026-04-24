@@ -92,7 +92,9 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen> {
           itemBuilder: (context, i) {
             final e = _equines[i];
             return Padding(
-              padding: EdgeInsets.only(bottom: i < _equines.length - 1 ? 10 : 0),
+              padding: EdgeInsets.only(
+                bottom: i < _equines.length - 1 ? 10 : 0,
+              ),
               child: AppEntityRowCard(
                 title: e.name,
                 subtitle: e.summary,

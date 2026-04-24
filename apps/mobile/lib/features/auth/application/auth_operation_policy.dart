@@ -1,7 +1,4 @@
-enum OperationMode {
-  requiresBackend,
-  canFallbackToLocal,
-}
+enum OperationMode { requiresBackend, canFallbackToLocal }
 
 class AuthOperationPolicy {
   const AuthOperationPolicy();

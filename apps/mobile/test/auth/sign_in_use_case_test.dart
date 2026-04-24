@@ -29,10 +29,7 @@ void main() {
     final useCase = SignInUseCase(repo);
 
     expect(
-      () => useCase(
-        email: 'x@x.com',
-        password: 'bad',
-      ),
+      () => useCase(email: 'x@x.com', password: 'bad'),
       throwsA(
         isA<AuthFailure>().having(
           (e) => e.code,

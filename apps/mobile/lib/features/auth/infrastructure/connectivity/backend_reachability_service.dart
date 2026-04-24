@@ -14,10 +14,10 @@ class HttpBackendReachabilityService implements BackendReachabilityService {
     required String baseUrl,
     http.Client? httpClient,
     this.timeout = const Duration(seconds: 3),
-  })  : _http = httpClient ?? http.Client(),
-        _healthUri = Uri.parse(
-          '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/health',
-        );
+  }) : _http = httpClient ?? http.Client(),
+       _healthUri = Uri.parse(
+         '${baseUrl.replaceFirst(RegExp(r'/+$'), '')}/health',
+       );
 
   final http.Client _http;
   final Uri _healthUri;

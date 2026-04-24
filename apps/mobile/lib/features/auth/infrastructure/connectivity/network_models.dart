@@ -1,15 +1,6 @@
-enum LinkType {
-  offline,
-  mobile,
-  wifi,
-  other,
-}
+enum LinkType { offline, mobile, wifi, other }
 
-enum BackendReachability {
-  reachable,
-  unreachable,
-  unknown,
-}
+enum BackendReachability { reachable, unreachable, unknown }
 
 class NetworkStatus {
   const NetworkStatus({

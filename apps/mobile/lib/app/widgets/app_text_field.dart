@@ -63,8 +63,8 @@ class AppTextField extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tokens = theme.appTokens;
-    final effectiveKeyboardType = keyboardType ??
-        (obscureText ? TextInputType.visiblePassword : null);
+    final effectiveKeyboardType =
+        keyboardType ?? (obscureText ? TextInputType.visiblePassword : null);
 
     // ── Borders ────────────────────────────────────────────────────────────
     InputBorder underline(Color color, [double width = 1.0]) =>

@@ -18,7 +18,7 @@ class CatalogsDatabase {
     final path = p.join(databasesPath, 'la_juana_catalogs_v1.db');
     _database = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE experiences_local (
@@ -31,6 +31,18 @@ class CatalogsDatabase {
             duration_hours INTEGER NULL,
             duration_days INTEGER NULL,
             base_capacity INTEGER NULL,
+            subtitle TEXT NULL,
+            image_url TEXT NULL,
+            difficulty TEXT NULL,
+            category TEXT NULL,
+            status TEXT NULL,
+            duration_json TEXT NULL,
+            route_details_json TEXT NULL,
+            pricing_json TEXT NULL,
+            inclusions_json TEXT NULL,
+            standard_max_participants INTEGER NULL,
+            min_participants INTEGER NULL,
+            tags_json TEXT NULL,
             is_active INTEGER NOT NULL,
             sync_status TEXT NOT NULL,
             sync_error TEXT NULL,
@@ -117,6 +129,46 @@ class CatalogsDatabase {
             cursor TEXT NOT NULL
           );
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN subtitle TEXT NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN image_url TEXT NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN difficulty TEXT NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN category TEXT NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN status TEXT NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN duration_json TEXT NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN route_details_json TEXT NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN pricing_json TEXT NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN inclusions_json TEXT NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN standard_max_participants INTEGER NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN min_participants INTEGER NULL',
+          );
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN tags_json TEXT NULL',
+          );
+        }
       },
     );
     return _database!;
