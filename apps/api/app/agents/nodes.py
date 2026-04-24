@@ -87,7 +87,7 @@ async def tourist_agent_node(state: GraphState, deps: NodeDependencies, config: 
     
     system_prompt = SystemMessage(content=(
         "Eres el agente de atención de La Juana. "
-        "Resuelve dudas sobre caballos/campo usando RAG y gestiona reservas."
+        "Resuelve dudas sobre equinos/campo usando RAG y gestiona reservas."
     ))
     
     messages = [system_prompt] + state.get("messages", [])
