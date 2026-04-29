@@ -444,7 +444,11 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
 
 
 ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
-    ("POST", "/api/v1/auth/register"): {"cases_400": (), "cases_404": (), "cases_409": ("B409-001",)},
+    ("POST", "/api/v1/auth/register"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": ("B409-001",),
+    },
     ("POST", "/api/v1/auth/login"): {"cases_400": (), "cases_404": (), "cases_409": ()},
     ("POST", "/api/v1/auth/refresh"): {"cases_400": (), "cases_404": (), "cases_409": ()},
     ("POST", "/api/v1/auth/logout"): {"cases_400": (), "cases_404": (), "cases_409": ()},
@@ -454,7 +458,11 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_409": (),
     },
     ("GET", "/api/v1/auth/me"): {"cases_400": (), "cases_404": ("B404-001",), "cases_409": ()},
-    ("POST", "/api/v1/users"): {"cases_400": ("B400-002",), "cases_404": (), "cases_409": ("B409-001",)},
+    ("POST", "/api/v1/users"): {
+        "cases_400": ("B400-002",),
+        "cases_404": (),
+        "cases_409": ("B409-001",),
+    },
     ("GET", "/api/v1/users"): {"cases_400": (), "cases_404": (), "cases_409": ()},
     ("GET", "/api/v1/users/{user_id}"): {
         "cases_400": (),
@@ -623,7 +631,11 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_404": ("B404-004",),
         "cases_409": (),
     },
-    ("GET", "/api/v1/logs/{log_id}"): {"cases_400": (), "cases_404": ("B404-010",), "cases_409": ()},
+    ("GET", "/api/v1/logs/{log_id}"): {
+        "cases_400": (),
+        "cases_404": ("B404-010",),
+        "cases_409": (),
+    },
     ("PATCH", "/api/v1/logs/{log_id}"): {
         "cases_400": ("B400-029", "B400-030"),
         "cases_404": ("B404-010",),
@@ -650,7 +662,11 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_404": ("B404-004", "B404-011"),
         "cases_409": (),
     },
-    ("GET", "/api/v1/policies/{policy_id}"): {"cases_400": (), "cases_404": ("B404-012",), "cases_409": ()},
+    ("GET", "/api/v1/policies/{policy_id}"): {
+        "cases_400": (),
+        "cases_404": ("B404-012",),
+        "cases_409": (),
+    },
     ("PATCH", "/api/v1/policies/{policy_id}"): {
         "cases_400": (),
         "cases_404": ("B404-012",),

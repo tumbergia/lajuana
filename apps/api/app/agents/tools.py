@@ -1,31 +1,102 @@
-import datetime
 from datetime import date
-from typing import Literal
+from typing import Literal, Sequence
 
 from langchain_core.messages import BaseMessage
 from langchain_core.tools import tool
+from openai import AsyncOpenAI
 
-from app.documents import ServiceLogEventType
-from app.schemas.service_log import ServiceLogCreateSchema
-from app.services import BookingService, OpsService, ReservationService, ParticipantService, EquineService, ScheduleService, SaddleService
-from app.core.errors import ApiError
 from app.agents.handlers import (
     EquineHandler,
     ReservationHandler,
     SaddleHandler,
-    ServiceLogHandler,
     ScheduleHandler,
+    ServiceLogHandler,
+)
+from app.core.config import settings
+from app.core.errors import ApiError
+from app.services import (
+    BookingService,
+    EquineService,
+    OpsService,
+    ParticipantService,
+    ReservationService,
+    SaddleService,
+    ScheduleService,
 )
 
-class StubVectorClient:
-    async def search(self, query: str) -> str:
-        return "Respuesta RAG sobre equinos y campo."
+
+def _normalize_embedding_input(text: str | Sequence[str]) -> str | list[str]:
+    if isinstance(text, str):
+        return text
+    if isinstance(text, (list, tuple)):
+        if not all(isinstance(item, str) for item in text):
+            raise ValueError("Embedding query list items must all be strings.")
+        return list(text)
+    raise ValueError("Vector search query must be a string or a list of strings.")
+
+
+class MongoDBVectorClient:
+    def __init__(self) -> None:
+        self.client = AsyncOpenAI(
+            api_key=settings.chat_embedding_api_key,
+            base_url=settings.chat_embedding_base_url,
+        )
+
+    async def search(
+        self,
+        query: str | list[str],
+        scope: Literal["public", "ops"] | list[Literal["public", "ops"]] = "public",
+    ) -> str:
+        from app.documents import KnowledgeDocument
+
+        query = _normalize_embedding_input(query)
+        
+        response = await self.client.embeddings.create(
+            model=settings.chat_embedding_model,
+            input=query,
+        )
+        query_vector = response.data[0].embedding
+        allowed_scopes = [scope] if isinstance(scope, str) else scope
+
+        pipeline = [
+            {
+                "$vectorSearch": {
+                    "index": settings.chat_vector_index_name,
+                    "path": "embedding",
+                    "queryVector": query_vector,
+                    "numCandidates": settings.chat_vector_top_k * 10,
+                    "limit": settings.chat_vector_top_k,
+                    "filter": {"scope": {"$in": allowed_scopes}},
+                }
+            },
+            {
+                "$project": {
+                    "text": 1,
+                    "source": 1,
+                    "scope": 1,
+                    "score": {"$meta": "vectorSearchScore"},
+                }
+            },
+        ]
+
+        collection = KnowledgeDocument.get_motor_collection()
+        results = await collection.aggregate(pipeline).to_list(length=settings.chat_vector_top_k)
+
+        if not results:
+            return "No se encontró información relevante en la base de conocimientos."
+
+        texts = [
+            f"Fuente ({res.get('scope', 'unknown')}): {res.get('text', '')}" for res in results
+        ]
+        return "\n\n".join(texts)
+
 
 def get_last_user_text(messages: list[BaseMessage]) -> str:
     for message in reversed(messages):
         if message.type == "human":
             return str(message.content)
     return ""
+
 
 def create_ops_tools(
     ops_service: OpsService,
@@ -34,6 +105,7 @@ def create_ops_tools(
     equine_service: EquineService,
     schedule_service: ScheduleService,
     saddle_service: SaddleService,
+    vector_client: MongoDBVectorClient,
 ):
     handlers = {
         "equinos": EquineHandler(equine_service),
@@ -51,35 +123,49 @@ def create_ops_tools(
         datos_cambio: dict,
     ) -> str:
         """
-        Usa esta herramienta cuando un administrador o guía solicite registrar, modificar, consultar o anular cualquier dato del sistema (equinos, sillas, pagos, novedades, agendas). Traduce el lenguaje coloquial a la acción técnica correspondiente.
+        Usa esta herramienta cuando un administrador o guía solicite registrar, modificar,
+        consultar o anular cualquier dato del sistema (equinos, sillas, pagos, novedades, agendas).
+        Traduce el lenguaje coloquial a la acción técnica correspondiente.
         - entidad: El tipo de registro a afectar ("equinos", "reservas", "sillas", "bitacora", "agendas").
         - accion: Lo que se desea hacer ("crear", "consultar", "actualizar", "anular").
         - parametros_busqueda: Diccionario para localizar el registro (Ej: {"nombre": "Rayo"}, {"codigo": "RES-123"}).
-        - datos_cambio: Diccionario con la nueva información o parámetros extraídos del texto (Ej: {"is_available": false, "health_notes": "está cojo", "event_type": "INCIDENT", "notes": "Equino se desbocó"}).
+        - datos_cambio: Diccionario con la nueva información o parámetros extraídos del texto
+          (Ej: {"is_available": false, "health_notes": "cojo", "event_type": "INCIDENT", "notes": "Equino desbocó"}).
         """
         try:
             handler = handlers.get(entidad)
             if not handler:
                 return f"No sé cómo manejar la entidad '{entidad}'."
-            
+
             method = getattr(handler, accion, None)
             if not method:
                 return f"La acción '{accion}' no está disponible para '{entidad}'."
-                
+
             return await method(parametros_busqueda, datos_cambio)
         except Exception as e:
             return f"Error al ejecutar la acción: {str(e)}"
 
-    return [ejecutar_accion_administrativa]
+    @tool
+    async def search_ops_information(query: str) -> str:
+        """Busca información operativa, reglas de negocio o detalles de equinos y operaciones."""
+        return await vector_client.search(query, scope=["public", "ops"])
 
-def create_tourist_tools(booking_service: BookingService, vector_client: StubVectorClient):
+    return [ejecutar_accion_administrativa, search_ops_information]
+
+
+def create_tourist_tools(booking_service: BookingService, vector_client: MongoDBVectorClient):
     @tool
     async def search_information(query: str) -> str:
-        """Busca información de contexto o RAG para responder preguntas sobre La Juana, equinos o el campo."""
-        return await vector_client.search(query)
+        """
+        Busca información de contexto o RAG para responder preguntas
+        sobre La Juana, equinos o el campo.
+        """
+        return await vector_client.search(query, scope="public")
 
     @tool
-    async def get_available_schedule(experience_id: str, participant_count: int, requested_date: str) -> dict:
+    async def get_available_schedule(
+        experience_id: str, participant_count: int, requested_date: str
+    ) -> dict:
         """Consulta la disponibilidad de agenda para una experiencia."""
         parsed_date = date.fromisoformat(requested_date) if requested_date else None
         schedule = await booking_service.get_available_schedule(
@@ -89,7 +175,11 @@ def create_tourist_tools(booking_service: BookingService, vector_client: StubVec
         )
         if not schedule:
             return {"success": False, "message": "No encontré cupo disponible."}
-        return {"success": True, "schedule_id": str(schedule.id), "message": "Agenda disponible encontrada."}
+        return {
+            "success": True,
+            "schedule_id": str(schedule.id),
+            "message": "Agenda disponible encontrada.",
+        }
 
     @tool
     async def create_pending_reservation(
@@ -105,8 +195,9 @@ def create_tourist_tools(booking_service: BookingService, vector_client: StubVec
         """Crea una reserva en estado pendiente usando schedule_id previamente verificado."""
         try:
             import re
+
             from beanie import PydanticObjectId
-            
+
             parsed_actor_id = None
             if actor_id and re.fullmatch(r"[a-fA-F0-9]{24}", actor_id):
                 parsed_actor_id = PydanticObjectId(actor_id)
@@ -126,5 +217,5 @@ def create_tourist_tools(booking_service: BookingService, vector_client: StubVec
             return f"No pude crear la reserva pendiente. Código: {exc.code}."
         except Exception as e:
             return f"Error en creación: {str(e)}"
-    
+
     return [search_information, get_available_schedule, create_pending_reservation]

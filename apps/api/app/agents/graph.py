@@ -6,8 +6,6 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from app.agents.nodes import (
     NodeDependencies,
     default_dependencies,
-    map_role_for_graph,
-    now_iso,
     ops_agent_node,
     route_initial_by_role,
     tourist_agent_node,
@@ -28,15 +26,16 @@ def build_chat_graph(dependencies: NodeDependencies | None = None):
             equine_service=deps.equine_service,
             schedule_service=deps.schedule_service,
             saddle_service=deps.saddle_service,
+            vector_client=deps.vector_client,
         )
     )
     tourist_tools_node = ToolNode(create_tourist_tools(deps.booking_service, deps.vector_client))
 
     workflow = StateGraph(GraphState)
-    
+
     workflow.add_node("ops_agent", partial(ops_agent_node, deps=deps))
     workflow.add_node("ops_tools", ops_tools_node)
-    
+
     workflow.add_node("tourist_agent", partial(tourist_agent_node, deps=deps))
     workflow.add_node("tourist_tools", tourist_tools_node)
 
@@ -46,7 +45,7 @@ def build_chat_graph(dependencies: NodeDependencies | None = None):
         {
             "ops_agent": "ops_agent",
             "tourist_agent": "tourist_agent",
-        }
+        },
     )
 
     workflow.add_conditional_edges(
@@ -71,7 +70,9 @@ def build_chat_graph(dependencies: NodeDependencies | None = None):
 
     return workflow.compile()
 
+
 _graph = build_chat_graph()
+
 
 def get_chat_graph():
     return _graph

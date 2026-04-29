@@ -12,8 +12,8 @@ from app.schemas.auth import (
     UserResponseSchema,
     UserUpdateSchema,
 )
-from app.schemas.common import ApiErrorResponse
 from app.schemas.chat import ChatRequestSchema, ChatResponseSchema
+from app.schemas.common import ApiErrorResponse
 from app.schemas.config import (
     EmergencyCatalogContactSchema,
     EmergencyContactsResponseSchema,

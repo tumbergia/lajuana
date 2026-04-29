@@ -8,6 +8,7 @@ from app.documents import (
     ChatCheckpointDocument,
     EquineDocument,
     ExperienceDocument,
+    KnowledgeDocument,
     ParticipantDocument,
     PaymentProofDocument,
     PingDocument,
@@ -59,6 +60,7 @@ async def init_db() -> None:
             ProviderDocument,
             PolicyDocument,
             ChatCheckpointDocument,
+            KnowledgeDocument,
         ],
     )
 

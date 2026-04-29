@@ -710,18 +710,11 @@ async def _refresh_schedule_occupancy_from_confirmed(
         reserved = load_by_schedule.get(str(schedule.id), schedule.reserved_slots)
         available_slots = max(
             0,
-            schedule.capacity_total
-            - reserved
-            - schedule.internal_slots
-            - schedule.blocked_slots,
+            schedule.capacity_total - reserved - schedule.internal_slots - schedule.blocked_slots,
         )
         status = schedule.status
         if schedule.status != ScheduleStatus.CLOSED:
-            status = (
-                ScheduleStatus.FULL
-                if available_slots == 0
-                else ScheduleStatus.OPEN
-            )
+            status = ScheduleStatus.FULL if available_slots == 0 else ScheduleStatus.OPEN
         await collection.update_one(
             {"_id": ObjectId(str(schedule.id))},
             {

@@ -128,14 +128,8 @@ def test_openapi_business_examples_follow_master_catalog() -> None:
             if not case_ids:
                 continue
             response = responses[status_code]
-            examples = (
-                response.get("content", {})
-                .get("application/json", {})
-                .get("examples", {})
-            )
+            examples = response.get("content", {}).get("application/json", {}).get("examples", {})
             assert examples, (operation_id, status_code)
             for case_id in case_ids:
                 assert case_id in examples, (operation_id, status_code, case_id)
-                assert (
-                    examples[case_id]["value"]["code"] == BUSINESS_ERROR_CASES[case_id]["code"]
-                )
+                assert examples[case_id]["value"]["code"] == BUSINESS_ERROR_CASES[case_id]["code"]
