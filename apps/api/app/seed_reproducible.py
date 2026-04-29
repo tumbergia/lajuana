@@ -715,7 +715,7 @@ async def _refresh_schedule_occupancy_from_confirmed(
             schedule.capacity_total - reserved - schedule.internal_slots - schedule.blocked_slots,
         )
         status = schedule.status
-        if schedule.is_active and schedule.status != ScheduleStatus.CLOSED:
+        if schedule.status != ScheduleStatus.CLOSED:
             status = ScheduleStatus.FULL if available_slots == 0 else ScheduleStatus.OPEN
         await collection.update_one(
             {"_id": ObjectId(str(schedule.id))},

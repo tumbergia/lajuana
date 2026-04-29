@@ -30,6 +30,7 @@ PROTECTED_ENDPOINTS = [
     ("post", "/api/v1/auth/logout", None),
     ("post", "/api/v1/auth/change-password", {"current_password": "x", "new_password": "nueva123"}),
     ("get", "/api/v1/auth/me", None),
+    ("post", "/api/v1/chat", {"conversation_id": "conv-test-1", "message": "hola"}),
     (
         "post",
         "/api/v1/users",
@@ -91,7 +92,7 @@ PROTECTED_ENDPOINTS = [
             "content_type": "application/pdf",
             "size_bytes": 1000,
             "sha256": "abc",
-            "storage_key": "payment_proof/mock.pdf",
+            "content_base64": "SG9sYQ==",
         },
     ),
     (
@@ -192,6 +193,7 @@ GUIDE_FORBIDDEN_ENDPOINTS = [
 VALIDATION_ENDPOINTS = [
     ("post", "/api/v1/auth/login", {}),
     ("post", "/api/v1/auth/register", {}),
+    ("post", "/api/v1/chat", {}),
     ("post", "/api/v1/experiences", {}),
     ("post", "/api/v1/schedules", {}),
     ("post", "/api/v1/reservations", {}),

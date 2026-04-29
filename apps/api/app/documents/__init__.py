@@ -1,8 +1,9 @@
 from app.documents.app_config_document import AppConfigDocument, ReservationRules
 from app.documents.assignment_document import AssignmentDocument
+from app.documents.chat_checkpoint_document import ChatCheckpointDocument
 from app.documents.equine_document import EquineDocument
 from app.documents.experience_document import ExperienceDocument
-from app.documents.file_upload_document import FileUploadDocument
+from app.documents.knowledge_document import KnowledgeDocument
 from app.documents.participant_document import EmergencyContact, ParticipantDocument
 from app.documents.payment_proof_document import PaymentProofDocument
 from app.documents.ping_document import PingDocument
@@ -19,10 +20,11 @@ from app.documents.user_document import UserDocument
 __all__ = [
     "AssignmentDocument",
     "AppConfigDocument",
+    "ChatCheckpointDocument",
     "EmergencyContact",
     "EquineDocument",
     "ExperienceDocument",
-    "FileUploadDocument",
+    "KnowledgeDocument",
     "ParticipantDocument",
     "PaymentProofDocument",
     "PingDocument",

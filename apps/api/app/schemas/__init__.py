@@ -12,6 +12,7 @@ from app.schemas.auth import (
     UserResponseSchema,
     UserUpdateSchema,
 )
+from app.schemas.chat import ChatRequestSchema, ChatResponseSchema
 from app.schemas.common import ApiErrorResponse
 from app.schemas.config import (
     EmergencyCatalogContactSchema,
@@ -76,6 +77,8 @@ from app.schemas.sync import (
 
 __all__ = [
     "ApiErrorResponse",
+    "ChatRequestSchema",
+    "ChatResponseSchema",
     "AssignmentCreateSchema",
     "AssignmentResponseSchema",
     "AssignmentUpdateSchema",

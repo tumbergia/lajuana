@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.endpoints.assignments import router as assignments_router
 from app.api.endpoints.auth import router as auth_router
+from app.api.endpoints.chat import router as chat_router
 from app.api.endpoints.config import router as config_router
 from app.api.endpoints.diagnostics import router as diagnostics_router
 from app.api.endpoints.equines import router as equines_router
@@ -24,6 +25,7 @@ api_router = APIRouter(prefix=f"{settings.api_prefix}/{settings.api_version}")
 api_router.include_router(health_router)
 api_router.include_router(diagnostics_router)
 api_router.include_router(auth_router)
+api_router.include_router(chat_router)
 api_router.include_router(users_router)
 api_router.include_router(experiences_router)
 api_router.include_router(schedules_router)

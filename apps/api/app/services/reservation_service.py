@@ -76,6 +76,14 @@ class ReservationService:
             )
         return doc
 
+    async def find_by_code_or_id(self, identifier: str) -> ReservationDocument | None:
+        """Busca una reserva por su ObjectId (24 caracteres) o usando coincidencia parcial del código."""
+        if len(identifier) == 24:
+            doc = await ReservationDocument.get(identifier)
+            if doc:
+                return doc
+        return await ReservationDocument.find_one({"code": {"$regex": identifier, "$options": "i"}})
+
     async def update(
         self,
         reservation_id: str,

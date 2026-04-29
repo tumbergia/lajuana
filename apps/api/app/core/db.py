@@ -5,9 +5,10 @@ from app.core.config import settings
 from app.documents import (
     AppConfigDocument,
     AssignmentDocument,
+    ChatCheckpointDocument,
     EquineDocument,
     ExperienceDocument,
-    FileUploadDocument,
+    KnowledgeDocument,
     ParticipantDocument,
     PaymentProofDocument,
     PingDocument,
@@ -60,9 +61,8 @@ async def init_db() -> None:
             ServiceLogDocument,
             ProviderDocument,
             PolicyDocument,
-            SyncChangeDocument,
-            SyncOperationReceiptDocument,
-            FileUploadDocument,
+            ChatCheckpointDocument,
+            KnowledgeDocument,
         ],
     )
 
