@@ -1,0 +1,902 @@
+{"timestamp": "2026-04-25T04:37:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T04:37:41+00:00", "event": "inbound_message", "from": "16315551181", "type": "text"}
+{"timestamp": "2026-04-25T04:37:41+00:00", "event": "inbound_text", "from": "16315551181", "body": "this is a text message"}
+{"timestamp": "2026-04-25T04:37:41+00:00", "event": "agent_reply", "to": "16315551181", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-25T05:41:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:41:01+00:00", "event": "inbound_message", "from": "16315551181", "type": "text"}
+{"timestamp": "2026-04-25T05:41:01+00:00", "event": "inbound_text", "from": "16315551181", "body": "this is a text message"}
+{"timestamp": "2026-04-25T05:41:01+00:00", "event": "agent_reply", "to": "16315551181", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-25T05:48:23+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:48:23+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:48:23+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-25T05:48:23+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-25T05:48:25+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:48:25+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:48:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:48:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:48:42+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:48:42+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas las experiencias"}
+{"timestamp": "2026-04-25T05:49:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:49:12+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:49:12+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas las experiencias"}
+{"timestamp": "2026-04-25T05:49:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:49:42+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:49:42+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas las experiencias"}
+{"timestamp": "2026-04-25T05:50:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:50:12+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:50:12+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas las experiencias"}
+{"timestamp": "2026-04-25T05:50:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:50:42+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:50:42+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas las experiencias"}
+{"timestamp": "2026-04-25T05:53:38+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:53:38+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:53:38+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola mi ni\u00f1a como estas respondeme en menos de 5 palabras"}
+{"timestamp": "2026-04-25T05:53:38+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-25T05:53:40+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:53:40+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:53:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:53:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:53:55+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:53:55+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime como estas en menos de 5 palabras"}
+{"timestamp": "2026-04-25T05:53:55+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-25T05:53:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:53:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:53:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:53:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:54:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:54:16+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:54:16+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T05:54:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:54:46+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:54:46+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas las experiencias"}
+{"timestamp": "2026-04-25T05:55:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:55:16+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:55:16+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T05:55:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:55:46+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:55:46+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T05:56:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:56:16+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:56:16+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T05:56:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:56:46+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:56:46+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T05:59:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:59:00+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:59:00+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T05:59:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T05:59:52+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T05:59:52+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas las experiencias"}
+{"timestamp": "2026-04-25T06:03:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:03:10+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:03:10+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime cuanto vale un paseo en mula en menos de 10 palabras algo rapido"}
+{"timestamp": "2026-04-25T06:03:10+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-25T06:03:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:03:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:03:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:03:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:03:30+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:03:30+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime cuanto cuesta una experiencia menos de 10 palabras"}
+{"timestamp": "2026-04-25T06:03:30+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-25T06:03:32+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:03:32+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:03:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:03:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:03:51+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:03:51+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T06:04:34+00:00", "event": "agent_reply", "to": "573138659839", "body": "No tengo esa informaci\u00f3n en el contexto. Por favor, escala a un humano para obtener los detalles."}
+{"timestamp": "2026-04-25T06:04:35+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:04:35+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:04:35+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T06:05:11+00:00", "event": "agent_reply", "to": "573138659839", "body": "No tengo acceso a la lista de experiencias disponibles. Por favor, escala a un humano para obtener ese detalle."}
+{"timestamp": "2026-04-25T06:05:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:12+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:05:12+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T06:05:50+00:00", "event": "agent_reply", "to": "573138659839", "body": "No tengo acceso a la lista de experiencias disponibles. Te recomiendo escalar esta solicitud a un agente humano para obtener esa informaci\u00f3n."}
+{"timestamp": "2026-04-25T06:05:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:05:51+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:05:51+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T06:07:35+00:00", "event": "agent_reply", "to": "573138659839", "body": "No tengo acceso a una lista de experiencias. No tengo ese detalle, puedo escalar a un humano si lo necesitas."}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:07:36+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T06:09:11+00:00", "event": "agent_reply", "to": "573138659839", "body": "No tengo acceso a la lista de experiencias disponibles. Por favor, escala a un humano para esa informaci\u00f3n."}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:21+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:09:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:10:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:10:31+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:10:31+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:10:31+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas dime que experiencias tienes"}
+{"timestamp": "2026-04-25T06:11:01+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizaci\u00f3n operativa para la gesti\u00f3n integral de experiencias tur\u00edsticas. Centraliza el flujo comercial y operativo completo: desde el primer contacto con el cliente hasta la ejecuci\u00f3n del tour, pasando por cotizaci\u00f3n, pago, confirmaci\u00f3n, log\u00edstica, asignaci\u00f3n de gu"}
+{"timestamp": "2026-04-25T06:11:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:02+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:11:02+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas dime que experiencias tienes"}
+{"timestamp": "2026-04-25T06:11:27+00:00", "event": "agent_reply", "to": "573138659839", "body": "El usuario pregunta c\u00f3mo estoy y qu\u00e9 experiencias tengo. Soy un asistente de WhatsApp de La Juana. Debo responder breve, claro y profesional en espa\u00f1ol natural, bas\u00e1ndome en el contexto proporcionado. Contexto clave: Soy una plataforma de digitalizaci\u00f3n operativa para gesti\u00f3n de experiencias tur\u00edsti"}
+{"timestamp": "2026-04-25T06:11:28+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:28+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:28+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:28+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:28+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:11:28+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas dime que experiencias tienes"}
+{"timestamp": "2026-04-25T06:11:58+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizaci\u00f3n operativa para la gesti\u00f3n integral de experiencias tur\u00edsticas. Centraliza el flujo comercial y operativo completo: desde el primer contacto con el cliente hasta la ejecuci\u00f3n del tour, pasando por cotizaci\u00f3n, pago, confirmaci\u00f3n, log\u00edstica, asignaci\u00f3n de gu"}
+{"timestamp": "2026-04-25T06:11:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:11:59+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:11:59+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas dime que experiencias tienes"}
+{"timestamp": "2026-04-25T06:12:21+00:00", "event": "agent_reply", "to": "573138659839", "body": "El usuario pregunta c\u00f3mo estoy y qu\u00e9 experiencias tengo. Soy un asistente de WhatsApp de La Juana. Debo responder breve, claro y profesional en espa\u00f1ol natural, bas\u00e1ndome en el contexto proporcionado. Contexto clave: Soy una plataforma de digitalizaci\u00f3n operativa para gesti\u00f3n de experiencias tur\u00edsti"}
+{"timestamp": "2026-04-25T06:12:22+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:22+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:12:22+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-25T06:12:45+00:00", "event": "agent_reply", "to": "573138659839", "body": "El usuario pregunta por mis experiencias en menos de 10 palabras. Soy un asistente de WhatsApp de La Juana, una plataforma de digitalizaci\u00f3n operativa para gesti\u00f3n de experiencias tur\u00edsticas. Debo basar mi respuesta en el contexto proporcionado, que describe la funcionalidad de la plataforma, no mis"}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:12:46+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas dime que experiencias tienes"}
+{"timestamp": "2026-04-25T06:13:15+00:00", "event": "agent_reply", "to": "573138659839", "body": "El usuario pregunta c\u00f3mo estoy y qu\u00e9 experiencias tengo. Soy un asistente de WhatsApp de La Juana. Debo responder breve, claro y profesional en espa\u00f1ol natural, bas\u00e1ndome en el contexto proporcionado. Contexto clave: Soy una plataforma de digitalizaci\u00f3n operativa para gesti\u00f3n de experiencias tur\u00edsti"}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:32+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:13:39+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-25T06:13:39+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas dime que experiencias tienes"}
+{"timestamp": "2026-04-25T06:14:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-25T06:14:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:14+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T16:52:14+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-28T16:52:14+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T16:52:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:31+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:31+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T16:52:31+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas una cotizacion para una experiencia"}
+{"timestamp": "2026-04-28T16:52:31+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T16:52:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:41+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T16:52:41+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes"}
+{"timestamp": "2026-04-28T16:52:41+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizaci\u00f3n operativa para la gesti\u00f3n integral de experiencias tur\u00edsticas. Centraliza el flujo comercial y operativo completo: desde el primer contacto con el cliente hasta la ejecuci\u00f3n del tour, pasando por cotizaci\u00f3n, pago, confirmaci\u00f3n, log\u00edstica, asignaci\u00f3n de gu"}
+{"timestamp": "2026-04-28T16:52:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:44+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:44+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:44+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:55+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T16:52:55+00:00", "event": "inbound_text", "from": "573138659839", "body": "continua"}
+{"timestamp": "2026-04-28T16:52:55+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T16:52:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:52:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:53:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:53:05+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T16:53:05+00:00", "event": "inbound_text", "from": "573138659839", "body": "continua con lo de la juana"}
+{"timestamp": "2026-04-28T16:53:05+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T16:53:07+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:53:07+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:53:07+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:53:07+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:55:19+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:55:19+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T16:55:19+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas hablame de la juana"}
+{"timestamp": "2026-04-28T16:55:19+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T16:55:21+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:55:21+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:55:22+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:56:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:56:01+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T16:56:01+00:00", "event": "inbound_text", "from": "573138659839", "body": "hablame de que experiencias tienes"}
+{"timestamp": "2026-04-28T16:56:01+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizaci\u00f3n operativa para la gesti\u00f3n integral de experiencias tur\u00edsticas. Centraliza el flujo comercial y operativo completo: desde el primer contacto con el cliente hasta la ejecuci\u00f3n del tour, pasando por cotizaci\u00f3n, pago, confirmaci\u00f3n, log\u00edstica, asignaci\u00f3n de gu"}
+{"timestamp": "2026-04-28T16:56:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:56:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:56:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T16:56:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:13+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:01:13+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T17:01:13+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T17:01:15+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:24+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:24+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:01:24+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas de que trata la juana"}
+{"timestamp": "2026-04-28T17:01:24+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T17:01:26+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:27+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:27+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:01:57+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:01:57+00:00", "event": "inbound_text", "from": "573138659839", "body": "hablame de la juana"}
+{"timestamp": "2026-04-28T17:01:57+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T17:01:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:02:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:02:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:04:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:04:55+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:04:55+00:00", "event": "inbound_text", "from": "573138659839", "body": "hablame de la juana"}
+{"timestamp": "2026-04-28T17:04:55+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T17:04:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:04:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:04:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:02+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:05:02+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola?"}
+{"timestamp": "2026-04-28T17:05:02+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T17:05:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:11+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:05:11+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito cotizacion  de una experiencia"}
+{"timestamp": "2026-04-28T17:05:11+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T17:05:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:05:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:06:06+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:06:06+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:06:06+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas hablame de la juana"}
+{"timestamp": "2026-04-28T17:06:06+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T17:06:08+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:06:08+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:06:08+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:06:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:06:14+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:06:14+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas hablame de la juana"}
+{"timestamp": "2026-04-28T17:06:14+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-28T17:06:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:06:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:06:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:06:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:32+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:32+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:07:32+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-28T17:07:32+00:00", "event": "agent_reply", "to": "573138659839", "body": "Te ayudo con reservas, disponibilidad o informacion de La Juana. Si quieres, preguntame qu\u00e9 es La Juana o qu\u00e9 experiencias manejamos."}
+{"timestamp": "2026-04-28T17:07:34+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:35+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:35+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:35+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:35+00:00", "event": "inbound_message", "from": "573043052095", "type": "image"}
+{"timestamp": "2026-04-28T17:07:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:38+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:49+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:49+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:07:49+00:00", "event": "inbound_text", "from": "573138659839", "body": "nececito que me digas de que trata la juana"}
+{"timestamp": "2026-04-28T17:07:49+00:00", "event": "agent_reply", "to": "573138659839", "body": "<p align=\"center\"> <img src=\"apps/mobile/assets/branding/lajuana.svg\" alt=\"La Juana\" width=\"200\" /> </p> La Juana es una plataforma de digitalizaci\u00f3n operativa para la gesti\u00f3n integral de experiencias tur\u00edsticas. Centraliza el flujo comercial y operativo completo: desde el primer contacto con el cli"}
+{"timestamp": "2026-04-28T17:07:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:07:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:11:44+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:11:44+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:11:44+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas hablame de la juana"}
+{"timestamp": "2026-04-28T17:11:44+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas, reservas, disponibilidad y seguimiento."}
+{"timestamp": "2026-04-28T17:11:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:11:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:11:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:11:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:12:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:12:00+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:12:00+00:00", "event": "inbound_text", "from": "573138659839", "body": "como estas"}
+{"timestamp": "2026-04-28T17:12:01+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas, reservas, disponibilidad y seguimiento."}
+{"timestamp": "2026-04-28T17:12:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:12:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:12:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:12:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:13:45+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:13:45+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:13:45+00:00", "event": "inbound_text", "from": "573138659839", "body": "Hola"}
+{"timestamp": "2026-04-28T17:13:45+00:00", "event": "agent_reply", "to": "573138659839", "body": "Te ayudo con reservas, disponibilidad o informacion de La Juana. Si quieres, preguntame qu\u00e9 es La Juana o qu\u00e9 experiencias manejamos."}
+{"timestamp": "2026-04-28T17:13:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:13:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:13:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:13:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:13:58+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:13:58+00:00", "event": "inbound_text", "from": "573138659839", "body": "Que experiencias maneja"}
+{"timestamp": "2026-04-28T17:13:59+00:00", "event": "agent_reply", "to": "573138659839", "body": "Estas son las experiencias activas: Los Chorros, El Pueblo de las Dos Mentiras, La Montana de Cristal, Salamina - San Felix - Marulanda. Si quieres, revisamos disponibilidad."}
+{"timestamp": "2026-04-28T17:14:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:28+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:28+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-28T17:14:28+00:00", "event": "inbound_text", "from": "573214650754", "body": "Resp\u00f3ndeme o me suicido"}
+{"timestamp": "2026-04-28T17:14:28+00:00", "event": "agent_reply", "to": "573214650754", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas, reservas, disponibilidad y seguimiento."}
+{"timestamp": "2026-04-28T17:14:32+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:32+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:40+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:40+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:14:40+00:00", "event": "inbound_text", "from": "573138659839", "body": "Como estas"}
+{"timestamp": "2026-04-28T17:14:40+00:00", "event": "agent_reply", "to": "573138659839", "body": "Te ayudo con reservas, disponibilidad o informacion de La Juana. Si quieres, preguntame qu\u00e9 es La Juana o qu\u00e9 experiencias manejamos."}
+{"timestamp": "2026-04-28T17:14:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:54+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:54+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-28T17:14:54+00:00", "event": "inbound_text", "from": "573214650754", "body": "????"}
+{"timestamp": "2026-04-28T17:14:55+00:00", "event": "agent_reply", "to": "573214650754", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas, reservas, disponibilidad y seguimiento."}
+{"timestamp": "2026-04-28T17:14:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:14:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:15:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:15:04+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-28T17:15:04+00:00", "event": "inbound_text", "from": "573214650754", "body": "Quiero cotizar"}
+{"timestamp": "2026-04-28T17:17:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:17:36+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-28T17:17:36+00:00", "event": "inbound_text", "from": "573214650754", "body": "Puedo reservar para est\u00e1s fechas??"}
+{"timestamp": "2026-04-28T17:17:44+00:00", "event": "agent_reply", "to": "573214650754", "body": "Que experiencia te interesa? Opciones: Los Chorros, El Pueblo de las Dos Mentiras, La Montana de Cristal, Salamina - San Felix - Marulanda."}
+{"timestamp": "2026-04-28T17:17:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:17:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:17:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:18:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:18:02+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-28T17:18:02+00:00", "event": "inbound_text", "from": "573214650754", "body": "Me gustar\u00eda San F\u00e9lix"}
+{"timestamp": "2026-04-28T17:18:02+00:00", "event": "agent_reply", "to": "573214650754", "body": "Te ayudo con reservas, disponibilidad o informacion de La Juana. Si quieres, preguntame qu\u00e9 es La Juana o qu\u00e9 experiencias manejamos."}
+{"timestamp": "2026-04-28T17:18:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:18:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:18:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:19:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:19:48+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:19:48+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola hablame de las experiencias en la juana"}
+{"timestamp": "2026-04-28T17:19:48+00:00", "event": "agent_reply", "to": "573138659839", "body": "Estas son las experiencias activas: Los Chorros, El Pueblo de las Dos Mentiras, La Montana de Cristal, Salamina - San Felix - Marulanda. Si quieres, revisamos disponibilidad."}
+{"timestamp": "2026-04-28T17:19:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:19:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:19:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:26:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:26:55+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:26:55+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T17:26:56+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas."}
+{"timestamp": "2026-04-28T17:26:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:26:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:26:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:26:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:27:07+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:27:07+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:27:07+00:00", "event": "inbound_text", "from": "573138659839", "body": "hablame de experiencias"}
+{"timestamp": "2026-04-28T17:27:07+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas."}
+{"timestamp": "2026-04-28T17:27:09+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:27:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:27:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:27:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:01+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:32:01+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-28T17:32:02+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas."}
+{"timestamp": "2026-04-28T17:32:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:10+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:32:10+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T17:32:11+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas."}
+{"timestamp": "2026-04-28T17:32:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:35+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:35+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:32:35+00:00", "event": "inbound_text", "from": "573138659839", "body": "hablame de la juana"}
+{"timestamp": "2026-04-28T17:32:35+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana centraliza experiencias turisticas y reservas para manejar el flujo operativo completo."}
+{"timestamp": "2026-04-28T17:32:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:51+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:32:51+00:00", "event": "inbound_text", "from": "573138659839", "body": "me gustaria saber un poco mas"}
+{"timestamp": "2026-04-28T17:32:51+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana centraliza experiencias turisticas y reservas para manejar el flujo operativo completo."}
+{"timestamp": "2026-04-28T17:32:54+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:54+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:32:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:02+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:33:02+00:00", "event": "inbound_text", "from": "573138659839", "body": "no me respondas lo mismo"}
+{"timestamp": "2026-04-28T17:33:02+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana centraliza experiencias turisticas y reservas para manejar el flujo operativo completo."}
+{"timestamp": "2026-04-28T17:33:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:52+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:33:52+00:00", "event": "inbound_text", "from": "573138659839", "body": "quiero saber mas de las experiencias"}
+{"timestamp": "2026-04-28T17:33:52+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana centraliza experiencias turisticas y reservas para manejar el flujo operativo completo."}
+{"timestamp": "2026-04-28T17:33:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:33:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:34:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:34:00+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:34:00+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola?"}
+{"timestamp": "2026-04-28T17:34:00+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana centraliza experiencias turisticas y reservas para manejar el flujo operativo completo."}
+{"timestamp": "2026-04-28T17:34:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:34:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:34:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:34:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:34:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:34:57+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:34:57+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas hablame de la juana"}
+{"timestamp": "2026-04-28T17:34:58+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas."}
+{"timestamp": "2026-04-28T17:35:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:35:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:35:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:35:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:35:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:35:18+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:35:18+00:00", "event": "inbound_text", "from": "573138659839", "body": "okey quiero saber que experiencias manejan"}
+{"timestamp": "2026-04-28T17:35:18+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas."}
+{"timestamp": "2026-04-28T17:35:21+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:35:21+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:35:21+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:35:21+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:04+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:41:04+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T17:41:07+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Estoy muy bien, gracias por preguntar. \ud83d\ude0a Soy el asistente de La Juana, una plataforma que digitaliza la gesti\u00f3n de experiencias tur\u00edsticas. Te ayudo con todo el proceso, desde la cotizaci\u00f3n y reserva hasta la log\u00edstica y seguimiento de tus tours. \u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T17:41:09+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:09+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:24+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:24+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:41:24+00:00", "event": "inbound_text", "from": "573138659839", "body": "me gustaria conocer que experiencias tienes"}
+{"timestamp": "2026-04-28T17:41:27+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Soy tu asistente de La Juana. Nosotros somos una plataforma que"}
+{"timestamp": "2026-04-28T17:41:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:42+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:41:42+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola?"}
+{"timestamp": "2026-04-28T17:41:44+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Soy tu asistente de La Juana. Estamos aqu\u00ed para simplificar la gesti\u00f3n de tus experiencias tur\u00edsticas, desde la cotizaci\u00f3n y reserva hasta la ejecuci\u00f3n del tour. \u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T17:41:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:41:57+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:41:57+00:00", "event": "inbound_text", "from": "573138659839", "body": "me gustaria saber que es la juana"}
+{"timestamp": "2026-04-28T17:41:59+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! La Juana es una plataforma que digitaliza y centraliza toda la gesti\u00f3n de experiencias tur\u00edsticas. Desde la cotizaci\u00f3n y reserva hasta el pago y la log\u00edstica del tour, te ayuda a organizar todo de forma integral y eficiente."}
+{"timestamp": "2026-04-28T17:42:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:42:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:42:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:42:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:51:34+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:51:34+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:51:34+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T17:51:35+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas. Como referencia demo, puedo hablar de experiencias ficticias con precios ficticios mientras pruebas el flujo."}
+{"timestamp": "2026-04-28T17:51:38+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:51:38+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:51:40+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:51:53+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:51:53+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:51:53+00:00", "event": "inbound_text", "from": "573138659839", "body": "okey hablemos de eso"}
+{"timestamp": "2026-04-28T17:51:54+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas. Como referencia demo, puedo hablar de experiencias ficticias con precios ficticios mientras pruebas el flujo."}
+{"timestamp": "2026-04-28T17:51:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:51:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:51:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:51:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:56:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:56:11+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T17:56:11+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T17:56:26+00:00", "event": "agent_reply", "to": "573138659839", "body": "* User: \"hola como estas\" * Role: Conversational agent for \"La Juana\" on WhatsApp. * Goal: Assist commercial/operational flow, explain what La Juana does if asked. * Tone: Friendly, natural, secure, conversational, human, close, professional, brief, clear. * Constraints: * Do NOT invent availability"}
+{"timestamp": "2026-04-28T17:56:28+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:56:29+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T17:56:29+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:01:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:01:42+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:01:42+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:01:58+00:00", "event": "agent_reply", "to": "573138659839", "body": "*   User: \"hola como estas\" (Hello, how are you?)\n*   Role: Conversational agent for \"La Juana\" on WhatsApp.\n*   Goal: Assist commercial/operational flow, be professional, brief, clear, natural, human, and close.\n*   Constraints:\n    *   Do NOT invent availability, prices, etc. (unless it's the demo"}
+{"timestamp": "2026-04-28T18:02:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:02:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:02:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:02:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:02:39+00:00", "event": "inbound_message", "from": "573004121952", "type": "text"}
+{"timestamp": "2026-04-28T18:02:39+00:00", "event": "inbound_text", "from": "573004121952", "body": "Hola"}
+{"timestamp": "2026-04-28T18:02:55+00:00", "event": "agent_reply", "to": "573004121952", "body": "*   User: \"Hola\"\n*   Context: I am the conversational agent for \"La Juana\" on WhatsApp.\n*   Goal: Assist commercial/operational flows, but I am not the source of truth. I must be brief, clear, professional, friendly, natural, and human.\n*   Constraint: Do not mention files, routes, HTML, markdown, o"}
+{"timestamp": "2026-04-28T18:02:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:02:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:14:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:14:03+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-28T18:14:03+00:00", "event": "inbound_text", "from": "573214650754", "body": "Te amo"}
+{"timestamp": "2026-04-28T18:14:19+00:00", "event": "agent_reply", "to": "573214650754", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:14:22+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:14:23+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:14:31+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:14:31+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:14:31+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:15:18+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:15:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:15:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:15:20+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:15:20+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:15:49+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:15:50+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:15:50+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:15:50+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:15:50+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:16:14+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:16:15+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:16:15+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:16:15+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:16:15+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:16:15+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:16:15+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:16:36+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:16:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:16:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:16:37+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:16:37+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:16:59+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:17:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:17:00+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:17:00+00:00", "event": "inbound_text", "from": "573138659839", "body": "quiero saber mas sobre la juana"}
+{"timestamp": "2026-04-28T18:17:23+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:17:26+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:17:26+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-28T18:17:26+00:00", "event": "inbound_text", "from": "573214650754", "body": "Quiero reservar una experiencia"}
+{"timestamp": "2026-04-28T18:17:52+00:00", "event": "agent_reply", "to": "573214650754", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:17:54+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:17:54+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:17:54+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:17:54+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:17:54+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:17:54+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:18:08+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:18:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:18:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:05+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:20:05+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:20:21+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:20:23+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:23+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-28T18:20:23+00:00", "event": "inbound_text", "from": "573214650754", "body": "Qui\u00e9n eres"}
+{"timestamp": "2026-04-28T18:20:40+00:00", "event": "agent_reply", "to": "573214650754", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:20:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:49+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:20:56+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:20:56+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:21:19+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:21:21+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:21:21+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:21:21+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:21:21+00:00", "event": "inbound_text", "from": "573138659839", "body": "quiero que me digas que experiencias tienes"}
+{"timestamp": "2026-04-28T18:21:58+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:22:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:00+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-28T18:22:00+00:00", "event": "inbound_text", "from": "573214650754", "body": "Quiero reservar una experiencia"}
+{"timestamp": "2026-04-28T18:22:16+00:00", "event": "agent_reply", "to": "573214650754", "body": "Que experiencia te interesa? Opciones: Los Chorros, El Pueblo de las Dos Mentiras, La Montana de Cristal, Salamina - San Felix - Marulanda."}
+{"timestamp": "2026-04-28T18:22:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:49+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:49+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:22:52+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:22:52+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:23:06+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:23:08+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:23:08+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:23:08+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:23:09+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:23:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:23:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:23:17+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:23:17+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes"}
+{"timestamp": "2026-04-28T18:23:56+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s?\n\nSoy el asistente de La Juana. Somos una plataforma para digitalizar y gestionar experiencias tur\u00edsticas, centralizando consulta, cotizaci\u00f3n, reserva, pago y seguimiento.\n\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-28T18:23:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:23:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:23:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:23:59+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:23:59+00:00", "event": "inbound_text", "from": "573138659839", "body": "quiero saber mas sobre la juana"}
+{"timestamp": "2026-04-28T18:24:11+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Es un gusto saludarte.\n\nTe cuento que La Juana es una plataforma dise\u00f1ada para digitalizar y centralizar toda la gesti\u00f3n de experiencias tur\u00edsticas. Nos encargamos de acompa\u00f1ar todo el proceso, desde el primer contacto con el cliente hasta la ejecuci\u00f3n del tour, pasando por la cotizaci\u00f3n, la "}
+{"timestamp": "2026-04-28T18:32:28+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:32:28+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:32:28+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:34:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:34:03+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:34:03+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola?"}
+{"timestamp": "2026-04-28T18:34:26+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:36:49+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:36:49+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:36:49+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-28T18:37:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:37:36+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:37:36+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-28T18:37:56+00:00", "event": "agent_reply", "to": "573138659839", "body": "Final JSON Construction:*\n    {\"greeting\":\"\u00a1Hola! Es un gusto saludarte.\",\"intro\":\"Soy el asistente de La Juana. Te cuento que somos una plataforma dise\u00f1ada para facilitar la gesti\u00f3n completa de experiencias tur\u00edsticas, encarg\u00e1ndonos de todo el proceso, desde la cotizaci\u00f3n y reserva hasta la log\u00edsti"}
+{"timestamp": "2026-04-28T18:37:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:37:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:38:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:38:44+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:38:44+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:38:44+00:00", "event": "inbound_text", "from": "573138659839", "body": "quiero que me digas como estas"}
+{"timestamp": "2026-04-28T18:39:08+00:00", "event": "agent_reply", "to": "573138659839", "body": "Final JSON construction:*\n    {\"greeting\":\"\u00a1Hola! Qu\u00e9 amable de tu parte preguntar, me encuentro muy bien y con toda la energ\u00eda para trabajar.\",\"intro\":\"Soy el asistente de La Juana, la plataforma que te ayuda a digitalizar y gestionar todo el proceso de tus experiencias tur\u00edsticas, desde el primer "}
+{"timestamp": "2026-04-28T18:39:09+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:39:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:39:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:39:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:41:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:41:17+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:41:17+00:00", "event": "inbound_text", "from": "573138659839", "body": "quiero saber mas sobre la juana"}
+{"timestamp": "2026-04-28T18:41:38+00:00", "event": "agent_reply", "to": "573138659839", "body": "Final JSON structure check*:\n    `{\"greeting\":\"\u00a1Hola! Es un gusto saludarte.\",\"intro\":\"Te cuento que La Juana es una plataforma integral de digitalizaci\u00f3n operativa pensada para la gesti\u00f3n de experiencias tur\u00edsticas. Nuestro objetivo es centralizar todo el flujo de trabajo, desde el contacto inicial"}
+{"timestamp": "2026-04-28T18:41:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:41:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:41:45+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:44:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:44:13+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-28T18:44:13+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-28T18:44:30+00:00", "event": "agent_reply", "to": "573138659839", "body": "Final Polish:*\n    \u00a1Hola! Todo muy bien por aqu\u00ed, muchas gracias por preguntar. \u00bfY t\u00fa c\u00f3mo est\u00e1s? Cu\u00e9ntame, \u00bfen qu\u00e9 puedo ayudarte hoy? Si quieres conocer nuestras experiencias disponibles o necesitas apoyo con el proceso de una reserva, estoy aqu\u00ed para acompa\u00f1arte.\u00a1Hola! Todo muy bien por aqu\u00ed, muc"}
+{"timestamp": "2026-04-28T18:44:31+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:44:32+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-28T18:44:32+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:39:19+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:39:19+00:00", "event": "inbound_message", "from": "573002458581", "type": "text"}
+{"timestamp": "2026-04-29T01:39:19+00:00", "event": "inbound_text", "from": "573002458581", "body": "Hoka"}
+{"timestamp": "2026-04-29T01:39:31+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:41:53+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:41:53+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T01:41:53+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-29T01:41:54+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas."}
+{"timestamp": "2026-04-29T01:41:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:41:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:41:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:41:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:42:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:42:55+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T01:42:55+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-29T01:42:56+00:00", "event": "agent_reply", "to": "573138659839", "body": "La Juana es una plataforma de digitalizacion operativa para gestionar experiencias turisticas y reservas."}
+{"timestamp": "2026-04-29T01:42:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:42:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:42:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:27+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:27+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:27+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T01:45:27+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-29T01:45:27+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-29T01:45:29+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:29+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:29+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:38+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:38+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T01:45:38+00:00", "event": "inbound_text", "from": "573138659839", "body": "estado nececito estado"}
+{"timestamp": "2026-04-29T01:45:38+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte rapido, dime si necesitas disponibilidad, cotizacion o estado."}
+{"timestamp": "2026-04-29T01:45:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:40+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:43+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T01:45:43+00:00", "event": "inbound_text", "from": "573138659839", "body": "disponibilidad"}
+{"timestamp": "2026-04-29T01:45:45+00:00", "event": "agent_reply", "to": "573138659839", "body": "Tu caso necesita revision humana por un conflicto operativo. Ya lo escalo."}
+{"timestamp": "2026-04-29T01:45:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T01:45:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:00:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:03:08+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:03:08+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T02:03:08+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-29T02:03:14+00:00", "event": "agent_reply", "to": "573138659839", "body": "<thought>* User: \"hola\" * Role: WhatsApp assistant for \"La Juana\". * Constraints: Brief, clear, professional, natural Spanish, single message, no extra text (no markdown, no thinking, no JSON, etc.). * Context: None provided. * Greeting: \"\u00a1Hola! \ud83d\udc4b\" or \"Hola, bienvenido/a a La Juana.\" * Offer help: \""}
+{"timestamp": "2026-04-29T02:03:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:03:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:03:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:03:19+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:04:40+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:04:40+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T02:04:40+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-29T02:04:45+00:00", "event": "agent_reply", "to": "573138659839", "body": "<thought>* User: \"hola\" * Role: WhatsApp assistant for \"La Juana\". * Constraints: Brief, clear, professional, natural Spanish, single message, no markdown, no thinking/analysis in output, no internal citations. * Greeting: \"\u00a1Hola! \ud83d\udc4b\" or \"Hola, \u00bfc\u00f3mo est\u00e1s?\" * Identity: \"Soy el asistente de La Juana."}
+{"timestamp": "2026-04-29T02:04:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:04:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:04:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:04:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:05:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:05:41+00:00", "event": "inbound_message", "from": "573002458581", "type": "text"}
+{"timestamp": "2026-04-29T02:05:41+00:00", "event": "inbound_text", "from": "573002458581", "body": "Hola"}
+{"timestamp": "2026-04-29T02:05:46+00:00", "event": "agent_reply", "to": "573002458581", "body": "<thought>* User: \"Hola\" * Role: WhatsApp assistant for \"La Juana\". * Goal: Respond briefly, clearly, and professionally in natural Spanish. * Constraint: Only the final response. No thinking, no markdown, no extra text. * Greeting: \"\u00a1Hola! \ud83d\udc4b \u00bfEn qu\u00e9 puedo ayudarte hoy?\" or \"Hola, bienvenido/a a La J"}
+{"timestamp": "2026-04-29T02:05:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:05:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:11:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:11:36+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T02:11:36+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-29T02:11:44+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! \ud83d\udc4b Bienvenido a La Juana. \u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-29T02:11:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:11:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:11:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:11:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:11:57+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T02:11:57+00:00", "event": "inbound_text", "from": "573138659839", "body": "explicame que es la juana"}
+{"timestamp": "2026-04-29T02:12:16+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! La Juana es una plataforma de digitalizaci\u00f3n operativa dise\u00f1ada para la gesti\u00f3n integral de experiencias tur\u00edsticas. Centralizamos todo tu proceso: desde el primer contacto con el cliente, cotizaciones y pagos, hasta la log\u00edstica, asignaci\u00f3n de gu\u00edas y la ejecuci\u00f3n del tour."}
+{"timestamp": "2026-04-29T02:12:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:12:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:12:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:13:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:13:01+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T02:13:01+00:00", "event": "inbound_text", "from": "573138659839", "body": "podrias decirme que experiencias tienes"}
+{"timestamp": "2026-04-29T02:13:18+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Con gusto. \u00bfTienes alg\u00fan destino o tipo de actividad en mente? Cu\u00e9ntame qu\u00e9 est\u00e1s buscando y te comparto las opciones disponibles."}
+{"timestamp": "2026-04-29T02:13:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:13:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:13:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:13:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:17:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:17:11+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T02:17:11+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-29T02:17:31+00:00", "event": "agent_reply", "to": "573138659839", "body": "Contamos con una amplia variedad de experiencias tur\u00edsticas."}
+{"timestamp": "2026-04-29T02:17:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:17:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:17:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:17:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:19:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:19:05+00:00", "event": "inbound_message", "from": "573043052095", "type": "text"}
+{"timestamp": "2026-04-29T02:19:05+00:00", "event": "inbound_text", "from": "573043052095", "body": "Buenas tardes; \u00bfa cu\u00e1nto el kilo de papa?"}
+{"timestamp": "2026-04-29T02:19:14+00:00", "event": "agent_reply", "to": "573043052095", "body": "Buenas tardes. Perm\u00edtame un momento para consultar el precio de hoy y le informo enseguida."}
+{"timestamp": "2026-04-29T02:19:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:19:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:19:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:19:19+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:22:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:22:55+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T02:22:55+00:00", "event": "inbound_text", "from": "573138659839", "body": "tienes alguna experiencia turistica?"}
+{"timestamp": "2026-04-29T02:23:07+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Claro que s\u00ed, estamos aqu\u00ed para ayudarte a que tu experiencia sea la mejor. \u00bfEn qu\u00e9 puedo apoyarte hoy?"}
+{"timestamp": "2026-04-29T02:23:09+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:23:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:23:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:23:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:23:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:23:20+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T02:23:20+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime las experiencias que tienes"}
+{"timestamp": "2026-04-29T02:23:33+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Con gusto te ayudo. \u00bfTienes alg\u00fan destino o tipo de actividad en mente para poder mostrarte las opciones que tenemos disponibles?"}
+{"timestamp": "2026-04-29T02:23:35+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:23:35+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:23:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:23:50+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:24:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:24:04+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T02:24:04+00:00", "event": "inbound_text", "from": "573138659839", "body": "si un paseo por el campo con mi familia"}
+{"timestamp": "2026-04-29T02:24:16+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Qu\u00e9 buen plan! \u00bfTe gustar\u00eda recibir informaci\u00f3n sobre nuestros servicios o necesitas ayuda con alguna reserva para tu familia?"}
+{"timestamp": "2026-04-29T02:24:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:24:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:24:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T02:24:44+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:27:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:27:56+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T19:27:56+00:00", "event": "inbound_text", "from": "573138659839", "body": "quiero que me digas que experiencias tienes"}
+{"timestamp": "2026-04-29T19:28:09+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Contamos con una gran variedad de experiencias tur\u00edsticas. Para poder recomendarte las mejores opciones, \u00bfpodr\u00edas decirme qu\u00e9 tipo de actividad buscas o en qu\u00e9 destino est\u00e1s interesado?"}
+{"timestamp": "2026-04-29T19:28:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:29:33+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:29:33+00:00", "event": "inbound_message", "from": "573214650754", "type": "text"}
+{"timestamp": "2026-04-29T19:29:33+00:00", "event": "inbound_text", "from": "573214650754", "body": "Hola"}
+{"timestamp": "2026-04-29T19:29:38+00:00", "event": "agent_reply", "to": "573214650754", "body": "\u00a1Hola! \ud83d\udc4b Bienvenido a La Juana. \u00bfEn qu\u00e9 podemos ayudarte hoy?"}
+{"timestamp": "2026-04-29T19:29:40+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:29:40+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:29:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:29:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:29:58+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T19:29:58+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-29T19:30:04+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \ud83d\ude0a \u00bfEn qu\u00e9 puedo ayudarte hoy de parte de La Juana?"}
+{"timestamp": "2026-04-29T19:30:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:32:23+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:32:23+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:33:35+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:35:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:35:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:36:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:36:03+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T19:36:03+00:00", "event": "inbound_text", "from": "573138659839", "body": "Hola bien y tu"}
+{"timestamp": "2026-04-29T19:36:09+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Todo muy bien tambi\u00e9n, gracias! \ud83d\ude0a \u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-29T19:36:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T19:36:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
