@@ -48,6 +48,7 @@ from app.schemas.policy import PolicyCreateSchema, PolicyResponseSchema, PolicyU
 from app.schemas.provider import ProviderCreateSchema, ProviderResponseSchema, ProviderUpdateSchema
 from app.schemas.reservation import (
     ReservationCancelSchema,
+    ReservationAvailabilityResponseSchema,
     ReservationConfirmSchema,
     ReservationCreateSchema,
     ReservationListItemSchema,
@@ -109,6 +110,7 @@ __all__ = [
     "ProviderResponseSchema",
     "ProviderUpdateSchema",
     "ReservationCancelSchema",
+    "ReservationAvailabilityResponseSchema",
     "ReservationConfirmSchema",
     "ReservationCreateSchema",
     "ReservationListItemSchema",

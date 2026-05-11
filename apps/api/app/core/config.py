@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
     api_version: str = "v1"
 
-    mongodb_uri: str = "mongodb://localhost:27017"
+    mongodb_uri: str = Field("mongodb://localhost:27017", validation_alias="MONGODB_URI")
     mongodb_db_name: str = Field("lajuana", validation_alias="DATABASE_NAME")
     mongodb_connect_timeout_ms: int = 2000
     app_skip_db_init: bool = False
@@ -34,6 +34,23 @@ class Settings(BaseSettings):
     storage_s3_presign_expiration_seconds: int = 900
 
     chat_llm_model: str = "stub-extractor-v1"
+    chat_llm_provider: str = Field("groq", validation_alias="LLM_PROVIDER")
+    chat_llm_base_url: str = Field(
+        "https://api.groq.com/openai/v1",
+        validation_alias=AliasChoices("LJ_LLM_BASE_URL", "LLM_BASE_URL"),
+    )
+    chat_llm_model_name: str = Field(
+        "llama-3.3-70b-versatile", validation_alias=AliasChoices("LJ_LLM_MODEL", "LLM_MODEL")
+    )
+    chat_llm_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "LJ_LLM_API_KEY",
+            "LLM_API_KEY",
+            "GROQ_API_KEY",
+            "OPENAI_API_KEY",
+        ),
+    )
     chat_enable_rag: bool = True
     chat_enable_booking: bool = True
     chat_vector_top_k: int = 3
@@ -45,7 +62,7 @@ class Settings(BaseSettings):
     chat_default_channel: str = "whatsapp"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "apps/api/.env", "prueba-rag/.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )

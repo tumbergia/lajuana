@@ -17,6 +17,7 @@ class ChatCheckpointDocument(AuditDocument):
     extracted_data: dict[str, Any] = Field(default_factory=dict)
     rag_context: str = ""
     booking_intent: bool = False
+    state_snapshot: dict[str, Any] = Field(default_factory=dict)
     checkpoint_updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     class Settings:

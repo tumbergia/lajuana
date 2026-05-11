@@ -24,6 +24,11 @@ from app.services import (
     ScheduleService,
 )
 
+RAG_UNAVAILABLE_MESSAGE = (
+    "No pude consultar la base de conocimientos en este momento. "
+    "Sigue con el flujo de reserva usando disponibilidad, fecha, número de personas y datos de contacto."
+)
+
 
 def _normalize_embedding_input(text: str | Sequence[str]) -> str | list[str]:
     if isinstance(text, str):
@@ -47,48 +52,53 @@ class MongoDBVectorClient:
         query: str | list[str],
         scope: Literal["public", "ops"] | list[Literal["public", "ops"]] = "public",
     ) -> str:
-        from app.documents import KnowledgeDocument
+        try:
+            from app.documents import KnowledgeDocument
 
-        query = _normalize_embedding_input(query)
-        
-        response = await self.client.embeddings.create(
-            model=settings.chat_embedding_model,
-            input=query,
-        )
-        query_vector = response.data[0].embedding
-        allowed_scopes = [scope] if isinstance(scope, str) else scope
+            query = _normalize_embedding_input(query)
 
-        pipeline = [
-            {
-                "$vectorSearch": {
-                    "index": settings.chat_vector_index_name,
-                    "path": "embedding",
-                    "queryVector": query_vector,
-                    "numCandidates": settings.chat_vector_top_k * 10,
-                    "limit": settings.chat_vector_top_k,
-                    "filter": {"scope": {"$in": allowed_scopes}},
-                }
-            },
-            {
-                "$project": {
-                    "text": 1,
-                    "source": 1,
-                    "scope": 1,
-                    "score": {"$meta": "vectorSearchScore"},
-                }
-            },
-        ]
+            response = await self.client.embeddings.create(
+                model=settings.chat_embedding_model,
+                input=query,
+            )
+            query_vector = response.data[0].embedding
+            allowed_scopes = [scope] if isinstance(scope, str) else scope
 
-        collection = KnowledgeDocument.get_motor_collection()
-        results = await collection.aggregate(pipeline).to_list(length=settings.chat_vector_top_k)
+            pipeline = [
+                {
+                    "$vectorSearch": {
+                        "index": settings.chat_vector_index_name,
+                        "path": "embedding",
+                        "queryVector": query_vector,
+                        "numCandidates": settings.chat_vector_top_k * 10,
+                        "limit": settings.chat_vector_top_k,
+                        "filter": {"scope": {"$in": allowed_scopes}},
+                    }
+                },
+                {
+                    "$project": {
+                        "text": 1,
+                        "source": 1,
+                        "scope": 1,
+                        "score": {"$meta": "vectorSearchScore"},
+                    }
+                },
+            ]
 
-        if not results:
-            return "No se encontró información relevante en la base de conocimientos."
+            collection = KnowledgeDocument.get_motor_collection()
+            results = await collection.aggregate(pipeline).to_list(length=settings.chat_vector_top_k)
 
-        texts = [
-            f"Fuente ({res.get('scope', 'unknown')}): {res.get('text', '')}" for res in results
-        ]
-        return "\n\n".join(texts)
+            if not results:
+                return "No se encontró información relevante en la base de conocimientos."
+
+            texts = [
+                f"Fuente ({res.get('scope', 'unknown')}): {res.get('text', '')}" for res in results
+            ]
+            return "\n\n".join(texts)
+        except ValueError:
+            raise
+        except Exception:
+            return RAG_UNAVAILABLE_MESSAGE
 
 
 def get_last_user_text(messages: list[BaseMessage]) -> str:
@@ -153,14 +163,23 @@ def create_ops_tools(
     return [ejecutar_accion_administrativa, search_ops_information]
 
 
-def create_tourist_tools(booking_service: BookingService, vector_client: MongoDBVectorClient):
-    @tool
-    async def search_information(query: str) -> str:
-        """
-        Busca información de contexto o RAG para responder preguntas
-        sobre La Juana, equinos o el campo.
-        """
-        return await vector_client.search(query, scope="public")
+def create_tourist_tools(
+    booking_service: BookingService,
+    vector_client: MongoDBVectorClient,
+    include_rag: bool = True,
+):
+    tools = []
+
+    if include_rag:
+        @tool
+        async def search_information(query: str) -> str:
+            """
+            Busca información de contexto o RAG para responder preguntas
+            sobre La Juana, equinos o el campo.
+            """
+            return await vector_client.search(query, scope="public")
+
+        tools.append(search_information)
 
     @tool
     async def get_available_schedule(
@@ -174,11 +193,11 @@ def create_tourist_tools(booking_service: BookingService, vector_client: MongoDB
             participant_count=participant_count,
         )
         if not schedule:
-            return {"success": False, "message": "No encontré cupo disponible."}
+            return {"success": False, "reason": "no_free_date"}
         return {
             "success": True,
             "schedule_id": str(schedule.id),
-            "message": "Agenda disponible encontrada.",
+            "reason": "free_date_found",
         }
 
     @tool
@@ -218,4 +237,5 @@ def create_tourist_tools(booking_service: BookingService, vector_client: MongoDB
         except Exception as e:
             return f"Error en creación: {str(e)}"
 
-    return [search_information, get_available_schedule, create_pending_reservation]
+    tools.extend([get_available_schedule, create_pending_reservation])
+    return tools

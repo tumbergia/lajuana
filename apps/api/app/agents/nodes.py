@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import re
 from typing import Any
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -13,10 +14,12 @@ from app.agents.tools import (
     create_ops_tools,
     create_tourist_tools,
 )
+from app.core.config import settings
 from app.common.enums import UserRole
 from app.services import (
     BookingService,
     EquineService,
+    ExperienceService,
     OpsService,
     ParticipantService,
     ReservationService,
@@ -34,6 +37,7 @@ class NodeDependencies:
     reservation_service: ReservationService
     participant_service: ParticipantService
     equine_service: EquineService
+    experience_service: ExperienceService
     schedule_service: ScheduleService
     saddle_service: SaddleService
 
@@ -41,9 +45,9 @@ class NodeDependencies:
 def default_dependencies() -> NodeDependencies:
     return NodeDependencies(
         chat_model=ChatOpenAI(
-            base_url="http://127.0.0.1:1234/v1",
-            api_key="lm-studio",
-            model="local-model",
+            base_url=settings.chat_llm_base_url,
+            api_key=settings.chat_llm_api_key or "lm-studio",
+            model=settings.chat_llm_model_name,
             temperature=0,
         ),
         ops_service=OpsService(),
@@ -52,6 +56,7 @@ def default_dependencies() -> NodeDependencies:
         reservation_service=ReservationService(),
         participant_service=ParticipantService(),
         equine_service=EquineService(),
+        experience_service=ExperienceService(),
         schedule_service=ScheduleService(),
         saddle_service=SaddleService(),
     )
@@ -61,7 +66,17 @@ def route_initial_by_role(state: GraphState) -> str:
     role = state.get("role", "unassigned")
     if role in {"guide", "admin"}:  # Solo personal autorizado va a operaciones
         return "ops_agent"
-    return "tourist_agent"  # Clientes e invitados van a RAG/Booking
+    return "reservation_receive_message"  # Clientes e invitados van al flujo de reservas
+
+
+def _looks_like_booking_intent(text: str) -> bool:
+    normalized = text.lower()
+    return bool(
+        re.search(
+            r"\b(reserv|reserva|cabalgata|experienc|cupo|fecha|personas?|pax|hora|horario)\b",
+            normalized,
+        )
+    )
 
 
 async def ops_agent_node(
@@ -97,19 +112,32 @@ async def ops_agent_node(
 async def tourist_agent_node(
     state: GraphState, deps: NodeDependencies, config: RunnableConfig
 ) -> dict[str, Any]:
-    tools = create_tourist_tools(deps.booking_service, deps.vector_client)
+    messages = state.get("messages", [])
+    last_user_text = messages[-1].content if messages else ""
+    booking_intent = bool(state.get("booking_intent", False)) or _looks_like_booking_intent(
+        str(last_user_text)
+    )
+
+    tools = create_tourist_tools(
+        deps.booking_service,
+        deps.vector_client,
+        include_rag=not booking_intent,
+    )
     llm_with_tools = deps.chat_model.bind_tools(tools)
 
     system_prompt = SystemMessage(
         content=(
             "Eres el agente de atención de La Juana. "
-            "Resuelve dudas sobre equinos/campo usando RAG y gestiona reservas."
+            "Resuelve dudas sobre equinos/campo usando RAG y gestiona reservas. "
+            "Si el usuario expresa intención de reservar, prioriza obtener fecha, cantidad de personas "
+            "y experiencia, y usa primero las herramientas de disponibilidad y creación de reserva. "
+            "No uses búsqueda de conocimiento para mensajes cuyo objetivo principal sea reservar."
         )
     )
 
-    messages = [system_prompt] + state.get("messages", [])
+    messages = [system_prompt] + messages
     response = await llm_with_tools.ainvoke(messages, config)
-    return {"messages": [response]}
+    return {"messages": [response], "booking_intent": booking_intent}
 
 
 def map_role_for_graph(user_role: UserRole) -> str:

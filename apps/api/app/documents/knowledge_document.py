@@ -1,14 +1,20 @@
-from typing import Literal
+from typing import Any, Literal
 
+from pydantic import Field
+
+from app.common.collections import Collections
 from app.documents.base import AuditDocument
 
 
 class KnowledgeDocument(AuditDocument):
-    text: str  # El contenido legible
-    source: str  # Archivo origen (ej. "seguridad.md")
-    scope: Literal["public", "ops"]  # 'public' (WhatsApp) o 'ops' (App)
-    embedding: list[float]  # El vector numérico
-    metadata: dict | None = {}
+    type: str = "knowledge"
+    title: str = ""
+    content: str = ""
+    text: str = ""
+    source: str = ""
+    scope: Literal["public", "ops"] = "public"
+    embedding: list[float] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     class Settings:
-        name = "knowledge"
+        name = Collections.KNOWLAGE

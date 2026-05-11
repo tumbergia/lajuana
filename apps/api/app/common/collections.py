@@ -14,3 +14,8 @@ class Collections:
     SUPPLIES = "supplies"
     APP_CONFIG = "app_config"
     CHAT_CHECKPOINTS = "chat_checkpoints"
+    FILE_UPLOADS = "file_uploads"
+    SYNC_CHANGES = "sync_changes"
+    SYNC_OPERATION_RECEIPTS = "sync_operation_receipts"
+    KNOWLAGE = "knowlage"
+    KNOWLEDGE = KNOWLAGE

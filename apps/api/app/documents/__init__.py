@@ -6,6 +6,7 @@ from app.documents.experience_document import ExperienceDocument
 from app.documents.knowledge_document import KnowledgeDocument
 from app.documents.participant_document import EmergencyContact, ParticipantDocument
 from app.documents.payment_proof_document import PaymentProofDocument
+from app.documents.file_upload_document import FileUploadDocument
 from app.documents.ping_document import PingDocument
 from app.documents.policy_document import PolicyDocument
 from app.documents.provider_document import ProviderDocument, ProviderType
@@ -27,6 +28,7 @@ __all__ = [
     "KnowledgeDocument",
     "ParticipantDocument",
     "PaymentProofDocument",
+    "FileUploadDocument",
     "PingDocument",
     "PolicyDocument",
     "ProviderDocument",

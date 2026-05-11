@@ -1,4 +1,5 @@
 from pymongo import AsyncMongoClient
+from pymongo.errors import PyMongoError
 
 from app.common.collections import Collections
 from app.core.config import settings
@@ -37,10 +38,16 @@ async def init_db() -> None:
 
     db.client = AsyncMongoClient(settings.mongodb_uri)
     database = db.client[settings.mongodb_db_name]
-    await database[Collections.USERS].update_many(
-        {"role": "staff"},
-        {"$set": {"role": "guide"}},
-    )
+
+    try:
+        await database[Collections.USERS].update_many(
+            {"role": "staff"},
+            {"$set": {"role": "guide"}},
+        )
+    except PyMongoError:
+        # Keep the API bootable even if the migration cannot run right now.
+        # The request path still depends on Mongo, but startup should not fail on a best-effort fixup.
+        pass
 
     from beanie import init_beanie
 

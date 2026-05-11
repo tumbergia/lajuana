@@ -900,3 +900,298 @@
 {"timestamp": "2026-04-29T19:36:09+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Todo muy bien tambi\u00e9n, gracias! \ud83d\ude0a \u00bfEn qu\u00e9 puedo ayudarte hoy?"}
 {"timestamp": "2026-04-29T19:36:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
 {"timestamp": "2026-04-29T19:36:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T20:50:53+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T20:50:53+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T20:50:53+00:00", "event": "inbound_text", "from": "573138659839", "body": "dime que experiencias tienes en menos de 10 palabras"}
+{"timestamp": "2026-04-29T20:50:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T20:59:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T20:59:41+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T20:59:41+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-29T21:00:07+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:00:07+00:00", "event": "inbound_message", "from": "573043052095", "type": "sticker"}
+{"timestamp": "2026-04-29T21:00:09+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:00:10+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:02:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:02:01+00:00", "event": "inbound_message", "from": "573043052095", "type": "text"}
+{"timestamp": "2026-04-29T21:02:01+00:00", "event": "inbound_text", "from": "573043052095", "body": "ya en lo legal"}
+{"timestamp": "2026-04-29T21:19:44+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:19:44+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:19:44+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-29T21:21:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:21:14+00:00", "event": "inbound_message", "from": "573004121952", "type": "sticker"}
+{"timestamp": "2026-04-29T21:21:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:26:25+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:34:32+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:34:32+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:34:32+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como ests"}
+{"timestamp": "2026-04-29T21:34:41+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar. \ud83d\ude0a \u00bfY t\u00fa c\u00f3mo est\u00e1s?\nEstoy aqu\u00ed para ayudarte con lo que necesites sobre **La Juana**. Puedo responder tus dudas sobre nuestros caballos y el campo, o ayudarte a gestionar una reserva para alguna de nuestras experiencias.\n\u00bfEn qu\u00e9 puedo ayudarte hoy?"}
+{"timestamp": "2026-04-29T21:34:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:34:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:34:45+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:34:54+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:34:54+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:34:54+00:00", "event": "inbound_text", "from": "573138659839", "body": "quiero hacer una reserva"}
+{"timestamp": "2026-04-29T21:35:48+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Claro que s\u00ed! Con gusto te ayudo con eso. \ud83d\udc0e\u2728\nPara poder avanzar, necesito saber qu\u00e9 tipo de experiencia te gustar\u00eda realizar. \u00bfTienes alguna en mente (como cabalgatas, tours por el campo, etc.) o te gustar\u00eda que te cuente qu\u00e9 opciones tenemos disponibles?"}
+{"timestamp": "2026-04-29T21:35:49+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:35:49+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:35:50+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:35:50+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:35:50+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:36:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:36:04+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:36:04+00:00", "event": "inbound_text", "from": "573138659839", "body": "cuentame que opciones tienes"}
+{"timestamp": "2026-04-29T21:41:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:41:36+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:41:36+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola quiero hacer una reserva de una experiencia"}
+{"timestamp": "2026-04-29T21:42:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:42:36+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:42:36+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola quiero hacer una reserva de una experiencia"}
+{"timestamp": "2026-04-29T21:43:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:43:36+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:43:36+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola quiero hacer una reserva de una experiencia"}
+{"timestamp": "2026-04-29T21:44:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:44:48+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:44:48+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-29T21:46:02+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:46:02+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:46:02+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola quiero reservar una experiencia"}
+{"timestamp": "2026-04-29T21:48:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:48:55+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:48:55+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola quiero hacer una reserva de una experiencia"}
+{"timestamp": "2026-04-29T21:55:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:55:56+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:55:56+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-29T21:57:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:57:12+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:57:12+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-29T21:58:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:58:14+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:58:14+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-29T21:58:21+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Todo muy bien por aqu\u00ed, gracias. \ud83d\ude0a\n\u00bfEn qu\u00e9 puedo ayudarte? Est\u00e1bamos hablando de que quer\u00edas hacer una **reserva**, \u00bfte gustar\u00eda que sigamos con eso o tienes alguna otra duda?"}
+{"timestamp": "2026-04-29T21:58:23+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:58:23+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:58:26+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:58:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:58:37+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:58:37+00:00", "event": "inbound_text", "from": "573138659839", "body": "si me gustaria"}
+{"timestamp": "2026-04-29T21:58:55+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Perfecto! Para poder ayudarte con la reserva, necesito que me proporciones algunos detalles:\n1. **\u00bfQu\u00e9 experiencia te gustar\u00eda realizar?** (Por ejemplo: una cabalgata, un tour por el campo, etc. Si no est\u00e1s seguro, dime y te ayudo).\n2. **\u00bfPara qu\u00e9 fecha la necesitas?**\n3. **\u00bfCu\u00e1ntas personas ser\u00edan"}
+{"timestamp": "2026-04-29T21:58:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:58:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:59:00+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:59:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T21:59:30+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T21:59:30+00:00", "event": "inbound_text", "from": "573138659839", "body": "cabalgata la nececito para el 30/04/2026 a las 9 de la ma\u00f1ana y seriamos 2 personas"}
+{"timestamp": "2026-04-29T22:24:25+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:24:25+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T22:24:25+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-29T22:24:36+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Todo muy bien por aqu\u00ed, gracias por preguntar. \ud83d\ude0a\n\u00bfEn qu\u00e9 puedo ayudarte? Est\u00e1bamos intentando gestionar tu reserva para la **cabalgata** el 30 de abril de 2026. \u00bfTe gustar\u00eda que sigamos intent\u00e1ndolo o tienes alguna otra duda?"}
+{"timestamp": "2026-04-29T22:24:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:24:38+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:24:38+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:24:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:24:47+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T22:24:47+00:00", "event": "inbound_text", "from": "573138659839", "body": "si intentemos"}
+{"timestamp": "2026-04-29T22:25:03+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Claro que s\u00ed! Sigamos intent\u00e1ndolo. \ud83d\ude0a\nComo te comentaba, estoy teniendo un peque\u00f1o inconveniente para localizar la actividad exacta de \"cabalgata\" en nuestro sistema para esa fecha.\nPara poder ayudarte mejor, \u00bfpodr\u00edas confirmarme alguno de estos detalles?\n1. **\u00bfEl nombre de la cabalgata es algo m\u00e1s"}
+{"timestamp": "2026-04-29T22:25:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:25:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:25:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:25:49+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:25:49+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T22:25:49+00:00", "event": "inbound_text", "from": "573138659839", "body": "cabalgata amanecer si ofreceme una fecha que me pueda servir"}
+{"timestamp": "2026-04-29T22:27:34+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:49:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:49:39+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T22:49:39+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola podrias hacerme la reserva ya"}
+{"timestamp": "2026-04-29T22:49:45+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte con la reserva necesito el nombre exacto de la experiencia. Veo estas opciones: Los Chorros, El Pueblo de las Dos Mentiras, La Montana de Cristal."}
+{"timestamp": "2026-04-29T22:49:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:49:46+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:49:50+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:49:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:49:56+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T22:49:56+00:00", "event": "inbound_text", "from": "573138659839", "body": "los chorros"}
+{"timestamp": "2026-04-29T22:50:28+00:00", "event": "agent_reply", "to": "573138659839", "body": "Encontr\u00e9 Los Chorros, pero no veo cupos abiertos por ahora. Si quieres, dime otra fecha y lo reviso."}
+{"timestamp": "2026-04-29T22:50:29+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:50:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:50:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:50:39+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:50:39+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T22:50:39+00:00", "event": "inbound_text", "from": "573138659839", "body": "cualquier fecha que se pueda"}
+{"timestamp": "2026-04-29T22:50:40+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte con la reserva necesito el nombre exacto de la experiencia. Veo estas opciones: Los Chorros, El Pueblo de las Dos Mentiras, La Montana de Cristal."}
+{"timestamp": "2026-04-29T22:50:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:50:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:50:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:50:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:50:52+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T22:50:52+00:00", "event": "inbound_text", "from": "573138659839", "body": "los chorros en cualquier fecha posible"}
+{"timestamp": "2026-04-29T22:51:17+00:00", "event": "agent_reply", "to": "573138659839", "body": "Encontr\u00e9 Los Chorros, pero no veo cupos abiertos por ahora. Si quieres, dime otra fecha y lo reviso."}
+{"timestamp": "2026-04-29T22:51:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:51:18+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:51:19+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:51:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:51:41+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T22:51:41+00:00", "event": "inbound_text", "from": "573138659839", "body": "los chorros para 20/05/2026 debe estar libre quiero esa fech"}
+{"timestamp": "2026-04-29T22:51:49+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para ayudarte con la reserva necesito el nombre exacto de la experiencia. Veo estas opciones: Los Chorros, El Pueblo de las Dos Mentiras, La Montana de Cristal."}
+{"timestamp": "2026-04-29T22:51:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:51:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:51:51+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:51:54+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:52:08+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:52:08+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-29T22:52:08+00:00", "event": "inbound_text", "from": "573138659839", "body": "el pueblo dos mentiras para 20/05/2026"}
+{"timestamp": "2026-04-29T22:52:09+00:00", "event": "agent_reply", "to": "573138659839", "body": "Encontr\u00e9 El Pueblo de las Dos Mentiras, pero no veo cupos abiertos por ahora. Si quieres, dime otra fecha y lo reviso."}
+{"timestamp": "2026-04-29T22:52:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:52:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T22:52:11+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-29T23:02:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:54:08+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:54:08+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T03:54:08+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola quiero hacer una reserva"}
+{"timestamp": "2026-04-30T03:54:32+00:00", "event": "agent_reply", "to": "573138659839", "body": "Por ahora no tenemos fechas disponibles para la experiencia Los Chorros."}
+{"timestamp": "2026-04-30T03:54:34+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:54:34+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:54:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:54:59+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:54:59+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T03:54:59+00:00", "event": "inbound_text", "from": "573138659839", "body": "entonces hazme cualquier reserva cualquier dia"}
+{"timestamp": "2026-04-30T03:55:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:55:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:55:13+00:00", "event": "inbound_message", "from": "573043052095", "type": "text"}
+{"timestamp": "2026-04-30T03:55:13+00:00", "event": "inbound_text", "from": "573043052095", "body": "Buenas tardes; \u00bfa cu\u00e1nto el kilo de papa?"}
+{"timestamp": "2026-04-30T03:55:18+00:00", "event": "agent_reply", "to": "573138659839", "body": "Por ahora no tenemos fechas disponibles para la experiencia Los Chorros."}
+{"timestamp": "2026-04-30T03:55:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:55:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:55:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:55:45+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:55:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:55:47+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T03:55:47+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-30T03:56:02+00:00", "event": "agent_reply", "to": "573138659839", "body": "Por ahora no tenemos fechas disponibles para la experiencia Los Chorros."}
+{"timestamp": "2026-04-30T03:56:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:56:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:56:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:56:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T03:56:43+00:00", "event": "agent_reply", "to": "573043052095", "body": "Tenemos disponibles Los Chorros, El Pueblo de las Dos Mentiras, La Montana de Cristal o la ruta de Salamina - San Felix - Marulanda. Dime cu\u00e1l te gusta m\u00e1s y p\u00e1same tu nombre y documento para avanzar con tu reserva."}
+{"timestamp": "2026-04-30T03:56:45+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:00:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:00:13+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T04:00:13+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-30T04:00:35+00:00", "event": "agent_reply", "to": "573138659839", "body": "Por el momento no tenemos fechas disponibles para la experiencia de Los Chorros para una persona."}
+{"timestamp": "2026-04-30T04:00:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:00:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:00:36+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:00:45+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:00:50+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:00:50+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T04:00:50+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-30T04:01:14+00:00", "event": "agent_reply", "to": "573138659839", "body": "Por el momento no tenemos fechas disponibles para la experiencia de Los Chorros para una persona."}
+{"timestamp": "2026-04-30T04:01:15+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:01:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:01:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:03:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:03:48+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:03:48+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T04:03:48+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-30T04:04:11+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para reservar Los Chorros para una persona, \u00bfqu\u00e9 fecha y hora tienes pensadas?"}
+{"timestamp": "2026-04-30T04:04:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:04:12+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:04:13+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:04:15+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:04:37+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:04:37+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T04:04:37+00:00", "event": "inbound_text", "from": "573138659839", "body": "ma\u00f1ana a las 9 am"}
+{"timestamp": "2026-04-30T04:04:54+00:00", "event": "agent_reply", "to": "573138659839", "body": "Para reservar Los Chorros para una persona, \u00bfqu\u00e9 fecha y hora tienes pensadas?"}
+{"timestamp": "2026-04-30T04:04:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:04:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:05:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:15:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:47:15+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T04:47:15+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T04:47:15+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-30T05:09:07+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:09:07+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T05:09:07+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-30T05:09:29+00:00", "event": "agent_reply", "to": "573138659839", "body": "Te ayudo con experiencias, disponibilidad o reservas."}
+{"timestamp": "2026-04-30T05:09:31+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:09:31+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:09:34+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:09:56+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:14:53+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:14:53+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T05:14:53+00:00", "event": "inbound_text", "from": "573138659839", "body": "disponibilidad"}
+{"timestamp": "2026-04-30T05:15:03+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00bfPara qu\u00e9 fecha quieres la reserva?"}
+{"timestamp": "2026-04-30T05:15:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:15:05+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:15:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:15:29+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:15:29+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T05:15:29+00:00", "event": "inbound_text", "from": "573138659839", "body": "30/04/2026"}
+{"timestamp": "2026-04-30T05:15:39+00:00", "event": "agent_reply", "to": "573138659839", "body": "Te ayudo con experiencias, disponibilidad o reservas."}
+{"timestamp": "2026-04-30T05:15:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:15:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:15:58+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:29:27+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T05:29:27+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T05:29:27+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola"}
+{"timestamp": "2026-04-30T13:28:01+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T13:28:01+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T13:28:01+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-30T13:28:24+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar \ud83d\ude0a \u00bfY t\u00fa c\u00f3mo est\u00e1s? \u00bfEn qu\u00e9 te puedo ayudar hoy? \u2728"}
+{"timestamp": "2026-04-30T13:28:26+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T13:28:26+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T13:28:30+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T13:37:07+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T13:52:14+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:02:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:02:41+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T14:02:41+00:00", "event": "inbound_text", "from": "573138659839", "body": "te sientes preparado para hacerme una reserva?"}
+{"timestamp": "2026-04-30T14:02:53+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Claro que s\u00ed, estoy m\u00e1s que lista! \ud83d\udc34 Solo necesito un par de detalles para dejarlo todo listo. \u00bfPara cu\u00e1ntas personas ser\u00eda la cabalgata y cu\u00e1l es tu nombre? \u2728"}
+{"timestamp": "2026-04-30T14:02:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:02:55+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:05:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:09:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:09:47+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T14:09:47+00:00", "event": "inbound_text", "from": "573138659839", "body": "hazme una reserva de cabalgata para el 02/05/2026 y mi nombre es juan diego rendon"}
+{"timestamp": "2026-04-30T14:09:50+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Mucho gusto, Juan Diego! \ud83d\udc34 Ya tengo casi todo listo para tu cabalgata por Los Chorros el 2 de mayo. Solo me falta un detallito, \u00bfpara cu\u00e1ntas personas ser\u00eda la reserva? \u2728"}
+{"timestamp": "2026-04-30T14:09:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:09:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:09:52+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:11:03+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:11:03+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T14:11:04+00:00", "event": "inbound_text", "from": "573138659839", "body": "para 2 personas"}
+{"timestamp": "2026-04-30T14:19:29+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:19:29+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T14:19:29+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-30T14:19:39+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola, Juan Diego! Muy bien, por ac\u00e1 todo tranquilo y con los caballos listos para la aventura \ud83d\udc34 \u00bfY t\u00fa c\u00f3mo vas? \u2728"}
+{"timestamp": "2026-04-30T14:19:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:19:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:19:41+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:20:43+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:20:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:20:57+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T14:20:57+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola muy bien gracias"}
+{"timestamp": "2026-04-30T14:21:43+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Qu\u00e9 bueno! \ud83d\ude0a Entonces, para ir organizando todo, \u00bfme podr\u00edas decir para cu\u00e1ntas personas ser\u00eda la cabalgata en Los Chorros? \ud83d\udc34\u2728"}
+{"timestamp": "2026-04-30T14:21:45+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:21:45+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:21:47+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:21:57+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:21:57+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T14:21:57+00:00", "event": "inbound_text", "from": "573138659839", "body": "seria para 2 personas"}
+{"timestamp": "2026-04-30T14:22:15+00:00", "event": "agent_reply", "to": "573138659839", "body": "Disculpa, estoy teniendo problemas t\u00e9cnicos en este momento. \u00bfPuedes intentar de nuevo en unos minutos? \ud83d\ude4f"}
+{"timestamp": "2026-04-30T14:22:16+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:22:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:22:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:22:17+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:33:04+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:33:04+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T14:33:04+00:00", "event": "inbound_text", "from": "573138659839", "body": "hola como estas"}
+{"timestamp": "2026-04-30T14:33:32+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1Hola! Muy bien, gracias por preguntar, \u00bfy t\u00fa c\u00f3mo vas? \ud83d\ude0a\nEst\u00e1bamos hablando de la cabalgata en Los Chorros para 2 personas, \u00bfte gustar\u00eda que sigamos con eso o tienes alguna otra duda? \ud83d\udc34\u2728"}
+{"timestamp": "2026-04-30T14:33:34+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:33:34+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:33:42+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:34:26+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:34:26+00:00", "event": "inbound_message", "from": "573138659839", "type": "text"}
+{"timestamp": "2026-04-30T14:34:26+00:00", "event": "inbound_text", "from": "573138659839", "body": "si sigamos"}
+{"timestamp": "2026-04-30T14:35:18+00:00", "event": "agent_reply", "to": "573138659839", "body": "\u00a1S\u00faper! Entonces, para ir organizando todo para esa cabalgata en Los Chorros para las 2 personas, \u00bfqu\u00e9 d\u00eda tienen pensado venir? \ud83d\udc34\ud83c\udf04"}
+{"timestamp": "2026-04-30T14:35:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:35:20+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}
+{"timestamp": "2026-04-30T14:37:31+00:00", "event": "webhook_received", "object": "whatsapp_business_account", "entries": 1}

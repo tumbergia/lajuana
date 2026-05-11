@@ -52,15 +52,31 @@ async def sync_knowledge() -> None:
     experiences = await ExperienceDocument.find(ExperienceDocument.is_active == True).to_list()
     for exp in experiences:
         duration_text = ""
-        if exp.duration_hours is not None:
-            duration_text = f"{exp.duration_hours} horas"
-        elif exp.duration_days is not None:
-            duration_text = f"{exp.duration_days} días"
+        duration = getattr(exp, "duration", None)
+        if duration is not None:
+            duration_text = getattr(duration, "display_text", None) or ""
+            if not duration_text:
+                activity_minutes = getattr(duration, "activity_minutes", None)
+                route_minutes = getattr(duration, "route_minutes", None)
+                if activity_minutes and route_minutes:
+                    duration_text = f"{activity_minutes} min totales / {route_minutes} min de ruta"
+        if not duration_text:
+            duration_hours = getattr(exp, "duration_hours", None)
+            duration_days = getattr(exp, "duration_days", None)
+            if duration_hours is not None:
+                duration_text = f"{duration_hours} horas"
+            elif duration_days is not None:
+                duration_text = f"{duration_days} días"
+
+        level = getattr(exp, "level", None)
+        level_text = getattr(level, "value", None) if hasattr(level, "value") else None
+        if not level_text:
+            level_text = str(level or "basic")
 
         text = (
             f"Experiencia: {exp.name}\n"
-            f"Descripción: {exp.description}\n"
-            f"Nivel: {exp.level.value}\n"
+            f"Descripción: {getattr(exp, 'description', '')}\n"
+            f"Nivel: {level_text}\n"
             f"Duración: {duration_text}"
         )
         source_ref = f"experience:{exp.id}"
@@ -72,10 +88,13 @@ async def sync_knowledge() -> None:
                 {"source": source_ref},
                 {
                     "$set": {
+                        "type": "experience",
+                        "title": exp.name,
+                        "content": text,
                         "text": text,
                         "scope": "public",
                         "embedding": embedding,
-                        "metadata": {"type": "experience", "id": str(exp.id)},
+                        "metadata": {"type": "experience", "id": str(exp.id), "title": exp.name},
                     }
                 },
                 upsert=True,
@@ -86,13 +105,13 @@ async def sync_knowledge() -> None:
     equines = await EquineDocument.find_all().to_list()
     for equine in equines:
         availability_text = "Disponible." if equine.is_available else "No disponible."
-        if equine.availability_notes:
+        if getattr(equine, "availability_notes", None):
             availability_text += f" Notas: {equine.availability_notes}"
 
         text = (
             f"Equino: {equine.name}\n"
-            f"Raza: {equine.breed or 'No especificada'}\n"
-            f"Paso: {equine.gait or 'No especificado'}\n"
+            f"Raza: {getattr(equine, 'breed', None) or 'No especificada'}\n"
+            f"Paso: {getattr(equine, 'gait', None) or 'No especificado'}\n"
             f"Disponibilidad: {availability_text}"
         )
         source_ref = f"equine:{equine.id}"
@@ -104,10 +123,13 @@ async def sync_knowledge() -> None:
                 {"source": source_ref},
                 {
                     "$set": {
+                        "type": "equine",
+                        "title": equine.name,
+                        "content": text,
                         "text": text,
                         "scope": "ops",
                         "embedding": embedding,
-                        "metadata": {"type": "equine", "id": str(equine.id)},
+                        "metadata": {"type": "equine", "id": str(equine.id), "title": equine.name},
                     }
                 },
                 upsert=True,
@@ -120,7 +142,7 @@ async def sync_knowledge() -> None:
         text = (
             f"Política de Seguridad / Reserva\n"
             f"Número: {policy.policy_number}\n"
-            f"Notas y Protocolo: {policy.notes or 'Sin notas'}"
+            f"Notas y Protocolo: {getattr(policy, 'notes', None) or 'Sin notas'}"
         )
         source_ref = f"policy:{policy.id}"
         print(f"  - Generando embedding para política: {policy.policy_number}")
@@ -131,10 +153,17 @@ async def sync_knowledge() -> None:
                 {"source": source_ref},
                 {
                     "$set": {
+                        "type": "policy",
+                        "title": str(getattr(policy, "policy_number", "política")),
+                        "content": text,
                         "text": text,
                         "scope": "ops",
                         "embedding": embedding,
-                        "metadata": {"type": "policy", "id": str(policy.id)},
+                        "metadata": {
+                            "type": "policy",
+                            "id": str(policy.id),
+                            "title": str(getattr(policy, "policy_number", "política")),
+                        },
                     }
                 },
                 upsert=True,

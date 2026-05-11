@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
@@ -9,6 +10,7 @@ from app.documents import UserDocument
 from app.schemas.participant import ParticipantCreateSchema, ParticipantResponseSchema
 from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofResponseSchema
 from app.schemas.reservation import (
+    ReservationAvailabilityResponseSchema,
     ReservationCancelSchema,
     ReservationConfirmSchema,
     ReservationCreateSchema,
@@ -16,6 +18,10 @@ from app.schemas.reservation import (
     ReservationResponseSchema,
     ReservationStatusTransitionSchema,
     ReservationUpdateSchema,
+)
+from app.agents.reservation_tools import (
+    UpdateReservationKnowledgeInput,
+    update_reservation_knowledge,
 )
 from app.services import ParticipantService, PaymentProofService, ReservationService
 from app.services.mappers import (
@@ -48,7 +54,24 @@ async def create_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.create(payload.model_dump(), actor_id=current_user.id)
+    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
+
+
+@router.get(
+    "/availability",
+    response_model=ReservationAvailabilityResponseSchema,
+    summary=ENDPOINT_DOCS["reservations_availability"]["summary"],
+    description=endpoint_description("reservations_availability"),
+    operation_id="checkReservationAvailability",
+    responses=endpoint_responses("reservations_availability"),
+)
+async def check_reservation_availability(
+    date: date,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_READ))],
+) -> ReservationAvailabilityResponseSchema:
+    availability = await reservation_service.check_availability(requested_date=date)
+    return ReservationAvailabilityResponseSchema.model_validate(availability)
 
 
 @router.get(
@@ -109,6 +132,7 @@ async def update_reservation(
         payload.model_dump(exclude_none=True),
         actor_id=current_user.id,
     )
+    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
 
 
@@ -129,6 +153,7 @@ async def confirm_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.confirm_reservation(reservation_id, actor_id=current_user.id)
+    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
 
 
@@ -153,6 +178,7 @@ async def transition_reservation_status(
         payload.target_status,
         actor_id=current_user.id,
     )
+    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
 
 
@@ -173,6 +199,7 @@ async def cancel_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.cancel_reservation(reservation_id, actor_id=current_user.id)
+    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
 
 

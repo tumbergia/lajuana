@@ -8,6 +8,12 @@ class ChatRequestSchema(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
 
 
+class WhatsAppChatRequestSchema(BaseModel):
+    wa_user_id: str = Field(min_length=3, max_length=32)
+    message: str = Field(min_length=1, max_length=4000)
+    conversation_id: str | None = Field(default=None, min_length=3, max_length=128)
+
+
 class ChatResponseSchema(BaseModel):
     conversation_id: str
     role: str

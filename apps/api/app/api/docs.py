@@ -376,6 +376,22 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         ],
         "service_docstring": "Crea reserva sin confirmarla ni descontar cupos.",
     },
+    "reservations_availability": {
+        "summary": "Consultar disponibilidad de reserva",
+        "description": (
+            "Consulta si una fecha está libre contra las reservas activas reales. "
+            "La disponibilidad se decide por la colección de reservas, no por el índice vectorial."
+        ),
+        "permissions": ["reservation.read"],
+        "responses": {
+            200: "Disponibilidad obtenida correctamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            422: "Datos inválidos.",
+        },
+        "error_codes": ["auth.unauthorized", "auth.forbidden", "common.validation_error"],
+        "service_docstring": "Consulta disponibilidad real por fecha contra reservas activas.",
+    },
     "reservations_list": {
         "summary": "Listar reservas",
         "description": "Lista reservas segun alcance del rol y filtros operativos.",
@@ -1055,6 +1071,20 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         ],
         "service_docstring": "Orquesta ramas operativa/turista y persiste estado conversacional.",
     },
+    "whatsapp_chat_create": {
+        "summary": "Responder WhatsApp con el orquestador",
+        "description": (
+            "Procesa un mensaje entrante de WhatsApp usando el grafo conversacional de La Juana. "
+            "La conversación se persiste por wa_user_id o conversation_id para mantener continuidad."
+        ),
+        "permissions": [],
+        "responses": {
+            200: "Mensaje de WhatsApp procesado correctamente.",
+            422: "Datos inválidos.",
+        },
+        "error_codes": ["common.validation_error"],
+        "service_docstring": "Orquesta el flujo conversacional de WhatsApp y persiste estado por usuario.",
+    },
 }
 
 
@@ -1081,6 +1111,7 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "schedules_update": ("PATCH", "/api/v1/schedules/{schedule_id}"),
     "schedules_delete": ("DELETE", "/api/v1/schedules/{schedule_id}"),
     "reservations_create": ("POST", "/api/v1/reservations"),
+    "reservations_availability": ("GET", "/api/v1/reservations/availability"),
     "reservations_list": ("GET", "/api/v1/reservations"),
     "reservations_get": ("GET", "/api/v1/reservations/{reservation_id}"),
     "reservations_update": ("PATCH", "/api/v1/reservations/{reservation_id}"),
@@ -1122,6 +1153,7 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "config_get": ("GET", "/api/v1/config/reservation-rules"),
     "config_update": ("PATCH", "/api/v1/config/reservation-rules"),
     "chat_create": ("POST", "/api/v1/chat"),
+    "whatsapp_chat_create": ("POST", "/api/v1/whatsapp/chat"),
 }
 
 for endpoint_key, route in ENDPOINT_ROUTE_MAP.items():

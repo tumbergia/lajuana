@@ -32,14 +32,14 @@ class BookingService:
         requested_date: date | None,
         participant_count: int,
     ) -> ScheduleDocument | None:
+        del participant_count
         schedules = await self.schedule_service.list(
             experience_id=experience_id,
             date_from=requested_date,
             date_to=requested_date,
-            status=ScheduleStatus.OPEN,
         )
         for schedule in schedules:
-            if schedule.available_slots >= participant_count:
+            if not await self.reservation_service.has_active_reservation_for_date(schedule.date):
                 return schedule
         return None
 
@@ -65,11 +65,10 @@ class BookingService:
             holder_email=holder_email,
             holder_phone=holder_phone,
         )
-        reservation = await self.reservation_service.create(payload.model_dump(), actor_id=actor_id)
-        reservation = await self.reservation_service.set_status(
-            str(reservation.id),
-            ReservationStatus.QUOTED,
+        reservation = await self.reservation_service.create(
+            payload.model_dump(),
             actor_id=actor_id,
+            initial_status=ReservationStatus.QUOTED,
         )
         reservation = await self.reservation_service.set_status(
             str(reservation.id),

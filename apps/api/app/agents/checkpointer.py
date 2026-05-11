@@ -24,6 +24,7 @@ class BeanieConversationCheckpointer:
             "extracted_data": document.extracted_data,
             "rag_context": document.rag_context,
             "booking_intent": document.booking_intent,
+            **(document.state_snapshot or {}),
         }
 
     async def save(
@@ -43,6 +44,7 @@ class BeanieConversationCheckpointer:
 
         messages = state.get("messages", [])
         serialized_messages = messages_to_dict(messages)
+        state_snapshot = {key: value for key, value in state.items() if key != "messages"}
 
         payload = {
             "messages": serialized_messages,
@@ -50,6 +52,7 @@ class BeanieConversationCheckpointer:
             "extracted_data": state.get("extracted_data", {}),
             "rag_context": state.get("rag_context", ""),
             "booking_intent": bool(state.get("booking_intent", False)),
+            "state_snapshot": state_snapshot,
             "checkpoint_updated_at": datetime.now(UTC),
         }
 

@@ -38,6 +38,13 @@ class ReservationStatusTransitionSchema(BaseModel):
     target_status: ReservationStatus
 
 
+class ReservationAvailabilityResponseSchema(BaseModel):
+    date: date
+    available: bool
+    blocking_reservation_id: str | None = None
+    reason: str | None = None
+
+
 class ReservationResponseSchema(AuditMetadataSchema):
     id: str
     code: str

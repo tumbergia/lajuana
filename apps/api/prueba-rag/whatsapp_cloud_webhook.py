@@ -11,6 +11,7 @@ import logging
 import os
 import sys
 import threading
+import time
 from datetime import UTC, datetime
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -24,7 +25,7 @@ CURRENT_DIR = Path(__file__).resolve().parent
 if str(CURRENT_DIR) not in sys.path:
     sys.path.insert(0, str(CURRENT_DIR))
 
-from whatsapp_operational_agent import WhatsAppOperationalAgent, build_agent_from_env, load_env_file
+from whatsapp_operational_agent import load_env_file
 
 load_env_file(Path(os.environ.get("LJ_ENV_FILE", CURRENT_DIR / ".env")))
 
@@ -63,17 +64,7 @@ def _required_env(name: str) -> str:
 @dataclass
 class SessionManager:
     lock: threading.Lock = field(default_factory=threading.Lock)
-    sessions: dict[str, WhatsAppOperationalAgent] = field(default_factory=dict)
     user_locks: dict[str, threading.Lock] = field(default_factory=dict)
-
-    def get_agent(self, wa_user_id: str) -> WhatsAppOperationalAgent:
-        with self.lock:
-            existing = self.sessions.get(wa_user_id)
-            if existing is not None:
-                return existing
-            new_agent = build_agent_from_env()
-            self.sessions[wa_user_id] = new_agent
-            return new_agent
 
     def get_user_lock(self, wa_user_id: str) -> threading.Lock:
         with self.lock:
@@ -122,6 +113,48 @@ def _send_whatsapp_text(to_number: str, text: str) -> None:
         raise HTTPException(status_code=503, detail="Could not reach WhatsApp Graph API") from exc
 
 
+def _forward_to_backend_chat(wa_user_id: str, text: str) -> dict[str, Any]:
+    _reload_env_for_runtime()
+    base_url = os.environ.get("LJ_API_BASE_URL", "http://127.0.0.1:8000/api/v1").rstrip("/")
+    url = f"{base_url}/whatsapp/chat"
+    payload = {
+        "wa_user_id": wa_user_id,
+        "conversation_id": wa_user_id,
+        "message": text,
+    }
+
+    req = request.Request(
+        url=url,
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+    )
+
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            with request.urlopen(req, timeout=30) as response:
+                raw = response.read().decode("utf-8")
+                data = json.loads(raw) if raw else {}
+            break
+        except error.HTTPError as exc:
+            body = exc.read().decode("utf-8") if exc.fp else ""
+            raise HTTPException(status_code=502, detail=f"Backend chat error: {body[:240]}") from exc
+        except (error.URLError, TimeoutError, ConnectionRefusedError) as exc:
+            last_exc = exc
+            if attempt < 2:
+                time.sleep(1.0)
+                continue
+            raise HTTPException(status_code=503, detail="Could not reach backend chat endpoint") from exc
+
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=502, detail="Backend chat returned an invalid payload")
+    return data
+
+
 def _extract_messages(payload: dict[str, Any]) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     entries = payload.get("entry", [])
@@ -155,22 +188,43 @@ def _is_duplicate_message(message: dict[str, Any]) -> bool:
 
     if message_id in cache:
         return True
-
-    cache[message_id] = now
     return False
 
 
-def _parse_optional_payload(text: str) -> tuple[str, dict[str, Any] | None, dict[str, Any] | None]:
-    clean = text.strip()
-    if clean.startswith("/proof "):
-        raw_json = clean[len("/proof ") :].strip()
-        payload = json.loads(raw_json)
-        return "Comprobante enviado", payload, None
-    if clean.startswith("/participant "):
-        raw_json = clean[len("/participant ") :].strip()
-        payload = json.loads(raw_json)
-        return "Registrar participante", None, payload
-    return clean, None, None
+def _mark_message_seen(message: dict[str, Any]) -> None:
+    message_id = str(message.get("id", "")).strip()
+    if not message_id:
+        return
+    _message_cache()[message_id] = datetime.now(UTC)
+
+
+def _process_inbound_text_message(
+    wa_user_id: str,
+    incoming: str,
+    message: dict[str, Any],
+) -> None:
+    try:
+        user_lock = session_manager.get_user_lock(wa_user_id)
+        with user_lock:
+            backend_reply = _forward_to_backend_chat(wa_user_id, incoming)
+            reply = str(backend_reply.get("reply", "")).strip()
+            if not reply:
+                logger.info("Backend chat produced no reply for=%s; skipping send.", wa_user_id)
+                return
+
+            logger.info("Agent reply for=%s body=%s", wa_user_id, reply[:160])
+            _append_webhook_trace(
+                {
+                    "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
+                    "event": "agent_reply",
+                    "to": wa_user_id,
+                    "body": reply[:300],
+                }
+            )
+            _send_whatsapp_text(wa_user_id, reply)
+            _mark_message_seen(message)
+    except Exception as exc:
+        logger.exception("Failed processing inbound WhatsApp text from %s: %s", wa_user_id, exc)
 
 
 @app.get("/webhook")
@@ -254,37 +308,12 @@ async def receive_webhook(request: Request) -> JSONResponse:
                 }
             )
 
-            agent = session_manager.get_agent(wa_user_id)
-            user_lock = session_manager.get_user_lock(wa_user_id)
-            with user_lock:
-                try:
-                    user_text, payment_payload, participant_payload = _parse_optional_payload(incoming)
-                except json.JSONDecodeError:
-                    logger.info("Skipping malformed JSON payload from=%s", wa_user_id)
-                    continue
-
-                reply = agent.handle_message(
-                    user_text,
-                    payment_proof_payload=payment_payload,
-                    participant_payload=participant_payload,
-                )
-                if not reply:
-                    logger.info("Agent produced no reply for=%s; skipping send.", wa_user_id)
-                    continue
-
-                logger.info("Agent reply for=%s body=%s", wa_user_id, reply[:160])
-                _append_webhook_trace(
-                    {
-                        "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
-                        "event": "agent_reply",
-                        "to": wa_user_id,
-                        "body": reply[:300],
-                    }
-                )
-                try:
-                    _send_whatsapp_text(wa_user_id, reply)
-                except Exception as send_exc:  # pragma: no cover - defensive logging path
-                    logger.exception("Failed sending WhatsApp reply to %s: %s", wa_user_id, send_exc)
+            worker = threading.Thread(
+                target=_process_inbound_text_message,
+                args=(wa_user_id, incoming, message),
+                daemon=True,
+            )
+            worker.start()
         except Exception as msg_exc:  # pragma: no cover - defensive logging path
             logger.exception("Failed processing webhook message payload: %s", msg_exc)
 
