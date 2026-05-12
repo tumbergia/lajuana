@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.endpoints.whatsapp import bare_router as whatsapp_bare_router
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.errors import register_error_handlers
@@ -59,3 +60,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(api_router)
+app.include_router(whatsapp_bare_router)
