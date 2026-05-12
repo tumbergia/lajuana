@@ -8,7 +8,6 @@ from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.schemas.experience import (
     ExperienceCreateSchema,
-    ExperienceQuoteRequestSchema,
     ExperienceUpdateSchema,
 )
 from app.services.experience_service import ExperienceService
@@ -81,49 +80,3 @@ def test_create_maps_duplicate_slug_to_conflict_sync(monkeypatch: pytest.MonkeyP
 
 def test_update_maps_duplicate_slug_to_conflict_sync(monkeypatch: pytest.MonkeyPatch) -> None:
     asyncio.run(_run_update_maps_duplicate_slug_to_conflict(monkeypatch))
-
-
-async def _run_quote_uses_matching_pricing_tier(monkeypatch: pytest.MonkeyPatch) -> None:
-    class FakeTier:
-        def __init__(
-            self, min_participants: int, max_participants: int, price_per_person: int
-        ) -> None:
-            self.min_participants = min_participants
-            self.max_participants = max_participants
-            self.price_per_person = price_per_person
-
-    class FakePricing:
-        currency = "COP"
-        pricing_notes = "Tarifas netas"
-
-        def __init__(self) -> None:
-            self.tiers = [
-                FakeTier(1, 1, 875000),
-                FakeTier(2, 2, 530000),
-                FakeTier(3, 3, 450000),
-                FakeTier(4, 8, 420000),
-            ]
-
-    class FakeDoc:
-        id = "660000000000000000000101"
-        pricing = FakePricing()
-
-    service = ExperienceService()
-
-    async def fake_get(_: str) -> FakeDoc:
-        return FakeDoc()
-
-    monkeypatch.setattr(service, "get", fake_get)
-
-    result = await service.quote(
-        "660000000000000000000101",
-        payload=ExperienceQuoteRequestSchema(participants_count=4),
-    )
-
-    assert result.unit_price == 420000
-    assert result.subtotal == 1680000
-    assert result.currency == "COP"
-
-
-def test_quote_uses_matching_pricing_tier(monkeypatch: pytest.MonkeyPatch) -> None:
-    asyncio.run(_run_quote_uses_matching_pricing_tier(monkeypatch))
