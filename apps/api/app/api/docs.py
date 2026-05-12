@@ -380,7 +380,7 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "summary": "Consultar disponibilidad de reserva",
         "description": (
             "Consulta si una fecha está libre contra las reservas activas reales. "
-            "La disponibilidad se decide por la colección de reservas, no por el índice vectorial."
+            "La disponibilidad se decide por la colección de reservas activas."
         ),
         "permissions": ["reservation.read"],
         "responses": {
@@ -1050,41 +1050,6 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         ],
         "service_docstring": "Actualiza configuración validando min_days_in_advance.",
     },
-    "chat_create": {
-        "summary": "Enviar mensaje al orquestador",
-        "description": (
-            "Procesa un turno de conversación según el rol del usuario autenticado. "
-            "La conversación se persiste por conversation_id para permitir continuidad."
-        ),
-        "permissions": ["auth.self.read"],
-        "responses": {
-            200: "Mensaje procesado correctamente.",
-            401: "No autenticado.",
-            422: "Datos inválidos.",
-        },
-        "error_codes": [
-            "auth.unauthorized",
-            "auth.invalid_token",
-            "auth.expired_token",
-            "auth.inactive_user",
-            "common.validation_error",
-        ],
-        "service_docstring": "Orquesta ramas operativa/turista y persiste estado conversacional.",
-    },
-    "whatsapp_chat_create": {
-        "summary": "Responder WhatsApp con el orquestador",
-        "description": (
-            "Procesa un mensaje entrante de WhatsApp usando el grafo conversacional de La Juana. "
-            "La conversación se persiste por wa_user_id o conversation_id para mantener continuidad."
-        ),
-        "permissions": [],
-        "responses": {
-            200: "Mensaje de WhatsApp procesado correctamente.",
-            422: "Datos inválidos.",
-        },
-        "error_codes": ["common.validation_error"],
-        "service_docstring": "Orquesta el flujo conversacional de WhatsApp y persiste estado por usuario.",
-    },
 }
 
 
@@ -1152,8 +1117,6 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "config_emergency_contacts": ("GET", "/api/v1/config/emergency-contacts"),
     "config_get": ("GET", "/api/v1/config/reservation-rules"),
     "config_update": ("PATCH", "/api/v1/config/reservation-rules"),
-    "chat_create": ("POST", "/api/v1/chat"),
-    "whatsapp_chat_create": ("POST", "/api/v1/whatsapp/chat"),
 }
 
 for endpoint_key, route in ENDPOINT_ROUTE_MAP.items():

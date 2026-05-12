@@ -11,7 +11,6 @@ from app.main import app
 client = TestClient(app)
 
 OPERATION_DOC_MAP = {
-    "chatWithAgent": "chat_create",
     "registerPublicUser": "auth_register",
     "loginUser": "auth_login",
     "refreshToken": "auth_refresh",

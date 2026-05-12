@@ -1,4 +1,4 @@
-from pydantic import AliasChoices, Field
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -33,32 +33,6 @@ class Settings(BaseSettings):
     storage_s3_secret_access_key: str | None = None
     storage_s3_presign_expiration_seconds: int = 900
 
-    chat_llm_model: str = "stub-extractor-v1"
-    chat_llm_provider: str = Field("groq", validation_alias="LLM_PROVIDER")
-    chat_llm_base_url: str = Field(
-        "https://api.groq.com/openai/v1",
-        validation_alias=AliasChoices("LJ_LLM_BASE_URL", "LLM_BASE_URL"),
-    )
-    chat_llm_model_name: str = Field(
-        "llama-3.3-70b-versatile", validation_alias=AliasChoices("LJ_LLM_MODEL", "LLM_MODEL")
-    )
-    chat_llm_api_key: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices(
-            "LJ_LLM_API_KEY",
-            "LLM_API_KEY",
-            "GROQ_API_KEY",
-            "OPENAI_API_KEY",
-        ),
-    )
-    chat_enable_rag: bool = True
-    chat_enable_booking: bool = True
-    chat_vector_top_k: int = 3
-    chat_vector_index_name: str = "vector_index"
-    chat_embedding_model: str = "https://huggingface.co/mixedbread-ai/mxbai-embed-large-v1"
-    chat_embedding_base_url: str = "http://127.0.0.1:1234/v1"
-    chat_embedding_api_key: str = "lm-studio"
-    chat_checkpoint_collection: str = "chat_checkpoints"
     chat_default_channel: str = "whatsapp"
 
     assistant_enable_llm: bool = False
