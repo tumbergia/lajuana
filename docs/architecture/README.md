@@ -9,6 +9,7 @@ Documentos de arquitectura vigentes.
 - `api.md`
 - `api-endpoints.md`
 - `design-system.md`
+- `chatbot-whatsapp-v2.md` — arquitectura actual del chatbot (planner → policy → tool → composer)
 
 ## Regla
 

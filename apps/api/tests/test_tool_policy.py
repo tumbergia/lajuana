@@ -1,4 +1,4 @@
-from app.assistant.policy import ToolPolicyEngine
+from app.ai.assistant.policy import ToolPolicyEngine
 from app.schemas.assistant_plan import AssistantAction, AssistantPlan, RiskLevel
 
 

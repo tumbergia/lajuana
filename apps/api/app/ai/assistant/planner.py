@@ -1,5 +1,5 @@
-from app.assistant.prompts.planner import PLANNER_SYSTEM_PROMPT
-from app.llm.factory import get_llm_provider
+from app.ai.assistant.prompts.planner import PLANNER_SYSTEM_PROMPT
+from app.ai.providers.factory import get_llm_provider
 from app.schemas.assistant_plan import AssistantPlan
 
 

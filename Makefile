@@ -61,7 +61,7 @@ api-typecheck:
 	cd apps/api && $(API_PY) -m mypy app
 
 api-mcp:
-	cd apps/api && $(API_PY) -m app.mcp_server.server
+	cd apps/api && $(API_PY) -m app.ai.mcp.server
 
 api-ask-example:
 	curl -X POST http://localhost:8000/api/v1/ask \

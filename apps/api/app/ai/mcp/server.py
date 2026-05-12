@@ -1,6 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 
-from app.mcp_server.tools.availability import check_experience_availability
+from app.ai.mcp.tools.availability import check_experience_availability
 
 mcp = FastMCP("lajuana-mcp")
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.assistant.orchestrator import AssistantOrchestrator
+from app.ai.assistant.orchestrator import AssistantOrchestrator
 from app.schemas.ask import AskRequest, AskResponse
 
 router = APIRouter(tags=["Assistant"])

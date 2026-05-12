@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
 
-from app.assistant.orchestrator import AssistantOrchestrator
+from app.ai.assistant.orchestrator import AssistantOrchestrator
 from app.channels.whatsapp.normalizer import normalize_whatsapp_payload
 from app.channels.whatsapp.sender import WhatsAppSender
 from app.core.config import settings

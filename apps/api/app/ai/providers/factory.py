@@ -1,5 +1,5 @@
+from app.ai.providers.gemini_provider import GeminiProvider
 from app.core.config import settings
-from app.llm.gemini_provider import GeminiProvider
 
 
 def get_llm_provider() -> GeminiProvider:

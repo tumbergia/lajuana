@@ -30,7 +30,6 @@ PROTECTED_ENDPOINTS = [
     ("post", "/api/v1/auth/logout", None),
     ("post", "/api/v1/auth/change-password", {"current_password": "x", "new_password": "nueva123"}),
     ("get", "/api/v1/auth/me", None),
-
     (
         "post",
         "/api/v1/users",
@@ -193,7 +192,6 @@ GUIDE_FORBIDDEN_ENDPOINTS = [
 VALIDATION_ENDPOINTS = [
     ("post", "/api/v1/auth/login", {}),
     ("post", "/api/v1/auth/register", {}),
-
     ("post", "/api/v1/experiences", {}),
     ("post", "/api/v1/schedules", {}),
     ("post", "/api/v1/reservations", {}),

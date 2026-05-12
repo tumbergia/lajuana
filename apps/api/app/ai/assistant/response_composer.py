@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.assistant.prompts.planner import TOOL_RESULT_RESPONSE_SYSTEM_PROMPT
+from app.ai.assistant.prompts.planner import TOOL_RESULT_RESPONSE_SYSTEM_PROMPT
+from app.ai.providers.factory import get_llm_provider
 from app.core.config import settings
-from app.llm.factory import get_llm_provider
 from app.schemas.assistant_plan import AssistantPlan, ToolResultResponse
 
 

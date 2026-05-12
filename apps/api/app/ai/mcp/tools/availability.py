@@ -5,15 +5,15 @@ from datetime import UTC, date, datetime
 from typing import Any
 from uuid import uuid4
 
-from app.core.config import settings
-from app.documents.experience_document import ExperienceDocument
-from app.documents.schedule_document import ScheduleDocument
-from app.documents.tool_call_log_document import ToolCallLogDocument
-from app.mcp_server.tool_contracts import (
+from app.ai.mcp.tool_contracts import (
     CheckExperienceAvailabilityInput,
     CheckExperienceAvailabilityOutput,
     ToolBlockingReason,
 )
+from app.core.config import settings
+from app.documents.experience_document import ExperienceDocument
+from app.documents.schedule_document import ScheduleDocument
+from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.services.experience_catalog_resolver import (
     ExperienceCatalogResolver,
     ExperienceResolutionStatus,

@@ -3,13 +3,13 @@ from __future__ import annotations
 import time
 from uuid import uuid4
 
-from app.assistant.planner import GeminiPlanner
-from app.assistant.policy import ToolPolicyEngine
-from app.assistant.response_composer import compose_tool_response
+from app.ai.assistant.planner import GeminiPlanner
+from app.ai.assistant.policy import ToolPolicyEngine
+from app.ai.assistant.response_composer import compose_tool_response
+from app.ai.mcp import registry
 from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
-from app.mcp_server import registry
 from app.schemas.ask import AskRequest, AskResponse
 from app.schemas.assistant_plan import AssistantAction
 from app.schemas.conversation_session import merge_slots
@@ -57,10 +57,14 @@ class AssistantOrchestrator:
         # Session merge: fill null plan args from session slots
         REQUIRED_FIELDS = ["requested_date", "participant_count", "experience_query"]
 
-        if plan.action in {
-            AssistantAction.TOOL_CALL,
-            AssistantAction.ASK_CLARIFYING_QUESTION,
-        } and plan.arguments:
+        if (
+            plan.action
+            in {
+                AssistantAction.TOOL_CALL,
+                AssistantAction.ASK_CLARIFYING_QUESTION,
+            }
+            and plan.arguments
+        ):
             plan_args = plan.arguments.model_dump()
             merge = merge_slots(
                 session_slots=session.slot_values,
