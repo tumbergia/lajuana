@@ -18,7 +18,7 @@ app = FastAPI(
     contact={"name": "Equipo La Juana"},
     openapi_tags=[
         {"name": "Autenticacion", "description": "Autenticacion y sesion actual."},
-        {"name": "Assistant", "description": "Orquestador conversacional con detección de intención."},
+        {"name": "Assistant", "description": "Planner Gemini + tools + policy."},
         {"name": "Usuarios", "description": "Gestion administrativa de usuarios internos."},
         {"name": "Experiencias", "description": "Catalogo de experiencias."},
         {"name": "Fechas operativas", "description": "Fechas operativas y disponibilidad."},

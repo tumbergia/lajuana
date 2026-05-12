@@ -38,6 +38,16 @@ class Settings(BaseSettings):
     assistant_enable_llm: bool = False
     assistant_default_min_notice_days: int = 7
 
+    llm_provider: str = "gemini"
+
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3-flash-preview"
+    gemini_temperature: float = 0.2
+    gemini_timeout_seconds: int = 30
+
+    assistant_tool_response_mode: str = "cheap"
+    assistant_min_plan_confidence: float = 0.55
+
     whatsapp_verify_token: str = "change-me"
     whatsapp_access_token: str = ""
     whatsapp_phone_number_id: str = ""

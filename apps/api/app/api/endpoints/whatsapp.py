@@ -8,16 +8,11 @@ from app.channels.whatsapp.normalizer import normalize_whatsapp_payload
 from app.channels.whatsapp.sender import WhatsAppSender
 from app.core.config import settings
 from app.schemas.ask import AskRequest
-from app.schemas.whatsapp import WhatsAppWebhookResult
 
 router = APIRouter(prefix="/whatsapp", tags=["WhatsApp"])
 
 
-@router.get(
-    "/webhook",
-    response_class=PlainTextResponse,
-    summary="Verificar webhook de WhatsApp Cloud API",
-)
+@router.get("/webhook", response_class=PlainTextResponse)
 async def verify_webhook(
     hub_mode: str | None = Query(default=None, alias="hub.mode"),
     hub_verify_token: str | None = Query(default=None, alias="hub.verify_token"),
@@ -29,24 +24,17 @@ async def verify_webhook(
     raise HTTPException(status_code=403, detail="Invalid WhatsApp webhook verification token")
 
 
-@router.post(
-    "/webhook",
-    response_model=WhatsAppWebhookResult,
-    summary="Recibir mensajes entrantes desde WhatsApp Cloud API",
-)
-async def receive_webhook(request: Request) -> WhatsAppWebhookResult:
-    payload: dict[str, Any] = await request.json()
-
+@router.post("/webhook")
+async def receive_webhook(request: Request) -> dict[str, Any]:
+    payload = await request.json()
     messages = normalize_whatsapp_payload(payload)
+
     orchestrator = AssistantOrchestrator()
     sender = WhatsAppSender()
 
     processed = 0
 
     for message in messages:
-        if not message.text:
-            continue
-
         result = await orchestrator.ask(
             AskRequest(
                 message=message.text,
@@ -56,8 +44,11 @@ async def receive_webhook(request: Request) -> WhatsAppWebhookResult:
         )
 
         if message.from_phone:
-            await sender.send_text(to_phone=message.from_phone, text=result.response)
+            await sender.send_text(
+                to_phone=message.from_phone,
+                text=result.response,
+            )
 
         processed += 1
 
-    return WhatsAppWebhookResult(received=True, processed_messages=processed)
+    return {"received": True, "processed_messages": processed}

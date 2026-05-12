@@ -1,5 +1,6 @@
 from app.documents.app_config_document import AppConfigDocument, ReservationRules
 from app.documents.assignment_document import AssignmentDocument
+from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.equine_document import EquineDocument
 from app.documents.experience_document import ExperienceDocument
@@ -21,6 +22,7 @@ from app.documents.user_document import UserDocument
 __all__ = [
     "AssignmentDocument",
     "AppConfigDocument",
+    "ConversationSessionDocument",
     "ConversationTurnDocument",
     "ToolCallLogDocument",
     "EmergencyContact",

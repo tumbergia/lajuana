@@ -9,10 +9,10 @@ router = APIRouter(tags=["Assistant"])
 @router.post(
     "/ask",
     response_model=AskResponse,
-    summary="Probar orquestador conversacional",
+    summary="Probar assistant planner con Gemini y tools",
     description=(
-        "Endpoint de prueba para validar intent detection, trazabilidad, ejecución de tools "
-        "y composición de respuesta. No confirma reservas ni modifica cupos."
+        "Ejecuta el flujo conversacional: Gemini planner, policy engine, tool MCP de prueba "
+        "y respuesta final. No confirma reservas ni modifica cupos."
     ),
 )
 async def ask(request: AskRequest) -> AskResponse:

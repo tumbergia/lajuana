@@ -5,8 +5,6 @@ from datetime import UTC, date, datetime
 from typing import Any
 from uuid import uuid4
 
-from beanie import PydanticObjectId
-
 from app.core.config import settings
 from app.documents.experience_document import ExperienceDocument
 from app.documents.schedule_document import ScheduleDocument
@@ -15,6 +13,10 @@ from app.mcp_server.tool_contracts import (
     CheckExperienceAvailabilityInput,
     CheckExperienceAvailabilityOutput,
     ToolBlockingReason,
+)
+from app.services.experience_catalog_resolver import (
+    ExperienceCatalogResolver,
+    ExperienceResolutionStatus,
 )
 
 
@@ -52,28 +54,20 @@ async def _find_experience(
     experience_id: str | None,
     experience_query: str | None,
 ) -> ExperienceDocument | None:
+    resolver = ExperienceCatalogResolver()
+
     if experience_id:
-        try:
-            return await ExperienceDocument.get(PydanticObjectId(experience_id))
-        except Exception:
-            return None
+        result = await resolver.resolve(experience_id)
+        if result.status == ExperienceResolutionStatus.FOUND:
+            return await ExperienceDocument.get(result.experience_id)
+        return None
 
     if not experience_query:
         return None
 
-    query = experience_query.strip().lower()
-    if not query:
-        return None
-
-    experiences = await ExperienceDocument.find_all().to_list()
-    for experience in experiences:
-        name = str(_field(experience, "name", "title", "label", default="")).lower()
-        description = str(_field(experience, "description", "summary", default="")).lower()
-        haystack = f"{name} {description}"
-        if query in haystack or any(
-            token in haystack for token in query.split() if len(token) >= 4
-        ):
-            return experience
+    result = await resolver.resolve(experience_query)
+    if result.status == ExperienceResolutionStatus.FOUND:
+        return await ExperienceDocument.get(result.experience_id)
 
     return None
 

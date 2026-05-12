@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.documents import (
     AppConfigDocument,
     AssignmentDocument,
+    ConversationSessionDocument,
     ConversationTurnDocument,
     EquineDocument,
     ExperienceDocument,
@@ -66,6 +67,7 @@ async def init_db() -> None:
             ServiceLogDocument,
             ProviderDocument,
             PolicyDocument,
+            ConversationSessionDocument,
             ConversationTurnDocument,
             ToolCallLogDocument,
         ],

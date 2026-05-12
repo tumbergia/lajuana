@@ -17,6 +17,12 @@ class ConversationTurnDocument(Document):
     normalized_text: str | None = None
     detected_intent: str | None = None
     reservation_id: str | None = None
+
+    # New fields for Gemini planner
+    user_message: str | None = None
+    planner_output: dict[str, Any] = Field(default_factory=dict)
+    tool_output: dict[str, Any] = Field(default_factory=dict)
+
     response_text: str | None = None
     status: str = Field(default="received")
     error_code: str | None = None

@@ -1,50 +1,60 @@
+from __future__ import annotations
+
 from typing import Any
 
-from app.assistant.intent_detector import DetectedIntent
+from app.assistant.prompts.planner import TOOL_RESULT_RESPONSE_SYSTEM_PROMPT
+from app.core.config import settings
+from app.llm.factory import get_llm_provider
+from app.schemas.assistant_plan import AssistantPlan, ToolResultResponse
 
 
-def compose_missing_data_response(intent: DetectedIntent) -> str:
-    missing: list[str] = []
+def cheap_tool_summary(*, plan: AssistantPlan, tool_output: dict[str, Any]) -> str:
+    if plan.tool_name == "check_experience_availability":
+        if tool_output.get("available") is True:
+            experience_name = tool_output.get("experience_name") or "la experiencia solicitada"
+            requested_date = tool_output.get("requested_date")
+            participant_count = tool_output.get("participant_count")
+            capacity_available = tool_output.get("capacity_available")
 
-    if intent.requested_date is None:
-        missing.append("la fecha")
-    if intent.participant_count is None:
-        missing.append("el número de personas")
-    if intent.experience_query is None:
-        missing.append("la experiencia o tipo de recorrido")
+            return (
+                f"Sí, hay disponibilidad para {experience_name} el {requested_date} "
+                f"para {participant_count} persona(s). Cupos disponibles: {capacity_available}. "
+                "Esto aún no confirma la reserva; para avanzar podemos continuar con la cotización "
+                "y el proceso de pago."
+            )
 
-    if not missing:
-        return "Necesito un dato adicional para revisar disponibilidad."
-
-    joined = ", ".join(missing)
-    return f"Para revisar disponibilidad necesito: {joined}."
-
-
-def compose_availability_response(tool_output: dict[str, Any]) -> str:
-    if tool_output.get("available") is True:
-        experience_name = tool_output.get("experience_name") or "esa experiencia"
-        requested_date = tool_output.get("requested_date")
-        participant_count = tool_output.get("participant_count")
-        capacity_available = tool_output.get("capacity_available")
-
-        return (
-            f"Sí, hay disponibilidad para {experience_name} el {requested_date} "
-            f"para {participant_count} persona(s). Cupos disponibles: {capacity_available}. "
-            "Esto todavía no confirma la reserva; para avanzar habría que generar la cotización "
-            "y luego validar el pago."
+        reasons = tool_output.get("blocking_reasons") or []
+        message = (
+            reasons[0].get("message")
+            if reasons and isinstance(reasons[0], dict)
+            else "No hay disponibilidad para esa solicitud."
         )
 
-    reasons = tool_output.get("blocking_reasons") or []
-    if not reasons:
-        return "No pude confirmar disponibilidad con la información disponible."
+        return f"No puedo avanzar con esa fecha: {message}"
 
-    main_reason = reasons[0]
-    message = main_reason.get("message") or "No hay disponibilidad para esa solicitud."
-    return f"No puedo avanzar con esa fecha: {message}"
+    return "Ya revisé la información solicitada, pero no pude generar una respuesta específica."
 
 
-def compose_general_response() -> str:
-    return (
-        "Puedo ayudarte a revisar disponibilidad de experiencias. "
-        "Envíame tipo de experiencia, fecha y número de personas."
+async def compose_tool_response(
+    *,
+    user_message: str,
+    plan: AssistantPlan,
+    tool_output: dict[str, Any],
+) -> str:
+    if settings.assistant_tool_response_mode == "cheap":
+        return cheap_tool_summary(plan=plan, tool_output=tool_output)
+
+    payload = {
+        "user_message": user_message,
+        "plan": plan.model_dump(mode="json"),
+        "tool_output": tool_output,
+    }
+
+    result = await get_llm_provider().generate_structured(
+        system=TOOL_RESULT_RESPONSE_SYSTEM_PROMPT,
+        user=str(payload),
+        response_model=ToolResultResponse,
+        temperature=0.4,
     )
+
+    return result.response
