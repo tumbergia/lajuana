@@ -60,6 +60,17 @@ api-format-check:
 api-typecheck:
 	cd apps/api && $(API_PY) -m mypy app
 
+api-mcp:
+	cd apps/api && $(API_PY) -m app.mcp_server.server
+
+api-ask-example:
+	curl -X POST http://localhost:8000/api/v1/ask \
+		-H "Content-Type: application/json" \
+		-d '{"message":"Hola, quiero reservar recorrido de medio día para 4 personas el 20 de junio de 2026","channel":"test","from_phone":"+573001112233"}'
+
+api-agentic-reset:
+	bash tooling/scripts/reset_agentic_layer.sh
+
 api-quality:
 	$(MAKE) api-lint
 	$(MAKE) api-format-check
