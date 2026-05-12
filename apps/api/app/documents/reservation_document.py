@@ -3,10 +3,18 @@ from decimal import Decimal
 
 from beanie import Indexed, PydanticObjectId
 from pydantic import EmailStr
+from pymongo import IndexModel
 
 from app.common.collections import Collections
 from app.common.enums import Channel, PaymentStatus, ReservationStatus
 from app.documents.base import AuditDocument
+
+ACTIVE_RESERVATION_STATUSES = [
+    ReservationStatus.QUOTED.value,
+    ReservationStatus.PENDING_PAYMENT.value,
+    ReservationStatus.PAYMENT_RECEIVED.value,
+    ReservationStatus.CONFIRMED.value,
+]
 
 
 class ReservationDocument(AuditDocument):
@@ -19,6 +27,8 @@ class ReservationDocument(AuditDocument):
     holder_email: EmailStr | None = None
     holder_phone: str | None = None
     requested_date: date | None = None
+    blocks_day: bool = False
+    availability_lock_key: str | None = None
     participant_count: int
     quoted_total_amount: Decimal | None = None
     currency: str = "COP"
@@ -35,3 +45,13 @@ class ReservationDocument(AuditDocument):
 
     class Settings:
         name = Collections.RESERVATIONS
+        indexes = [
+            IndexModel(
+                [("availability_lock_key", 1)],
+                unique=True,
+                partialFilterExpression={
+                    "blocks_day": True,
+                    "availability_lock_key": {"$type": "string"},
+                },
+            )
+        ]

@@ -376,6 +376,22 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         ],
         "service_docstring": "Crea reserva sin confirmarla ni descontar cupos.",
     },
+    "reservations_availability": {
+        "summary": "Consultar disponibilidad de reserva",
+        "description": (
+            "Consulta si una fecha está libre contra las reservas activas reales. "
+            "La disponibilidad se decide por la colección de reservas activas."
+        ),
+        "permissions": ["reservation.read"],
+        "responses": {
+            200: "Disponibilidad obtenida correctamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            422: "Datos inválidos.",
+        },
+        "error_codes": ["auth.unauthorized", "auth.forbidden", "common.validation_error"],
+        "service_docstring": "Consulta disponibilidad real por fecha contra reservas activas.",
+    },
     "reservations_list": {
         "summary": "Listar reservas",
         "description": "Lista reservas segun alcance del rol y filtros operativos.",
@@ -1060,6 +1076,7 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "schedules_update": ("PATCH", "/api/v1/schedules/{schedule_id}"),
     "schedules_delete": ("DELETE", "/api/v1/schedules/{schedule_id}"),
     "reservations_create": ("POST", "/api/v1/reservations"),
+    "reservations_availability": ("GET", "/api/v1/reservations/availability"),
     "reservations_list": ("GET", "/api/v1/reservations"),
     "reservations_get": ("GET", "/api/v1/reservations/{reservation_id}"),
     "reservations_update": ("PATCH", "/api/v1/reservations/{reservation_id}"),

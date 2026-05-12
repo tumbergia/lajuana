@@ -11,12 +11,15 @@ dependencies = [
 	"fastapi>=0.115.0,<1.0.0",
 	"uvicorn[standard]>=0.30.0,<1.0.0",
 	"pydantic-settings>=2.4.0,<3.0.0",
-    "pymongo>=4.0.0,<5.0.0",
-    "beanie>=1.0.0,<2.0.0",
-    "boto3>=1.34.0,<2.0.0",
-    "bcrypt>=4.1.0,<5.0.0",
-    "PyJWT>=2.9.0,<3.0.0",
-    "email-validator>=2.2.0,<3.0.0",
+	"pymongo>=4.0.0,<5.0.0",
+	"beanie>=1.0.0,<2.0.0",
+	"bcrypt>=4.1.0,<5.0.0",
+	"PyJWT>=2.9.0,<3.0.0",
+	"email-validator>=2.2.0,<3.0.0",
+	"google-genai>=1.0.0,<3.0.0",
+	"httpx>=0.27.0,<1.0.0",
+	"mcp>=1.13.0,<2.0.0",
+	"boto3>=1.34.0,<2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -24,7 +27,6 @@ dev = [
 	"pytest>=8.0.0,<9.0.0",
 	"ruff>=0.6.0,<1.0.0",
 	"mypy>=1.11.0,<2.0.0",
-	"httpx>=0.27.0,<1.0.0",
 ]
 
 [tool.ruff]
@@ -38,6 +40,7 @@ select = ["E", "F", "I", "UP", "B"]
 "app/api/docs.py" = ["E501"]
 "app/api/business_errors.py" = ["E501"]
 "tests/test_endpoint_response_matrix.py" = ["E501"]
+"app/ai/assistant/prompts/planner.py" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"

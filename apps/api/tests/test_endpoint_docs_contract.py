@@ -33,6 +33,7 @@ OPERATION_DOC_MAP = {
     "updateScheduleById": "schedules_update",
     "deactivateScheduleById": "schedules_delete",
     "createReservation": "reservations_create",
+    "checkReservationAvailability": "reservations_availability",
     "listReservations": "reservations_list",
     "getReservationById": "reservations_get",
     "updateReservationById": "reservations_update",

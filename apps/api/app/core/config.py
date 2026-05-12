@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,8 +14,8 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
     api_version: str = "v1"
 
-    mongodb_uri: str = "mongodb://localhost:27017"
-    mongodb_db_name: str = "lajuana"
+    mongodb_uri: str = Field("mongodb://localhost:27017", validation_alias="MONGODB_URI")
+    mongodb_db_name: str = Field("lajuana", validation_alias="DATABASE_NAME")
     mongodb_connect_timeout_ms: int = 2000
     app_skip_db_init: bool = False
 
@@ -32,8 +33,29 @@ class Settings(BaseSettings):
     storage_s3_secret_access_key: str | None = None
     storage_s3_presign_expiration_seconds: int = 900
 
+    chat_default_channel: str = "whatsapp"
+
+    assistant_enable_llm: bool = False
+    assistant_default_min_notice_days: int = 7
+
+    llm_provider: str = "gemini"
+
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-3-flash-preview"
+    gemini_temperature: float = 0.2
+    gemini_timeout_seconds: int = 30
+
+    assistant_tool_response_mode: str = "cheap"
+    assistant_min_plan_confidence: float = 0.55
+
+    whatsapp_verify_token: str = "change-me"
+    whatsapp_access_token: str = ""
+    whatsapp_phone_number_id: str = ""
+    whatsapp_api_version: str = "v23.0"
+    whatsapp_send_enabled: bool = False
+
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "apps/api/.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )

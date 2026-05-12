@@ -64,6 +64,7 @@ class ExperienceDocument(AuditDocument):
     standard_max_participants: int | None = None
     min_participants: int | None = None
     tags: list[str] = Field(default_factory=list)
+    aliases: list[str] = Field(default_factory=list)
 
     is_active: bool = True
     route_ids: list[PydanticObjectId] = Field(default_factory=list)

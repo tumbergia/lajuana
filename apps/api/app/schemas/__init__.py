@@ -46,6 +46,7 @@ from app.schemas.payment_proof import (
 from app.schemas.policy import PolicyCreateSchema, PolicyResponseSchema, PolicyUpdateSchema
 from app.schemas.provider import ProviderCreateSchema, ProviderResponseSchema, ProviderUpdateSchema
 from app.schemas.reservation import (
+    ReservationAvailabilityResponseSchema,
     ReservationCancelSchema,
     ReservationConfirmSchema,
     ReservationCreateSchema,
@@ -106,6 +107,7 @@ __all__ = [
     "ProviderResponseSchema",
     "ProviderUpdateSchema",
     "ReservationCancelSchema",
+    "ReservationAvailabilityResponseSchema",
     "ReservationConfirmSchema",
     "ReservationCreateSchema",
     "ReservationListItemSchema",

@@ -127,6 +127,7 @@ async def seed_experiences() -> dict[str, ExperienceDocument]:
             "duration_hours": 8,
             "base_capacity": 8,
             "is_active": True,
+            "aliases": ["chorros", "los chorros", "recorrido los chorros", "ruta los chorros"],
         },
         {
             "name": "El Pueblo de las Dos Mentiras",
@@ -136,6 +137,7 @@ async def seed_experiences() -> dict[str, ExperienceDocument]:
             "duration_hours": 8,
             "base_capacity": 8,
             "is_active": True,
+            "aliases": ["pueblo dos mentiras", "pueblo mentiras", "dos mentiras"],
         },
         {
             "name": "La Montana de Cristal",
@@ -145,6 +147,7 @@ async def seed_experiences() -> dict[str, ExperienceDocument]:
             "duration_hours": 10,
             "base_capacity": 6,
             "is_active": True,
+            "aliases": ["montaña cristal", "cristal"],
         },
         {
             "name": "Salamina - San Felix - Marulanda",
@@ -154,6 +157,7 @@ async def seed_experiences() -> dict[str, ExperienceDocument]:
             "duration_days": 3,
             "base_capacity": 6,
             "is_active": True,
+            "aliases": ["salamina", "san felix", "marulanda", "travesía"],
         },
         {
             "name": "Cruce del Alto del Roble",
@@ -163,6 +167,26 @@ async def seed_experiences() -> dict[str, ExperienceDocument]:
             "duration_hours": 5,
             "base_capacity": 10,
             "is_active": True,
+            "aliases": ["alto del roble", "cruce alto roble", "ruta corta"],
+        },
+        {
+            "name": "Recorrido de medio día",
+            "slug": "recorrido-medio-dia",
+            "description": "Experiencia corta ideal para quienes tienen poco tiempo. Incluye paseo en mula por senderos.",  # noqa: E501
+            "level": ExperienceLevel.BASIC,
+            "duration_hours": 4,
+            "base_capacity": 10,
+            "is_active": True,
+            "aliases": [
+                "medio día",
+                "medio dia",
+                "recorrido medio día",
+                "recorrido medio dia",
+                "recorrido de medio día",
+                "experiencia corta",
+                "plan corto",
+                "paseo corto",
+            ],
         },
     ]
     inserted: dict[str, ExperienceDocument] = {}
@@ -715,7 +739,7 @@ async def _refresh_schedule_occupancy_from_confirmed(
             schedule.capacity_total - reserved - schedule.internal_slots - schedule.blocked_slots,
         )
         status = schedule.status
-        if schedule.is_active and schedule.status != ScheduleStatus.CLOSED:
+        if schedule.status != ScheduleStatus.CLOSED:
             status = ScheduleStatus.FULL if available_slots == 0 else ScheduleStatus.OPEN
         await collection.update_one(
             {"_id": ObjectId(str(schedule.id))},

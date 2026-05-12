@@ -47,17 +47,6 @@ class ConfigService:
     async def update_reservation_rules(
         self, payload: ReservationRulesUpdateSchema
     ) -> ReservationRulesSchema:
-        config = await self.update_reservation_rules_document(payload)
-        if config.reservation_rules is None:
-            return ReservationRulesSchema(
-                min_days_in_advance=DEFAULT_RESERVATION_MIN_DAYS,
-                require_payment_proof_for_confirmation=True,
-            )
-        return ReservationRulesSchema.model_validate(config.reservation_rules.model_dump())
-
-    async def update_reservation_rules_document(
-        self, payload: ReservationRulesUpdateSchema
-    ) -> AppConfigDocument:
         if payload.min_days_in_advance is not None and payload.min_days_in_advance < 0:
             raise ApiError(
                 status_code=400,

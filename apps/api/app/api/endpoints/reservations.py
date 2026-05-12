@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
@@ -9,6 +10,7 @@ from app.documents import UserDocument
 from app.schemas.participant import ParticipantCreateSchema, ParticipantResponseSchema
 from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofResponseSchema
 from app.schemas.reservation import (
+    ReservationAvailabilityResponseSchema,
     ReservationCancelSchema,
     ReservationConfirmSchema,
     ReservationCreateSchema,
@@ -49,6 +51,22 @@ async def create_reservation(
 ) -> ReservationResponseSchema:
     doc = await reservation_service.create(payload.model_dump(), actor_id=current_user.id)
     return reservation_to_response(doc)
+
+
+@router.get(
+    "/availability",
+    response_model=ReservationAvailabilityResponseSchema,
+    summary=ENDPOINT_DOCS["reservations_availability"]["summary"],
+    description=endpoint_description("reservations_availability"),
+    operation_id="checkReservationAvailability",
+    responses=endpoint_responses("reservations_availability"),
+)
+async def check_reservation_availability(
+    date: date,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_READ))],
+) -> ReservationAvailabilityResponseSchema:
+    availability = await reservation_service.check_availability(requested_date=date)
+    return ReservationAvailabilityResponseSchema.model_validate(availability)
 
 
 @router.get(

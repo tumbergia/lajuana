@@ -91,7 +91,7 @@ PROTECTED_ENDPOINTS = [
             "content_type": "application/pdf",
             "size_bytes": 1000,
             "sha256": "abc",
-            "storage_key": "payment_proof/mock.pdf",
+            "content_base64": "SG9sYQ==",
         },
     ),
     (

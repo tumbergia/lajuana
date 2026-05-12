@@ -64,6 +64,7 @@ class ExperienceCreateSchema(BaseModel):
     standard_max_participants: int | None = Field(default=None, ge=1)
     min_participants: int | None = Field(default=None, ge=1)
     tags: list[str] = Field(default_factory=list)
+    aliases: list[str] = Field(default_factory=list)
 
     is_active: bool = True
 
@@ -89,6 +90,7 @@ class ExperienceUpdateSchema(BaseModel):
     standard_max_participants: int | None = Field(default=None, ge=1)
     min_participants: int | None = Field(default=None, ge=1)
     tags: list[str] | None = None
+    aliases: list[str] | None = None
 
     is_active: bool | None = None
 
@@ -117,6 +119,7 @@ class ExperienceResponseSchema(AuditMetadataSchema):
     standard_max_participants: int | None
     min_participants: int | None
     tags: list[str]
+    aliases: list[str]
 
     is_active: bool
 
