@@ -127,7 +127,16 @@ async def seed_experiences() -> dict[str, ExperienceDocument]:
             "duration_hours": 8,
             "base_capacity": 8,
             "is_active": True,
-            "aliases": ["chorros", "los chorros", "recorrido los chorros", "ruta los chorros"],
+            "aliases": [
+                "chorros",
+                "los chorros",
+                "recorrido los chorros",
+                "ruta los chorros",
+                "un día",
+                "día completo",
+                "paseo de un día",
+            ],
+            "tags": ["café", "cafe", "naturaleza", "cascada"],
         },
         {
             "name": "El Pueblo de las Dos Mentiras",
@@ -186,7 +195,11 @@ async def seed_experiences() -> dict[str, ExperienceDocument]:
                 "experiencia corta",
                 "plan corto",
                 "paseo corto",
+                "paseo café",
+                "cafe",
+                "café",
             ],
+            "tags": ["café", "cafe", "senderismo"],
         },
     ]
     inserted: dict[str, ExperienceDocument] = {}

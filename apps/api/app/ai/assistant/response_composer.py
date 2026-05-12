@@ -8,6 +8,22 @@ from app.core.config import settings
 from app.schemas.assistant_plan import AssistantPlan, ToolResultResponse
 
 
+def _fmt_duration(val: Any) -> str:
+    if val is None:
+        return ""
+    text = str(val)
+    if text.isdigit():
+        h = int(text)
+        return f"{h} hora(s)" if h < 24 else f"{h // 24} día(s)"
+    return text
+
+
+def _fmt_price(val: Any) -> str:
+    if val is None:
+        return ""
+    return f"Desde ${val:,} COP"
+
+
 def cheap_tool_summary(*, plan: AssistantPlan, tool_output: dict[str, Any]) -> str:
     if plan.tool_name == "check_experience_availability":
         if tool_output.get("available") is True:
@@ -19,7 +35,7 @@ def cheap_tool_summary(*, plan: AssistantPlan, tool_output: dict[str, Any]) -> s
             return (
                 f"Sí, hay disponibilidad para {experience_name} el {requested_date} "
                 f"para {participant_count} persona(s). Cupos disponibles: {capacity_available}. "
-                "Esto aún no confirma la reserva; para avanzar podemos continuar con la cotización "
+                "Esto aún no confirma la reserva; para avanzar puedes continuar con la cotización "
                 "y el proceso de pago."
             )
 
@@ -31,6 +47,32 @@ def cheap_tool_summary(*, plan: AssistantPlan, tool_output: dict[str, Any]) -> s
         )
 
         return f"No puedo avanzar con esa fecha: {message}"
+
+    if plan.tool_name == "list_experiences":
+        items = tool_output.get("experiences") or []
+        if not items:
+            return "Actualmente no hay experiencias activas en el catálogo."
+
+        lines: list[str] = []
+        for exp in items:
+            name = exp.get("name", "")
+            desc = exp.get("short_description", "")
+            dur = _fmt_duration(exp.get("duration"))
+            price = _fmt_price(exp.get("starting_price"))
+            parts = [name]
+            if desc:
+                parts.append(desc)
+            if dur:
+                parts.append(dur)
+            if price:
+                parts.append(price)
+            lines.append(" • ".join(parts))
+
+        return (
+            "Estas son las experiencias que tenemos disponibles:\n\n"
+            + "\n\n".join(lines)
+            + "\n\n¿Te gustaría saber más sobre alguna o te ayudo a revisar disponibilidad?"
+        )
 
     return "Ya revisé la información solicitada, pero no pude generar una respuesta específica."
 

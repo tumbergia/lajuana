@@ -89,12 +89,16 @@ Mantiene trazabilidad completa: cada turno tiene `trace_id`, el plan se guarda a
 Una sola llamada a Gemini con `response_model=AssistantPlan`. El prompt (`prompts/planner.py`) instruye:
 
 - Clasificar intención en 4 acciones: `final_response`, `tool_call`, `ask_clarifying_question`, `human_handoff`
-- Extraer argumentos estructurados: `experience_query`, `requested_date`, `participant_count`
+- Extraer argumentos estructurados: `experience_query`, `experience_id`, `requested_date`, `participant_count`
+- Invocar `list_experiences` para consultas de catálogo ("qué ofrecen", "planes", "experiencias")
+- Invocar `check_experience_availability` cuando hay fecha + participantes + experiencia
 - Evaluar nivel de riesgo: `low` / `medium` / `high` / `critical`
 - Nunca inventar datos operativos, precios ni políticas de pago
 - Auditabilidad: cada decisión incluye `audit_summary` de una línea
 
 Temperatura: 0.1 (determinístico).
+
+El planner acepta inyección del caller para testing (constructor `AssistantOrchestrator(planner=...)`).
 
 ### ToolPolicyEngine (`ai/assistant/policy.py`)
 
@@ -109,13 +113,13 @@ Guarda rail antes de ejecutar tools. Evalúa:
 | Args faltantes | `requested_date` o `participant_count` ausentes | Bloquea + detalle |
 | Tool desconocida | no está en `READ_TOOLS` ni `WRITE_TOOLS` | Bloquea |
 
-Tools autorizadas como lectura: solo `check_experience_availability` (y por añadidura `list_experiences`).
+Tools autorizadas como lectura: `check_experience_availability` y `list_experiences`.
 
 ### ResponseComposer (`ai/assistant/response_composer.py`)
 
 Dos modos:
 
-- **cheap** (`settings.assistant_tool_response_mode == "cheap"`): template `cheap_tool_summary()` que construye texto a partir del plan y tool output. Sin LLM, rápido y barato.
+- **cheap** (`settings.assistant_tool_response_mode == "cheap"`): template `cheap_tool_summary()` que construye texto a partir del plan y tool output. Sin LLM, rápido y barato. Soporta `check_experience_availability` y `list_experiences` (formatea catálogo con nombre, descripción, duración).
 - **llm**: segunda llamada Gemini con `response_model=ToolResultResponse`, temperatura 0.4, que recibe `user_message`, `plan` y `tool_output` para redactar una respuesta natural.
 
 ### MCP Tools (`ai/mcp/`)
@@ -134,9 +138,18 @@ list_experiences              → tools/catalog.py
 4. Retorna `available`, `blocking_reasons`, capacidad, etc.
 5. Loguea cada llamada en `ToolCallLogDocument`
 
+`ExperienceCatalogResolver` soporta:
+- Búsqueda por slug exacto, nombre, alias o ID de MongoDB
+- Normalización de acentos ("cafe" → "café", "dia" → "día")
+- Token overlap con longitud mínima 3 caracteres
+- Búsqueda en `tags` además de name, slug, description, aliases
+- Inyección de datos mock para testing unitario
+- Retorna `FOUND`, `AMBIGUOUS` (múltiples candidatos) o `NOT_FOUND`
+
 `list_experiences`:
 1. Query `ExperienceDocument.find()` con filtro opcional `is_active`
 2. Retorna resumen: nombre, slug, duración, dificultad, precio desde, tags
+3. Seed incluye aliases expandidos (`un día`, `día completo`, `cafe`, `café`) y tags de búsqueda
 
 ### LLM Provider (`ai/providers/`)
 
