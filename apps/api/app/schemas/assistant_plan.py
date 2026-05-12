@@ -22,6 +22,7 @@ class ToolArgs(BaseModel):
     experience_id: str | None = None
     requested_date: str | None = None
     participant_count: int | None = None
+    participants_count: int | None = None
 
 
 class AssistantPlan(BaseModel):

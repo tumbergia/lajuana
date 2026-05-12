@@ -7,6 +7,12 @@ from app.ai.assistant.planner import GeminiPlanner
 from app.ai.assistant.policy import ToolPolicyEngine
 from app.ai.assistant.response_composer import compose_tool_response
 from app.ai.mcp import registry
+from app.ai.providers.gemini_provider import (
+    GeminiModelUnavailable,
+    GeminiProviderError,
+    GeminiResourceExhausted,
+)
+from app.core.logging import logger
 from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
@@ -22,7 +28,17 @@ class AssistantOrchestrator:
 
     async def ask(self, request: AskRequest) -> AskResponse:
         trace_id = request.trace_id or str(uuid4())
-        conversation_key = request.conversation_id or request.from_phone or trace_id
+        conversation_id = request.conversation_id
+        conversation_key = conversation_id or request.from_phone or trace_id
+        flow_started = time.perf_counter()
+
+        logger.info(
+            "[conversation_id=%s] Message received | channel=%s | from=%s | message=%.120s",
+            conversation_id,
+            request.channel,
+            request.from_phone,
+            request.message,
+        )
 
         session = await self._load_or_create_session(
             channel=request.channel,
@@ -38,13 +54,88 @@ class AssistantOrchestrator:
             from_phone=request.from_phone,
             user_message=request.message,
         )
+        turn.conversation_id = conversation_key
         await turn.insert()
 
-        plan = await self._planner.plan(
-            user_message=request.message,
-            channel=request.channel,
-            conversation_context=str(session.slot_values) if session.slot_values else None,
+        recent_turns = (
+            await ConversationTurnDocument.find(
+                ConversationTurnDocument.channel == request.channel,
+                ConversationTurnDocument.conversation_id == conversation_key,
+            )
+            .sort(-ConversationTurnDocument.created_at)
+            .limit(5)
+            .to_list()
         )
+
+        history_lines = []
+        for t in reversed(recent_turns):
+            if str(t.id) == str(turn.id):
+                continue
+            if t.user_message:
+                history_lines.append(f"Usuario: {t.user_message}")
+            if t.response_text:
+                history_lines.append(f"Asistente: {t.response_text}")
+
+        conversation_history = "\n".join(history_lines)
+
+        # Enrich context with slot values + history
+        context_parts = []
+        if session.slot_values:
+            context_parts.append(f"Datos de la sesión: {session.slot_values}")
+        if conversation_history:
+            context_parts.append(f"Historial de la conversación:\n{conversation_history}")
+        enriched_context = "\n\n".join(context_parts) if context_parts else None
+
+        try:
+            plan = await self._planner.plan(
+                user_message=request.message,
+                channel=request.channel,
+                conversation_context=enriched_context,
+                conversation_id=conversation_id,
+            )
+        except GeminiResourceExhausted:
+            turn.status = "llm_unavailable"
+            await turn.save()
+            return AskResponse(
+                trace_id=trace_id,
+                action=AssistantAction.FINAL_RESPONSE,
+                planner_output={},
+                tool_output={},
+                response=(
+                    "En este momento no puedo procesar tu solicitud porque el "
+                    "servicio de IA está sobrepasado en su cuota gratuita. "
+                    "Por favor intenta de nuevo en unos minutos o contacta "
+                    "a un asesor directamente para ayudarte."
+                ),
+            )
+        except GeminiModelUnavailable:
+            turn.status = "llm_unavailable"
+            await turn.save()
+            return AskResponse(
+                trace_id=trace_id,
+                action=AssistantAction.HUMAN_HANDOFF,
+                planner_output={},
+                tool_output={},
+                response=(
+                    "El modelo de IA que uso actualmente no está disponible. "
+                    "Voy a transferirte con un asesor humano para que puedas "
+                    "recibir atención personalizada."
+                ),
+            )
+        except GeminiProviderError:
+            turn.status = "llm_error"
+            await turn.save()
+            return AskResponse(
+                trace_id=trace_id,
+                action=AssistantAction.HUMAN_HANDOFF,
+                planner_output={},
+                tool_output={},
+                response=(
+                    "Ocurrió un error temporal en mi sistema de procesamiento. "
+                    "Voy a transferirte con un asesor humano para que no te quedes "
+                    "sin atención."
+                ),
+            )
 
         turn.planner_output = plan.model_dump(mode="json")
         await turn.save()
@@ -104,6 +195,15 @@ class AssistantOrchestrator:
             turn.status = "completed"
             await turn.save()
 
+            total_ms = int((time.perf_counter() - flow_started) * 1000)
+            logger.info(
+                "[conversation_id=%s] Final response | action=%s | total_ms=%d | trace_id=%s",
+                conversation_id,
+                plan.action.value,
+                total_ms,
+                trace_id,
+            )
+
             return AskResponse(
                 trace_id=trace_id,
                 action=plan.action,
@@ -136,6 +236,17 @@ class AssistantOrchestrator:
             session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
             await session.save()
 
+            total_ms = int((time.perf_counter() - flow_started) * 1000)
+            logger.info(
+                "[conversation_id=%s] Blocked by policy | reason=%s | tool=%s |"
+                " total_ms=%d | trace_id=%s",
+                conversation_id,
+                policy_decision.reason,
+                plan.tool_name,
+                total_ms,
+                trace_id,
+            )
+
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.ASK_CLARIFYING_QUESTION,
@@ -152,6 +263,7 @@ class AssistantOrchestrator:
         try:
             tool_output = await registry.call(
                 plan.tool_name or "",
+                conversation_id=conversation_id,
                 trace_id=trace_id,
                 conversation_turn_id=str(turn.id),
                 **plan.arguments.model_dump(exclude_none=True),
@@ -182,6 +294,7 @@ class AssistantOrchestrator:
             user_message=request.message,
             plan=plan,
             tool_output=tool_output,
+            conversation_id=conversation_id,
         )
 
         turn.tool_output = tool_output
@@ -195,6 +308,17 @@ class AssistantOrchestrator:
         session.turn_count += 1
         session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
         await session.save()
+
+        total_ms = int((time.perf_counter() - flow_started) * 1000)
+        logger.info(
+            "[conversation_id=%s] Final response | action=%s | tool=%s |"
+            " total_ms=%d | trace_id=%s",
+            conversation_id,
+            plan.action.value if plan.action else None,
+            plan.tool_name,
+            total_ms,
+            trace_id,
+        )
 
         return AskResponse(
             trace_id=trace_id,

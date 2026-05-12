@@ -237,6 +237,13 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "min_days_in_advance invalido",
         "detail_keys": ("min_days_in_advance",),
     },
+    "B400-032": {
+        "http_status": 400,
+        "code": ErrorCode.EXPERIENCE_PRICING_MISSING,
+        "name": "Experiencia sin tarifas",
+        "trigger": "pricing es nulo o tiers vacio",
+        "detail_keys": ("experience_id",),
+    },
     "B404-001": {
         "http_status": 404,
         "code": ErrorCode.USER_NOT_FOUND,
@@ -440,6 +447,27 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "el actor intenta desactivarse a si mismo",
         "detail_keys": ("user_id",),
     },
+    "B409-017": {
+        "http_status": 409,
+        "code": ErrorCode.EXPERIENCE_INACTIVE,
+        "name": "Experiencia inactiva",
+        "trigger": "is_active es False",
+        "detail_keys": ("experience_id",),
+    },
+    "B409-018": {
+        "http_status": 409,
+        "code": ErrorCode.SCHEDULE_EXPERIENCE_MISMATCH,
+        "name": "Horario no corresponde a experiencia",
+        "trigger": "schedule.experience_id != experience_id",
+        "detail_keys": ("experience_id", "schedule_id"),
+    },
+    "B409-019": {
+        "http_status": 409,
+        "code": ErrorCode.EXPERIENCE_PRICING_TIER_NOT_FOUND,
+        "name": "Sin tarifa para cantidad de participantes",
+        "trigger": "participants_count fuera de todos los tiers",
+        "detail_keys": ("participant_count",),
+    },
 }
 
 
@@ -499,6 +527,11 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_400": (),
         "cases_404": ("B404-002",),
         "cases_409": (),
+    },
+    ("POST", "/api/v1/experiences/{experience_id}/quote"): {
+        "cases_400": ("B400-032",),
+        "cases_404": ("B404-002", "B404-003"),
+        "cases_409": ("B409-017", "B409-018", "B409-019"),
     },
     ("POST", "/api/v1/schedules"): {
         "cases_400": ("B400-005", "B400-006", "B400-007", "B400-008"),

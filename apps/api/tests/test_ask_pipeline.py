@@ -23,6 +23,22 @@ class FakeDoc:
         pass
 
 
+async def _empty_turn_list() -> list:
+    return []
+
+
+class FindableFakeDoc(FakeDoc):
+    channel = True
+    conversation_id = True
+    created_at = True
+
+    @classmethod
+    def find(cls, *args: Any, **kwargs: Any) -> SimpleNamespace:
+        return SimpleNamespace(
+            sort=lambda _: SimpleNamespace(limit=lambda _: SimpleNamespace(to_list=_empty_turn_list))
+        )
+
+
 def _make_plan(**overrides: Any) -> AssistantPlan:
     data = {
         "action": AssistantAction.FINAL_RESPONSE,
@@ -46,7 +62,7 @@ class MockPlanner:
 
 
 def _apply_mocks(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("app.ai.assistant.orchestrator.ConversationTurnDocument", FakeDoc)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.ConversationTurnDocument", FindableFakeDoc)
     monkeypatch.setattr("app.ai.assistant.orchestrator.ToolCallLogDocument", FakeDoc)
 
     async def fake_load_session(self: Any, **_: Any) -> Any:
@@ -225,7 +241,7 @@ def test_conversation_turn_is_completed(monkeypatch: pytest.MonkeyPatch) -> None
 
     saved_status: list[str] = []
 
-    class TrackingTurnDoc(FakeDoc):
+    class TrackingTurnDoc(FindableFakeDoc):
         async def save(self) -> None:
             saved_status.append(getattr(self, "status", "unknown"))
 

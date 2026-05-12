@@ -11,7 +11,7 @@ class ToolPolicyDecision:
 
 
 class ToolPolicyEngine:
-    READ_TOOLS = {"check_experience_availability", "list_experiences"}
+    READ_TOOLS = {"check_experience_availability", "list_experiences", "quote_experience"}
     WRITE_TOOLS: set[str] = set()
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
@@ -69,6 +69,27 @@ class ToolPolicyEngine:
                 return ToolPolicyDecision(
                     allowed=False,
                     reason=f"missing_required_arguments:{','.join(missing)}",
+                )
+
+        if plan.tool_name == "quote_experience":
+            args = plan.arguments.model_dump()
+            has_experience = (
+                args.get("experience_id") not in {None, ""}
+                or args.get("experience_query") not in {None, ""}
+            )
+            has_participants = (
+                args.get("participant_count") not in {None, ""}
+                or args.get("participants_count") not in {None, ""}
+            )
+            if not has_experience:
+                return ToolPolicyDecision(
+                    allowed=False,
+                    reason="missing_required_arguments:experience_id_or_experience_query",
+                )
+            if not has_participants:
+                return ToolPolicyDecision(
+                    allowed=False,
+                    reason="missing_required_arguments:participant_count_or_participants_count",
                 )
 
         return ToolPolicyDecision(allowed=True)

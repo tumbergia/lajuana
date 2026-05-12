@@ -257,7 +257,8 @@ class ReservationService:
         return len(reservations) > 0
 
     async def find_by_code_or_id(self, identifier: str) -> ReservationDocument | None:
-        """Busca una reserva por su ObjectId (24 caracteres) o usando coincidencia parcial del código."""
+        """Busca una reserva por su ObjectId (24 caracteres)
+        o usando coincidencia parcial del código."""
         if len(identifier) == 24:
             doc = await ReservationDocument.get(identifier)
             if doc:

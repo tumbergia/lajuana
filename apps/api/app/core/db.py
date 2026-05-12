@@ -45,7 +45,8 @@ async def init_db() -> None:
         )
     except PyMongoError:
         # Keep the API bootable even if the migration cannot run right now.
-        # The request path still depends on Mongo, but startup should not fail on a best-effort fixup.
+        # The request path still depends on Mongo, but startup
+        # should not fail on a best-effort fixup.
         pass
 
     from beanie import init_beanie

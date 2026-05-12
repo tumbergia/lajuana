@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+from beanie import PydanticObjectId
 from pymongo.errors import DuplicateKeyError
 
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument
+from app.documents.schedule_document import ScheduleDocument
 from app.schemas.experience import (
     ExperienceCreateSchema,
     ExperiencePricingSchema,
     ExperiencePricingTierSchema,
+    ExperienceQuoteRequestSchema,
+    ExperienceQuoteResponseSchema,
     ExperienceUpdateSchema,
 )
 
@@ -254,3 +258,100 @@ class ExperienceService:
         doc.is_active = False
         await doc.save()
         return doc
+
+    async def quote(
+        self,
+        experience_id: str | PydanticObjectId,
+        payload: ExperienceQuoteRequestSchema,
+    ) -> ExperienceQuoteResponseSchema:
+        try:
+            object_id = (
+                experience_id
+                if isinstance(experience_id, PydanticObjectId)
+                else PydanticObjectId(str(experience_id))
+            )
+        except Exception:
+            raise ApiError(
+                status_code=422,
+                code=ErrorCode.VALIDATION_ERROR,
+                message="El formato del ID de experiencia no es valido.",
+            )
+
+        experience = await ExperienceDocument.get(object_id)
+
+        if experience is None:
+            raise ApiError(
+                status_code=404,
+                code=ErrorCode.EXPERIENCE_NOT_FOUND,
+                message="La experiencia solicitada no existe.",
+            )
+
+        if experience.is_active is False:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.EXPERIENCE_INACTIVE,
+                message="La experiencia esta inactiva y no puede cotizarse.",
+            )
+
+        if payload.schedule_id:
+            schedule = await ScheduleDocument.get(PydanticObjectId(payload.schedule_id))
+            if schedule is None:
+                raise ApiError(
+                    status_code=404,
+                    code=ErrorCode.SCHEDULE_NOT_FOUND,
+                    message="El horario especificado no existe.",
+                )
+            if schedule.experience_id != object_id:
+                raise ApiError(
+                    status_code=409,
+                    code=ErrorCode.SCHEDULE_EXPERIENCE_MISMATCH,
+                    message="El horario no corresponde a esta experiencia.",
+                )
+
+        pricing = experience.pricing
+        if pricing is None or not pricing.tiers:
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.EXPERIENCE_PRICING_MISSING,
+                message="Esta experiencia no tiene tarifas configuradas.",
+            )
+
+        participants_count = payload.participants_count
+        matching_tier = None
+
+        for tier in pricing.tiers:
+            if tier.min_participants <= participants_count <= tier.max_participants:
+                matching_tier = tier
+                break
+
+        if matching_tier is None:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.EXPERIENCE_PRICING_TIER_NOT_FOUND,
+                message=f"No hay una tarifa disponible para {participants_count} participantes.",
+            )
+
+        unit_price = matching_tier.price_per_person
+        subtotal = unit_price * participants_count
+        currency = pricing.currency
+
+        notes_parts = []
+        if pricing.pricing_notes:
+            notes_parts.append(pricing.pricing_notes)
+        if payload.special_conditions:
+            notes_parts.append("Condiciones especiales: " + ", ".join(payload.special_conditions))
+        notes = " | ".join(notes_parts) if notes_parts else None
+
+        return ExperienceQuoteResponseSchema(
+            experience_id=str(experience.id),
+            participants_count=participants_count,
+            unit_price=unit_price,
+            subtotal=subtotal,
+            currency=currency,
+            pricing_tier=ExperiencePricingTierSchema(
+                min_participants=matching_tier.min_participants,
+                max_participants=matching_tier.max_participants,
+                price_per_person=unit_price,
+            ),
+            notes=notes,
+        )

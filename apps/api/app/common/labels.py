@@ -34,6 +34,10 @@ class ErrorCode:
         "experience.standard_capacity_out_of_pricing_range"
     )
     EXPERIENCE_INCLUSIONS_REQUIRED = "experience.inclusions_required"
+    EXPERIENCE_INACTIVE = "experience.inactive"
+    EXPERIENCE_PRICING_MISSING = "experience.pricing_missing"
+    EXPERIENCE_PRICING_TIER_NOT_FOUND = "experience.pricing_tier_not_found"
+    SCHEDULE_EXPERIENCE_MISMATCH = "schedule.experience_mismatch"
 
     SCHEDULE_NOT_FOUND = "schedule.not_found"
     SCHEDULE_INVALID_CAPACITY = "schedule.invalid_capacity"

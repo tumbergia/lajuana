@@ -272,6 +272,35 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "error_codes": ["auth.unauthorized", "auth.forbidden", "experience.not_found"],
         "service_docstring": "Realiza inactivación lógica de experiencia.",
     },
+    "experiences_quote": {
+        "summary": "Cotizar experiencia",
+        "description": (
+            "Calcula la cotización oficial para una experiencia según cantidad "
+            "de participantes y tabla tarifaria vigente."
+        ),
+        "permissions": ["experience.read"],
+        "responses": {
+            200: "Cotización calculada correctamente.",
+            400: "La experiencia no tiene tarifas configuradas.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            404: "Experiencia o schedule no existe.",
+            409: "Conflicto de estado o tarifa no disponible.",
+            422: "Datos inválidos.",
+        },
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.forbidden",
+            "experience.not_found",
+            "schedule.not_found",
+            "experience.inactive",
+            "experience.pricing_missing",
+            "experience.pricing_tier_not_found",
+            "schedule.experience_mismatch",
+            "common.validation_error",
+        ],
+        "service_docstring": "Calcula cotización oficial basada en tarifas y participantes.",
+    },
     "schedules_create": {
         "summary": "Crear fecha operativa",
         "description": "Crea una fecha operativa reservable de una experiencia.",
@@ -1070,6 +1099,7 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "experiences_get": ("GET", "/api/v1/experiences/{experience_id}"),
     "experiences_update": ("PATCH", "/api/v1/experiences/{experience_id}"),
     "experiences_delete": ("DELETE", "/api/v1/experiences/{experience_id}"),
+    "experiences_quote": ("POST", "/api/v1/experiences/{experience_id}/quote"),
     "schedules_create": ("POST", "/api/v1/schedules"),
     "schedules_list": ("GET", "/api/v1/schedules"),
     "schedules_get": ("GET", "/api/v1/schedules/{schedule_id}"),
@@ -1281,6 +1311,7 @@ def _detail_example_value(detail_key: str) -> object:
         "min_days_in_advance": -1,
         "experience_id": "660000000000000000000101",
         "schedule_id": "660000000000000000000401",
+        "participant_count": 4,
         "payment_proof_id": "660000000000000000000501",
         "equine_id": "660000000000000000000601",
         "saddle_id": "660000000000000000000701",

@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     llm_provider: str = "gemini"
 
     gemini_api_key: str = ""
+    gemini_api_key_2: str = ""
     gemini_model: str = "gemini-3-flash-preview"
     gemini_temperature: float = 0.2
     gemini_timeout_seconds: int = 30

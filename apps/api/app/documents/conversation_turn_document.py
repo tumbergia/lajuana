@@ -19,6 +19,7 @@ class ConversationTurnDocument(Document):
     reservation_id: str | None = None
 
     # New fields for Gemini planner
+    conversation_id: str | None = None
     user_message: str | None = None
     planner_output: dict[str, Any] = Field(default_factory=dict)
     tool_output: dict[str, Any] = Field(default_factory=dict)
@@ -32,6 +33,7 @@ class ConversationTurnDocument(Document):
         name = "conversation_turns"
         indexes = [
             "trace_id",
+            "conversation_id",
             "channel",
             "external_message_id",
             "from_phone",

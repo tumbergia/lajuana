@@ -40,6 +40,7 @@ async def receive_webhook(request: Request) -> dict[str, Any]:
                 message=message.text,
                 channel="whatsapp",
                 from_phone=message.from_phone,
+                conversation_id=message.from_phone,
             )
         )
 
