@@ -32,7 +32,10 @@ app = FastAPI(
         {"name": "Proveedores", "description": "Proveedores externos."},
         {"name": "Polizas", "description": "Polizas asociadas a reservas."},
         {"name": "Comprobantes de pago", "description": "Consulta y validacion de comprobantes."},
-        {"name": "WhatsApp", "description": "Webhook y orquestacion conversacional publica para WhatsApp."},
+        {
+            "name": "WhatsApp",
+            "description": "Webhook y orquestacion conversacional publica para WhatsApp.",
+        },
         {"name": "Sync", "description": "Sincronizacion incremental offline-first."},
         {"name": "Files", "description": "Inicializacion y consolidacion de uploads."},
         {"name": "health", "description": "Salud y diagnostico."},

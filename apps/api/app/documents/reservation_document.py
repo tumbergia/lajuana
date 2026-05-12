@@ -2,13 +2,12 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from beanie import Indexed, PydanticObjectId
-from pymongo import IndexModel
 from pydantic import EmailStr
+from pymongo import IndexModel
 
 from app.common.collections import Collections
 from app.common.enums import Channel, PaymentStatus, ReservationStatus
 from app.documents.base import AuditDocument
-
 
 ACTIVE_RESERVATION_STATUSES = [
     ReservationStatus.QUOTED.value,

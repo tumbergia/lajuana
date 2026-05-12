@@ -12,7 +12,6 @@ from app.schemas.auth import (
     UserResponseSchema,
     UserUpdateSchema,
 )
-from app.schemas.chat import ChatRequestSchema, ChatResponseSchema
 from app.schemas.common import ApiErrorResponse
 from app.schemas.config import (
     EmergencyCatalogContactSchema,
@@ -47,8 +46,8 @@ from app.schemas.payment_proof import (
 from app.schemas.policy import PolicyCreateSchema, PolicyResponseSchema, PolicyUpdateSchema
 from app.schemas.provider import ProviderCreateSchema, ProviderResponseSchema, ProviderUpdateSchema
 from app.schemas.reservation import (
-    ReservationCancelSchema,
     ReservationAvailabilityResponseSchema,
+    ReservationCancelSchema,
     ReservationConfirmSchema,
     ReservationCreateSchema,
     ReservationListItemSchema,
@@ -78,8 +77,6 @@ from app.schemas.sync import (
 
 __all__ = [
     "ApiErrorResponse",
-    "ChatRequestSchema",
-    "ChatResponseSchema",
     "AssignmentCreateSchema",
     "AssignmentResponseSchema",
     "AssignmentUpdateSchema",

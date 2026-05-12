@@ -61,8 +61,17 @@ class Settings(BaseSettings):
     chat_checkpoint_collection: str = "chat_checkpoints"
     chat_default_channel: str = "whatsapp"
 
+    assistant_enable_llm: bool = False
+    assistant_default_min_notice_days: int = 7
+
+    whatsapp_verify_token: str = "change-me"
+    whatsapp_access_token: str = ""
+    whatsapp_phone_number_id: str = ""
+    whatsapp_api_version: str = "v23.0"
+    whatsapp_send_enabled: bool = False
+
     model_config = SettingsConfigDict(
-        env_file=(".env", "apps/api/.env", "prueba-rag/.env"),
+        env_file=(".env", "apps/api/.env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )

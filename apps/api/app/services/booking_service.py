@@ -2,7 +2,7 @@ from datetime import date
 
 from beanie import PydanticObjectId
 
-from app.common.enums import Channel, ReservationStatus, ScheduleStatus
+from app.common.enums import Channel, ReservationStatus
 from app.core.config import settings
 from app.documents import ReservationDocument, ScheduleDocument
 from app.schemas.reservation import ReservationCreateSchema

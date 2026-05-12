@@ -4,13 +4,11 @@ from pymongo.errors import DuplicateKeyError
 
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-from app.documents import ExperienceDocument, ScheduleDocument
+from app.documents import ExperienceDocument
 from app.schemas.experience import (
     ExperienceCreateSchema,
     ExperiencePricingSchema,
     ExperiencePricingTierSchema,
-    ExperienceQuoteRequestSchema,
-    ExperienceQuoteResponseSchema,
     ExperienceUpdateSchema,
 )
 

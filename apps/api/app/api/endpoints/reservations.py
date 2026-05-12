@@ -19,10 +19,6 @@ from app.schemas.reservation import (
     ReservationStatusTransitionSchema,
     ReservationUpdateSchema,
 )
-from app.agents.reservation_tools import (
-    UpdateReservationKnowledgeInput,
-    update_reservation_knowledge,
-)
 from app.services import ParticipantService, PaymentProofService, ReservationService
 from app.services.mappers import (
     participant_to_response,
@@ -54,7 +50,6 @@ async def create_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.create(payload.model_dump(), actor_id=current_user.id)
-    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
 
 
@@ -132,7 +127,6 @@ async def update_reservation(
         payload.model_dump(exclude_none=True),
         actor_id=current_user.id,
     )
-    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
 
 
@@ -153,7 +147,6 @@ async def confirm_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.confirm_reservation(reservation_id, actor_id=current_user.id)
-    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
 
 
@@ -178,7 +171,6 @@ async def transition_reservation_status(
         payload.target_status,
         actor_id=current_user.id,
     )
-    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
 
 
@@ -199,7 +191,6 @@ async def cancel_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.cancel_reservation(reservation_id, actor_id=current_user.id)
-    await update_reservation_knowledge(UpdateReservationKnowledgeInput(reservation_id=str(doc.id)))
     return reservation_to_response(doc)
 
 

@@ -54,7 +54,9 @@ class ReservationService:
             if schedule is not None:
                 requested_date = schedule.date
 
-        reservation.blocks_day = bool(requested_date) and self._is_blocking_status(reservation.status)
+        reservation.blocks_day = bool(requested_date) and self._is_blocking_status(
+            reservation.status
+        )
         reservation.availability_lock_key = (
             requested_date.isoformat() if reservation.blocks_day and requested_date else None
         )
@@ -159,10 +161,16 @@ class ReservationService:
         else:
             if raw_status is None:
                 try:
-                    channel = Channel(data.get("channel")) if data.get("channel") is not None else None
+                    channel = (
+                        Channel(data.get("channel")) if data.get("channel") is not None else None
+                    )
                 except ValueError:
                     channel = None
-                status = ReservationStatus.QUOTED if channel == Channel.WHATSAPP else ReservationStatus.CONTACT
+                status = (
+                    ReservationStatus.QUOTED
+                    if channel == Channel.WHATSAPP
+                    else ReservationStatus.CONTACT
+                )
             else:
                 status = ReservationStatus(raw_status)
 
