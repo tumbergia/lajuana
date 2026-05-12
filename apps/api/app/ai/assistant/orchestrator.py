@@ -16,8 +16,8 @@ from app.schemas.conversation_session import merge_slots
 
 
 class AssistantOrchestrator:
-    def __init__(self) -> None:
-        self._planner = GeminiPlanner()
+    def __init__(self, planner: GeminiPlanner | None = None) -> None:
+        self._planner = planner or GeminiPlanner()
         self._policy = ToolPolicyEngine()
 
     async def ask(self, request: AskRequest) -> AskResponse:

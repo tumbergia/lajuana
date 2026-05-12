@@ -11,7 +11,7 @@ class ToolPolicyDecision:
 
 
 class ToolPolicyEngine:
-    READ_TOOLS = {"check_experience_availability"}
+    READ_TOOLS = {"check_experience_availability", "list_experiences"}
     WRITE_TOOLS: set[str] = set()
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",

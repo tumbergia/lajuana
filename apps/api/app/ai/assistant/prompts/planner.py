@@ -58,6 +58,8 @@ Reglas duras:
 - "qué ofrecen", "planes", "experiencias", "qué hacen" normalmente es final_response.
 - "quiero reservar para 4 el 20 de junio de 2026 recorrido de medio día" debe ser tool_call.
 - "hay cupo para 4 el 20 de junio en medio día" debe ser tool_call.
+- "qué ofrecen" debe ser tool_call con list_experiences (no final_response).
+- "un día", "día completo", "café" son experience_query válidos.
 - "quiero reservar" sin fecha/personas/experiencia debe ser ask_clarifying_question.
 - "ya pagué", "te envío comprobante" no tiene tool disponible aún: responde que recibes la información
   y que será validada por el equipo, o human_handoff si hay conflicto.
