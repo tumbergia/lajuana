@@ -1,4 +1,5 @@
 from typing import Any
+from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
@@ -25,13 +26,19 @@ async def _verify_webhook(
 
 
 async def _receive_webhook(request: Request) -> dict[str, Any]:
+    trace_id = str(uuid4())
     payload = await request.json()
     messages = normalize_whatsapp_payload(payload)
 
     logger.info(
-        "[webhook] WhatsApp webhook received | entry_count=%d | message_count=%d",
-        len(payload.get("entry", [])),
-        len(messages),
+        "whatsapp.webhook.received",
+        extra={
+            "trace_id": trace_id,
+            "channel": "whatsapp",
+            "endpoint": "/webhook",
+            "entry_count": len(payload.get("entry", [])),
+            "message_count": len(messages),
+        },
     )
 
     orchestrator = AssistantOrchestrator()
@@ -41,9 +48,21 @@ async def _receive_webhook(request: Request) -> dict[str, Any]:
 
     for message in messages:
         logger.info(
-            "[webhook] Processing message | from=%s | text=%.120s",
-            message.from_phone,
-            message.text,
+            "whatsapp.message.normalized",
+            extra={
+                "trace_id": trace_id,
+                "channel": "whatsapp",
+                "from_phone": message.from_phone[-4:] if message.from_phone else "unknown",
+            },
+        )
+
+        logger.info(
+            "assistant.ask.start",
+            extra={
+                "trace_id": trace_id,
+                "channel": "whatsapp",
+                "conversation_id": message.from_phone,
+            },
         )
 
         result = await orchestrator.ask(
@@ -52,15 +71,21 @@ async def _receive_webhook(request: Request) -> dict[str, Any]:
                 channel="whatsapp",
                 from_phone=message.from_phone,
                 conversation_id=message.from_phone,
+                trace_id=trace_id,
             )
         )
 
+        logger.info(
+            "assistant.ask.completed",
+            extra={
+                "trace_id": trace_id,
+                "channel": "whatsapp",
+                "conversation_id": message.from_phone,
+                "status": "success",
+            },
+        )
+
         if message.from_phone:
-            logger.info(
-                "[webhook] Sending response | to=%s | response=%.200s",
-                message.from_phone,
-                result.response,
-            )
             await sender.send_text(
                 to_phone=message.from_phone,
                 text=result.response,
@@ -69,8 +94,12 @@ async def _receive_webhook(request: Request) -> dict[str, Any]:
         processed += 1
 
     logger.info(
-        "[webhook] Webhook processed | total_processed=%d",
-        processed,
+        "whatsapp.webhook.processed",
+        extra={
+            "trace_id": trace_id,
+            "channel": "whatsapp",
+            "total_processed": processed,
+        },
     )
 
     return {"received": True, "processed_messages": processed}

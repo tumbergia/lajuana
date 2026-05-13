@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 import time
+from datetime import date
 from uuid import uuid4
 
+from app.ai.assistant.date_guard import (
+    InvalidRequestedDateError,
+    validate_requested_date_for_business,
+)
 from app.ai.assistant.planner import GeminiPlanner
 from app.ai.assistant.policy import ToolPolicyEngine
 from app.ai.assistant.response_composer import compose_tool_response
@@ -136,6 +141,19 @@ class AssistantOrchestrator:
                     "sin atención."
                 ),
             )
+
+        # Validate requested_date against Colombia business timezone
+        if plan.arguments and plan.arguments.requested_date:
+            try:
+                parsed_date = date.fromisoformat(plan.arguments.requested_date)
+                validate_requested_date_for_business(parsed_date)
+            except (InvalidRequestedDateError, ValueError):
+                plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
+                plan.response = (
+                    "Para evitar errores con la reserva, necesito que me confirmes "
+                    "la fecha exacta en formato día, mes y año."
+                )
+                plan.arguments.requested_date = None
 
         turn.planner_output = plan.model_dump(mode="json")
         await turn.save()
