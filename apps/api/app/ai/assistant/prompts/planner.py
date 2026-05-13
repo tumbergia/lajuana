@@ -112,12 +112,12 @@ Reglas duras:
   queja menor.
 
 Formato de argumentos para check_experience_availability:
-{
+{{
   "experience_query": "medio día",
   "experience_id": null,
   "requested_date": "2026-06-20",
   "participant_count": 4
-}
+}}
 
 Ejemplos de flujo:
 Usuario: "cuanto vale los chorros para 4 personas"

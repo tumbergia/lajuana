@@ -1,35 +1,21 @@
-import httpx
+from uuid import uuid4
 
-from app.core.config import settings
+from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
+from app.documents.conversation_turn_document import ConversationTurnDocument
 
 
 class WhatsAppSender:
+    def __init__(self) -> None:
+        self._service = WhatsAppOutboundService()
+
     async def send_text(self, *, to_phone: str, text: str) -> bool:
-        if not settings.whatsapp_send_enabled:
-            return False
-
-        if not settings.whatsapp_access_token or not settings.whatsapp_phone_number_id:
-            return False
-
-        url = (
-            f"https://graph.facebook.com/{settings.whatsapp_api_version}/"
-            f"{settings.whatsapp_phone_number_id}/messages"
+        turn = ConversationTurnDocument(
+            trace_id=str(uuid4()),
+            channel="whatsapp",
+            from_phone=to_phone,
+            user_message="(legacy send)",
+            conversation_id=f"whatsapp:{to_phone}",
         )
-
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": to_phone,
-            "type": "text",
-            "text": {"body": text},
-        }
-
-        headers = {
-            "Authorization": f"Bearer {settings.whatsapp_access_token}",
-            "Content-Type": "application/json",
-        }
-
-        async with httpx.AsyncClient(timeout=15) as client:
-            response = await client.post(url, json=payload, headers=headers)
-            response.raise_for_status()
-
-        return True
+        await turn.insert()
+        result = await self._service.send(turn=turn, to_phone=to_phone, text=text)
+        return result.status == "sent"

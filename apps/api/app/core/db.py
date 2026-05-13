@@ -2,6 +2,11 @@ from pymongo import AsyncMongoClient
 from pymongo.errors import PyMongoError
 
 from app.common.collections import Collections
+from app.conversations.documents import (
+    MessageBufferDocument,
+    OutboundMessageDocument,
+    WhatsAppInboundEventDocument,
+)
 from app.core.config import settings
 from app.documents import (
     AppConfigDocument,
@@ -44,9 +49,6 @@ async def init_db() -> None:
             {"$set": {"role": "guide"}},
         )
     except PyMongoError:
-        # Keep the API bootable even if the migration cannot run right now.
-        # The request path still depends on Mongo, but startup
-        # should not fail on a best-effort fixup.
         pass
 
     from beanie import init_beanie
@@ -71,8 +73,18 @@ async def init_db() -> None:
             ConversationSessionDocument,
             ConversationTurnDocument,
             ToolCallLogDocument,
+            WhatsAppInboundEventDocument,
+            MessageBufferDocument,
+            OutboundMessageDocument,
         ],
     )
+
+    try:
+        await database["whatsapp_inbound_events"].create_index(
+            "wa_message_id", unique=True, name="uq_wa_message_id"
+        )
+    except PyMongoError:
+        pass
 
 
 async def close_db() -> None:

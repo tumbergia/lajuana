@@ -122,7 +122,16 @@ class GeminiProvider:
             if not response.text:
                 raise GeminiProviderError("Gemini returned an empty response.")
 
-            return response_model.model_validate_json(response.text)
+            try:
+                return response_model.model_validate_json(response.text)
+            except Exception as exc:
+                logger.warning(
+                    "Gemini response validation failed: %s | text=%.200s",
+                    exc, response.text,
+                )
+                raise GeminiProviderError(
+                    f"Failed to parse Gemini response: {exc}"
+                ) from exc
 
         try:
             return await asyncio.wait_for(

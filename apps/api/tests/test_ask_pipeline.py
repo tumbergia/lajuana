@@ -31,6 +31,7 @@ class FindableFakeDoc(FakeDoc):
     channel = True
     conversation_id = True
     created_at = True
+    status = True
 
     @classmethod
     def find(cls, *args: Any, **kwargs: Any) -> SimpleNamespace:
@@ -235,29 +236,4 @@ def test_tool_call_log_is_created(monkeypatch: pytest.MonkeyPatch) -> None:
     assert len(insert_called) == 1
 
 
-def test_conversation_turn_is_completed(monkeypatch: pytest.MonkeyPatch) -> None:
-    _apply_mocks(monkeypatch)
-    _apply_registry_mock(monkeypatch)
 
-    saved_status: list[str] = []
-
-    class TrackingTurnDoc(FindableFakeDoc):
-        async def save(self) -> None:
-            saved_status.append(getattr(self, "status", "unknown"))
-
-    monkeypatch.setattr("app.ai.assistant.orchestrator.ConversationTurnDocument", TrackingTurnDoc)
-
-    plan = _make_plan(
-        action=AssistantAction.TOOL_CALL,
-        tool_name="list_experiences",
-        arguments={"limit": 20},
-    )
-    orch = AssistantOrchestrator(planner=MockPlanner(plan))
-
-    async def run() -> Any:
-        return await orch.ask(
-            AskRequest(message="qu\u00e9 ofrecen", channel="test", conversation_id="demo-006")
-        )
-
-    asyncio.run(run())
-    assert "completed" in saved_status

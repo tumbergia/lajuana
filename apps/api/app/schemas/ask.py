@@ -11,6 +11,7 @@ class AskRequest(BaseModel):
     from_phone: str | None = None
     conversation_id: str | None = None
     trace_id: str | None = None
+    conversation_turn_id: str | None = None
 
 
 class AskResponse(BaseModel):

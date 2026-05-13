@@ -1,3 +1,8 @@
+from app.conversations.documents import (
+    MessageBufferDocument,
+    OutboundMessageDocument,
+    WhatsAppInboundEventDocument,
+)
 from app.documents.app_config_document import AppConfigDocument, ReservationRules
 from app.documents.assignment_document import AssignmentDocument
 from app.documents.conversation_session_document import ConversationSessionDocument
@@ -44,4 +49,7 @@ __all__ = [
     "SyncChangeDocument",
     "SyncOperationReceiptDocument",
     "UserDocument",
+    "WhatsAppInboundEventDocument",
+    "MessageBufferDocument",
+    "OutboundMessageDocument",
 ]

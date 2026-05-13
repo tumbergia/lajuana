@@ -33,10 +33,11 @@ class AssistantOrchestrator:
         flow_started = time.perf_counter()
 
         logger.info(
-            "[conversation_id=%s] Message received | channel=%s | from=%s | message=%.120s",
+            "[conversation_id=%s] Message received | channel=%s | from=%s | trace_id=%s | message=%.120s",  # noqa: E501
             conversation_id,
             request.channel,
             request.from_phone,
+            trace_id,
             request.message,
         )
 
@@ -44,47 +45,36 @@ class AssistantOrchestrator:
             channel=request.channel,
             conversation_key=conversation_key,
             from_phone=request.from_phone,
-            conversation_id=request.conversation_id,
+            conversation_id=conversation_id,
             trace_id=trace_id,
         )
 
-        turn = ConversationTurnDocument(
-            trace_id=trace_id,
-            channel=request.channel,
-            from_phone=request.from_phone,
-            user_message=request.message,
-        )
-        turn.conversation_id = conversation_key
-        await turn.insert()
-
-        recent_turns = (
+        history_turns = (
             await ConversationTurnDocument.find(
-                ConversationTurnDocument.channel == request.channel,
                 ConversationTurnDocument.conversation_id == conversation_key,
+                ConversationTurnDocument.status == "responded",
             )
             .sort(-ConversationTurnDocument.created_at)
-            .limit(5)
+            .limit(8)
             .to_list()
         )
 
         history_lines = []
-        for t in reversed(recent_turns):
-            if str(t.id) == str(turn.id):
-                continue
+        for t in reversed(history_turns):
             if t.user_message:
                 history_lines.append(f"Usuario: {t.user_message}")
             if t.response_text:
                 history_lines.append(f"Asistente: {t.response_text}")
 
         conversation_history = "\n".join(history_lines)
-
-        # Enrich context with slot values + history
-        context_parts = []
-        if session.slot_values:
-            context_parts.append(f"Datos de la sesión: {session.slot_values}")
-        if conversation_history:
-            context_parts.append(f"Historial de la conversación:\n{conversation_history}")
-        enriched_context = "\n\n".join(context_parts) if context_parts else None
+        enriched_context = None
+        if session.slot_values or conversation_history:
+            parts = []
+            if session.slot_values:
+                parts.append(f"Datos de la sesión: {session.slot_values}")
+            if conversation_history:
+                parts.append(f"Historial de la conversación:\n{conversation_history}")
+            enriched_context = "\n\n".join(parts)
 
         try:
             plan = await self._planner.plan(
@@ -94,66 +84,44 @@ class AssistantOrchestrator:
                 conversation_id=conversation_id,
             )
         except GeminiResourceExhausted:
-            turn.status = "llm_unavailable"
-            await turn.save()
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.FINAL_RESPONSE,
-                planner_output={},
-                tool_output={},
-                response=(
-                    "En este momento no puedo procesar tu solicitud porque el "
-                    "servicio de IA está sobrepasado en su cuota gratuita. "
-                    "Por favor intenta de nuevo en unos minutos o contacta "
-                    "a un asesor directamente para ayudarte."
-                ),
+                planner_output={}, tool_output={},
+                response="Servicio de IA sobrepasado. Intenta en unos minutos.",
             )
         except GeminiModelUnavailable:
-            turn.status = "llm_unavailable"
-            await turn.save()
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.HUMAN_HANDOFF,
-                planner_output={},
-                tool_output={},
-                response=(
-                    "El modelo de IA que uso actualmente no está disponible. "
-                    "Voy a transferirte con un asesor humano para que puedas "
-                    "recibir atención personalizada."
-                ),
+                planner_output={}, tool_output={},
+                response="Modelo no disponible. Te transfiero con un asesor.",
             )
         except GeminiProviderError:
-            turn.status = "llm_error"
-            await turn.save()
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.HUMAN_HANDOFF,
-                planner_output={},
-                tool_output={},
-                response=(
-                    "Ocurrió un error temporal en mi sistema de procesamiento. "
-                    "Voy a transferirte con un asesor humano para que no te quedes "
-                    "sin atención."
-                ),
+                planner_output={}, tool_output={},
+                response="Error temporal. Te transfiero con un asesor.",
+            )
+        except Exception:
+            logger.exception("[conversation_id=%s] LLM parsing failed", conversation_id)
+            return AskResponse(
+                trace_id=trace_id,
+                action=AssistantAction.ASK_CLARIFYING_QUESTION,
+                planner_output={}, tool_output={},
+                response="No entendí bien tu mensaje. ¿Podrías repetirlo de otra forma?",
             )
 
-        turn.planner_output = plan.model_dump(mode="json")
-        await turn.save()
-
-        # Save all non-null arguments from planner to session slots
         if plan.arguments:
             for key, value in plan.arguments.model_dump(exclude_none=True).items():
                 session.slot_values[key] = value
 
-        # Session merge: fill null plan args from session slots
         REQUIRED_FIELDS = ["requested_date", "participant_count", "experience_query"]
 
         if (
             plan.action
-            in {
-                AssistantAction.TOOL_CALL,
-                AssistantAction.ASK_CLARIFYING_QUESTION,
-            }
+            in {AssistantAction.TOOL_CALL, AssistantAction.ASK_CLARIFYING_QUESTION}
             and plan.arguments
         ):
             plan_args = plan.arguments.model_dump()
@@ -162,11 +130,9 @@ class AssistantOrchestrator:
                 plan_args=plan_args,
                 required_fields=REQUIRED_FIELDS,
             )
-
             if merge.filled_from_session or plan.action == AssistantAction.ASK_CLARIFYING_QUESTION:
                 for key, value in merge.merged.items():
                     setattr(plan.arguments, key, value)
-
                 if not merge.still_missing:
                     plan.action = AssistantAction.TOOL_CALL
                     plan.missing_fields = []
@@ -174,86 +140,42 @@ class AssistantOrchestrator:
                     plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
                     plan.missing_fields = merge.still_missing
 
-        # Handle actions that don't need tools
         if plan.action in {
             AssistantAction.FINAL_RESPONSE,
             AssistantAction.ASK_CLARIFYING_QUESTION,
             AssistantAction.HUMAN_HANDOFF,
         }:
-            response = plan.response or "Necesito un poco más de información para ayudarte bien."
-
+            response = plan.response or "Necesito más información."
             if plan.action == AssistantAction.ASK_CLARIFYING_QUESTION:
                 session.pending_fields = plan.missing_fields
-
             session.last_intent = plan.action.value
             session.last_trace_id = trace_id
             session.turn_count += 1
             session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
             await session.save()
-
-            turn.response_text = response
-            turn.status = "completed"
-            await turn.save()
-
-            total_ms = int((time.perf_counter() - flow_started) * 1000)
-            logger.info(
-                "[conversation_id=%s] Final response | action=%s | total_ms=%d | trace_id=%s",
-                conversation_id,
-                plan.action.value,
-                total_ms,
-                trace_id,
-            )
-
             return AskResponse(
-                trace_id=trace_id,
-                action=plan.action,
-                tool_name=None,
+                trace_id=trace_id, action=plan.action,
                 planner_output=plan.model_dump(mode="json"),
-                tool_output={},
-                response=response,
+                tool_output={}, response=response,
             )
 
-        # Save session slots before tool call
         if plan.arguments:
             session.slot_values.update(plan.arguments.model_dump(exclude_none=True))
         session.pending_fields = []
 
         policy_decision = self._policy.validate(plan)
         if not policy_decision.allowed:
-            response = (
-                plan.response
-                or "Necesito confirmar algunos datos antes de avanzar con esa solicitud."
-            )
-
-            turn.status = "blocked_by_policy"
-            turn.error_code = policy_decision.reason
-            turn.response_text = response
-            await turn.save()
-
+            response = plan.response or "Necesito confirmar datos antes de avanzar."
             session.last_intent = "blocked_by_policy"
             session.last_trace_id = trace_id
             session.turn_count += 1
             session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
             await session.save()
-
-            total_ms = int((time.perf_counter() - flow_started) * 1000)
-            logger.info(
-                "[conversation_id=%s] Blocked by policy | reason=%s | tool=%s |"
-                " total_ms=%d | trace_id=%s",
-                conversation_id,
-                policy_decision.reason,
-                plan.tool_name,
-                total_ms,
-                trace_id,
-            )
-
             return AskResponse(
-                trace_id=trace_id,
-                action=AssistantAction.ASK_CLARIFYING_QUESTION,
+                trace_id=trace_id, action=AssistantAction.ASK_CLARIFYING_QUESTION,
                 tool_name=plan.tool_name,
                 planner_output=plan.model_dump(mode="json"),
-                tool_output={},
-                response=response,
+                tool_output={}, response=response,
             )
 
         started = time.perf_counter()
@@ -265,23 +187,20 @@ class AssistantOrchestrator:
                 plan.tool_name or "",
                 conversation_id=conversation_id,
                 trace_id=trace_id,
-                conversation_turn_id=str(turn.id),
+                conversation_turn_id=request.conversation_turn_id or str(uuid4()),
                 **plan.arguments.model_dump(exclude_none=True),
             )
             status = "success"
         except Exception as exc:
             error_code = "tool.execution_failed"
             status = "error"
-            tool_output = {
-                "error": str(exc),
-                "trace_id": trace_id,
-            }
+            tool_output = {"error": str(exc), "trace_id": trace_id}
 
         latency_ms = int((time.perf_counter() - started) * 1000)
 
         await ToolCallLogDocument(
             trace_id=trace_id,
-            conversation_turn_id=str(turn.id),
+            conversation_turn_id=request.conversation_turn_id or str(uuid4()),
             tool_name=plan.tool_name or "unknown",
             input=plan.arguments.model_dump(),
             output=tool_output,
@@ -297,36 +216,16 @@ class AssistantOrchestrator:
             conversation_id=conversation_id,
         )
 
-        turn.tool_output = tool_output
-        turn.response_text = response
-        turn.status = "completed" if not error_code else "tool_error"
-        turn.error_code = error_code
-        await turn.save()
-
         session.last_intent = plan.action.value if plan.action else "tool_executed"
         session.last_trace_id = trace_id
         session.turn_count += 1
         session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
         await session.save()
 
-        total_ms = int((time.perf_counter() - flow_started) * 1000)
-        logger.info(
-            "[conversation_id=%s] Final response | action=%s | tool=%s |"
-            " total_ms=%d | trace_id=%s",
-            conversation_id,
-            plan.action.value if plan.action else None,
-            plan.tool_name,
-            total_ms,
-            trace_id,
-        )
-
         return AskResponse(
-            trace_id=trace_id,
-            action=plan.action,
-            tool_name=plan.tool_name,
+            trace_id=trace_id, action=plan.action, tool_name=plan.tool_name,
             planner_output=plan.model_dump(mode="json"),
-            tool_output=tool_output,
-            response=response,
+            tool_output=tool_output, response=response,
         )
 
     async def _load_or_create_session(
@@ -339,14 +238,11 @@ class AssistantOrchestrator:
         trace_id: str,
     ) -> ConversationSessionDocument:
         existing = await ConversationSessionDocument.find_one(
-            ConversationSessionDocument.channel == channel,
             ConversationSessionDocument.conversation_key == conversation_key,
             ConversationSessionDocument.status == "active",
         )
-
         if existing:
             return existing
-
         return await ConversationSessionDocument(
             channel=channel,
             conversation_key=conversation_key,

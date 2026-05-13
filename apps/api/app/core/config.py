@@ -34,18 +34,14 @@ class Settings(BaseSettings):
     storage_s3_presign_expiration_seconds: int = 900
 
     chat_default_channel: str = "whatsapp"
-
     assistant_enable_llm: bool = False
     assistant_default_min_notice_days: int = 7
-
     llm_provider: str = "gemini"
-
     gemini_api_key: str = ""
     gemini_api_key_2: str = ""
     gemini_model: str = "gemini-3-flash-preview"
     gemini_temperature: float = 0.2
     gemini_timeout_seconds: int = 30
-
     assistant_tool_response_mode: str = "cheap"
     assistant_min_plan_confidence: float = 0.55
 
@@ -54,6 +50,12 @@ class Settings(BaseSettings):
     whatsapp_phone_number_id: str = ""
     whatsapp_api_version: str = "v23.0"
     whatsapp_send_enabled: bool = False
+
+    buffer_debounce_seconds: int = 10
+    buffer_max_seconds: int = 30
+    buffer_max_messages: int = 15
+    buffer_lock_seconds: int = 60
+    scheduler_loop_seconds: int = 1
 
     model_config = SettingsConfigDict(
         env_file=(".env", "apps/api/.env"),

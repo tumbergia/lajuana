@@ -17,17 +17,16 @@ class ConversationTurnDocument(Document):
     normalized_text: str | None = None
     detected_intent: str | None = None
     reservation_id: str | None = None
-
-    # New fields for Gemini planner
     conversation_id: str | None = None
     user_message: str | None = None
+    input_message_ids: list[str] = Field(default_factory=list)
     planner_output: dict[str, Any] = Field(default_factory=dict)
     tool_output: dict[str, Any] = Field(default_factory=dict)
-
     response_text: str | None = None
     status: str = Field(default="received")
     error_code: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    responded_at: datetime | None = None
 
     class Settings:
         name = "conversation_turns"
@@ -39,4 +38,5 @@ class ConversationTurnDocument(Document):
             "from_phone",
             "created_at",
             "detected_intent",
+            [("conversation_id", 1), ("status", 1)],
         ]
