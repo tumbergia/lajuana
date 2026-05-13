@@ -4,6 +4,7 @@ import time
 from datetime import date
 from uuid import uuid4
 
+from app.ai.assistant.date_extractor import extract_date_from_message
 from app.ai.assistant.date_guard import (
     InvalidRequestedDateError,
     validate_requested_date_for_business,
@@ -142,6 +143,16 @@ class AssistantOrchestrator:
                 ),
             )
 
+        # Fallback: if planner didn't extract date but user message has one
+        if (
+            plan.arguments
+            and plan.action in {AssistantAction.TOOL_CALL, AssistantAction.ASK_CLARIFYING_QUESTION}
+            and not plan.arguments.requested_date
+        ):
+            extracted = extract_date_from_message(request.message)
+            if extracted:
+                plan.arguments.requested_date = extracted
+
         # Validate requested_date against Colombia business timezone
         if plan.arguments and plan.arguments.requested_date:
             try:
@@ -164,7 +175,12 @@ class AssistantOrchestrator:
                 session.slot_values[key] = value
 
         # Session merge: fill null plan args from session slots
-        REQUIRED_FIELDS = ["requested_date", "participant_count", "experience_query"]
+        REQUIRED_FIELDS = [
+            "requested_date",
+            "participant_count",
+            "experience_query",
+            "experience_id",
+        ]
 
         if (
             plan.action
@@ -315,11 +331,32 @@ class AssistantOrchestrator:
             conversation_id=conversation_id,
         )
 
+        if (
+            plan.tool_name == "suggest_alternative_dates"
+            and tool_output.get("total", 0) == 0
+            and not tool_output.get("blocking_reasons")
+        ):
+            plan.action = AssistantAction.HUMAN_HANDOFF
+            response = (
+                "Lo siento, no encontré más fechas disponibles para "
+                "esta experiencia. Un asesor humano podrá revisar opciones "
+                "alternativas y ayudarte con lo que necesites. Te transfiero ahora."
+            )
+
         turn.tool_output = tool_output
         turn.response_text = response
         turn.status = "completed" if not error_code else "tool_error"
         turn.error_code = error_code
         await turn.save()
+
+        # Propagate resolved experience_id from tool output to session slots
+        if tool_output:
+            exp_id = tool_output.get("experience_id")
+            exp_name = tool_output.get("experience_name")
+            if exp_id:
+                session.slot_values["experience_id"] = exp_id
+            if exp_name:
+                session.slot_values["experience_name"] = exp_name
 
         session.last_intent = plan.action.value if plan.action else "tool_executed"
         session.last_trace_id = trace_id

@@ -44,9 +44,8 @@ class Settings(BaseSettings):
     gemini_api_key_2: str = ""
     gemini_model: str = "gemini-3-flash-preview"
     gemini_temperature: float = 0.2
-    gemini_timeout_seconds: int = 30
+    gemini_timeout_seconds: int = 60
 
-    assistant_tool_response_mode: str = "cheap"
     assistant_min_plan_confidence: float = 0.55
 
     whatsapp_verify_token: str = "change-me"

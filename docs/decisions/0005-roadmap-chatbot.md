@@ -299,8 +299,8 @@ Estabilizar la arquitectura conversacional antes de permitir escritura. El foco 
 | Deduplicación WhatsApp por `external_message_id` | Pendiente | Crítico antes de escritura |
 | Lock por `conversation_key` | Pendiente | Crítico para evitar respuestas entrelazadas |
 | Debounce/batching de mensajes cortos | Pendiente | Necesario para usuarios que escriben en varios mensajes |
-| Contratos Pydantic para todas las tools | Parcial | Falta `list_experiences` |
-| Simetría registry/FastMCP | Parcial | Falta exponer `list_experiences` o documentar excepción |
+| Contratos Pydantic para todas las tools | Completado | `ListExperiencesInput`/`Output` en `tool_contracts.py` |
+| Simetría registry/FastMCP | Completado | `list_experiences` expuesta en FastMCP y registry |
 
 ### Criterio de salida
 
