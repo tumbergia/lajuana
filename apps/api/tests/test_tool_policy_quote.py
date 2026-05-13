@@ -95,7 +95,7 @@ def test_blocks_quote_without_count() -> None:
     decision = ToolPolicyEngine().validate(plan)
 
     assert decision.allowed is False
-    assert decision.reason == "missing_required_arguments:participant_count_or_participants_count"
+    assert decision.reason == "missing_required_arguments:participant_count"
 
 
 def test_blocks_quote_with_neither_experience_nor_count() -> None:

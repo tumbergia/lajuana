@@ -125,14 +125,12 @@ class ExperienceResponseSchema(AuditMetadataSchema):
 
 
 class ExperienceQuoteRequestSchema(BaseModel):
-    participants_count: int = Field(ge=1)
-    schedule_id: str | None = None
-    special_conditions: list[str] = Field(default_factory=list)
+    participant_count: int = Field(ge=1)
 
 
 class ExperienceQuoteResponseSchema(BaseModel):
     experience_id: str
-    participants_count: int
+    participant_count: int
     unit_price: int
     subtotal: int
     currency: str

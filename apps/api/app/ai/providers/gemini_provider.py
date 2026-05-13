@@ -133,10 +133,21 @@ class GeminiProvider:
                     f"Failed to parse Gemini response: {exc}"
                 ) from exc
 
-        try:
-            return await asyncio.wait_for(
-                asyncio.to_thread(_call),
-                timeout=settings.gemini_timeout_seconds,
-            )
-        except TimeoutError as exc:
-            raise GeminiProviderError("Gemini request timed out.") from exc
+        last_exc: TimeoutError | None = None
+        for attempt in range(len(self._clients)):
+            try:
+                return await asyncio.wait_for(
+                    asyncio.to_thread(_call),
+                    timeout=settings.gemini_timeout_seconds,
+                )
+            except TimeoutError as exc:
+                last_exc = exc
+                if attempt < len(self._clients) - 1:
+                    self._rotate_key()
+                    logger.warning(
+                        "Gemini request timed out (attempt %d/%d). Rotating key.",
+                        attempt + 1,
+                        len(self._clients),
+                    )
+                    continue
+                raise GeminiProviderError("Gemini request timed out.") from last_exc

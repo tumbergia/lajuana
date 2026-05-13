@@ -293,21 +293,6 @@ class ExperienceService:
                 message="La experiencia esta inactiva y no puede cotizarse.",
             )
 
-        if payload.schedule_id:
-            schedule = await ScheduleDocument.get(PydanticObjectId(payload.schedule_id))
-            if schedule is None:
-                raise ApiError(
-                    status_code=404,
-                    code=ErrorCode.SCHEDULE_NOT_FOUND,
-                    message="El horario especificado no existe.",
-                )
-            if schedule.experience_id != object_id:
-                raise ApiError(
-                    status_code=409,
-                    code=ErrorCode.SCHEDULE_EXPERIENCE_MISMATCH,
-                    message="El horario no corresponde a esta experiencia.",
-                )
-
         pricing = experience.pricing
         if pricing is None or not pricing.tiers:
             raise ApiError(
@@ -316,11 +301,11 @@ class ExperienceService:
                 message="Esta experiencia no tiene tarifas configuradas.",
             )
 
-        participants_count = payload.participants_count
+        participant_count = payload.participant_count
         matching_tier = None
 
         for tier in pricing.tiers:
-            if tier.min_participants <= participants_count <= tier.max_participants:
+            if tier.min_participants <= participant_count <= tier.max_participants:
                 matching_tier = tier
                 break
 
@@ -328,23 +313,21 @@ class ExperienceService:
             raise ApiError(
                 status_code=409,
                 code=ErrorCode.EXPERIENCE_PRICING_TIER_NOT_FOUND,
-                message=f"No hay una tarifa disponible para {participants_count} participantes.",
+                message=f"No hay una tarifa disponible para {participant_count} participantes.",
             )
 
         unit_price = matching_tier.price_per_person
-        subtotal = unit_price * participants_count
+        subtotal = unit_price * participant_count
         currency = pricing.currency
 
         notes_parts = []
         if pricing.pricing_notes:
             notes_parts.append(pricing.pricing_notes)
-        if payload.special_conditions:
-            notes_parts.append("Condiciones especiales: " + ", ".join(payload.special_conditions))
         notes = " | ".join(notes_parts) if notes_parts else None
 
         return ExperienceQuoteResponseSchema(
             experience_id=str(experience.id),
-            participants_count=participants_count,
+            participant_count=participant_count,
             unit_price=unit_price,
             subtotal=subtotal,
             currency=currency,

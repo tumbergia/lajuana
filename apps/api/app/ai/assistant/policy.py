@@ -11,7 +11,18 @@ class ToolPolicyDecision:
 
 
 class ToolPolicyEngine:
-    READ_TOOLS = {"check_experience_availability", "list_experiences", "quote_experience"}
+    READ_TOOLS = {
+        "list_experiences",
+        "get_experience_detail",
+        "get_public_business_rules",
+        "check_experience_availability",
+        "list_available_schedules",
+        "quote_experience",
+        "suggest_alternative_dates",
+    }
+    LIMITED_WRITE_TOOLS = {
+        "request_human_review",
+    }
     WRITE_TOOLS: set[str] = set()
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
@@ -55,7 +66,7 @@ class ToolPolicyEngine:
                 reason="human_review_required",
             )
 
-        if plan.tool_name not in self.READ_TOOLS and plan.tool_name not in self.WRITE_TOOLS:
+        if plan.tool_name not in self.READ_TOOLS and plan.tool_name not in self.LIMITED_WRITE_TOOLS and plan.tool_name not in self.WRITE_TOOLS:
             return ToolPolicyDecision(
                 allowed=False,
                 reason="unknown_or_not_allowed_tool",
@@ -77,10 +88,7 @@ class ToolPolicyEngine:
                 args.get("experience_id") not in {None, ""}
                 or args.get("experience_query") not in {None, ""}
             )
-            has_participants = (
-                args.get("participant_count") not in {None, ""}
-                or args.get("participants_count") not in {None, ""}
-            )
+            has_participants = args.get("participant_count") not in {None, ""}
             if not has_experience:
                 return ToolPolicyDecision(
                     allowed=False,
@@ -89,7 +97,7 @@ class ToolPolicyEngine:
             if not has_participants:
                 return ToolPolicyDecision(
                     allowed=False,
-                    reason="missing_required_arguments:participant_count_or_participants_count",
+                    reason="missing_required_arguments:participant_count",
                 )
 
         return ToolPolicyDecision(allowed=True)

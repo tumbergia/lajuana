@@ -8,7 +8,7 @@ import pytest
 
 from app.ai.assistant.orchestrator import AssistantOrchestrator
 from app.schemas.ask import AskRequest
-from app.schemas.assistant_plan import AssistantAction, AssistantPlan, RiskLevel
+from app.schemas.assistant_plan import AssistantAction, AssistantPlan, RiskLevel, ToolResultResponse
 
 
 class FakeDoc:
@@ -88,6 +88,14 @@ def _apply_mocks(monkeypatch: pytest.MonkeyPatch) -> None:
         AssistantOrchestrator,
         "_load_or_create_session",
         fake_load_session,
+    )
+
+    async def fake_generate_structured(**kwargs: Any) -> ToolResultResponse:
+        return ToolResultResponse(response="Ok.", audit_summary="Test.")
+
+    monkeypatch.setattr(
+        "app.ai.assistant.response_composer.get_llm_provider",
+        lambda: SimpleNamespace(generate_structured=fake_generate_structured),
     )
 
 

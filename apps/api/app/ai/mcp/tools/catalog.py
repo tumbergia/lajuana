@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.ai.mcp.tool_contracts import ExperienceSummaryItem, ListExperiencesOutput
 from app.documents.experience_document import ExperienceDocument
 
 
@@ -70,7 +71,8 @@ async def list_experiences(
             }
         )
 
-    return {
-        "experiences": result,
-        "total": len(result),
-    }
+    return ListExperiencesOutput(
+        trace_id=trace_id or "",
+        experiences=[ExperienceSummaryItem(**e) for e in result],
+        total=len(result),
+    ).model_dump()
