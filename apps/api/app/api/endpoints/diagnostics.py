@@ -1,5 +1,8 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter
 
+from app.core.time import now_colombia, today_colombia_iso
 from app.documents.ping_document import PingDocument
 
 router = APIRouter(prefix="/diagnostics", tags=["diagnostics"])
@@ -18,3 +21,16 @@ async def get_latest_ping() -> dict[str, str | bool]:
     if doc is None:
         return {"status": "empty", "ok": False}
     return {"status": doc.name, "ok": doc.ok}
+
+
+@router.get("/time")
+async def get_time_diagnostics() -> dict:
+    now_co = now_colombia()
+    now_utc = datetime.now(UTC)
+
+    return {
+        "utc": now_utc.isoformat(),
+        "colombia": now_co.isoformat(),
+        "colombia_date": today_colombia_iso(),
+        "timezone": "America/Bogota",
+    }

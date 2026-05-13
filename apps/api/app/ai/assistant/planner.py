@@ -1,18 +1,10 @@
 import time
-from datetime import UTC, datetime
 
 from app.ai.assistant.prompts.planner import PLANNER_SYSTEM_PROMPT
 from app.ai.providers.factory import get_llm_provider
 from app.core.logging import logger
+from app.core.time import format_colombia_today_es, now_colombia
 from app.schemas.assistant_plan import AssistantPlan
-
-_DAYS_ES = [
-    "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo",
-]
-_MONTHS_ES = [
-    "enero", "febrero", "marzo", "abril", "mayo", "junio",
-    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-]
 
 
 class GeminiPlanner:
@@ -32,10 +24,8 @@ class GeminiPlanner:
 
         started = time.perf_counter()
 
-        now = datetime.now(UTC)
-        wd = _DAYS_ES[now.weekday()]
-        mo = _MONTHS_ES[now.month - 1]
-        today_formatted = f"{wd.capitalize()} {now.day} de {mo} de {now.year}"
+        now = now_colombia()
+        today_formatted = format_colombia_today_es()
 
         system_prompt = PLANNER_SYSTEM_PROMPT.format(
             today_formatted=today_formatted,
@@ -43,9 +33,10 @@ class GeminiPlanner:
         )
 
         context = {
-            "today": now.strftime("%Y-%m-%d"),
+            "today": now.date().isoformat(),
             "today_description": today_formatted,
             "current_time": now.strftime("%H:%M"),
+            "timezone": "America/Bogota",
             "channel": channel,
             "conversation_context": conversation_context or "",
             "user_message": user_message,

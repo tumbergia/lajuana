@@ -20,6 +20,7 @@ dependencies = [
 	"httpx>=0.27.0,<1.0.0",
 	"mcp>=1.13.0,<2.0.0",
 	"boto3>=1.34.0,<2.0.0",
+	"tzdata>=2024.0,<2026.0",
 ]
 
 [project.optional-dependencies]
