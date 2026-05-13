@@ -1,5 +1,4 @@
 from typing import Any
-from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
@@ -23,83 +22,11 @@ async def _verify_webhook(
 
 
 async def _receive_webhook(request: Request) -> dict[str, Any]:
-    trace_id = str(uuid4())
     payload = await request.json()
-    messages = normalize_whatsapp_payload(payload)
-
-    logger.info(
-        "whatsapp.webhook.received",
-        extra={
-            "trace_id": trace_id,
-            "channel": "whatsapp",
-            "endpoint": "/webhook",
-            "entry_count": len(payload.get("entry", [])),
-            "message_count": len(messages),
-        },
-    )
-
-    orchestrator = AssistantOrchestrator()
-    sender = WhatsAppSender()
-
-    processed = 0
-
-    for message in messages:
-        logger.info(
-            "whatsapp.message.normalized",
-            extra={
-                "trace_id": trace_id,
-                "channel": "whatsapp",
-                "from_phone": message.from_phone[-4:] if message.from_phone else "unknown",
-            },
-        )
-
-        logger.info(
-            "assistant.ask.start",
-            extra={
-                "trace_id": trace_id,
-                "channel": "whatsapp",
-                "conversation_id": message.from_phone,
-            },
-        )
-
-        result = await orchestrator.ask(
-            AskRequest(
-                message=message.text,
-                channel="whatsapp",
-                from_phone=message.from_phone,
-                conversation_id=message.from_phone,
-                trace_id=trace_id,
-            )
-        )
-
-        logger.info(
-            "assistant.ask.completed",
-            extra={
-                "trace_id": trace_id,
-                "channel": "whatsapp",
-                "conversation_id": message.from_phone,
-                "status": "success",
-            },
-        )
-
-        if message.from_phone:
-            await sender.send_text(
-                to_phone=message.from_phone,
-                text=result.response,
-            )
-
-        processed += 1
-
-    logger.info(
-        "whatsapp.webhook.processed",
-        extra={
-            "trace_id": trace_id,
-            "channel": "whatsapp",
-            "total_processed": processed,
-        },
-    )
-
-    return {"received": True, "processed_messages": processed}
+    ingestion = WhatsAppIngestionService()
+    ingested = await ingestion.ingest(payload)
+    logger.info("[webhook] Ingested %d message(s)", ingested)
+    return {"received": True, "ingested_messages": ingested}
 
 
 @router.get("/webhook", response_class=PlainTextResponse)

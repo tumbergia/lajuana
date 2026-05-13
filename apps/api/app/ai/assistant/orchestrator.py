@@ -1,13 +1,8 @@
 from __future__ import annotations
 
 import time
-from datetime import date
 from uuid import uuid4
 
-from app.ai.assistant.date_guard import (
-    InvalidRequestedDateError,
-    validate_requested_date_for_business,
-)
 from app.ai.assistant.planner import GeminiPlanner
 from app.ai.assistant.policy import ToolPolicyEngine
 from app.ai.assistant.response_composer import compose_tool_response
@@ -72,6 +67,7 @@ class AssistantOrchestrator:
                 history_lines.append(f"Asistente: {t.response_text}")
 
         conversation_history = "\n".join(history_lines)
+
         enriched_context = None
         if session.slot_values or conversation_history:
             parts = []
@@ -106,32 +102,18 @@ class AssistantOrchestrator:
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.HUMAN_HANDOFF,
-                planner_output={},
-                tool_output={},
-                response=(
-                    "Ocurrió un error temporal en mi sistema de procesamiento. "
-                    "Voy a transferirte con un asesor humano para que no te quedes "
-                    "sin atención."
-                ),
+                planner_output={}, tool_output={},
+                response="Error temporal. Te transfiero con un asesor.",
+            )
+        except Exception:
+            logger.exception("[conversation_id=%s] LLM parsing failed", conversation_id)
+            return AskResponse(
+                trace_id=trace_id,
+                action=AssistantAction.ASK_CLARIFYING_QUESTION,
+                planner_output={}, tool_output={},
+                response="No entendí bien tu mensaje. ¿Podrías repetirlo de otra forma?",
             )
 
-        # Validate requested_date against Colombia business timezone
-        if plan.arguments and plan.arguments.requested_date:
-            try:
-                parsed_date = date.fromisoformat(plan.arguments.requested_date)
-                validate_requested_date_for_business(parsed_date)
-            except (InvalidRequestedDateError, ValueError):
-                plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
-                plan.response = (
-                    "Para evitar errores con la reserva, necesito que me confirmes "
-                    "la fecha exacta en formato día, mes y año."
-                )
-                plan.arguments.requested_date = None
-
-        turn.planner_output = plan.model_dump(mode="json")
-        await turn.save()
-
-        # Save all non-null arguments from planner to session slots
         if plan.arguments:
             for key, value in plan.arguments.model_dump(exclude_none=True).items():
                 session.slot_values[key] = value
