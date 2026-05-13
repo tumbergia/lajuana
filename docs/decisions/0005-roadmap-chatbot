@@ -1,0 +1,668 @@
+# Roadmap del asistente AI para La Juana
+
+## Índice
+
+1. [Propósito del roadmap](#1-propósito-del-roadmap)  
+2. [Principios de diseño](#2-principios-de-diseño)  
+3. [Fase 0 — Gobernanza, permisos y trazabilidad](#3-fase-0--gobernanza-permisos-y-trazabilidad)  
+   1. [Subfase 0.1 — Contexto de ejecución](#subfase-01--contexto-de-ejecución)  
+   2. [Subfase 0.2 — Clasificación de tools por riesgo](#subfase-02--clasificación-de-tools-por-riesgo)  
+   3. [Subfase 0.3 — Auditoría y logs de tools](#subfase-03--auditoría-y-logs-de-tools)  
+4. [Fase 1 — Asistente público de conocimiento](#4-fase-1--asistente-público-de-conocimiento)  
+   1. [Subfase 1.1 — Base de conocimiento institucional](#subfase-11--base-de-conocimiento-institucional)  
+   2. [Subfase 1.2 — Preguntas frecuentes públicas](#subfase-12--preguntas-frecuentes-públicas)  
+   3. [Subfase 1.3 — Reglas comerciales y tono de atención](#subfase-13--reglas-comerciales-y-tono-de-atención)  
+5. [Fase 2 — Catálogo comercial y experiencias](#5-fase-2--catálogo-comercial-y-experiencias)  
+   1. [Subfase 2.1 — Listado de experiencias](#subfase-21--listado-de-experiencias)  
+   2. [Subfase 2.2 — Detalle y comparación de experiencias](#subfase-22--detalle-y-comparación-de-experiencias)  
+   3. [Subfase 2.3 — Recomendación guiada](#subfase-23--recomendación-guiada)  
+6. [Fase 3 — Disponibilidad, cotización y alternativas](#6-fase-3--disponibilidad-cotización-y-alternativas)  
+   1. [Subfase 3.1 — Consulta puntual de disponibilidad](#subfase-31--consulta-puntual-de-disponibilidad)  
+   2. [Subfase 3.2 — Listado de fechas disponibles](#subfase-32--listado-de-fechas-disponibles)  
+   3. [Subfase 3.3 — Cotización comercial](#subfase-33--cotización-comercial)  
+   4. [Subfase 3.4 — Fechas alternativas](#subfase-34--fechas-alternativas)  
+7. [Fase 4 — Flujo WhatsApp de pre-reserva](#7-fase-4--flujo-whatsapp-de-pre-reserva)  
+   1. [Subfase 4.1 — Creación de reserva borrador](#subfase-41--creación-de-reserva-borrador)  
+   2. [Subfase 4.2 — Consulta de estado por cliente](#subfase-42--consulta-de-estado-por-cliente)  
+   3. [Subfase 4.3 — Handoff humano](#subfase-43--handoff-humano)  
+8. [Fase 5 — Pagos, comprobantes y confirmación](#8-fase-5--pagos-comprobantes-y-confirmación)  
+   1. [Subfase 5.1 — Adjuntar comprobantes](#subfase-51--adjuntar-comprobantes)  
+   2. [Subfase 5.2 — Revisión administrativa del pago](#subfase-52--revisión-administrativa-del-pago)  
+   3. [Subfase 5.3 — Confirmación formal de reserva](#subfase-53--confirmación-formal-de-reserva)  
+9. [Fase 6 — Participantes, formularios y datos sensibles](#9-fase-6--participantes-formularios-y-datos-sensibles)  
+   1. [Subfase 6.1 — Envío de formulario](#subfase-61--envío-de-formulario)  
+   2. [Subfase 6.2 — Estado de registro de participantes](#subfase-62--estado-de-registro-de-participantes)  
+   3. [Subfase 6.3 — Validación administrativa](#subfase-63--validación-administrativa)  
+10. [Fase 7 — CRUD administrativo base](#10-fase-7--crud-administrativo-base)  
+   1. [Subfase 7.1 — Usuarios y roles](#subfase-71--usuarios-y-roles)  
+   2. [Subfase 7.2 — Experiencias](#subfase-72--experiencias)  
+   3. [Subfase 7.3 — Fechas operativas](#subfase-73--fechas-operativas)  
+   4. [Subfase 7.4 — Reservas](#subfase-74--reservas)  
+   5. [Subfase 7.5 — Participantes](#subfase-75--participantes)  
+   6. [Subfase 7.6 — Equinos](#subfase-76--equinos)  
+   7. [Subfase 7.7 — Sillas y asignaciones](#subfase-77--sillas-y-asignaciones)  
+   8. [Subfase 7.8 — Proveedores](#subfase-78--proveedores)  
+   9. [Subfase 7.9 — Pólizas y documentos](#subfase-79--pólizas-y-documentos)  
+   10. [Subfase 7.10 — Configuración](#subfase-710--configuración)  
+11. [Fase 8 — Asistente administrativo sobre la app móvil](#11-fase-8--asistente-administrativo-sobre-la-app-móvil)  
+   1. [Subfase 8.1 — Consultas administrativas](#subfase-81--consultas-administrativas)  
+   2. [Subfase 8.2 — Escritura asistida con confirmación](#subfase-82--escritura-asistida-con-confirmación)  
+   3. [Subfase 8.3 — Acciones críticas protegidas](#subfase-83--acciones-críticas-protegidas)  
+12. [Fase 9 — Operación de campo y bienestar equino](#12-fase-9--operación-de-campo-y-bienestar-equino)  
+   1. [Subfase 9.1 — Resumen operativo](#subfase-91--resumen-operativo)  
+   2. [Subfase 9.2 — Bitácora de recorrido](#subfase-92--bitácora-de-recorrido)  
+   3. [Subfase 9.3 — Historial y eventos equinos](#subfase-93--historial-y-eventos-equinos)  
+13. [Fase 10 — Analítica, reportes y automatizaciones](#13-fase-10--analítica-reportes-y-automatizaciones)  
+   1. [Subfase 10.1 — Reportes comerciales](#subfase-101--reportes-comerciales)  
+   2. [Subfase 10.2 — Reportes operativos](#subfase-102--reportes-operativos)  
+   3. [Subfase 10.3 — Automatizaciones post-servicio](#subfase-103--automatizaciones-post-servicio)  
+14. [Cierre técnico](#14-cierre-técnico)
+
+---
+
+## 1. Propósito del roadmap
+
+Este roadmap define la evolución del asistente AI de La Juana desde un chatbot comercial básico hacia un sistema conversacional completo para ventas, conocimiento institucional, reservas, operación interna, administración móvil, bienestar equino y analítica. El objetivo no es crear un bot “que responda bonito”, sino una capa de asistencia gobernada por permisos, trazabilidad y reglas de negocio.
+
+La solución debe mantener una separación estricta entre el asistente público de WhatsApp y el asistente administrativo de la app móvil. El primero informa, filtra, cotiza y acompaña al cliente. El segundo consulta y opera entidades internas bajo permisos, confirmaciones y auditoría.
+
+---
+
+## 2. Principios de diseño
+
+La reserva sigue siendo el eje operativo cuando existe una experiencia contratada, pero el asistente no debe limitarse a reservas. También debe responder sobre historia, identidad, reglas, experiencias, equinos, logística, proveedores, operación, reportes y configuración.
+
+La IA no debe ser fuente de verdad ni autoridad final sobre acciones críticas. Debe apoyarse en tools tipadas, contratos estables, permisos por rol, logs de ejecución y confirmación humana para operaciones sensibles como validar pagos, confirmar reservas, cambiar cupos, cerrar fechas o cancelar servicios.
+
+---
+
+# 3. Fase 0 — Gobernanza, permisos y trazabilidad
+
+## Subfase 0.1 — Contexto de ejecución
+
+Antes de agregar más tools, el sistema debe saber quién está hablando, desde qué canal, con qué rol y qué permisos tiene. Sin ese contexto, una misma orden puede ser segura en app administrativa y peligrosa en WhatsApp público.
+
+El `ToolContext` debe viajar con cada ejecución para evitar que el asistente público toque recursos internos. Esta subfase es obligatoria antes de habilitar escritura.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `resolve_actor_context` | Interna | Determina actor, canal, rol, permisos, teléfono, usuario y conversación. |
+| `get_current_permissions` | Lectura | Devuelve las acciones permitidas para el actor actual. |
+| `validate_tool_access` | Interna | Verifica si una tool puede ejecutarse según rol, canal y riesgo. |
+
+## Subfase 0.2 — Clasificación de tools por riesgo
+
+Las tools deben clasificarse por nivel de riesgo: lectura pública, escritura pública limitada, lectura administrativa, escritura administrativa y acción crítica. Esto evita que una tool poderosa termine disponible en el canal equivocado.
+
+La regla es simple: WhatsApp público no administra el negocio. La app móvil sí puede operar, pero con permisos y confirmaciones.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `classify_tool_risk` | Interna | Clasifica cada tool según riesgo funcional y datos afectados. |
+| `require_human_confirmation` | Interna | Fuerza confirmación explícita antes de ejecutar acciones críticas. |
+| `deny_critical_public_action` | Interna | Bloquea acciones críticas si el actor viene de un canal público. |
+
+## Subfase 0.3 — Auditoría y logs de tools
+
+Cada tool debe dejar rastro: quién la ejecutó, con qué entrada, qué resultado produjo, cuándo ocurrió y bajo qué conversación. Sin logs, el sistema no es auditable y cualquier error queda sin explicación.
+
+La trazabilidad debe ser transversal. No se implementa solo para reservas; aplica también a equinos, proveedores, participantes, pagos, configuración y knowledge base.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `log_tool_call` | Interna | Registra entrada, salida, actor, estado, error y trace ID. |
+| `get_tool_call_trace` | Admin lectura | Consulta la traza de ejecución de una acción específica. |
+| `list_tool_call_logs` | Admin lectura | Lista ejecuciones por fecha, usuario, tool, estado o entidad afectada. |
+
+---
+
+# 4. Fase 1 — Asistente público de conocimiento
+
+## Subfase 1.1 — Base de conocimiento institucional
+
+El asistente debe poder responder sobre qué es La Juana, dónde queda, qué tipo de experiencias ofrece, quiénes la fundaron y cuál es su enfoque. También debe manejar preguntas no definidas, como “por qué se llama La Juana” o “quién es La Juana”, sin inventar.
+
+La información institucional debe vivir en artículos controlados, versionados y publicables. Si la historia oficial no existe, se crea un artículo pendiente, no una respuesta improvisada por el modelo.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `search_knowledge` | Pública lectura | Busca respuestas en la base de conocimiento según consulta y audiencia. |
+| `get_knowledge_article` | Pública/Admin lectura | Devuelve un artículo por slug o ID. |
+| `admin_create_knowledge_article` | Admin escritura | Crea contenido institucional, comercial u operativo. |
+| `admin_update_knowledge_article` | Admin escritura | Actualiza artículos existentes con versionado. |
+| `admin_publish_knowledge_article` | Admin crítica | Publica contenido validado para uso del asistente público. |
+
+## Subfase 1.2 — Preguntas frecuentes públicas
+
+Las preguntas frecuentes deben cubrir ubicación, duración, niveles, qué incluye, alimentación, seguridad, clima, restricciones, pagos, cancelaciones y condiciones familiares. Esta capa reduce presión operativa sin convertir al asistente en vendedor agresivo.
+
+Las FAQs deben estar separadas por categoría y audiencia. Algunas respuestas pueden ser públicas; otras solo deben ser internas para administradores o guías.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `list_public_faqs` | Pública lectura | Lista preguntas frecuentes publicadas por categoría. |
+| `answer_public_faq` | Pública lectura | Responde usando FAQs y knowledge articles publicados. |
+| `admin_create_faq` | Admin escritura | Crea una pregunta frecuente. |
+| `admin_update_faq` | Admin escritura | Edita pregunta, respuesta, categoría o audiencia. |
+| `admin_archive_faq` | Admin escritura | Retira una FAQ sin borrarla definitivamente. |
+
+## Subfase 1.3 — Reglas comerciales y tono de atención
+
+El asistente debe comunicar con claridad que La Juana es una experiencia familiar, tranquila y de naturaleza. Si alguien busca tomar licor, hacer alboroto o convertir la experiencia en fiesta, debe filtrar sin insultar ni seguir vendiendo mal.
+
+Estas reglas deben estar parametrizadas, no quemadas en el prompt. El negocio podrá ajustar textos, restricciones y mensajes sin tocar código.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `get_public_business_rules` | Pública lectura | Devuelve reglas visibles: enfoque familiar, restricciones y condiciones. |
+| `get_message_template` | Lectura | Obtiene plantillas oficiales para respuestas comerciales. |
+| `admin_update_business_rules` | Admin crítica | Actualiza reglas comerciales que afectan atención pública. |
+| `admin_update_message_template` | Admin escritura | Edita plantillas de WhatsApp, confirmación o recomendaciones. |
+
+---
+
+# 5. Fase 2 — Catálogo comercial y experiencias
+
+## Subfase 2.1 — Listado de experiencias
+
+El asistente debe listar experiencias activas con nombre, descripción corta, duración, nivel, dificultad, precio desde y etiquetas. Esta es la base del flujo comercial y ya existe parcialmente.
+
+La respuesta debe ser útil para decisión, no una descarga de base de datos. El asistente debe resumir y guiar al cliente según intención.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `list_experiences` | Pública lectura | Lista experiencias activas con resumen comercial. |
+| `admin_list_experiences` | Admin lectura | Lista experiencias con filtros administrativos. |
+| `admin_create_experience` | Admin escritura | Crea una experiencia nueva. |
+| `admin_update_experience` | Admin escritura | Actualiza información, precios, duración, nivel o estado. |
+| `admin_deactivate_experience` | Admin crítica | Desactiva una experiencia sin eliminar histórico. |
+
+## Subfase 2.2 — Detalle y comparación de experiencias
+
+El cliente suele preguntar diferencias: cuál es más suave, cuál sirve para niños, cuál dura más o cuál incluye alimentación. El asistente necesita una tool de detalle y otra de comparación para responder sin inventar.
+
+Esta subfase evita respuestas genéricas. La comparación debe basarse en datos reales del catálogo y reglas comerciales.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `get_experience_detail` | Pública lectura | Devuelve detalle completo de una experiencia activa. |
+| `compare_experiences` | Pública lectura | Compara duración, dificultad, nivel, precio e inclusión. |
+| `list_experience_media` | Pública lectura | Lista imágenes o recursos asociados a una experiencia. |
+| `admin_update_experience_media` | Admin escritura | Agrega, edita o retira medios de una experiencia. |
+
+## Subfase 2.3 — Recomendación guiada
+
+La recomendación debe cruzar perfil del grupo, edad, experiencia previa, expectativas y restricciones. No es lo mismo recomendar a una pareja que a una familia con niños o adultos mayores.
+
+Esta subfase debe mantener un filtro operativo: si el cliente busca fiesta, consumo de licor o desorden, la recomendación debe detenerse y explicar las condiciones de La Juana.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `recommend_experience` | Pública lectura | Recomienda experiencias según perfil, grupo y restricciones. |
+| `evaluate_customer_fit` | Pública lectura | Evalúa si el perfil del cliente encaja con la experiencia. |
+| `ask_profile_clarification` | Interna | Genera preguntas mínimas para recomendar sin adivinar. |
+
+---
+
+# 6. Fase 3 — Disponibilidad, cotización y alternativas
+
+## Subfase 3.1 — Consulta puntual de disponibilidad
+
+Esta subfase valida si una experiencia específica tiene cupo en una fecha y para un número de participantes. Es el mínimo necesario para no cotizar fechas imposibles.
+
+La tool actual cubre parte de esto y debe mantenerse como lectura. No debe crear reservas ni bloquear cupos.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `check_experience_availability` | Pública lectura | Verifica disponibilidad para experiencia, fecha y participantes. |
+| `get_schedule_detail` | Pública/Admin lectura | Consulta detalle de una fecha operativa específica. |
+| `explain_availability_block` | Interna | Traduce motivos técnicos de bloqueo a lenguaje claro para el usuario. |
+
+## Subfase 3.2 — Listado de fechas disponibles
+
+Esta es la brecha más importante del asistente actual. El cliente no siempre sabe qué fecha pedir; muchas veces necesita opciones disponibles.
+
+La tool debe listar fechas abiertas por rango, experiencia y tamaño del grupo. Sin esto, el asistente parece inteligente, pero comercialmente queda incompleto.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `list_available_schedules` | Pública lectura | Lista fechas abiertas con cupo suficiente en un rango. |
+| `filter_schedules_by_group_size` | Interna | Filtra fechas según participantes requeridos. |
+| `format_schedule_options` | Interna | Presenta opciones de agenda en formato conversacional. |
+
+## Subfase 3.3 — Cotización comercial
+
+La cotización debe basarse en experiencia, número de personas y tarifas configuradas. También debe aclarar que cotizar no confirma reserva.
+
+Esta subfase no debe depender de disponibilidad para calcular precio, pero sí debe sugerir validarla antes de avanzar.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `quote_experience` | Pública lectura | Calcula precio estimado según experiencia y participantes. |
+| `get_pricing_tiers` | Admin/Pública lectura | Consulta tramos tarifarios publicados de una experiencia. |
+| `explain_quote_disclaimer` | Interna | Agrega aclaración de que la cotización no confirma cupo. |
+
+## Subfase 3.4 — Fechas alternativas
+
+Cuando una fecha no está disponible, el asistente debe proponer alternativas cercanas. Decir “no hay cupo” y cortar el flujo es comercialmente pobre.
+
+La búsqueda de alternativas debe respetar experiencia, cantidad de personas, rango de fechas y anticipación mínima.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `suggest_alternative_dates` | Pública lectura | Sugiere fechas cercanas con disponibilidad real. |
+| `suggest_alternative_experiences` | Pública lectura | Sugiere experiencias similares si la solicitada no está disponible. |
+| `rank_schedule_options` | Interna | Ordena alternativas por cercanía, cupo y relevancia. |
+
+---
+
+# 7. Fase 4 — Flujo WhatsApp de pre-reserva
+
+## Subfase 4.1 — Creación de reserva borrador
+
+Cuando el cliente acepta avanzar, el asistente puede crear una reserva borrador. Esta reserva no confirma cupo definitivo ni valida pago; solo estructura la intención comercial.
+
+El borrador debe guardar snapshot de cotización, experiencia, fecha, cantidad de participantes, canal de origen y datos mínimos del titular. Sin snapshot, se pierde trazabilidad comercial.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `create_reservation_draft` | Pública escritura limitada | Crea reserva preliminar en estado borrador o pendiente de pago. |
+| `validate_reservation_draft_input` | Interna | Verifica datos mínimos antes de crear el borrador. |
+| `expire_reservation_draft` | Sistema | Marca borradores vencidos si no avanzan a pago. |
+
+## Subfase 4.2 — Consulta de estado por cliente
+
+El cliente debe poder preguntar por su proceso: si ya quedó registrada la solicitud, si falta comprobante, si falta formulario o si la reserva ya fue confirmada.
+
+Esta consulta debe limitarse al teléfono o identificador del cliente. No debe permitir explorar reservas de terceros.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `get_reservation_status_by_phone` | Pública lectura limitada | Consulta reservas asociadas al número de WhatsApp. |
+| `get_reservation_public_summary` | Pública lectura limitada | Devuelve resumen seguro de una reserva del cliente. |
+| `explain_next_reservation_step` | Interna | Explica qué debe hacer el cliente según estado actual. |
+
+## Subfase 4.3 — Handoff humano
+
+El handoff debe activarse cuando hay ambigüedad, riesgo, cliente molesto, pago por revisar, solicitud especial, cambio complejo o decisión fuera de reglas.
+
+No todo debe resolverlo el bot. Un asistente serio sabe cuándo detenerse y escalar.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `request_human_review` | Pública/Admin escritura limitada | Crea solicitud de revisión humana con contexto y motivo. |
+| `notify_admin_handoff` | Sistema | Notifica al administrador sobre un caso pendiente. |
+| `get_handoff_status` | Lectura | Consulta si un caso ya fue tomado por un humano. |
+
+---
+
+# 8. Fase 5 — Pagos, comprobantes y confirmación
+
+## Subfase 5.1 — Adjuntar comprobantes
+
+El cliente puede enviar comprobante por WhatsApp, pero adjuntar comprobante no significa validar pago. La tool solo debe asociar evidencia a la reserva.
+
+El sistema debe guardar metadatos, archivo o referencia, monto declarado, medio de pago, fecha reportada y trazabilidad de origen.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `attach_payment_proof_to_reservation` | Pública escritura limitada | Asocia comprobante enviado por cliente a una reserva. |
+| `get_payment_proof_public_status` | Pública lectura limitada | Indica si el comprobante fue recibido o está en revisión. |
+| `admin_get_payment_proof` | Admin lectura | Consulta detalle administrativo del comprobante. |
+
+## Subfase 5.2 — Revisión administrativa del pago
+
+La validación del pago debe ser administrativa o conciliada por integración confiable. El LLM no puede decidir que un pago existe porque vio una imagen.
+
+Esta subfase protege caja, cupos y confianza operativa. Validar mal un pago es peor que responder lento.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_list_payment_proofs` | Admin lectura | Lista comprobantes pendientes, aprobados o rechazados. |
+| `admin_update_payment_proof` | Admin escritura | Actualiza observaciones o estado preliminar del comprobante. |
+| `admin_mark_payment_verified` | Admin crítica | Marca pago como verificado con confirmación humana. |
+| `admin_reject_payment_proof` | Admin crítica | Rechaza comprobante con motivo documentado. |
+
+## Subfase 5.3 — Confirmación formal de reserva
+
+La confirmación formal debe ocurrir solo cuando hay pago validado y disponibilidad real vigente. En ese momento se descuentan cupos y se dispara la comunicación post-reserva.
+
+Esta acción debe ser atómica en backend. No puede depender de que el asistente “crea” que hay cupo.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_confirm_reservation` | Admin crítica | Confirma reserva, descuenta cupos y dispara mensajes. |
+| `send_reservation_confirmation` | Sistema | Envía confirmación formal, ubicación e instrucciones. |
+| `generate_reservation_summary` | Admin/Sistema | Genera resumen de experiencia, valores y condiciones. |
+
+---
+
+# 9. Fase 6 — Participantes, formularios y datos sensibles
+
+## Subfase 6.1 — Envío de formulario
+
+Después de confirmar reserva, el sistema debe enviar formulario obligatorio para participantes. Este formulario no debe resolverse completo por WhatsApp porque incluye datos sensibles y operativos.
+
+El enlace debe estar asociado a reserva, idioma, expiración y trazabilidad. Debe permitir español e inglés.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `send_participant_form_link` | Pública/Sistema | Envía enlace de formulario asociado a la reserva. |
+| `generate_participant_form_link` | Sistema | Crea enlace seguro, versionado y trazable. |
+| `get_participant_form_config` | Lectura | Consulta estructura vigente del formulario. |
+
+## Subfase 6.2 — Estado de registro de participantes
+
+El cliente y el administrador deben saber si faltan participantes o campos obligatorios. Sin esto, la operación llega incompleta al día del servicio.
+
+La respuesta pública debe ser agregada: “faltan 2 participantes” o “faltan datos médicos”. No debe exponer datos sensibles por chat.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `get_participant_form_status` | Pública lectura limitada | Informa avance general del registro de participantes. |
+| `admin_get_missing_participant_fields` | Admin lectura | Lista campos faltantes por participante. |
+| `send_participant_form_reminder` | Sistema/Admin | Envía recordatorio para completar datos. |
+
+## Subfase 6.3 — Validación administrativa
+
+Antes de ejecutar la experiencia, operación debe revisar si los datos permiten preparar pólizas, asignaciones, logística y seguridad.
+
+Esta subfase conecta participantes con operación. No es un trámite decorativo; es insumo para decidir mulas, sillas, alimentación y riesgos.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_list_participants` | Admin lectura | Lista participantes por reserva, fecha o estado. |
+| `admin_get_participant_detail` | Admin lectura | Consulta detalle completo de un participante. |
+| `admin_update_participant` | Admin escritura | Corrige o completa datos permitidos. |
+| `admin_mark_participant_complete` | Admin escritura | Marca registro como operativo si cumple requisitos. |
+
+---
+
+# 10. Fase 7 — CRUD administrativo base
+
+## Subfase 7.1 — Usuarios y roles
+
+El sistema debe permitir gestionar usuarios internos, especialmente administradores y guías. Los permisos definen qué puede ver y ejecutar cada rol.
+
+No todos los usuarios deben administrar todo. Un guía necesita operación de campo; un administrador necesita configuración, reservas y gestión general.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_list_users` | Admin lectura | Lista usuarios internos con filtros. |
+| `admin_get_user_detail` | Admin lectura | Consulta información de un usuario. |
+| `admin_create_user` | Admin escritura | Crea usuario interno. |
+| `admin_update_user` | Admin escritura | Actualiza datos, estado o rol. |
+| `admin_deactivate_user` | Admin crítica | Desactiva usuario sin eliminar histórico. |
+
+## Subfase 7.2 — Experiencias
+
+La administración debe poder crear, editar y desactivar experiencias desde la app móvil. Esto incluye precios, duración, dificultad, nivel, descripción, etiquetas y medios.
+
+El asistente administrativo puede ayudar a redactar, pero los cambios deben guardar trazabilidad y pasar por validación de campos.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_list_experiences` | Admin lectura | Lista experiencias con filtros internos. |
+| `admin_get_experience_detail` | Admin lectura | Consulta detalle completo administrativo. |
+| `admin_create_experience` | Admin escritura | Crea experiencia nueva. |
+| `admin_update_experience` | Admin escritura | Actualiza atributos comerciales u operativos. |
+| `admin_deactivate_experience` | Admin crítica | Desactiva experiencia preservando histórico. |
+
+## Subfase 7.3 — Fechas operativas
+
+Las fechas operativas son críticas porque gobiernan cupos, estados y capacidad. Sin CRUD sólido de schedules, el asistente comercial venderá sobre datos incompletos.
+
+Esta subfase debe incluir creación, edición, cierre, bloqueo de cupos, cambio de capacidad e histórico de ocupación.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_list_schedules` | Admin lectura | Lista fechas operativas por rango, experiencia o estado. |
+| `admin_get_schedule_detail` | Admin lectura | Consulta fecha operativa con cupos e histórico. |
+| `admin_create_schedule` | Admin escritura | Crea una fecha programada. |
+| `admin_update_schedule` | Admin escritura | Edita hora, capacidad o estado permitido. |
+| `admin_close_schedule` | Admin crítica | Cierra una fecha con motivo. |
+| `admin_block_schedule_slots` | Admin crítica | Bloquea cupos por contingencia o uso interno. |
+
+## Subfase 7.4 — Reservas
+
+Reservas es el módulo central para seguimiento comercial y operativo. La app debe permitir ver reservas por estado, fecha, experiencia, cliente y pendientes.
+
+El asistente administrativo puede resumir, filtrar y preparar cambios, pero confirmar o cancelar debe seguir protegido.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_list_reservations` | Admin lectura | Lista reservas con filtros. |
+| `admin_get_reservation_detail` | Admin lectura | Consulta detalle completo de una reserva. |
+| `admin_update_reservation` | Admin escritura | Actualiza campos no críticos. |
+| `admin_transition_reservation_status` | Admin crítica | Cambia estado con validación y motivo. |
+| `admin_cancel_reservation` | Admin crítica | Cancela reserva y registra causa. |
+
+## Subfase 7.5 — Participantes
+
+La administración de participantes debe permitir consultar, corregir, validar y detectar faltantes. Este módulo maneja datos sensibles, por lo que exige permisos claros.
+
+No debe haber acceso público amplio a participantes. WhatsApp solo consulta estado general del propio registro.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_list_participants` | Admin lectura | Lista participantes por reserva o filtros. |
+| `admin_get_participant_detail` | Admin lectura | Consulta datos completos de participante. |
+| `admin_update_participant` | Admin escritura | Actualiza campos permitidos. |
+| `admin_validate_participant_readiness` | Admin lectura | Verifica si el participante está listo para operar. |
+| `admin_export_participants_for_policy` | Admin crítica | Exporta datos necesarios para pólizas. |
+
+## Subfase 7.6 — Equinos
+
+Equinos no es un CRUD secundario. Es un módulo operativo central para seguridad, bienestar animal y asignación de carga.
+
+La parte pública puede mostrar perfiles limitados; la parte administrativa gestiona disponibilidad, salud, entrenamiento, nutrición, eventos veterinarios y actividad.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `list_public_equines` | Pública lectura | Lista equinos visibles públicamente con información limitada. |
+| `get_public_equine_profile` | Pública lectura | Muestra perfil público de un equino. |
+| `admin_list_equines` | Admin lectura | Lista equinos con filtros operativos. |
+| `admin_get_equine_detail` | Admin lectura | Consulta ficha completa del equino. |
+| `admin_create_equine` | Admin escritura | Crea registro de equino. |
+| `admin_update_equine` | Admin escritura | Actualiza datos generales o disponibilidad. |
+| `admin_deactivate_equine` | Admin crítica | Retira equino de operación activa. |
+
+## Subfase 7.7 — Sillas y asignaciones
+
+Las sillas y asignaciones conectan participantes con equinos. La asignación debe considerar peso, edad, experiencia, seguridad y disponibilidad.
+
+El sistema debe permitir asignación manual final, pero también generar advertencias cuando detecte riesgos.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_list_saddles` | Admin lectura | Lista sillas disponibles o registradas. |
+| `admin_create_saddle` | Admin escritura | Crea una silla nueva. |
+| `admin_update_saddle` | Admin escritura | Actualiza estado o características de silla. |
+| `admin_create_assignment` | Admin escritura | Asigna participante, equino y silla. |
+| `admin_update_assignment` | Admin escritura | Modifica asignación existente. |
+| `admin_get_assignment_warnings` | Admin lectura | Devuelve alertas por peso, edad, experiencia o disponibilidad. |
+
+## Subfase 7.8 — Proveedores
+
+El módulo de proveedores debe centralizar alojamientos, transporte, alimentación y aliados operativos. Esto reemplaza progresivamente información dispersa en Excel o conversaciones.
+
+Las relaciones con reservas deben quedar trazables: qué proveedor participó, para qué servicio, bajo qué condiciones y en qué fecha.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_list_providers` | Admin lectura | Lista proveedores con filtros. |
+| `admin_get_provider_detail` | Admin lectura | Consulta detalle del proveedor. |
+| `admin_create_provider` | Admin escritura | Crea proveedor operativo o comercial. |
+| `admin_update_provider` | Admin escritura | Actualiza datos, tarifas o condiciones. |
+| `admin_deactivate_provider` | Admin escritura | Desactiva proveedor preservando histórico. |
+| `admin_link_provider_to_reservation` | Admin escritura | Asocia proveedor a una reserva o servicio. |
+
+## Subfase 7.9 — Pólizas y documentos
+
+Las pólizas y documentos deben quedar asociados a reservas y participantes. Esto incluye comprobantes, formularios, autorizaciones, facturas, imágenes y evidencia operativa.
+
+La firma digital todavía debe tratarse como pendiente hasta resolver validez legal y mecanismo técnico.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_create_policy` | Admin escritura | Crea póliza asociada a reserva o participantes. |
+| `admin_get_policy_detail` | Admin lectura | Consulta detalle de una póliza. |
+| `admin_update_policy` | Admin escritura | Actualiza datos de póliza. |
+| `admin_link_document_to_entity` | Admin escritura | Asocia documento a reserva, participante o equino. |
+| `admin_list_documents` | Admin lectura | Lista documentos por entidad. |
+
+## Subfase 7.10 — Configuración
+
+La configuración debe permitir ajustar reglas sin tocar código: anticipación mínima, textos, ubicación, contactos, plantillas, links y políticas comerciales.
+
+Esto evita que cada cambio de negocio se convierta en una modificación técnica.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_get_reservation_rules` | Admin lectura | Consulta reglas de reserva vigentes. |
+| `admin_update_reservation_rules` | Admin crítica | Actualiza reglas que afectan disponibilidad o confirmación. |
+| `admin_get_business_profile` | Admin lectura | Consulta datos públicos del negocio. |
+| `admin_update_business_profile` | Admin escritura | Actualiza ubicación, links, contacto o descripción. |
+| `admin_get_message_templates` | Admin lectura | Lista plantillas de comunicación. |
+| `admin_update_message_template` | Admin escritura | Edita plantillas usadas por el asistente. |
+
+---
+
+# 11. Fase 8 — Asistente administrativo sobre la app móvil
+
+## Subfase 8.1 — Consultas administrativas
+
+El primer uso administrativo del asistente debe ser lectura: buscar reservas, fechas, clientes, equinos, proveedores, participantes incompletos y comprobantes pendientes.
+
+Esto reduce carga operativa sin riesgo de alterar datos. Es el mejor punto de entrada para voz o texto en la app móvil.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_search_global` | Admin lectura | Busca entidades por texto en módulos autorizados. |
+| `admin_get_today_summary` | Admin lectura | Resume operación del día. |
+| `admin_get_pending_tasks` | Admin lectura | Lista pagos, formularios, asignaciones o pólizas pendientes. |
+| `admin_get_entity_summary` | Admin lectura | Resume una entidad específica en lenguaje operativo. |
+
+## Subfase 8.2 — Escritura asistida con confirmación
+
+Después de consultas, el asistente puede ayudar a crear o actualizar entidades. Debe mostrar preview antes de ejecutar.
+
+La experiencia correcta es: usuario pide cambio, asistente interpreta, muestra resumen, usuario confirma, backend ejecuta, sistema audita.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_prepare_create_entity` | Admin escritura asistida | Prepara creación y devuelve preview validado. |
+| `admin_prepare_update_entity` | Admin escritura asistida | Prepara actualización y muestra cambios detectados. |
+| `admin_execute_prepared_action` | Admin escritura | Ejecuta una acción previamente confirmada. |
+| `admin_discard_prepared_action` | Admin escritura | Descarta una acción preparada. |
+
+## Subfase 8.3 — Acciones críticas protegidas
+
+Confirmar reservas, validar pagos, cancelar servicios, bloquear cupos o cambiar capacidad no deben ejecutarse por inferencia del modelo. Requieren permiso, preview y confirmación explícita.
+
+Esta subfase evita que un comando ambiguo destruya operación, disponibilidad o caja.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_prepare_critical_action` | Admin crítica | Prepara acción sensible con resumen de impacto. |
+| `admin_confirm_critical_action` | Admin crítica | Ejecuta acción crítica tras confirmación explícita. |
+| `admin_cancel_critical_action` | Admin crítica | Cancela acción crítica preparada. |
+| `admin_get_critical_action_impact` | Admin lectura | Explica impacto sobre reservas, cupos o datos. |
+
+---
+
+# 12. Fase 9 — Operación de campo y bienestar equino
+
+## Subfase 9.1 — Resumen operativo
+
+Antes de cada salida, operación necesita un resumen: reserva, participantes, pesos, edades, experiencia, restricciones, consentimiento de fotos, proveedor, logística, pólizas y asignaciones.
+
+El asistente debe generar esto desde datos estructurados, no desde memoria ni conversaciones sueltas.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_generate_operational_summary` | Admin lectura | Genera resumen operativo de una reserva. |
+| `guide_get_service_briefing` | Guía lectura | Muestra información necesaria para ejecutar servicio. |
+| `admin_get_logistics_checklist` | Admin/Guía lectura | Consulta checklist operativo por experiencia o reserva. |
+
+## Subfase 9.2 — Bitácora de recorrido
+
+Durante la experiencia se deben registrar hitos, observaciones e incidentes. La bitácora mantiene histórico real del servicio.
+
+La app móvil debe soportar operación offline y sincronización posterior para guías en campo.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `guide_create_service_log` | Guía escritura | Registra hito u observación durante recorrido. |
+| `guide_update_service_log` | Guía escritura | Corrige o amplía una entrada de bitácora. |
+| `guide_report_incident` | Guía escritura crítica | Registra incidente con severidad y entidades afectadas. |
+| `admin_list_service_logs` | Admin lectura | Lista bitácora de una reserva. |
+| `admin_close_service_execution` | Admin crítica | Cierra ejecución operativa del servicio. |
+
+## Subfase 9.3 — Historial y eventos equinos
+
+El bienestar equino requiere registrar eventos de salud, entrenamiento, nutrición, recorridos, tratamientos, podología, odontología y disponibilidad.
+
+Este módulo no debe depender solo de reservas. También debe permitir eventos de manejo sin servicio turístico asociado.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_add_equine_health_event` | Admin escritura | Registra evento sanitario o de bienestar. |
+| `admin_add_equine_training_event` | Admin escritura | Registra entrenamiento o actividad física. |
+| `admin_add_equine_veterinary_treatment` | Admin escritura crítica | Registra tratamiento veterinario. |
+| `admin_update_equine_availability` | Admin crítica | Cambia disponibilidad operativa del equino. |
+| `admin_get_equine_workload` | Admin lectura | Consulta carga de trabajo por rango de fechas. |
+
+---
+
+# 13. Fase 10 — Analítica, reportes y automatizaciones
+
+## Subfase 10.1 — Reportes comerciales
+
+La administración necesita entender embudo, conversión, reservas, cotizaciones, pagos pendientes, cancelaciones y canales de entrada.
+
+El asistente debe convertir datos operativos en respuestas accionables, no solo mostrar tablas.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_get_sales_summary` | Admin lectura | Resume ventas, reservas y pagos por rango. |
+| `admin_get_reservation_funnel` | Admin lectura | Muestra conversión por estados del flujo. |
+| `admin_get_channel_performance` | Admin lectura | Compara origen de contactos y conversión. |
+| `admin_get_cancellation_report` | Admin lectura | Resume cancelaciones y motivos. |
+
+## Subfase 10.2 — Reportes operativos
+
+Los reportes operativos deben cubrir ocupación, cupos, carga de equinos, uso de proveedores, participantes, restricciones y ejecución de servicios.
+
+Esto permite tomar decisiones sobre capacidad, rutas, personal, bienestar animal y logística.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `admin_get_occupancy_report` | Admin lectura | Reporta ocupación por fecha, experiencia o rango. |
+| `admin_get_customer_demographics` | Admin lectura | Resume nacionalidad, edad y tipo de grupo. |
+| `admin_get_equine_workload_report` | Admin lectura | Reporta carga de trabajo de equinos. |
+| `admin_get_provider_usage_report` | Admin lectura | Mide uso de proveedores por periodo. |
+| `admin_get_incident_report` | Admin lectura | Resume incidentes operativos o de seguridad. |
+
+## Subfase 10.3 — Automatizaciones post-servicio
+
+Después del servicio, el sistema debe enviar agradecimiento, reseñas, fotos y automatizaciones de cumpleaños o aniversario. Esto debe ejecutarse con reglas, no con improvisación del modelo.
+
+Las automatizaciones deben poder pausarse, auditarse y configurarse desde administración.
+
+| Tool | Tipo | Descripción breve |
+|---|---:|---|
+| `send_post_service_message` | Sistema | Envía agradecimiento y enlaces posteriores al servicio. |
+| `send_review_request` | Sistema | Solicita reseña al cliente. |
+| `send_photo_gallery_link` | Sistema | Envía enlace de fotos si aplica. |
+| `schedule_birthday_automation` | Sistema/Admin | Programa mensaje de cumpleaños. |
+| `schedule_visit_anniversary_automation` | Sistema/Admin | Programa mensaje de aniversario de visita. |
+| `admin_list_automation_logs` | Admin lectura | Consulta automatizaciones enviadas o fallidas. |
+
+---
+
+# 14. Cierre técnico
+
+El orden correcto no es construir un asistente que “haga de todo” desde el primer día. El orden correcto es: gobernanza, conocimiento, catálogo, disponibilidad, pre-reserva, pago, confirmación, formularios, CRUD administrativo, operación de campo, bienestar equino, reportes y automatizaciones.
+
+La ejecución debe mantener dos fronteras: WhatsApp es público y limitado; app móvil es administrativa y protegida. Si esa separación se rompe, el sistema deja de ser una arquitectura seria y se convierte en un riesgo operativo.
