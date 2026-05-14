@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formulario de Participantes - La Juana</title>
+<style>
+  :root {
+    --green-900: #1a3a2a;
+    --green-700: #2d6a4f;
+    --green-500: #40916c;
+    --green-200: #d8f3dc;
+    --green-50: #f0fdf4;
+    --stone-900: #1c1917;
+    --stone-700: #44403c;
+    --stone-500: #78716c;
+    --stone-300: #d6d3d1;
+    --stone-100: #f5f5f4;
+    --white: #ffffff;
+    --red-600: #dc2626;
+    --amber-500: #f59e0b;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--stone-100);
+    color: var(--stone-900);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, var(--green-900), var(--green-700));
+    color: var(--white);
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+  .header h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: .25rem; }
+  .header p { font-size: .9rem; opacity: .85; }
+  .container { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+  .card h2 {
+    font-size: 1.1rem;
+    color: var(--green-700);
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid var(--green-200);
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+  .grid-full { grid-column: 1 / -1; }
+  .field { margin-bottom: .75rem; }
+  .field label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--stone-700);
+    margin-bottom: .25rem;
+  }
+  .field label .required { color: var(--red-600); margin-left: 2px; }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: .6rem .75rem;
+    border: 1.5px solid var(--stone-300);
+    border-radius: 8px;
+    font-size: .9rem;
+    font-family: var(--font);
+    transition: border-color .2s;
+    background: var(--white);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--green-500);
+    box-shadow: 0 0 0 3px rgba(64,145,108,.15);
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .full-width { grid-column: 1 / -1; }
+  .checkbox-field {
+    display: flex; align-items: flex-start; gap: .75rem;
+    padding: 1rem; background: var(--green-50);
+    border-radius: 8px; border: 1.5px solid var(--green-200);
+  }
+  .checkbox-field input[type="checkbox"] {
+    width: 18px; height: 18px; margin-top: 3px; flex-shrink: 0;
+    accent-color: var(--green-700);
+  }
+  .checkbox-field label { font-size: .85rem; color: var(--stone-700); font-weight: 400; }
+  .checkbox-field label strong { color: var(--stone-900); }
+  .risk-box {
+    background: #fef2f2; border: 1.5px solid #fecaca;
+    border-radius: 8px; padding: 1rem; margin-bottom: 1rem;
+  }
+  .risk-box p { font-size: .85rem; color: #7f1d1d; margin-bottom: .75rem; line-height: 1.5; }
+  .risk-options { display: flex; gap: 1rem; }
+  .risk-options label {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .5rem 1rem; border-radius: 8px;
+    border: 1.5px solid var(--stone-300); cursor: pointer;
+    font-size: .9rem; font-weight: 500;
+  }
+  .risk-options input:checked + span { color: var(--green-700); }
+  .risk-options label:has(input:checked) { border-color: var(--green-500); background: var(--green-50); }
+  .risk-options input[type="radio"] { accent-color: var(--green-700); }
+  .btn-submit {
+    width: 100%; padding: .85rem;
+    background: var(--green-700); color: var(--white);
+    border: none; border-radius: 10px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-submit:hover { background: var(--green-900); }
+  .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+  .error-msg {
+    background: #fef2f2; color: #991b1b;
+    padding: .75rem 1rem; border-radius: 8px;
+    margin-bottom: 1rem; font-size: .9rem;
+    display: none;
+  }
+  .success-msg {
+    background: #f0fdf4; color: #166534;
+    padding: 2rem; border-radius: 12px;
+    text-align: center; font-size: 1.1rem;
+    display: none;
+  }
+  .success-msg h2 { font-size: 1.4rem; margin-bottom: .5rem; }
+  .loading { display: none; text-align: center; padding: 2rem; }
+  .spinner {
+    width: 40px; height: 40px; border: 4px solid var(--green-200);
+    border-top-color: var(--green-700); border-radius: 50%;
+    animation: spin .8s linear infinite; margin: 0 auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .expired-box {
+    text-align: center; padding: 3rem 1rem;
+  }
+  .expired-box h2 { color: var(--stone-700); margin-bottom: .5rem; }
+  .expired-box p { color: var(--stone-500); font-size: .95rem; }
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .75rem 1rem; background: var(--green-50);
+    border-radius: 8px; margin-bottom: 1rem;
+    font-size: .85rem; color: var(--stone-700);
+  }
+  .status-bar strong { color: var(--green-700); }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Formulario de Participantes</h1>
+  <p>La Juana - Turismo Ecuestre</p>
+</div>
+
+<div class="container">
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Validando enlace...</p>
+  </div>
+
+  <div id="expired" class="expired-box" style="display:none">
+    <h2>Enlace no válido o expirado</h2>
+    <p>Este enlace ha expirado o no es válido. Contacta a La Juana por WhatsApp para recibir un nuevo enlace.</p>
+  </div>
+
+  <div id="form-wrapper" style="display:none">
+    <div id="status-bar" class="status-bar">
+      <span>Reserva: <strong id="reservation-code"></strong></span>
+      <span>Experiencia: <strong id="experience-name"></strong></span>
+    </div>
+
+    <form id="participant-form" novalidate>
+      <div id="form-error" class="error-msg"></div>
+      <div id="form-success" class="success-msg">
+        <h2>¡Registrado exitosamente!</h2>
+        <p>Tus datos han sido enviados. Puedes cerrar esta página.</p>
+      </div>
+
+      <div class="card">
+        <h2>Datos personales</h2>
+        <div class="grid">
+          <div class="field">
+            <label>Nombres <span class="required">*</span></label>
+            <input type="text" id="first_name" required>
+          </div>
+          <div class="field">
+            <label>Apellidos <span class="required">*</span></label>
+            <input type="text" id="last_name" required>
+          </div>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" id="email">
+          </div>
+          <div class="field">
+            <label>Fecha de nacimiento <span class="required">*</span></label>
+            <input type="date" id="birth_date" required>
+          </div>
+          <div class="field">
+            <label>Tipo de documento <span class="required">*</span></label>
+            <select id="document_type" required>
+              <option value="">Selecciona</option>
+              <option value="cc">Cédula de Ciudadanía</option>
+              <option value="ce">Cédula de Extranjería</option>
+              <option value="passport">Pasaporte</option>
+              <option value="nit">NIT</option>
+              <option value="ti">Tarjeta de Identidad</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Número de documento <span class="required">*</span></label>
+            <input type="text" id="document_number" required>
+          </div>
+          <div class="field">
+            <label>Celular <span class="required">*</span></label>
+            <input type="tel" id="phone" required placeholder="+57 300 000 0000">
+          </div>
+          <div class="field">
+            <label>País <span class="required">*</span></label>
+            <input type="text" id="country" required>
+          </div>
+          <div class="field grid-full">
+            <label>Ciudad <span class="required">*</span></label>
+            <input type="text" id="city" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Datos para la actividad ecuestre</h2>
+        <div class="grid">
+          <div class="field">
+            <label>Altura (cm) <span class="required">*</span></label>
+            <input type="number" id="height_cm" required min="100" max="220" step="1">
+          </div>
+          <div class="field">
+            <label>Peso (kg) <span class="required">*</span></label>
+            <input type="number" id="weight_kg" required min="20" max="200" step="0.1">
+          </div>
+          <div class="field">
+            <label>Experiencia ecuestre <span class="required">*</span></label>
+            <select id="riding_experience" required>
+              <option value="">Selecciona</option>
+              <option value="none">Ninguna</option>
+              <option value="basic">Básica</option>
+              <option value="intermediate">Intermedia</option>
+              <option value="advanced">Avanzada</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de sangre <span class="required">*</span></label>
+            <select id="blood_type" required>
+              <option value="">Selecciona</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
+          </div>
+          <div class="field grid-full">
+            <label>EPS / Seguro de viaje</label>
+            <input type="text" id="eps_or_travel_insurance" placeholder="Nombre de la EPS o aseguradora">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Salud y restricciones</h2>
+        <div class="grid">
+          <div class="field grid-full">
+            <label>Condiciones de salud relevantes</label>
+            <textarea id="health_conditions" placeholder="Ej: asma, alergias, problemas cardiacos, lesiones previas..."></textarea>
+          </div>
+          <div class="field grid-full">
+            <label>Discapacidad sensorial</label>
+            <textarea id="sensory_disabilities" placeholder="Ej: visual, auditiva, otras..."></textarea>
+          </div>
+          <div class="field grid-full">
+            <label>Restricciones alimenticias</label>
+            <textarea id="dietary_restrictions" placeholder="Ej: vegetariano, sin gluten, alergia a frutos secos..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Contacto de emergencia</h2>
+        <div class="grid">
+          <div class="field">
+            <label>Nombre completo <span class="required">*</span></label>
+            <input type="text" id="emergency_name" required>
+          </div>
+          <div class="field">
+            <label>Teléfono <span class="required">*</span></label>
+            <input type="tel" id="emergency_phone" required>
+          </div>
+          <div class="field">
+            <label>País</label>
+            <input type="text" id="emergency_country">
+          </div>
+          <div class="field">
+            <label>Parentesco</label>
+            <input type="text" id="emergency_relationship" placeholder="Ej: esposo(a), madre, amigo...">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Consentimientos</h2>
+
+        <div class="checkbox-field" style="margin-bottom:.75rem">
+          <input type="checkbox" id="accepted_data_processing" required>
+          <label for="accepted_data_processing">
+            <strong>Autorizo el tratamiento de mis datos personales</strong> de acuerdo con la política de tratamiento de datos de La Juana. <span style="color:var(--red-600)">*</span>
+          </label>
+        </div>
+
+        <div class="checkbox-field" style="margin-bottom:.75rem">
+          <input type="checkbox" id="accepted_media_usage">
+          <label for="accepted_media_usage">
+            <strong>Autorizo el uso de mi imagen y voz</strong> en fotografías y videos tomados durante la actividad para fines promocionales de La Juana.
+          </label>
+        </div>
+
+        <div class="risk-box">
+          <p><strong>Liberación de responsabilidad y asunción de riesgos</strong></p>
+          <p id="risk-release-text">Cargando texto de liberación...</p>
+          <div class="risk-options">
+            <label>
+              <input type="radio" name="accepted_risk_release" value="true" required>
+              <span>Acepto</span>
+            </label>
+            <label>
+              <input type="radio" name="accepted_risk_release" value="false">
+              <span>No acepto</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btn-submit">Enviar formulario</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const API_BASE = '/api/v1';
+
+function getToken() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('t');
+}
+
+async function loadRiskReleaseText() {
+  try {
+    const res = await fetch(`${API_BASE}/public/participant-forms/risk-release-text`);
+    const data = await res.json();
+    document.getElementById('risk-release-text').textContent = data.risk_release_text;
+  } catch {
+    document.getElementById('risk-release-text').textContent =
+      'Declaro que entiendo que la actividad ecuestre con mulas implica riesgos inherentes, incluyendo caídas, golpes, lesiones graves, incapacidad permanente o muerte. Acepto participar bajo mi propia responsabilidad, siguiendo las instrucciones del personal de La Juana.';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('form-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hideError() {
+  document.getElementById('form-error').style.display = 'none';
+}
+
+async function validateToken(token) {
+  const res = await fetch(`${API_BASE}/public/participant-forms/${token}/validate`);
+  return res.json();
+}
+
+async function validate() {
+  const token = getToken();
+  if (!token) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('expired').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('loading').style.display = 'block';
+
+  try {
+    const data = await validateToken(token);
+
+    if (!data.valid) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('expired').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('reservation-code').textContent = data.reservation_code || '---';
+    document.getElementById('experience-name').textContent = data.experience_name || '---';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('form-wrapper').style.display = 'block';
+  } catch {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('expired').style.display = 'block';
+  }
+}
+
+function getFormData() {
+  return {
+    first_name: document.getElementById('first_name').value.trim(),
+    last_name: document.getElementById('last_name').value.trim(),
+    email: document.getElementById('email').value.trim() || null,
+    birth_date: document.getElementById('birth_date').value,
+    document_type: document.getElementById('document_type').value,
+    document_number: document.getElementById('document_number').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    country: document.getElementById('country').value.trim(),
+    city: document.getElementById('city').value.trim(),
+    height_cm: parseFloat(document.getElementById('height_cm').value),
+    weight_kg: parseFloat(document.getElementById('weight_kg').value),
+    riding_experience: document.getElementById('riding_experience').value || null,
+    blood_type: document.getElementById('blood_type').value || null,
+    eps_or_travel_insurance: document.getElementById('eps_or_travel_insurance').value.trim() || null,
+    health_conditions: document.getElementById('health_conditions').value.trim() || null,
+    sensory_disabilities: document.getElementById('sensory_disabilities').value.trim() || null,
+    dietary_restrictions: document.getElementById('dietary_restrictions').value.trim() || null,
+    emergency_contact: {
+      name: document.getElementById('emergency_name').value.trim(),
+      phone: document.getElementById('emergency_phone').value.trim(),
+      country: document.getElementById('emergency_country').value.trim() || null,
+      relationship: document.getElementById('emergency_relationship').value.trim() || null,
+    },
+    accepted_data_processing: document.getElementById('accepted_data_processing').checked,
+    accepted_media_usage: document.getElementById('accepted_media_usage').checked || null,
+    accepted_risk_release: document.querySelector('input[name="accepted_risk_release"]:checked')?.value === 'true',
+    risk_release_text_version: document.getElementById('risk-release-text').textContent,
+  };
+}
+
+async function submitForm(e) {
+  e.preventDefault();
+  hideError();
+
+  const riskValue = document.querySelector('input[name="accepted_risk_release"]:checked')?.value;
+  if (riskValue === 'false') {
+    showError('Debes aceptar la liberación de responsabilidad para participar. Si no aceptas, no podrás realizar la actividad.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const token = getToken();
+  const data = getFormData();
+
+  try {
+    const res = await fetch(`${API_BASE}/public/participant-forms/${token}/participants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      document.getElementById('participant-form').style.display = 'none';
+      document.getElementById('form-success').style.display = 'block';
+    } else {
+      const err = await res.json();
+      showError(err.detail || err.message || 'Error al enviar el formulario. Intenta de nuevo.');
+      btn.disabled = false;
+      btn.textContent = 'Enviar formulario';
+    }
+  } catch {
+    showError('Error de conexión. Verifica tu internet e intenta de nuevo.');
+    btn.disabled = false;
+    btn.textContent = 'Enviar formulario';
+  }
+}
+
+document.getElementById('participant-form').addEventListener('submit', submitForm);
+loadRiskReleaseText();
+validate();
+</script>
+</body>
+</html>

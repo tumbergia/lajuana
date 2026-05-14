@@ -468,6 +468,41 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "participants_count fuera de todos los tiers",
         "detail_keys": ("participant_count",),
     },
+    "B409-020": {
+        "http_status": 409,
+        "code": ErrorCode.FORM_LINK_RESERVATION_NOT_CONFIRMED,
+        "name": "Reserva no confirmada",
+        "trigger": "reservation.status no es CONFIRMED",
+        "detail_keys": ("reservation_id", "reservation_status"),
+    },
+    "B409-021": {
+        "http_status": 409,
+        "code": ErrorCode.FORM_LINK_MAX_PARTICIPANTS_REACHED,
+        "name": "Cupo maximo de participantes alcanzado",
+        "trigger": "used_count >= max_participants",
+        "detail_keys": ("max_participants", "used_count"),
+    },
+    "B409-022": {
+        "http_status": 409,
+        "code": ErrorCode.FORM_LINK_ALREADY_COMPLETED,
+        "name": "Formulario ya completado",
+        "trigger": "status es COMPLETED",
+        "detail_keys": (),
+    },
+    "B409-023": {
+        "http_status": 409,
+        "code": ErrorCode.PARTICIPANT_FORM_NOT_COMPLETE,
+        "name": "Formulario de participantes incompleto",
+        "trigger": "no todos los participantes han completado el formulario",
+        "detail_keys": ("expected", "completed"),
+    },
+    "B404-014": {
+        "http_status": 404,
+        "code": ErrorCode.FORM_LINK_NOT_FOUND,
+        "name": "Enlace de formulario no encontrado",
+        "trigger": "no hay enlace activo para la reserva",
+        "detail_keys": ("reservation_id",),
+    },
 }
 
 
@@ -746,6 +781,41 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_409": (),
     },
     ("POST", "/api/v1/files/{upload_id}/complete"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/public/participant-forms/{token}/validate"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/public/participant-forms/{token}/status"): {
+        "cases_400": (),
+        "cases_404": ("B404-001",),
+        "cases_409": (),
+    },
+    ("POST", "/api/v1/public/participant-forms/{token}/participants"): {
+        "cases_400": ("B400-020",),
+        "cases_404": ("B404-001",),
+        "cases_409": ("B409-021", "B409-022"),
+    },
+    ("GET", "/api/v1/public/participant-forms/risk-release-text"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
+    ("POST", "/api/v1/reservations/{reservation_id}/participant-form-link"): {
+        "cases_400": (),
+        "cases_404": ("B404-004",),
+        "cases_409": ("B409-020",),
+    },
+    ("POST", "/api/v1/reservations/{reservation_id}/participant-form-link/revoke"): {
+        "cases_400": (),
+        "cases_404": ("B404-014",),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/reservations/{reservation_id}/participant-form-link"): {
         "cases_400": (),
         "cases_404": (),
         "cases_409": (),

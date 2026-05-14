@@ -16,3 +16,4 @@ class Collections:
     FILE_UPLOADS = "file_uploads"
     SYNC_CHANGES = "sync_changes"
     SYNC_OPERATION_RECEIPTS = "sync_operation_receipts"
+    PARTICIPANT_FORM_LINKS = "participant_form_links"

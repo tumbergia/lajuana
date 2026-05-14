@@ -1,16 +1,30 @@
 """Servicio de negocio para el agregado Reservation."""
 
 import secrets
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time
 
 from beanie import PydanticObjectId
+from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
 
-from app.common.enums import Channel, PaymentStatus, ReservationStatus, ScheduleStatus, UserRole
+from app.common.enums import (
+    Channel,
+    ParticipantFormStatus,
+    PaymentStatus,
+    ReservationStatus,
+    ScheduleStatus,
+    UserRole,
+)
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-from app.documents import ExperienceDocument, ReservationDocument, ScheduleDocument
+from app.documents import (
+    ExperienceDocument,
+    ParticipantDocument,
+    ReservationDocument,
+    ScheduleDocument,
+)
 from app.services.config_service import ConfigService
+from app.services.participant_form_link_service import ParticipantFormLinkService
 
 ACTIVE_RESERVATION_STATUSES = {
     ReservationStatus.QUOTED,
@@ -42,6 +56,7 @@ class ReservationService:
 
     def __init__(self) -> None:
         self.config_service = ConfigService()
+        self.form_link_service = ParticipantFormLinkService()
 
     @staticmethod
     def _is_blocking_status(status: ReservationStatus) -> bool:
@@ -66,13 +81,14 @@ class ReservationService:
         requested_date: date,
         exclude_reservation_id: str | None = None,
     ) -> list[ReservationDocument]:
-        query = [
-            ReservationDocument.requested_date == requested_date,
-            ReservationDocument.status.in_(list(ACTIVE_RESERVATION_STATUSES)),
+        active_values = [s.value for s in ACTIVE_RESERVATION_STATUSES]
+        filters: list = [
+            {"requested_date": datetime.combine(requested_date, time.min)},
+            {"status": {"$in": active_values}},
         ]
         if exclude_reservation_id is not None:
-            query.append(ReservationDocument.id != exclude_reservation_id)
-        return await ReservationDocument.find(*query).to_list()
+            filters.append({"_id": {"$ne": ObjectId(exclude_reservation_id)}})
+        return await ReservationDocument.find({"$and": filters}).to_list()
 
     async def get_blocking_reservation_for_date(
         self,
@@ -364,8 +380,22 @@ class ReservationService:
 
         reservation.confirmed_at = datetime.now(UTC)
         reservation.updated_by = actor_id
+
         await schedule.save()
         await reservation.save()
+
+        _, raw_token = await self.form_link_service.generate(
+            reservation_id=reservation_id,
+            expected_participants_count=reservation.participant_count,
+            created_by=actor_id,
+        )
+        from app.core.config import settings
+
+        reservation.form_url = (
+            f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
+        )
+        await reservation.save()
+
         return reservation
 
     async def set_status(
@@ -404,6 +434,43 @@ class ReservationService:
         reservation.updated_by = actor_id
         await reservation.save()
         return reservation
+
+    async def validate_participant_forms_completed(
+        self, reservation: ReservationDocument
+    ) -> None:
+        if reservation.participant_form_status != ParticipantFormStatus.COMPLETE:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.PARTICIPANT_FORM_NOT_COMPLETE,
+                message="Todos los participantes deben completar el formulario antes de continuar.",
+                details={
+                    "expected": reservation.expected_participants_count,
+                    "completed": reservation.participants_completed_count,
+                },
+            )
+
+        participants = await ParticipantDocument.find(
+            ParticipantDocument.reservation_id == reservation.id,
+        ).to_list()
+        for p in participants:
+            if not p.accepted_data_processing:
+                raise ApiError(
+                    status_code=409,
+                    code=ErrorCode.PARTICIPANT_DATA_PROCESSING_REQUIRED,
+                    message=(
+                        f"El participante {p.first_name} {p.last_name} "
+                        "no aceptó el tratamiento de datos."
+                    ),
+                )
+            if p.accepted_risk_release is not True:
+                raise ApiError(
+                    status_code=409,
+                    code=ErrorCode.PARTICIPANT_RISK_RELEASE_REQUIRED,
+                    message=(
+                        f"El participante {p.first_name} {p.last_name} "
+                        "no aceptó la liberación de responsabilidad."
+                    ),
+                )
 
     def _build_code(self) -> str:
         return f"RES-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"

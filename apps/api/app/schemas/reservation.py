@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.common.enums import Channel, PaymentStatus, ReservationStatus
+from app.common.enums import Channel, ParticipantFormStatus, PaymentStatus, ReservationStatus
 from app.schemas.common import AuditMetadataSchema
 
 
@@ -60,6 +60,10 @@ class ReservationResponseSchema(AuditMetadataSchema):
     requested_date: date | None
     quoted_total_amount: Decimal | None
     currency: str
+    expected_participants_count: int | None
+    participants_completed_count: int
+    participant_form_status: ParticipantFormStatus
+    form_url: str | None
     confirmed_at: datetime | None
     cancelled_at: datetime | None
     completed_at: datetime | None

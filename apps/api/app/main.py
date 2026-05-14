@@ -1,11 +1,16 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from app.api.endpoints.whatsapp import bare_router as whatsapp_bare_router
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.errors import register_error_handlers
 from app.core.lifespan import lifespan
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 app = FastAPI(
     title=settings.app_name,
@@ -61,3 +66,17 @@ app.add_middleware(
 )
 app.include_router(api_router)
 app.include_router(whatsapp_bare_router)
+
+
+@app.get("/formulario-participantes", include_in_schema=False)
+async def participant_form_page() -> HTMLResponse:
+    html_path = STATIC_DIR / "participant_form.html"
+    if not html_path.exists():
+        return HTMLResponse("<h1>Formulario no disponible</h1>", status_code=503)
+    content = html_path.read_text(encoding="utf-8")
+    return HTMLResponse(content)
+
+
+@app.get("/formulario-participantes/", include_in_schema=False)
+async def participant_form_page_slash() -> HTMLResponse:
+    return await participant_form_page()

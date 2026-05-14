@@ -1079,6 +1079,113 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         ],
         "service_docstring": "Actualiza configuración validando min_days_in_advance.",
     },
+    "participant_form_validate_token": {
+        "summary": "Validar token del formulario",
+        "description": "Valida que un token de formulario sea válido, no haya expirado y tenga cupos disponibles.",
+        "permissions": [],
+        "responses": {
+            200: "Resultado de validación del token.",
+        },
+        "error_codes": [],
+        "service_docstring": "Valida token de formulario de participantes.",
+    },
+    "participant_form_public_status": {
+        "summary": "Estado público del formulario",
+        "description": "Retorna estado agregado del formulario: completados, esperados, sin datos sensibles.",
+        "permissions": [],
+        "responses": {
+            200: "Estado agregado del formulario.",
+            404: "Token inválido o reserva no encontrada.",
+        },
+        "error_codes": ["form_link.invalid_token", "reservation.not_found"],
+        "service_docstring": "Retorna estado agregado público del formulario.",
+    },
+    "participant_form_public_create": {
+        "summary": "Registrar participante desde formulario público",
+        "description": "Crea un participante asociado a la reserva mediante un token válido del formulario.",
+        "permissions": [],
+        "responses": {
+            201: "Participante registrado correctamente.",
+            400: "Fecha de nacimiento inválida.",
+            404: "Token inválido.",
+            409: "Enlace expirado, revocado o cupo máximo alcanzado.",
+            410: "Enlace expirado o revocado.",
+            422: "Datos inválidos o falta aceptar tratamiento de datos/liberación.",
+        },
+        "error_codes": [
+            "form_link.invalid_token",
+            "form_link.expired",
+            "form_link.revoked",
+            "form_link.max_participants_reached",
+            "form_link.already_completed",
+            "participant.invalid_birth_date",
+            "participant.data_processing_required",
+            "participant.risk_release_required",
+            "common.validation_error",
+        ],
+        "service_docstring": "Crea participante desde formulario público con validaciones de token.",
+    },
+    "participant_form_risk_release_text": {
+        "summary": "Obtener texto de liberación de responsabilidad",
+        "description": "Retorna el texto vigente de liberación de responsabilidad y asunción de riesgos.",
+        "permissions": [],
+        "responses": {
+            200: "Texto de liberación de responsabilidad.",
+        },
+        "error_codes": [],
+        "service_docstring": "Retorna el texto de liberación de responsabilidad.",
+    },
+    "participant_form_generate_link": {
+        "summary": "Generar enlace de formulario",
+        "description": "Genera un enlace temporal para que los participantes de una reserva confirmada diligencien sus datos.",
+        "permissions": ["participant_form_link.create"],
+        "responses": {
+            201: "Enlace generado correctamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            404: "Reserva no encontrada.",
+            409: "La reserva no está confirmada.",
+        },
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.forbidden",
+            "reservation.not_found",
+            "form_link.reservation_not_confirmed",
+        ],
+        "service_docstring": "Genera enlace temporal de formulario de participantes.",
+    },
+    "participant_form_revoke_link": {
+        "summary": "Revocar enlace de formulario",
+        "description": "Revoca manualmente un enlace de formulario activo.",
+        "permissions": ["participant_form_link.revoke"],
+        "responses": {
+            200: "Enlace revocado correctamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            404: "No hay enlace activo para esta reserva.",
+        },
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.forbidden",
+            "form_link.not_found",
+        ],
+        "service_docstring": "Revoca enlace de formulario de participantes.",
+    },
+    "participant_form_get_link": {
+        "summary": "Consultar enlace de formulario",
+        "description": "Retorna el estado del enlace de formulario activo o el último generado.",
+        "permissions": ["participant_form_link.read"],
+        "responses": {
+            200: "Estado del enlace obtenido correctamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+        },
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.forbidden",
+        ],
+        "service_docstring": "Obtiene estado del enlace de formulario.",
+    },
 }
 
 
@@ -1147,6 +1254,34 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "config_emergency_contacts": ("GET", "/api/v1/config/emergency-contacts"),
     "config_get": ("GET", "/api/v1/config/reservation-rules"),
     "config_update": ("PATCH", "/api/v1/config/reservation-rules"),
+    "participant_form_validate_token": (
+        "GET",
+        "/api/v1/public/participant-forms/{token}/validate",
+    ),
+    "participant_form_public_status": (
+        "GET",
+        "/api/v1/public/participant-forms/{token}/status",
+    ),
+    "participant_form_public_create": (
+        "POST",
+        "/api/v1/public/participant-forms/{token}/participants",
+    ),
+    "participant_form_risk_release_text": (
+        "GET",
+        "/api/v1/public/participant-forms/risk-release-text",
+    ),
+    "participant_form_generate_link": (
+        "POST",
+        "/api/v1/reservations/{reservation_id}/participant-form-link",
+    ),
+    "participant_form_revoke_link": (
+        "POST",
+        "/api/v1/reservations/{reservation_id}/participant-form-link/revoke",
+    ),
+    "participant_form_get_link": (
+        "GET",
+        "/api/v1/reservations/{reservation_id}/participant-form-link",
+    ),
 }
 
 for endpoint_key, route in ENDPOINT_ROUTE_MAP.items():
@@ -1311,7 +1446,6 @@ def _detail_example_value(detail_key: str) -> object:
         "min_days_in_advance": -1,
         "experience_id": "660000000000000000000101",
         "schedule_id": "660000000000000000000401",
-        "participant_count": 4,
         "payment_proof_id": "660000000000000000000501",
         "equine_id": "660000000000000000000601",
         "saddle_id": "660000000000000000000701",

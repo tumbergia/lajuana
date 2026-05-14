@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     mongodb_connect_timeout_ms: int = 2000
     app_skip_db_init: bool = False
 
+    app_base_url: str = "http://localhost:8080"
+
     auth_jwt_secret: str = "change-me"
     auth_jwt_algorithm: str = "HS256"
     auth_access_token_minutes: int = 30

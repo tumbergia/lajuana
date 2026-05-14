@@ -67,6 +67,22 @@ class AssignmentPriority(StrEnum):
     SENIOR_SAFETY = "senior_safety"
 
 
+class ParticipantFormLinkStatus(StrEnum):
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    REVOKED = "revoked"
+    COMPLETED = "completed"
+
+
+class ParticipantFormStatus(StrEnum):
+    NOT_SENT = "not_sent"
+    SENT = "sent"
+    PARTIAL = "partial"
+    COMPLETE = "complete"
+    EXPIRED = "expired"
+    REVOKED = "revoked"
+
+
 class Permission(StrEnum):
     AUTH_SELF_READ = "auth.self.read"
     AUTH_SELF_UPDATE_PASSWORD = "auth.self.update_password"
@@ -129,6 +145,10 @@ class Permission(StrEnum):
     CONFIG_READ = "config.read"
     CONFIG_UPDATE = "config.update"
 
+    PARTICIPANT_FORM_LINK_CREATE = "participant_form_link.create"
+    PARTICIPANT_FORM_LINK_READ = "participant_form_link.read"
+    PARTICIPANT_FORM_LINK_REVOKE = "participant_form_link.revoke"
+
 
 ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
     UserRole.ADMIN: set(Permission),
@@ -148,6 +168,7 @@ ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
         Permission.LOG_CREATE,
         Permission.LOG_UPDATE,
         Permission.POLICY_READ,
+        Permission.PARTICIPANT_FORM_LINK_READ,
     },
     UserRole.UNASSIGNED: {
         Permission.AUTH_SELF_READ,
