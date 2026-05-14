@@ -427,3 +427,200 @@ class UpdateEquineAvailabilityOutput(BaseModel):
     is_available: bool | None = None
     message: str
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Horizonte 8: Analítica, reportes y automatizaciones ──────
+
+
+class SalesSummaryInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date_from: str | None = None
+    date_to: str | None = None
+
+
+class StatusSalesItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: str
+    count: int
+
+
+class SalesSummaryOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_sales_summary"] = "admin_get_sales_summary"
+    total_reservations: int
+    by_status: list[StatusSalesItem]
+    total_revenue: int = 0
+    currency: str = "COP"
+    date_from: str | None = None
+    date_to: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class FunnelStageItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    stage: str
+    count: int
+    conversion_pct: float = 0.0
+
+
+class ReservationFunnelInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date_from: str | None = None
+    date_to: str | None = None
+
+
+class ReservationFunnelOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_reservation_funnel"] = "admin_get_reservation_funnel"
+    stages: list[FunnelStageItem]
+    total_start: int = 0
+    total_converted: int = 0
+    date_from: str | None = None
+    date_to: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class ChannelPerformanceItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    channel: str
+    count: int
+    confirmed: int = 0
+
+
+class ChannelPerformanceInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date_from: str | None = None
+    date_to: str | None = None
+
+
+class ChannelPerformanceOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_channel_performance"] = "admin_get_channel_performance"
+    channels: list[ChannelPerformanceItem]
+    total: int
+    date_from: str | None = None
+    date_to: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class OccupancyItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date: str
+    experience_name: str
+    capacity_total: int
+    reserved: int
+    available: int
+    occupancy_pct: float = 0.0
+
+
+class OccupancyReportInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date_from: str | None = None
+    date_to: str | None = None
+    experience_id: str | None = None
+
+
+class OccupancyReportOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_occupancy_report"] = "admin_get_occupancy_report"
+    occupancy: list[OccupancyItem]
+    total_schedules: int = 0
+    avg_occupancy_pct: float = 0.0
+    date_from: str | None = None
+    date_to: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class EquineWorkloadReportInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    date_from: str | None = None
+    date_to: str | None = None
+
+
+class WorkloadSummaryItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    equine_id: str
+    name: str
+    is_available: bool
+    total_assignments_in_range: int = 0
+
+
+class EquineWorkloadReportOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_equine_workload_report"] = "admin_get_equine_workload_report"
+    workload: list[WorkloadSummaryItem]
+    total_equines: int = 0
+    total_assignments: int = 0
+    date_from: str | None = None
+    date_to: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class PostServiceMessageInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_id: str
+
+
+class PostServiceMessageOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["send_post_service_message"] = "send_post_service_message"
+    sent: bool
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class BirthdayAutomationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool | None = None
+
+
+class BirthdayAutomationOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["schedule_birthday_automation"] = "schedule_birthday_automation"
+    enabled: bool
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AnniversaryAutomationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool | None = None
+
+
+class AnniversaryAutomationOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["schedule_visit_anniversary_automation"] = (
+        "schedule_visit_anniversary_automation"
+    )
+    enabled: bool
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)

@@ -608,9 +608,9 @@ Este documento lista todos los MCP tools del asistente AI expuestos por `apps/ap
 
 | Clasificación | Tools | Acción |
 |---|---|---|
-| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates`, `admin_get_logistics_checklist`, `admin_get_equine_workload` | Permitidos si pasan validaciones de args |
-| `LIMITED_WRITE_TOOLS` | `request_human_review`, `guide_create_service_log`, `admin_add_equine_health_event` | Escritura limitada (handoff trazable) |
-| `WRITE_TOOLS` | `guide_report_incident`, `admin_close_service_execution`, `admin_update_equine_availability` | Escritura, pasa por validación de riesgo |
+| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates`, `admin_get_logistics_checklist`, `admin_get_equine_workload`, `admin_get_sales_summary`, `admin_get_reservation_funnel`, `admin_get_channel_performance`, `admin_get_occupancy_report`, `admin_get_equine_workload_report` | Permitidos si pasan validaciones de args |
+| `LIMITED_WRITE_TOOLS` | `request_human_review`, `guide_create_service_log`, `admin_add_equine_health_event`, `send_post_service_message` | Escritura limitada (handoff trazable) |
+| `WRITE_TOOLS` | `guide_report_incident`, `admin_close_service_execution`, `admin_update_equine_availability`, `schedule_birthday_automation`, `schedule_visit_anniversary_automation` | Escritura, pasa por validación de riesgo |
 | `CRITICAL_TOOLS` | `confirm_reservation`, `cancel_reservation`, `mark_payment_verified`, `change_schedule_capacity`, `block_slots` | **Siempre denegados** — requieren intervención humana |
 
 **Reglas de denegación** (orden de evaluación):
@@ -694,7 +694,7 @@ Colección: `tool_call_logs`
 | Archivo | `ai/mcp/server.py` |
 | Framework | `FastMCP` |
 | Server name | `lajuana-mcp` |
-| Tools expuestos | `admin_add_equine_health_event`, `admin_close_service_execution`, `admin_get_equine_workload`, `admin_get_logistics_checklist`, `admin_update_equine_availability`, `check_experience_availability`, `get_experience_detail`, `get_public_business_rules`, `guide_create_service_log`, `guide_report_incident`, `list_available_schedules`, `list_experiences`, `quote_experience`, `suggest_alternative_dates`, `request_human_review` |
+| Tools expuestos | `admin_add_equine_health_event`, `admin_close_service_execution`, `admin_get_channel_performance`, `admin_get_equine_workload`, `admin_get_equine_workload_report`, `admin_get_logistics_checklist`, `admin_get_occupancy_report`, `admin_get_reservation_funnel`, `admin_get_sales_summary`, `admin_update_equine_availability`, `check_experience_availability`, `get_experience_detail`, `get_public_business_rules`, `guide_create_service_log`, `guide_report_incident`, `list_available_schedules`, `list_experiences`, `quote_experience`, `schedule_birthday_automation`, `schedule_visit_anniversary_automation`, `send_post_service_message`, `suggest_alternative_dates`, `request_human_review` |
 
 ---
 
@@ -714,8 +714,13 @@ Singleton: `app.ai.mcp.registry.registry`
 |---|---|---|---|---|
 | admin_add_equine_health_event | `admin_add_equine_health_event` | `ai/mcp/tools/operations.py` | Sí |
 | admin_close_service_execution | `admin_close_service_execution` | `ai/mcp/tools/operations.py` | Sí |
+| admin_get_channel_performance | `admin_get_channel_performance` | `ai/mcp/tools/analytics.py` | Sí |
 | admin_get_equine_workload | `admin_get_equine_workload` | `ai/mcp/tools/operations.py` | Sí |
+| admin_get_equine_workload_report | `admin_get_equine_workload_report` | `ai/mcp/tools/analytics.py` | Sí |
 | admin_get_logistics_checklist | `admin_get_logistics_checklist` | `ai/mcp/tools/operations.py` | Sí |
+| admin_get_occupancy_report | `admin_get_occupancy_report` | `ai/mcp/tools/analytics.py` | Sí |
+| admin_get_reservation_funnel | `admin_get_reservation_funnel` | `ai/mcp/tools/analytics.py` | Sí |
+| admin_get_sales_summary | `admin_get_sales_summary` | `ai/mcp/tools/analytics.py` | Sí |
 | admin_update_equine_availability | `admin_update_equine_availability` | `ai/mcp/tools/operations.py` | Sí |
 | check_experience_availability | `check_experience_availability` | `ai/mcp/tools/availability.py` | Sí |
 | list_experiences | `list_experiences` | `ai/mcp/tools/catalog.py` | Sí (v2) |
@@ -727,6 +732,9 @@ Singleton: `app.ai.mcp.registry.registry`
 | request_human_review | `request_human_review` | `ai/mcp/tools/__init__.py` | Sí |
 | guide_create_service_log | `guide_create_service_log` | `ai/mcp/tools/operations.py` | Sí |
 | guide_report_incident | `guide_report_incident` | `ai/mcp/tools/operations.py` | Sí |
+| schedule_birthday_automation | `schedule_birthday_automation` | `ai/mcp/tools/automations.py` | Sí |
+| schedule_visit_anniversary_automation | `schedule_visit_anniversary_automation` | `ai/mcp/tools/automations.py` | Sí |
+| send_post_service_message | `send_post_service_message` | `ai/mcp/tools/automations.py` | Sí |
 
 ## Notas de mantenimiento
 

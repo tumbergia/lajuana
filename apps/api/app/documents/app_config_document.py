@@ -10,9 +10,15 @@ class ReservationRules(BaseModel):
     require_payment_proof_for_confirmation: bool = True
 
 
+class AutomationConfig(BaseModel):
+    birthday_messages_enabled: bool = False
+    anniversary_messages_enabled: bool = False
+
+
 class AppConfigDocument(AuditDocument):
     key: str
     reservation_rules: ReservationRules | None = None
+    automation: AutomationConfig | None = None
 
     class Settings:
         name = Collections.APP_CONFIG

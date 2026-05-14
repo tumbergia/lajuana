@@ -2,6 +2,18 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.ai.mcp.tools.analytics import (
+    admin_get_channel_performance,
+    admin_get_equine_workload_report,
+    admin_get_occupancy_report,
+    admin_get_reservation_funnel,
+    admin_get_sales_summary,
+)
+from app.ai.mcp.tools.automations import (
+    schedule_birthday_automation,
+    schedule_visit_anniversary_automation,
+    send_post_service_message,
+)
 from app.ai.mcp.tools.availability import check_experience_availability
 from app.ai.mcp.tools.catalog import list_experiences
 from app.ai.mcp.tools.operations import (
@@ -56,8 +68,13 @@ async def request_human_review(**kwargs: Any) -> dict[str, Any]:
 __all__ = [
     "admin_add_equine_health_event",
     "admin_close_service_execution",
+    "admin_get_channel_performance",
     "admin_get_equine_workload",
+    "admin_get_equine_workload_report",
     "admin_get_logistics_checklist",
+    "admin_get_occupancy_report",
+    "admin_get_reservation_funnel",
+    "admin_get_sales_summary",
     "admin_update_equine_availability",
     "check_experience_availability",
     "get_experience_detail",
@@ -67,6 +84,9 @@ __all__ = [
     "list_available_schedules",
     "list_experiences",
     "quote_experience",
+    "schedule_birthday_automation",
+    "schedule_visit_anniversary_automation",
+    "send_post_service_message",
     "suggest_alternative_dates",
     "request_human_review",
 ]

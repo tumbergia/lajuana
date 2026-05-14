@@ -21,16 +21,24 @@ class ToolPolicyEngine:
         "suggest_alternative_dates",
         "admin_get_logistics_checklist",
         "admin_get_equine_workload",
+        "admin_get_sales_summary",
+        "admin_get_reservation_funnel",
+        "admin_get_channel_performance",
+        "admin_get_occupancy_report",
+        "admin_get_equine_workload_report",
     }
     LIMITED_WRITE_TOOLS = {
         "request_human_review",
         "guide_create_service_log",
         "admin_add_equine_health_event",
+        "send_post_service_message",
     }
     WRITE_TOOLS: set[str] = {
         "guide_report_incident",
         "admin_close_service_execution",
         "admin_update_equine_availability",
+        "schedule_birthday_automation",
+        "schedule_visit_anniversary_automation",
     }
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",

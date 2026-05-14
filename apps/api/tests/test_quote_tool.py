@@ -69,6 +69,4 @@ async def _run_quote_experience_accepts_trace_id_and_conversation_turn_id(
 def test_quote_experience_accepts_trace_id_and_conversation_turn_id(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_quote_experience_accepts_trace_id_and_conversation_turn_id(monkeypatch)
-    )
+    asyncio.run(_run_quote_experience_accepts_trace_id_and_conversation_turn_id(monkeypatch))
