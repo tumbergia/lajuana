@@ -40,6 +40,7 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.ruff.lint.per-file-ignores]
 "app/api/docs.py" = ["E501"]
 "app/api/business_errors.py" = ["E501"]
+"app/seed_schedules_2026_q2.py" = ["E501"]
 "tests/test_endpoint_response_matrix.py" = ["E501"]
 "app/ai/assistant/prompts/planner.py" = ["E501"]
 

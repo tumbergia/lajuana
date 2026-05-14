@@ -120,7 +120,8 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="quote.pricing_not_configured",
-                        message="La experiencia no tiene tarifa configurada para esa cantidad de participantes.",
+                        message="La experiencia no tiene tarifa configurada "
+                        "para esa cantidad de participantes.",
                     )
                 ],
             )

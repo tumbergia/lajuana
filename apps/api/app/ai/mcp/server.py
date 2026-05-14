@@ -7,8 +7,8 @@ from app.ai.mcp.tools import (
     list_available_schedules,
     list_experiences,
     quote_experience,
-    suggest_alternative_dates,
     request_human_review,
+    suggest_alternative_dates,
 )
 
 mcp = FastMCP("lajuana-mcp")

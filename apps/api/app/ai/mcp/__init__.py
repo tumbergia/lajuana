@@ -1,5 +1,5 @@
-from app.ai.mcp.registry import registry
 from app.ai.mcp import tools
+from app.ai.mcp.registry import registry
 
 registry.register("check_experience_availability", tools.check_experience_availability)
 registry.register("get_experience_detail", tools.get_experience_detail)

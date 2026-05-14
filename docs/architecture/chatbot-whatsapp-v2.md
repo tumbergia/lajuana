@@ -42,7 +42,8 @@ orchestrator.ask(AskRequest)  ← por cada mensaje
   │    (acción, tool, argumentos, riesgo, auditoría)
   │
   ├─ 4. Merge slots: plan.arguments + session.slot_values
-  │    → merge_slots() completa campos faltantes
+  │    → merge_slots() tool-aware por REQUIRED_FIELDS_BY_TOOL
+  │    → required_fields según plan.tool_name (check_availability, create_reservation, suggest_alternative_dates)
   │    → si complete → promueve a TOOL_CALL
   │    → si faltan → ASK_CLARIFYING_QUESTION
   │
@@ -51,11 +52,11 @@ orchestrator.ask(AskRequest)  ← por cada mensaje
   │    → bloqueado → responde sin ejecutar tool
   │
   ├─ 6. Ejecutar tool MCP: registry.call(name, **args)
-  │    → check_experience_availability o list_experiences
+  │    → check_experience_availability, list_experiences, quote_experience,
+  │      list_available_schedules, suggest_alternative_dates, ...
   │
   ├─ 7. Componer respuesta: compose_tool_response()
-  │    → "cheap": template directo
-  │    → "llm": segunda llamada Gemini con tool output
+  │    → LLM: segunda llamada Gemini con tool output (único modo)
   │
   ├─ 8. Persistir: turn, session, tool_call_log
   │
@@ -92,6 +93,9 @@ Una sola llamada a Gemini con `response_model=AssistantPlan`. El prompt (`prompt
 - Extraer argumentos estructurados: `experience_query`, `experience_id`, `requested_date`, `participant_count`
 - Invocar `list_experiences` para consultas de catálogo ("qué ofrecen", "planes", "experiencias")
 - Invocar `check_experience_availability` cuando hay fecha + participantes + experiencia
+- Invocar `quote_experience` para cotizar precio según participantes
+- Invocar `list_available_schedules` para consultar fechas disponibles
+- Invocar `suggest_alternative_dates` cuando no hay cupo o el usuario rechaza fechas mostradas
 - Evaluar nivel de riesgo: `low` / `medium` / `high` / `critical`
 - Nunca inventar datos operativos, precios ni políticas de pago
 - Auditabilidad: cada decisión incluye `audit_summary` de una línea
@@ -111,16 +115,14 @@ Guarda rail antes de ejecutar tools. Evalúa:
 | Tool crítica | `confirm_reservation`, `cancel_reservation`, `mark_payment_verified`, `change_schedule_capacity`, `block_slots` | Bloquea siempre |
 | Riesgo alto | `risk_level in {HIGH, CRITICAL}` | Requiere humano |
 | Args faltantes | `requested_date` o `participant_count` ausentes | Bloquea + detalle |
-| Tool desconocida | no está en `READ_TOOLS` ni `WRITE_TOOLS` | Bloquea |
+| Tool desconocida | no está en `READ_TOOLS` ni `WRITE_TOOLS` ni `LIMITED_WRITE_TOOLS` | Bloquea |
 
-Tools autorizadas como lectura: `check_experience_availability` y `list_experiences`.
+Tools autorizadas como lectura: `check_experience_availability`, `list_experiences`, `quote_experience`, `list_available_schedules`, `suggest_alternative_dates`, `get_experience_detail`, `get_public_business_rules`.  
+Tool de escritura limitada: `request_human_review`.
 
 ### ResponseComposer (`ai/assistant/response_composer.py`)
 
-Dos modos:
-
-- **cheap** (`settings.assistant_tool_response_mode == "cheap"`): template `cheap_tool_summary()` que construye texto a partir del plan y tool output. Sin LLM, rápido y barato. Soporta `check_experience_availability` y `list_experiences` (formatea catálogo con nombre, descripción, duración).
-- **llm**: segunda llamada Gemini con `response_model=ToolResultResponse`, temperatura 0.4, que recibe `user_message`, `plan` y `tool_output` para redactar una respuesta natural.
+Una sola llamada Gemini con `response_model=ToolResultResponse`, temperatura 0.4, que recibe `user_message`, `plan` y `tool_output` para redactar una respuesta natural. No existe modo "cheap".
 
 ### MCP Tools (`ai/mcp/`)
 
@@ -129,14 +131,32 @@ Registro central tipo `dict[str, Callable]` en `registry.py`. Se registran al im
 ```
 check_experience_availability  → tools/availability.py
 list_experiences              → tools/catalog.py
+quote_experience              → tools/quote.py
+list_available_schedules      → tools/schedules.py
+suggest_alternative_dates     → tools/schedules.py
+get_experience_detail         → tools/__init__.py (stub, planned)
+get_public_business_rules     → tools/__init__.py (stub, planned)
+request_human_review          → tools/__init__.py (stub, planned)
 ```
 
 `check_experience_availability`:
 1. Resuelve experiencia por ID o texto vía `ExperienceCatalogResolver`
 2. Busca `ScheduleDocument` para la fecha solicitada
-3. Valida: estado abierto, cupo disponible, días de antelación mínimos
+3. Valida: estado abierto, cupo disponible, días de antelación mínimos (`min_notice` se evalúa solo si no hay schedule)
 4. Retorna `available`, `blocking_reasons`, capacidad, etc.
 5. Loguea cada llamada en `ToolCallLogDocument`
+
+`list_available_schedules`:
+1. Resuelve experiencia por ID o texto
+2. Busca `ScheduleDocument` en rango de fechas (60 días, con filtros is_active + OPEN)
+3. Filtra por cupo si `participant_count` está presente
+4. Retorna listado de fechas con capacidad disponible
+
+`suggest_alternative_dates`:
+1. Resuelve experiencia por ID o texto
+2. Busca schedules alternativos alrededor de la fecha (15 días antes, 30 después)
+3. Excluye fechas ya mostradas
+4. Retorna alternativas ordenadas por fecha
 
 `ExperienceCatalogResolver` soporta:
 - Búsqueda por slug exacto, nombre, alias o ID de MongoDB
@@ -150,6 +170,11 @@ list_experiences              → tools/catalog.py
 1. Query `ExperienceDocument.find()` con filtro opcional `is_active`
 2. Retorna resumen: nombre, slug, duración, dificultad, precio desde, tags
 3. Seed incluye aliases expandidos (`un día`, `día completo`, `cafe`, `café`) y tags de búsqueda
+
+`quote_experience`:
+1. Resuelve experiencia por ID o texto
+2. Calcula precio según `participant_count` usando tarifas configuradas (tramos por rango de participantes)
+3. Retorna precio unitario, subtotal, tramo aplicado
 
 ### LLM Provider (`ai/providers/`)
 

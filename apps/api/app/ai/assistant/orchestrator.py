@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from datetime import date
 from uuid import uuid4
 
 from app.ai.assistant.date_extractor import extract_date_from_message
@@ -35,8 +36,6 @@ class AssistantOrchestrator:
         trace_id = request.trace_id or str(uuid4())
         conversation_id = request.conversation_id
         conversation_key = conversation_id or request.from_phone or trace_id
-        flow_started = time.perf_counter()
-
         logger.info(
             "[conversation_id=%s] Message received | channel=%s | from=%s | trace_id=%s | message=%.120s",  # noqa: E501
             conversation_id,
@@ -62,6 +61,14 @@ class AssistantOrchestrator:
             .sort(-ConversationTurnDocument.created_at)
             .limit(8)
             .to_list()
+        )
+
+        turn = ConversationTurnDocument(
+            trace_id=trace_id,
+            channel=request.channel,
+            conversation_id=conversation_key,
+            user_message=request.message,
+            from_phone=request.from_phone,
         )
 
         history_lines = []
@@ -148,33 +155,34 @@ class AssistantOrchestrator:
                 session.slot_values[key] = value
 
         # Session merge: fill null plan args from session slots
-        REQUIRED_FIELDS = [
-            "requested_date",
-            "participant_count",
-            "experience_query",
-            "experience_id",
-        ]
+        REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
+            "check_availability": ["experience_id", "requested_date", "participant_count"],
+            "create_reservation": ["experience_id", "requested_date", "participant_count"],
+            "suggest_alternative_dates": ["experience_id"],
+        }
 
         if (
             plan.action
             in {AssistantAction.TOOL_CALL, AssistantAction.ASK_CLARIFYING_QUESTION}
             and plan.arguments
         ):
-            plan_args = plan.arguments.model_dump()
-            merge = merge_slots(
-                session_slots=session.slot_values,
-                plan_args=plan_args,
-                required_fields=REQUIRED_FIELDS,
-            )
-            if merge.filled_from_session or plan.action == AssistantAction.ASK_CLARIFYING_QUESTION:
-                for key, value in merge.merged.items():
-                    setattr(plan.arguments, key, value)
-                if not merge.still_missing:
-                    plan.action = AssistantAction.TOOL_CALL
-                    plan.missing_fields = []
-                else:
-                    plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
-                    plan.missing_fields = merge.still_missing
+            required_fields = REQUIRED_FIELDS_BY_TOOL.get(plan.tool_name or "", [])
+            if required_fields:
+                plan_args = plan.arguments.model_dump()
+                merge = merge_slots(
+                    session_slots=session.slot_values,
+                    plan_args=plan_args,
+                    required_fields=required_fields,
+                )
+                if merge.filled_from_session or plan.action == AssistantAction.ASK_CLARIFYING_QUESTION:  # noqa: E501
+                    for key, value in merge.merged.items():
+                        setattr(plan.arguments, key, value)
+                    if not merge.still_missing:
+                        plan.action = AssistantAction.TOOL_CALL
+                        plan.missing_fields = []
+                    else:
+                        plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
+                        plan.missing_fields = merge.still_missing
 
         if plan.action in {
             AssistantAction.FINAL_RESPONSE,

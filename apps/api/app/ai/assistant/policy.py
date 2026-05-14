@@ -66,7 +66,12 @@ class ToolPolicyEngine:
                 reason="human_review_required",
             )
 
-        if plan.tool_name not in self.READ_TOOLS and plan.tool_name not in self.LIMITED_WRITE_TOOLS and plan.tool_name not in self.WRITE_TOOLS:
+        is_unknown = (
+            plan.tool_name not in self.READ_TOOLS
+            and plan.tool_name not in self.LIMITED_WRITE_TOOLS
+            and plan.tool_name not in self.WRITE_TOOLS
+        )
+        if is_unknown:
             return ToolPolicyDecision(
                 allowed=False,
                 reason="unknown_or_not_allowed_tool",

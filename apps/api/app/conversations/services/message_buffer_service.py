@@ -1,6 +1,4 @@
-from datetime import datetime, timedelta, timezone
-
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from app.conversations.documents import MessageBufferDocument

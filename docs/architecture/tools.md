@@ -169,11 +169,204 @@ Este documento lista todos los MCP tools del asistente AI expuestos por `apps/ap
 
 ---
 
+### `list_available_schedules`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/schedules.py` |
+| Propósito | Lista fechas y horarios disponibles para una experiencia en un rango de 60 días |
+| Categoría | `READ_TOOLS` (solo lectura) |
+| input | `ListAvailableSchedulesInput` |
+| output | `ListAvailableSchedulesOutput` |
+
+**Input (`ListAvailableSchedulesInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `experience_id` | `str \| None` | No* | ID de la experiencia. |
+| `experience_query` | `str \| None` | No* | Texto libre para buscar experiencia. |
+| `date_from` | `date \| None` | No | Fecha inicio (default: hoy). |
+| `date_to` | `date \| None` | No | Fecha fin (default: date_from + 60 días). |
+| `participant_count` | `int \| None` | No | Filtra schedules con cupo suficiente. |
+| `limit` | `int` (1-30) | No | Máximo de resultados (default 10). |
+
+**Output (`ListAvailableSchedulesOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"list_available_schedules"` | Identificador del tool. |
+| `date_from` | `date` | Fecha inicio del rango. |
+| `date_to` | `date` | Fecha fin del rango. |
+| `participant_count` | `int \| None` | Filtro aplicado. |
+| `schedules` | `list[AvailableScheduleItem]` | Schedules encontrados. |
+| `total` | `int` | Cantidad total de schedules (sin limit). |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+**AvailableScheduleItem**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `schedule_id` | `str` | ID del schedule. |
+| `experience_id` | `str` | ID de la experiencia. |
+| `experience_name` | `str` | Nombre de la experiencia. |
+| `scheduled_date` | `date` | Fecha programada. |
+| `start_time` | `str \| None` | Hora de inicio. |
+| `capacity_total` | `int` | Cupo total. |
+| `capacity_available` | `int` | Cupos disponibles. |
+| `status` | `str` | Estado del schedule. |
+
+---
+
+### `suggest_alternative_dates`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/schedules.py` |
+| Propósito | Sugiere fechas alternativas cuando no hay disponibilidad en la fecha solicitada |
+| Categoría | `READ_TOOLS` (solo lectura) |
+| input | `SuggestAlternativeDatesInput` |
+| output | `SuggestAlternativeDatesOutput` |
+
+**Input (`SuggestAlternativeDatesInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `experience_id` | `str \| None` | No* | ID de la experiencia. |
+| `experience_query` | `str \| None` | No* | Texto libre para buscar experiencia. |
+| `requested_date` | `date` | Sí | Fecha original solicitada. |
+| `participant_count` | `int` (1-30) | Sí | Cantidad de participantes. |
+| `search_days_before` | `int` (0-60) | No | Días antes a buscar (default 15). |
+| `search_days_after` | `int` (1-90) | No | Días después a buscar (default 30). |
+| `limit` | `int` (1-10) | No | Máximo de alternativas (default 5). |
+| `exclude_dates` | `list[date]` | No | Fechas a excluir. |
+
+**Output (`SuggestAlternativeDatesOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"suggest_alternative_dates"` | Identificador del tool. |
+| `requested_date` | `date` | Fecha original. |
+| `participant_count` | `int` | Participantes. |
+| `alternatives` | `list[AvailableScheduleItem]` | Fechas alternativas. |
+| `total` | `int` | Cantidad de alternativas. |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+---
+
+### `get_experience_detail`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/__init__.py` (stub, implementación planned) |
+| Propósito | Obtiene información detallada de una experiencia |
+| Categoría | `READ_TOOLS` (solo lectura) |
+| input | `GetExperienceDetailInput` |
+| output | `ExperienceDetailOutput` |
+
+**Input (`GetExperienceDetailInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `experience_id` | `str \| None` | No* | ID de la experiencia. |
+| `experience_query` | `str \| None` | No* | Texto libre para buscar experiencia. |
+
+**Output (`ExperienceDetailOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"get_experience_detail"` | Identificador del tool. |
+| `found` | `bool` | Si se encontró la experiencia. |
+| `experience_id` | `str \| None` | ID de la experiencia. |
+| `name` | `str \| None` | Nombre. |
+| `slug` | `str \| None` | Slug URL. |
+| `description` | `str \| None` | Descripción completa. |
+| `short_description` | `str \| None` | Subtítulo. |
+| `duration` | `str \| None` | Duración. |
+| `difficulty` | `str \| None` | Dificultad. |
+| `level` | `str \| None` | Nivel. |
+| `includes` | `list[str]` | Incluye. |
+| `restrictions` | `list[str]` | Restricciones. |
+| `starting_price` | `int \| None` | Precio mínimo. |
+| `currency` | `str` | Moneda (default COP). |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+---
+
+### `get_public_business_rules`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/__init__.py` (stub, implementación planned) |
+| Propósito | Devuelve las reglas de negocio públicas de La Juana |
+| Categoría | `READ_TOOLS` (solo lectura) |
+| input | `PublicBusinessRulesInput` |
+| output | `PublicBusinessRulesOutput` |
+
+**Input (`PublicBusinessRulesInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `include_reservation_rules` | `bool` | No | Incluir reglas de reserva (default true). |
+| `include_behavior_rules` | `bool` | No | Incluir reglas de comportamiento (default true). |
+
+**Output (`PublicBusinessRulesOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"get_public_business_rules"` | Identificador del tool. |
+| `family_focus` | `str` | Enfoque familiar. |
+| `alcohol_policy` | `str` | Política de alcohol. |
+| `behavior_policy` | `str` | Política de comportamiento. |
+| `reservation_notice_days` | `int \| None` | Anticipación mínima. |
+| `general_restrictions` | `list[str]` | Restricciones generales. |
+| `disclaimer` | `str` | Descargo de responsabilidad. |
+
+---
+
+### `request_human_review`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/__init__.py` (stub, implementación planned) |
+| Propósito | Crea una solicitud trazable de revisión humana |
+| Categoría | `LIMITED_WRITE_TOOLS` (escritura limitada) |
+| input | `RequestHumanReviewInput` |
+| output | `RequestHumanReviewOutput` |
+
+**Input (`RequestHumanReviewInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `conversation_id` | `str` | Sí | ID de la conversación. |
+| `reason_code` | `Literal[...]` | Sí | Motivo: `customer_requests_human`, `unclear_experience`, `special_condition`, `availability_conflict`, `payment_or_confirmation`, `safety_or_incident`, `other` |
+| `summary` | `str` (10-1000) | Sí | Resumen del caso. |
+| `priority` | `Literal["low", "normal", "high", "urgent"]` | No | Prioridad (default `normal`). |
+
+**Output (`RequestHumanReviewOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"request_human_review"` | Identificador del tool. |
+| `requested` | `bool` | `true` si se creó la solicitud. |
+| `review_id` | `str` | ID de la solicitud de revisión. |
+| `status` | `"open" \| "already_open"` | Estado de la solicitud. |
+| `message` | `str` | Mensaje para el usuario. |
+
+---
+
+## Gobernanza (ToolPolicyEngine)
+
 ## Gobernanza (ToolPolicyEngine)
 
 | Clasificación | Tools | Acción |
 |---|---|---|
-| `READ_TOOLS` | `check_experience_availability`, `list_experiences`, `quote_experience` | Permitidos si pasan validaciones de args |
+| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates` | Permitidos si pasan validaciones de args |
+| `LIMITED_WRITE_TOOLS` | `request_human_review` | Escritura limitada (handoff trazable) |
 | `WRITE_TOOLS` | *(vacio)* | Reservado para futuros tools de escritura |
 | `CRITICAL_TOOLS` | `confirm_reservation`, `cancel_reservation`, `mark_payment_verified`, `change_schedule_capacity`, `block_slots` | **Siempre denegados** — requieren intervención humana |
 
@@ -186,10 +379,10 @@ Este documento lista todos los MCP tools del asistente AI expuestos por `apps/ap
 | `tool_name in CRITICAL_TOOLS` | `critical_tool_denied` | `403` |
 | `risk_level in {HIGH, CRITICAL}` | `high_risk_requires_human` | `403` |
 | `needs_human == true` | `human_review_required` | `403` |
-| tool no está en READ_TOOLS ni WRITE_TOOLS | `unknown_or_not_allowed_tool` | `404/403` |
+| tool no está en READ_TOOLS ni WRITE_TOOLS ni LIMITED_WRITE_TOOLS | `unknown_or_not_allowed_tool` | `404/403` |
 | `check_experience_availability` sin `requested_date` o `participant_count` | `missing_required_arguments:...` | `422` |
 | `quote_experience` sin `experience_id`/`experience_query` | `missing_required_arguments:experience_id_or_experience_query` | `422` |
-| `quote_experience` sin `participant_count`/`participants_count` | `missing_required_arguments:participant_count_or_participants_count` | `422` |
+| `quote_experience` sin `participant_count` | `missing_required_arguments:participant_count` | `422` |
 
 ---
 
@@ -258,8 +451,7 @@ Colección: `tool_call_logs`
 | Archivo | `ai/mcp/server.py` |
 | Framework | `FastMCP` |
 | Server name | `lajuana-mcp` |
-| Tools expuestos | `check_experience_availability`, `quote_experience` |
-| `list_experiences` | No expuesto vía MCP standalone |
+| Tools expuestos | `check_experience_availability`, `get_experience_detail`, `get_public_business_rules`, `list_available_schedules`, `list_experiences`, `quote_experience`, `suggest_alternative_dates`, `request_human_review` |
 
 ---
 
@@ -275,11 +467,16 @@ Singleton: `app.ai.mcp.registry.registry`
 
 ## Tools registrados actualmente
 
-| Tool | Alias en registry | Archivo |
-|---|---|---|
-| check_experience_availability | `check_experience_availability` | `ai/mcp/tools/availability.py` |
-| list_experiences | `list_experiences` | `ai/mcp/tools/catalog.py` |
-| quote_experience | `quote_experience` | `ai/mcp/tools/quote.py` |
+| Tool | Alias en registry | Archivo | Contrato Pydantic |
+|---|---|---|---|
+| check_experience_availability | `check_experience_availability` | `ai/mcp/tools/availability.py` | Sí |
+| list_experiences | `list_experiences` | `ai/mcp/tools/catalog.py` | Sí (v2) |
+| quote_experience | `quote_experience` | `ai/mcp/tools/quote.py` | Sí |
+| list_available_schedules | `list_available_schedules` | `ai/mcp/tools/schedules.py` | Sí |
+| suggest_alternative_dates | `suggest_alternative_dates` | `ai/mcp/tools/schedules.py` | Sí |
+| get_experience_detail | `get_experience_detail` | `ai/mcp/tools/__init__.py` | Sí |
+| get_public_business_rules | `get_public_business_rules` | `ai/mcp/tools/__init__.py` | Sí |
+| request_human_review | `request_human_review` | `ai/mcp/tools/__init__.py` | Sí |
 
 ## Notas de mantenimiento
 

@@ -67,16 +67,22 @@ Componentes actuales:
 ### 2.1 Tools actuales
 
 | Tool | Estado funcional | Registry interno | FastMCP standalone | Contrato Pydantic | Observación |
-|---|---:|---:|---:|---:|---|
-| `list_experiences` | Implementada | Sí | No | No / incompleto | Debe formalizar `ListExperiencesInput/Output` o declararse explícitamente como tool interna. Recomendación: formalizar y exponer también en FastMCP. |
+|---|---:|---:|---:|---:|---:|---|
+| `list_experiences` | Implementada | Sí | Sí | Sí (v2) | Contrato formalizado con `ListExperiencesInput/Output`. Expuesta en FastMCP. |
 | `check_experience_availability` | Implementada | Sí | Sí | Sí | Correcta como tool read-only. No crea reservas, no bloquea cupos, no confirma disponibilidad final sin backend. |
-| `quote_experience` | Implementada | Sí | Sí | Sí | Correcta como tool read-only/computacional. Debe alinear `requested_date` opcional entre input y output si se conserva como eco conversacional. |
+| `quote_experience` | Implementada | Sí | Sí | Sí | Correcta. `requested_date` opcional agregado al input. |
+| `list_available_schedules` | Implementada | Sí | Sí | Sí | Nueva. Lista fechas disponibles en rango de 60 días. |
+| `suggest_alternative_dates` | Implementada | Sí | Sí | Sí | Nueva. Sugiere fechas alternativas cuando no hay cupo. |
+| `get_experience_detail` | Stub | Sí | Sí | Sí | Stub que retorna no encontrado. Implementación real pendiente. |
+| `get_public_business_rules` | Stub | Sí | Sí | Sí | Stub que retorna datos vacíos. Implementación real pendiente. |
+| `request_human_review` | Stub | Sí | Sí | Sí | Stub funcional que crea solicitud. Integración real pendiente. |
 
 ### 2.2 Tools permitidas por policy actualmente
 
 | Clasificación | Tools | Estado |
-|---|---|---|
-| `READ_TOOLS` | `list_experiences`, `check_experience_availability`, `quote_experience` | Permitidas si pasan validación de argumentos, confianza y riesgo |
+|---|---|---|---|
+| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates` | Permitidas si pasan validación de argumentos, confianza y riesgo |
+| `LIMITED_WRITE_TOOLS` | `request_human_review` | Escritura limitada (handoff trazable) |
 | `WRITE_TOOLS` | Ninguna | Vacío intencionalmente |
 | `CRITICAL_TOOLS` | `confirm_reservation`, `cancel_reservation`, `mark_payment_verified`, `change_schedule_capacity`, `block_slots` | Denegadas preventivamente |
 
@@ -94,14 +100,14 @@ El asistente actual no debe:
 
 ### 2.4 Brechas inmediatas detectadas
 
-| Brecha | Impacto | Acción recomendada |
-|---|---|---|
-| `list_experiences` no tiene contrato Pydantic formal | Rompe consistencia con el resto de tools | Crear `ListExperiencesInput` y `ListExperiencesOutput` en `tool_contracts.py` |
-| `list_experiences` no está expuesta en FastMCP standalone | Diferencia entre registry interno y servidor MCP | Exponerla en `ai/mcp/server.py` o documentarla como interna. Recomendación: exponerla |
-| `quote_experience` devuelve `requested_date` pero el input documentado no lo incluye | Contrato ambiguo | Agregar `requested_date: str | None` a `QuoteExperienceInput` o retirarlo del output. Recomendación: agregarlo como opcional |
-| Arquitectura v2 puede quedar desactualizada frente a `quote_experience` | Documentación contradictoria | Actualizar `chatbot-whatsapp-v2.md` y `tools.md` juntos |
-| No existe todavía `list_available_schedules` | Brecha comercial fuerte | Priorizarla en Horizonte 1 |
-| No existe `request_human_review` | Handoff aún informal | Crear capacidad antes de flujos sensibles |
+| Brecha | Impacto | Estado |
+|---|---|---|---|
+| `list_experiences` no tiene contrato Pydantic formal | Rompe consistencia con el resto de tools | **Resuelta** — `ListExperiencesInput/Output` creados. |
+| `list_experiences` no está expuesta en FastMCP standalone | Diferencia entre registry interno y servidor MCP | **Resuelta** — Expuesta en FastMCP. |
+| `quote_experience` devuelve `requested_date` pero el input documentado no lo incluye | Contrato ambiguo | **Resuelta** — `requested_date` opcional agregado a `QuoteExperienceInput`. |
+| Arquitectura v2 puede quedar desactualizada frente a `quote_experience` | Documentación contradictoria | **Resuelta** — `chatbot-whatsapp-v2.md` y `tools.md` actualizados. |
+| No existe todavía `list_available_schedules` | Brecha comercial fuerte | **Resuelta** — Implementada y registrada. |
+| No existe `request_human_review` | Handoff aún informal | **Resuelta (stub)** — Registrada como LIMITED_WRITE_TOOL. Integración real pendiente. |
 
 ---
 
@@ -292,15 +298,16 @@ Estabilizar la arquitectura conversacional antes de permitir escritura. El foco 
 ### Capacidades
 
 | Capacidad | Estado | Observación |
-|---|---:|---|
+|---|---:|---:|---|
 | Pipeline planner → policy → tool → composer | Implementado | Base actual de la v2 |
 | Sesiones conversacionales con slots | Implementado / fortalecer | Debe formalizar estados conversacionales |
-| ToolCallLog por ejecución | Implementado | Debe incluir siempre trace y latencia |
+| ToolCallLog por ejecución | Implementado | Incluye trace_id y latencia |
+| Slot merge tool-aware (`REQUIRED_FIELDS_BY_TOOL`) | Implementado | merge_slots() con required_fields por tool |
 | Deduplicación WhatsApp por `external_message_id` | Pendiente | Crítico antes de escritura |
 | Lock por `conversation_key` | Pendiente | Crítico para evitar respuestas entrelazadas |
 | Debounce/batching de mensajes cortos | Pendiente | Necesario para usuarios que escriben en varios mensajes |
-| Contratos Pydantic para todas las tools | Completado | `ListExperiencesInput`/`Output` en `tool_contracts.py` |
-| Simetría registry/FastMCP | Completado | `list_experiences` expuesta en FastMCP y registry |
+| Contratos Pydantic para todas las tools | Completado | Todas las tools públicas tienen contrato Pydantic |
+| Simetría registry/FastMCP | Completado | Todas las tools expuestas en registry y FastMCP |
 
 ### Criterio de salida
 
@@ -322,15 +329,15 @@ Permitir que un cliente por WhatsApp pueda entender qué ofrece La Juana, consul
 ### Tools / capacidades
 
 | Tool o capacidad | Estado | Tipo | Comentario |
-|---|---:|---|---|
-| `list_experiences` | Implementada / fortalecer | Pública lectura | Formalizar contrato Pydantic y exponer en FastMCP |
-| `get_experience_detail` | Planned | Pública lectura | Necesaria para preguntas específicas |
-| `get_public_business_rules` | Planned | Pública lectura | Enfoque familiar, restricciones, no licor/desorden |
+|---|---:|---:|---|---|
+| `list_experiences` | Implementada | Pública lectura | Contrato Pydantic + FastMCP |
+| `get_experience_detail` | Stub | Pública lectura | Stub en registry/FastMCP. Implementación real pendiente |
+| `get_public_business_rules` | Stub | Pública lectura | Stub en registry/FastMCP. Implementación real pendiente |
 | `check_experience_availability` | Implementada | Pública lectura | Tool operativa actual |
-| `list_available_schedules` | Planned prioritaria | Pública lectura | Brecha comercial fuerte: clientes preguntan “qué fechas hay” |
-| `quote_experience` | Implementada / fortalecer | Pública lectura | Alinear `requested_date` opcional |
-| `suggest_alternative_dates` | Planned | Pública lectura | Debe activarse cuando no hay cupo |
-| `request_human_review` | Planned | Escritura limitada | Handoff trazable, no informal |
+| `list_available_schedules` | Implementada | Pública lectura | Rango 60 días, filtro por cupo |
+| `quote_experience` | Implementada | Pública lectura | `requested_date` opcional alineado |
+| `suggest_alternative_dates` | Implementada | Pública lectura | ±15/30 días, exclude_dates |
+| `request_human_review` | Implementada (stub) | Escritura limitada | Stub funcional en LIMITED_WRITE_TOOLS |
 
 ### Criterio de salida
 
@@ -705,11 +712,17 @@ Este roadmap se considera correctamente encaminado cuando:
 
 ## Próxima acción recomendada
 
-Antes de avanzar a nuevas capacidades, cerrar las brechas de tools actuales:
+Brechas resueltas (documentación y tools alineadas):
 
-1. Crear `ListExperiencesInput` y `ListExperiencesOutput`.
-2. Exponer `list_experiences` en FastMCP o documentar formalmente que es solo interna. Recomendación: exponerla.
-3. Agregar `requested_date: str | None` a `QuoteExperienceInput` si se mantiene en output.
-4. Actualizar documentación de arquitectura v2 para incluir `quote_experience`.
-5. Implementar pruebas golden para catálogo, disponibilidad y cotización.
-6. Priorizar después `list_available_schedules` como siguiente tool del MVP comercial.
+1. ✅ `ListExperiencesInput` y `ListExperiencesOutput` creados.
+2. ✅ `list_experiences` expuesta en FastMCP.
+3. ✅ `requested_date` opcional agregado a `QuoteExperienceInput`.
+4. ✅ Documentación de arquitectura v2 y tools actualizada.
+5. ⬜ Implementar pruebas golden para catálogo, disponibilidad y cotización.
+6. ✅ `list_available_schedules` implementada.
+
+Próximas prioridades:
+- Implementar `get_experience_detail` real (no stub).
+- Implementar `get_public_business_rules` real (no stub).
+- Integrar `request_human_review` con sistema de tickets/bandeja.
+- Implementar deduplicación WhatsApp y lock por conversación.

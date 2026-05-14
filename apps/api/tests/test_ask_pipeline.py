@@ -36,7 +36,7 @@ class FindableFakeDoc(FakeDoc):
     @classmethod
     def find(cls, *args: Any, **kwargs: Any) -> SimpleNamespace:
         return SimpleNamespace(
-            sort=lambda _: SimpleNamespace(limit=lambda _: SimpleNamespace(to_list=_empty_turn_list))
+            sort=lambda _: SimpleNamespace(limit=lambda _: SimpleNamespace(to_list=_empty_turn_list))  # noqa: E501
         )
 
 

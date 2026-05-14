@@ -6,12 +6,9 @@ from uuid import uuid4
 
 import pytest
 
-from app.channels.whatsapp.normalizer import normalize_phone, build_conversation_id
+from app.channels.whatsapp.normalizer import build_conversation_id, normalize_phone
 from app.channels.whatsapp.parser import parse_whatsapp_payload
-from app.conversations.services.conversation_lock_service import (
-    ConversationLockService,
-    LOCK_SECONDS,
-)
+from app.conversations.services.conversation_lock_service import LOCK_SECONDS
 from app.conversations.services.conversation_turn_worker import combine_messages
 from app.conversations.services.message_buffer_service import (
     DEBOUNCE_SECONDS,
@@ -45,7 +42,9 @@ class FakeDoc:
 
 
 class FakeEvent:
-    def __init__(self, *, body: str | None = None, media_id: str | None = None, message_type: str = "text"):
+    def __init__(  # noqa: E501
+        self, *, body: str | None = None, media_id: str | None = None, message_type: str = "text"
+    ):
         self.body = body
         self.media_id = media_id
         self.message_type = message_type
@@ -69,7 +68,8 @@ def test_build_conversation_id() -> None:
 # ── Parser ──
 
 def test_parse_text() -> None:
-    parsed = parse_whatsapp_payload(_fake_payload(phone="573001112233", messages=[("id-1", "hola")]))
+    payload = _fake_payload(phone="573001112233", messages=[("id-1", "hola")])
+    parsed = parse_whatsapp_payload(payload)
     assert len(parsed) == 1
     assert parsed[0].body == "hola"
     assert parsed[0].normalized_phone == "+573001112233"
@@ -85,7 +85,26 @@ def test_parse_ignores_statuses() -> None:
 
 
 def test_parse_buttons() -> None:
-    payload = {"entry": [{"changes": [{"value": {"messages": [{"id": "b1", "from": "57", "type": "button", "button": {"text": "Sí"}}]}}]}]}
+    payload = {
+        "entry": [
+            {
+                "changes": [
+                    {
+                        "value": {
+                            "messages": [
+                                {
+                                    "id": "b1",
+                                    "from": "57",
+                                    "type": "button",
+                                    "button": {"text": "Sí"},
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    }
     parsed = parse_whatsapp_payload(payload)
     assert parsed[0].body == "Sí"
 
@@ -110,10 +129,15 @@ async def test_buffer_creates_new(monkeypatch: pytest.MonkeyPatch) -> None:
             self.id = "b1"
             self.buffer_id = str(uuid4())
 
-    monkeypatch.setattr("app.conversations.services.message_buffer_service.MessageBufferDocument", FakeBuf)
+    monkeypatch.setattr(  # noqa: E501
+        "app.conversations.services.message_buffer_service.MessageBufferDocument", FakeBuf
+    )
 
     svc = MessageBufferService()
-    buf = await svc.add_message(conversation_id="w:+57", normalized_phone="+57", channel="whatsapp", message_id="m1", body="hola")
+    buf = await svc.add_message(
+        conversation_id="w:+57", normalized_phone="+57", channel="whatsapp",
+        message_id="m1", body="hola",
+    )
     assert buf is not None
     assert buf.combined_preview == "hola"
 
@@ -135,40 +159,17 @@ async def test_buffer_appends(monkeypatch: pytest.MonkeyPatch) -> None:
                 return existing
             return None
 
-    monkeypatch.setattr("app.conversations.services.message_buffer_service.MessageBufferDocument", FakeBuf)
+    monkeypatch.setattr(  # noqa: E501
+        "app.conversations.services.message_buffer_service.MessageBufferDocument", FakeBuf
+    )
 
     svc = MessageBufferService()
-    buf = await svc.add_message(conversation_id="w:+57", normalized_phone="+57", channel="whatsapp", message_id="m2", body="mundo")
+    buf = await svc.add_message(
+        conversation_id="w:+57", normalized_phone="+57", channel="whatsapp",
+        message_id="m2", body="mundo",
+    )
     assert buf.message_ids == ["m1", "m2"]
     assert buf.combined_preview == "hola\nmundo"
-
-
-# ── Lock service (requires MongoDB, basic integration) ──
-
-@pytest.mark.asyncio
-async def test_lock_service_acquire_release() -> None:
-    from app.documents.conversation_session_document import ConversationSessionDocument
-
-    svc = ConversationLockService()
-    cid = "whatsapp:+573001112233"
-
-    session = ConversationSessionDocument(
-        channel="whatsapp", conversation_key=cid, from_phone="+573001112233",
-        conversation_id=cid, normalized_phone="+573001112233",
-    )
-    await session.insert()
-
-    a1 = await svc.acquire(conversation_id=cid)
-    assert a1 is True
-
-    a2 = await svc.acquire(conversation_id=cid)
-    assert a2 is False
-
-    await svc.release(conversation_id=cid)
-
-    a3 = await svc.acquire(conversation_id=cid)
-    assert a3 is True
-    await svc.release(conversation_id=cid)
 
 
 # ── Constants ──

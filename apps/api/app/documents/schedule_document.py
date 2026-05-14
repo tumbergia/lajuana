@@ -1,6 +1,7 @@
 from datetime import date, time
 
 from beanie import PydanticObjectId
+from pymongo import ASCENDING, IndexModel
 
 from app.common.collections import Collections
 from app.common.enums import ScheduleStatus
@@ -23,3 +24,14 @@ class ScheduleDocument(AuditDocument):
 
     class Settings:
         name = Collections.SCHEDULES
+        indexes = [
+            IndexModel(
+                [
+                    ("experience_id", ASCENDING),
+                    ("date", ASCENDING),
+                    ("start_time", ASCENDING),
+                ],
+                unique=True,
+                name="uq_schedule_experience_date_start_time",
+            ),
+        ]

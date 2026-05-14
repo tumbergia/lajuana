@@ -1311,7 +1311,6 @@ def _detail_example_value(detail_key: str) -> object:
         "min_days_in_advance": -1,
         "experience_id": "660000000000000000000101",
         "schedule_id": "660000000000000000000401",
-        "participant_count": 4,
         "payment_proof_id": "660000000000000000000501",
         "equine_id": "660000000000000000000601",
         "saddle_id": "660000000000000000000701",
