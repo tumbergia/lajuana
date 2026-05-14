@@ -359,15 +359,258 @@ Este documento lista todos los MCP tools del asistente AI expuestos por `apps/ap
 
 ---
 
+### `admin_get_logistics_checklist`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/operations.py` |
+| Propósito | Obtiene checklist logístico de una reserva: estado, participantes, asignaciones, pólizas, registro de llegada |
+| Categoría | `READ_TOOLS` (solo lectura) |
+| input | `LogisticsChecklistInput` |
+| output | `LogisticsChecklistOutput` |
+
+**Input (`LogisticsChecklistInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `reservation_id` | `str` | Sí | ID de la reserva. |
+
+**Output (`LogisticsChecklistOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"admin_get_logistics_checklist"` | Identificador del tool. |
+| `reservation_id` | `str` | ID de la reserva consultada. |
+| `items` | `list[LogisticsChecklistItem]` | Items del checklist. |
+| `total` | `int` | Total de items. |
+| `completed` | `int` | Items completados. |
+| `pending` | `int` | Items pendientes. |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+**LogisticsChecklistItem**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `category` | `str` | Categoría (reserva, participantes, asignaciones, pólizas, operación). |
+| `label` | `str` | Descripción del item. |
+| `status` | `"completed" \| "pending" \| "not_applicable"` | Estado del item. |
+| `details` | `str \| None` | Detalle adicional. |
+
+---
+
+### `guide_create_service_log`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/operations.py` |
+| Propósito | Registra una entrada de bitácora de servicio para una reserva |
+| Categoría | `LIMITED_WRITE_TOOLS` (escritura limitada) |
+| input | `CreateServiceLogInput` |
+| output | `CreateServiceLogOutput` |
+
+**Input (`CreateServiceLogInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `reservation_id` | `str` | Sí | ID de la reserva. |
+| `event_type` | `"arrival" \| "departure" \| "checkpoint" \| "closure" \| "note"` | Sí | Tipo de evento. |
+| `happened_at` | `str \| None` | No | Timestamp ISO 8601 del evento (default: ahora). |
+| `checkpoint_name` | `str \| None` | No* | Obligatorio si event_type es `checkpoint`. |
+| `notes` | `str \| None` | No | Notas adicionales. |
+| `related_participant_id` | `str \| None` | No | ID del participante relacionado. |
+| `related_equine_id` | `str \| None` | No | ID del equino relacionado. |
+
+**Output (`CreateServiceLogOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"guide_create_service_log"` | Identificador del tool. |
+| `created` | `bool` | `true` si se registró la bitácora. |
+| `log_id` | `str \| None` | ID del log creado. |
+| `message` | `str` | Mensaje para el usuario. |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+---
+
+### `guide_report_incident`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/operations.py` |
+| Propósito | Reporta un incidente durante la ejecución del servicio |
+| Categoría | `WRITE_TOOLS` (escritura) |
+| input | `ReportIncidentInput` |
+| output | `ReportIncidentOutput` |
+
+**Input (`ReportIncidentInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `reservation_id` | `str` | Sí | ID de la reserva. |
+| `severity` | `"low" \| "medium" \| "high" \| "critical"` | Sí | Severidad del incidente. |
+| `description` | `str` (10-2000) | Sí | Descripción del incidente. |
+| `happened_at` | `str \| None` | No | Timestamp ISO 8601 (default: ahora). |
+| `related_participant_id` | `str \| None` | No | Participante involucrado. |
+| `related_equine_id` | `str \| None` | No | Equino involucrado. |
+
+**Output (`ReportIncidentOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"guide_report_incident"` | Identificador del tool. |
+| `reported` | `bool` | `true` si se reportó el incidente. |
+| `incident_id` | `str \| None` | ID del incidente. |
+| `message` | `str` | Mensaje para el usuario. |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+---
+
+### `admin_close_service_execution`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/operations.py` |
+| Propósito | Cierra operativamente una reserva confirmada. Transiciona a COMPLETED |
+| Categoría | `WRITE_TOOLS` (escritura) |
+| input | `CloseServiceExecutionInput` |
+| output | `CloseServiceExecutionOutput` |
+
+**Input (`CloseServiceExecutionInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `reservation_id` | `str` | Sí | ID de la reserva a cerrar. |
+| `notes` | `str \| None` | No | Notas de cierre. |
+
+**Output (`CloseServiceExecutionOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"admin_close_service_execution"` | Identificador del tool. |
+| `closed` | `bool` | `true` si se cerró la ejecución. |
+| `reservation_id` | `str \| None` | ID de la reserva cerrada. |
+| `message` | `str` | Mensaje para el usuario. |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+---
+
+### `admin_add_equine_health_event`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/operations.py` |
+| Propósito | Registra un evento de salud o bienestar para un equino |
+| Categoría | `LIMITED_WRITE_TOOLS` (escritura limitada) |
+| input | `EquineHealthEventInput` |
+| output | `EquineHealthEventOutput` |
+
+**Input (`EquineHealthEventInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `equine_id` | `str` | Sí | ID del equino. |
+| `event_type` | `"health_check" \| "injury" \| "treatment" \| "medication" \| "rest" \| "note"` | Sí | Tipo de evento. |
+| `description` | `str` (5-2000) | Sí | Descripción del evento. |
+| `happened_at` | `str \| None` | No | Timestamp ISO 8601 (default: ahora). |
+| `severity` | `"low" \| "medium" \| "high"` | No | Severidad (default `low`). |
+
+**Output (`EquineHealthEventOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"admin_add_equine_health_event"` | Identificador del tool. |
+| `created` | `bool` | `true` si se registró el evento. |
+| `event_id` | `str \| None` | ID del evento creado. |
+| `message` | `str` | Mensaje para el usuario. |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+---
+
+### `admin_get_equine_workload`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/operations.py` |
+| Propósito | Consulta la carga de trabajo de equinos: asignaciones próximas y disponibilidad |
+| Categoría | `READ_TOOLS` (solo lectura) |
+| input | `EquineWorkloadInput` |
+| output | `EquineWorkloadOutput` |
+
+**Input (`EquineWorkloadInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `equine_ids` | `list[str] \| None` | No | IDs específicos de equinos. Si se omite, consulta todos. |
+| `only_available` | `bool` | No | Filtrar solo equinos disponibles (default `false`). |
+
+**Output (`EquineWorkloadOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"admin_get_equine_workload"` | Identificador del tool. |
+| `workload` | `list[EquineWorkloadItem]` | Carga de trabajo por equino. |
+| `total` | `int` | Cantidad de equinos. |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+**EquineWorkloadItem**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `equine_id` | `str` | ID del equino. |
+| `name` | `str` | Nombre del equino. |
+| `is_available` | `bool` | Disponibilidad actual. |
+| `upcoming_assignments` | `int` | Asignaciones futuras (reservas confirmadas). |
+| `next_date` | `str \| None` | Próxima fecha de asignación. |
+
+---
+
+### `admin_update_equine_availability`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/operations.py` |
+| Propósito | Actualiza la disponibilidad operacional de un equino. Requiere motivo |
+| Categoría | `WRITE_TOOLS` (escritura) |
+| input | `UpdateEquineAvailabilityInput` |
+| output | `UpdateEquineAvailabilityOutput` |
+
+**Input (`UpdateEquineAvailabilityInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `equine_id` | `str` | Sí | ID del equino. |
+| `is_available` | `bool` | Sí | Nuevo estado de disponibilidad. |
+| `reason` | `str` (5-500) | Sí | Motivo del cambio. |
+
+**Output (`UpdateEquineAvailabilityOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"admin_update_equine_availability"` | Identificador del tool. |
+| `updated` | `bool` | `true` si se actualizó. |
+| `equine_id` | `str \| None` | ID del equino actualizado. |
+| `is_available` | `bool \| None` | Nuevo estado de disponibilidad. |
+| `message` | `str` | Mensaje para el usuario. |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si falló. |
+
+---
+
 ## Gobernanza (ToolPolicyEngine)
 
 ## Gobernanza (ToolPolicyEngine)
 
 | Clasificación | Tools | Acción |
 |---|---|---|
-| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates` | Permitidos si pasan validaciones de args |
-| `LIMITED_WRITE_TOOLS` | `request_human_review` | Escritura limitada (handoff trazable) |
-| `WRITE_TOOLS` | *(vacio)* | Reservado para futuros tools de escritura |
+| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates`, `admin_get_logistics_checklist`, `admin_get_equine_workload` | Permitidos si pasan validaciones de args |
+| `LIMITED_WRITE_TOOLS` | `request_human_review`, `guide_create_service_log`, `admin_add_equine_health_event` | Escritura limitada (handoff trazable) |
+| `WRITE_TOOLS` | `guide_report_incident`, `admin_close_service_execution`, `admin_update_equine_availability` | Escritura, pasa por validación de riesgo |
 | `CRITICAL_TOOLS` | `confirm_reservation`, `cancel_reservation`, `mark_payment_verified`, `change_schedule_capacity`, `block_slots` | **Siempre denegados** — requieren intervención humana |
 
 **Reglas de denegación** (orden de evaluación):
@@ -451,7 +694,7 @@ Colección: `tool_call_logs`
 | Archivo | `ai/mcp/server.py` |
 | Framework | `FastMCP` |
 | Server name | `lajuana-mcp` |
-| Tools expuestos | `check_experience_availability`, `get_experience_detail`, `get_public_business_rules`, `list_available_schedules`, `list_experiences`, `quote_experience`, `suggest_alternative_dates`, `request_human_review` |
+| Tools expuestos | `admin_add_equine_health_event`, `admin_close_service_execution`, `admin_get_equine_workload`, `admin_get_logistics_checklist`, `admin_update_equine_availability`, `check_experience_availability`, `get_experience_detail`, `get_public_business_rules`, `guide_create_service_log`, `guide_report_incident`, `list_available_schedules`, `list_experiences`, `quote_experience`, `suggest_alternative_dates`, `request_human_review` |
 
 ---
 
@@ -468,7 +711,12 @@ Singleton: `app.ai.mcp.registry.registry`
 ## Tools registrados actualmente
 
 | Tool | Alias en registry | Archivo | Contrato Pydantic |
-|---|---|---|---|
+|---|---|---|---|---|
+| admin_add_equine_health_event | `admin_add_equine_health_event` | `ai/mcp/tools/operations.py` | Sí |
+| admin_close_service_execution | `admin_close_service_execution` | `ai/mcp/tools/operations.py` | Sí |
+| admin_get_equine_workload | `admin_get_equine_workload` | `ai/mcp/tools/operations.py` | Sí |
+| admin_get_logistics_checklist | `admin_get_logistics_checklist` | `ai/mcp/tools/operations.py` | Sí |
+| admin_update_equine_availability | `admin_update_equine_availability` | `ai/mcp/tools/operations.py` | Sí |
 | check_experience_availability | `check_experience_availability` | `ai/mcp/tools/availability.py` | Sí |
 | list_experiences | `list_experiences` | `ai/mcp/tools/catalog.py` | Sí (v2) |
 | quote_experience | `quote_experience` | `ai/mcp/tools/quote.py` | Sí |
@@ -477,6 +725,8 @@ Singleton: `app.ai.mcp.registry.registry`
 | get_experience_detail | `get_experience_detail` | `ai/mcp/tools/__init__.py` | Sí |
 | get_public_business_rules | `get_public_business_rules` | `ai/mcp/tools/__init__.py` | Sí |
 | request_human_review | `request_human_review` | `ai/mcp/tools/__init__.py` | Sí |
+| guide_create_service_log | `guide_create_service_log` | `ai/mcp/tools/operations.py` | Sí |
+| guide_report_incident | `guide_report_incident` | `ai/mcp/tools/operations.py` | Sí |
 
 ## Notas de mantenimiento
 

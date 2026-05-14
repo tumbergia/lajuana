@@ -19,11 +19,19 @@ class ToolPolicyEngine:
         "list_available_schedules",
         "quote_experience",
         "suggest_alternative_dates",
+        "admin_get_logistics_checklist",
+        "admin_get_equine_workload",
     }
     LIMITED_WRITE_TOOLS = {
         "request_human_review",
+        "guide_create_service_log",
+        "admin_add_equine_health_event",
     }
-    WRITE_TOOLS: set[str] = set()
+    WRITE_TOOLS: set[str] = {
+        "guide_report_incident",
+        "admin_close_service_execution",
+        "admin_update_equine_availability",
+    }
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
         "cancel_reservation",
@@ -89,10 +97,9 @@ class ToolPolicyEngine:
 
         if plan.tool_name == "quote_experience":
             args = plan.arguments.model_dump()
-            has_experience = (
-                args.get("experience_id") not in {None, ""}
-                or args.get("experience_query") not in {None, ""}
-            )
+            has_experience = args.get("experience_id") not in {None, ""} or args.get(
+                "experience_query"
+            ) not in {None, ""}
             has_participants = args.get("participant_count") not in {None, ""}
             if not has_experience:
                 return ToolPolicyDecision(

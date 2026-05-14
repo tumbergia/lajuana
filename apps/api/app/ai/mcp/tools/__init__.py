@@ -4,6 +4,15 @@ from typing import Any
 
 from app.ai.mcp.tools.availability import check_experience_availability
 from app.ai.mcp.tools.catalog import list_experiences
+from app.ai.mcp.tools.operations import (
+    admin_add_equine_health_event,
+    admin_close_service_execution,
+    admin_get_equine_workload,
+    admin_get_logistics_checklist,
+    admin_update_equine_availability,
+    guide_create_service_log,
+    guide_report_incident,
+)
 from app.ai.mcp.tools.quote import quote_experience
 from app.ai.mcp.tools.schedules import list_available_schedules, suggest_alternative_dates
 
@@ -45,9 +54,16 @@ async def request_human_review(**kwargs: Any) -> dict[str, Any]:
 
 
 __all__ = [
+    "admin_add_equine_health_event",
+    "admin_close_service_execution",
+    "admin_get_equine_workload",
+    "admin_get_logistics_checklist",
+    "admin_update_equine_availability",
     "check_experience_availability",
     "get_experience_detail",
     "get_public_business_rules",
+    "guide_create_service_log",
+    "guide_report_incident",
     "list_available_schedules",
     "list_experiences",
     "quote_experience",
