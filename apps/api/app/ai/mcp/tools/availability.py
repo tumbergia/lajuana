@@ -149,6 +149,7 @@ async def check_experience_availability(
     participant_count: int = 1,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     trace_id = trace_id or str(uuid4())

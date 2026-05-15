@@ -23,7 +23,7 @@ from app.documents.conversation_session_document import ConversationSessionDocum
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.schemas.ask import AskRequest, AskResponse
-from app.schemas.assistant_plan import AssistantAction
+from app.schemas.assistant_plan import AssistantAction, ToolArgs
 from app.schemas.conversation_session import merge_slots
 
 
@@ -33,6 +33,13 @@ class AssistantOrchestrator:
         self._policy = ToolPolicyEngine()
 
     async def ask(self, request: AskRequest) -> AskResponse:
+        def _has_value(value: object) -> bool:
+            if value is None or value == "":
+                return False
+            if isinstance(value, (dict, list, tuple, set)) and len(value) == 0:
+                return False
+            return True
+
         trace_id = request.trace_id or str(uuid4())
         conversation_id = request.conversation_id
         conversation_key = conversation_id or request.from_phone or trace_id
@@ -52,6 +59,11 @@ class AssistantOrchestrator:
             conversation_id=conversation_id,
             trace_id=trace_id,
         )
+
+        # Propagate from_phone as holder_phone in slot_values
+        phone = request.from_phone or getattr(session, "from_phone", None)
+        if phone and "holder_phone" not in session.slot_values:
+            session.slot_values["holder_phone"] = phone
 
         history_turns = (
             await ConversationTurnDocument.find(
@@ -149,16 +161,36 @@ class AssistantOrchestrator:
         turn.planner_output = plan.model_dump(mode="json")
         await turn.save()
 
+        if conversation_id:
+            session.slot_values["conversation_id"] = conversation_id
+
         # Save all non-null arguments from planner to session slots
         if plan.arguments:
             for key, value in plan.arguments.model_dump(exclude_none=True).items():
-                session.slot_values[key] = value
+                if _has_value(value):
+                    session.slot_values[key] = value
 
         # Session merge: fill null plan args from session slots
         REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
             "check_availability": ["experience_id", "requested_date", "participant_count"],
             "create_reservation": ["experience_id", "requested_date", "participant_count"],
             "suggest_alternative_dates": ["experience_id"],
+            "create_reservation_draft": [
+                "experience_id",
+                "schedule_id",
+                "participant_count",
+                "holder_phone",
+                "requested_date",
+                "quote_snapshot",
+                "conversation_id",
+            ],
+            "get_reservation_public_summary": [
+                "code",
+                "holder_phone",
+            ],
+            "get_reservation_status_by_phone": [
+                "holder_phone",
+            ],
         }
 
         if (
@@ -175,8 +207,10 @@ class AssistantOrchestrator:
                     required_fields=required_fields,
                 )
                 if merge.filled_from_session or plan.action == AssistantAction.ASK_CLARIFYING_QUESTION:  # noqa: E501
+                    valid_keys = ToolArgs.model_fields.keys()
                     for key, value in merge.merged.items():
-                        setattr(plan.arguments, key, value)
+                        if key in valid_keys:
+                            setattr(plan.arguments, key, value)
                     if not merge.still_missing:
                         plan.action = AssistantAction.TOOL_CALL
                         plan.missing_fields = []
@@ -204,7 +238,9 @@ class AssistantOrchestrator:
             )
 
         if plan.arguments:
-            session.slot_values.update(plan.arguments.model_dump(exclude_none=True))
+            for key, value in plan.arguments.model_dump(exclude_none=True).items():
+                if _has_value(value):
+                    session.slot_values[key] = value
         session.pending_fields = []
 
         policy_decision = self._policy.validate(plan)
@@ -227,12 +263,13 @@ class AssistantOrchestrator:
         tool_output: dict = {}
 
         try:
+            tool_kwargs = plan.arguments.model_dump(exclude_none=True)
             tool_output = await registry.call(
                 plan.tool_name or "",
-                conversation_id=conversation_id,
+                conversation_id_for_log=conversation_id,
                 trace_id=trace_id,
                 conversation_turn_id=request.conversation_turn_id or str(uuid4()),
-                **plan.arguments.model_dump(exclude_none=True),
+                **tool_kwargs,
             )
             status = "success"
         except Exception as exc:
@@ -253,12 +290,15 @@ class AssistantOrchestrator:
             latency_ms=latency_ms,
         ).insert()
 
-        response = await compose_tool_response(
-            user_message=request.message,
-            plan=plan,
-            tool_output=tool_output,
-            conversation_id=conversation_id,
-        )
+        if tool_output and isinstance(tool_output, dict) and tool_output.get("response"):
+            response = tool_output["response"]
+        else:
+            response = await compose_tool_response(
+                user_message=request.message,
+                plan=plan,
+                tool_output=tool_output,
+                conversation_id=conversation_id,
+            )
 
         if (
             plan.tool_name == "suggest_alternative_dates"
@@ -278,7 +318,7 @@ class AssistantOrchestrator:
         turn.error_code = error_code
         await turn.save()
 
-        # Propagate resolved experience_id from tool output to session slots
+        # Propagate resolved fields from tool output to session slots
         if tool_output:
             exp_id = tool_output.get("experience_id")
             exp_name = tool_output.get("experience_name")
@@ -286,6 +326,12 @@ class AssistantOrchestrator:
                 session.slot_values["experience_id"] = exp_id
             if exp_name:
                 session.slot_values["experience_name"] = exp_name
+            sched_id = tool_output.get("schedule_id")
+            if sched_id:
+                session.slot_values["schedule_id"] = sched_id
+            qs = tool_output.get("quote_snapshot")
+            if qs:
+                session.slot_values["quote_snapshot"] = qs
 
         session.last_intent = plan.action.value if plan.action else "tool_executed"
         session.last_trace_id = trace_id

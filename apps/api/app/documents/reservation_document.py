@@ -40,6 +40,10 @@ class ReservationDocument(AuditDocument):
     confirmed_at: datetime | None = None
     cancelled_at: datetime | None = None
     completed_at: datetime | None = None
+    quote_snapshot: dict | None = None
+    quote_trace_id: str | None = None
+    pre_reserved_at: datetime | None = None
+    expire_at: datetime | None = None
     created_by: PydanticObjectId | None = None
     updated_by: PydanticObjectId | None = None
 

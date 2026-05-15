@@ -3,7 +3,11 @@ from app.conversations.documents import (
     OutboundMessageDocument,
     WhatsAppInboundEventDocument,
 )
-from app.documents.app_config_document import AppConfigDocument, ReservationRules
+from app.documents.app_config_document import (
+    AppConfigDocument,
+    PaymentInstructionsConfig,
+    ReservationRules,
+)
 from app.documents.assignment_document import AssignmentDocument
 from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
@@ -27,6 +31,7 @@ from app.documents.user_document import UserDocument
 __all__ = [
     "AssignmentDocument",
     "AppConfigDocument",
+    "PaymentInstructionsConfig",
     "ConversationSessionDocument",
     "ConversationTurnDocument",
     "ToolCallLogDocument",

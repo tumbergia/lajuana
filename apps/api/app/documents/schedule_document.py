@@ -16,6 +16,7 @@ class ScheduleDocument(AuditDocument):
     capacity_total: int
     reserved_slots: int = 0
     internal_slots: int = 0
+    held_slots: int = 0
     blocked_slots: int = 0
     available_slots: int
     status: ScheduleStatus = ScheduleStatus.OPEN

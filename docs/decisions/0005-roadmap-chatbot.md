@@ -1,6 +1,6 @@
 # Roadmap del asistente AI para La Juana — v2 validado contra tools actuales
 
-**Fecha de actualización:** 2026-05-13  
+**Fecha de actualización:** 2026-05-15  
 **Naturaleza del documento:** roadmap estratégico de capacidades, no plan de implementación sprint por sprint.  
 **Validado contra:** arquitectura v2 del chatbot, `tools.md`, requerimientos funcionales/no funcionales, cronograma y documentación de arquitectura del proyecto.
 
@@ -59,7 +59,7 @@ Componentes actuales:
 - `GeminiPlanner` con salida estructurada.
 - `ToolPolicyEngine` para validar confianza, riesgo, argumentos requeridos y tool permitida.
 - `ToolRegistry` interno para ejecutar tools desde el orquestador.
-- `ResponseComposer` con modo `cheap` y modo `llm`.
+- `ResponseComposer` con composición vía LLM.
 - `ConversationSessionDocument` para conservar slots conversacionales.
 - `ConversationTurnDocument` para registrar cada turno.
 - `ToolCallLogDocument` para auditar cada ejecución de tool.
@@ -73,6 +73,10 @@ Componentes actuales:
 | `quote_experience` | Implementada | Sí | Sí | Sí | Correcta. `requested_date` opcional agregado al input. |
 | `list_available_schedules` | Implementada | Sí | Sí | Sí | Nueva. Lista fechas disponibles en rango de 60 días. |
 | `suggest_alternative_dates` | Implementada | Sí | Sí | Sí | Nueva. Sugiere fechas alternativas cuando no hay cupo. |
+| `create_reservation_draft` | Implementada | Sí | Sí | Sí | Crea pre-reserva con `quote_snapshot` y respuesta con instrucciones de pago configurables. |
+| `attach_payment_proof_to_reservation` | Implementada | Sí | Sí | Sí | Adjunta comprobante en estado `under_review`/`duplicate`; no valida pago. |
+| `get_reservation_public_summary` | Implementada | Sí | Sí | Sí | Resumen seguro de reserva por código + holder_phone. |
+| `get_reservation_status_by_phone` | Implementada | Sí | Sí | Sí | Consulta estado por teléfono del titular. |
 | `get_experience_detail` | Stub | Sí | Sí | Sí | Stub que retorna no encontrado. Implementación real pendiente. |
 | `get_public_business_rules` | Stub | Sí | Sí | Sí | Stub que retorna datos vacíos. Implementación real pendiente. |
 | `request_human_review` | Stub | Sí | Sí | Sí | Stub funcional que crea solicitud. Integración real pendiente. |
@@ -81,8 +85,8 @@ Componentes actuales:
 
 | Clasificación | Tools | Estado |
 |---|---|---|---|
-| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates` | Permitidas si pasan validación de argumentos, confianza y riesgo |
-| `LIMITED_WRITE_TOOLS` | `request_human_review` | Escritura limitada (handoff trazable) |
+| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates`, `get_reservation_public_summary`, `get_reservation_status_by_phone` | Permitidas si pasan validación de argumentos, confianza y riesgo |
+| `LIMITED_WRITE_TOOLS` | `request_human_review`, `create_reservation_draft`, `attach_payment_proof_to_reservation` | Escritura limitada (handoff, pre-reserva y adjunto de comprobante) |
 | `WRITE_TOOLS` | Ninguna | Vacío intencionalmente |
 | `CRITICAL_TOOLS` | `confirm_reservation`, `cancel_reservation`, `mark_payment_verified`, `change_schedule_capacity`, `block_slots` | Denegadas preventivamente |
 
@@ -360,11 +364,11 @@ Convertir una conversación viable en una reserva no confirmada, con snapshot co
 
 | Tool o capacidad | Estado | Tipo | Comentario |
 |---|---:|---|---|
-| `create_reservation_draft` | Planned | Pública escritura limitada | No confirma reserva ni descuenta cupos |
-| `get_reservation_public_summary` | Planned | Pública lectura limitada | Resumen seguro para cliente |
-| `get_reservation_status_by_phone` | Planned | Pública lectura limitada | Solo reservas asociadas al teléfono |
-| `expire_reservation_draft` | Planned | Sistema | Expira pre-reservas sin avance |
-| `quote_snapshot` | Planned | Persistencia | Obligatorio antes de crear pre-reserva |
+| `create_reservation_draft` | Implementada | Pública escritura limitada | No confirma reserva ni descuenta cupos |
+| `get_reservation_public_summary` | Implementada | Pública lectura limitada | Resumen seguro para cliente (código + holder_phone) |
+| `get_reservation_status_by_phone` | Implementada | Pública lectura limitada | Solo reservas asociadas al teléfono |
+| `expire_reservation_draft` | Implementada | Sistema | Expira borradores de reserva sin avance |
+| `quote_snapshot` | Implementada | Persistencia | Obligatorio antes de crear `create_reservation_draft` |
 
 ### Regla de diseño
 
@@ -381,8 +385,8 @@ Convertir una conversación viable en una reserva no confirmada, con snapshot co
 
 ### Criterio de salida
 
-- Toda pre-reserva tiene `quote_snapshot`.
-- Toda pre-reserva tiene canal de origen y trace.
+- Todo `create_reservation_draft` tiene `quote_snapshot`.
+- Todo `create_reservation_draft` tiene canal de origen y trace.
 - No se descuentan cupos.
 - No se confirma pago.
 - No se confirma reserva.
@@ -399,12 +403,12 @@ Recibir comprobantes, permitir revisión administrativa y confirmar reservas sol
 
 | Tool o capacidad | Estado | Tipo | Comentario |
 |---|---:|---|---|
-| `attach_payment_proof_to_reservation` | Planned | Pública escritura limitada | Recibe evidencia, no valida pago |
+| `attach_payment_proof_to_reservation` | Implementada | Pública escritura limitada | Recibe evidencia y la deja en revision (`under_review`/`duplicate`) |
 | `get_payment_proof_public_status` | Planned | Pública lectura limitada | Estado agregado: recibido/en revisión |
-| `admin_list_payment_proofs` | Planned | Admin lectura | Bandeja de revisión |
-| `admin_mark_payment_verified` | Planned | Admin crítica | Requiere usuario, confirmación y auditoría |
-| `admin_reject_payment_proof` | Planned | Admin crítica | Requiere motivo |
-| `admin_confirm_reservation` | Planned | Admin crítica | Revalida disponibilidad y descuenta cupos atómicamente |
+| `admin_get_payment_proof` | Implementada (API) | Admin lectura | `GET /api/v1/payment-proofs/{payment_proof_id}` |
+| `admin_verify_payment_proof` | Implementada (API) | Admin crítica | `POST /api/v1/payment-proofs/{payment_proof_id}/verify` |
+| `admin_reject_payment_proof` | Implementada (API) | Admin crítica | `POST /api/v1/payment-proofs/{payment_proof_id}/reject` con motivo |
+| `admin_confirm_reservation` | Implementada (API) | Admin crítica | `POST /api/v1/reservations/{reservation_id}/confirm`; exige pago verificado y commit atómico de cupo |
 | `send_reservation_confirmation` | Planned | Sistema | Mensaje formal post-confirmación |
 
 ### Regla de diseño
@@ -560,7 +564,7 @@ Convertir datos operativos en decisiones: embudo comercial, ocupación, canales,
 |---|---|---|
 | `create_reservation_draft` | disponibilidad estable, cotización estable, `quote_snapshot`, deduplicación WhatsApp, locks por conversación | Evitar duplicados, inconsistencias y reservas sin trazabilidad |
 | `attach_payment_proof_to_reservation` | reserva no confirmada existente, file upload estable, asociación reserva ↔ comprobante | Comprobante debe tener entidad destino |
-| `admin_mark_payment_verified` | auth/roles, comprobante existente, confirmación explícita | Acción financiera crítica |
+| `admin_verify_payment_proof` | auth/roles, comprobante existente, confirmación explícita | Acción financiera crítica |
 | `admin_confirm_reservation` | pago verificado, disponibilidad revalidada, transición de estado válida, descuento atómico | Evitar sobreventa y falsa confirmación |
 | `send_participant_form_link` | reserva confirmada, formulario versionado, link seguro | No pedir datos sensibles sin reserva confirmada |
 | asistente admin escritura | auth/roles, ToolContext, preview, idempotency | Evitar cambios destructivos por inferencia |
@@ -614,7 +618,7 @@ Relación con tools:
 | `check_experience_availability` | No | Ninguno | Solo consulta cupo |
 | `create_reservation_draft` | Sí | `contact` / `quoted` / `pending_payment` | No confirma |
 | `attach_payment_proof_to_reservation` | Sí | `payment_received` | No valida pago |
-| `admin_mark_payment_verified` | Sí | estado interno de pago verificado | Admin crítico |
+| `admin_verify_payment_proof` | Sí | estado interno de pago verificado | Admin crítico |
 | `admin_confirm_reservation` | Sí | `confirmed` | Revalida disponibilidad y descuenta cupos |
 | `admin_cancel_reservation` | Sí | `cancelled` | Requiere motivo y permisos |
 

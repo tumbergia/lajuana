@@ -14,6 +14,7 @@ from app.services.config_service import ConfigService
 
 ACTIVE_RESERVATION_STATUSES = {
     ReservationStatus.QUOTED,
+    ReservationStatus.PRE_RESERVED,
     ReservationStatus.PENDING_PAYMENT,
     ReservationStatus.PAYMENT_RECEIVED,
     ReservationStatus.CONFIRMED,
@@ -21,7 +22,16 @@ ACTIVE_RESERVATION_STATUSES = {
 
 ALLOWED_RESERVATION_TRANSITIONS = {
     ReservationStatus.CONTACT: {ReservationStatus.QUOTED, ReservationStatus.CANCELLED},
-    ReservationStatus.QUOTED: {ReservationStatus.PENDING_PAYMENT, ReservationStatus.CANCELLED},
+    ReservationStatus.QUOTED: {
+        ReservationStatus.PRE_RESERVED,
+        ReservationStatus.PENDING_PAYMENT,
+        ReservationStatus.CANCELLED,
+    },
+    ReservationStatus.PRE_RESERVED: {
+        ReservationStatus.PENDING_PAYMENT,
+        ReservationStatus.EXPIRED,
+        ReservationStatus.CANCELLED,
+    },
     ReservationStatus.PENDING_PAYMENT: {
         ReservationStatus.PAYMENT_RECEIVED,
         ReservationStatus.CANCELLED,
@@ -30,6 +40,7 @@ ALLOWED_RESERVATION_TRANSITIONS = {
     ReservationStatus.CONFIRMED: {ReservationStatus.COMPLETED, ReservationStatus.CANCELLED},
     ReservationStatus.CANCELLED: set(),
     ReservationStatus.COMPLETED: set(),
+    ReservationStatus.EXPIRED: set(),
 }
 
 
@@ -46,6 +57,14 @@ class ReservationService:
     @staticmethod
     def _is_blocking_status(status: ReservationStatus) -> bool:
         return status in ACTIVE_RESERVATION_STATUSES
+
+    @staticmethod
+    def _compute_schedule_status(*, is_active: bool, available_slots: int) -> ScheduleStatus:
+        if not is_active:
+            return ScheduleStatus.CLOSED
+        if available_slots == 0:
+            return ScheduleStatus.FULL
+        return ScheduleStatus.OPEN
 
     async def _sync_day_lock_fields(self, reservation: ReservationDocument) -> None:
         requested_date = reservation.requested_date
@@ -66,13 +85,14 @@ class ReservationService:
         requested_date: date,
         exclude_reservation_id: str | None = None,
     ) -> list[ReservationDocument]:
-        query = [
-            ReservationDocument.requested_date == requested_date,
-            ReservationDocument.status.in_(list(ACTIVE_RESERVATION_STATUSES)),
-        ]
+        status_values = [s.value for s in ACTIVE_RESERVATION_STATUSES]
+        query = {
+            "requested_date": requested_date,
+            "status": {"$in": status_values},
+        }
         if exclude_reservation_id is not None:
-            query.append(ReservationDocument.id != exclude_reservation_id)
-        return await ReservationDocument.find(*query).to_list()
+            query["_id"] = {"$ne": exclude_reservation_id}
+        return await ReservationDocument.find(query).to_list()
 
     async def get_blocking_reservation_for_date(
         self,
@@ -136,6 +156,7 @@ class ReservationService:
     ) -> ReservationDocument:
         data = dict(payload)
         raw_status = data.pop("status", None)
+        code = data.pop("code", None)
         experience_id = data.get("experience_id")
         if experience_id is not None:
             try:
@@ -179,7 +200,7 @@ class ReservationService:
 
         doc = ReservationDocument(
             **data,
-            code=self._build_code(),
+            code=code or self._build_code(),
             status=status,
             created_by=actor_id,
             updated_by=actor_id,
@@ -338,35 +359,159 @@ class ReservationService:
             )
 
         if rules.require_payment_proof_for_confirmation and (
-            reservation.payment_status not in {PaymentStatus.RECEIVED, PaymentStatus.VERIFIED}
+            reservation.payment_status != PaymentStatus.VERIFIED
             or not reservation.payment_proof_ids
         ):
             raise ApiError(
                 status_code=400,
-                code=ErrorCode.RESERVATION_PAYMENT_REQUIRED,
-                message="No se puede confirmar sin pago/comprobante válido.",
+                code=ErrorCode.RESERVATION_PAYMENT_NOT_VERIFIED,
+                message="No se puede confirmar sin pago verificado.",
             )
 
-        if await self.has_active_reservation_for_schedule(
-            str(schedule.id),
-            exclude_reservation_id=str(reservation.id),
-        ):
+        await self.ensure_date_available(service_date, exclude_reservation_id=str(reservation.id))
+
+        allowed = ALLOWED_RESERVATION_TRANSITIONS.get(reservation.status, set())
+        if ReservationStatus.CONFIRMED not in allowed:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.RESERVATION_INVALID_STATUS_TRANSITION,
+                message="La transición de estado no es válida.",
+                details={"from": reservation.status, "to": ReservationStatus.CONFIRMED},
+            )
+
+        capacity_source = await self._commit_schedule_capacity(
+            schedule_id=str(schedule.id),
+            participant_count=reservation.participant_count,
+        )
+        if capacity_source is None:
             raise ApiError(
                 status_code=409,
                 code=ErrorCode.RESERVATION_NO_AVAILABILITY,
-                message="La fecha ya tiene una reserva activa.",
+                message="No fue posible comprometer cupos para confirmar la reserva.",
                 details={"schedule_id": str(schedule.id)},
             )
 
-        await self.transition_status(reservation, ReservationStatus.CONFIRMED)
-        await self._sync_day_lock_fields(reservation)
-        schedule.status = ScheduleStatus.FULL
+        try:
+            await self.transition_status(reservation, ReservationStatus.CONFIRMED)
+            await self._sync_day_lock_fields(reservation)
+            schedule = await ScheduleDocument.get(schedule.id)
+            if schedule is None:
+                raise ApiError(
+                    status_code=404,
+                    code=ErrorCode.SCHEDULE_NOT_FOUND,
+                    message="Agenda no encontrada.",
+                )
+            schedule.status = self._compute_schedule_status(
+                is_active=schedule.is_active,
+                available_slots=schedule.available_slots,
+            )
 
-        reservation.confirmed_at = datetime.now(UTC)
-        reservation.updated_by = actor_id
-        await schedule.save()
-        await reservation.save()
-        return reservation
+            reservation.confirmed_at = datetime.now(UTC)
+            reservation.updated_by = actor_id
+            await schedule.save()
+            await reservation.save()
+            return reservation
+        except Exception:
+            await self._rollback_schedule_capacity(
+                schedule_id=str(schedule.id),
+                participant_count=reservation.participant_count,
+                capacity_source=capacity_source,
+            )
+            schedule_after_rollback = await ScheduleDocument.get(schedule.id)
+            if schedule_after_rollback is not None:
+                schedule_after_rollback.status = self._compute_schedule_status(
+                    is_active=schedule_after_rollback.is_active,
+                    available_slots=schedule_after_rollback.available_slots,
+                )
+                await schedule_after_rollback.save()
+            raise
+
+    async def _commit_schedule_capacity(
+        self,
+        schedule_id: str,
+        participant_count: int,
+    ) -> str | None:
+        collection = ScheduleDocument.get_motor_collection()
+        schedule_object_id = PydanticObjectId(schedule_id)
+
+        convert_result = await collection.update_one(
+            {
+                "_id": schedule_object_id,
+                "held_slots": {"$gte": participant_count},
+            },
+            {
+                "$inc": {
+                    "held_slots": -participant_count,
+                    "reserved_slots": participant_count,
+                }
+            },
+        )
+        if convert_result.modified_count > 0:
+            return "held"
+
+        reserve_result = await collection.update_one(
+            {
+                "_id": schedule_object_id,
+                "available_slots": {"$gte": participant_count},
+            },
+            {
+                "$inc": {
+                    "available_slots": -participant_count,
+                    "reserved_slots": participant_count,
+                }
+            },
+        )
+        if reserve_result.modified_count > 0:
+            return "available"
+        return None
+
+    async def _rollback_schedule_capacity(
+        self,
+        *,
+        schedule_id: str,
+        participant_count: int,
+        capacity_source: str,
+    ) -> None:
+        collection = ScheduleDocument.get_motor_collection()
+        schedule_object_id = PydanticObjectId(schedule_id)
+        if capacity_source == "held":
+            rollback_result = await collection.update_one(
+                {
+                    "_id": schedule_object_id,
+                    "reserved_slots": {"$gte": participant_count},
+                },
+                {
+                    "$inc": {
+                        "held_slots": participant_count,
+                        "reserved_slots": -participant_count,
+                    }
+                },
+            )
+        else:
+            rollback_result = await collection.update_one(
+                {
+                    "_id": schedule_object_id,
+                    "reserved_slots": {"$gte": participant_count},
+                },
+                {
+                    "$inc": {
+                        "available_slots": participant_count,
+                        "reserved_slots": -participant_count,
+                    }
+                },
+            )
+
+        if rollback_result.modified_count == 0:
+            raise ApiError(
+                status_code=500,
+                code=ErrorCode.INTERNAL_ERROR,
+                message="No fue posible revertir cupos tras fallo de confirmación.",
+                details={
+                    "schedule_id": schedule_id,
+                    "participant_count": participant_count,
+                    "capacity_source": capacity_source,
+                },
+            )
 
     async def set_status(
         self,
@@ -405,5 +550,5 @@ class ReservationService:
         await reservation.save()
         return reservation
 
-    def _build_code(self) -> str:
-        return f"RES-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
+    def _build_code(self, prefix: str = "RES") -> str:
+        return f"{prefix}-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"

@@ -15,21 +15,28 @@ def merge_slots(
     plan_args: dict[str, Any],
     required_fields: list[str],
 ) -> SlotsMergeResult:
+    def has_value(value: Any) -> bool:
+        if value is None or value == "":
+            return False
+        if isinstance(value, (dict, list, tuple, set)) and len(value) == 0:
+            return False
+        return True
+
     merged = dict(session_slots)
     filled_from_session: list[str] = []
 
     for key, value in plan_args.items():
-        if value is not None and value != "":
+        if has_value(value):
             merged[key] = value
 
     for key in required_fields:
         session_val = session_slots.get(key)
         plan_val = plan_args.get(key)
-        if not plan_val and session_val:
+        if not has_value(plan_val) and has_value(session_val):
             merged[key] = session_val
             filled_from_session.append(key)
 
-    still_missing = [f for f in required_fields if not merged.get(f)]
+    still_missing = [f for f in required_fields if not has_value(merged.get(f))]
 
     return SlotsMergeResult(
         merged=merged,

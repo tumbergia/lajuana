@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -205,6 +205,8 @@ class QuoteExperienceOutput(BaseModel):
     currency: str = "COP"
     pricing_tier: QuotePricingTier | None = None
     notes: str | None = None
+    quote_snapshot: dict | None = None
+    response: str | None = None
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 
@@ -265,3 +267,97 @@ class RequestHumanReviewOutput(BaseModel):
     review_id: str
     status: Literal["open", "already_open"]
     message: str
+
+
+class CreateReservationDraftInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    experience_id: str
+    schedule_id: str
+    participant_count: int
+    holder_phone: str
+    holder_name: str | None = None
+    requested_date: date
+    quote_snapshot: dict
+    conversation_id: str | None = None
+
+
+class CreateReservationDraftOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    created: bool
+    code: str | None = None
+    status: str = ""
+    expire_at: datetime | None = None
+    message: str = ""
+    response: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = []
+
+
+class GetReservationPublicSummaryOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    found: bool
+    code: str | None = None
+    status: str = ""
+    expire_at: datetime | None = None
+    participant_count: int | None = None
+    blocking_reasons: list[ToolBlockingReason] = []
+
+
+class GetReservationPublicSummaryInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    code: str
+    holder_phone: str
+
+
+class GetReservationStatusByPhoneInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    holder_phone: str
+
+
+class GetReservationStatusByPhoneOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    found: bool
+    code: str | None = None
+    status: str = ""
+    expire_at: datetime | None = None
+    participant_count: int | None = None
+    blocking_reasons: list[ToolBlockingReason] = []
+
+
+class AttachPaymentProofToReservationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_id: str | None = None
+    public_reservation_code: str | None = None
+    from_phone: str
+    whatsapp_message_id: str
+    media_id: str
+    media_mime_type: str
+    filename: str | None = None
+    caption: str | None = Field(default=None, max_length=500)
+
+    @model_validator(mode="after")
+    def require_reservation_identifier(self):
+        if not self.reservation_id and not self.public_reservation_code:
+            raise ValueError("reservation_id_or_public_reservation_code_required")
+        return self
+
+
+class AttachPaymentProofToReservationOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    attached: bool
+    idempotent: bool = False
+    trace_id: str
+    tool_name: Literal["attach_payment_proof_to_reservation"] = "attach_payment_proof_to_reservation"
+    reservation_code: str | None = None
+    reservation_status: Literal["pending_payment", "payment_received", "unknown"] = "unknown"
+    proof_status: Literal["received", "under_review", "duplicate", "rejected"] = "received"
+    message: str
+    response: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)

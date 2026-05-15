@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.common.enums import PaymentStatus
@@ -15,12 +17,25 @@ class PaymentProofCreateSchema(BaseModel):
 
 
 class PaymentProofUpdateSchema(BaseModel):
-    status: PaymentStatus | None = None
     reservation_id: str | None = None
     filename: str | None = None
     content_type: str | None = None
     size_bytes: int | None = Field(default=None, gt=0)
     sha256: str | None = None
+
+    model_config = {"extra": "forbid"}
+
+
+class PaymentProofVerifySchema(BaseModel):
+    confirmation_token: Literal["VERIFY_PAYMENT"]
+    amount: float | None = Field(default=None, gt=0)
+    reference: str | None = None
+    note: str | None = None
+
+
+class PaymentProofRejectSchema(BaseModel):
+    confirmation_token: Literal["REJECT_PAYMENT"]
+    note: str | None = None
 
 
 class PaymentProofResponseSchema(AuditMetadataSchema):

@@ -13,7 +13,7 @@ app/documents/      → persistencia (Beanie/Mongo): sesiones, turns, logs
 app/schemas/        → contratos serializables entre capas
 ```
 
-- `ai/` planifica y redacta respuestas, **no** confirma pagos, no modifica cupos, no crea reservas.
+- `ai/` planifica y redacta respuestas; puede ejecutar escritura limitada (`create_reservation_draft`, `attach_payment_proof_to_reservation`) pero **no** confirma pagos ni modifica cupos.
 - `services/` es la fuente de verdad para validaciones críticas.
 - `documents/` registra todo: sesiones, turns, tool calls.
 - `channels/` solo traduce formatos externos (WhatsApp) al modelo interno.
@@ -37,30 +37,35 @@ orchestrator.ask(AskRequest)  ← por cada mensaje
   │
   ├─ 2. Insertar ConversationTurnDocument (user_message)
   │
-  ├─ 3. GeminiPlanner.plan()
-  │    → LLM produce AssistantPlan estructurado
-  │    (acción, tool, argumentos, riesgo, auditoría)
+  ├─ 3. Pre-planner media branch (solo WhatsApp)
+  │    → si llega imagen/PDF y existe una sola pre-reserva activa por teléfono:
+  │      ejecuta `attach_payment_proof_to_reservation` y responde sin planner
+  │    → si no hay pre-reserva activa o hay varias: responde instrucción/código y corta flujo
   │
-  ├─ 4. Merge slots: plan.arguments + session.slot_values
+  ├─ 4. GeminiPlanner.plan()
+   │    → LLM produce AssistantPlan estructurado
+   │    (acción, tool, argumentos, riesgo, auditoría)
+   │
+  ├─ 5. Merge slots: plan.arguments + session.slot_values
   │    → merge_slots() tool-aware por REQUIRED_FIELDS_BY_TOOL
-  │    → required_fields según plan.tool_name (check_availability, create_reservation, suggest_alternative_dates)
+  │    → required_fields según plan.tool_name (check_experience_availability, create_reservation_draft, suggest_alternative_dates)
   │    → si complete → promueve a TOOL_CALL
   │    → si faltan → ASK_CLARIFYING_QUESTION
   │
-  ├─ 5. Policy: ToolPolicyEngine.validate(plan)
+  ├─ 6. Policy: ToolPolicyEngine.validate(plan)
   │    → confianza baja, tool crítica, args faltantes → bloquea
   │    → bloqueado → responde sin ejecutar tool
   │
-  ├─ 6. Ejecutar tool MCP: registry.call(name, **args)
+  ├─ 7. Ejecutar tool MCP: registry.call(name, **args)
   │    → check_experience_availability, list_experiences, quote_experience,
   │      list_available_schedules, suggest_alternative_dates, ...
   │
-  ├─ 7. Componer respuesta: compose_tool_response()
+  ├─ 8. Componer respuesta: compose_tool_response()
   │    → LLM: segunda llamada Gemini con tool output (único modo)
   │
-  ├─ 8. Persistir: turn, session, tool_call_log
+  ├─ 9. Persistir: turn, session, tool_call_log
   │
-  └─ 9. Enviar respuesta: WhatsAppSender.send_text()
+  └─ 10. Enviar respuesta: WhatsAppSender.send_text()
        → POST a Meta Graph API
 ```
 
@@ -117,8 +122,8 @@ Guarda rail antes de ejecutar tools. Evalúa:
 | Args faltantes | `requested_date` o `participant_count` ausentes | Bloquea + detalle |
 | Tool desconocida | no está en `READ_TOOLS` ni `WRITE_TOOLS` ni `LIMITED_WRITE_TOOLS` | Bloquea |
 
-Tools autorizadas como lectura: `check_experience_availability`, `list_experiences`, `quote_experience`, `list_available_schedules`, `suggest_alternative_dates`, `get_experience_detail`, `get_public_business_rules`.  
-Tool de escritura limitada: `request_human_review`.
+Tools autorizadas como lectura: `check_experience_availability`, `list_experiences`, `quote_experience`, `list_available_schedules`, `suggest_alternative_dates`, `get_experience_detail`, `get_public_business_rules`, `get_reservation_public_summary`, `get_reservation_status_by_phone`.  
+Tools de escritura limitada: `request_human_review`, `create_reservation_draft`, `attach_payment_proof_to_reservation`.
 
 ### ResponseComposer (`ai/assistant/response_composer.py`)
 
@@ -134,6 +139,10 @@ list_experiences              → tools/catalog.py
 quote_experience              → tools/quote.py
 list_available_schedules      → tools/schedules.py
 suggest_alternative_dates     → tools/schedules.py
+create_reservation_draft      → tools/reservation_draft.py
+attach_payment_proof_to_reservation → tools/reservation_draft.py
+get_reservation_public_summary→ tools/reservation_draft.py
+get_reservation_status_by_phone→ tools/reservation_draft.py
 get_experience_detail         → tools/__init__.py (stub, planned)
 get_public_business_rules     → tools/__init__.py (stub, planned)
 request_human_review          → tools/__init__.py (stub, planned)
@@ -175,6 +184,19 @@ request_human_review          → tools/__init__.py (stub, planned)
 1. Resuelve experiencia por ID o texto
 2. Calcula precio según `participant_count` usando tarifas configuradas (tramos por rango de participantes)
 3. Retorna precio unitario, subtotal, tramo aplicado
+
+Tools activas de reserva/pago (runtime):
+- `create_reservation_draft` crea una reserva en estado no confirmado con trazabilidad de origen; no confirma pago ni reserva.
+- `create_reservation_draft` devuelve instrucciones de pago desde configuración (`ConfigService.get_payment_instructions()`).
+- `attach_payment_proof_to_reservation` asocia comprobantes enviados por WhatsApp y los deja en estado `under_review`/`duplicate`; no valida pago.
+- `get_reservation_public_summary` devuelve un resumen seguro para el cliente por codigo de reserva + `holder_phone` (doble validacion).
+- `get_reservation_status_by_phone` consulta estado solo para reservas del telefono del solicitante.
+- `expire_reservation_draft` se ejecuta como job del sistema para vencer borradores sin avance.
+- Regla: `create_reservation_draft` requiere `quote_snapshot` valido antes de persistir el borrador.
+
+Confirmacion administrativa en backend:
+- `POST /api/v1/payment-proofs/{payment_proof_id}/verify` y `POST /api/v1/payment-proofs/{payment_proof_id}/reject` son acciones de admin con permiso `PAYMENT_VERIFY`.
+- `POST /api/v1/reservations/{reservation_id}/confirm` exige pago verificado y realiza commit de cupo con revalidacion al confirmar.
 
 ### LLM Provider (`ai/providers/`)
 
@@ -241,7 +263,7 @@ ai/mcp/tools/        ← tools MCP (disponibilidad, catálogo)
 
 ## Reglas
 
-- `ai/` no ejecuta acciones críticas: solo planifica y redacta.
+- `ai/` no ejecuta acciones críticas: solo planifica, redacta y ejecuta escritura limitada no crítica.
 - `services/` valida disponibilidad real; la tool `check_experience_availability` es una consulta operativa, no una confirmación.
 - Las herramientas críticas (`confirm_reservation`, etc.) están bloqueadas por `ToolPolicyEngine` y no se exponen al LLM.
 - Cada turno y tool call se loguea con trazabilidad completa (`trace_id`).

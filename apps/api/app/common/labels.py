@@ -59,6 +59,12 @@ class ErrorCode:
     RESERVATION_CANCELLATION_NOT_ALLOWED = "reservation.cancellation_not_allowed"
     RESERVATION_ALREADY_CANCELLED = "reservation.already_cancelled"
     RESERVATION_ALREADY_COMPLETED = "reservation.already_completed"
+    RESERVATION_PRE_RESERVATION_EXPIRED = "reservation.pre_reservation_expired"
+    RESERVATION_ALREADY_PRE_RESERVED = "reservation.already_pre_reserved"
+    RESERVATION_INVALID_HOLDER = "reservation.invalid_holder"
+    RESERVATION_QUOTE_SNAPSHOT_REQUIRED = "reservation.quote_snapshot_required"
+    SCHEDULE_HOLD_FAILED = "schedule.hold_failed"
+    SCHEDULE_HELD_SLOTS_NEGATIVE = "schedule.held_slots_negative"
 
     PAYMENT_PROOF_NOT_FOUND = "payment_proof.not_found"
     PAYMENT_PROOF_STORAGE_KEY_REQUIRED = "payment_proof.storage_key_required"

@@ -48,18 +48,41 @@ class GeminiProvider:
             )
 
         self._clients = [genai.Client(api_key=k) for k in keys]
-        self._model = settings.gemini_model
-        self._current_index = 0
+        models = [settings.gemini_model] + [
+            m.strip()
+            for m in settings.gemini_fallback_models.split(",")
+            if m.strip()
+        ]
+        self._models = models
+        self._current_key_index = 0
+        self._current_model_index = 0
 
     @property
     def _current_client(self) -> genai.Client:
-        return self._clients[self._current_index]
+        return self._clients[self._current_key_index]
+
+    @property
+    def _current_model(self) -> str:
+        return self._models[self._current_model_index]
 
     def _rotate_key(self) -> bool:
-        if self._current_index < len(self._clients) - 1:
-            self._current_index += 1
+        if self._current_key_index < len(self._clients) - 1:
+            self._current_key_index += 1
             logger.warning(
-                "Rotating to fallback Gemini API key (index %d)", self._current_index
+                "Rotating to fallback Gemini API key (key %d)", self._current_key_index
+            )
+            return True
+        return False
+
+    def _rotate_model(self) -> bool:
+        if self._current_model_index < len(self._models) - 1:
+            self._current_model_index += 1
+            self._current_key_index = 0
+            logger.warning(
+                "Rotating to fallback model '%s' (model %d/%d)",
+                self._current_model,
+                self._current_model_index + 1,
+                len(self._models),
             )
             return True
         return False
@@ -78,7 +101,7 @@ class GeminiProvider:
         def _call() -> TModel:
             try:
                 response = self._current_client.models.generate_content(
-                    model=self._model,
+                    model=self._current_model,
                     contents=prompt,
                     config={
                         "temperature": (
@@ -94,15 +117,19 @@ class GeminiProvider:
                 if exc.code == 429:
                     if self._rotate_key():
                         return _call()
+                    if self._rotate_model():
+                        return _call()
                     raise GeminiResourceExhausted(
-                        "Todos los API keys de Gemini excedieron su cuota. "
-                        "Espera unos minutos o configura una clave con más capacidad."
+                        "Todos los API keys y modelos de Gemini excedieron su cuota. "
+                        "Espera unos minutos o configura más capacidad."
                     ) from exc
 
                 if exc.code == 404:
+                    if self._rotate_model():
+                        return _call()
                     raise GeminiModelUnavailable(
-                        f"El modelo '{self._model}' no está disponible "
-                        "con las API keys configuradas."
+                        "Ningún modelo configurado está disponible "
+                        "con las API keys actuales."
                     ) from exc
 
                 if exc.code in (401, 403):

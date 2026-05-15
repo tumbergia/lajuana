@@ -19,9 +19,13 @@ class ToolPolicyEngine:
         "list_available_schedules",
         "quote_experience",
         "suggest_alternative_dates",
+        "get_reservation_public_summary",
+        "get_reservation_status_by_phone",
     }
     LIMITED_WRITE_TOOLS = {
         "request_human_review",
+        "create_reservation_draft",
+        "attach_payment_proof_to_reservation",
     }
     WRITE_TOOLS: set[str] = set()
     CRITICAL_TOOLS: set[str] = {

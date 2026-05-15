@@ -2,15 +2,17 @@ from app.common.constants import DEFAULT_RESERVATION_MIN_DAYS
 from app.common.labels import ErrorCode
 from app.config.emergency_contacts import EMERGENCY_CONTACTS
 from app.core.errors import ApiError
-from app.documents import AppConfigDocument, ReservationRules
+from app.documents import AppConfigDocument, PaymentInstructionsConfig, ReservationRules
 from app.schemas.config import (
     EmergencyCatalogContactSchema,
     EmergencyContactsResponseSchema,
+    PaymentInstructionsSchema,
     ReservationRulesSchema,
     ReservationRulesUpdateSchema,
 )
 
 RESERVATION_RULES_KEY = "reservation_rules"
+PAYMENT_INSTRUCTIONS_KEY = "payment_instructions"
 
 
 class ConfigService:
@@ -38,11 +40,23 @@ class ConfigService:
             return ReservationRulesSchema(
                 min_days_in_advance=DEFAULT_RESERVATION_MIN_DAYS,
                 require_payment_proof_for_confirmation=True,
+                reservation_draft_ttl_minutes=30,
             )
         return ReservationRulesSchema.model_validate(config.reservation_rules.model_dump())
 
     async def get_reservation_rules_document(self) -> AppConfigDocument | None:
         return await AppConfigDocument.find_one(AppConfigDocument.key == RESERVATION_RULES_KEY)
+
+    async def get_payment_instructions(self) -> PaymentInstructionsSchema:
+        config = await self.get_payment_instructions_document()
+        if config is None or config.payment_instructions is None:
+            return PaymentInstructionsSchema.model_validate(
+                PaymentInstructionsConfig().model_dump()
+            )
+        return PaymentInstructionsSchema.model_validate(config.payment_instructions.model_dump())
+
+    async def get_payment_instructions_document(self) -> AppConfigDocument | None:
+        return await AppConfigDocument.find_one(AppConfigDocument.key == PAYMENT_INSTRUCTIONS_KEY)
 
     async def update_reservation_rules(
         self, payload: ReservationRulesUpdateSchema

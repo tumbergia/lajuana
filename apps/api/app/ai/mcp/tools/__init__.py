@@ -4,6 +4,12 @@ from typing import Any
 
 from app.ai.mcp.tools.availability import check_experience_availability
 from app.ai.mcp.tools.catalog import list_experiences
+from app.ai.mcp.tools.reservation_draft import (
+    attach_payment_proof_to_reservation,
+    create_reservation_draft,
+    get_reservation_public_summary,
+    get_reservation_status_by_phone,
+)
 from app.ai.mcp.tools.quote import quote_experience
 from app.ai.mcp.tools.schedules import list_available_schedules, suggest_alternative_dates
 
@@ -52,5 +58,9 @@ __all__ = [
     "list_experiences",
     "quote_experience",
     "suggest_alternative_dates",
+    "create_reservation_draft",
+    "attach_payment_proof_to_reservation",
+    "get_reservation_public_summary",
+    "get_reservation_status_by_phone",
     "request_human_review",
 ]

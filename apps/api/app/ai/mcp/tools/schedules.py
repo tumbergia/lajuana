@@ -75,6 +75,7 @@ async def list_available_schedules(
     limit: int = 10,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     trace_id = trace_id or str(uuid4())
@@ -222,6 +223,7 @@ async def suggest_alternative_dates(
     limit: int = 5,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     trace_id = trace_id or str(uuid4())

@@ -9,7 +9,7 @@ Este documento lista todos los MCP tools del asistente AI expuestos por `apps/ap
 - Todo tool call se persiste en `ToolCallLogDocument` (colección `tool_call_logs`).
 - El pipeline completo: **planner (Gemini) → policy engine → registry.call() → response composer**.
 - Los tools son síncronos desde la perspectiva del orquestador pero asíncronos internamente.
-- No deben crear reservas, confirmar pagos ni modificar cupos.
+- No deben confirmar pagos ni modificar cupos.
 
 ## Pipeline
 
@@ -147,8 +147,8 @@ Este documento lista todos los MCP tools del asistente AI expuestos por `apps/ap
 | `pricing_tier` | `QuotePricingTier \| None` | Tramo de precios aplicado. |
 | `requested_date` | `str \| None` | Fecha solicitada (eco). |
 | `notes` | `str \| None` | Notas adicionales. |
-| `next_step` | `str` | Siguiente paso sugerido (default `check_availability_or_create_reservation_draft`). |
-| `disclaimer` | `str` | Descargo: cotización no confirma reserva. |
+| `next_step` | `str` | Siguiente paso sugerido (default `check_availability_or_create_reservation_draft`; en Horizonte 2 el flujo de escritura usa `create_reservation_draft`). |
+| `disclaimer` | `str` | Descargo: cotización no confirma reserva y no crea borrador por si sola (`quote_snapshot` es requisito previo para `create_reservation_draft`). |
 | `blocking_reasons` | `list[ToolBlockingReason]` | Motivos si no se pudo cotizar. |
 
 **Blocking reasons posibles**
@@ -359,14 +359,60 @@ Este documento lista todos los MCP tools del asistente AI expuestos por `apps/ap
 
 ---
 
-## Gobernanza (ToolPolicyEngine)
+### `attach_payment_proof_to_reservation`
+
+| Atributo | Valor |
+|---|---|
+| Archivo | `ai/mcp/tools/reservation_draft.py` |
+| Propósito | Asocia un comprobante de pago enviado por WhatsApp a una pre-reserva activa |
+| Categoría | `LIMITED_WRITE_TOOLS` (escritura limitada) |
+| input | `AttachPaymentProofToReservationInput` |
+| output | `AttachPaymentProofToReservationOutput` |
+
+**Input (`AttachPaymentProofToReservationInput`)**
+
+| Campo | Tipo | Requerido | Descripción |
+|---|---|---|---|
+| `reservation_id` | `str \| None` | No* | ID interno de reserva. |
+| `public_reservation_code` | `str \| None` | No* | Código público de reserva (`PR-...`). |
+| `from_phone` | `str` | Sí | Teléfono remitente para validación de pertenencia. |
+| `whatsapp_message_id` | `str` | Sí | ID del mensaje de WhatsApp para idempotencia. |
+| `media_id` | `str` | Sí | ID del media en Meta. |
+| `media_mime_type` | `str` | Sí | Tipo MIME del archivo. |
+| `filename` | `str \| None` | No | Nombre original del archivo. |
+| `caption` | `str \| None` | No | Texto adicional enviado con el comprobante. |
+
+\*Debe venir `reservation_id` o `public_reservation_code`.
+
+**Output (`AttachPaymentProofToReservationOutput`)**
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `attached` | `bool` | `true` si el comprobante quedó asociado o detectado como duplicado idempotente. |
+| `idempotent` | `bool` | `true` si ya existía un comprobante equivalente. |
+| `trace_id` | `str` | ID de trazabilidad. |
+| `tool_name` | `"attach_payment_proof_to_reservation"` | Identificador del tool. |
+| `reservation_code` | `str \| None` | Código público de reserva. |
+| `reservation_status` | `"pending_payment" \| "payment_received" \| "unknown"` | Estado público de pago de la reserva. |
+| `proof_status` | `"received" \| "under_review" \| "duplicate" \| "rejected"` | Estado del comprobante. |
+| `message` | `str` | Mensaje operativo corto. |
+| `response` | `str` | Respuesta redactada para el cliente. |
+| `blocking_reasons` | `list[ToolBlockingReason]` | Motivos de bloqueo si falla. |
+
+**Reglas implementadas**
+
+- El tool solo registra/adjunta evidencia: **no** valida pago ni confirma reserva.
+- Si el media ya existe (por `whatsapp_message_id` o hash), retorna `idempotent=true` y mantiene estado en revisión.
+- La confirmación final depende de revisión administrativa y `confirm_reservation` en backend.
+
+---
 
 ## Gobernanza (ToolPolicyEngine)
 
 | Clasificación | Tools | Acción |
 |---|---|---|
-| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates` | Permitidos si pasan validaciones de args |
-| `LIMITED_WRITE_TOOLS` | `request_human_review` | Escritura limitada (handoff trazable) |
+| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates`, `get_reservation_public_summary`, `get_reservation_status_by_phone` | Permitidos si pasan validaciones de args |
+| `LIMITED_WRITE_TOOLS` | `request_human_review`, `create_reservation_draft`, `attach_payment_proof_to_reservation` | Escritura limitada (handoff, borrador y adjunto de comprobante) |
 | `WRITE_TOOLS` | *(vacio)* | Reservado para futuros tools de escritura |
 | `CRITICAL_TOOLS` | `confirm_reservation`, `cancel_reservation`, `mark_payment_verified`, `change_schedule_capacity`, `block_slots` | **Siempre denegados** — requieren intervención humana |
 
@@ -383,6 +429,7 @@ Este documento lista todos los MCP tools del asistente AI expuestos por `apps/ap
 | `check_experience_availability` sin `requested_date` o `participant_count` | `missing_required_arguments:...` | `422` |
 | `quote_experience` sin `experience_id`/`experience_query` | `missing_required_arguments:experience_id_or_experience_query` | `422` |
 | `quote_experience` sin `participant_count` | `missing_required_arguments:participant_count` | `422` |
+| `get_reservation_public_summary` sin `code` o `holder_phone` | `missing_required_arguments:code,holder_phone` | `422` |
 
 ---
 
@@ -451,7 +498,7 @@ Colección: `tool_call_logs`
 | Archivo | `ai/mcp/server.py` |
 | Framework | `FastMCP` |
 | Server name | `lajuana-mcp` |
-| Tools expuestos | `check_experience_availability`, `get_experience_detail`, `get_public_business_rules`, `list_available_schedules`, `list_experiences`, `quote_experience`, `suggest_alternative_dates`, `request_human_review` |
+| Tools expuestos | `check_experience_availability`, `get_experience_detail`, `get_public_business_rules`, `list_available_schedules`, `list_experiences`, `quote_experience`, `suggest_alternative_dates`, `request_human_review`, `create_reservation_draft`, `attach_payment_proof_to_reservation`, `get_reservation_public_summary`, `get_reservation_status_by_phone` |
 
 ---
 
@@ -474,6 +521,10 @@ Singleton: `app.ai.mcp.registry.registry`
 | quote_experience | `quote_experience` | `ai/mcp/tools/quote.py` | Sí |
 | list_available_schedules | `list_available_schedules` | `ai/mcp/tools/schedules.py` | Sí |
 | suggest_alternative_dates | `suggest_alternative_dates` | `ai/mcp/tools/schedules.py` | Sí |
+| create_reservation_draft | `create_reservation_draft` | `ai/mcp/tools/reservation_draft.py` | Sí |
+| attach_payment_proof_to_reservation | `attach_payment_proof_to_reservation` | `ai/mcp/tools/reservation_draft.py` | Sí |
+| get_reservation_public_summary | `get_reservation_public_summary` | `ai/mcp/tools/reservation_draft.py` | Sí |
+| get_reservation_status_by_phone | `get_reservation_status_by_phone` | `ai/mcp/tools/reservation_draft.py` | Sí |
 | get_experience_detail | `get_experience_detail` | `ai/mcp/tools/__init__.py` | Sí |
 | get_public_business_rules | `get_public_business_rules` | `ai/mcp/tools/__init__.py` | Sí |
 | request_human_review | `request_human_review` | `ai/mcp/tools/__init__.py` | Sí |

@@ -79,6 +79,8 @@ Este documento lista todos los endpoints expuestos por `apps/api` según el esqu
 |---|---|---|---|---|---|
 | GET | `/api/v1/payment-proofs/{payment_proof_id}` | `getPaymentProofById` | — | `200 PaymentProofResponseSchema` | `200, 401, 403, 404, 422` |
 | PATCH | `/api/v1/payment-proofs/{payment_proof_id}` | `updatePaymentProofById` | `PaymentProofUpdateSchema` | `200 PaymentProofResponseSchema` | `200, 401, 403, 404, 409, 422` |
+| POST | `/api/v1/payment-proofs/{payment_proof_id}/verify` | `verifyPaymentProofById` | `PaymentProofVerifySchema` | `200 PaymentProofResponseSchema` | `200, 401, 403, 404, 409, 422` |
+| POST | `/api/v1/payment-proofs/{payment_proof_id}/reject` | `rejectPaymentProofById` | `PaymentProofRejectSchema` | `200 PaymentProofResponseSchema` | `200, 401, 403, 404, 409, 422` |
 
 ## Participants
 

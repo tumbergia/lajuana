@@ -13,8 +13,10 @@ class ReservationStatus(StrEnum):
     PENDING_PAYMENT = "pending_payment"
     PAYMENT_RECEIVED = "payment_received"
     CONFIRMED = "confirmed"
+    PRE_RESERVED = "pre_reserved"
     CANCELLED = "cancelled"
     COMPLETED = "completed"
+    EXPIRED = "expired"
 
 
 class ScheduleStatus(StrEnum):

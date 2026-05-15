@@ -1,5 +1,7 @@
 from datetime import date
 
+from beanie import PydanticObjectId
+
 from app.common.enums import ScheduleStatus
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
@@ -11,10 +13,11 @@ def compute_available_slots(
     *,
     capacity_total: int,
     reserved_slots: int,
+    held_slots: int,
     blocked_slots: int,
     internal_slots: int,
 ) -> int:
-    available = capacity_total - reserved_slots - blocked_slots - internal_slots
+    available = capacity_total - reserved_slots - held_slots - blocked_slots - internal_slots
     if available < 0:
         raise ApiError(
             status_code=400,
@@ -37,6 +40,7 @@ class ScheduleService:
         available_slots = compute_available_slots(
             capacity_total=payload.capacity_total,
             reserved_slots=payload.reserved_slots,
+            held_slots=payload.held_slots,
             blocked_slots=payload.blocked_slots,
             internal_slots=payload.internal_slots,
         )
@@ -96,6 +100,7 @@ class ScheduleService:
         doc.available_slots = compute_available_slots(
             capacity_total=doc.capacity_total,
             reserved_slots=doc.reserved_slots,
+            held_slots=doc.held_slots,
             blocked_slots=doc.blocked_slots,
             internal_slots=doc.internal_slots,
         )
@@ -108,6 +113,66 @@ class ScheduleService:
 
         await doc.save()
         return doc
+
+    async def hold_slots(
+        self, schedule_id: str, participant_count: int
+    ) -> dict | None:
+        collection = ScheduleDocument.get_motor_collection()
+        result = await collection.update_one(
+            {
+                "_id": PydanticObjectId(schedule_id),
+                "available_slots": {"$gte": participant_count},
+            },
+            {
+                "$inc": {
+                    "held_slots": participant_count,
+                    "available_slots": -participant_count,
+                }
+            },
+        )
+        if result.modified_count == 0:
+            return None
+        return {"held": participant_count}
+
+    async def release_held_slots(
+        self, schedule_id: str, participant_count: int
+    ) -> dict | None:
+        collection = ScheduleDocument.get_motor_collection()
+        result = await collection.update_one(
+            {
+                "_id": PydanticObjectId(schedule_id),
+                "held_slots": {"$gte": participant_count},
+            },
+            {
+                "$inc": {
+                    "held_slots": -participant_count,
+                    "available_slots": participant_count,
+                }
+            },
+        )
+        if result.modified_count == 0:
+            return None
+        return {"released": participant_count}
+
+    async def convert_hold_to_reserved(
+        self, schedule_id: str, participant_count: int
+    ) -> dict | None:
+        collection = ScheduleDocument.get_motor_collection()
+        result = await collection.update_one(
+            {
+                "_id": PydanticObjectId(schedule_id),
+                "held_slots": {"$gte": participant_count},
+            },
+            {
+                "$inc": {
+                    "held_slots": -participant_count,
+                    "reserved_slots": participant_count,
+                }
+            },
+        )
+        if result.modified_count == 0:
+            return None
+        return {"converted": participant_count}
 
     async def deactivate(self, schedule_id: str) -> ScheduleDocument:
         doc = await self.get(schedule_id)
