@@ -49,9 +49,7 @@ class GeminiProvider:
 
         self._clients = [genai.Client(api_key=k) for k in keys]
         models = [settings.gemini_model] + [
-            m.strip()
-            for m in settings.gemini_fallback_models.split(",")
-            if m.strip()
+            m.strip() for m in settings.gemini_fallback_models.split(",") if m.strip()
         ]
         self._models = models
         self._current_key_index = 0
@@ -68,9 +66,7 @@ class GeminiProvider:
     def _rotate_key(self) -> bool:
         if self._current_key_index < len(self._clients) - 1:
             self._current_key_index += 1
-            logger.warning(
-                "Rotating to fallback Gemini API key (key %d)", self._current_key_index
-            )
+            logger.warning("Rotating to fallback Gemini API key (key %d)", self._current_key_index)
             return True
         return False
 
@@ -105,9 +101,7 @@ class GeminiProvider:
                     contents=prompt,
                     config={
                         "temperature": (
-                            settings.gemini_temperature
-                            if temperature is None
-                            else temperature
+                            settings.gemini_temperature if temperature is None else temperature
                         ),
                         "response_mime_type": "application/json",
                         "response_schema": schema,
@@ -128,23 +122,16 @@ class GeminiProvider:
                     if self._rotate_model():
                         return _call()
                     raise GeminiModelUnavailable(
-                        "Ningún modelo configurado está disponible "
-                        "con las API keys actuales."
+                        "Ningún modelo configurado está disponible con las API keys actuales."
                     ) from exc
 
                 if exc.code in (401, 403):
-                    raise GeminiProviderError(
-                        "API key de Gemini inválida o sin permisos."
-                    ) from exc
+                    raise GeminiProviderError("API key de Gemini inválida o sin permisos.") from exc
 
-                raise GeminiProviderError(
-                    f"Gemini API error ({exc.code}): {exc}"
-                ) from exc
+                raise GeminiProviderError(f"Gemini API error ({exc.code}): {exc}") from exc
 
             except Exception as exc:
-                raise GeminiProviderError(
-                    f"Gemini structured generation failed: {exc}"
-                ) from exc
+                raise GeminiProviderError(f"Gemini structured generation failed: {exc}") from exc
 
             if not response.text:
                 raise GeminiProviderError("Gemini returned an empty response.")
@@ -154,11 +141,10 @@ class GeminiProvider:
             except Exception as exc:
                 logger.warning(
                     "Gemini response validation failed: %s | text=%.200s",
-                    exc, response.text,
+                    exc,
+                    response.text,
                 )
-                raise GeminiProviderError(
-                    f"Failed to parse Gemini response: {exc}"
-                ) from exc
+                raise GeminiProviderError(f"Failed to parse Gemini response: {exc}") from exc
 
         last_exc: TimeoutError | None = None
         for attempt in range(len(self._clients)):

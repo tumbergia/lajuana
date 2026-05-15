@@ -44,7 +44,6 @@ class ToolPolicyEngine:
         "schedule_birthday_automation",
         "schedule_visit_anniversary_automation",
     }
-    }
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
         "cancel_reservation",

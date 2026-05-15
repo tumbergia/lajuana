@@ -39,20 +39,22 @@ class WhatsAppIngestionService:
             collection = WhatsAppInboundEventDocument.get_motor_collection()
             result = await collection.update_one(
                 {"wa_message_id": parsed.wa_message_id},
-                {"$setOnInsert": {
-                    "wa_message_id": parsed.wa_message_id,
-                    "from_phone": parsed.from_phone,
-                    "normalized_phone": parsed.normalized_phone,
-                    "conversation_id": conversation_id,
-                    "message_type": parsed.message_type,
-                    "body": parsed.body,
-                    "media_id": parsed.media_id,
-                    "caption": parsed.caption,
-                    "provider_timestamp": provider_ts,
-                    "status": "received",
-                    "raw_payload": parsed.raw_payload,
-                    "received_at": datetime.now(UTC),
-                }},
+                {
+                    "$setOnInsert": {
+                        "wa_message_id": parsed.wa_message_id,
+                        "from_phone": parsed.from_phone,
+                        "normalized_phone": parsed.normalized_phone,
+                        "conversation_id": conversation_id,
+                        "message_type": parsed.message_type,
+                        "body": parsed.body,
+                        "media_id": parsed.media_id,
+                        "caption": parsed.caption,
+                        "provider_timestamp": provider_ts,
+                        "status": "received",
+                        "raw_payload": parsed.raw_payload,
+                        "received_at": datetime.now(UTC),
+                    }
+                },
                 upsert=True,
             )
 

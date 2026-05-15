@@ -114,9 +114,7 @@ class ScheduleService:
         await doc.save()
         return doc
 
-    async def hold_slots(
-        self, schedule_id: str, participant_count: int
-    ) -> dict | None:
+    async def hold_slots(self, schedule_id: str, participant_count: int) -> dict | None:
         collection = ScheduleDocument.get_motor_collection()
         result = await collection.update_one(
             {
@@ -134,9 +132,7 @@ class ScheduleService:
             return None
         return {"held": participant_count}
 
-    async def release_held_slots(
-        self, schedule_id: str, participant_count: int
-    ) -> dict | None:
+    async def release_held_slots(self, schedule_id: str, participant_count: int) -> dict | None:
         collection = ScheduleDocument.get_motor_collection()
         result = await collection.update_one(
             {

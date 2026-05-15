@@ -119,7 +119,9 @@ def test_attach_payment_proof_to_reservation_returns_under_review(
             return None
 
     async def fake_get_attachable_reservation(self, **kwargs):
-        return SimpleNamespace(id="res-1", code="PR-123", status=SimpleNamespace(value="pending_payment"))
+        return SimpleNamespace(
+            id="res-1", code="PR-123", status=SimpleNamespace(value="pending_payment")
+        )
 
     async def fake_find_existing_by_whatsapp_message(self, **kwargs):
         return None
@@ -134,8 +136,14 @@ def test_attach_payment_proof_to_reservation_returns_under_review(
         return SimpleNamespace(code="PR-123", status=SimpleNamespace(value="pending_payment"))
 
     monkeypatch.setattr(reservation_draft, "ToolCallLogDocument", FakeToolCallLogDocument)
-    monkeypatch.setattr(PaymentProofService, "get_attachable_reservation", fake_get_attachable_reservation)
-    monkeypatch.setattr(PaymentProofService, "find_existing_by_whatsapp_message", fake_find_existing_by_whatsapp_message)
+    monkeypatch.setattr(
+        PaymentProofService, "get_attachable_reservation", fake_get_attachable_reservation
+    )
+    monkeypatch.setattr(
+        PaymentProofService,
+        "find_existing_by_whatsapp_message",
+        fake_find_existing_by_whatsapp_message,
+    )
     monkeypatch.setattr(PaymentProofService, "find_existing_by_hash", fake_find_existing_by_hash)
     monkeypatch.setattr(PaymentProofService, "create_metadata_only", fake_create_metadata_only)
     monkeypatch.setattr(reservation_draft.ReservationDocument, "get", fake_get)
@@ -180,7 +188,9 @@ def test_get_reservation_public_summary_uses_single_query_argument(
     monkeypatch.setattr(reservation_draft, "ToolCallLogDocument", FakeToolCallLogDocument)
     monkeypatch.setattr(reservation_draft.ReservationDocument, "find_one", fake_find_one)
 
-    result = asyncio.run(get_reservation_public_summary(code="PR-123", holder_phone="+573001112233"))
+    result = asyncio.run(
+        get_reservation_public_summary(code="PR-123", holder_phone="+573001112233")
+    )
 
     assert result["found"] is True
     assert captured["query"] == {"code": "PR-123", "holder_phone": "+573001112233"}

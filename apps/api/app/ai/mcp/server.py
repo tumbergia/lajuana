@@ -123,8 +123,7 @@ mcp.tool(
 mcp.tool(
     name="get_reservation_status_by_phone",
     description=(
-        "Consulta el estado de una reserva por telefono del titular. "
-        "No modifica ningun dato."
+        "Consulta el estado de una reserva por telefono del titular. No modifica ningun dato."
     ),
 )(get_reservation_status_by_phone)
 

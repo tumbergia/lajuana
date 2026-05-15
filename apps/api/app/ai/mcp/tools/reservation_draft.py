@@ -39,7 +39,11 @@ def _build_pre_reservation_response(
     quote_snapshot: dict[str, Any],
     payment_instructions: Any,
 ) -> str:
-    experience = quote_snapshot.get("experience_name") or quote_snapshot.get("experience_id") or "No disponible"
+    experience = (
+        quote_snapshot.get("experience_name")
+        or quote_snapshot.get("experience_id")
+        or "No disponible"
+    )
     subtotal = quote_snapshot.get("subtotal")
     currency = quote_snapshot.get("currency", "COP")
 
@@ -83,7 +87,9 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
     error_code: str | None = None
 
     try:
-        filtered = {k: v for k, v in kwargs.items() if k in CreateReservationDraftInput.model_fields}
+        filtered = {
+            k: v for k, v in kwargs.items() if k in CreateReservationDraftInput.model_fields
+        }
         payload = CreateReservationDraftInput.model_validate(filtered)
 
         service = ReservationDraftService()
@@ -225,7 +231,9 @@ async def get_reservation_status_by_phone(**kwargs: Any) -> dict[str, Any]:
     error_code: str | None = None
 
     try:
-        filtered = {k: v for k, v in kwargs.items() if k in GetReservationStatusByPhoneInput.model_fields}
+        filtered = {
+            k: v for k, v in kwargs.items() if k in GetReservationStatusByPhoneInput.model_fields
+        }
         payload = GetReservationStatusByPhoneInput.model_validate(filtered)
 
         reservations = await ReservationDocument.find(

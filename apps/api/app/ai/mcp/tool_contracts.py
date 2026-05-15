@@ -357,7 +357,9 @@ class AttachPaymentProofToReservationOutput(BaseModel):
     attached: bool
     idempotent: bool = False
     trace_id: str
-    tool_name: Literal["attach_payment_proof_to_reservation"] = "attach_payment_proof_to_reservation"
+    tool_name: Literal["attach_payment_proof_to_reservation"] = (
+        "attach_payment_proof_to_reservation"
+    )
     reservation_code: str | None = None
     reservation_status: Literal["pending_payment", "payment_received", "unknown"] = "unknown"
     proof_status: Literal["received", "under_review", "duplicate", "rejected"] = "received"

@@ -39,7 +39,9 @@ async def test_media_proof_attaches_when_single_candidate(monkeypatch: pytest.Mo
         return None
 
     monkeypatch.setattr(worker, "_find_active_candidates", fake_find_active_candidates)
-    monkeypatch.setattr("app.conversations.services.conversation_turn_worker.registry.call", fake_registry_call)
+    monkeypatch.setattr(
+        "app.conversations.services.conversation_turn_worker.registry.call", fake_registry_call
+    )
     monkeypatch.setattr(worker._outbound_service, "send", fake_send)
 
     event = SimpleNamespace(
@@ -68,7 +70,9 @@ async def test_media_proof_attaches_when_single_candidate(monkeypatch: pytest.Mo
 
 
 @pytest.mark.asyncio
-async def test_media_proof_asks_code_when_multiple_candidates(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_media_proof_asks_code_when_multiple_candidates(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     worker = ConversationTurnWorker()
     sent: list[str] = []
 

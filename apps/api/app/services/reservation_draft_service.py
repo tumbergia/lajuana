@@ -133,9 +133,7 @@ class ReservationDraftService:
 
         count = 0
         for reservation in expired:
-            await self.reservation_service.transition_status(
-                reservation, ReservationStatus.EXPIRED
-            )
+            await self.reservation_service.transition_status(reservation, ReservationStatus.EXPIRED)
             reservation.updated_at = datetime.now(UTC)
             await reservation.save()
 

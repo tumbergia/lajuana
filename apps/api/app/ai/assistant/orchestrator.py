@@ -112,14 +112,16 @@ class AssistantOrchestrator:
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.FINAL_RESPONSE,
-                planner_output={}, tool_output={},
+                planner_output={},
+                tool_output={},
                 response="Servicio de IA sobrepasado. Intenta en unos minutos.",
             )
         except GeminiModelUnavailable:
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.HUMAN_HANDOFF,
-                planner_output={}, tool_output={},
+                planner_output={},
+                tool_output={},
                 response="Modelo no disponible. Te transfiero con un asesor.",
             )
         except GeminiProviderError:
@@ -194,8 +196,7 @@ class AssistantOrchestrator:
         }
 
         if (
-            plan.action
-            in {AssistantAction.TOOL_CALL, AssistantAction.ASK_CLARIFYING_QUESTION}
+            plan.action in {AssistantAction.TOOL_CALL, AssistantAction.ASK_CLARIFYING_QUESTION}
             and plan.arguments
         ):
             required_fields = REQUIRED_FIELDS_BY_TOOL.get(plan.tool_name or "", [])
@@ -206,7 +207,10 @@ class AssistantOrchestrator:
                     plan_args=plan_args,
                     required_fields=required_fields,
                 )
-                if merge.filled_from_session or plan.action == AssistantAction.ASK_CLARIFYING_QUESTION:  # noqa: E501
+                if (
+                    merge.filled_from_session
+                    or plan.action == AssistantAction.ASK_CLARIFYING_QUESTION
+                ):  # noqa: E501
                     valid_keys = ToolArgs.model_fields.keys()
                     for key, value in merge.merged.items():
                         if key in valid_keys:
@@ -232,9 +236,11 @@ class AssistantOrchestrator:
             session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
             await session.save()
             return AskResponse(
-                trace_id=trace_id, action=plan.action,
+                trace_id=trace_id,
+                action=plan.action,
                 planner_output=plan.model_dump(mode="json"),
-                tool_output={}, response=response,
+                tool_output={},
+                response=response,
             )
 
         if plan.arguments:
@@ -252,10 +258,12 @@ class AssistantOrchestrator:
             session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
             await session.save()
             return AskResponse(
-                trace_id=trace_id, action=AssistantAction.ASK_CLARIFYING_QUESTION,
+                trace_id=trace_id,
+                action=AssistantAction.ASK_CLARIFYING_QUESTION,
                 tool_name=plan.tool_name,
                 planner_output=plan.model_dump(mode="json"),
-                tool_output={}, response=response,
+                tool_output={},
+                response=response,
             )
 
         started = time.perf_counter()
@@ -340,9 +348,12 @@ class AssistantOrchestrator:
         await session.save()
 
         return AskResponse(
-            trace_id=trace_id, action=plan.action, tool_name=plan.tool_name,
+            trace_id=trace_id,
+            action=plan.action,
+            tool_name=plan.tool_name,
             planner_output=plan.model_dump(mode="json"),
-            tool_output=tool_output, response=response,
+            tool_output=tool_output,
+            response=response,
         )
 
     async def _load_or_create_session(

@@ -4,8 +4,8 @@ from uuid import uuid4
 
 from app.ai.assistant.orchestrator import AssistantOrchestrator
 from app.ai.mcp.registry import registry
-from app.common.enums import ReservationStatus
 from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
+from app.common.enums import ReservationStatus
 from app.conversations.documents import (
     MessageBufferDocument,
     WhatsAppInboundEventDocument,
@@ -234,7 +234,8 @@ class ConversationTurnWorker:
         except Exception as exc:
             logger.error(
                 "[conversation_id=%s] Turn failed | error=%s",
-                conversation_id, exc,
+                conversation_id,
+                exc,
             )
             await self._buffer_service.mark_failed(buffer=reloaded, error=str(exc))
             return False

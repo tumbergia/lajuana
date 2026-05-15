@@ -56,41 +56,426 @@ class SchedulePayload:
 
 def _build_payloads() -> list[SchedulePayload]:
     raw = [
-        ("EXP_MEDIO_DIA_ID", "2026-05-15", "08:00:00", True, 8, 2, 0, 0, False, "Medio dia familiar - disponibilidad parcial cercana"),
-        ("EXP_DIA_COMPLETO_ID", "2026-05-16", "08:00:00", True, 6, 6, 0, 0, False, "Dia completo - lleno"),
-        ("EXP_AVISTAMIENTO_ID", "2026-05-17", "07:30:00", True, 8, 0, 1, 0, False, "Avistamiento/naturaleza - cupo interno operativo"),
-        ("EXP_MEDIO_DIA_ID", "2026-05-20", "08:00:00", True, 8, 0, 0, 0, False, "Medio dia familiar - disponibilidad completa"),
-        ("EXP_AVISTAMIENTO_ID", "2026-05-22", "07:30:00", False, 6, 0, 0, 0, False, "Avistamiento/naturaleza - cerrado por clima"),
-        ("EXP_MEDIO_DIA_ID", "2026-05-23", "08:00:00", True, 8, 4, 0, 1, False, "Medio dia familiar - bloqueo manual por contingencia"),
-        ("EXP_DIA_COMPLETO_ID", "2026-05-24", "08:00:00", True, 6, 2, 1, 0, False, "Dia completo - cupo de staff reservado"),
-        ("EXP_MEDIO_DIA_ID", "2026-05-27", "08:00:00", True, 8, 0, 0, 0, False, "Medio dia familiar - miercoles tranquilo"),
-        ("EXP_PERSONALIZADA_ID", "2026-05-29", "09:00:00", True, 4, 0, 0, 0, True, "Personalizada - solo por solicitud"),
-        ("EXP_AVANZADA_ID", "2026-05-30", "07:00:00", True, 6, 1, 1, 0, False, "Ruta avanzada - cupo operativo reservado"),
-        ("EXP_MEDIO_DIA_ID", "2026-05-31", "08:00:00", True, 8, 8, 0, 0, False, "Medio dia familiar - lleno"),
-        ("EXP_MEDIO_DIA_ID", "2026-06-03", "08:00:00", True, 8, 1, 0, 0, False, "Medio dia familiar - baja ocupacion"),
-        ("EXP_AVISTAMIENTO_ID", "2026-06-05", "07:30:00", True, 8, 3, 0, 0, False, "Avistamiento/naturaleza - cupo medio"),
-        ("EXP_DIA_COMPLETO_ID", "2026-06-06", "08:00:00", True, 8, 5, 0, 1, False, "Dia completo - casi lleno con bloqueo"),
-        ("EXP_MEDIO_DIA_ID", "2026-06-07", "08:00:00", True, 8, 0, 1, 0, False, "Medio dia familiar - cupo interno"),
-        ("EXP_MEDIO_DIA_ID", "2026-06-10", "08:00:00", False, 8, 0, 0, 0, False, "Medio dia familiar - cerrado por mantenimiento de ruta"),
-        ("EXP_AVANZADA_ID", "2026-06-12", "07:00:00", True, 6, 4, 0, 0, False, "Ruta avanzada - disponibilidad baja"),
-        ("EXP_MEDIO_DIA_ID", "2026-06-13", "08:00:00", True, 8, 6, 0, 0, False, "Medio dia familiar - solo quedan 2 cupos"),
-        ("EXP_DIA_COMPLETO_ID", "2026-06-14", "08:00:00", True, 6, 5, 1, 0, False, "Dia completo - lleno por cupo interno"),
-        ("EXP_AVISTAMIENTO_ID", "2026-06-17", "07:30:00", True, 8, 0, 0, 0, False, "Avistamiento/naturaleza - disponibilidad completa"),
-        ("EXP_PERSONALIZADA_ID", "2026-06-19", "09:00:00", True, 4, 1, 0, 0, True, "Personalizada - solicitud especial con ocupacion parcial"),
-        ("EXP_MEDIO_DIA_ID", "2026-06-20", "08:00:00", True, 8, 7, 0, 0, False, "Medio dia familiar - ultimo cupo"),
-        ("EXP_DIA_COMPLETO_ID", "2026-06-21", "08:00:00", True, 8, 0, 2, 0, False, "Dia completo - dos cupos internos para operacion"),
-        ("EXP_MEDIO_DIA_ID", "2026-06-24", "08:00:00", True, 8, 0, 0, 0, False, "Medio dia familiar - disponibilidad limpia"),
-        ("EXP_AVISTAMIENTO_ID", "2026-06-26", "07:30:00", True, 6, 6, 0, 0, False, "Avistamiento/naturaleza - lleno"),
-        ("EXP_AVANZADA_ID", "2026-06-27", "07:00:00", False, 6, 0, 1, 0, False, "Ruta avanzada - cerrada por revision de seguridad"),
-        ("EXP_MEDIO_DIA_ID", "2026-06-28", "08:00:00", True, 8, 2, 0, 2, False, "Medio dia familiar - bloqueo por contingencia"),
-        ("EXP_MEDIO_DIA_ID", "2026-07-01", "08:00:00", True, 8, 0, 0, 0, False, "Medio dia familiar - inicio de julio"),
-        ("EXP_AVISTAMIENTO_ID", "2026-07-03", "07:30:00", True, 8, 1, 0, 0, False, "Avistamiento/naturaleza - baja ocupacion"),
-        ("EXP_DIA_COMPLETO_ID", "2026-07-04", "08:00:00", True, 8, 4, 1, 1, False, "Dia completo - ocupacion media con operacion interna"),
-        ("EXP_MEDIO_DIA_ID", "2026-07-05", "08:00:00", True, 8, 0, 0, 0, False, "Medio dia familiar - domingo libre"),
-        ("EXP_MEDIO_DIA_ID", "2026-07-08", "08:00:00", True, 8, 5, 0, 0, False, "Medio dia familiar - quedan 3 cupos"),
-        ("EXP_PERSONALIZADA_ID", "2026-07-10", "09:00:00", True, 4, 0, 0, 0, True, "Personalizada - solo por solicitud futura"),
-        ("EXP_AVANZADA_ID", "2026-07-11", "07:00:00", True, 6, 6, 0, 0, False, "Ruta avanzada - llena"),
-        ("EXP_DIA_COMPLETO_ID", "2026-07-12", "08:00:00", True, 8, 2, 0, 0, False, "Dia completo - disponibilidad amplia"),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-05-15",
+            "08:00:00",
+            True,
+            8,
+            2,
+            0,
+            0,
+            False,
+            "Medio dia familiar - disponibilidad parcial cercana",
+        ),
+        (
+            "EXP_DIA_COMPLETO_ID",
+            "2026-05-16",
+            "08:00:00",
+            True,
+            6,
+            6,
+            0,
+            0,
+            False,
+            "Dia completo - lleno",
+        ),
+        (
+            "EXP_AVISTAMIENTO_ID",
+            "2026-05-17",
+            "07:30:00",
+            True,
+            8,
+            0,
+            1,
+            0,
+            False,
+            "Avistamiento/naturaleza - cupo interno operativo",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-05-20",
+            "08:00:00",
+            True,
+            8,
+            0,
+            0,
+            0,
+            False,
+            "Medio dia familiar - disponibilidad completa",
+        ),
+        (
+            "EXP_AVISTAMIENTO_ID",
+            "2026-05-22",
+            "07:30:00",
+            False,
+            6,
+            0,
+            0,
+            0,
+            False,
+            "Avistamiento/naturaleza - cerrado por clima",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-05-23",
+            "08:00:00",
+            True,
+            8,
+            4,
+            0,
+            1,
+            False,
+            "Medio dia familiar - bloqueo manual por contingencia",
+        ),
+        (
+            "EXP_DIA_COMPLETO_ID",
+            "2026-05-24",
+            "08:00:00",
+            True,
+            6,
+            2,
+            1,
+            0,
+            False,
+            "Dia completo - cupo de staff reservado",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-05-27",
+            "08:00:00",
+            True,
+            8,
+            0,
+            0,
+            0,
+            False,
+            "Medio dia familiar - miercoles tranquilo",
+        ),
+        (
+            "EXP_PERSONALIZADA_ID",
+            "2026-05-29",
+            "09:00:00",
+            True,
+            4,
+            0,
+            0,
+            0,
+            True,
+            "Personalizada - solo por solicitud",
+        ),
+        (
+            "EXP_AVANZADA_ID",
+            "2026-05-30",
+            "07:00:00",
+            True,
+            6,
+            1,
+            1,
+            0,
+            False,
+            "Ruta avanzada - cupo operativo reservado",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-05-31",
+            "08:00:00",
+            True,
+            8,
+            8,
+            0,
+            0,
+            False,
+            "Medio dia familiar - lleno",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-06-03",
+            "08:00:00",
+            True,
+            8,
+            1,
+            0,
+            0,
+            False,
+            "Medio dia familiar - baja ocupacion",
+        ),
+        (
+            "EXP_AVISTAMIENTO_ID",
+            "2026-06-05",
+            "07:30:00",
+            True,
+            8,
+            3,
+            0,
+            0,
+            False,
+            "Avistamiento/naturaleza - cupo medio",
+        ),
+        (
+            "EXP_DIA_COMPLETO_ID",
+            "2026-06-06",
+            "08:00:00",
+            True,
+            8,
+            5,
+            0,
+            1,
+            False,
+            "Dia completo - casi lleno con bloqueo",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-06-07",
+            "08:00:00",
+            True,
+            8,
+            0,
+            1,
+            0,
+            False,
+            "Medio dia familiar - cupo interno",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-06-10",
+            "08:00:00",
+            False,
+            8,
+            0,
+            0,
+            0,
+            False,
+            "Medio dia familiar - cerrado por mantenimiento de ruta",
+        ),
+        (
+            "EXP_AVANZADA_ID",
+            "2026-06-12",
+            "07:00:00",
+            True,
+            6,
+            4,
+            0,
+            0,
+            False,
+            "Ruta avanzada - disponibilidad baja",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-06-13",
+            "08:00:00",
+            True,
+            8,
+            6,
+            0,
+            0,
+            False,
+            "Medio dia familiar - solo quedan 2 cupos",
+        ),
+        (
+            "EXP_DIA_COMPLETO_ID",
+            "2026-06-14",
+            "08:00:00",
+            True,
+            6,
+            5,
+            1,
+            0,
+            False,
+            "Dia completo - lleno por cupo interno",
+        ),
+        (
+            "EXP_AVISTAMIENTO_ID",
+            "2026-06-17",
+            "07:30:00",
+            True,
+            8,
+            0,
+            0,
+            0,
+            False,
+            "Avistamiento/naturaleza - disponibilidad completa",
+        ),
+        (
+            "EXP_PERSONALIZADA_ID",
+            "2026-06-19",
+            "09:00:00",
+            True,
+            4,
+            1,
+            0,
+            0,
+            True,
+            "Personalizada - solicitud especial con ocupacion parcial",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-06-20",
+            "08:00:00",
+            True,
+            8,
+            7,
+            0,
+            0,
+            False,
+            "Medio dia familiar - ultimo cupo",
+        ),
+        (
+            "EXP_DIA_COMPLETO_ID",
+            "2026-06-21",
+            "08:00:00",
+            True,
+            8,
+            0,
+            2,
+            0,
+            False,
+            "Dia completo - dos cupos internos para operacion",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-06-24",
+            "08:00:00",
+            True,
+            8,
+            0,
+            0,
+            0,
+            False,
+            "Medio dia familiar - disponibilidad limpia",
+        ),
+        (
+            "EXP_AVISTAMIENTO_ID",
+            "2026-06-26",
+            "07:30:00",
+            True,
+            6,
+            6,
+            0,
+            0,
+            False,
+            "Avistamiento/naturaleza - lleno",
+        ),
+        (
+            "EXP_AVANZADA_ID",
+            "2026-06-27",
+            "07:00:00",
+            False,
+            6,
+            0,
+            1,
+            0,
+            False,
+            "Ruta avanzada - cerrada por revision de seguridad",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-06-28",
+            "08:00:00",
+            True,
+            8,
+            2,
+            0,
+            2,
+            False,
+            "Medio dia familiar - bloqueo por contingencia",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-07-01",
+            "08:00:00",
+            True,
+            8,
+            0,
+            0,
+            0,
+            False,
+            "Medio dia familiar - inicio de julio",
+        ),
+        (
+            "EXP_AVISTAMIENTO_ID",
+            "2026-07-03",
+            "07:30:00",
+            True,
+            8,
+            1,
+            0,
+            0,
+            False,
+            "Avistamiento/naturaleza - baja ocupacion",
+        ),
+        (
+            "EXP_DIA_COMPLETO_ID",
+            "2026-07-04",
+            "08:00:00",
+            True,
+            8,
+            4,
+            1,
+            1,
+            False,
+            "Dia completo - ocupacion media con operacion interna",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-07-05",
+            "08:00:00",
+            True,
+            8,
+            0,
+            0,
+            0,
+            False,
+            "Medio dia familiar - domingo libre",
+        ),
+        (
+            "EXP_MEDIO_DIA_ID",
+            "2026-07-08",
+            "08:00:00",
+            True,
+            8,
+            5,
+            0,
+            0,
+            False,
+            "Medio dia familiar - quedan 3 cupos",
+        ),
+        (
+            "EXP_PERSONALIZADA_ID",
+            "2026-07-10",
+            "09:00:00",
+            True,
+            4,
+            0,
+            0,
+            0,
+            True,
+            "Personalizada - solo por solicitud futura",
+        ),
+        (
+            "EXP_AVANZADA_ID",
+            "2026-07-11",
+            "07:00:00",
+            True,
+            6,
+            6,
+            0,
+            0,
+            False,
+            "Ruta avanzada - llena",
+        ),
+        (
+            "EXP_DIA_COMPLETO_ID",
+            "2026-07-12",
+            "08:00:00",
+            True,
+            8,
+            2,
+            0,
+            0,
+            False,
+            "Dia completo - disponibilidad amplia",
+        ),
     ]
     slug_map = {
         "EXP_MEDIO_DIA_ID": EXP_MEDIO_DIA,
@@ -171,7 +556,13 @@ async def run_seed() -> None:
         experiences_by_slug[exp.slug] = exp
 
     missing = []
-    for slug in {EXP_MEDIO_DIA, EXP_DIA_COMPLETO, EXP_AVANZADA, EXP_PERSONALIZADA, EXP_AVISTAMIENTO}:
+    for slug in {
+        EXP_MEDIO_DIA,
+        EXP_DIA_COMPLETO,
+        EXP_AVANZADA,
+        EXP_PERSONALIZADA,
+        EXP_AVISTAMIENTO,
+    }:
         if slug not in experiences_by_slug:
             missing.append(slug)
     if missing:
@@ -254,79 +645,122 @@ async def _run_validations(
     if doc_1 is not None:
         ok = doc_1.status.value == "open" and doc_1.available_slots >= 4
         validation_results.append(
-            ("1", "medio dia 2026-06-24, 4p -> available=true",
-             "PASS" if ok else "FAIL",
-             f"status={doc_1.status.value}, available={doc_1.available_slots}")
+            (
+                "1",
+                "medio dia 2026-06-24, 4p -> available=true",
+                "PASS" if ok else "FAIL",
+                f"status={doc_1.status.value}, available={doc_1.available_slots}",
+            )
         )
     else:
-        validation_results.append(("1", "medio dia 2026-06-24, 4p -> available=true", "FAIL", "schedule not found"))
+        validation_results.append(
+            ("1", "medio dia 2026-06-24, 4p -> available=true", "FAIL", "schedule not found")
+        )
 
     # 2) check_experience_availability medio dia, 2026-06-13, 4 personas -> available=false
     doc_2 = await find_schedule(EXP_MEDIO_DIA, "2026-06-13")
     if doc_2 is not None:
         ok = doc_2.available_slots < 4
         validation_results.append(
-            ("2", "medio dia 2026-06-13, 4p -> available=false",
-             "PASS" if ok else "FAIL",
-             f"status={doc_2.status.value}, available={doc_2.available_slots}")
+            (
+                "2",
+                "medio dia 2026-06-13, 4p -> available=false",
+                "PASS" if ok else "FAIL",
+                f"status={doc_2.status.value}, available={doc_2.available_slots}",
+            )
         )
     else:
-        validation_results.append(("2", "medio dia 2026-06-13, 4p -> available=false", "FAIL", "schedule not found"))
+        validation_results.append(
+            ("2", "medio dia 2026-06-13, 4p -> available=false", "FAIL", "schedule not found")
+        )
 
     # 3) check_experience_availability medio dia, 2026-06-20, 1 persona -> available=true
     doc_3 = await find_schedule(EXP_MEDIO_DIA, "2026-06-20")
     if doc_3 is not None:
         ok = doc_3.status.value == "open" and doc_3.available_slots >= 1
         validation_results.append(
-            ("3", "medio dia 2026-06-20, 1p -> available=true",
-             "PASS" if ok else "FAIL",
-             f"status={doc_3.status.value}, available={doc_3.available_slots}")
+            (
+                "3",
+                "medio dia 2026-06-20, 1p -> available=true",
+                "PASS" if ok else "FAIL",
+                f"status={doc_3.status.value}, available={doc_3.available_slots}",
+            )
         )
     else:
-        validation_results.append(("3", "medio dia 2026-06-20, 1p -> available=true", "FAIL", "schedule not found"))
+        validation_results.append(
+            ("3", "medio dia 2026-06-20, 1p -> available=true", "FAIL", "schedule not found")
+        )
 
     # 4) check_experience_availability medio dia, 2026-06-20, 2 personas -> available=false
     if doc_3 is not None:
         ok = doc_3.available_slots < 2
         validation_results.append(
-            ("4", "medio dia 2026-06-20, 2p -> available=false",
-             "PASS" if ok else "FAIL",
-             f"available={doc_3.available_slots}")
+            (
+                "4",
+                "medio dia 2026-06-20, 2p -> available=false",
+                "PASS" if ok else "FAIL",
+                f"available={doc_3.available_slots}",
+            )
         )
     else:
-        validation_results.append(("4", "medio dia 2026-06-20, 2p -> available=false", "FAIL", "schedule not found"))
+        validation_results.append(
+            ("4", "medio dia 2026-06-20, 2p -> available=false", "FAIL", "schedule not found")
+        )
 
     # 5) check_experience_availability dia completo, 2026-06-14, 1 persona -> available=false (full)
     doc_5 = await find_schedule(EXP_DIA_COMPLETO, "2026-06-14")
     if doc_5 is not None:
         ok = doc_5.status.value == "full" or doc_5.available_slots < 1
         validation_results.append(
-            ("5", "dia completo 2026-06-14, 1p -> available=false (full)",
-             "PASS" if ok else "FAIL",
-             f"status={doc_5.status.value}, available={doc_5.available_slots}")
+            (
+                "5",
+                "dia completo 2026-06-14, 1p -> available=false (full)",
+                "PASS" if ok else "FAIL",
+                f"status={doc_5.status.value}, available={doc_5.available_slots}",
+            )
         )
     else:
-        validation_results.append(("5", "dia completo 2026-06-14, 1p -> available=false (full)", "FAIL", "schedule not found"))
+        validation_results.append(
+            (
+                "5",
+                "dia completo 2026-06-14, 1p -> available=false (full)",
+                "FAIL",
+                "schedule not found",
+            )
+        )
 
     # 6) check_experience_availability medio dia, 2026-06-10, 1 persona -> available=false (closed)
     doc_6 = await find_schedule(EXP_MEDIO_DIA, "2026-06-10")
     if doc_6 is not None:
         ok = not doc_6.is_active or doc_6.status.value == "closed"
         validation_results.append(
-            ("6", "medio dia 2026-06-10, 1p -> available=false (closed)",
-             "PASS" if ok else "FAIL",
-             f"is_active={doc_6.is_active}, status={doc_6.status.value}")
+            (
+                "6",
+                "medio dia 2026-06-10, 1p -> available=false (closed)",
+                "PASS" if ok else "FAIL",
+                f"is_active={doc_6.is_active}, status={doc_6.status.value}",
+            )
         )
     else:
-        validation_results.append(("6", "medio dia 2026-06-10, 1p -> available=false (closed)", "FAIL", "schedule not found"))
+        validation_results.append(
+            (
+                "6",
+                "medio dia 2026-06-10, 1p -> available=false (closed)",
+                "FAIL",
+                "schedule not found",
+            )
+        )
 
     # 7) check_experience_availability medio dia, 2026-06-25, 1 persona -> available=false (schedule.not_found)
     doc_7 = await find_schedule(EXP_MEDIO_DIA, "2026-06-25")
     ok_7 = doc_7 is None
     validation_results.append(
-        ("7", "medio dia 2026-06-25, 1p -> available=false (schedule.not_found)",
-         "PASS" if ok_7 else "FAIL",
-         "schedule found (unexpected)" if doc_7 else "not found (expected)")
+        (
+            "7",
+            "medio dia 2026-06-25, 1p -> available=false (schedule.not_found)",
+            "PASS" if ok_7 else "FAIL",
+            "schedule found (unexpected)" if doc_7 else "not found (expected)",
+        )
     )
 
     # 8) list schedules date_from=2026-06-01 date_to=2026-06-30 status=open
@@ -340,54 +774,82 @@ async def _run_validations(
         open_docs_filtered = [d for d in open_docs if d.status == ScheduleStatus.OPEN]
         open_count = len(open_docs_filtered)
         validation_results.append(
-            ("8", "list schedules junio, status=open",
-             "PASS" if open_count >= 3 else "FAIL",
-             f"open count={open_count} (expected >=3)")
+            (
+                "8",
+                "list schedules junio, status=open",
+                "PASS" if open_count >= 3 else "FAIL",
+                f"open count={open_count} (expected >=3)",
+            )
         )
     else:
-        validation_results.append(("8", "list schedules junio, status=open", "FAIL", "experience not found"))
+        validation_results.append(
+            ("8", "list schedules junio, status=open", "FAIL", "experience not found")
+        )
 
     # 9) list_available_schedules medio dia, participant_count=4, rango junio
     if exp_medio:
-        available_4 = await ScheduleDocument.find(
-            ScheduleDocument.experience_id == exp_medio.id,
-            ScheduleDocument.date >= date.fromisoformat("2026-06-01"),
-            ScheduleDocument.date <= date.fromisoformat("2026-06-30"),
-            ScheduleDocument.status == ScheduleStatus.OPEN,
-            ScheduleDocument.available_slots >= 4,
-        ).sort(("date", 1)).to_list()
+        available_4 = (
+            await ScheduleDocument.find(
+                ScheduleDocument.experience_id == exp_medio.id,
+                ScheduleDocument.date >= date.fromisoformat("2026-06-01"),
+                ScheduleDocument.date <= date.fromisoformat("2026-06-30"),
+                ScheduleDocument.status == ScheduleStatus.OPEN,
+                ScheduleDocument.available_slots >= 4,
+            )
+            .sort(("date", 1))
+            .to_list()
+        )
         cnt = len(available_4)
         excludes_wrong = all(
-            d.date.isoformat() not in {"2026-06-13", "2026-06-20"}
-            for d in available_4
+            d.date.isoformat() not in {"2026-06-13", "2026-06-20"} for d in available_4
         )
         validation_results.append(
-            ("9", "list_available_schedules medio dia, 4p, junio",
-             "PASS" if excludes_wrong and cnt >= 2 else "FAIL",
-             f"count={cnt}, excludes_13_20={excludes_wrong}")
+            (
+                "9",
+                "list_available_schedules medio dia, 4p, junio",
+                "PASS" if excludes_wrong and cnt >= 2 else "FAIL",
+                f"count={cnt}, excludes_13_20={excludes_wrong}",
+            )
         )
     else:
-        validation_results.append(("9", "list_available_schedules medio dia, 4p, junio", "FAIL", "experience not found"))
+        validation_results.append(
+            ("9", "list_available_schedules medio dia, 4p, junio", "FAIL", "experience not found")
+        )
 
     # 10) suggest_alternative_dates medio dia, requested_date=2026-06-20, participant_count=4
     if exp_medio:
-        suggested = await ScheduleDocument.find(
-            ScheduleDocument.experience_id == exp_medio.id,
-            ScheduleDocument.date >= date.fromisoformat("2026-06-20"),
-            ScheduleDocument.date <= date.fromisoformat("2026-07-05"),
-            ScheduleDocument.status == ScheduleStatus.OPEN,
-            ScheduleDocument.available_slots >= 4,
-        ).sort(("date", 1)).limit(5).to_list()
+        suggested = (
+            await ScheduleDocument.find(
+                ScheduleDocument.experience_id == exp_medio.id,
+                ScheduleDocument.date >= date.fromisoformat("2026-06-20"),
+                ScheduleDocument.date <= date.fromisoformat("2026-07-05"),
+                ScheduleDocument.status == ScheduleStatus.OPEN,
+                ScheduleDocument.available_slots >= 4,
+            )
+            .sort(("date", 1))
+            .limit(5)
+            .to_list()
+        )
         sug_dates = [d.date.isoformat() for d in suggested]
         has_0624 = "2026-06-24" in sug_dates
         has_0628 = "2026-06-28" in sug_dates
         validation_results.append(
-            ("10", "suggest_alternative_dates medio dia, cerca 2026-06-20",
-             "PASS" if has_0624 or has_0628 else "FAIL",
-             f"dates={sug_dates}" if sug_dates else "no alternatives found")
+            (
+                "10",
+                "suggest_alternative_dates medio dia, cerca 2026-06-20",
+                "PASS" if has_0624 or has_0628 else "FAIL",
+                f"dates={sug_dates}" if sug_dates else "no alternatives found",
+            )
         )
     else:
-        validation_results.append(("10", "suggest_alternative_dates medio dia, cerca 2026-06-20", "FAIL", "experience not found"))
+        validation_results.append(
+            (
+                "10",
+                "suggest_alternative_dates medio dia, cerca 2026-06-20",
+                "FAIL",
+                "experience not found",
+            )
+        )
 
     print(f"{'':>3}  {'Caso':<60} {'Resultado':<8} Detalle")
     print("-" * 100)

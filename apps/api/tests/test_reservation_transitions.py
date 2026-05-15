@@ -8,9 +8,9 @@ from pydantic import ValidationError
 from app.common.enums import PaymentStatus, ReservationStatus, ScheduleStatus, UserRole
 from app.core.errors import ApiError
 from app.documents import ReservationDocument
+from app.schemas.payment_proof import PaymentProofUpdateSchema
 from app.services.payment_proof_service import PaymentProofService
 from app.services.reservation_service import ALLOWED_RESERVATION_TRANSITIONS, ReservationService
-from app.schemas.payment_proof import PaymentProofUpdateSchema
 
 
 @pytest.mark.parametrize(
@@ -72,7 +72,9 @@ class _FakeReservationSaveFailure(_FakeReservation):
         raise RuntimeError("forced reservation save error")
 
 
-def test_admin_verify_success_leaves_reservation_unconfirmed(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_admin_verify_success_leaves_reservation_unconfirmed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     service = PaymentProofService()
     proof = _FakePaymentProof("660000000000000000000001")
     reservation = _FakeReservation()
@@ -86,7 +88,9 @@ def test_admin_verify_success_leaves_reservation_unconfirmed(monkeypatch: pytest
     monkeypatch.setattr(service, "get", _fake_get)
     monkeypatch.setattr(ReservationDocument, "get", _fake_reservation_get)
 
-    payload = SimpleNamespace(confirmation_token="VERIFY_PAYMENT", amount=None, reference=None, note=None)
+    payload = SimpleNamespace(
+        confirmation_token="VERIFY_PAYMENT", amount=None, reference=None, note=None
+    )
     asyncio.run(
         service.verify_payment(
             "proof-id",
@@ -133,7 +137,9 @@ def test_verify_rejects_terminal_transition(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(service, "get", _fake_get)
     monkeypatch.setattr(ReservationDocument, "get", _fake_reservation_get)
 
-    payload = SimpleNamespace(confirmation_token="VERIFY_PAYMENT", amount=None, reference=None, note=None)
+    payload = SimpleNamespace(
+        confirmation_token="VERIFY_PAYMENT", amount=None, reference=None, note=None
+    )
     with pytest.raises(ApiError):
         asyncio.run(
             service.verify_payment(
@@ -171,7 +177,9 @@ def test_reject_rejects_terminal_transition(monkeypatch: pytest.MonkeyPatch) -> 
         )
 
 
-def test_verify_rolls_back_proof_when_reservation_save_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_verify_rolls_back_proof_when_reservation_save_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     service = PaymentProofService()
     proof = _FakePaymentProofWithRollback("660000000000000000000001", status=PaymentStatus.RECEIVED)
     reservation = _FakeReservationSaveFailure()
@@ -185,7 +193,9 @@ def test_verify_rolls_back_proof_when_reservation_save_fails(monkeypatch: pytest
     monkeypatch.setattr(service, "get", _fake_get)
     monkeypatch.setattr(ReservationDocument, "get", _fake_reservation_get)
 
-    payload = SimpleNamespace(confirmation_token="VERIFY_PAYMENT", amount=None, reference=None, note=None)
+    payload = SimpleNamespace(
+        confirmation_token="VERIFY_PAYMENT", amount=None, reference=None, note=None
+    )
     with pytest.raises(ApiError) as exc:
         asyncio.run(
             service.verify_payment(
@@ -201,7 +211,9 @@ def test_verify_rolls_back_proof_when_reservation_save_fails(monkeypatch: pytest
     assert proof.saved_statuses == [PaymentStatus.VERIFIED, PaymentStatus.RECEIVED]
 
 
-def test_reject_rolls_back_proof_when_reservation_save_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_reject_rolls_back_proof_when_reservation_save_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     service = PaymentProofService()
     proof = _FakePaymentProofWithRollback("660000000000000000000001", status=PaymentStatus.RECEIVED)
     reservation = _FakeReservationSaveFailure()
