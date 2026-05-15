@@ -20,8 +20,14 @@ class RiskLevel(StrEnum):
 class ToolArgs(BaseModel):
     experience_query: str | None = None
     experience_id: str | None = None
+    schedule_id: str | None = None
     requested_date: str | None = None
     participant_count: int | None = None
+    holder_phone: str | None = None
+    holder_name: str | None = None
+    code: str | None = None
+    conversation_id: str | None = None
+    quote_snapshot: dict | None = None
     exclude_dates: list[str] | None = None
     search_days_before: int | None = None
     search_days_after: int | None = None

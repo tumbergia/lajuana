@@ -1,5 +1,5 @@
 from app.ai.assistant.policy import ToolPolicyEngine
-from app.schemas.assistant_plan import AssistantAction, AssistantPlan, RiskLevel
+from app.schemas.assistant_plan import AssistantAction, AssistantPlan, RiskLevel, ToolArgs
 
 
 def test_allows_read_availability_tool_with_required_args() -> None:
@@ -112,3 +112,55 @@ def test_allows_non_tool_action() -> None:
     decision = ToolPolicyEngine().validate(plan)
 
     assert decision.allowed is True
+
+
+def test_create_reservation_draft_allowed() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        tool_name="create_reservation_draft",
+        arguments=ToolArgs(),
+        confidence=0.9,
+        user_goal="create a reservation draft",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan)
+    assert decision.allowed
+
+
+def test_get_reservation_public_summary_allowed() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        tool_name="get_reservation_public_summary",
+        arguments=ToolArgs(),
+        confidence=0.9,
+        user_goal="check reservation public summary",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan)
+    assert decision.allowed
+
+
+def test_get_reservation_status_by_phone_allowed() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        tool_name="get_reservation_status_by_phone",
+        arguments=ToolArgs(),
+        confidence=0.9,
+        user_goal="check reservation status by phone",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan)
+    assert decision.allowed
+
+
+def test_attach_payment_proof_to_reservation_allowed() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        tool_name="attach_payment_proof_to_reservation",
+        arguments=ToolArgs(),
+        confidence=0.9,
+        user_goal="attach payment proof",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan)
+    assert decision.allowed

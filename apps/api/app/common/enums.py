@@ -13,8 +13,10 @@ class ReservationStatus(StrEnum):
     PENDING_PAYMENT = "pending_payment"
     PAYMENT_RECEIVED = "payment_received"
     CONFIRMED = "confirmed"
+    PRE_RESERVED = "pre_reserved"
     CANCELLED = "cancelled"
     COMPLETED = "completed"
+    EXPIRED = "expired"
 
 
 class ScheduleStatus(StrEnum):
@@ -67,6 +69,7 @@ class AssignmentPriority(StrEnum):
     SENIOR_SAFETY = "senior_safety"
 
 
+<<<<<<< HEAD
 class ParticipantFormLinkStatus(StrEnum):
     ACTIVE = "active"
     EXPIRED = "expired"
@@ -79,6 +82,11 @@ class ParticipantFormStatus(StrEnum):
     SENT = "sent"
     PARTIAL = "partial"
     COMPLETE = "complete"
+=======
+class ParticipantFormStatus(StrEnum):
+    ACTIVE = "active"
+    FULL = "full"
+>>>>>>> 2e13917303fb450ddb2878854d293ef87d75f9ab
     EXPIRED = "expired"
     REVOKED = "revoked"
 

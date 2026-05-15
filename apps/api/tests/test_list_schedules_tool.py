@@ -114,9 +114,7 @@ async def _run_returns_schedules_when_experience_found(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await list_available_schedules(
         experience_query="test experience",
@@ -137,9 +135,7 @@ async def _run_returns_schedules_when_experience_found(
 def test_returns_schedules_when_experience_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_returns_schedules_when_experience_found(monkeypatch)
-    )
+    asyncio.run(_run_returns_schedules_when_experience_found(monkeypatch))
 
 
 async def _run_returns_empty_when_experience_not_found(
@@ -151,9 +147,7 @@ async def _run_returns_empty_when_experience_not_found(
         )
 
     monkeypatch.setattr(ExperienceCatalogResolver, "resolve", fake_resolve)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await list_available_schedules(
         experience_query="nonexistent",
@@ -167,9 +161,7 @@ async def _run_returns_empty_when_experience_not_found(
 def test_returns_empty_when_experience_not_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_returns_empty_when_experience_not_found(monkeypatch)
-    )
+    asyncio.run(_run_returns_empty_when_experience_not_found(monkeypatch))
 
 
 async def _run_returns_empty_when_no_schedules(
@@ -210,9 +202,7 @@ async def _run_returns_empty_when_no_schedules(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await list_available_schedules(
         experience_query="test experience",
@@ -262,25 +252,25 @@ async def _run_resolves_by_experience_id(
 
     class FakeQuery:
         def sort(self, *args):
-            return FakeSortQuery([
-                SimpleNamespace(
-                    id=PydanticObjectId(),
-                    date=date(2026, 7, 1),
-                    start_time=time(10, 0),
-                    capacity_total=15,
-                    available_slots=8,
-                    status=ScheduleStatus.OPEN,
-                )
-            ])
+            return FakeSortQuery(
+                [
+                    SimpleNamespace(
+                        id=PydanticObjectId(),
+                        date=date(2026, 7, 1),
+                        start_time=time(10, 0),
+                        capacity_total=15,
+                        available_slots=8,
+                        status=ScheduleStatus.OPEN,
+                    )
+                ]
+            )
 
     def fake_find_many(*args, **kwargs):
         return FakeQuery()
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await list_available_schedules(
         experience_id=str(exp_id),
@@ -354,9 +344,7 @@ async def _run_filters_by_participant_count(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await list_available_schedules(
         experience_query="test experience",
@@ -406,25 +394,25 @@ async def _run_accepts_trace_id_and_conversation_turn_id(
 
     class FakeQuery:
         def sort(self, *args):
-            return FakeSortQuery([
-                SimpleNamespace(
-                    id=PydanticObjectId(),
-                    date=date(2026, 9, 1),
-                    start_time=time(11, 0),
-                    capacity_total=20,
-                    available_slots=15,
-                    status=ScheduleStatus.OPEN,
-                )
-            ])
+            return FakeSortQuery(
+                [
+                    SimpleNamespace(
+                        id=PydanticObjectId(),
+                        date=date(2026, 9, 1),
+                        start_time=time(11, 0),
+                        capacity_total=20,
+                        available_slots=15,
+                        status=ScheduleStatus.OPEN,
+                    )
+                ]
+            )
 
     def fake_find_many(*args, **kwargs):
         return FakeQuery()
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     trace_id = str(uuid4())
     conversation_turn_id = str(uuid4())
@@ -442,9 +430,7 @@ async def _run_accepts_trace_id_and_conversation_turn_id(
 def test_accepts_trace_id_and_conversation_turn_id(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_accepts_trace_id_and_conversation_turn_id(monkeypatch)
-    )
+    asyncio.run(_run_accepts_trace_id_and_conversation_turn_id(monkeypatch))
 
 
 async def _run_date_range_derivation(
@@ -485,9 +471,7 @@ async def _run_date_range_derivation(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     requested = date(2026, 10, 15)
     result = await list_available_schedules(
@@ -563,9 +547,7 @@ async def _run_returns_alternatives_when_schedules_found(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
         experience_query="test experience",
@@ -582,9 +564,7 @@ async def _run_returns_alternatives_when_schedules_found(
 def test_returns_alternatives_when_schedules_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_returns_alternatives_when_schedules_found(monkeypatch)
-    )
+    asyncio.run(_run_returns_alternatives_when_schedules_found(monkeypatch))
 
 
 async def _run_no_alternatives_available(
@@ -625,9 +605,7 @@ async def _run_no_alternatives_available(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
         experience_query="test experience",
@@ -654,9 +632,7 @@ async def _run_alternative_dates_experience_not_found(
         )
 
     monkeypatch.setattr(ExperienceCatalogResolver, "resolve", fake_resolve)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
         experience_query="nonexistent",
@@ -671,9 +647,7 @@ async def _run_alternative_dates_experience_not_found(
 def test_alternative_dates_experience_not_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_alternative_dates_experience_not_found(monkeypatch)
-    )
+    asyncio.run(_run_alternative_dates_experience_not_found(monkeypatch))
 
 
 async def _run_alternative_dates_filters_by_participant_count(
@@ -733,9 +707,7 @@ async def _run_alternative_dates_filters_by_participant_count(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
         experience_query="test experience",
@@ -752,9 +724,7 @@ async def _run_alternative_dates_filters_by_participant_count(
 def test_alternative_dates_filters_by_participant_count(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_alternative_dates_filters_by_participant_count(monkeypatch)
-    )
+    asyncio.run(_run_alternative_dates_filters_by_participant_count(monkeypatch))
 
 
 async def _run_alternative_dates_excludes_dates(
@@ -817,9 +787,7 @@ async def _run_alternative_dates_excludes_dates(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
         experience_query="test experience",
@@ -877,9 +845,7 @@ async def _run_alternative_dates_default_requested_date(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
         experience_query="test experience",
@@ -894,9 +860,7 @@ async def _run_alternative_dates_default_requested_date(
 def test_alternative_dates_default_requested_date(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_alternative_dates_default_requested_date(monkeypatch)
-    )
+    asyncio.run(_run_alternative_dates_default_requested_date(monkeypatch))
 
 
 async def _run_alternative_dates_accepts_trace_id(
@@ -930,25 +894,25 @@ async def _run_alternative_dates_accepts_trace_id(
 
     class FakeQuery:
         def sort(self, *args):
-            return FakeSortQuery([
-                SimpleNamespace(
-                    id=PydanticObjectId(),
-                    date=date(2026, 9, 1),
-                    start_time=time(11, 0),
-                    capacity_total=20,
-                    available_slots=15,
-                    status=ScheduleStatus.OPEN,
-                )
-            ])
+            return FakeSortQuery(
+                [
+                    SimpleNamespace(
+                        id=PydanticObjectId(),
+                        date=date(2026, 9, 1),
+                        start_time=time(11, 0),
+                        capacity_total=20,
+                        available_slots=15,
+                        status=ScheduleStatus.OPEN,
+                    )
+                ]
+            )
 
     def fake_find_many(*args, **kwargs):
         return FakeQuery()
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     trace_id = str(uuid4())
     conversation_turn_id = str(uuid4())
@@ -968,9 +932,7 @@ async def _run_alternative_dates_accepts_trace_id(
 def test_alternative_dates_accepts_trace_id(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_alternative_dates_accepts_trace_id(monkeypatch)
-    )
+    asyncio.run(_run_alternative_dates_accepts_trace_id(monkeypatch))
 
 
 async def _run_alternative_dates_search_window_bounds(
@@ -1019,9 +981,7 @@ async def _run_alternative_dates_search_window_bounds(
             capture["log_input"] = self.input
             return await super().insert()
 
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", CapturingToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", CapturingToolLogDoc)
 
     requested = date(2026, 10, 15)
     search_before = 15
@@ -1045,9 +1005,7 @@ async def _run_alternative_dates_search_window_bounds(
 def test_alternative_dates_search_window_bounds(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_alternative_dates_search_window_bounds(monkeypatch)
-    )
+    asyncio.run(_run_alternative_dates_search_window_bounds(monkeypatch))
 
 
 async def _run_alternative_dates_limit(
@@ -1100,9 +1058,7 @@ async def _run_alternative_dates_limit(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
         experience_query="test experience",
@@ -1182,9 +1138,7 @@ async def _run_alternative_dates_excludes_dates_from_json(
 
     _patch_schedule_fields(monkeypatch)
     monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr(
-        "app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc
-    )
+    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     # Simulate real orchestrator pipeline: exclude_dates arrives as list[str]
     # (planner JSON -> ToolArgs -> model_dump -> kwargs)
@@ -1203,6 +1157,4 @@ async def _run_alternative_dates_excludes_dates_from_json(
 def test_alternative_dates_excludes_dates_from_json(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(
-        _run_alternative_dates_excludes_dates_from_json(monkeypatch)
-    )
+    asyncio.run(_run_alternative_dates_excludes_dates_from_json(monkeypatch))

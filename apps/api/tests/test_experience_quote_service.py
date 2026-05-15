@@ -229,6 +229,3 @@ def test_quote_raises_pricing_missing_when_tiers_empty(monkeypatch) -> None:
 
 def test_quote_raises_tier_not_found(monkeypatch) -> None:
     asyncio.run(_run_quote_raises_tier_not_found(monkeypatch))
-
-
-

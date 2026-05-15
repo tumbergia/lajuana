@@ -19,11 +19,31 @@ class ToolPolicyEngine:
         "list_available_schedules",
         "quote_experience",
         "suggest_alternative_dates",
+        "get_reservation_public_summary",
+        "get_reservation_status_by_phone",
+        "admin_get_logistics_checklist",
+        "admin_get_equine_workload",
+        "admin_get_sales_summary",
+        "admin_get_reservation_funnel",
+        "admin_get_channel_performance",
+        "admin_get_occupancy_report",
+        "admin_get_equine_workload_report",
     }
     LIMITED_WRITE_TOOLS = {
         "request_human_review",
+        "create_reservation_draft",
+        "attach_payment_proof_to_reservation",
+        "guide_create_service_log",
+        "admin_add_equine_health_event",
+        "send_post_service_message",
     }
-    WRITE_TOOLS: set[str] = set()
+    WRITE_TOOLS: set[str] = {
+        "guide_report_incident",
+        "admin_close_service_execution",
+        "admin_update_equine_availability",
+        "schedule_birthday_automation",
+        "schedule_visit_anniversary_automation",
+    }
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
         "cancel_reservation",
@@ -66,7 +86,12 @@ class ToolPolicyEngine:
                 reason="human_review_required",
             )
 
-        if plan.tool_name not in self.READ_TOOLS and plan.tool_name not in self.LIMITED_WRITE_TOOLS and plan.tool_name not in self.WRITE_TOOLS:
+        is_unknown = (
+            plan.tool_name not in self.READ_TOOLS
+            and plan.tool_name not in self.LIMITED_WRITE_TOOLS
+            and plan.tool_name not in self.WRITE_TOOLS
+        )
+        if is_unknown:
             return ToolPolicyDecision(
                 allowed=False,
                 reason="unknown_or_not_allowed_tool",
@@ -84,10 +109,9 @@ class ToolPolicyEngine:
 
         if plan.tool_name == "quote_experience":
             args = plan.arguments.model_dump()
-            has_experience = (
-                args.get("experience_id") not in {None, ""}
-                or args.get("experience_query") not in {None, ""}
-            )
+            has_experience = args.get("experience_id") not in {None, ""} or args.get(
+                "experience_query"
+            ) not in {None, ""}
             has_participants = args.get("participant_count") not in {None, ""}
             if not has_experience:
                 return ToolPolicyDecision(

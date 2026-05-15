@@ -1,0 +1,526 @@
+from __future__ import annotations
+
+import time
+from collections import Counter
+from datetime import date, datetime
+from typing import Any
+from uuid import uuid4
+
+from app.ai.mcp.tool_contracts import (
+    ChannelPerformanceInput,
+    ChannelPerformanceItem,
+    ChannelPerformanceOutput,
+    EquineWorkloadReportInput,
+    EquineWorkloadReportOutput,
+    FunnelStageItem,
+    OccupancyItem,
+    OccupancyReportInput,
+    OccupancyReportOutput,
+    ReservationFunnelInput,
+    ReservationFunnelOutput,
+    SalesSummaryInput,
+    SalesSummaryOutput,
+    StatusSalesItem,
+    ToolBlockingReason,
+    WorkloadSummaryItem,
+)
+from app.common.enums import ReservationStatus
+from app.documents import (
+    AssignmentDocument,
+    EquineDocument,
+    ExperienceDocument,
+    ReservationDocument,
+    ScheduleDocument,
+)
+from app.documents.tool_call_log_document import ToolCallLogDocument
+
+RESERVATION_FUNNEL_ORDER = [
+    ReservationStatus.CONTACT,
+    ReservationStatus.QUOTED,
+    ReservationStatus.PENDING_PAYMENT,
+    ReservationStatus.PAYMENT_RECEIVED,
+    ReservationStatus.CONFIRMED,
+    ReservationStatus.COMPLETED,
+]
+
+
+def _safe_str(value: Any) -> str | None:
+    if value is None:
+        return None
+    return str(value)
+
+
+def _field(obj: Any, *names: str, default: Any = None) -> Any:
+    for name in names:
+        if hasattr(obj, name):
+            value = getattr(obj, name)
+            if value is not None:
+                return value
+    return default
+
+
+def _parse_date_range(
+    date_from: str | None,
+    date_to: str | None,
+) -> tuple[datetime | None, datetime | None]:
+    dt_from: datetime | None = None
+    dt_to: datetime | None = None
+    if date_from:
+        dt_from = datetime.fromisoformat(date_from)
+    if date_to:
+        dt_to = datetime.fromisoformat(date_to)
+    return dt_from, dt_to
+
+
+def _date_from_kwargs(**kwargs: Any) -> tuple[str | None, str | None]:
+    return kwargs.get("date_from"), kwargs.get("date_to")
+
+
+def _build_created_at_filter(
+    date_from: str | None,
+    date_to: str | None,
+) -> dict:
+    f: dict[str, Any] = {}
+    if date_from:
+        f["$gte"] = datetime.fromisoformat(date_from)
+    if date_to:
+        f["$lte"] = datetime.fromisoformat(date_to)
+    return f
+
+
+async def admin_get_sales_summary(
+    date_from: str | None = None,
+    date_to: str | None = None,
+    trace_id: str | None = None,
+    conversation_turn_id: str | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    started = time.perf_counter()
+    trace_id = trace_id or str(uuid4())
+
+    payload: SalesSummaryInput | None = None
+    output: SalesSummaryOutput | None = None
+    error_code: str | None = None
+
+    try:
+        payload = SalesSummaryInput(date_from=date_from, date_to=date_to)
+
+        created_filter = _build_created_at_filter(payload.date_from, payload.date_to)
+
+        reservations: list[ReservationDocument] = []
+        if created_filter:
+            reservations = await ReservationDocument.find(
+                ReservationDocument.created_at.in_(created_filter)
+            ).to_list()
+        else:
+            reservations = await ReservationDocument.find_all().to_list()
+
+        total = len(reservations)
+        status_counts: Counter = Counter()
+        total_revenue = 0
+        for r in reservations:
+            status_counts[r.status] += 1
+            if r.quoted_total_amount is not None:
+                total_revenue += int(r.quoted_total_amount)
+
+        by_status = [
+            StatusSalesItem(status=s.value, count=c)
+            for s, c in sorted(status_counts.items(), key=lambda x: str(x[0]))
+        ]
+
+        output = SalesSummaryOutput(
+            trace_id=trace_id,
+            total_reservations=total,
+            by_status=by_status,
+            total_revenue=total_revenue,
+            date_from=payload.date_from,
+            date_to=payload.date_to,
+        )
+        return output.model_dump(mode="json")
+
+    except Exception as exc:
+        error_code = "tool.unhandled_error"
+        output = SalesSummaryOutput(
+            trace_id=trace_id,
+            total_reservations=0,
+            by_status=[],
+            blocking_reasons=[
+                ToolBlockingReason(code=error_code, message=str(exc)),
+            ],
+        )
+        return output.model_dump(mode="json")
+
+    finally:
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        await ToolCallLogDocument(
+            trace_id=trace_id,
+            conversation_turn_id=conversation_turn_id,
+            tool_name="admin_get_sales_summary",
+            input=payload.model_dump(mode="json") if payload else {},
+            output=output.model_dump(mode="json") if output else {},
+            status="error" if error_code else "success",
+            error_code=error_code,
+            latency_ms=latency_ms,
+        ).insert()
+
+
+async def admin_get_reservation_funnel(
+    date_from: str | None = None,
+    date_to: str | None = None,
+    trace_id: str | None = None,
+    conversation_turn_id: str | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    started = time.perf_counter()
+    trace_id = trace_id or str(uuid4())
+
+    payload: ReservationFunnelInput | None = None
+    output: ReservationFunnelOutput | None = None
+    error_code: str | None = None
+
+    try:
+        payload = ReservationFunnelInput(date_from=date_from, date_to=date_to)
+
+        created_filter = _build_created_at_filter(payload.date_from, payload.date_to)
+
+        reservations: list[ReservationDocument] = []
+        if created_filter:
+            reservations = await ReservationDocument.find(
+                ReservationDocument.created_at.in_(created_filter)
+            ).to_list()
+        else:
+            reservations = await ReservationDocument.find_all().to_list()
+
+        status_counts: Counter = Counter(r.status for r in reservations)
+        total = len(reservations)
+        stages: list[FunnelStageItem] = []
+        prev_count = total
+
+        for status_enum in RESERVATION_FUNNEL_ORDER:
+            count = status_counts.get(status_enum, 0)
+            pct = (count / prev_count * 100) if prev_count > 0 else 0.0
+            stages.append(
+                FunnelStageItem(
+                    stage=status_enum.value,
+                    count=count,
+                    conversion_pct=round(pct, 1),
+                )
+            )
+            prev_count = count
+
+        confirmed_or_completed = status_counts.get(
+            ReservationStatus.CONFIRMED, 0
+        ) + status_counts.get(ReservationStatus.COMPLETED, 0)
+
+        output = ReservationFunnelOutput(
+            trace_id=trace_id,
+            stages=stages,
+            total_start=total,
+            total_converted=confirmed_or_completed,
+            date_from=payload.date_from,
+            date_to=payload.date_to,
+        )
+        return output.model_dump(mode="json")
+
+    except Exception as exc:
+        error_code = "tool.unhandled_error"
+        output = ReservationFunnelOutput(
+            trace_id=trace_id,
+            stages=[],
+            total_start=0,
+            total_converted=0,
+            blocking_reasons=[
+                ToolBlockingReason(code=error_code, message=str(exc)),
+            ],
+        )
+        return output.model_dump(mode="json")
+
+    finally:
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        await ToolCallLogDocument(
+            trace_id=trace_id,
+            conversation_turn_id=conversation_turn_id,
+            tool_name="admin_get_reservation_funnel",
+            input=payload.model_dump(mode="json") if payload else {},
+            output=output.model_dump(mode="json") if output else {},
+            status="error" if error_code else "success",
+            error_code=error_code,
+            latency_ms=latency_ms,
+        ).insert()
+
+
+async def admin_get_channel_performance(
+    date_from: str | None = None,
+    date_to: str | None = None,
+    trace_id: str | None = None,
+    conversation_turn_id: str | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    started = time.perf_counter()
+    trace_id = trace_id or str(uuid4())
+
+    payload: ChannelPerformanceInput | None = None
+    output: ChannelPerformanceOutput | None = None
+    error_code: str | None = None
+
+    try:
+        payload = ChannelPerformanceInput(date_from=date_from, date_to=date_to)
+
+        created_filter = _build_created_at_filter(payload.date_from, payload.date_to)
+
+        reservations: list[ReservationDocument] = []
+        if created_filter:
+            reservations = await ReservationDocument.find(
+                ReservationDocument.created_at.in_(created_filter)
+            ).to_list()
+        else:
+            reservations = await ReservationDocument.find_all().to_list()
+
+        channel_data: dict[str, dict[str, int]] = {}
+        for r in reservations:
+            ch = r.channel.value if hasattr(r.channel, "value") else str(r.channel)
+            if ch not in channel_data:
+                channel_data[ch] = {"count": 0, "confirmed": 0}
+            channel_data[ch]["count"] += 1
+            if r.status in {
+                ReservationStatus.CONFIRMED,
+                ReservationStatus.COMPLETED,
+            }:
+                channel_data[ch]["confirmed"] += 1
+
+        channels = [
+            ChannelPerformanceItem(
+                channel=ch,
+                count=data["count"],
+                confirmed=data["confirmed"],
+            )
+            for ch, data in sorted(channel_data.items(), key=lambda x: -x[1]["count"])
+        ]
+
+        total = sum(data["count"] for data in channel_data.values())
+
+        output = ChannelPerformanceOutput(
+            trace_id=trace_id,
+            channels=channels,
+            total=total,
+            date_from=payload.date_from,
+            date_to=payload.date_to,
+        )
+        return output.model_dump(mode="json")
+
+    except Exception as exc:
+        error_code = "tool.unhandled_error"
+        output = ChannelPerformanceOutput(
+            trace_id=trace_id,
+            channels=[],
+            total=0,
+            blocking_reasons=[
+                ToolBlockingReason(code=error_code, message=str(exc)),
+            ],
+        )
+        return output.model_dump(mode="json")
+
+    finally:
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        await ToolCallLogDocument(
+            trace_id=trace_id,
+            conversation_turn_id=conversation_turn_id,
+            tool_name="admin_get_channel_performance",
+            input=payload.model_dump(mode="json") if payload else {},
+            output=output.model_dump(mode="json") if output else {},
+            status="error" if error_code else "success",
+            error_code=error_code,
+            latency_ms=latency_ms,
+        ).insert()
+
+
+async def admin_get_occupancy_report(
+    date_from: str | None = None,
+    date_to: str | None = None,
+    experience_id: str | None = None,
+    trace_id: str | None = None,
+    conversation_turn_id: str | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    started = time.perf_counter()
+    trace_id = trace_id or str(uuid4())
+
+    payload: OccupancyReportInput | None = None
+    output: OccupancyReportOutput | None = None
+    error_code: str | None = None
+
+    try:
+        payload = OccupancyReportInput(
+            date_from=date_from,
+            date_to=date_to,
+            experience_id=experience_id,
+        )
+
+        query: dict[str, Any] = {}
+        if payload.date_from:
+            query["date"] = query.get("date", {})
+            query["date"]["$gte"] = date.fromisoformat(payload.date_from)
+        if payload.date_to:
+            query["date"] = query.get("date", {})
+            query["date"]["$lte"] = date.fromisoformat(payload.date_to)
+        if payload.experience_id:
+            query["experience_id"] = payload.experience_id
+
+        schedules = await ScheduleDocument.find(**query).to_list()
+
+        occupancy: list[OccupancyItem] = []
+        total_pct = 0.0
+
+        for s in schedules:
+            total_cap = getattr(s, "capacity_total", 0) or 0
+            reserved = getattr(s, "reserved_slots", 0) or 0
+            available = getattr(s, "available_slots", 0) or 0
+            pct = (reserved / total_cap * 100) if total_cap > 0 else 0.0
+
+            experience_name = ""
+            exp_id = getattr(s, "experience_id", None)
+            if exp_id:
+                exp_doc = await ExperienceDocument.get(exp_id)
+                if exp_doc:
+                    experience_name = getattr(exp_doc, "name", "") or ""
+
+            s_date = getattr(s, "date", None)
+            occupancy.append(
+                OccupancyItem(
+                    date=s_date.isoformat() if s_date else "",
+                    experience_name=experience_name,
+                    capacity_total=total_cap,
+                    reserved=reserved,
+                    available=available,
+                    occupancy_pct=round(pct, 1),
+                )
+            )
+            total_pct += pct
+
+        avg_pct = round(total_pct / len(schedules), 1) if schedules else 0.0
+
+        output = OccupancyReportOutput(
+            trace_id=trace_id,
+            occupancy=occupancy,
+            total_schedules=len(schedules),
+            avg_occupancy_pct=avg_pct,
+            date_from=payload.date_from,
+            date_to=payload.date_to,
+        )
+        return output.model_dump(mode="json")
+
+    except Exception as exc:
+        error_code = "tool.unhandled_error"
+        output = OccupancyReportOutput(
+            trace_id=trace_id,
+            occupancy=[],
+            total_schedules=0,
+            avg_occupancy_pct=0.0,
+            blocking_reasons=[
+                ToolBlockingReason(code=error_code, message=str(exc)),
+            ],
+        )
+        return output.model_dump(mode="json")
+
+    finally:
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        await ToolCallLogDocument(
+            trace_id=trace_id,
+            conversation_turn_id=conversation_turn_id,
+            tool_name="admin_get_occupancy_report",
+            input=payload.model_dump(mode="json") if payload else {},
+            output=output.model_dump(mode="json") if output else {},
+            status="error" if error_code else "success",
+            error_code=error_code,
+            latency_ms=latency_ms,
+        ).insert()
+
+
+async def admin_get_equine_workload_report(
+    date_from: str | None = None,
+    date_to: str | None = None,
+    trace_id: str | None = None,
+    conversation_turn_id: str | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    started = time.perf_counter()
+    trace_id = trace_id or str(uuid4())
+
+    payload: EquineWorkloadReportInput | None = None
+    output: EquineWorkloadReportOutput | None = None
+    error_code: str | None = None
+
+    try:
+        payload = EquineWorkloadReportInput(date_from=date_from, date_to=date_to)
+
+        equines = await EquineDocument.find_all().to_list()
+        total_assignments = 0
+        workload: list[WorkloadSummaryItem] = []
+
+        for equine in equines:
+            assignments = await AssignmentDocument.find(
+                AssignmentDocument.equine_id == equine.id
+            ).to_list()
+
+            count_in_range = 0
+            for a in assignments:
+                reservation = await ReservationDocument.get(a.reservation_id)
+                if reservation is None:
+                    continue
+                if payload.date_from:
+                    rd = reservation.requested_date
+                    if rd and rd < date.fromisoformat(payload.date_from):
+                        continue
+                if payload.date_to:
+                    rd = reservation.requested_date
+                    if rd and rd > date.fromisoformat(payload.date_to):
+                        continue
+                count_in_range += 1
+
+            total_assignments += count_in_range
+            workload.append(
+                WorkloadSummaryItem(
+                    equine_id=_safe_str(equine.id) or "",
+                    name=equine.name,
+                    is_available=equine.is_available,
+                    total_assignments_in_range=count_in_range,
+                )
+            )
+
+        workload.sort(key=lambda x: -x.total_assignments_in_range)
+
+        output = EquineWorkloadReportOutput(
+            trace_id=trace_id,
+            workload=workload,
+            total_equines=len(equines),
+            total_assignments=total_assignments,
+            date_from=payload.date_from,
+            date_to=payload.date_to,
+        )
+        return output.model_dump(mode="json")
+
+    except Exception as exc:
+        error_code = "tool.unhandled_error"
+        output = EquineWorkloadReportOutput(
+            trace_id=trace_id,
+            workload=[],
+            total_equines=0,
+            total_assignments=0,
+            blocking_reasons=[
+                ToolBlockingReason(code=error_code, message=str(exc)),
+            ],
+        )
+        return output.model_dump(mode="json")
+
+    finally:
+        latency_ms = int((time.perf_counter() - started) * 1000)
+        await ToolCallLogDocument(
+            trace_id=trace_id,
+            conversation_turn_id=conversation_turn_id,
+            tool_name="admin_get_equine_workload_report",
+            input=payload.model_dump(mode="json") if payload else {},
+            output=output.model_dump(mode="json") if output else {},
+            status="error" if error_code else "success",
+            error_code=error_code,
+            latency_ms=latency_ms,
+        ).insert()

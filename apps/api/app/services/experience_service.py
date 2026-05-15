@@ -6,7 +6,6 @@ from pymongo.errors import DuplicateKeyError
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument
-from app.documents.schedule_document import ScheduleDocument
 from app.schemas.experience import (
     ExperienceCreateSchema,
     ExperiencePricingSchema,
@@ -275,7 +274,7 @@ class ExperienceService:
                 status_code=422,
                 code=ErrorCode.VALIDATION_ERROR,
                 message="El formato del ID de experiencia no es valido.",
-            )
+            ) from None
 
         experience = await ExperienceDocument.get(object_id)
 

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, EmailStr, Field
@@ -115,3 +115,57 @@ class ParticipantResponseSchema(AuditMetadataSchema):
     accepted_risk_release: bool | None
     risk_release_text_version: str | None
     is_completed: bool
+
+
+class ParticipantPublicCreateSchema(BaseModel):
+    first_name: str = Field(min_length=1)
+    last_name: str = Field(min_length=1)
+    email: EmailStr
+    birth_date: date
+    document_type: str = Field(min_length=1)
+    document_number: str = Field(min_length=1)
+    phone: str = Field(min_length=1)
+    country: str = Field(min_length=1)
+    city: str = Field(min_length=1)
+    height_cm: Decimal = Field(gt=0)
+    weight_kg: Decimal = Field(gt=0)
+    experience_level: ExperienceLevel
+    blood_type: str | None = None
+    eps: str | None = None
+    travel_insurance: str | None = None
+    medical_conditions: str | None = None
+    functional_conditions: str | None = None
+    dietary_restrictions: str | None = None
+    diet: str | None = None
+    emergency_contact_name: str = Field(min_length=1)
+    emergency_contact_phone: str = Field(min_length=1)
+    emergency_contact_relationship: str | None = None
+    accepted_data_processing: bool
+    accepted_media_usage: bool | None = None
+
+
+class ParticipantFormInfoSchema(BaseModel):
+    reservation_public_code: str
+    experience_name: str
+    scheduled_date: date | None = None
+    start_time: str | None = None
+    participant_limit: int
+    participants_registered: int
+    participants_remaining: int
+    form_status: str
+
+
+class ParticipantFormCreateRequest(BaseModel):
+    force_regenerate: bool = False
+    expires_in_days: int | None = None
+
+
+class ParticipantFormCreateResponse(BaseModel):
+    reservation_id: str
+    public_reservation_code: str
+    form_url: str
+    expires_at: datetime | None = None
+    participant_limit: int | None = None
+    participants_registered: int = 0
+    participants_remaining: int = 0
+    form_status: str

@@ -59,6 +59,12 @@ class ErrorCode:
     RESERVATION_CANCELLATION_NOT_ALLOWED = "reservation.cancellation_not_allowed"
     RESERVATION_ALREADY_CANCELLED = "reservation.already_cancelled"
     RESERVATION_ALREADY_COMPLETED = "reservation.already_completed"
+    RESERVATION_PRE_RESERVATION_EXPIRED = "reservation.pre_reservation_expired"
+    RESERVATION_ALREADY_PRE_RESERVED = "reservation.already_pre_reserved"
+    RESERVATION_INVALID_HOLDER = "reservation.invalid_holder"
+    RESERVATION_QUOTE_SNAPSHOT_REQUIRED = "reservation.quote_snapshot_required"
+    SCHEDULE_HOLD_FAILED = "schedule.hold_failed"
+    SCHEDULE_HELD_SLOTS_NEGATIVE = "schedule.held_slots_negative"
 
     PAYMENT_PROOF_NOT_FOUND = "payment_proof.not_found"
     PAYMENT_PROOF_STORAGE_KEY_REQUIRED = "payment_proof.storage_key_required"
@@ -66,6 +72,12 @@ class ErrorCode:
     PAYMENT_PROOF_INVALID_SIZE = "payment_proof.invalid_size"
     PAYMENT_PROOF_HASH_REQUIRED = "payment_proof.hash_required"
     PAYMENT_PROOF_RESERVATION_MISMATCH = "payment_proof.reservation_mismatch"
+
+    PARTICIPANT_FORM_INVALID_TOKEN = "participant_form.invalid_token"
+    PARTICIPANT_FORM_EXPIRED = "participant_form.expired"
+    PARTICIPANT_FORM_FULL = "participant_form.full"
+    PARTICIPANT_FORM_NOT_CONFIRMED = "participant_form.not_confirmed"
+    PARTICIPANT_FORM_ALREADY_EXISTS = "participant_form.already_exists"
 
     PARTICIPANT_NOT_FOUND = "participant.not_found"
     PARTICIPANT_RESERVATION_MISMATCH = "participant.reservation_mismatch"

@@ -50,7 +50,8 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
     error_code: str | None = None
 
     try:
-        payload = QuoteExperienceInput.model_validate(kwargs)
+        filtered = {k: v for k, v in kwargs.items() if k in QuoteExperienceInput.model_fields}
+        payload = QuoteExperienceInput.model_validate(filtered)
 
         resolver = ExperienceCatalogResolver()
 
@@ -88,9 +89,7 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
             )
             return output.model_dump(mode="json")
 
-        experience = await ExperienceDocument.get(
-            PydanticObjectId(resolution.experience_id)
-        )
+        experience = await ExperienceDocument.get(PydanticObjectId(resolution.experience_id))
         if experience is None:
             output = QuoteExperienceOutput(
                 quoted=False,
@@ -120,7 +119,8 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="quote.pricing_not_configured",
-                        message="La experiencia no tiene tarifa configurada para esa cantidad de participantes.",
+                        message="La experiencia no tiene tarifa configurada "
+                        "para esa cantidad de participantes.",
                     )
                 ],
             )
@@ -128,6 +128,7 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
 
         subtotal = tier.price_per_person * payload.participant_count
 
+        exp_name = getattr(experience, "name", "la experiencia")
         output = QuoteExperienceOutput(
             quoted=True,
             trace_id=trace_id,
@@ -135,12 +136,27 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
             participant_count=payload.participant_count,
             unit_price=tier.price_per_person,
             subtotal=subtotal,
+            response=(
+                f"{exp_name} para {payload.participant_count} persona(s) "
+                f"sale a ${subtotal} COP "
+                f"(${tier.price_per_person} por persona)."
+            ),
             pricing_tier=QuotePricingTier(
                 min_participants=tier.min_participants,
                 max_participants=tier.max_participants,
                 price_per_person=tier.price_per_person,
             ),
             notes=payload.notes,
+            quote_snapshot={
+                "unit_price": tier.price_per_person,
+                "subtotal": subtotal,
+                "participant_count": payload.participant_count,
+                "currency": "COP",
+                "tier_min": tier.min_participants,
+                "tier_max": tier.max_participants,
+                "experience_id": resolution.experience_id,
+                "experience_name": getattr(experience, "name", None),
+            },
         )
         return output.model_dump(mode="json")
 

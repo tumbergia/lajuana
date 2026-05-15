@@ -9,5 +9,7 @@ def utc_now() -> datetime:
 
 
 class AuditDocument(Document):
+    version: int = Field(default=1)
+    deleted_at: datetime | None = None
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)

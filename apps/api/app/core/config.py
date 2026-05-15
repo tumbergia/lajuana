@@ -41,7 +41,8 @@ class Settings(BaseSettings):
     llm_provider: str = "gemini"
     gemini_api_key: str = ""
     gemini_api_key_2: str = ""
-    gemini_model: str = "gemini-3-flash-preview"
+    gemini_model: str = "gemini-2.5-flash"
+    gemini_fallback_models: str = "gemini-2.0-flash,gemini-2.0-flash-lite"
     gemini_temperature: float = 0.2
     gemini_timeout_seconds: int = 60
 
@@ -52,6 +53,10 @@ class Settings(BaseSettings):
     whatsapp_phone_number_id: str = ""
     whatsapp_api_version: str = "v23.0"
     whatsapp_send_enabled: bool = False
+
+    participant_form_base_url: str = "https://formulario-la-juana.vercel.app"
+    participant_form_token_expiry_days: int = 14
+    participant_form_token_secret: str = "change-me"
 
     buffer_debounce_seconds: int = 10
     buffer_max_seconds: int = 30

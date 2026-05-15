@@ -7,7 +7,12 @@ from app.api.deps import require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
-from app.schemas.participant import ParticipantCreateSchema, ParticipantResponseSchema
+from app.schemas.participant import (
+    ParticipantCreateSchema,
+    ParticipantFormCreateRequest,
+    ParticipantFormCreateResponse,
+    ParticipantResponseSchema,
+)
 from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofResponseSchema
 from app.schemas.reservation import (
     ReservationAvailabilityResponseSchema,
@@ -19,7 +24,12 @@ from app.schemas.reservation import (
     ReservationStatusTransitionSchema,
     ReservationUpdateSchema,
 )
-from app.services import ParticipantService, PaymentProofService, ReservationService
+from app.services import (
+    ParticipantFormService,
+    ParticipantService,
+    PaymentProofService,
+    ReservationService,
+)
 from app.services.mappers import (
     participant_to_response,
     payment_proof_to_response,
@@ -31,6 +41,7 @@ router = APIRouter(prefix="/reservations", tags=["Reservas"])
 reservation_service = ReservationService()
 participant_service = ParticipantService()
 payment_proof_service = PaymentProofService()
+participant_form_service = ParticipantFormService()
 
 
 @router.post(
@@ -231,3 +242,25 @@ async def create_participant(
 ) -> ParticipantResponseSchema:
     doc = await participant_service.create(reservation_id, payload)
     return participant_to_response(doc)
+
+
+@router.post(
+    "/{reservation_id}/participant-form-link",
+    response_model=ParticipantFormCreateResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary=ENDPOINT_DOCS[    "participant_form_link_generate"]["summary"],
+    description=endpoint_description("participant_form_link_generate"),
+    operation_id="generateParticipantFormLink",
+    responses=endpoint_responses("participant_form_link_generate"),
+)  # fmt: skip
+async def generate_participant_form_link(
+    reservation_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.PARTICIPANT_CREATE))],
+    payload: ParticipantFormCreateRequest | None = None,
+) -> ParticipantFormCreateResponse:
+    data = payload or ParticipantFormCreateRequest()
+    return await participant_form_service.generate_form_link(
+        reservation_id,
+        force=data.force_regenerate,
+        expires_in_days=data.expires_in_days,
+    )

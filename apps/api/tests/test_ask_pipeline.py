@@ -36,7 +36,9 @@ class FindableFakeDoc(FakeDoc):
     @classmethod
     def find(cls, *args: Any, **kwargs: Any) -> SimpleNamespace:
         return SimpleNamespace(
-            sort=lambda _: SimpleNamespace(limit=lambda _: SimpleNamespace(to_list=_empty_turn_list))
+            sort=lambda _: SimpleNamespace(
+                limit=lambda _: SimpleNamespace(to_list=_empty_turn_list)
+            )  # noqa: E501
         )
 
 
@@ -242,6 +244,3 @@ def test_tool_call_log_is_created(monkeypatch: pytest.MonkeyPatch) -> None:
 
     asyncio.run(run())
     assert len(insert_called) == 1
-
-
-

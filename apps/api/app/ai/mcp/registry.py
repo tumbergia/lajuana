@@ -19,7 +19,7 @@ class ToolRegistry:
     async def call(
         self,
         name: str,
-        conversation_id: str | None = None,
+        conversation_id_for_log: str | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
         tool = self._tools.get(name)
@@ -28,7 +28,7 @@ class ToolRegistry:
 
         logger.info(
             "[conversation_id=%s] Tool called | tool=%s",
-            conversation_id,
+            conversation_id_for_log,
             name,
         )
 
@@ -38,7 +38,7 @@ class ToolRegistry:
 
         logger.info(
             "[conversation_id=%s] Tool result | tool=%s | elapsed_ms=%d | available=%s",
-            conversation_id,
+            conversation_id_for_log,
             name,
             elapsed_ms,
             result.get("available") if isinstance(result, dict) else "N/A",

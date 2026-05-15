@@ -149,6 +149,7 @@ async def check_experience_availability(
     participant_count: int = 1,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     trace_id = trace_id or str(uuid4())
@@ -194,16 +195,16 @@ async def check_experience_availability(
             )
             return output.model_dump(mode="json")
 
-        if _violates_min_notice(payload.requested_date, min_notice_days):
-            reasons.append(
-                ToolBlockingReason(
-                    code="reservation.min_notice_violation",
-                    message=f"La reserva requiere mínimo {min_notice_days} días de anticipación.",
-                )
-            )
-
         schedule = await _find_schedule(experience, payload.requested_date)
         if schedule is None:
+            if _violates_min_notice(payload.requested_date, min_notice_days):
+                reasons.append(
+                    ToolBlockingReason(
+                        code="reservation.min_notice_violation",
+                        message=f"La reserva requiere mínimo {min_notice_days} días de anticipación.",  # noqa: E501
+                    )
+                )
+
             reasons.append(
                 ToolBlockingReason(
                     code="schedule.not_found",

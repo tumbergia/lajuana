@@ -1,6 +1,4 @@
-from datetime import datetime, timedelta, timezone
-
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 from app.conversations.documents import MessageBufferDocument
@@ -35,15 +33,18 @@ class MessageBufferService:
             existing.last_message_at = now
             existing.version += 1
             existing.combined_preview = (
-                existing.combined_preview + f"\n{body}"
-            ) if existing.combined_preview else body
+                (existing.combined_preview + f"\n{body}") if existing.combined_preview else body
+            )
 
             first_at = existing.first_message_at
             if first_at and first_at.tzinfo is None:
                 first_at = first_at.replace(tzinfo=UTC)
             elapsed = (now - (first_at or now)).total_seconds()
 
-            if elapsed >= MAX_BUFFER_SECONDS or len(existing.message_ids) >= MAX_MESSAGES_PER_BUFFER:  # noqa: E501
+            if (
+                elapsed >= MAX_BUFFER_SECONDS
+                or len(existing.message_ids) >= MAX_MESSAGES_PER_BUFFER
+            ):  # noqa: E501
                 existing.scheduled_for = now
                 existing.status = "scheduled"
             else:
@@ -78,19 +79,30 @@ class MessageBufferService:
 
     async def find_due_buffers(self, *, limit: int = 25) -> list[MessageBufferDocument]:
         now = datetime.now(UTC)
-        return await MessageBufferDocument.find(
-            {
-                "status": "scheduled",
-                "scheduled_for": {"$lte": now},
-            }
-        ).sort("scheduled_for").limit(limit).to_list()
+        return (
+            await MessageBufferDocument.find(
+                {
+                    "status": "scheduled",
+                    "scheduled_for": {"$lte": now},
+                }
+            )
+            .sort("scheduled_for")
+            .limit(limit)
+            .to_list()
+        )
 
     async def mark_processing(self, *, buffer: MessageBufferDocument) -> bool:
         now = datetime.now(UTC)
         collection = MessageBufferDocument.get_motor_collection()
         result = await collection.find_one_and_update(
             {"buffer_id": buffer.buffer_id, "status": "scheduled"},
-            {"$set": {"status": "processing", "processing_started_at": now, "version": buffer.version + 1}},  # noqa: E501
+            {
+                "$set": {
+                    "status": "processing",
+                    "processing_started_at": now,
+                    "version": buffer.version + 1,
+                }
+            },  # noqa: E501
         )
         return result is not None
 
@@ -114,5 +126,10 @@ class MessageBufferService:
         collection = MessageBufferDocument.get_motor_collection()
         await collection.find_one_and_update(
             {"buffer_id": buffer.buffer_id, "status": {"$in": ["scheduled", "processing"]}},
-            {"$set": {"status": "scheduled", "scheduled_for": now + timedelta(seconds=delay_seconds)}},  # noqa: E501
+            {
+                "$set": {
+                    "status": "scheduled",
+                    "scheduled_for": now + timedelta(seconds=delay_seconds),
+                }
+            },  # noqa: E501
         )

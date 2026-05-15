@@ -75,6 +75,7 @@ async def list_available_schedules(
     limit: int = 10,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     trace_id = trace_id or str(uuid4())
@@ -158,10 +159,12 @@ async def list_available_schedules(
                 start_time=str(_field(s, "start_time")) if _field(s, "start_time") else None,
                 capacity_total=_safe_int(
                     _field(s, "capacity_total", "total_capacity", "capacity"), default=0
-                ) or 0,
+                )
+                or 0,
                 capacity_available=_safe_int(
                     _field(s, "available_slots", "available_spots", "cupos_disponibles"), default=0
-                ) or 0,
+                )
+                or 0,
                 status=str(_field(s, "status", default="")),
             )
             for s in limited
@@ -222,6 +225,7 @@ async def suggest_alternative_dates(
     limit: int = 5,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     trace_id = trace_id or str(uuid4())
@@ -323,10 +327,12 @@ async def suggest_alternative_dates(
                 start_time=str(_field(s, "start_time")) if _field(s, "start_time") else None,
                 capacity_total=_safe_int(
                     _field(s, "capacity_total", "total_capacity", "capacity"), default=0
-                ) or 0,
+                )
+                or 0,
                 capacity_available=_safe_int(
                     _field(s, "available_slots", "available_spots", "cupos_disponibles"), default=0
-                ) or 0,
+                )
+                or 0,
                 status=str(_field(s, "status", default="")),
             )
             for s in limited
