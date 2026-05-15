@@ -52,6 +52,7 @@ class FakeEvent:
 
 # ── Normalizer ──
 
+
 def test_normalize_phone() -> None:
     assert normalize_phone("+57 (300) 111-22-33") == "+573001112233"
 
@@ -66,6 +67,7 @@ def test_build_conversation_id() -> None:
 
 
 # ── Parser ──
+
 
 def test_parse_text() -> None:
     payload = _fake_payload(phone="573001112233", messages=[("id-1", "hola")])
@@ -111,6 +113,7 @@ def test_parse_buttons() -> None:
 
 # ── Combine messages ──
 
+
 def test_combine_single() -> None:
     assert combine_messages([FakeEvent(body="hola")]) == "hola"
 
@@ -121,6 +124,7 @@ def test_combine_multiple() -> None:
 
 
 # ── Buffer service ──
+
 
 @pytest.mark.asyncio
 async def test_buffer_creates_new(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -135,8 +139,11 @@ async def test_buffer_creates_new(monkeypatch: pytest.MonkeyPatch) -> None:
 
     svc = MessageBufferService()
     buf = await svc.add_message(
-        conversation_id="w:+57", normalized_phone="+57", channel="whatsapp",
-        message_id="m1", body="hola",
+        conversation_id="w:+57",
+        normalized_phone="+57",
+        channel="whatsapp",
+        message_id="m1",
+        body="hola",
     )
     assert buf is not None
     assert buf.combined_preview == "hola"
@@ -145,10 +152,15 @@ async def test_buffer_creates_new(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.asyncio
 async def test_buffer_appends(monkeypatch: pytest.MonkeyPatch) -> None:
     existing = FakeDoc(
-        buffer_id="b1", conversation_id="w:+57", message_ids=["m1"], combined_preview="hola",
-        status="scheduled", first_message_at=datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC),
+        buffer_id="b1",
+        conversation_id="w:+57",
+        message_ids=["m1"],
+        combined_preview="hola",
+        status="scheduled",
+        first_message_at=datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC),
         last_message_at=datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC),
-        scheduled_for=datetime(2026, 1, 1, 0, 0, 4, tzinfo=UTC), version=1,
+        scheduled_for=datetime(2026, 1, 1, 0, 0, 4, tzinfo=UTC),
+        version=1,
     )
 
     class FakeBuf(FakeDoc):
@@ -165,14 +177,18 @@ async def test_buffer_appends(monkeypatch: pytest.MonkeyPatch) -> None:
 
     svc = MessageBufferService()
     buf = await svc.add_message(
-        conversation_id="w:+57", normalized_phone="+57", channel="whatsapp",
-        message_id="m2", body="mundo",
+        conversation_id="w:+57",
+        normalized_phone="+57",
+        channel="whatsapp",
+        message_id="m2",
+        body="mundo",
     )
     assert buf.message_ids == ["m1", "m2"]
     assert buf.combined_preview == "hola\nmundo"
 
 
 # ── Constants ──
+
 
 def test_constants() -> None:
     assert DEBOUNCE_SECONDS == 10

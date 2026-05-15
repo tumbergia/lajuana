@@ -159,10 +159,12 @@ async def list_available_schedules(
                 start_time=str(_field(s, "start_time")) if _field(s, "start_time") else None,
                 capacity_total=_safe_int(
                     _field(s, "capacity_total", "total_capacity", "capacity"), default=0
-                ) or 0,
+                )
+                or 0,
                 capacity_available=_safe_int(
                     _field(s, "available_slots", "available_spots", "cupos_disponibles"), default=0
-                ) or 0,
+                )
+                or 0,
                 status=str(_field(s, "status", default="")),
             )
             for s in limited
@@ -325,10 +327,12 @@ async def suggest_alternative_dates(
                 start_time=str(_field(s, "start_time")) if _field(s, "start_time") else None,
                 capacity_total=_safe_int(
                     _field(s, "capacity_total", "total_capacity", "capacity"), default=0
-                ) or 0,
+                )
+                or 0,
                 capacity_available=_safe_int(
                     _field(s, "available_slots", "available_spots", "cupos_disponibles"), default=0
-                ) or 0,
+                )
+                or 0,
                 status=str(_field(s, "status", default="")),
             )
             for s in limited

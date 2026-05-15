@@ -1,6 +1,16 @@
 from mcp.server.fastmcp import FastMCP
 
 from app.ai.mcp.tools import (
+    admin_add_equine_health_event,
+    admin_close_service_execution,
+    admin_get_channel_performance,
+    admin_get_equine_workload,
+    admin_get_equine_workload_report,
+    admin_get_logistics_checklist,
+    admin_get_occupancy_report,
+    admin_get_reservation_funnel,
+    admin_get_sales_summary,
+    admin_update_equine_availability,
     attach_payment_proof_to_reservation,
     check_experience_availability,
     create_reservation_draft,
@@ -8,10 +18,15 @@ from app.ai.mcp.tools import (
     get_public_business_rules,
     get_reservation_public_summary,
     get_reservation_status_by_phone,
+    guide_create_service_log,
+    guide_report_incident,
     list_available_schedules,
     list_experiences,
     quote_experience,
     request_human_review,
+    schedule_birthday_automation,
+    schedule_visit_anniversary_automation,
+    send_post_service_message,
     suggest_alternative_dates,
 )
 
@@ -112,6 +127,134 @@ mcp.tool(
         "No modifica ningun dato."
     ),
 )(get_reservation_status_by_phone)
+
+mcp.tool(
+    name="admin_get_logistics_checklist",
+    description=(
+        "Obtiene el checklist logistico para una reserva confirmada: "
+        "estado, participantes, asignaciones, polizas y registro de llegada. "
+        "No modifica datos."
+    ),
+)(admin_get_logistics_checklist)
+
+mcp.tool(
+    name="guide_create_service_log",
+    description=(
+        "Registra una entrada de bitacora de servicio para una reserva. "
+        "Tipos: arrival, departure, checkpoint, closure, note. "
+        "No modifica reservas, no confirma pagos."
+    ),
+)(guide_create_service_log)
+
+mcp.tool(
+    name="guide_report_incident",
+    description=(
+        "Reporta un incidente durante la ejecucion del servicio. "
+        "Severidades: low, medium, high, critical. "
+        "Queda asociado a la reserva, participante o equino."
+    ),
+)(guide_report_incident)
+
+mcp.tool(
+    name="admin_close_service_execution",
+    description=(
+        "Cierra operativamente una reserva confirmada. "
+        "Transiciona el estado a COMPLETED y registra el cierre en bitacora. "
+        "Accion critica: solo administradores."
+    ),
+)(admin_close_service_execution)
+
+mcp.tool(
+    name="admin_add_equine_health_event",
+    description=(
+        "Registra un evento de salud o bienestar para un equino. "
+        "Tipos: health_check, injury, treatment, medication, rest, note. "
+        "No modifica la disponibilidad del equino."
+    ),
+)(admin_add_equine_health_event)
+
+mcp.tool(
+    name="admin_get_equine_workload",
+    description=(
+        "Consulta la carga de trabajo de los equinos: "
+        "asignaciones proximas, proxima fecha y disponibilidad actual. "
+        "No modifica datos."
+    ),
+)(admin_get_equine_workload)
+
+mcp.tool(
+    name="admin_update_equine_availability",
+    description=(
+        "Actualiza la disponibilidad operacional de un equino. "
+        "Requiere motivo. Accion critica: solo administradores."
+    ),
+)(admin_update_equine_availability)
+
+mcp.tool(
+    name="admin_get_sales_summary",
+    description=(
+        "Obtiene resumen de ventas: total de reservas, desglose por estado "
+        "e ingreso total estimado. No modifica datos."
+    ),
+)(admin_get_sales_summary)
+
+mcp.tool(
+    name="admin_get_reservation_funnel",
+    description=(
+        "Obtiene el embudo de conversión de reservas: "
+        "cantidad de reservas en cada estado y porcentaje de conversión. "
+        "No modifica datos."
+    ),
+)(admin_get_reservation_funnel)
+
+mcp.tool(
+    name="admin_get_channel_performance",
+    description=(
+        "Obtiene rendimiento por canal de entrada: "
+        "cantidad de reservas y confirmaciones por canal (WhatsApp, Instagram, etc.). "
+        "No modifica datos."
+    ),
+)(admin_get_channel_performance)
+
+mcp.tool(
+    name="admin_get_occupancy_report",
+    description=(
+        "Obtiene reporte de ocupación: capacidad, reservas y porcentaje "
+        "de ocupación por fecha y experiencia. No modifica datos."
+    ),
+)(admin_get_occupancy_report)
+
+mcp.tool(
+    name="admin_get_equine_workload_report",
+    description=(
+        "Obtiene reporte de carga de trabajo equina: "
+        "asignaciones en un rango de fechas por equino. No modifica datos."
+    ),
+)(admin_get_equine_workload_report)
+
+mcp.tool(
+    name="send_post_service_message",
+    description=(
+        "Registra el envío de un mensaje post-servicio para una reserva completada. "
+        "Requiere que la reserva esté en estado completada o confirmada."
+    ),
+)(send_post_service_message)
+
+mcp.tool(
+    name="schedule_birthday_automation",
+    description=(
+        "Activa o desactiva el envío automático de mensajes de cumpleaños. "
+        "Consulta el estado actual si no se envía el parámetro enabled."
+    ),
+)(schedule_birthday_automation)
+
+mcp.tool(
+    name="schedule_visit_anniversary_automation",
+    description=(
+        "Activa o desactiva el envío automático de mensajes de aniversario de visita. "
+        "Consulta el estado actual si no se envía el parámetro enabled."
+    ),
+)(schedule_visit_anniversary_automation)
 
 if __name__ == "__main__":
     mcp.run()

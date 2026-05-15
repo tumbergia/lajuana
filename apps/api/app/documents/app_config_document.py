@@ -20,10 +20,16 @@ class PaymentInstructionsConfig(BaseModel):
     transfer_note: str = "Envia el comprobante con el codigo de pre-reserva."
 
 
+class AutomationConfig(BaseModel):
+    birthday_messages_enabled: bool = False
+    anniversary_messages_enabled: bool = False
+
+
 class AppConfigDocument(AuditDocument):
     key: str
     reservation_rules: ReservationRules | None = None
     payment_instructions: PaymentInstructionsConfig | None = None
+    automation: AutomationConfig | None = None
 
     class Settings:
         name = Collections.APP_CONFIG

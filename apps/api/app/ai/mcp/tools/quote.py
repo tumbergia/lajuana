@@ -89,9 +89,7 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
             )
             return output.model_dump(mode="json")
 
-        experience = await ExperienceDocument.get(
-            PydanticObjectId(resolution.experience_id)
-        )
+        experience = await ExperienceDocument.get(PydanticObjectId(resolution.experience_id))
         if experience is None:
             output = QuoteExperienceOutput(
                 quoted=False,

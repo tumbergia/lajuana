@@ -5,6 +5,7 @@ from app.conversations.documents import (
 )
 from app.documents.app_config_document import (
     AppConfigDocument,
+    AutomationConfig,
     PaymentInstructionsConfig,
     ReservationRules,
 )
@@ -31,6 +32,7 @@ from app.documents.user_document import UserDocument
 __all__ = [
     "AssignmentDocument",
     "AppConfigDocument",
+    "AutomationConfig",
     "PaymentInstructionsConfig",
     "ConversationSessionDocument",
     "ConversationTurnDocument",
