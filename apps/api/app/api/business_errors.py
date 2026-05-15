@@ -468,6 +468,34 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "participants_count fuera de todos los tiers",
         "detail_keys": ("participant_count",),
     },
+    "B400-033": {
+        "http_status": 400,
+        "code": ErrorCode.PARTICIPANT_FORM_NOT_CONFIRMED,
+        "name": "Reserva no confirmada",
+        "trigger": "generar link para reserva no CONFIRMED",
+        "detail_keys": ("reservation_id", "status"),
+    },
+    "B409-020": {
+        "http_status": 409,
+        "code": ErrorCode.PARTICIPANT_FORM_FULL,
+        "name": "Formulario de participantes lleno",
+        "trigger": "participant_registration_count >= participant_registration_limit",
+        "detail_keys": ("registered", "limit"),
+    },
+    "B410-001": {
+        "http_status": 410,
+        "code": ErrorCode.PARTICIPANT_FORM_INVALID_TOKEN,
+        "name": "Token de formulario invalido",
+        "trigger": "token no corresponde a ninguna reserva",
+        "detail_keys": (),
+    },
+    "B410-002": {
+        "http_status": 410,
+        "code": ErrorCode.PARTICIPANT_FORM_EXPIRED,
+        "name": "Formulario expirado",
+        "trigger": "participant_form_expires_at ya paso",
+        "detail_keys": ("expires_at",),
+    },
 }
 
 
@@ -609,6 +637,21 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_400": (),
         "cases_404": ("B404-005", "B404-004"),
         "cases_409": ("B409-009",),
+    },
+    ("POST", "/api/v1/reservations/{reservation_id}/participant-form-link"): {
+        "cases_400": ("B400-033",),
+        "cases_404": ("B404-004",),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/public/participant-form/{token}"): {
+        "cases_400": (),
+        "cases_404": ("B410-001",),
+        "cases_409": ("B409-020",),
+    },
+    ("POST", "/api/v1/public/participant-form/{token}"): {
+        "cases_400": (),
+        "cases_404": ("B410-001",),
+        "cases_409": ("B409-020",),
     },
     ("GET", "/api/v1/participants/{participant_id}"): {
         "cases_400": (),

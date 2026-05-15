@@ -367,6 +367,54 @@ class AttachPaymentProofToReservationOutput(BaseModel):
     response: str
 
 
+# ── Horizonte 4: Formulario de participantes ────────────────────────
+
+
+class GenerateParticipantFormLinkInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_id: str
+    force_regenerate: bool = False
+
+
+class GenerateParticipantFormLinkOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    generated: bool
+    trace_id: str
+    tool_name: Literal["generate_participant_form_link"] = "generate_participant_form_link"
+    reservation_id: str
+    public_reservation_code: str
+    form_url: str | None = None
+    participant_limit: int | None = None
+    participants_registered: int = 0
+    participants_remaining: int = 0
+    expires_at: datetime | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class GetParticipantFormStatusInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_id: str | None = None
+    public_reservation_code: str | None = None
+
+
+class GetParticipantFormStatusOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    found: bool
+    trace_id: str
+    tool_name: Literal["get_participant_form_status"] = "get_participant_form_status"
+    reservation_id: str | None = None
+    public_reservation_code: str | None = None
+    participant_limit: int | None = None
+    participants_registered: int | None = None
+    participants_remaining: int | None = None
+    form_status: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
 # ── Horizonte 7: Operación de campo y bienestar equino ──────────────
 
 

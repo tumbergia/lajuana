@@ -16,7 +16,7 @@ from app.schemas.assignment import AssignmentResponseSchema
 from app.schemas.auth import UserResponseSchema
 from app.schemas.equine import EquineResponseSchema
 from app.schemas.experience import ExperienceResponseSchema
-from app.schemas.participant import ParticipantResponseSchema
+from app.schemas.participant import ParticipantFormInfoSchema, ParticipantResponseSchema
 from app.schemas.payment_proof import PaymentProofResponseSchema
 from app.schemas.policy import PolicyResponseSchema
 from app.schemas.provider import ProviderResponseSchema
@@ -261,6 +261,25 @@ def provider_to_response(doc: ProviderDocument) -> ProviderResponseSchema:
         created_at=doc.created_at,
         updated_at=doc.updated_at,
         deleted_at=doc.deleted_at,
+    )
+
+
+def form_info_to_response(
+    reservation: ReservationDocument,
+    experience_name: str,
+    start_time: str | None = None,
+) -> ParticipantFormInfoSchema:
+    limit = reservation.participant_registration_limit or 0
+    registered = reservation.participant_registration_count
+    return ParticipantFormInfoSchema(
+        reservation_public_code=reservation.code,
+        experience_name=experience_name,
+        scheduled_date=reservation.requested_date,
+        start_time=start_time,
+        participant_limit=limit,
+        participants_registered=registered,
+        participants_remaining=max(0, limit - registered),
+        form_status=reservation.participant_form_status or "active",
     )
 
 

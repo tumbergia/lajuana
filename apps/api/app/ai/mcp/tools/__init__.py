@@ -25,6 +25,10 @@ from app.ai.mcp.tools.operations import (
     guide_create_service_log,
     guide_report_incident,
 )
+from app.ai.mcp.tools.participant_forms import (
+    generate_participant_form_link,
+    get_participant_form_status,
+)
 from app.ai.mcp.tools.quote import quote_experience
 from app.ai.mcp.tools.reservation_draft import (
     attach_payment_proof_to_reservation,
@@ -99,4 +103,6 @@ __all__ = [
     "get_reservation_public_summary",
     "get_reservation_status_by_phone",
     "request_human_review",
+    "generate_participant_form_link",
+    "get_participant_form_status",
 ]

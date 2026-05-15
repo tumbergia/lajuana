@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     whatsapp_api_version: str = "v23.0"
     whatsapp_send_enabled: bool = False
 
+    participant_form_base_url: str = "https://formulario-la-juana.vercel.app"
+    participant_form_token_expiry_days: int = 14
+    participant_form_token_secret: str = "change-me"
+
     buffer_debounce_seconds: int = 10
     buffer_max_seconds: int = 30
     buffer_max_messages: int = 15

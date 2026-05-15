@@ -44,6 +44,12 @@ class ReservationDocument(AuditDocument):
     quote_trace_id: str | None = None
     pre_reserved_at: datetime | None = None
     expire_at: datetime | None = None
+    participant_form_token_hash: str | None = None
+    participant_form_created_at: datetime | None = None
+    participant_form_expires_at: datetime | None = None
+    participant_form_status: str | None = None
+    participant_registration_limit: int | None = None
+    participant_registration_count: int = 0
     created_by: PydanticObjectId | None = None
     updated_by: PydanticObjectId | None = None
 

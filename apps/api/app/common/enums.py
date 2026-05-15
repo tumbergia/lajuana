@@ -69,6 +69,13 @@ class AssignmentPriority(StrEnum):
     SENIOR_SAFETY = "senior_safety"
 
 
+class ParticipantFormStatus(StrEnum):
+    ACTIVE = "active"
+    FULL = "full"
+    EXPIRED = "expired"
+    REVOKED = "revoked"
+
+
 class Permission(StrEnum):
     AUTH_SELF_READ = "auth.self.read"
     AUTH_SELF_UPDATE_PASSWORD = "auth.self.update_password"

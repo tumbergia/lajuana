@@ -73,6 +73,12 @@ class ErrorCode:
     PAYMENT_PROOF_HASH_REQUIRED = "payment_proof.hash_required"
     PAYMENT_PROOF_RESERVATION_MISMATCH = "payment_proof.reservation_mismatch"
 
+    PARTICIPANT_FORM_INVALID_TOKEN = "participant_form.invalid_token"
+    PARTICIPANT_FORM_EXPIRED = "participant_form.expired"
+    PARTICIPANT_FORM_FULL = "participant_form.full"
+    PARTICIPANT_FORM_NOT_CONFIRMED = "participant_form.not_confirmed"
+    PARTICIPANT_FORM_ALREADY_EXISTS = "participant_form.already_exists"
+
     PARTICIPANT_NOT_FOUND = "participant.not_found"
     PARTICIPANT_RESERVATION_MISMATCH = "participant.reservation_mismatch"
     PARTICIPANT_MISSING_REQUIRED_FIELDS = "participant.missing_required_fields"

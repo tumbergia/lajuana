@@ -14,7 +14,9 @@ from app.ai.mcp.tools import (
     attach_payment_proof_to_reservation,
     check_experience_availability,
     create_reservation_draft,
+    generate_participant_form_link,
     get_experience_detail,
+    get_participant_form_status,
     get_public_business_rules,
     get_reservation_public_summary,
     get_reservation_status_by_phone,
@@ -111,6 +113,24 @@ mcp.tool(
         "No confirma la reserva ni el pago. Requiere quote_snapshot."
     ),
 )(create_reservation_draft)
+
+mcp.tool(
+    name="generate_participant_form_link",
+    description=(
+        "Genera un enlace de formulario de participantes para una reserva confirmada. "
+        "Retorna la URL que el titular debe reenviar a cada participante. "
+        "No envia automaticamente el enlace. No recolecta datos por chat."
+    ),
+)(generate_participant_form_link)
+
+mcp.tool(
+    name="get_participant_form_status",
+    description=(
+        "Consulta el estado del formulario de participantes: "
+        "cuantos han registrado sus datos, cuantos faltan y si esta completo o expirado. "
+        "No expone datos personales ni medicos de los participantes."
+    ),
+)(get_participant_form_status)
 
 mcp.tool(
     name="get_reservation_public_summary",
