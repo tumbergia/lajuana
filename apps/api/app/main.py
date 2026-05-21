@@ -29,6 +29,7 @@ app = FastAPI(
         {"name": "Equinos", "description": "Gestion de equinos para operacion."},
         {"name": "Sillas", "description": "Gestion de sillas operativas."},
         {"name": "Asignaciones", "description": "Asignaciones operativas."},
+        {"name": "Notificaciones", "description": "Notificaciones, plantillas y outbox."},
         {"name": "Bitacora", "description": "Bitacora del servicio."},
         {"name": "Proveedores", "description": "Proveedores externos."},
         {"name": "Polizas", "description": "Polizas asociadas a reservas."},

@@ -21,6 +21,7 @@ dependencies = [
 	"mcp>=1.13.0,<2.0.0",
 	"boto3>=1.34.0,<2.0.0",
 	"tzdata>=2024.0,<2026.0",
+	"aiosmtplib>=3.0.0,<4.0.0",
 ]
 
 [project.optional-dependencies]
@@ -43,6 +44,7 @@ select = ["E", "F", "I", "UP", "B"]
 "app/api/business_errors.py" = ["E501"]
 "app/seed_schedules_2026_q2.py" = ["E501"]
 "app/seed_experiences_and_schedules_qa.py" = ["E501"]
+"app/migrations/seed_notification_templates.py" = ["E501"]
 "app/ai/assistant/prompts/planner.py" = ["E501"]
 "app/ai/mcp/tool_contracts.py" = ["E501"]
 "app/ai/mcp/tools/reservation_draft.py" = ["E501"]

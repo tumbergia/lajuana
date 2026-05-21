@@ -138,6 +138,36 @@ class Permission(StrEnum):
     CONFIG_READ = "config.read"
     CONFIG_UPDATE = "config.update"
 
+    NOTIFICATION_READ = "notification.read"
+    NOTIFICATION_UPDATE = "notification.update"
+    NOTIFICATION_TEMPLATE_READ = "notification_template.read"
+    NOTIFICATION_TEMPLATE_CREATE = "notification_template.create"
+    NOTIFICATION_TEMPLATE_UPDATE = "notification_template.update"
+
+
+class NotificationEventType(StrEnum):
+    RESERVATION_CREATED = "reservation_created"
+    RESERVATION_CONFIRMED = "reservation_confirmed"
+    PARTICIPANT_FORM_LINK_GENERATED = "participant_form_link_generated"
+    PRE_SERVICE_REMINDER = "pre_service_reminder"
+    POST_SERVICE_COMPLETED = "post_service_completed"
+
+
+class NotificationChannel(StrEnum):
+    EMAIL = "email"
+    IN_APP = "in_app"
+    WHATSAPP = "whatsapp"
+
+
+class NotificationStatus(StrEnum):
+    PENDING = "pending"
+    SCHEDULED = "scheduled"
+    SENDING = "sending"
+    SENT = "sent"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    SKIPPED = "skipped"
+
 
 ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
     UserRole.ADMIN: set(Permission),
@@ -157,6 +187,7 @@ ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
         Permission.LOG_CREATE,
         Permission.LOG_UPDATE,
         Permission.POLICY_READ,
+        Permission.NOTIFICATION_READ,
     },
     UserRole.UNASSIGNED: {
         Permission.AUTH_SELF_READ,

@@ -117,3 +117,12 @@ class ErrorCode:
     FILE_UPLOAD_NOT_FOUND = "file_upload.not_found"
     FILE_UPLOAD_EXPIRED = "file_upload.expired"
     FILE_UPLOAD_NOT_READY = "file_upload.not_ready"
+
+    NOTIFICATION_TEMPLATE_NOT_FOUND = "notification_template.not_found"
+    NOTIFICATION_TEMPLATE_KEY_EXISTS = "notification_template.key_exists"
+    NOTIFICATION_TEMPLATE_INACTIVE = "notification_template.inactive"
+    NOTIFICATION_NOT_FOUND = "notification.not_found"
+    NOTIFICATION_SEND_FAILED = "notification.send_failed"
+    NOTIFICATION_INVALID_CHANNEL = "notification.invalid_channel"
+    NOTIFICATION_OUTBOX_FULL = "notification.outbox_full"
+    NOTIFICATION_PROVIDER_NOT_CONFIGURED = "notification.provider_not_configured"

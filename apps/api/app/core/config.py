@@ -56,6 +56,18 @@ class Settings(BaseSettings):
     participant_form_token_expiry_days: int = 14
     participant_form_token_secret: str = "change-me"
 
+    email_service: str = "gmail"
+    email_host: str | None = None
+    email_port: int | None = None
+    email_user: str = ""
+    email_pass: str = ""
+    email_from_address: str = "noreply@lajuana.com"
+    email_from_name: str = "La Juana"
+
+    notification_outbox_poll_interval: int = 30
+    notification_max_retries: int = 3
+    notification_retry_delay_seconds: int = 300
+
     buffer_debounce_seconds: int = 10
     buffer_max_seconds: int = 30
     buffer_max_messages: int = 15

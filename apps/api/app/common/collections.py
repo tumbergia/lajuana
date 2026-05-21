@@ -16,3 +16,6 @@ class Collections:
     FILE_UPLOADS = "file_uploads"
     SYNC_CHANGES = "sync_changes"
     SYNC_OPERATION_RECEIPTS = "sync_operation_receipts"
+    NOTIFICATION_TEMPLATES = "notification_templates"
+    NOTIFICATION_OUTBOX = "notification_outbox"
+    IN_APP_NOTIFICATIONS = "in_app_notifications"

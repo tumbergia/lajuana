@@ -11,6 +11,7 @@ from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument, ReservationDocument, ScheduleDocument
 from app.services.config_service import ConfigService
+from app.services.notification_service import NotificationService
 
 ACTIVE_RESERVATION_STATUSES = {
     ReservationStatus.QUOTED,
@@ -53,6 +54,7 @@ class ReservationService:
 
     def __init__(self) -> None:
         self.config_service = ConfigService()
+        self.notification_service = NotificationService()
 
     @staticmethod
     def _is_blocking_status(status: ReservationStatus) -> bool:
@@ -224,6 +226,13 @@ class ReservationService:
                 message="Existe un conflicto al guardar la reserva.",
                 details={"collection": "reservations"},
             ) from exc
+
+        if status in (ReservationStatus.CONTACT, ReservationStatus.QUOTED):
+            try:
+                await self.notification_service.enqueue_reservation_created(doc)
+            except Exception:
+                pass
+
         return doc
 
     async def list(self, actor_role: UserRole) -> list[ReservationDocument]:
@@ -410,6 +419,12 @@ class ReservationService:
             reservation.updated_by = actor_id
             await schedule.save()
             await reservation.save()
+
+            try:
+                await self.notification_service.enqueue_reservation_confirmed(reservation)
+            except Exception:
+                pass
+
             return reservation
         except Exception:
             await self._rollback_schedule_capacity(
@@ -526,6 +541,19 @@ class ReservationService:
         if target_status == ReservationStatus.PAYMENT_RECEIVED:
             reservation.payment_status = PaymentStatus.RECEIVED
         await reservation.save()
+
+        if target_status == ReservationStatus.PAYMENT_RECEIVED:
+            try:
+                await self.notification_service.enqueue_payment_received(reservation)
+            except Exception:
+                pass
+
+        if target_status == ReservationStatus.COMPLETED:
+            try:
+                await self.notification_service.enqueue_post_service(reservation)
+            except Exception:
+                pass
+
         return reservation
 
     async def cancel_reservation(

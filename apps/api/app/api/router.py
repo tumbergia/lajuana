@@ -10,6 +10,7 @@ from app.api.endpoints.experiences import router as experiences_router
 from app.api.endpoints.files import router as files_router
 from app.api.endpoints.health import router as health_router
 from app.api.endpoints.logs import router as logs_router
+from app.api.endpoints.notifications import router as notifications_router
 from app.api.endpoints.participant_forms import router as participant_forms_router
 from app.api.endpoints.participants import router as participants_router
 from app.api.endpoints.payment_proofs import router as payment_proofs_router
@@ -36,6 +37,7 @@ api_router.include_router(payment_proofs_router)
 api_router.include_router(participants_router)
 api_router.include_router(participant_forms_router)
 api_router.include_router(config_router)
+api_router.include_router(notifications_router)
 api_router.include_router(sync_router)
 api_router.include_router(files_router)
 api_router.include_router(equines_router)

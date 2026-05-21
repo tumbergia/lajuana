@@ -20,6 +20,7 @@ from app.schemas.participant import (
     ParticipantPublicCreateSchema,
 )
 from app.services.mappers import form_info_to_response
+from app.services.notification_service import NotificationService
 
 
 def _generate_raw_token() -> str:
@@ -79,6 +80,13 @@ class ParticipantFormService:
 
         response = self._build_response(reservation)
         response.form_url = f"{settings.participant_form_base_url}?token={token}"
+
+        try:
+            svc = NotificationService()
+            await svc.enqueue_form_link(reservation, response.form_url)
+        except Exception:
+            pass
+
         return response
 
     async def get_form_info(self, token: str) -> ParticipantFormInfoSchema:

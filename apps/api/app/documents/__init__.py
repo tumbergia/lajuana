@@ -15,6 +15,9 @@ from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.equine_document import EquineDocument
 from app.documents.experience_document import ExperienceDocument
 from app.documents.file_upload_document import FileUploadDocument
+from app.documents.in_app_notification_document import InAppNotificationDocument
+from app.documents.notification_outbox_document import NotificationOutboxDocument
+from app.documents.notification_template_document import NotificationTemplateDocument
 from app.documents.participant_document import EmergencyContact, ParticipantDocument
 from app.documents.payment_proof_document import PaymentProofDocument
 from app.documents.ping_document import PingDocument
@@ -59,4 +62,7 @@ __all__ = [
     "WhatsAppInboundEventDocument",
     "MessageBufferDocument",
     "OutboundMessageDocument",
+    "NotificationTemplateDocument",
+    "NotificationOutboxDocument",
+    "InAppNotificationDocument",
 ]
