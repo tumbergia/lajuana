@@ -43,6 +43,7 @@ OPERATION_DOC_MAP = {
     "createPaymentProofForReservation": "reservation_payment_proofs_create",
     "createParticipantForReservation": "participants_create",
     "getPaymentProofById": "payment_proofs_get",
+    "downloadPaymentProofFile": "payment_proofs_download",
     "updatePaymentProofById": "payment_proofs_update",
     "getParticipantById": "participants_get",
     "updateParticipantById": "participants_update",

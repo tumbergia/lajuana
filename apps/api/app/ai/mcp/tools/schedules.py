@@ -11,29 +11,19 @@ from app.ai.mcp.tool_contracts import (
     SuggestAlternativeDatesOutput,
     ToolBlockingReason,
 )
-from app.common.enums import ScheduleStatus
 from app.documents.experience_document import ExperienceDocument
-from app.documents.schedule_document import ScheduleDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.services.experience_catalog_resolver import (
     ExperienceCatalogResolver,
     ExperienceResolutionStatus,
 )
+from app.services.reservation_service import ReservationService
 
 
 def _safe_str(value: Any) -> str | None:
     if value is None:
         return None
     return str(value)
-
-
-def _safe_int(value: Any, default: int | None = None) -> int | None:
-    if value is None:
-        return default
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return default
 
 
 def _field(obj: Any, *names: str, default: Any = None) -> Any:
@@ -67,6 +57,22 @@ async def _resolve_experience(
     return None
 
 
+def _generate_date_range(
+    date_from: date,
+    date_to: date,
+    min_notice_days: int = 7,
+) -> list[date]:
+    today = datetime.now(UTC).date()
+    min_date = today + timedelta(days=min_notice_days)
+    start = max(date_from, min_date)
+    dates: list[date] = []
+    current = start
+    while current <= date_to:
+        dates.append(current)
+        current += timedelta(days=1)
+    return dates
+
+
 async def list_available_schedules(
     experience_id: str | None = None,
     experience_query: str | None = None,
@@ -81,7 +87,7 @@ async def list_available_schedules(
     trace_id = trace_id or str(uuid4())
 
     if requested_date is None:
-        date_from = datetime.now(UTC).date()
+        date_from = datetime.now(UTC).date() + timedelta(days=7)
     elif isinstance(requested_date, date):
         date_from = requested_date
     else:
@@ -126,49 +132,27 @@ async def list_available_schedules(
         experience_id_obj = getattr(experience, "id", None)
         experience_name = _safe_str(_field(experience, "name", "title", "label"))
 
-        all_schedules = await (
-            ScheduleDocument.find_many(
-                ScheduleDocument.experience_id == experience_id_obj,
-                ScheduleDocument.date >= date_from,
-                ScheduleDocument.date <= date_to,
-                ScheduleDocument.is_active == True,  # noqa: E712
-                ScheduleDocument.status == ScheduleStatus.OPEN,
-            )
-            .sort("date")
-            .to_list()
-        )
+        candidate_dates = _generate_date_range(date_from, date_to, min_notice_days=7)
 
-        pc = participant_count
-        if pc is not None:
-            filtered = [
-                s
-                for s in all_schedules
-                if (_safe_int(_field(s, "available_slots"), default=0) or 0) >= pc
-            ]
-        else:
-            filtered = all_schedules
-
-        limited = filtered[:limit]
-
-        schedule_items = [
-            AvailableScheduleItem(
-                schedule_id=_safe_str(getattr(s, "id", None)) or "",
-                experience_id=_safe_str(experience_id_obj) or "",
-                experience_name=experience_name or "",
-                scheduled_date=_field(s, "date"),
-                start_time=str(_field(s, "start_time")) if _field(s, "start_time") else None,
-                capacity_total=_safe_int(
-                    _field(s, "capacity_total", "total_capacity", "capacity"), default=0
+        reservation_service = ReservationService()
+        schedule_items: list[AvailableScheduleItem] = []
+        for d in candidate_dates:
+            if len(schedule_items) >= limit:
+                break
+            has_active = await reservation_service.has_active_reservation_for_date(d)
+            if not has_active:
+                schedule_items.append(
+                    AvailableScheduleItem(
+                        schedule_id="",
+                        experience_id=_safe_str(experience_id_obj) or "",
+                        experience_name=experience_name or "",
+                        scheduled_date=d,
+                        start_time=None,
+                        capacity_total=8,
+                        capacity_available=8,
+                        status="open",
+                    )
                 )
-                or 0,
-                capacity_available=_safe_int(
-                    _field(s, "available_slots", "available_spots", "cupos_disponibles"), default=0
-                )
-                or 0,
-                status=str(_field(s, "status", default="")),
-            )
-            for s in limited
-        ]
 
         output = ListAvailableSchedulesOutput(
             trace_id=trace_id,
@@ -176,7 +160,7 @@ async def list_available_schedules(
             date_to=date_to,
             participant_count=participant_count,
             schedules=schedule_items,
-            total=len(filtered),
+            total=len(schedule_items),
             blocking_reasons=reasons,
         )
         return output.model_dump(mode="json")
@@ -292,58 +276,36 @@ async def suggest_alternative_dates(
         experience_id_obj = getattr(experience, "id", None)
         experience_name = _safe_str(_field(experience, "name", "title", "label"))
 
-        all_schedules = await (
-            ScheduleDocument.find_many(
-                ScheduleDocument.experience_id == experience_id_obj,
-                ScheduleDocument.date >= date_from,
-                ScheduleDocument.date <= date_to,
-                ScheduleDocument.is_active == True,  # noqa: E712
-                ScheduleDocument.status == ScheduleStatus.OPEN,
-            )
-            .sort("date")
-            .to_list()
-        )
+        candidate_dates = _generate_date_range(date_from, date_to, min_notice_days=7)
 
-        pc = participant_count
-        if pc is not None:
-            filtered = [
-                s
-                for s in all_schedules
-                if (_safe_int(_field(s, "available_slots"), default=0) or 0) >= pc
-            ]
-        else:
-            filtered = all_schedules
-
-        filtered = [s for s in filtered if _field(s, "date") not in exclude]
-
-        limited = filtered[:limit]
-
-        schedule_items = [
-            AvailableScheduleItem(
-                schedule_id=_safe_str(getattr(s, "id", None)) or "",
-                experience_id=_safe_str(experience_id_obj) or "",
-                experience_name=experience_name or "",
-                scheduled_date=_field(s, "date"),
-                start_time=str(_field(s, "start_time")) if _field(s, "start_time") else None,
-                capacity_total=_safe_int(
-                    _field(s, "capacity_total", "total_capacity", "capacity"), default=0
+        reservation_service = ReservationService()
+        schedule_items: list[AvailableScheduleItem] = []
+        for d in candidate_dates:
+            if len(schedule_items) >= limit:
+                break
+            if d in exclude:
+                continue
+            has_active = await reservation_service.has_active_reservation_for_date(d)
+            if not has_active:
+                schedule_items.append(
+                    AvailableScheduleItem(
+                        schedule_id="",
+                        experience_id=_safe_str(experience_id_obj) or "",
+                        experience_name=experience_name or "",
+                        scheduled_date=d,
+                        start_time=None,
+                        capacity_total=8,
+                        capacity_available=8,
+                        status="open",
+                    )
                 )
-                or 0,
-                capacity_available=_safe_int(
-                    _field(s, "available_slots", "available_spots", "cupos_disponibles"), default=0
-                )
-                or 0,
-                status=str(_field(s, "status", default="")),
-            )
-            for s in limited
-        ]
 
         output = SuggestAlternativeDatesOutput(
             trace_id=trace_id,
             requested_date=requested_date,
             participant_count=participant_count or 1,
             alternatives=schedule_items,
-            total=len(filtered),
+            total=len(schedule_items),
             blocking_reasons=reasons,
         )
         return output.model_dump(mode="json")

@@ -577,6 +577,20 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "error_codes": ["auth.unauthorized", "auth.forbidden", "payment_proof.not_found"],
         "service_docstring": "Obtiene comprobante por id sin exponer binario.",
     },
+    "payment_proofs_download": {
+        "summary": "Descargar archivo de comprobante de pago",
+        "description": "Descarga el archivo binario (imagen o PDF) del comprobante de pago. Si el archivo aun no se ha descargado de WhatsApp, retorna 202 Accepted.",
+        "permissions": ["payment_proof.read"],
+        "responses": {
+            200: "Archivo binario del comprobante.",
+            202: "Archivo pendiente de descarga desde WhatsApp.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            404: "Comprobante o archivo no existe.",
+        },
+        "error_codes": ["auth.unauthorized", "auth.forbidden", "payment_proof.not_found", "payment_proof.file_not_found"],
+        "service_docstring": "Descarga el archivo binario de un comprobante de pago desde S3/local.",
+    },
     "payment_proofs_update": {
         "summary": "Actualizar comprobante de pago",
         "description": "Actualiza estado o metadatos de validacion de comprobante.",
@@ -1301,6 +1315,7 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     ),
     "participants_create": ("POST", "/api/v1/reservations/{reservation_id}/participants"),
     "payment_proofs_get": ("GET", "/api/v1/payment-proofs/{payment_proof_id}"),
+    "payment_proofs_download": ("GET", "/api/v1/payment-proofs/{payment_proof_id}/download"),
     "payment_proofs_update": ("PATCH", "/api/v1/payment-proofs/{payment_proof_id}"),
     "participant_form_link_generate": (
         "POST",

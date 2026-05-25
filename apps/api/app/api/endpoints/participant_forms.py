@@ -1,9 +1,15 @@
-<<<<<<< HEAD
 from fastapi import APIRouter, Request, status
 
+from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.core.config import settings
 from app.documents import ExperienceDocument, ReservationDocument
-from app.schemas.participant import ParticipantPublicCreateSchema, ParticipantResponseSchema
+from app.schemas.participant import (
+    ParticipantFormCreateResponse,
+    ParticipantFormInfoSchema,
+    ParticipantNestedCreateSchema,
+    ParticipantPublicCreateSchema,
+    ParticipantResponseSchema,
+)
 from app.schemas.participant_form_link import (
     ParticipantFormLinkGenerateRequest,
     ParticipantFormLinkGenerateResponse,
@@ -11,13 +17,14 @@ from app.schemas.participant_form_link import (
     ParticipantFormPublicStatusResponse,
     ParticipantFormTokenValidationResponse,
 )
-from app.services import ParticipantService
+from app.services import ParticipantFormService, ParticipantService
 from app.services.mappers import form_link_to_status_response, participant_to_response
 from app.services.participant_form_link_service import ParticipantFormLinkService
 
 router = APIRouter()
 form_link_service = ParticipantFormLinkService()
 participant_service = ParticipantService()
+participant_form_service = ParticipantFormService()
 
 
 @router.get(
@@ -84,7 +91,7 @@ async def get_public_participant_form_status(
 )
 async def create_participant_via_form(
     token: str,
-    payload: ParticipantPublicCreateSchema,
+    payload: ParticipantNestedCreateSchema,
     request: Request,
 ) -> ParticipantResponseSchema:
     ip_address = request.client.host if request.client else None
@@ -171,47 +178,35 @@ async def get_participant_form_link_status(
     if doc is None:
         return None
     return form_link_to_status_response(doc)
-=======
-from fastapi import APIRouter, status
-
-from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
-from app.schemas.participant import (
-    ParticipantFormCreateResponse,
-    ParticipantFormInfoSchema,
-    ParticipantPublicCreateSchema,
-)
-from app.services import ParticipantFormService
-
-router = APIRouter(prefix="/public/participant-form", tags=["Participantes - Formulario público"])
-service = ParticipantFormService()
 
 
 @router.get(
-    "/{token}",
+    "/public/participant-form/{token}",
     response_model=ParticipantFormInfoSchema,
     summary=ENDPOINT_DOCS["participant_form_info"]["summary"],
     description=endpoint_description("participant_form_info"),
     operation_id="getParticipantFormInfo",
     responses=endpoint_responses("participant_form_info"),
+    tags=["Participantes - Formulario público"],
 )
 async def get_participant_form_info(
     token: str,
 ) -> ParticipantFormInfoSchema:
-    return await service.get_form_info(token)
+    return await participant_form_service.get_form_info(token)
 
 
 @router.post(
-    "/{token}",
+    "/public/participant-form/{token}",
     response_model=ParticipantFormCreateResponse,
     status_code=status.HTTP_201_CREATED,
     summary=ENDPOINT_DOCS["participant_form_register"]["summary"],
     description=endpoint_description("participant_form_register"),
     operation_id="registerParticipantFromForm",
     responses=endpoint_responses("participant_form_register"),
+    tags=["Participantes - Formulario público"],
 )
 async def register_participant_from_form(
     token: str,
     payload: ParticipantPublicCreateSchema,
 ) -> ParticipantFormCreateResponse:
-    return await service.register_participant(token, payload)
->>>>>>> 2e13917303fb450ddb2878854d293ef87d75f9ab
+    return await participant_form_service.register_participant(token, payload)

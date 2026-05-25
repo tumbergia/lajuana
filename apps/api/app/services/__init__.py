@@ -5,11 +5,8 @@ from app.services.config_service import ConfigService
 from app.services.equine_service import EquineService
 from app.services.experience_service import ExperienceService
 from app.services.ops_service import OpsService
-<<<<<<< HEAD
 from app.services.participant_form_link_service import ParticipantFormLinkService
-=======
 from app.services.participant_form_service import ParticipantFormService
->>>>>>> 2e13917303fb450ddb2878854d293ef87d75f9ab
 from app.services.participant_service import ParticipantService
 from app.services.payment_proof_service import PaymentProofService
 from app.services.policy_service import PolicyService

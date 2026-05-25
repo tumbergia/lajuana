@@ -97,6 +97,34 @@ def test_reject_payment_proof_endpoint_returns_rejected_status(monkeypatch) -> N
     }
 
 
+def test_approve_payment_proof_endpoint_returns_verified_status(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    async def fake_approve(payment_proof_id, payload, *, actor_id, actor_role):
+        captured["payment_proof_id"] = payment_proof_id
+        captured["token"] = payload.confirmation_token
+        captured["actor_id"] = str(actor_id)
+        captured["actor_role"] = actor_role
+        return _proof_doc(PaymentStatus.VERIFIED)
+
+    monkeypatch.setattr("app.api.endpoints.payment_proofs.service.approve_payment", fake_approve)
+    app.dependency_overrides[get_current_user] = lambda: _admin_user()
+    response = client.post(
+        "/api/v1/payment-proofs/660000000000000000000501/approve",
+        json={"confirmation_token": "APPROVE_PAYMENT"},
+    )
+    app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "verified"
+    assert captured == {
+        "payment_proof_id": "660000000000000000000501",
+        "token": "APPROVE_PAYMENT",
+        "actor_id": "660000000000000000000001",
+        "actor_role": UserRole.ADMIN,
+    }
+
+
 def test_guide_cannot_verify_or_reject_payment_proof() -> None:
     app.dependency_overrides[get_current_user] = lambda: _guide_user()
     verify_response = client.post(

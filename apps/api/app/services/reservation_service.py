@@ -1,10 +1,9 @@
 """Servicio de negocio para el agregado Reservation."""
 
 import secrets
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime
 
 from beanie import PydanticObjectId
-from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
 
 from app.common.enums import (
@@ -83,10 +82,6 @@ class ReservationService:
 
     async def _sync_day_lock_fields(self, reservation: ReservationDocument) -> None:
         requested_date = reservation.requested_date
-        if requested_date is None and reservation.schedule_id is not None:
-            schedule = await ScheduleDocument.get(reservation.schedule_id)
-            if schedule is not None:
-                requested_date = schedule.date
 
         reservation.blocks_day = bool(requested_date) and self._is_blocking_status(
             reservation.status
@@ -100,16 +95,6 @@ class ReservationService:
         requested_date: date,
         exclude_reservation_id: str | None = None,
     ) -> list[ReservationDocument]:
-<<<<<<< HEAD
-        active_values = [s.value for s in ACTIVE_RESERVATION_STATUSES]
-        filters: list = [
-            {"requested_date": datetime.combine(requested_date, time.min)},
-            {"status": {"$in": active_values}},
-        ]
-        if exclude_reservation_id is not None:
-            filters.append({"_id": {"$ne": ObjectId(exclude_reservation_id)}})
-        return await ReservationDocument.find({"$and": filters}).to_list()
-=======
         status_values = [s.value for s in ACTIVE_RESERVATION_STATUSES]
         query = {
             "requested_date": requested_date,
@@ -118,7 +103,6 @@ class ReservationService:
         if exclude_reservation_id is not None:
             query["_id"] = {"$ne": exclude_reservation_id}
         return await ReservationDocument.find(query).to_list()
->>>>>>> 2e13917303fb450ddb2878854d293ef87d75f9ab
 
     async def get_blocking_reservation_for_date(
         self,
@@ -432,31 +416,23 @@ class ReservationService:
                 available_slots=schedule.available_slots,
             )
 
-<<<<<<< HEAD
-        reservation.confirmed_at = datetime.now(UTC)
-        reservation.updated_by = actor_id
-
-        await schedule.save()
-        await reservation.save()
-
-        _, raw_token = await self.form_link_service.generate(
-            reservation_id=reservation_id,
-            expected_participants_count=reservation.participant_count,
-            created_by=actor_id,
-        )
-        from app.core.config import settings
-
-        reservation.form_url = (
-            f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
-        )
-        await reservation.save()
-
-        return reservation
-=======
             reservation.confirmed_at = datetime.now(UTC)
             reservation.updated_by = actor_id
             await schedule.save()
             await reservation.save()
+
+            _, raw_token = await self.form_link_service.generate(
+                reservation_id=reservation_id,
+                expected_participants_count=reservation.participant_count,
+                created_by=actor_id,
+            )
+            from app.core.config import settings
+
+            reservation.form_url = (
+                f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
+            )
+            await reservation.save()
+
             return reservation
         except Exception:
             await self._rollback_schedule_capacity(
@@ -559,7 +535,6 @@ class ReservationService:
                     "capacity_source": capacity_source,
                 },
             )
->>>>>>> 2e13917303fb450ddb2878854d293ef87d75f9ab
 
     async def set_status(
         self,
@@ -598,7 +573,6 @@ class ReservationService:
         await reservation.save()
         return reservation
 
-<<<<<<< HEAD
     async def validate_participant_forms_completed(
         self, reservation: ReservationDocument
     ) -> None:
@@ -636,9 +610,5 @@ class ReservationService:
                     ),
                 )
 
-    def _build_code(self) -> str:
-        return f"RES-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
-=======
     def _build_code(self, prefix: str = "RES") -> str:
         return f"{prefix}-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
->>>>>>> 2e13917303fb450ddb2878854d293ef87d75f9ab

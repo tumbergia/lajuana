@@ -14,6 +14,7 @@ from app.documents.conversation_session_document import ConversationSessionDocum
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.equine_document import EquineDocument
 from app.documents.experience_document import ExperienceDocument
+from app.documents.liability_release_document import LiabilityReleaseDocument
 from app.documents.file_upload_document import FileUploadDocument
 from app.documents.participant_document import EmergencyContact, ParticipantDocument
 from app.documents.participant_form_link_document import ParticipantFormLinkDocument
@@ -41,6 +42,7 @@ __all__ = [
     "EmergencyContact",
     "EquineDocument",
     "ExperienceDocument",
+    "LiabilityReleaseDocument",
     "ParticipantDocument",
     "ParticipantFormLinkDocument",
     "PaymentProofDocument",

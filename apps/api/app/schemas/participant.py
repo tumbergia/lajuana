@@ -27,7 +27,6 @@ class ParticipantCreateSchema(BaseModel):
     height_cm: Decimal = Field(gt=0)
     weight_kg: Decimal = Field(gt=0)
     experience_level: ExperienceLevel
-    riding_experience: str | None = None
     dietary_restrictions: str | None = None
     blood_type: str | None = None
     eps_or_travel_insurance: str | None = None
@@ -40,7 +39,7 @@ class ParticipantCreateSchema(BaseModel):
     risk_release_text_version: str | None = None
 
 
-class ParticipantPublicCreateSchema(BaseModel):
+class ParticipantNestedCreateSchema(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr | None = None
@@ -53,7 +52,6 @@ class ParticipantPublicCreateSchema(BaseModel):
     height_cm: Decimal = Field(gt=0)
     weight_kg: Decimal = Field(gt=0)
     experience_level: ExperienceLevel | None = None
-    riding_experience: str | None = None
     dietary_restrictions: str | None = None
     blood_type: str | None = None
     eps_or_travel_insurance: str | None = None
@@ -76,7 +74,6 @@ class ParticipantUpdateSchema(BaseModel):
     city: str | None = None
     height_cm: Decimal | None = Field(default=None, gt=0)
     weight_kg: Decimal | None = Field(default=None, gt=0)
-    riding_experience: str | None = None
     dietary_restrictions: str | None = None
     blood_type: str | None = None
     eps_or_travel_insurance: str | None = None
@@ -103,7 +100,6 @@ class ParticipantResponseSchema(AuditMetadataSchema):
     height_cm: Decimal
     weight_kg: Decimal
     experience_level: ExperienceLevel
-    riding_experience: str | None
     dietary_restrictions: str | None
     blood_type: str | None
     eps_or_travel_insurance: str | None
@@ -120,7 +116,7 @@ class ParticipantResponseSchema(AuditMetadataSchema):
 class ParticipantPublicCreateSchema(BaseModel):
     first_name: str = Field(min_length=1)
     last_name: str = Field(min_length=1)
-    email: EmailStr
+    email: EmailStr | None = None
     birth_date: date
     document_type: str = Field(min_length=1)
     document_number: str = Field(min_length=1)
@@ -140,8 +136,11 @@ class ParticipantPublicCreateSchema(BaseModel):
     emergency_contact_name: str = Field(min_length=1)
     emergency_contact_phone: str = Field(min_length=1)
     emergency_contact_relationship: str | None = None
+    emergency_contact_country: str | None = None
     accepted_data_processing: bool
     accepted_media_usage: bool | None = None
+    accepted_risk_release: bool
+    risk_release_text_version: str | None = None
 
 
 class ParticipantFormInfoSchema(BaseModel):

@@ -382,7 +382,7 @@ async def attach_payment_proof_to_reservation(**kwargs: Any) -> dict[str, Any]:
             return output.model_dump(mode="json")
 
         now_id = payload.whatsapp_message_id
-        storage_key = f"whatsapp/{now_id}"
+        storage_key = f"whatsapp/{payload.media_id}"
         filename = payload.filename or f"wa-proof-{now_id}"
 
         doc = await service.create_metadata_only(

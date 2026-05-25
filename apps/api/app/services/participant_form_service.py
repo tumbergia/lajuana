@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
@@ -10,6 +11,7 @@ from app.core.config import settings
 from app.core.errors import ApiError
 from app.documents import (
     ExperienceDocument,
+    LiabilityReleaseDocument,
     ParticipantDocument,
     ReservationDocument,
     ScheduleDocument,
@@ -20,6 +22,7 @@ from app.schemas.participant import (
     ParticipantPublicCreateSchema,
 )
 from app.services.mappers import form_info_to_response
+from app.utils.pdf_generator import generate_liability_release_pdf
 
 
 def _generate_raw_token() -> str:
@@ -29,6 +32,17 @@ def _generate_raw_token() -> str:
 def _hash_token(token: str) -> str:
     raw = token + settings.participant_form_token_secret
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _utc_now_naive() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
+RISK_RELEASE_TEXT = (
+    "Declaro que entiendo que la actividad ecuestre con mulas implica riesgos inherentes, "
+    "incluyendo caídas, golpes, lesiones graves, incapacidad permanente o muerte. Acepto "
+    "participar bajo mi propia responsabilidad, siguiendo instrucciones del personal de La Juana."
+)
 
 
 class ParticipantFormService:
@@ -57,7 +71,7 @@ class ParticipantFormService:
             not force
             and reservation.participant_form_status == ParticipantFormStatus.ACTIVE
             and reservation.participant_form_expires_at
-            and reservation.participant_form_expires_at > datetime.now(UTC)
+            and reservation.participant_form_expires_at > _utc_now_naive()
         ):
             return self._build_response(reservation)
 
@@ -69,8 +83,8 @@ class ParticipantFormService:
         expiry_days = expires_in_days or settings.participant_form_token_expiry_days
 
         reservation.participant_form_token_hash = token_hash
-        reservation.participant_form_created_at = datetime.now(UTC)
-        reservation.participant_form_expires_at = datetime.now(UTC) + timedelta(days=expiry_days)
+        reservation.participant_form_created_at = _utc_now_naive()
+        reservation.participant_form_expires_at = _utc_now_naive() + timedelta(days=expiry_days)
         reservation.participant_form_status = ParticipantFormStatus.ACTIVE
         reservation.participant_registration_limit = reservation.participant_count
         if not force:
@@ -95,7 +109,7 @@ class ParticipantFormService:
             ParticipantFormStatus.REVOKED,
         ) or (
             reservation.participant_form_expires_at
-            and reservation.participant_form_expires_at < datetime.now(UTC)
+            and reservation.participant_form_expires_at < _utc_now_naive()
         ):
             if reservation.participant_form_status != ParticipantFormStatus.REVOKED:
                 reservation.participant_form_status = ParticipantFormStatus.EXPIRED
@@ -152,7 +166,7 @@ class ParticipantFormService:
 
         if (
             reservation.participant_form_expires_at
-            and reservation.participant_form_expires_at < datetime.now(UTC)
+            and reservation.participant_form_expires_at < _utc_now_naive()
         ):
             reservation.participant_form_status = ParticipantFormStatus.EXPIRED
             await reservation.save()
@@ -169,6 +183,13 @@ class ParticipantFormService:
                 message="Debe aceptar el tratamiento de datos personales.",
             )
 
+        if not payload.accepted_risk_release:
+            raise ApiError(
+                status_code=422,
+                code=ErrorCode.PARTICIPANT_RISK_RELEASE_REQUIRED,
+                message="Debe aceptar la liberación de responsabilidad para participar.",
+            )
+
         limit = reservation.participant_registration_limit or 0
         if reservation.participant_registration_count >= limit:
             raise ApiError(
@@ -183,7 +204,7 @@ class ParticipantFormService:
                 "_id": reservation.id,
                 "participant_form_status": ParticipantFormStatus.ACTIVE,
                 "participant_registration_count": {"$lt": limit},
-                "participant_form_expires_at": {"$gt": datetime.now(UTC)},
+                "participant_form_expires_at": {"$gt": _utc_now_naive()},
             },
             {"$inc": {"participant_registration_count": 1}},
         )
@@ -216,38 +237,60 @@ class ParticipantFormService:
             weight_kg=payload.weight_kg,
             experience_level=payload.experience_level,
             blood_type=payload.blood_type,
-            eps=payload.eps,
-            travel_insurance=payload.travel_insurance,
-            medical_conditions=payload.medical_conditions,
-            functional_conditions=payload.functional_conditions,
+            eps_or_travel_insurance=payload.eps or payload.travel_insurance,
+            health_conditions=payload.medical_conditions,
+            sensory_disabilities=payload.functional_conditions,
             dietary_restrictions=payload.dietary_restrictions,
-            diet=payload.diet,
             emergency_contact={
                 "name": payload.emergency_contact_name,
                 "phone": payload.emergency_contact_phone,
                 "relationship": payload.emergency_contact_relationship,
+                "country": payload.emergency_contact_country,
             },
             accepted_data_processing=payload.accepted_data_processing,
             accepted_media_usage=payload.accepted_media_usage,
+            accepted_risk_release=payload.accepted_risk_release,
+            risk_release_text_version=payload.risk_release_text_version or RISK_RELEASE_TEXT,
             is_completed=True,
         )
-        await doc.insert()
 
-        await collection.update_one(
-            {"_id": reservation.id},
-            {"$push": {"participant_ids": doc.id}},
-        )
+        try:
+            await doc.insert()
 
-        updated = await ReservationDocument.get(reservation.id)
-        if updated and updated.participant_registration_count >= (limit):
+            release_text = payload.risk_release_text_version or RISK_RELEASE_TEXT
+            pdf_bytes = generate_liability_release_pdf(release_text, f"{payload.first_name} {payload.last_name}")
+            pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
+
+            liability = LiabilityReleaseDocument(
+                participant_id=doc.id,
+                reservation_id=reservation.id,
+                participant_name=f"{payload.first_name} {payload.last_name}",
+                pdf_base64=pdf_base64,
+                accepted_at=datetime.now(UTC),
+            )
+            await liability.insert()
+
             await collection.update_one(
                 {"_id": reservation.id},
-                {
-                    "$set": {
-                        "participant_form_status": ParticipantFormStatus.FULL,
-                    }
-                },
+                {"$push": {"participant_ids": doc.id}},
             )
+
+            updated = await ReservationDocument.get(reservation.id)
+            if updated and updated.participant_registration_count >= (limit):
+                await collection.update_one(
+                    {"_id": reservation.id},
+                    {
+                        "$set": {
+                            "participant_form_status": ParticipantFormStatus.FULL,
+                        }
+                    },
+                )
+        except Exception:
+            await collection.update_one(
+                {"_id": reservation.id},
+                {"$inc": {"participant_registration_count": -1}},
+            )
+            raise
 
         response = self._build_response(updated or reservation)
         if updated:

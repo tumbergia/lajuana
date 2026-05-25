@@ -4,19 +4,16 @@ from beanie import PydanticObjectId
 
 from app.common.enums import Channel, ReservationStatus
 from app.core.config import settings
-from app.documents import ReservationDocument, ScheduleDocument
+from app.documents import ReservationDocument
 from app.schemas.reservation import ReservationCreateSchema
 from app.services.reservation_service import ReservationService
-from app.services.schedule_service import ScheduleService
 
 
 class BookingService:
     def __init__(
         self,
-        schedule_service: ScheduleService | None = None,
         reservation_service: ReservationService | None = None,
     ) -> None:
-        self.schedule_service = schedule_service or ScheduleService()
         self.reservation_service = reservation_service or ReservationService()
 
     def _channel(self) -> Channel:
@@ -25,23 +22,12 @@ class BookingService:
         except ValueError:
             return Channel.WHATSAPP
 
-    async def get_available_schedule(
+    async def date_is_available(
         self,
         *,
-        experience_id: str,
-        requested_date: date | None,
-        participant_count: int,
-    ) -> ScheduleDocument | None:
-        del participant_count
-        schedules = await self.schedule_service.list(
-            experience_id=experience_id,
-            date_from=requested_date,
-            date_to=requested_date,
-        )
-        for schedule in schedules:
-            if not await self.reservation_service.has_active_reservation_for_date(schedule.date):
-                return schedule
-        return None
+        requested_date: date,
+    ) -> bool:
+        return not await self.reservation_service.has_active_reservation_for_date(requested_date)
 
     async def create_pending_reservation(
         self,

@@ -30,7 +30,6 @@ class ParticipantDocument(AuditDocument):
     height_cm: Decimal
     weight_kg: Decimal
     experience_level: ExperienceLevel
-    riding_experience: str | None = None
     dietary_restrictions: str | None = None
     blood_type: str | None = None
     eps_or_travel_insurance: str | None = None

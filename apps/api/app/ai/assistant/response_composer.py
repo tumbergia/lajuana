@@ -15,6 +15,7 @@ async def compose_tool_response(
     plan: AssistantPlan,
     tool_output: dict[str, Any],
     conversation_id: str | None = None,
+    channel: str | None = None,
 ) -> str:
     logger.info(
         "[conversation_id=%s] Composing final response | tool=%s",
@@ -35,6 +36,7 @@ async def compose_tool_response(
         user=str(payload),
         response_model=ToolResultResponse,
         temperature=0.4,
+        telemetry_context={"channel": channel, "conversation_id": conversation_id},
     )
     result = llm_result.response
 

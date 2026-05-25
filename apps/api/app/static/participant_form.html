@@ -241,16 +241,6 @@
             <input type="number" id="weight_kg" required min="20" max="200" step="0.1">
           </div>
           <div class="field">
-            <label>Experiencia ecuestre <span class="required">*</span></label>
-            <select id="riding_experience" required>
-              <option value="">Selecciona</option>
-              <option value="none">Ninguna</option>
-              <option value="basic">Básica</option>
-              <option value="intermediate">Intermedia</option>
-              <option value="advanced">Avanzada</option>
-            </select>
-          </div>
-          <div class="field">
             <label>Tipo de sangre <span class="required">*</span></label>
             <select id="blood_type" required>
               <option value="">Selecciona</option>
@@ -426,7 +416,6 @@ function getFormData() {
     city: document.getElementById('city').value.trim(),
     height_cm: parseFloat(document.getElementById('height_cm').value),
     weight_kg: parseFloat(document.getElementById('weight_kg').value),
-    riding_experience: document.getElementById('riding_experience').value || null,
     blood_type: document.getElementById('blood_type').value || null,
     eps_or_travel_insurance: document.getElementById('eps_or_travel_insurance').value.trim() || null,
     health_conditions: document.getElementById('health_conditions').value.trim() || null,

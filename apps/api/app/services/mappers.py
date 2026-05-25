@@ -17,12 +17,8 @@ from app.schemas.assignment import AssignmentResponseSchema
 from app.schemas.auth import UserResponseSchema
 from app.schemas.equine import EquineResponseSchema
 from app.schemas.experience import ExperienceResponseSchema
-<<<<<<< HEAD
-from app.schemas.participant import ParticipantResponseSchema
-from app.schemas.participant_form_link import ParticipantFormLinkStatusResponse
-=======
 from app.schemas.participant import ParticipantFormInfoSchema, ParticipantResponseSchema
->>>>>>> 2e13917303fb450ddb2878854d293ef87d75f9ab
+from app.schemas.participant_form_link import ParticipantFormLinkStatusResponse
 from app.schemas.payment_proof import PaymentProofResponseSchema
 from app.schemas.policy import PolicyResponseSchema
 from app.schemas.provider import ProviderResponseSchema
@@ -156,7 +152,6 @@ def participant_to_response(doc: ParticipantDocument) -> ParticipantResponseSche
         city=doc.city,
         height_cm=doc.height_cm,
         weight_kg=doc.weight_kg,
-        riding_experience=doc.riding_experience,
         dietary_restrictions=doc.dietary_restrictions,
         blood_type=doc.blood_type,
         eps_or_travel_insurance=doc.eps_or_travel_insurance,

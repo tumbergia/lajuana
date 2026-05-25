@@ -1,14 +1,16 @@
+import base64
 from datetime import UTC, datetime
 
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-from app.documents import ParticipantDocument, ReservationDocument
+from app.documents import LiabilityReleaseDocument, ParticipantDocument, ReservationDocument
 from app.schemas.participant import (
     ParticipantCreateSchema,
-    ParticipantPublicCreateSchema,
+    ParticipantNestedCreateSchema,
     ParticipantUpdateSchema,
 )
 from app.services.participant_form_link_service import ParticipantFormLinkService
+from app.utils.pdf_generator import generate_liability_release_pdf
 
 REQUIRED_FIELDS_FOR_OPERATIONAL_COMPLETION = (
     "first_name",
@@ -75,7 +77,7 @@ class ParticipantService:
     async def create_from_form(
         self,
         raw_token: str,
-        payload: ParticipantPublicCreateSchema,
+        payload: ParticipantNestedCreateSchema,
         ip_address: str | None = None,
         user_agent: str | None = None,
     ) -> ParticipantDocument:
@@ -117,7 +119,6 @@ class ParticipantService:
             city=payload.city,
             height_cm=payload.height_cm,
             weight_kg=payload.weight_kg,
-            riding_experience=payload.riding_experience,
             dietary_restrictions=payload.dietary_restrictions,
             blood_type=payload.blood_type,
             eps_or_travel_insurance=payload.eps_or_travel_insurance,
@@ -133,6 +134,19 @@ class ParticipantService:
         )
         doc.is_completed = self._is_completed(doc)
         await doc.insert()
+
+        release_text = payload.risk_release_text_version or RISK_RELEASE_TEXT
+        pdf_bytes = generate_liability_release_pdf(release_text, f"{payload.first_name} {payload.last_name}")
+        pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
+
+        liability = LiabilityReleaseDocument(
+            participant_id=doc.id,
+            reservation_id=form_link.reservation_id,
+            participant_name=f"{payload.first_name} {payload.last_name}",
+            pdf_base64=pdf_base64,
+            accepted_at=datetime.now(UTC),
+        )
+        await liability.insert()
 
         if reservation is not None:
             reservation.participant_ids.append(doc.id)

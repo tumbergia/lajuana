@@ -72,6 +72,7 @@ class ErrorCode:
     PAYMENT_PROOF_INVALID_SIZE = "payment_proof.invalid_size"
     PAYMENT_PROOF_HASH_REQUIRED = "payment_proof.hash_required"
     PAYMENT_PROOF_RESERVATION_MISMATCH = "payment_proof.reservation_mismatch"
+    PAYMENT_PROOF_FILE_NOT_FOUND = "payment_proof.file_not_found"
 
     PARTICIPANT_FORM_INVALID_TOKEN = "participant_form.invalid_token"
     PARTICIPANT_FORM_EXPIRED = "participant_form.expired"

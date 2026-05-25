@@ -103,7 +103,7 @@ class CheckExperienceAvailabilityInput(BaseModel):
     experience_id: str | None = None
     experience_query: str | None = None
     requested_date: date
-    participant_count: int = Field(ge=1, le=30)
+    participant_count: int = Field(ge=1, le=8)
 
     @model_validator(mode="after")
     def require_experience(self):
@@ -149,7 +149,7 @@ class ListAvailableSchedulesInput(BaseModel):
     experience_query: str | None = None
     date_from: date | None = None
     date_to: date | None = None
-    participant_count: int | None = Field(default=None, ge=1, le=30)
+    participant_count: int | None = Field(default=None, ge=1, le=8)
     limit: int = Field(default=10, ge=1, le=30)
 
 
@@ -180,7 +180,7 @@ class QuoteExperienceInput(BaseModel):
     experience_id: str | None = None
     experience_query: str | None = None
     requested_date: date | None = None
-    participant_count: int = Field(ge=1, le=30)
+    participant_count: int = Field(ge=1, le=8)
     notes: str | None = Field(default=None, max_length=500)
 
     @model_validator(mode="after")
@@ -216,7 +216,7 @@ class SuggestAlternativeDatesInput(BaseModel):
     experience_id: str | None = None
     experience_query: str | None = None
     requested_date: date
-    participant_count: int = Field(ge=1, le=30)
+    participant_count: int = Field(ge=1, le=8)
     search_days_before: int = Field(default=15, ge=0, le=60)
     search_days_after: int = Field(default=30, ge=1, le=90)
     limit: int = Field(default=5, ge=1, le=10)
@@ -276,8 +276,8 @@ class CreateReservationDraftInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     experience_id: str
-    schedule_id: str
-    participant_count: int
+    schedule_id: str | None = None
+    participant_count: int = Field(ge=1, le=8)
     holder_phone: str
     holder_name: str | None = None
     requested_date: date

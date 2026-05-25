@@ -10,9 +10,11 @@ from app.conversations.services.conversation_scheduler import (
 from app.core.db import close_db, init_db
 from app.core.logging import logger, reconfigure_logger
 from app.jobs.expire_reservation_drafts import ReservationDraftExpireWorker
+from app.jobs.whatsapp_media_worker import WhatsAppMediaWorker
 
 scheduler = ConversationScheduler()
 expire_worker = ReservationDraftExpireWorker()
+media_worker = WhatsAppMediaWorker()
 
 
 @asynccontextmanager
@@ -27,13 +29,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     expire_task = asyncio.create_task(expire_worker.run())
     logger.info("[lifespan] Pre-reservation expire worker started")
 
+    media_task = asyncio.create_task(media_worker.run())
+    logger.info("[lifespan] WhatsApp media download worker started")
+
     yield
 
     scheduler.stop()
     expire_worker.stop()
+    media_worker.stop()
 
     scheduler_task.cancel()
     expire_task.cancel()
+    media_task.cancel()
 
     try:
         await scheduler_task
@@ -42,6 +49,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     try:
         await expire_task
+    except asyncio.CancelledError:
+        pass
+
+    try:
+        await media_task
     except asyncio.CancelledError:
         pass
 
