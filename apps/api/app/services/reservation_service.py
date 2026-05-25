@@ -6,12 +6,25 @@ from datetime import UTC, date, datetime
 from beanie import PydanticObjectId
 from pymongo.errors import DuplicateKeyError
 
-from app.common.enums import Channel, PaymentStatus, ReservationStatus, ScheduleStatus, UserRole
+from app.common.enums import (
+    Channel,
+    ParticipantFormStatus,
+    PaymentStatus,
+    ReservationStatus,
+    ScheduleStatus,
+    UserRole,
+)
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-from app.documents import ExperienceDocument, ReservationDocument, ScheduleDocument
+from app.documents import (
+    ExperienceDocument,
+    ParticipantDocument,
+    ReservationDocument,
+    ScheduleDocument,
+)
 from app.services.config_service import ConfigService
 from app.services.notification_service import NotificationService
+from app.services.participant_form_link_service import ParticipantFormLinkService
 
 ACTIVE_RESERVATION_STATUSES = {
     ReservationStatus.QUOTED,
@@ -55,6 +68,7 @@ class ReservationService:
     def __init__(self) -> None:
         self.config_service = ConfigService()
         self.notification_service = NotificationService()
+        self.form_link_service = ParticipantFormLinkService()
 
     @staticmethod
     def _is_blocking_status(status: ReservationStatus) -> bool:
@@ -70,10 +84,6 @@ class ReservationService:
 
     async def _sync_day_lock_fields(self, reservation: ReservationDocument) -> None:
         requested_date = reservation.requested_date
-        if requested_date is None and reservation.schedule_id is not None:
-            schedule = await ScheduleDocument.get(reservation.schedule_id)
-            if schedule is not None:
-                requested_date = schedule.date
 
         reservation.blocks_day = bool(requested_date) and self._is_blocking_status(
             reservation.status
@@ -425,6 +435,18 @@ class ReservationService:
             except Exception:
                 pass
 
+            _, raw_token = await self.form_link_service.generate(
+                reservation_id=reservation_id,
+                expected_participants_count=reservation.participant_count,
+                created_by=actor_id,
+            )
+            from app.core.config import settings
+
+            reservation.form_url = (
+                f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
+            )
+            await reservation.save()
+
             return reservation
         except Exception:
             await self._rollback_schedule_capacity(
@@ -577,6 +599,43 @@ class ReservationService:
         reservation.updated_by = actor_id
         await reservation.save()
         return reservation
+
+    async def validate_participant_forms_completed(
+        self, reservation: ReservationDocument
+    ) -> None:
+        if reservation.participant_form_status != ParticipantFormStatus.COMPLETE:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.PARTICIPANT_FORM_NOT_COMPLETE,
+                message="Todos los participantes deben completar el formulario antes de continuar.",
+                details={
+                    "expected": reservation.expected_participants_count,
+                    "completed": reservation.participants_completed_count,
+                },
+            )
+
+        participants = await ParticipantDocument.find(
+            ParticipantDocument.reservation_id == reservation.id,
+        ).to_list()
+        for p in participants:
+            if not p.accepted_data_processing:
+                raise ApiError(
+                    status_code=409,
+                    code=ErrorCode.PARTICIPANT_DATA_PROCESSING_REQUIRED,
+                    message=(
+                        f"El participante {p.first_name} {p.last_name} "
+                        "no aceptó el tratamiento de datos."
+                    ),
+                )
+            if p.accepted_risk_release is not True:
+                raise ApiError(
+                    status_code=409,
+                    code=ErrorCode.PARTICIPANT_RISK_RELEASE_REQUIRED,
+                    message=(
+                        f"El participante {p.first_name} {p.last_name} "
+                        "no aceptó la liberación de responsabilidad."
+                    ),
+                )
 
     def _build_code(self, prefix: str = "RES") -> str:
         return f"{prefix}-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"

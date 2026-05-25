@@ -69,10 +69,18 @@ class AssignmentPriority(StrEnum):
     SENIOR_SAFETY = "senior_safety"
 
 
-class ParticipantFormStatus(StrEnum):
+class ParticipantFormLinkStatus(StrEnum):
     ACTIVE = "active"
-    FULL = "full"
     EXPIRED = "expired"
+    REVOKED = "revoked"
+    COMPLETED = "completed"
+
+
+class ParticipantFormStatus(StrEnum):
+    NOT_SENT = "not_sent"
+    SENT = "sent"
+    PARTIAL = "partial"
+    COMPLETE = "complete"
     REVOKED = "revoked"
 
 
@@ -143,6 +151,9 @@ class Permission(StrEnum):
     NOTIFICATION_TEMPLATE_READ = "notification_template.read"
     NOTIFICATION_TEMPLATE_CREATE = "notification_template.create"
     NOTIFICATION_TEMPLATE_UPDATE = "notification_template.update"
+    PARTICIPANT_FORM_LINK_CREATE = "participant_form_link.create"
+    PARTICIPANT_FORM_LINK_READ = "participant_form_link.read"
+    PARTICIPANT_FORM_LINK_REVOKE = "participant_form_link.revoke"
 
 
 class NotificationEventType(StrEnum):
@@ -188,6 +199,7 @@ ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
         Permission.LOG_UPDATE,
         Permission.POLICY_READ,
         Permission.NOTIFICATION_READ,
+        Permission.PARTICIPANT_FORM_LINK_READ,
     },
     UserRole.UNASSIGNED: {
         Permission.AUTH_SELF_READ,

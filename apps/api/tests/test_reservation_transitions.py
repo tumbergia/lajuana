@@ -298,12 +298,16 @@ def test_confirm_success_with_capacity_updates_schedule(monkeypatch: pytest.Monk
     async def _noop(*args, **kwargs):
         return None
 
+    async def _fake_generate(*args, **kwargs):
+        return "token", "raw_token"
+
     monkeypatch.setattr(service, "get", _fake_get)
     monkeypatch.setattr(service.config_service, "get_reservation_rules", _fake_rules)
     monkeypatch.setattr("app.services.reservation_service.ScheduleDocument.get", _fake_schedule_get)
     monkeypatch.setattr(service, "_commit_schedule_capacity", _fake_commit)
     monkeypatch.setattr(service, "ensure_date_available", _noop)
     monkeypatch.setattr(service, "_sync_day_lock_fields", _noop)
+    monkeypatch.setattr(service.form_link_service, "generate", _fake_generate)
 
     result = asyncio.run(service.confirm_reservation(str(reservation.id)))
 

@@ -7,6 +7,7 @@ from google import genai
 from google.genai import errors as genai_errors
 from pydantic import BaseModel
 
+from app.ai.providers.token_telemetry import log_token_usage
 from app.core.config import settings
 from app.core.logging import logger
 
@@ -39,14 +40,20 @@ def _strip_additional_properties(schema: Any) -> Any:
 
 class GeminiProvider:
     def __init__(self) -> None:
-        keys = [settings.gemini_api_key, settings.gemini_api_key_2]
+        keys = [
+            settings.gemini_api_key,
+            settings.gemini_api_key_2,
+            settings.gemini_api_key_3,
+        ]
         keys = [k for k in keys if k]
 
         if not keys:
             raise GeminiProviderError(
-                "No Gemini API keys configured. Set GEMINI_API_KEY or GEMINI_API_KEY_2."
+                "No Gemini API keys configured. "
+                "Set GEMINI_API_KEY, GEMINI_API_KEY_2, or GEMINI_API_KEY_3."
             )
 
+        self._keys = keys
         self._clients = [genai.Client(api_key=k) for k in keys]
         models = [settings.gemini_model] + [
             m.strip() for m in settings.gemini_fallback_models.split(",") if m.strip()
@@ -63,22 +70,28 @@ class GeminiProvider:
     def _current_model(self) -> str:
         return self._models[self._current_model_index]
 
-    def _rotate_key(self) -> bool:
-        if self._current_key_index < len(self._clients) - 1:
-            self._current_key_index += 1
-            logger.warning("Rotating to fallback Gemini API key (key %d)", self._current_key_index)
-            return True
-        return False
-
     def _rotate_model(self) -> bool:
         if self._current_model_index < len(self._models) - 1:
             self._current_model_index += 1
-            self._current_key_index = 0
             logger.warning(
-                "Rotating to fallback model '%s' (model %d/%d)",
+                "Rotating to fallback model '%s' (model %d/%d) on key %d",
                 self._current_model,
                 self._current_model_index + 1,
                 len(self._models),
+                self._current_key_index + 1,
+            )
+            return True
+        return False
+
+    def _rotate_key(self) -> bool:
+        if self._current_key_index < len(self._clients) - 1:
+            self._current_key_index += 1
+            self._current_model_index = 0
+            logger.warning(
+                "Rotating to fallback Gemini API key (key %d/%d) with model '%s'",
+                self._current_key_index + 1,
+                len(self._clients),
+                self._current_model,
             )
             return True
         return False
@@ -90,6 +103,7 @@ class GeminiProvider:
         user: str,
         response_model: type[TModel],
         temperature: float | None = None,
+        telemetry_context: dict | None = None,
     ) -> TModel:
         prompt = f"{system.strip()}\n\nMensaje / contexto:\n{user.strip()}"
         schema = _strip_additional_properties(response_model.model_json_schema())
@@ -107,19 +121,21 @@ class GeminiProvider:
                         "response_schema": schema,
                     },
                 )
-            except genai_errors.ClientError as exc:
+            except genai_errors.APIError as exc:
                 if exc.code == 429:
-                    if self._rotate_key():
-                        return _call()
                     if self._rotate_model():
+                        return _call()
+                    if self._rotate_key():
                         return _call()
                     raise GeminiResourceExhausted(
                         "Todos los API keys y modelos de Gemini excedieron su cuota. "
                         "Espera unos minutos o configura más capacidad."
                     ) from exc
 
-                if exc.code == 404:
+                if exc.code in (404, 500, 502, 503):
                     if self._rotate_model():
+                        return _call()
+                    if self._rotate_key():
                         return _call()
                     raise GeminiModelUnavailable(
                         "Ningún modelo configurado está disponible con las API keys actuales."
@@ -135,6 +151,21 @@ class GeminiProvider:
 
             if not response.text:
                 raise GeminiProviderError("Gemini returned an empty response.")
+
+            try:
+                um = response.usage_metadata
+                if um is not None:
+                    log_token_usage(
+                        api_key_suffix=self._keys[self._current_key_index][-4:],
+                        model=self._current_model,
+                        prompt_tokens=getattr(um, "prompt_token_count", 0) or 0,
+                        completion_tokens=getattr(um, "candidates_token_count", 0) or 0,
+                        total_tokens=getattr(um, "total_token_count", 0) or 0,
+                        channel=telemetry_context.get("channel") if telemetry_context else None,
+                        conversation_id=telemetry_context.get("conversation_id") if telemetry_context else None,
+                    )
+            except Exception:
+                logger.debug("Failed to log token telemetry; continuing.")
 
             try:
                 return response_model.model_validate_json(response.text)

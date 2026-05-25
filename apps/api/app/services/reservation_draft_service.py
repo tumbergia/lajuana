@@ -11,19 +11,17 @@ from app.core.errors import ApiError
 from app.documents import ExperienceDocument, ReservationDocument
 from app.services.config_service import ConfigService
 from app.services.reservation_service import ReservationService
-from app.services.schedule_service import ScheduleService
 
 
 class ReservationDraftService:
     def __init__(self) -> None:
         self.reservation_service = ReservationService()
-        self.schedule_service = ScheduleService()
         self.config_service = ConfigService()
 
     async def create_reservation_draft(
         self,
         experience_id: str,
-        schedule_id: str,
+        schedule_id: str | None,
         participant_count: int,
         holder_phone: str,
         holder_name: str | None,
@@ -41,16 +39,7 @@ class ReservationDraftService:
                 message="Experiencia no encontrada.",
             )
 
-        # 2. Validate schedule is open
-        schedule = await self.schedule_service.get(schedule_id)
-        if not schedule.is_active or schedule.status.value != "open":
-            raise ApiError(
-                status_code=409,
-                code=ErrorCode.SCHEDULE_NOT_OPEN,
-                message="La agenda no está disponible para pre-reservar.",
-            )
-
-        # 3. Validate minimum anticipation and convert date
+        # 2. Validate minimum anticipation and convert date
         rules = await self.config_service.get_reservation_rules()
         requested = datetime.strptime(requested_date, "%Y-%m-%d").date()
         delta_days = (requested - datetime.now(UTC).date()).days
@@ -61,13 +50,16 @@ class ReservationDraftService:
                 message="La fecha no cumple la anticipación mínima.",
             )
 
-        # 4. Validate available slots (must use live read since atomic hold covers race)
-        if schedule.available_slots < participant_count:
+        # 3. Validate max participants
+        if participant_count > 8:
             raise ApiError(
-                status_code=409,
-                code=ErrorCode.SCHEDULE_ALREADY_FULL,
-                message="No hay suficientes cupos disponibles.",
+                status_code=400,
+                code=ErrorCode.RESERVATION_INVALID_PARTICIPANT_COUNT,
+                message="Máximo 8 personas por reserva.",
             )
+
+        # 4. Validate no active reservation on the same date
+        await self.reservation_service.ensure_date_available(requested)
 
         # 5. Validate quote_snapshot
         if not quote_snapshot or not isinstance(quote_snapshot, dict):
@@ -77,42 +69,35 @@ class ReservationDraftService:
                 message="quote_snapshot es obligatorio.",
             )
 
-        # 6. Atomic hold
-        hold_result = await self.schedule_service.hold_slots(schedule_id, participant_count)
-        if hold_result is None:
-            raise ApiError(
-                status_code=409,
-                code=ErrorCode.SCHEDULE_HOLD_FAILED,
-                message="No se pudieron reservar los cupos temporalmente. Intenta de nuevo.",
-            )
-
-        # 7. Generate code with PR- prefix
+        # 6. Generate code with PR- prefix
         code = self._build_reservation_draft_code()
 
-        # 8. Compute TTL
+        # 7. Compute TTL
         expire_at = datetime.now(UTC) + timedelta(minutes=rules.reservation_draft_ttl_minutes)
 
-        # 9. Create reservation (requested_date as date object, not string)
+        # 8. Create reservation
+        payload = {
+            "experience_id": experience_id,
+            "participant_count": participant_count,
+            "holder_phone": holder_phone,
+            "holder_name": holder_name,
+            "requested_date": requested,
+            "channel": "whatsapp",
+            "code": code,
+            "quote_snapshot": quote_snapshot,
+            "quote_trace_id": trace_id,
+            "pre_reserved_at": datetime.now(UTC),
+            "expire_at": expire_at,
+        }
+        if schedule_id is not None:
+            payload["schedule_id"] = schedule_id
+
         try:
             await self.reservation_service.create(
-                payload={
-                    "experience_id": experience_id,
-                    "schedule_id": schedule_id,
-                    "participant_count": participant_count,
-                    "holder_phone": holder_phone,
-                    "holder_name": holder_name,
-                    "requested_date": requested,
-                    "channel": "whatsapp",
-                    "code": code,
-                    "quote_snapshot": quote_snapshot,
-                    "quote_trace_id": trace_id,
-                    "pre_reserved_at": datetime.now(UTC),
-                    "expire_at": expire_at,
-                },
+                payload=payload,
                 initial_status=ReservationStatus.PRE_RESERVED,
             )
         except Exception:
-            await self.schedule_service.release_held_slots(schedule_id, participant_count)
             raise
 
         return {
@@ -136,12 +121,6 @@ class ReservationDraftService:
             await self.reservation_service.transition_status(reservation, ReservationStatus.EXPIRED)
             reservation.updated_at = datetime.now(UTC)
             await reservation.save()
-
-            if reservation.schedule_id is not None:
-                await self.schedule_service.release_held_slots(
-                    str(reservation.schedule_id),
-                    reservation.participant_count,
-                )
             count += 1
 
         return count

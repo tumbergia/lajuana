@@ -3,7 +3,12 @@ from datetime import UTC, datetime
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ParticipantDocument, ReservationDocument
-from app.schemas.participant import ParticipantCreateSchema, ParticipantUpdateSchema
+from app.schemas.participant import (
+    ParticipantCreateSchema,
+    ParticipantNestedCreateSchema,
+    ParticipantUpdateSchema,
+)
+from app.services.participant_form_link_service import ParticipantFormLinkService
 
 REQUIRED_FIELDS_FOR_OPERATIONAL_COMPLETION = (
     "first_name",
@@ -16,13 +21,21 @@ REQUIRED_FIELDS_FOR_OPERATIONAL_COMPLETION = (
     "city",
     "height_cm",
     "weight_kg",
-    "experience_level",
     "emergency_contact",
     "accepted_data_processing",
 )
 
+RISK_RELEASE_TEXT = (
+    "Declaro que entiendo que la actividad ecuestre con mulas implica riesgos inherentes, "
+    "incluyendo caídas, golpes, lesiones graves, incapacidad permanente o muerte. Acepto "
+    "participar bajo mi propia responsabilidad, siguiendo instrucciones del personal de La Juana."
+)
+
 
 class ParticipantService:
+    def __init__(self) -> None:
+        self.form_link_service = ParticipantFormLinkService()
+
     async def get(self, participant_id: str) -> ParticipantDocument:
         doc = await ParticipantDocument.get(participant_id)
         if doc is None:
@@ -59,6 +72,76 @@ class ParticipantService:
         await reservation.save()
         return doc
 
+    async def create_from_form(
+        self,
+        raw_token: str,
+        payload: ParticipantNestedCreateSchema,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> ParticipantDocument:
+        form_link = await self.form_link_service.validate_token(raw_token)
+
+        if payload.birth_date >= datetime.now(UTC).date():
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.PARTICIPANT_INVALID_BIRTH_DATE,
+                message="La fecha de nacimiento debe ser anterior a hoy.",
+            )
+
+        if not payload.accepted_data_processing:
+            raise ApiError(
+                status_code=422,
+                code=ErrorCode.PARTICIPANT_DATA_PROCESSING_REQUIRED,
+                message="Debe aceptar el tratamiento de datos personales.",
+            )
+
+        if not payload.accepted_risk_release:
+            raise ApiError(
+                status_code=422,
+                code=ErrorCode.PARTICIPANT_RISK_RELEASE_REQUIRED,
+                message="Debe aceptar la liberación de responsabilidad para participar.",
+            )
+
+        reservation = await ReservationDocument.get(form_link.reservation_id)
+
+        doc = ParticipantDocument(
+            reservation_id=form_link.reservation_id,
+            first_name=payload.first_name,
+            last_name=payload.last_name,
+            email=payload.email,
+            birth_date=payload.birth_date,
+            document_type=payload.document_type,
+            document_number=payload.document_number,
+            phone=payload.phone,
+            country=payload.country,
+            city=payload.city,
+            height_cm=payload.height_cm,
+            weight_kg=payload.weight_kg,
+            dietary_restrictions=payload.dietary_restrictions,
+            blood_type=payload.blood_type,
+            eps_or_travel_insurance=payload.eps_or_travel_insurance,
+            health_conditions=payload.health_conditions,
+            sensory_disabilities=payload.sensory_disabilities,
+            emergency_contact=payload.emergency_contact,
+            accepted_data_processing=payload.accepted_data_processing,
+            accepted_media_usage=payload.accepted_media_usage,
+            accepted_risk_release=payload.accepted_risk_release,
+            risk_release_text_version=payload.risk_release_text_version or RISK_RELEASE_TEXT,
+            submitted_at=datetime.now(UTC),
+            source_form_link_id=form_link.id,
+        )
+        doc.is_completed = self._is_completed(doc)
+        await doc.insert()
+
+        if reservation is not None:
+            reservation.participant_ids.append(doc.id)
+            await reservation.save()
+
+        await self.form_link_service.increment_used_count(form_link)
+        await self.form_link_service.update_reservation_completion(form_link.reservation_id)
+
+        return doc
+
     async def update(
         self,
         participant_id: str,
@@ -84,6 +167,8 @@ class ParticipantService:
                 return False
         if not participant.accepted_data_processing:
             return False
+        if participant.accepted_risk_release is not True:
+            return False
         return True
 
     def validate_completed(self, participant: ParticipantDocument) -> None:
@@ -93,3 +178,6 @@ class ParticipantService:
                 code=ErrorCode.PARTICIPANT_OPERATIONALLY_INCOMPLETE,
                 message="El participante no tiene completitud operativa.",
             )
+
+    def get_risk_release_text(self) -> str:
+        return RISK_RELEASE_TEXT

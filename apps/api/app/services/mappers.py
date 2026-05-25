@@ -3,6 +3,7 @@ from app.documents import (
     EquineDocument,
     ExperienceDocument,
     ParticipantDocument,
+    ParticipantFormLinkDocument,
     PaymentProofDocument,
     PolicyDocument,
     ProviderDocument,
@@ -16,7 +17,8 @@ from app.schemas.assignment import AssignmentResponseSchema
 from app.schemas.auth import UserResponseSchema
 from app.schemas.equine import EquineResponseSchema
 from app.schemas.experience import ExperienceResponseSchema
-from app.schemas.participant import ParticipantFormInfoSchema, ParticipantResponseSchema
+from app.schemas.participant import ParticipantResponseSchema
+from app.schemas.participant_form_link import ParticipantFormLinkStatusResponse
 from app.schemas.payment_proof import PaymentProofResponseSchema
 from app.schemas.policy import PolicyResponseSchema
 from app.schemas.provider import ProviderResponseSchema
@@ -108,6 +110,10 @@ def reservation_to_response(doc: ReservationDocument) -> ReservationResponseSche
         requested_date=doc.requested_date,
         quoted_total_amount=doc.quoted_total_amount,
         currency=doc.currency,
+        expected_participants_count=doc.expected_participants_count,
+        participants_completed_count=doc.participants_completed_count,
+        participant_form_status=doc.participant_form_status,
+        form_url=doc.form_url,
         confirmed_at=doc.confirmed_at,
         cancelled_at=doc.cancelled_at,
         completed_at=doc.completed_at,
@@ -146,15 +152,37 @@ def participant_to_response(doc: ParticipantDocument) -> ParticipantResponseSche
         city=doc.city,
         height_cm=doc.height_cm,
         weight_kg=doc.weight_kg,
-        experience_level=doc.experience_level,
+        dietary_restrictions=doc.dietary_restrictions,
+        blood_type=doc.blood_type,
+        eps_or_travel_insurance=doc.eps_or_travel_insurance,
+        health_conditions=doc.health_conditions,
+        sensory_disabilities=doc.sensory_disabilities,
         emergency_contact=doc.emergency_contact,
         accepted_data_processing=doc.accepted_data_processing,
         accepted_media_usage=doc.accepted_media_usage,
+        accepted_risk_release=doc.accepted_risk_release,
+        risk_release_text_version=doc.risk_release_text_version,
         is_completed=doc.is_completed,
         created_at=doc.created_at,
         updated_at=doc.updated_at,
         deleted_at=doc.deleted_at,
         version=doc.version,
+    )
+
+
+def form_link_to_status_response(
+    doc: ParticipantFormLinkDocument,
+) -> ParticipantFormLinkStatusResponse:
+    return ParticipantFormLinkStatusResponse(
+        id=str(doc.id),
+        reservation_id=str(doc.reservation_id),
+        status=doc.status,
+        expires_at=doc.expires_at,
+        max_participants=doc.max_participants,
+        used_count=doc.used_count,
+        completed_participants=doc.used_count,
+        created_at=doc.created_at,
+        revoked_at=doc.revoked_at,
     )
 
 
@@ -261,25 +289,6 @@ def provider_to_response(doc: ProviderDocument) -> ProviderResponseSchema:
         created_at=doc.created_at,
         updated_at=doc.updated_at,
         deleted_at=doc.deleted_at,
-    )
-
-
-def form_info_to_response(
-    reservation: ReservationDocument,
-    experience_name: str,
-    start_time: str | None = None,
-) -> ParticipantFormInfoSchema:
-    limit = reservation.participant_registration_limit or 0
-    registered = reservation.participant_registration_count
-    return ParticipantFormInfoSchema(
-        reservation_public_code=reservation.code,
-        experience_name=experience_name,
-        scheduled_date=reservation.requested_date,
-        start_time=start_time,
-        participant_limit=limit,
-        participants_registered=registered,
-        participants_remaining=max(0, limit - registered),
-        form_status=reservation.participant_form_status or "active",
     )
 
 

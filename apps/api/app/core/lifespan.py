@@ -12,11 +12,13 @@ from app.core.logging import logger, reconfigure_logger
 from app.jobs.expire_reservation_drafts import ReservationDraftExpireWorker
 from app.jobs.notification_outbox_worker import NotificationOutboxWorker
 from app.jobs.pre_service_reminder_scheduler import PreServiceReminderScheduler
+from app.jobs.whatsapp_media_worker import WhatsAppMediaWorker
 
 scheduler = ConversationScheduler()
 expire_worker = ReservationDraftExpireWorker()
 notif_outbox_worker = NotificationOutboxWorker()
 pre_service_scheduler = PreServiceReminderScheduler()
+media_worker = WhatsAppMediaWorker()
 
 
 @asynccontextmanager
@@ -47,17 +49,22 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except TimeoutError:
         logger.warning("[lifespan] Initial notification batch timed out")
 
+    media_task = asyncio.create_task(media_worker.run())
+    logger.info("[lifespan] WhatsApp media download worker started")
+
     yield
 
     scheduler.stop()
     expire_worker.stop()
     notif_outbox_worker.stop()
     pre_service_scheduler.stop()
+    media_worker.stop()
 
     scheduler_task.cancel()
     expire_task.cancel()
     notif_outbox_task.cancel()
     pre_service_task.cancel()
+    media_task.cancel()
 
     try:
         await scheduler_task
@@ -76,6 +83,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     try:
         await pre_service_task
+    except asyncio.CancelledError:
+        pass
+
+    try:
+        await media_task
     except asyncio.CancelledError:
         pass
 

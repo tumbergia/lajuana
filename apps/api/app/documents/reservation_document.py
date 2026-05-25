@@ -6,7 +6,7 @@ from pydantic import EmailStr
 from pymongo import IndexModel
 
 from app.common.collections import Collections
-from app.common.enums import Channel, PaymentStatus, ReservationStatus
+from app.common.enums import Channel, ParticipantFormStatus, PaymentStatus, ReservationStatus
 from app.documents.base import AuditDocument
 
 ACTIVE_RESERVATION_STATUSES = [
@@ -40,16 +40,14 @@ class ReservationDocument(AuditDocument):
     confirmed_at: datetime | None = None
     cancelled_at: datetime | None = None
     completed_at: datetime | None = None
+    expected_participants_count: int | None = None
+    participants_completed_count: int = 0
+    participant_form_status: ParticipantFormStatus = ParticipantFormStatus.NOT_SENT
+    form_url: str | None = None
     quote_snapshot: dict | None = None
     quote_trace_id: str | None = None
     pre_reserved_at: datetime | None = None
     expire_at: datetime | None = None
-    participant_form_token_hash: str | None = None
-    participant_form_created_at: datetime | None = None
-    participant_form_expires_at: datetime | None = None
-    participant_form_status: str | None = None
-    participant_registration_limit: int | None = None
-    participant_registration_count: int = 0
     created_by: PydanticObjectId | None = None
     updated_by: PydanticObjectId | None = None
 

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     app_env: str = "local"
     app_debug: bool = True
-    cors_allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:8080"
+    cors_allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:8080,https://formulario-la-juana.vercel.app"
     cors_allow_origin_regex: str = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
     cors_allow_credentials: bool = False
 
@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     mongodb_db_name: str = Field("lajuana", validation_alias="DATABASE_NAME")
     mongodb_connect_timeout_ms: int = 2000
     app_skip_db_init: bool = False
+
+    app_base_url: str = "http://localhost:8080"
 
     auth_jwt_secret: str = "change-me"
     auth_jwt_algorithm: str = "HS256"
@@ -39,8 +41,9 @@ class Settings(BaseSettings):
     llm_provider: str = "gemini"
     gemini_api_key: str = ""
     gemini_api_key_2: str = ""
+    gemini_api_key_3: str = ""
     gemini_model: str = "gemini-2.5-flash"
-    gemini_fallback_models: str = "gemini-2.0-flash,gemini-2.0-flash-lite"
+    gemini_fallback_models: str = "gemini-3-flash,gemini-3.1-flash-lite,gemini-2.5-flash-lite"
     gemini_temperature: float = 0.2
     gemini_timeout_seconds: int = 60
 

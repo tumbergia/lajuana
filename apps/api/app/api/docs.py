@@ -577,6 +577,20 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "error_codes": ["auth.unauthorized", "auth.forbidden", "payment_proof.not_found"],
         "service_docstring": "Obtiene comprobante por id sin exponer binario.",
     },
+    "payment_proofs_download": {
+        "summary": "Descargar archivo de comprobante de pago",
+        "description": "Descarga el archivo binario (imagen o PDF) del comprobante de pago. Si el archivo aun no se ha descargado de WhatsApp, retorna 202 Accepted.",
+        "permissions": ["payment_proof.read"],
+        "responses": {
+            200: "Archivo binario del comprobante.",
+            202: "Archivo pendiente de descarga desde WhatsApp.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            404: "Comprobante o archivo no existe.",
+        },
+        "error_codes": ["auth.unauthorized", "auth.forbidden", "payment_proof.not_found", "payment_proof.file_not_found"],
+        "service_docstring": "Descarga el archivo binario de un comprobante de pago desde S3/local.",
+    },
     "payment_proofs_update": {
         "summary": "Actualizar comprobante de pago",
         "description": "Actualiza estado o metadatos de validacion de comprobante.",
@@ -636,82 +650,7 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "error_codes": ["auth.unauthorized", "auth.forbidden", "participant.not_found"],
         "service_docstring": "Obtiene participante por id.",
     },
-    "participant_form_link_generate": {
-        "summary": "Generar enlace de formulario de participantes",
-        "description": (
-            "Genera un enlace público seguro para que los participantes de una reserva "
-            "confirmada registren sus datos obligatorios. El enlace se retorna al usuario "
-            "para que lo reenvíe. No se envía automáticamente a los participantes."
-        ),
-        "permissions": ["participant.create"],
-        "responses": {
-            201: "Enlace de formulario generado correctamente.",
-            400: "La reserva no está confirmada.",
-            401: "No autenticado.",
-            403: "Sin permisos.",
-            404: "Reserva no existe.",
-        },
-        "error_codes": [
-            "auth.unauthorized",
-            "auth.forbidden",
-            "reservation.not_found",
-            "participant_form.not_confirmed",
-            "common.validation_error",
-        ],
-        "service_docstring": "Genera token, lo guarda con hash en la reserva y retorna URL pública.",
-    },
-    "participant_form_info": {
-        "summary": "Obtener información del formulario",
-        "description": (
-            "Retorna información pública de un formulario de participantes mediante su token. "
-            "No expone datos sensibles como teléfono, pago o datos de salud. "
-            "Solo retorna código de reserva, nombre de experiencia, fecha y estado de cupos."
-        ),
-        "permissions": [],
-        "responses": {
-            200: "Información del formulario obtenida correctamente.",
-            404: "Token inválido.",
-            409: "Formulario completo.",
-            410: "Formulario expirado.",
-        },
-        "error_codes": [
-            "participant_form.invalid_token",
-            "participant_form.expired",
-            "participant_form.full",
-        ],
-        "service_docstring": "Valida token y retorna info pública del formulario.",
-    },
-    "participant_form_register": {
-        "summary": "Registrar participante desde formulario",
-        "description": (
-            "Registra un participante usando el token del formulario público. "
-            "Valida que el formulario esté activo, no expirado y con cupos disponibles. "
-            "El registro es atómico: si dos personas envían simultáneamente cuando solo queda "
-            "un cupo, solo una completa el registro."
-        ),
-        "permissions": [],
-        "responses": {
-            201: "Participante registrado correctamente.",
-            400: "Datos inválidos o incompletos.",
-            403: "No acepta tratamiento de datos.",
-            404: "Token inválido.",
-            409: "Formulario completo.",
-            410: "Formulario expirado.",
-            422: "Datos inválidos o incompletos.",
-        },
-        "error_codes": [
-            "participant_form.invalid_token",
-            "participant_form.expired",
-            "participant_form.full",
-            "participant.data_processing_required",
-            "common.validation_error",
-        ],
-        "service_docstring": (
-            "Valida token, chequea cupo atómicamente, crea ParticipantDocument, "
-            "incrementa contador y marca full si corresponde."
-        ),
-    },
-    "participants_update": {
+	"participants_update": {
         "summary": "Actualizar participante",
         "description": "Actualiza participante y recalcula completitud.",
         "permissions": ["participant.update"],
@@ -1154,6 +1093,113 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         ],
         "service_docstring": "Actualiza configuración validando min_days_in_advance.",
     },
+    "participant_form_validate_token": {
+        "summary": "Validar token del formulario",
+        "description": "Valida que un token de formulario sea válido, no haya expirado y tenga cupos disponibles.",
+        "permissions": [],
+        "responses": {
+            200: "Resultado de validación del token.",
+        },
+        "error_codes": [],
+        "service_docstring": "Valida token de formulario de participantes.",
+    },
+    "participant_form_public_status": {
+        "summary": "Estado público del formulario",
+        "description": "Retorna estado agregado del formulario: completados, esperados, sin datos sensibles.",
+        "permissions": [],
+        "responses": {
+            200: "Estado agregado del formulario.",
+            404: "Token inválido o reserva no encontrada.",
+        },
+        "error_codes": ["form_link.invalid_token", "reservation.not_found"],
+        "service_docstring": "Retorna estado agregado público del formulario.",
+    },
+    "participant_form_public_create": {
+        "summary": "Registrar participante desde formulario público",
+        "description": "Crea un participante asociado a la reserva mediante un token válido del formulario.",
+        "permissions": [],
+        "responses": {
+            201: "Participante registrado correctamente.",
+            400: "Fecha de nacimiento inválida.",
+            404: "Token inválido.",
+            409: "Enlace expirado, revocado o cupo máximo alcanzado.",
+            410: "Enlace expirado o revocado.",
+            422: "Datos inválidos o falta aceptar tratamiento de datos/liberación.",
+        },
+        "error_codes": [
+            "form_link.invalid_token",
+            "form_link.expired",
+            "form_link.revoked",
+            "form_link.max_participants_reached",
+            "form_link.already_completed",
+            "participant.invalid_birth_date",
+            "participant.data_processing_required",
+            "participant.risk_release_required",
+            "common.validation_error",
+        ],
+        "service_docstring": "Crea participante desde formulario público con validaciones de token.",
+    },
+    "participant_form_risk_release_text": {
+        "summary": "Obtener texto de liberación de responsabilidad",
+        "description": "Retorna el texto vigente de liberación de responsabilidad y asunción de riesgos.",
+        "permissions": [],
+        "responses": {
+            200: "Texto de liberación de responsabilidad.",
+        },
+        "error_codes": [],
+        "service_docstring": "Retorna el texto de liberación de responsabilidad.",
+    },
+    "participant_form_generate_link": {
+        "summary": "Generar enlace de formulario",
+        "description": "Genera un enlace temporal para que los participantes de una reserva confirmada diligencien sus datos.",
+        "permissions": ["participant_form_link.create"],
+        "responses": {
+            201: "Enlace generado correctamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            404: "Reserva no encontrada.",
+            409: "La reserva no está confirmada.",
+        },
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.forbidden",
+            "reservation.not_found",
+            "form_link.reservation_not_confirmed",
+        ],
+        "service_docstring": "Genera enlace temporal de formulario de participantes.",
+    },
+    "participant_form_revoke_link": {
+        "summary": "Revocar enlace de formulario",
+        "description": "Revoca manualmente un enlace de formulario activo.",
+        "permissions": ["participant_form_link.revoke"],
+        "responses": {
+            200: "Enlace revocado correctamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            404: "No hay enlace activo para esta reserva.",
+        },
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.forbidden",
+            "form_link.not_found",
+        ],
+        "service_docstring": "Revoca enlace de formulario de participantes.",
+    },
+    "participant_form_get_link": {
+        "summary": "Consultar enlace de formulario",
+        "description": "Retorna el estado del enlace de formulario activo o el último generado.",
+        "permissions": ["participant_form_link.read"],
+        "responses": {
+            200: "Estado del enlace obtenido correctamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+        },
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.forbidden",
+        ],
+        "service_docstring": "Obtiene estado del enlace de formulario.",
+    },
 }
 
 
@@ -1194,13 +1240,8 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     ),
     "participants_create": ("POST", "/api/v1/reservations/{reservation_id}/participants"),
     "payment_proofs_get": ("GET", "/api/v1/payment-proofs/{payment_proof_id}"),
+    "payment_proofs_download": ("GET", "/api/v1/payment-proofs/{payment_proof_id}/download"),
     "payment_proofs_update": ("PATCH", "/api/v1/payment-proofs/{payment_proof_id}"),
-    "participant_form_link_generate": (
-        "POST",
-        "/api/v1/reservations/{reservation_id}/participant-form-link",
-    ),
-    "participant_form_info": ("GET", "/api/v1/public/participant-form/{token}"),
-    "participant_form_register": ("POST", "/api/v1/public/participant-form/{token}"),
     "participants_get": ("GET", "/api/v1/participants/{participant_id}"),
     "participants_update": ("PATCH", "/api/v1/participants/{participant_id}"),
     "equines_create": ("POST", "/api/v1/equines"),
@@ -1228,6 +1269,34 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "config_emergency_contacts": ("GET", "/api/v1/config/emergency-contacts"),
     "config_get": ("GET", "/api/v1/config/reservation-rules"),
     "config_update": ("PATCH", "/api/v1/config/reservation-rules"),
+    "participant_form_validate_token": (
+        "GET",
+        "/api/v1/public/participant-forms/{token}/validate",
+    ),
+    "participant_form_public_status": (
+        "GET",
+        "/api/v1/public/participant-forms/{token}/status",
+    ),
+    "participant_form_public_create": (
+        "POST",
+        "/api/v1/public/participant-forms/{token}/participants",
+    ),
+    "participant_form_risk_release_text": (
+        "GET",
+        "/api/v1/public/participant-forms/risk-release-text",
+    ),
+    "participant_form_generate_link": (
+        "POST",
+        "/api/v1/reservations/{reservation_id}/participant-form-link",
+    ),
+    "participant_form_revoke_link": (
+        "POST",
+        "/api/v1/reservations/{reservation_id}/participant-form-link/revoke",
+    ),
+    "participant_form_get_link": (
+        "GET",
+        "/api/v1/reservations/{reservation_id}/participant-form-link",
+    ),
 }
 
 for endpoint_key, route in ENDPOINT_ROUTE_MAP.items():

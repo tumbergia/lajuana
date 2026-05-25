@@ -47,6 +47,7 @@ class GeminiPlanner:
             user=str(context),
             response_model=AssistantPlan,
             temperature=0.1,
+            telemetry_context={"channel": channel, "conversation_id": conversation_id},
         )
 
         elapsed_ms = int((time.perf_counter() - started) * 1000)

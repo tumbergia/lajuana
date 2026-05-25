@@ -80,7 +80,7 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "http_status": 400,
         "code": ErrorCode.RESERVATION_INVALID_PARTICIPANT_COUNT,
         "name": "Cantidad de participantes invalida",
-        "trigger": "participant_count <= 0",
+        "trigger": "participant_count <= 0 o > 8",
         "detail_keys": ("participant_count",),
     },
     "B400-010": {
@@ -468,33 +468,47 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "participants_count fuera de todos los tiers",
         "detail_keys": ("participant_count",),
     },
-    "B400-033": {
-        "http_status": 400,
-        "code": ErrorCode.PARTICIPANT_FORM_NOT_CONFIRMED,
-        "name": "Reserva no confirmada",
-        "trigger": "generar link para reserva no CONFIRMED",
-        "detail_keys": ("reservation_id", "status"),
-    },
     "B409-020": {
         "http_status": 409,
-        "code": ErrorCode.PARTICIPANT_FORM_FULL,
-        "name": "Formulario de participantes lleno",
-        "trigger": "participant_registration_count >= participant_registration_limit",
-        "detail_keys": ("registered", "limit"),
+        "code": ErrorCode.FORM_LINK_RESERVATION_NOT_CONFIRMED,
+        "name": "Reserva no confirmada",
+        "trigger": "reservation.status no es CONFIRMED",
+        "detail_keys": ("reservation_id", "reservation_status"),
     },
-    "B410-001": {
-        "http_status": 410,
-        "code": ErrorCode.PARTICIPANT_FORM_INVALID_TOKEN,
-        "name": "Token de formulario invalido",
-        "trigger": "token no corresponde a ninguna reserva",
+    "B409-021": {
+        "http_status": 409,
+        "code": ErrorCode.FORM_LINK_MAX_PARTICIPANTS_REACHED,
+        "name": "Cupo maximo de participantes alcanzado",
+        "trigger": "used_count >= max_participants",
+        "detail_keys": ("max_participants", "used_count"),
+    },
+    "B409-022": {
+        "http_status": 409,
+        "code": ErrorCode.FORM_LINK_ALREADY_COMPLETED,
+        "name": "Formulario ya completado",
+        "trigger": "status es COMPLETED",
         "detail_keys": (),
     },
-    "B410-002": {
-        "http_status": 410,
-        "code": ErrorCode.PARTICIPANT_FORM_EXPIRED,
-        "name": "Formulario expirado",
-        "trigger": "participant_form_expires_at ya paso",
-        "detail_keys": ("expires_at",),
+    "B409-023": {
+        "http_status": 409,
+        "code": ErrorCode.PARTICIPANT_FORM_NOT_COMPLETE,
+        "name": "Formulario de participantes incompleto",
+        "trigger": "no todos los participantes han completado el formulario",
+        "detail_keys": ("expected", "completed"),
+    },
+    "B404-014": {
+        "http_status": 404,
+        "code": ErrorCode.FORM_LINK_NOT_FOUND,
+        "name": "Enlace de formulario no encontrado",
+        "trigger": "no hay enlace activo para la reserva",
+        "detail_keys": ("reservation_id",),
+    },
+    "B404-015": {
+        "http_status": 404,
+        "code": ErrorCode.PAYMENT_PROOF_FILE_NOT_FOUND,
+        "name": "Archivo de comprobante no encontrado",
+        "trigger": "storage_key no existe en el almacenamiento",
+        "detail_keys": ("storage_key",),
     },
 }
 
@@ -633,10 +647,15 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_404": ("B404-005",),
         "cases_409": (),
     },
-    ("PATCH", "/api/v1/payment-proofs/{payment_proof_id}"): {
+    ("GET", "/api/v1/payment-proofs/{payment_proof_id}/download"): {
         "cases_400": (),
-        "cases_404": ("B404-005", "B404-004"),
-        "cases_409": ("B409-009",),
+        "cases_404": ("B404-005", "B404-015"),
+        "cases_409": (),
+    },
+    ("PATCH", "/api/v1/payment-proofs/{payment_proof_id}"): {
+        "cases_400": ("B400-006", "B400-012"),
+        "cases_404": ("B404-005",),
+        "cases_409": ("B409-008",),
     },
     ("POST", "/api/v1/reservations/{reservation_id}/participant-form-link"): {
         "cases_400": ("B400-033",),
@@ -646,12 +665,12 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
     ("GET", "/api/v1/public/participant-form/{token}"): {
         "cases_400": (),
         "cases_404": ("B410-001",),
-        "cases_409": ("B409-020",),
+        "cases_409": ("B409-024", "B410-002"),
     },
     ("POST", "/api/v1/public/participant-form/{token}"): {
         "cases_400": (),
         "cases_404": ("B410-001",),
-        "cases_409": ("B409-020",),
+        "cases_409": ("B409-024", "B410-002"),
     },
     ("GET", "/api/v1/participants/{participant_id}"): {
         "cases_400": (),
@@ -789,6 +808,41 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_409": (),
     },
     ("POST", "/api/v1/files/{upload_id}/complete"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/public/participant-forms/{token}/validate"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/public/participant-forms/{token}/status"): {
+        "cases_400": (),
+        "cases_404": ("B404-001",),
+        "cases_409": (),
+    },
+    ("POST", "/api/v1/public/participant-forms/{token}/participants"): {
+        "cases_400": ("B400-020",),
+        "cases_404": ("B404-001",),
+        "cases_409": ("B409-021", "B409-022"),
+    },
+    ("GET", "/api/v1/public/participant-forms/risk-release-text"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
+    ("POST", "/api/v1/reservations/{reservation_id}/participant-form-link"): {
+        "cases_400": (),
+        "cases_404": ("B404-004",),
+        "cases_409": ("B409-020",),
+    },
+    ("POST", "/api/v1/reservations/{reservation_id}/participant-form-link/revoke"): {
+        "cases_400": (),
+        "cases_404": ("B404-014",),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/reservations/{reservation_id}/participant-form-link"): {
         "cases_400": (),
         "cases_404": (),
         "cases_409": (),

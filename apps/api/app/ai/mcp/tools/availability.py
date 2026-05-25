@@ -12,27 +12,18 @@ from app.ai.mcp.tool_contracts import (
 )
 from app.core.config import settings
 from app.documents.experience_document import ExperienceDocument
-from app.documents.schedule_document import ScheduleDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.services.experience_catalog_resolver import (
     ExperienceCatalogResolver,
     ExperienceResolutionStatus,
 )
+from app.services.reservation_service import ReservationService
 
 
 def _safe_str(value: Any) -> str | None:
     if value is None:
         return None
     return str(value)
-
-
-def _safe_int(value: Any, default: int | None = None) -> int | None:
-    if value is None:
-        return default
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return default
 
 
 def _field(obj: Any, *names: str, default: Any = None) -> Any:
@@ -70,70 +61,6 @@ async def _find_experience(
         return await ExperienceDocument.get(result.experience_id)
 
     return None
-
-
-async def _find_schedule(
-    experience: ExperienceDocument,
-    requested_date: date,
-) -> ScheduleDocument | None:
-    experience_id = getattr(experience, "id", None)
-    if experience_id is None:
-        return None
-
-    try:
-        return await ScheduleDocument.find_one(
-            ScheduleDocument.experience_id == experience_id,
-            ScheduleDocument.date == requested_date,
-        )
-    except Exception:
-        schedules = await ScheduleDocument.find_all().to_list()
-        for schedule in schedules:
-            same_experience = _safe_str(_field(schedule, "experience_id")) == _safe_str(
-                experience_id
-            )
-            same_date = (
-                _field(schedule, "date", "scheduled_date", "requested_date") == requested_date
-            )
-            if same_experience and same_date:
-                return schedule
-        return None
-
-
-def _is_schedule_available(
-    schedule: ScheduleDocument, participant_count: int
-) -> tuple[bool, list[ToolBlockingReason]]:
-    reasons: list[ToolBlockingReason] = []
-
-    status = _status_text(schedule)
-    if status in {"closed", "cerrada", "full", "complete", "completa", "cancelled", "cancelada"}:
-        reasons.append(
-            ToolBlockingReason(
-                code="schedule.not_open",
-                message="La fecha operativa no está abierta para reservas.",
-            )
-        )
-
-    capacity_available = _safe_int(
-        _field(
-            schedule,
-            "capacity_available",
-            "available_capacity",
-            "available_slots",
-            "available_spots",
-            "cupos_disponibles",
-        ),
-        default=0,
-    )
-
-    if capacity_available is None or capacity_available < participant_count:
-        reasons.append(
-            ToolBlockingReason(
-                code="schedule.no_availability",
-                message="No hay cupos suficientes para esa fecha.",
-            )
-        )
-
-    return len(reasons) == 0, reasons
 
 
 def _violates_min_notice(requested_date: date, min_notice_days: int) -> bool:
@@ -195,26 +122,13 @@ async def check_experience_availability(
             )
             return output.model_dump(mode="json")
 
-        schedule = await _find_schedule(experience, payload.requested_date)
-        if schedule is None:
-            if _violates_min_notice(payload.requested_date, min_notice_days):
-                reasons.append(
-                    ToolBlockingReason(
-                        code="reservation.min_notice_violation",
-                        message=f"La reserva requiere mínimo {min_notice_days} días de anticipación.",  # noqa: E501
-                    )
-                )
-
+        if _violates_min_notice(payload.requested_date, min_notice_days):
             reasons.append(
                 ToolBlockingReason(
-                    code="schedule.not_found",
-                    message=(
-                        "No hay una fecha operativa programada para esa"
-                        " experiencia en la fecha solicitada."
-                    ),
+                    code="reservation.min_notice_violation",
+                    message=f"La reserva requiere mínimo {min_notice_days} días de anticipación.",
                 )
             )
-
             output = CheckExperienceAvailabilityOutput(
                 available=False,
                 trace_id=trace_id,
@@ -227,35 +141,26 @@ async def check_experience_availability(
             )
             return output.model_dump(mode="json")
 
-        schedule_available, schedule_reasons = _is_schedule_available(
-            schedule, payload.participant_count
+        reservation_service = ReservationService()
+        has_active = await reservation_service.has_active_reservation_for_date(
+            payload.requested_date
         )
-        reasons.extend(schedule_reasons)
-
-        capacity_total = _safe_int(
-            _field(schedule, "capacity_total", "total_capacity", "capacity", "capacidad_total")
-        )
-        capacity_available = _safe_int(
-            _field(
-                schedule,
-                "capacity_available",
-                "available_capacity",
-                "available_slots",
-                "available_spots",
-                "cupos_disponibles",
+        if has_active:
+            reasons.append(
+                ToolBlockingReason(
+                    code="reservation.date_already_booked",
+                    message="Ya existe una reserva activa para esa fecha.",
+                )
             )
-        )
 
         output = CheckExperienceAvailabilityOutput(
-            available=schedule_available and len(reasons) == 0,
+            available=len(reasons) == 0,
             trace_id=trace_id,
             experience_id=_safe_str(getattr(experience, "id", None)),
             experience_name=_safe_str(_field(experience, "name", "title", "label")),
-            schedule_id=_safe_str(getattr(schedule, "id", None)),
+            schedule_id=None,
             requested_date=payload.requested_date,
             participant_count=payload.participant_count,
-            capacity_total=capacity_total,
-            capacity_available=capacity_available,
             min_notice_days=min_notice_days,
             blocking_reasons=reasons,
         )

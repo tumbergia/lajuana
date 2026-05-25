@@ -26,6 +26,25 @@ from app.schemas.ask import AskRequest, AskResponse
 from app.schemas.assistant_plan import AssistantAction, ToolArgs
 from app.schemas.conversation_session import merge_slots
 
+FIELD_LABELS: dict[str, str] = {
+    "experience_id": "¿qué experiencia te interesa?",
+    "requested_date": "¿para qué fecha?",
+    "participant_count": "¿cuántas personas serían?",
+    "holder_phone": "¿cuál es tu número de teléfono?",
+    "holder_name": "¿cuál es tu nombre completo?",
+    "schedule_id": "¿para qué fecha?",
+    "quote_snapshot": "necesito primero consultar disponibilidad y precio",
+    "conversation_id": None,
+    "code": "¿cuál es el código de tu reserva?",
+}
+
+
+def _build_missing_fields_response(missing: list[str]) -> str:
+    labels = [FIELD_LABELS.get(f, f) for f in missing if FIELD_LABELS.get(f) is not None]
+    if not labels:
+        return "Necesito algunos datos para continuar."
+    return "Para continuar, necesito que me indiques " + ", ".join(labels) + "."
+
 
 class AssistantOrchestrator:
     def __init__(self, planner: GeminiPlanner | None = None) -> None:
@@ -179,12 +198,10 @@ class AssistantOrchestrator:
             "suggest_alternative_dates": ["experience_id"],
             "create_reservation_draft": [
                 "experience_id",
-                "schedule_id",
                 "participant_count",
                 "holder_phone",
                 "requested_date",
                 "quote_snapshot",
-                "conversation_id",
             ],
             "get_reservation_public_summary": [
                 "code",
@@ -221,13 +238,18 @@ class AssistantOrchestrator:
                     else:
                         plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
                         plan.missing_fields = merge.still_missing
+                        plan.response = _build_missing_fields_response(merge.still_missing)
 
         if plan.action in {
             AssistantAction.FINAL_RESPONSE,
             AssistantAction.ASK_CLARIFYING_QUESTION,
             AssistantAction.HUMAN_HANDOFF,
         }:
-            response = plan.response or "Necesito más información."
+            response = (
+                plan.response
+                or _build_missing_fields_response(plan.missing_fields)
+                or "Necesito más información."
+            )
             if plan.action == AssistantAction.ASK_CLARIFYING_QUESTION:
                 session.pending_fields = plan.missing_fields
             session.last_intent = plan.action.value
@@ -251,7 +273,11 @@ class AssistantOrchestrator:
 
         policy_decision = self._policy.validate(plan)
         if not policy_decision.allowed:
-            response = plan.response or "Necesito confirmar datos antes de avanzar."
+            response = (
+                plan.response
+                or _build_missing_fields_response(plan.missing_fields)
+                or "Necesito confirmar datos antes de avanzar."
+            )
             session.last_intent = "blocked_by_policy"
             session.last_trace_id = trace_id
             session.turn_count += 1
@@ -306,6 +332,7 @@ class AssistantOrchestrator:
                 plan=plan,
                 tool_output=tool_output,
                 conversation_id=conversation_id,
+                channel=request.channel,
             )
 
         if (

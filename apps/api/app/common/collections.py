@@ -19,3 +19,4 @@ class Collections:
     NOTIFICATION_TEMPLATES = "notification_templates"
     NOTIFICATION_OUTBOX = "notification_outbox"
     IN_APP_NOTIFICATIONS = "in_app_notifications"
+    PARTICIPANT_FORM_LINKS = "participant_form_links"

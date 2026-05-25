@@ -11,6 +11,7 @@ class EmergencyContactSchema(BaseModel):
     name: str
     phone: str
     relationship: str | None = None
+    country: str | None = None
 
 
 class ParticipantCreateSchema(BaseModel):
@@ -26,16 +27,41 @@ class ParticipantCreateSchema(BaseModel):
     height_cm: Decimal = Field(gt=0)
     weight_kg: Decimal = Field(gt=0)
     experience_level: ExperienceLevel
-    blood_type: str | None = None
-    eps: str | None = None
-    travel_insurance: str | None = None
-    medical_conditions: str | None = None
-    functional_conditions: str | None = None
     dietary_restrictions: str | None = None
-    diet: str | None = None
+    blood_type: str | None = None
+    eps_or_travel_insurance: str | None = None
+    health_conditions: str | None = None
+    sensory_disabilities: str | None = None
     emergency_contact: EmergencyContactSchema
     accepted_data_processing: bool
     accepted_media_usage: bool | None = None
+    accepted_risk_release: bool | None = None
+    risk_release_text_version: str | None = None
+
+
+class ParticipantNestedCreateSchema(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr | None = None
+    birth_date: date
+    document_type: str
+    document_number: str
+    phone: str
+    country: str
+    city: str
+    height_cm: Decimal = Field(gt=0)
+    weight_kg: Decimal = Field(gt=0)
+    experience_level: ExperienceLevel | None = None
+    dietary_restrictions: str | None = None
+    blood_type: str | None = None
+    eps_or_travel_insurance: str | None = None
+    health_conditions: str | None = None
+    sensory_disabilities: str | None = None
+    emergency_contact: EmergencyContactSchema
+    accepted_data_processing: bool
+    accepted_media_usage: bool | None = None
+    accepted_risk_release: bool
+    risk_release_text_version: str | None = None
 
 
 class ParticipantUpdateSchema(BaseModel):
@@ -48,14 +74,16 @@ class ParticipantUpdateSchema(BaseModel):
     city: str | None = None
     height_cm: Decimal | None = Field(default=None, gt=0)
     weight_kg: Decimal | None = Field(default=None, gt=0)
-    experience_level: ExperienceLevel | None = None
-    medical_conditions: str | None = None
-    functional_conditions: str | None = None
     dietary_restrictions: str | None = None
-    diet: str | None = None
+    blood_type: str | None = None
+    eps_or_travel_insurance: str | None = None
+    health_conditions: str | None = None
+    sensory_disabilities: str | None = None
     emergency_contact: EmergencyContactSchema | None = None
     accepted_data_processing: bool | None = None
     accepted_media_usage: bool | None = None
+    accepted_risk_release: bool | None = None
+    risk_release_text_version: str | None = None
 
 
 class ParticipantResponseSchema(AuditMetadataSchema):
@@ -72,16 +100,23 @@ class ParticipantResponseSchema(AuditMetadataSchema):
     height_cm: Decimal
     weight_kg: Decimal
     experience_level: ExperienceLevel
+    dietary_restrictions: str | None
+    blood_type: str | None
+    eps_or_travel_insurance: str | None
+    health_conditions: str | None
+    sensory_disabilities: str | None
     emergency_contact: EmergencyContactSchema
     accepted_data_processing: bool
     accepted_media_usage: bool | None
+    accepted_risk_release: bool | None
+    risk_release_text_version: str | None
     is_completed: bool
 
 
 class ParticipantPublicCreateSchema(BaseModel):
     first_name: str = Field(min_length=1)
     last_name: str = Field(min_length=1)
-    email: EmailStr
+    email: EmailStr | None = None
     birth_date: date
     document_type: str = Field(min_length=1)
     document_number: str = Field(min_length=1)
@@ -101,8 +136,11 @@ class ParticipantPublicCreateSchema(BaseModel):
     emergency_contact_name: str = Field(min_length=1)
     emergency_contact_phone: str = Field(min_length=1)
     emergency_contact_relationship: str | None = None
+    emergency_contact_country: str | None = None
     accepted_data_processing: bool
     accepted_media_usage: bool | None = None
+    accepted_risk_release: bool
+    risk_release_text_version: str | None = None
 
 
 class ParticipantFormInfoSchema(BaseModel):

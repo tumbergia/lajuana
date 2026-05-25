@@ -14,7 +14,7 @@ from app.ai.mcp.tool_contracts import (
 from app.core.errors import ApiError
 from app.documents import ReservationDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
-from app.services import ParticipantFormService
+from app.services.participant_form_link_service import ParticipantFormLinkService
 
 
 async def generate_participant_form_link(**kwargs: Any) -> dict[str, Any]:
@@ -34,22 +34,29 @@ async def generate_participant_form_link(**kwargs: Any) -> dict[str, Any]:
         }
         payload = GenerateParticipantFormLinkInput.model_validate(filtered)
 
-        service = ParticipantFormService()
-        result = await service.generate_form_link(
+        service = ParticipantFormLinkService()
+        # Get the reservation to know expected participants count
+        reservation = await ReservationDocument.get(payload.reservation_id)
+        expected_count = reservation.participant_count if reservation else 1
+        doc, raw_token = await service.generate(
             reservation_id=payload.reservation_id,
-            force=payload.force_regenerate,
+            expected_participants_count=expected_count,
         )
+
+        from app.core.config import settings
+
+        form_url = f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
 
         output = GenerateParticipantFormLinkOutput(
             generated=True,
             trace_id=trace_id,
             reservation_id=payload.reservation_id,
-            public_reservation_code=result.public_reservation_code,
-            form_url=result.form_url,
-            participant_limit=result.participant_limit,
-            participants_registered=result.participants_registered,
-            participants_remaining=result.participants_remaining,
-            expires_at=result.expires_at,
+            public_reservation_code=reservation.code if reservation else "",
+            form_url=form_url,
+            participant_limit=doc.max_participants,
+            participants_registered=doc.used_count,
+            participants_remaining=max(0, doc.max_participants - doc.used_count),
+            expires_at=doc.expires_at,
         )
         return output.model_dump(mode="json")
 
@@ -149,8 +156,8 @@ async def get_participant_form_status(**kwargs: Any) -> dict[str, Any]:
             )
             return output.model_dump(mode="json")
 
-        limit = reservation.participant_registration_limit or 0
-        registered = reservation.participant_registration_count
+        limit = reservation.expected_participants_count or reservation.participant_count
+        registered = reservation.participants_completed_count
         output = GetParticipantFormStatusOutput(
             found=True,
             trace_id=trace_id,

@@ -32,6 +32,11 @@ dev = [
 	"mypy>=1.11.0,<2.0.0",
 ]
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+exclude = ["storage*"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

@@ -218,30 +218,6 @@ class NotificationService:
 
         return entries
 
-    async def enqueue_form_link(
-        self, reservation: ReservationDocument, form_url: str
-    ) -> list[NotificationOutboxDocument]:
-        entries: list[NotificationOutboxDocument] = []
-
-        if reservation.holder_email:
-            vars = self._build_customer_vars(reservation)
-            vars["form_url"] = form_url
-            if reservation.participant_form_expires_at:
-                vars["form_expires_at"] = reservation.participant_form_expires_at.isoformat()
-
-            entry = await self.enqueue(
-                event_type=NotificationEventType.PARTICIPANT_FORM_LINK_GENERATED,
-                reservation_id=str(reservation.id),
-                channel=NotificationChannel.EMAIL,
-                recipient_type="customer",
-                recipient_identifier=reservation.holder_email,
-                variables=vars,
-                dedup_suffix=reservation.participant_form_token_hash,
-            )
-            entries.append(entry)
-
-        return entries
-
     async def send_from_outbox(self, entry: NotificationOutboxDocument) -> None:
         provider = self._providers.get(entry.channel)
         if provider is None:

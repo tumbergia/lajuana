@@ -32,6 +32,11 @@ class PaymentProofVerifySchema(BaseModel):
     note: str | None = None
 
 
+class PaymentProofApproveSchema(BaseModel):
+    confirmation_token: Literal["APPROVE_PAYMENT"]
+    note: str | None = None
+
+
 class PaymentProofRejectSchema(BaseModel):
     confirmation_token: Literal["REJECT_PAYMENT"]
     note: str | None = None

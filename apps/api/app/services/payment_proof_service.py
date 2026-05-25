@@ -1,17 +1,25 @@
+import asyncio
+from datetime import UTC, datetime, timedelta
 from hashlib import sha256
+from uuid import uuid4
 
 from beanie import PydanticObjectId
 
+from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
 from app.common.enums import PaymentStatus, ReservationStatus, UserRole
 from app.common.labels import ErrorCode
+from app.core.config import settings
 from app.core.errors import ApiError
 from app.documents import FileUploadDocument, PaymentProofDocument, ReservationDocument
+from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.schemas.payment_proof import (
+    PaymentProofApproveSchema,
     PaymentProofCreateSchema,
     PaymentProofRejectSchema,
     PaymentProofUpdateSchema,
     PaymentProofVerifySchema,
 )
+from app.services.storage import get_storage_adapter
 
 ALLOWED_CONTENT_TYPES = {
     "image/jpeg",
@@ -167,6 +175,89 @@ class PaymentProofService:
             actor_id=actor_id,
         )
         return doc
+
+    async def approve_payment(
+        self,
+        payment_proof_id: str,
+        payload: PaymentProofApproveSchema,
+        *,
+        actor_id: PydanticObjectId | None,
+        actor_role: UserRole,
+    ) -> PaymentProofDocument:
+        if actor_role != UserRole.ADMIN:
+            raise ApiError(
+                status_code=403,
+                code=ErrorCode.AUTH_FORBIDDEN,
+                message="No tienes permisos para aprobar comprobantes.",
+            )
+        if payload.confirmation_token != "APPROVE_PAYMENT":
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.VALIDATION_ERROR,
+                message="Token de confirmación inválido para aprobar pago.",
+            )
+
+        doc = await self.get(payment_proof_id)
+        self._ensure_transition_allowed(doc.status, PaymentStatus.VERIFIED)
+        reservation = await ReservationDocument.get(doc.reservation_id)
+        if reservation is None:
+            raise ApiError(
+                status_code=404,
+                code=ErrorCode.RESERVATION_NOT_FOUND,
+                message="Reserva no encontrada.",
+            )
+
+        await self._sync_proof_and_reservation_payment_status(
+            doc=doc,
+            reservation=reservation,
+            target_status=PaymentStatus.VERIFIED,
+            actor_id=actor_id,
+        )
+
+        reservation.status = ReservationStatus.PAYMENT_RECEIVED
+        reservation.updated_by = actor_id
+        await reservation.save()
+
+        if reservation.holder_phone:
+            date_str = "próxima fecha agendada"
+            if reservation.requested_date:
+                date_str = self._format_date_es(reservation.requested_date)
+
+            name = reservation.holder_name or "Cliente"
+            message = (
+                f"¡Hola {name}! Tu pago ha sido aprobado. "
+                f"Te esperamos el {date_str}."
+            )
+
+            turn = ConversationTurnDocument(
+                trace_id=str(uuid4()),
+                channel="whatsapp",
+                from_phone=reservation.holder_phone,
+                conversation_id=f"payment-approval-{reservation.id}",
+                user_message="",
+                response_text=message,
+                status="responded",
+                responded_at=datetime.now(UTC),
+            )
+            await turn.insert()
+
+            outbound_service = WhatsAppOutboundService()
+            await outbound_service.send(
+                turn=turn,
+                to_phone=reservation.holder_phone,
+                text=message,
+            )
+
+        return doc
+
+    @staticmethod
+    def _format_date_es(d: datetime.date) -> str:
+        days = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+        months = [
+            "enero", "febrero", "marzo", "abril", "mayo", "junio",
+            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+        ]
+        return f"{days[d.weekday()]} {d.day} de {months[d.month - 1]} de {d.year}"
 
     async def reject_payment(
         self,
@@ -350,4 +441,33 @@ class PaymentProofService:
         reservation.payment_proof_ids.append(doc.id)
         reservation.payment_status = PaymentStatus.RECEIVED
         await reservation.save()
+
+        asyncio.create_task(self._background_download(str(doc.id)))
+
         return doc
+
+    async def _background_download(self, proof_id: str) -> None:
+        from app.services.whatsapp_media_downloader import download_and_store
+
+        await download_and_store(proof_id)
+
+    async def get_download(
+        self,
+        payment_proof_id: str,
+    ) -> tuple[str, bytes | None]:
+        doc = await self.get(payment_proof_id)
+
+        if doc.storage_key.startswith("whatsapp/") and doc.size_bytes == 1:
+            return "pending", None
+
+        adapter = get_storage_adapter()
+        file_bytes = await adapter.read_bytes(doc.storage_key)
+        if file_bytes is None:
+            raise ApiError(
+                status_code=404,
+                code=ErrorCode.PAYMENT_PROOF_FILE_NOT_FOUND,
+                message="Archivo no encontrado en el almacenamiento.",
+                details={"storage_key": doc.storage_key},
+            )
+
+        return doc.content_type, file_bytes

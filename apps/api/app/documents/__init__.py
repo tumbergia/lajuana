@@ -19,6 +19,7 @@ from app.documents.in_app_notification_document import InAppNotificationDocument
 from app.documents.notification_outbox_document import NotificationOutboxDocument
 from app.documents.notification_template_document import NotificationTemplateDocument
 from app.documents.participant_document import EmergencyContact, ParticipantDocument
+from app.documents.participant_form_link_document import ParticipantFormLinkDocument
 from app.documents.payment_proof_document import PaymentProofDocument
 from app.documents.ping_document import PingDocument
 from app.documents.policy_document import PolicyDocument
@@ -44,6 +45,7 @@ __all__ = [
     "EquineDocument",
     "ExperienceDocument",
     "ParticipantDocument",
+    "ParticipantFormLinkDocument",
     "PaymentProofDocument",
     "FileUploadDocument",
     "PingDocument",

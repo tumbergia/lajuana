@@ -1,49 +1,21 @@
 import asyncio
-from datetime import date, time, timedelta
+from datetime import date, timedelta
 from types import SimpleNamespace
 from typing import Any
 from uuid import uuid4
 
 import pytest
-from beanie import PydanticObjectId
 
 from app.ai.mcp.tools.schedules import (
     list_available_schedules,
     suggest_alternative_dates,
 )
-from app.common.enums import ScheduleStatus
 from app.documents.experience_document import ExperienceDocument
-from app.documents.schedule_document import ScheduleDocument
 from app.services.experience_catalog_resolver import (
     ExperienceCatalogResolver,
     ExperienceResolutionStatus,
 )
-
-
-class _MockField:
-    def __eq__(self, other):
-        return self
-
-    def __ne__(self, other):
-        return self
-
-    def __ge__(self, other):
-        return self
-
-    def __le__(self, other):
-        return self
-
-    def __gt__(self, other):
-        return self
-
-    def __lt__(self, other):
-        return self
-
-    def __hash__(self):
-        return 0
-
-    def __bool__(self):
-        return True
+from app.services.reservation_service import ReservationService
 
 
 class FakeToolLogDoc:
@@ -55,22 +27,15 @@ class FakeToolLogDoc:
         self.id = "log-fake"
 
 
-def _patch_schedule_fields(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(ScheduleDocument, "experience_id", _MockField(), raising=False)
-    monkeypatch.setattr(ScheduleDocument, "date", _MockField(), raising=False)
-    monkeypatch.setattr(ScheduleDocument, "is_active", _MockField(), raising=False)
-    monkeypatch.setattr(ScheduleDocument, "status", _MockField(), raising=False)
-
-
 async def _run_returns_schedules_when_experience_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -84,52 +49,30 @@ async def _run_returns_schedules_when_experience_found(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    schedule_date = date(2026, 6, 15)
-    schedule_start = time(9, 0)
+    async def fake_has_active(self, requested_date):
+        return False
 
-    fake_schedules = [
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=schedule_date,
-            start_time=schedule_start,
-            capacity_total=20,
-            available_slots=10,
-            status=ScheduleStatus.OPEN,
-        )
-    ]
-
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
-
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(fake_schedules)
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
+    requested_date = date(2026, 10, 15)
     result = await list_available_schedules(
         experience_query="test experience",
+        requested_date=requested_date,
         participant_count=2,
+        limit=100,
     )
 
     assert result["blocking_reasons"] == []
-    assert len(result["schedules"]) == 1
+    assert len(result["schedules"]) > 0
     item = result["schedules"][0]
-    assert item["schedule_id"] == str(fake_schedules[0].id)
-    assert item["scheduled_date"] == schedule_date.isoformat()
-    assert item["start_time"] == str(schedule_start)
-    assert item["capacity_total"] == 20
-    assert item["capacity_available"] == 10
-    assert item["status"] == ScheduleStatus.OPEN
+    assert item["schedule_id"] == ""
+    assert item["scheduled_date"] == requested_date.isoformat()
+    assert item["start_time"] is None
+    assert item["capacity_total"] == 8
+    assert item["capacity_available"] == 8
+    assert item["status"] == "open"
+    assert item["experience_id"] == exp_id
 
 
 def test_returns_schedules_when_experience_found(
@@ -164,15 +107,15 @@ def test_returns_empty_when_experience_not_found(
     asyncio.run(_run_returns_empty_when_experience_not_found(monkeypatch))
 
 
-async def _run_returns_empty_when_no_schedules(
+async def _run_returns_empty_when_all_dates_blocked(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -186,26 +129,16 @@ async def _run_returns_empty_when_no_schedules(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
+    async def fake_has_active(self, requested_date):
+        return True
 
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery([])
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await list_available_schedules(
         experience_query="test experience",
+        requested_date=date(2026, 10, 15),
+        limit=100,
     )
 
     assert result["schedules"] == []
@@ -213,16 +146,16 @@ async def _run_returns_empty_when_no_schedules(
     assert result["blocking_reasons"] == []
 
 
-def test_returns_empty_when_no_schedules(
+def test_returns_empty_when_all_dates_blocked(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    asyncio.run(_run_returns_empty_when_no_schedules(monkeypatch))
+    asyncio.run(_run_returns_empty_when_all_dates_blocked(monkeypatch))
 
 
 async def _run_resolves_by_experience_id(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
     resolve_calls: list[str] = []
 
     async def fake_resolve(self, query):
@@ -243,40 +176,19 @@ async def _run_resolves_by_experience_id(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
+    async def fake_has_active(self, requested_date):
+        return False
 
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(
-                [
-                    SimpleNamespace(
-                        id=PydanticObjectId(),
-                        date=date(2026, 7, 1),
-                        start_time=time(10, 0),
-                        capacity_total=15,
-                        available_slots=8,
-                        status=ScheduleStatus.OPEN,
-                    )
-                ]
-            )
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await list_available_schedules(
-        experience_id=str(exp_id),
+        experience_id=exp_id,
+        requested_date=date(2026, 7, 1),
+        limit=1,
     )
 
-    assert resolve_calls == [str(exp_id)]
+    assert resolve_calls == [exp_id]
     assert result["blocking_reasons"] == []
     assert len(result["schedules"]) == 1
 
@@ -287,91 +199,15 @@ def test_resolves_by_experience_id(
     asyncio.run(_run_resolves_by_experience_id(monkeypatch))
 
 
-async def _run_filters_by_participant_count(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    exp_id = PydanticObjectId()
-
-    async def fake_resolve(self, query):
-        return SimpleNamespace(
-            status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
-            experience_name="Test Experience",
-        )
-
-    monkeypatch.setattr(ExperienceCatalogResolver, "resolve", fake_resolve)
-
-    async def fake_get(_):
-        return SimpleNamespace(
-            id=exp_id,
-            name="Test Experience",
-        )
-
-    monkeypatch.setattr(ExperienceDocument, "get", fake_get)
-
-    schedules_list = [
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=date(2026, 8, 1),
-            start_time=time(9, 0),
-            capacity_total=10,
-            available_slots=2,
-            status=ScheduleStatus.OPEN,
-        ),
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=date(2026, 8, 5),
-            start_time=time(10, 0),
-            capacity_total=20,
-            available_slots=10,
-            status=ScheduleStatus.OPEN,
-        ),
-    ]
-
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
-
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(schedules_list)
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
-
-    result = await list_available_schedules(
-        experience_query="test experience",
-        participant_count=5,
-    )
-
-    assert result["blocking_reasons"] == []
-    assert len(result["schedules"]) == 1
-    assert result["schedules"][0]["capacity_available"] == 10
-    assert result["total"] == 1
-
-
-def test_filters_by_participant_count(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    asyncio.run(_run_filters_by_participant_count(monkeypatch))
-
-
 async def _run_accepts_trace_id_and_conversation_turn_id(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -385,33 +221,10 @@ async def _run_accepts_trace_id_and_conversation_turn_id(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
+    async def fake_has_active(self, requested_date):
+        return False
 
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(
-                [
-                    SimpleNamespace(
-                        id=PydanticObjectId(),
-                        date=date(2026, 9, 1),
-                        start_time=time(11, 0),
-                        capacity_total=20,
-                        available_slots=15,
-                        status=ScheduleStatus.OPEN,
-                    )
-                ]
-            )
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     trace_id = str(uuid4())
@@ -419,6 +232,7 @@ async def _run_accepts_trace_id_and_conversation_turn_id(
 
     result = await list_available_schedules(
         experience_query="test experience",
+        requested_date=date(2026, 9, 1),
         trace_id=trace_id,
         conversation_turn_id=conversation_turn_id,
     )
@@ -436,12 +250,12 @@ def test_accepts_trace_id_and_conversation_turn_id(
 async def _run_date_range_derivation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -455,22 +269,10 @@ async def _run_date_range_derivation(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
+    async def fake_has_active(self, requested_date):
+        return False
 
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery([])
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     requested = date(2026, 10, 15)
@@ -498,12 +300,12 @@ def test_date_range_derivation(
 async def _run_returns_alternatives_when_schedules_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -517,48 +319,27 @@ async def _run_returns_alternatives_when_schedules_found(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    requested_date = date(2026, 7, 15)
-    alt_date = date(2026, 8, 14)
+    async def fake_has_active(self, requested_date):
+        return False
 
-    fake_schedules = [
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=alt_date,
-            start_time=time(9, 0),
-            capacity_total=20,
-            available_slots=10,
-            status=ScheduleStatus.OPEN,
-        )
-    ]
-
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
-
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(fake_schedules)
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
+    requested_date = date(2026, 7, 15)
     result = await suggest_alternative_dates(
         experience_query="test experience",
         requested_date=requested_date,
-        search_days_after=30,
+        limit=100,
     )
 
     assert result["blocking_reasons"] == []
-    assert len(result["alternatives"]) == 1
-    assert result["total"] == 1
-    assert result["alternatives"][0]["scheduled_date"] == alt_date.isoformat()
+    assert len(result["alternatives"]) > 0
+    assert result["total"] > 0
+    item = result["alternatives"][0]
+    assert item["schedule_id"] == ""
+    assert item["capacity_total"] == 8
+    assert item["capacity_available"] == 8
+    assert item["status"] == "open"
 
 
 def test_returns_alternatives_when_schedules_found(
@@ -570,12 +351,12 @@ def test_returns_alternatives_when_schedules_found(
 async def _run_no_alternatives_available(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -589,27 +370,16 @@ async def _run_no_alternatives_available(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
+    async def fake_has_active(self, requested_date):
+        return True
 
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery([])
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
         experience_query="test experience",
         requested_date=date(2026, 7, 15),
+        limit=100,
     )
 
     assert result["alternatives"] == []
@@ -650,92 +420,15 @@ def test_alternative_dates_experience_not_found(
     asyncio.run(_run_alternative_dates_experience_not_found(monkeypatch))
 
 
-async def _run_alternative_dates_filters_by_participant_count(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    exp_id = PydanticObjectId()
-
-    async def fake_resolve(self, query):
-        return SimpleNamespace(
-            status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
-            experience_name="Test Experience",
-        )
-
-    monkeypatch.setattr(ExperienceCatalogResolver, "resolve", fake_resolve)
-
-    async def fake_get(_):
-        return SimpleNamespace(
-            id=exp_id,
-            name="Test Experience",
-        )
-
-    monkeypatch.setattr(ExperienceDocument, "get", fake_get)
-
-    schedules_list = [
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=date(2026, 8, 1),
-            start_time=time(9, 0),
-            capacity_total=10,
-            available_slots=2,
-            status=ScheduleStatus.OPEN,
-        ),
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=date(2026, 8, 5),
-            start_time=time(10, 0),
-            capacity_total=20,
-            available_slots=10,
-            status=ScheduleStatus.OPEN,
-        ),
-    ]
-
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
-
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(schedules_list)
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
-    monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
-
-    result = await suggest_alternative_dates(
-        experience_query="test experience",
-        requested_date=date(2026, 7, 15),
-        participant_count=5,
-    )
-
-    assert result["blocking_reasons"] == []
-    assert len(result["alternatives"]) == 1
-    assert result["alternatives"][0]["capacity_available"] == 10
-    assert result["total"] == 1
-
-
-def test_alternative_dates_filters_by_participant_count(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    asyncio.run(_run_alternative_dates_filters_by_participant_count(monkeypatch))
-
-
 async def _run_alternative_dates_excludes_dates(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -749,56 +442,26 @@ async def _run_alternative_dates_excludes_dates(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    excluded = date(2026, 8, 1)
-    included = date(2026, 8, 5)
+    async def fake_has_active(self, requested_date):
+        return False
 
-    schedules_list = [
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=excluded,
-            start_time=time(9, 0),
-            capacity_total=10,
-            available_slots=5,
-            status=ScheduleStatus.OPEN,
-        ),
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=included,
-            start_time=time(10, 0),
-            capacity_total=20,
-            available_slots=10,
-            status=ScheduleStatus.OPEN,
-        ),
-    ]
-
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
-
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(schedules_list)
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
+    excluded = date(2026, 7, 5)
     result = await suggest_alternative_dates(
         experience_query="test experience",
         requested_date=date(2026, 7, 15),
+        search_days_before=10,
+        search_days_after=10,
         exclude_dates=[excluded],
+        limit=100,
     )
 
     assert result["blocking_reasons"] == []
-    assert len(result["alternatives"]) == 1
-    assert result["alternatives"][0]["scheduled_date"] == included.isoformat()
-    assert result["total"] == 1
+    returned_dates = [alt["scheduled_date"] for alt in result["alternatives"]]
+    assert excluded.isoformat() not in returned_dates
+    assert result["total"] == len(result["alternatives"])
 
 
 def test_alternative_dates_excludes_dates(
@@ -810,12 +473,12 @@ def test_alternative_dates_excludes_dates(
 async def _run_alternative_dates_default_requested_date(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -829,22 +492,10 @@ async def _run_alternative_dates_default_requested_date(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
+    async def fake_has_active(self, requested_date):
+        return True
 
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery([])
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
@@ -866,12 +517,12 @@ def test_alternative_dates_default_requested_date(
 async def _run_alternative_dates_accepts_trace_id(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -885,33 +536,10 @@ async def _run_alternative_dates_accepts_trace_id(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
+    async def fake_has_active(self, requested_date):
+        return False
 
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(
-                [
-                    SimpleNamespace(
-                        id=PydanticObjectId(),
-                        date=date(2026, 9, 1),
-                        start_time=time(11, 0),
-                        capacity_total=20,
-                        available_slots=15,
-                        status=ScheduleStatus.OPEN,
-                    )
-                ]
-            )
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     trace_id = str(uuid4())
@@ -926,7 +554,7 @@ async def _run_alternative_dates_accepts_trace_id(
 
     assert result["trace_id"] == trace_id
     assert result["blocking_reasons"] == []
-    assert len(result["alternatives"]) == 1
+    assert len(result["alternatives"]) > 0
 
 
 def test_alternative_dates_accepts_trace_id(
@@ -938,12 +566,12 @@ def test_alternative_dates_accepts_trace_id(
 async def _run_alternative_dates_search_window_bounds(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -957,22 +585,10 @@ async def _run_alternative_dates_search_window_bounds(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
+    async def fake_has_active(self, requested_date):
+        return False
 
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery([])
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
 
     capture = {}
 
@@ -1011,12 +627,12 @@ def test_alternative_dates_search_window_bounds(
 async def _run_alternative_dates_limit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -1030,45 +646,23 @@ async def _run_alternative_dates_limit(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    schedules_list = [
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=date(2026, 8, d),
-            start_time=time(9, 0),
-            capacity_total=20,
-            available_slots=10,
-            status=ScheduleStatus.OPEN,
-        )
-        for d in range(1, 8)
-    ]
+    async def fake_has_active(self, requested_date):
+        return False
 
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
-
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(schedules_list)
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await suggest_alternative_dates(
         experience_query="test experience",
         requested_date=date(2026, 7, 15),
         limit=3,
+        search_days_before=30,
+        search_days_after=30,
     )
 
     assert result["blocking_reasons"] == []
     assert len(result["alternatives"]) == 3
-    assert result["total"] == 7
+    assert result["total"] == 3
 
 
 def test_alternative_dates_limit(
@@ -1081,12 +675,12 @@ async def _run_alternative_dates_excludes_dates_from_json(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Regression test: exclude_dates arriving as list[str] (from orchestrator kwargs via JSON)."""
-    exp_id = PydanticObjectId()
+    exp_id = "507f1f77bcf86cd799439011"
 
     async def fake_resolve(self, query):
         return SimpleNamespace(
             status=ExperienceResolutionStatus.FOUND,
-            experience_id=str(exp_id),
+            experience_id=exp_id,
             experience_name="Test Experience",
         )
 
@@ -1100,58 +694,25 @@ async def _run_alternative_dates_excludes_dates_from_json(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    excluded = date(2026, 8, 1)
-    included = date(2026, 8, 5)
+    async def fake_has_active(self, requested_date):
+        return False
 
-    schedules_list = [
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=excluded,
-            start_time=time(9, 0),
-            capacity_total=10,
-            available_slots=5,
-            status=ScheduleStatus.OPEN,
-        ),
-        SimpleNamespace(
-            id=PydanticObjectId(),
-            date=included,
-            start_time=time(10, 0),
-            capacity_total=20,
-            available_slots=10,
-            status=ScheduleStatus.OPEN,
-        ),
-    ]
-
-    class FakeSortQuery:
-        def __init__(self, items):
-            self._items = items
-
-        async def to_list(self):
-            return self._items
-
-    class FakeQuery:
-        def sort(self, *args):
-            return FakeSortQuery(schedules_list)
-
-    def fake_find_many(*args, **kwargs):
-        return FakeQuery()
-
-    _patch_schedule_fields(monkeypatch)
-    monkeypatch.setattr(ScheduleDocument, "find_many", fake_find_many)
+    monkeypatch.setattr(ReservationService, "has_active_reservation_for_date", fake_has_active)
     monkeypatch.setattr("app.ai.mcp.tools.schedules.ToolCallLogDocument", FakeToolLogDoc)
 
-    # Simulate real orchestrator pipeline: exclude_dates arrives as list[str]
-    # (planner JSON -> ToolArgs -> model_dump -> kwargs)
+    excluded_str = "2026-07-05"
     result = await suggest_alternative_dates(
         experience_query="test experience",
         requested_date=date(2026, 7, 15),
-        exclude_dates=["2026-08-01"],
+        search_days_before=10,
+        search_days_after=10,
+        exclude_dates=[excluded_str],
+        limit=100,
     )
 
     assert result["blocking_reasons"] == []
-    assert len(result["alternatives"]) == 1
-    assert result["alternatives"][0]["scheduled_date"] == included.isoformat()
-    assert result["total"] == 1
+    returned_dates = [alt["scheduled_date"] for alt in result["alternatives"]]
+    assert excluded_str not in returned_dates
 
 
 def test_alternative_dates_excludes_dates_from_json(
