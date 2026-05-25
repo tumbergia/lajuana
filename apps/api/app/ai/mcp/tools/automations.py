@@ -38,7 +38,7 @@ def _safe_str(value: Any) -> str | None:
 
 
 async def _get_or_create_automation_config() -> AppConfigDocument:
-    config = await AppConfigDocument.find_one(AppConfigDocument.key == AUTOMATION_CONFIG_KEY)
+    config = await AppConfigDocument.find_one({"key": AUTOMATION_CONFIG_KEY})
     if config is None:
         config = AppConfigDocument(
             key=AUTOMATION_CONFIG_KEY,

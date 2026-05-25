@@ -316,7 +316,7 @@ class SyncService:
                     )
                 )
                 continue
-            query = SyncChangeDocument.find(SyncChangeDocument.stream == stream_cursor.name)
+            query = SyncChangeDocument.find({"stream": stream_cursor.name})
             if stream_cursor.cursor:
                 try:
                     cursor_id = PydanticObjectId(stream_cursor.cursor)
@@ -326,8 +326,8 @@ class SyncService:
                         code=ErrorCode.SYNC_INVALID_CURSOR,
                         message="Cursor invalido.",
                     ) from exc
-                query = query.find(SyncChangeDocument.id > cursor_id)
-            changes = await query.sort(SyncChangeDocument.id).limit(500).to_list()
+                query = query.find({"_id": {"$gt": cursor_id}})
+            changes = await query.sort("id").limit(500).to_list()
             next_cursor = str(changes[-1].id) if changes else (stream_cursor.cursor or "")
             streams.append(
                 SyncPullStreamResponseSchema(
@@ -353,8 +353,7 @@ class SyncService:
         results: list[SyncPushResultSchema] = []
         for operation in body.operations:
             receipt = await SyncOperationReceiptDocument.find_one(
-                SyncOperationReceiptDocument.user_id == str(current_user.id),
-                SyncOperationReceiptDocument.idempotency_key == operation.idempotency_key,
+                {"user_id": str(current_user.id), "idempotency_key": operation.idempotency_key},
             )
             if receipt is not None:
                 results.append(
@@ -417,7 +416,7 @@ async def _ensure_base_version(
 async def _ensure_reservation_rules_base_version(base_version: int | None) -> None:
     if base_version is None:
         return
-    config = await AppConfigDocument.find_one(AppConfigDocument.key == RESERVATION_RULES_KEY)
+    config = await AppConfigDocument.find_one({"key": RESERVATION_RULES_KEY})
     if config is None:
         return
     if base_version != config.version:
@@ -538,8 +537,8 @@ async def _latest_stream_cursors() -> dict[str, str]:
     cursors: dict[str, str] = {}
     for stream in streams:
         latest = (
-            await SyncChangeDocument.find(SyncChangeDocument.stream == stream)
-            .sort(-SyncChangeDocument.id)
+            await SyncChangeDocument.find({"stream": stream})
+            .sort("-id")
             .first_or_none()
         )
         cursors[stream] = str(latest.id) if latest else ""

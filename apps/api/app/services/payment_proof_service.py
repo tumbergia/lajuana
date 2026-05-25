@@ -69,7 +69,7 @@ class PaymentProofService:
                 message="El tipo de contenido no esta permitido.",
             )
         upload = await FileUploadDocument.find_one(
-            FileUploadDocument.storage_key == payload.storage_key
+            {"storage_key": payload.storage_key}
         )
         if upload is None or upload.status != "ready":
             raise ApiError(

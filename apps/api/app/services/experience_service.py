@@ -213,7 +213,7 @@ class ExperienceService:
     async def list(self, is_active: bool | None = None) -> list[ExperienceDocument]:
         if is_active is None:
             return await ExperienceDocument.find_all().to_list()
-        return await ExperienceDocument.find(ExperienceDocument.is_active == is_active).to_list()
+        return await ExperienceDocument.find({"is_active": is_active}).to_list()
 
     async def get(self, experience_id: str) -> ExperienceDocument:
         doc = await ExperienceDocument.get(experience_id)

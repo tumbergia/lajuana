@@ -110,7 +110,7 @@ async def admin_get_sales_summary(
         reservations: list[ReservationDocument] = []
         if created_filter:
             reservations = await ReservationDocument.find(
-                ReservationDocument.created_at.in_(created_filter)
+                {"created_at": {"$in": created_filter}}
             ).to_list()
         else:
             reservations = await ReservationDocument.find_all().to_list()
@@ -186,7 +186,7 @@ async def admin_get_reservation_funnel(
         reservations: list[ReservationDocument] = []
         if created_filter:
             reservations = await ReservationDocument.find(
-                ReservationDocument.created_at.in_(created_filter)
+                {"created_at": {"$in": created_filter}}
             ).to_list()
         else:
             reservations = await ReservationDocument.find_all().to_list()
@@ -271,7 +271,7 @@ async def admin_get_channel_performance(
         reservations: list[ReservationDocument] = []
         if created_filter:
             reservations = await ReservationDocument.find(
-                ReservationDocument.created_at.in_(created_filter)
+                {"created_at": {"$in": created_filter}}
             ).to_list()
         else:
             reservations = await ReservationDocument.find_all().to_list()
@@ -459,7 +459,7 @@ async def admin_get_equine_workload_report(
 
         for equine in equines:
             assignments = await AssignmentDocument.find(
-                AssignmentDocument.equine_id == equine.id
+                {"equine_id": equine.id}
             ).to_list()
 
             count_in_range = 0

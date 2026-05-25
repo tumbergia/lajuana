@@ -47,8 +47,7 @@ class AssignmentService:
             )
 
         dup_e = await AssignmentDocument.find_one(
-            AssignmentDocument.reservation_id == reservation.id,
-            AssignmentDocument.equine_id == equine.id,
+            {"reservation_id": reservation.id, "equine_id": equine.id},
         )
         if dup_e is not None:
             raise ApiError(
@@ -73,8 +72,7 @@ class AssignmentService:
                     message="Silla no disponible.",
                 )
             dup_s = await AssignmentDocument.find_one(
-                AssignmentDocument.reservation_id == reservation.id,
-                AssignmentDocument.saddle_id == saddle_obj.id,
+                {"reservation_id": reservation.id, "saddle_id": saddle_obj.id},
             )
             if dup_s is not None:
                 raise ApiError(
@@ -127,9 +125,7 @@ class AssignmentService:
                     message="Equino no disponible.",
                 )
             dup_e = await AssignmentDocument.find_one(
-                AssignmentDocument.id != doc.id,
-                AssignmentDocument.reservation_id == doc.reservation_id,
-                AssignmentDocument.equine_id == equine.id,
+                {"_id": {"$ne": doc.id}, "reservation_id": doc.reservation_id, "equine_id": equine.id},
             )
             if dup_e is not None:
                 raise ApiError(
@@ -153,9 +149,7 @@ class AssignmentService:
                     message="Silla no disponible.",
                 )
             dup_s = await AssignmentDocument.find_one(
-                AssignmentDocument.id != doc.id,
-                AssignmentDocument.reservation_id == doc.reservation_id,
-                AssignmentDocument.saddle_id == saddle.id,
+                {"_id": {"$ne": doc.id}, "reservation_id": doc.reservation_id, "saddle_id": saddle.id},
             )
             if dup_s is not None:
                 raise ApiError(

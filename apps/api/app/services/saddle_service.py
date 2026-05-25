@@ -6,7 +6,7 @@ from app.schemas.saddle import SaddleCreateSchema, SaddleUpdateSchema
 
 class SaddleService:
     async def create(self, payload: SaddleCreateSchema) -> SaddleDocument:
-        existing = await SaddleDocument.find_one(SaddleDocument.code == payload.code)
+        existing = await SaddleDocument.find_one({"code": payload.code})
         if existing is not None:
             raise ApiError(
                 status_code=409,
@@ -34,7 +34,7 @@ class SaddleService:
         doc = await self.get(saddle_id)
         updates = payload.model_dump(exclude_none=True)
         if "code" in updates:
-            existing = await SaddleDocument.find_one(SaddleDocument.code == updates["code"])
+            existing = await SaddleDocument.find_one({"code": updates["code"]})
             if existing is not None and existing.id != doc.id:
                 raise ApiError(
                     status_code=409,

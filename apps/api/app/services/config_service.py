@@ -45,7 +45,7 @@ class ConfigService:
         return ReservationRulesSchema.model_validate(config.reservation_rules.model_dump())
 
     async def get_reservation_rules_document(self) -> AppConfigDocument | None:
-        return await AppConfigDocument.find_one(AppConfigDocument.key == RESERVATION_RULES_KEY)
+        return await AppConfigDocument.find_one({"key": RESERVATION_RULES_KEY})
 
     async def get_payment_instructions(self) -> PaymentInstructionsSchema:
         config = await self.get_payment_instructions_document()
@@ -56,7 +56,7 @@ class ConfigService:
         return PaymentInstructionsSchema.model_validate(config.payment_instructions.model_dump())
 
     async def get_payment_instructions_document(self) -> AppConfigDocument | None:
-        return await AppConfigDocument.find_one(AppConfigDocument.key == PAYMENT_INSTRUCTIONS_KEY)
+        return await AppConfigDocument.find_one({"key": PAYMENT_INSTRUCTIONS_KEY})
 
     async def update_reservation_rules(
         self, payload: ReservationRulesUpdateSchema

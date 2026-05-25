@@ -821,7 +821,7 @@ async def validate_seed(
         if load > schedule.capacity_total:
             raise ValueError("Overbooking detectado.")
 
-    experiences_count = await ExperienceDocument.find(ExperienceDocument.is_active == True).count()  # noqa: E712
+    experiences_count = await ExperienceDocument.find({"is_active": True}).count()
     if experiences_count != 5:
         raise ValueError("Cobertura invalida de experiencias activas.")
     equines_count = await EquineDocument.find_all().count()
@@ -830,7 +830,7 @@ async def validate_seed(
     schedules_count = await ScheduleDocument.find_all().count()
     if schedules_count != 20:
         raise ValueError("Cobertura invalida de schedules.")
-    active_assignable = await EquineDocument.find(EquineDocument.is_available == True).count()  # noqa: E712
+    active_assignable = await EquineDocument.find({"is_available": True}).count()
     if active_assignable != 13:
         raise ValueError("Cantidad de equinos asignables invalida.")
 

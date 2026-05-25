@@ -15,7 +15,7 @@ class ConversationResolver:
         conversation_id = build_conversation_id(channel, normalized_phone)
 
         existing = await ConversationSessionDocument.find_one(
-            ConversationSessionDocument.conversation_id == conversation_id,
+            {"conversation_id": conversation_id},
         )
 
         if existing:

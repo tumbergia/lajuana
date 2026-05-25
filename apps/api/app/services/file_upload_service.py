@@ -75,7 +75,7 @@ class FileUploadService:
     async def complete_upload(
         self, *, current_user: UserDocument, upload_id: str
     ) -> FileCompleteUploadResponseSchema:
-        doc = await FileUploadDocument.find_one(FileUploadDocument.upload_id == upload_id)
+        doc = await FileUploadDocument.find_one({"upload_id": upload_id})
         if doc is None or doc.user_id != str(current_user.id):
             raise ApiError(
                 status_code=404,

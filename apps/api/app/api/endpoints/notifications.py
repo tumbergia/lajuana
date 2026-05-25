@@ -240,7 +240,7 @@ async def list_in_app(
 ) -> list[InAppNotificationResponseSchema]:
     docs = (
         await InAppNotificationDocument.find(
-            InAppNotificationDocument.user_id == current_user.id
+            {"user_id": current_user.id}
         )
         .sort("-created_at")
         .limit(50)

@@ -167,7 +167,7 @@ class ConversationTurnWorker:
             events = []
             for msg_id in reloaded.message_ids:
                 event = await WhatsAppInboundEventDocument.find_one(
-                    WhatsAppInboundEventDocument.wa_message_id == msg_id
+                    {"wa_message_id": msg_id}
                 )
                 if event:
                     events.append(event)

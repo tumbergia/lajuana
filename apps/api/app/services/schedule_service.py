@@ -66,20 +66,23 @@ class ScheduleService:
         status: ScheduleStatus | None = None,
         is_active: bool | None = None,
     ) -> list[ScheduleDocument]:
-        query = []
+        query: dict[str, object] = {}
         if experience_id:
-            query.append(ScheduleDocument.experience_id == experience_id)
+            query["experience_id"] = experience_id
+        date_filter: dict[str, date] = {}
         if date_from:
-            query.append(ScheduleDocument.date >= date_from)
+            date_filter["$gte"] = date_from
         if date_to:
-            query.append(ScheduleDocument.date <= date_to)
+            date_filter["$lte"] = date_to
+        if date_filter:
+            query["date"] = date_filter
         if status:
-            query.append(ScheduleDocument.status == status)
+            query["status"] = status
         if is_active is not None:
-            query.append(ScheduleDocument.is_active == is_active)
+            query["is_active"] = is_active
         if not query:
             return await ScheduleDocument.find_all().to_list()
-        return await ScheduleDocument.find(*query).to_list()
+        return await ScheduleDocument.find(query).to_list()
 
     async def get(self, schedule_id: str) -> ScheduleDocument:
         doc = await ScheduleDocument.get(schedule_id)

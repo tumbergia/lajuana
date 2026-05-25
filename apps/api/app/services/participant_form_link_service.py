@@ -75,7 +75,7 @@ class ParticipantFormLinkService:
     async def validate_token(self, raw_token: str) -> ParticipantFormLinkDocument:
         hashed = self._hash_token(raw_token)
         doc = await ParticipantFormLinkDocument.find_one(
-            ParticipantFormLinkDocument.token_hash == hashed
+            {"token_hash": hashed}
         )
         if doc is None:
             raise ApiError(
@@ -115,7 +115,7 @@ class ParticipantFormLinkService:
         self, reservation_id: str
     ) -> ParticipantFormLinkDocument | None:
         return await ParticipantFormLinkDocument.find_one(
-            ParticipantFormLinkDocument.reservation_id == PydanticObjectId(reservation_id),
+            {"reservation_id": PydanticObjectId(reservation_id)},
             sort=[("created_at", -1)],
         )
 
@@ -124,7 +124,7 @@ class ParticipantFormLinkService:
     ) -> dict:
         hashed = self._hash_token(raw_token)
         doc = await ParticipantFormLinkDocument.find_one(
-            ParticipantFormLinkDocument.token_hash == hashed
+            {"token_hash": hashed}
         )
         if doc is None:
             raise ApiError(
@@ -192,8 +192,7 @@ class ParticipantFormLinkService:
             return
 
         total_completed = await ParticipantDocument.find(
-            ParticipantDocument.reservation_id == reservation_id,
-            ParticipantDocument.is_completed,
+            {"reservation_id": reservation_id, "is_completed": True},
         ).count()
 
         reservation.participants_completed_count = total_completed

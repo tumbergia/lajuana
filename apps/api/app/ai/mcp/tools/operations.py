@@ -116,7 +116,7 @@ async def admin_get_logistics_checklist(
         )
 
         participants = await ParticipantDocument.find(
-            ParticipantDocument.reservation_id == reservation.id
+            {"reservation_id": reservation.id}
         ).to_list()
         completed_participants = sum(1 for p in participants if p.is_completed)
         items.append(
@@ -133,7 +133,7 @@ async def admin_get_logistics_checklist(
         )
 
         assignments = await AssignmentDocument.find(
-            AssignmentDocument.reservation_id == reservation.id
+            {"reservation_id": reservation.id}
         ).to_list()
         items.append(
             LogisticsChecklistItem(
@@ -145,7 +145,7 @@ async def admin_get_logistics_checklist(
         )
 
         policies = await PolicyDocument.find(
-            PolicyDocument.reservation_id == reservation.id
+            {"reservation_id": reservation.id}
         ).to_list()
         items.append(
             LogisticsChecklistItem(
@@ -157,7 +157,7 @@ async def admin_get_logistics_checklist(
         )
 
         logs = await ServiceLogDocument.find(
-            ServiceLogDocument.reservation_id == reservation.id
+            {"reservation_id": reservation.id}
         ).to_list()
         has_arrival = any(
             getattr(log, "event_type", None) == ServiceLogEventType.ARRIVAL for log in logs
@@ -670,7 +670,7 @@ async def admin_get_equine_workload(
         workload: list[EquineWorkloadItem] = []
         for equine in equines:
             assignments = await AssignmentDocument.find(
-                AssignmentDocument.equine_id == equine.id
+                {"equine_id": equine.id}
             ).to_list()
 
             upcoming = 0

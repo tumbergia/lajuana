@@ -650,7 +650,7 @@ SCHEDULE_DEFS: list[_ScheduleSeed] = [
 
 async def _upsert_experience(data: dict) -> tuple[str, ExperienceDocument]:
     slug = data["slug"]
-    existing = await ExperienceDocument.find_one(ExperienceDocument.slug == slug)
+    existing = await ExperienceDocument.find_one({"slug": slug})
     if existing:
         for key, value in data.items():
             setattr(existing, key, value)
@@ -705,7 +705,7 @@ async def run() -> None:
     required_slugs = {s.slug for s in SCHEDULE_DEFS}
     exp_by_slug: dict[str, ExperienceDocument] = {}
     for slug in required_slugs:
-        doc = await ExperienceDocument.find_one(ExperienceDocument.slug == slug)
+        doc = await ExperienceDocument.find_one({"slug": slug})
         if doc is None:
             slug_errors.append(slug)
         else:

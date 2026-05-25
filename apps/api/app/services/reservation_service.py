@@ -248,7 +248,7 @@ class ReservationService:
     async def list(self, actor_role: UserRole) -> list[ReservationDocument]:
         if actor_role == UserRole.GUIDE:
             return await ReservationDocument.find(
-                ReservationDocument.status == ReservationStatus.CONFIRMED
+                {"status": ReservationStatus.CONFIRMED}
             ).to_list()
         return await ReservationDocument.find_all().to_list()
 
@@ -615,7 +615,7 @@ class ReservationService:
             )
 
         participants = await ParticipantDocument.find(
-            ParticipantDocument.reservation_id == reservation.id,
+            {"reservation_id": reservation.id},
         ).to_list()
         for p in participants:
             if not p.accepted_data_processing:

@@ -22,8 +22,7 @@ async def notify_existing_payments() -> int:
     count = 0
 
     reservations = await ReservationDocument.find(
-        ReservationDocument.status == ReservationStatus.PAYMENT_RECEIVED,
-        ReservationDocument.payment_status == "verified",
+        {"status": ReservationStatus.PAYMENT_RECEIVED, "payment_status": "verified"},
     ).to_list()
 
     for reservation in reservations:
@@ -36,8 +35,7 @@ async def notify_existing_payments() -> int:
             continue
 
         internal_users = await UserDocument.find(
-            UserDocument.is_active,
-            UserDocument.role == UserRole.ADMIN,
+            {"is_active": True, "role": UserRole.ADMIN},
         ).to_list()
 
         vars = {

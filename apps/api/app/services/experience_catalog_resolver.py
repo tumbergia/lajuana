@@ -78,7 +78,7 @@ class ExperienceCatalogResolver:
         docs = (
             experiences
             if experiences is not None
-            else await ExperienceDocument.find(ExperienceDocument.is_active == True).to_list()  # noqa: E712
+            else await ExperienceDocument.find({"is_active": True}).to_list()
         )
 
         # 2. Exact match by slug (normalized)

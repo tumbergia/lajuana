@@ -86,10 +86,9 @@ class AssistantOrchestrator:
 
         history_turns = (
             await ConversationTurnDocument.find(
-                ConversationTurnDocument.conversation_id == conversation_key,
-                ConversationTurnDocument.status == "responded",
+                {"conversation_id": conversation_key, "status": "responded"},
             )
-            .sort(-ConversationTurnDocument.created_at)
+            .sort("-created_at")
             .limit(8)
             .to_list()
         )
@@ -393,8 +392,7 @@ class AssistantOrchestrator:
         trace_id: str,
     ) -> ConversationSessionDocument:
         existing = await ConversationSessionDocument.find_one(
-            ConversationSessionDocument.conversation_key == conversation_key,
-            ConversationSessionDocument.status == "active",
+            {"conversation_key": conversation_key, "status": "active"},
         )
         if existing:
             return existing

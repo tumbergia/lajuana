@@ -636,8 +636,7 @@ async def _run_validations(
         if exp is None:
             return None
         return await ScheduleDocument.find_one(
-            ScheduleDocument.experience_id == exp.id,
-            ScheduleDocument.date == date.fromisoformat(date_iso),
+            {"experience_id": exp.id, "date": date.fromisoformat(date_iso)},
         )
 
     # 1) check_experience_availability medio dia, 2026-06-24, 4 personas -> available=true
@@ -767,9 +766,7 @@ async def _run_validations(
     exp_medio = experiences_by_slug.get(EXP_MEDIO_DIA)
     if exp_medio:
         open_docs = await ScheduleDocument.find(
-            ScheduleDocument.experience_id == exp_medio.id,
-            ScheduleDocument.date >= date.fromisoformat("2026-06-01"),
-            ScheduleDocument.date <= date.fromisoformat("2026-06-30"),
+            {"experience_id": exp_medio.id, "date": {"$gte": date.fromisoformat("2026-06-01"), "$lte": date.fromisoformat("2026-06-30")}},
         ).to_list()
         open_docs_filtered = [d for d in open_docs if d.status == ScheduleStatus.OPEN]
         open_count = len(open_docs_filtered)
@@ -790,11 +787,7 @@ async def _run_validations(
     if exp_medio:
         available_4 = (
             await ScheduleDocument.find(
-                ScheduleDocument.experience_id == exp_medio.id,
-                ScheduleDocument.date >= date.fromisoformat("2026-06-01"),
-                ScheduleDocument.date <= date.fromisoformat("2026-06-30"),
-                ScheduleDocument.status == ScheduleStatus.OPEN,
-                ScheduleDocument.available_slots >= 4,
+                {"experience_id": exp_medio.id, "date": {"$gte": date.fromisoformat("2026-06-01"), "$lte": date.fromisoformat("2026-06-30")}, "status": ScheduleStatus.OPEN, "available_slots": {"$gte": 4}},
             )
             .sort(("date", 1))
             .to_list()
@@ -820,11 +813,7 @@ async def _run_validations(
     if exp_medio:
         suggested = (
             await ScheduleDocument.find(
-                ScheduleDocument.experience_id == exp_medio.id,
-                ScheduleDocument.date >= date.fromisoformat("2026-06-20"),
-                ScheduleDocument.date <= date.fromisoformat("2026-07-05"),
-                ScheduleDocument.status == ScheduleStatus.OPEN,
-                ScheduleDocument.available_slots >= 4,
+                {"experience_id": exp_medio.id, "date": {"$gte": date.fromisoformat("2026-06-20"), "$lte": date.fromisoformat("2026-07-05")}, "status": ScheduleStatus.OPEN, "available_slots": {"$gte": 4}},
             )
             .sort(("date", 1))
             .limit(5)

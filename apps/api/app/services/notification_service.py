@@ -125,8 +125,7 @@ class NotificationService:
         entries: list[NotificationOutboxDocument] = []
 
         internal_users = await UserDocument.find(
-            UserDocument.is_active,
-            UserDocument.role == UserRole.ADMIN,
+            {"is_active": True, "role": UserRole.ADMIN},
         ).to_list()
         for user in internal_users:
             if user.email:
@@ -170,8 +169,7 @@ class NotificationService:
             entries.append(entry)
 
         internal_users = await UserDocument.find(
-            UserDocument.is_active,
-            UserDocument.role == UserRole.ADMIN,
+            {"is_active": True, "role": UserRole.ADMIN},
         ).to_list()
         for user in internal_users:
             if user.email:
