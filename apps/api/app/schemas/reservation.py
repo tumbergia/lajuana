@@ -5,6 +5,8 @@ from pydantic import BaseModel, EmailStr, Field
 
 from app.common.enums import Channel, ParticipantFormStatus, PaymentStatus, ReservationStatus
 from app.schemas.common import AuditMetadataSchema
+from app.schemas.participant import ParticipantResponseSchema
+from app.schemas.payment_proof import PaymentProofResponseSchema
 
 
 class ReservationCreateSchema(BaseModel):
@@ -67,6 +69,8 @@ class ReservationResponseSchema(AuditMetadataSchema):
     confirmed_at: datetime | None
     cancelled_at: datetime | None
     completed_at: datetime | None
+    participants: list[ParticipantResponseSchema] = []
+    payment_proofs: list[PaymentProofResponseSchema] = []
 
 
 class ReservationListItemSchema(AuditMetadataSchema):

@@ -71,7 +71,7 @@ class AppStatusBanner extends StatelessWidget {
       outlined: tone != AppStatusBannerTone.danger,
       onTap: onTap,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, size: 18, color: textColor),
           const SizedBox(width: 10),

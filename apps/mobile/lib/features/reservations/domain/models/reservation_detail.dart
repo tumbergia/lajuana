@@ -2,6 +2,8 @@ import 'reservation_status.dart';
 import 'reservation_payment_summary.dart';
 import 'reservation_timeline_event.dart';
 import 'reservation_operational_alert.dart';
+import 'reservation_participant_detail.dart';
+import 'reservation_payment_proof_detail.dart';
 
 class ReservationDetail {
   const ReservationDetail({
@@ -32,6 +34,8 @@ class ReservationDetail {
     this.paymentSummary,
     this.timeline = const [],
     this.operationalAlerts = const [],
+    this.participants = const [],
+    this.paymentProofs = const [],
   });
 
   final String id;
@@ -61,4 +65,6 @@ class ReservationDetail {
   final ReservationPaymentSummary? paymentSummary;
   final List<ReservationTimelineEvent> timeline;
   final List<ReservationOperationalAlert> operationalAlerts;
+  final List<ReservationParticipantDetail> participants;
+  final List<ReservationPaymentProofDetail> paymentProofs;
 }

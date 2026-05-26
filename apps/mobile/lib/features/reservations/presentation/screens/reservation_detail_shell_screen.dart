@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:mobile_core/mobile_core.dart';
 
@@ -13,11 +15,15 @@ import '../../../catalogs/catalogs_module.dart';
 import '../../domain/models/reservation_detail.dart';
 import '../../domain/models/reservation_list_item.dart';
 import '../../domain/models/reservation_status.dart';
+import '../../domain/models/reservation_participant_detail.dart';
+import '../../domain/models/reservation_payment_proof_detail.dart';
 import '../../domain/repositories/reservations_repository.dart';
 import '../../infrastructure/mappers/reservation_mapper.dart';
 import '../../reservations_module.dart';
 import '../widgets/payment_status_card.dart';
 import '../controllers/reservation_detail_controller.dart';
+import '../controllers/reservation_participants_section_controller.dart';
+import '../controllers/reservation_payment_proofs_section_controller.dart';
 
 enum ReservationDetailSubroute {
   resumen,
@@ -48,7 +54,17 @@ class ReservationDetailShellScreen extends StatefulWidget {
 class _ReservationDetailShellScreenState
     extends State<ReservationDetailShellScreen> {
   late final ReservationDetailController _controller;
+  late final ReservationParticipantsSectionController
+      _participantsSectionController;
+  late final ReservationPaymentProofsSectionController
+      _paymentProofsSectionController;
   ReservationDetailSubroute _subroute = ReservationDetailSubroute.resumen;
+  final Map<String, Uint8List> _proofPreviewCache = {};
+  final ScrollController _participantsScrollCtrl = ScrollController();
+  String? _highlightedParticipantId;
+  final Map<String, GlobalKey> _participantKeys = {};
+
+  ReservationsRepository? get _repo => widget.reservationsModule?.repository;
 
   @override
   void initState() {
@@ -58,6 +74,9 @@ class _ReservationDetailShellScreenState
           repository: widget.reservationsModule?.repository ??
               (_throwNoModule()),
         );
+    _participantsSectionController = ReservationParticipantsSectionController();
+    _paymentProofsSectionController =
+        ReservationPaymentProofsSectionController();
     _controller.addListener(_onStateChanged);
     _controller.loadDetail(widget.reservationId);
   }
@@ -70,10 +89,19 @@ class _ReservationDetailShellScreenState
   void dispose() {
     _controller.removeListener(_onStateChanged);
     _controller.dispose();
+    _participantsSectionController.dispose();
+    _paymentProofsSectionController.dispose();
+    _proofPreviewCache.clear();
+    _participantsScrollCtrl.dispose();
     super.dispose();
   }
 
   void _onStateChanged() {
+    final detail = _controller.detail;
+    if (detail != null) {
+      _participantsSectionController.updateFromDetail(detail);
+      _paymentProofsSectionController.updateFromDetail(detail);
+    }
     if (mounted) setState(() {});
   }
 
@@ -100,20 +128,19 @@ class _ReservationDetailShellScreenState
             const Expanded(
               child: AppCenteredLoader(),
             )
-          else if (state == ReservationDetailLoadState.error) ...[
-            AppStatusBanner(
-              title: 'Error',
-              message: _controller.errorMessage ?? 'No se pudo cargar.',
-              tone: AppStatusBannerTone.danger,
-              icon: Icons.error_outline_rounded,
-            ),
-            const SizedBox(height: 12),
-            AppButton(
-              label: 'Reintentar',
-              onPressed: () => _controller.loadDetail(widget.reservationId),
-            ),
-            const Spacer(),
-          ] else if (detail != null) ...[
+          else if (state == ReservationDetailLoadState.error)
+            Expanded(
+              child: _buildSectionPlaceholder(
+                'Sin reserva',
+                _controller.errorMessage ?? 'No se pudo cargar el detalle de la reserva.',
+                Icons.error_outline_rounded,
+                action: AppButton(
+                  label: 'Reintentar',
+                  onPressed: () => _controller.loadDetail(widget.reservationId),
+                ),
+              ),
+            )
+          else if (detail != null) ...[
             if (state == ReservationDetailLoadState.offlineFromCache)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -155,13 +182,9 @@ class _ReservationDetailShellScreenState
       case ReservationDetailSubroute.resumen:
         return _buildSummary(detail);
       case ReservationDetailSubroute.participantes:
-        return _buildSectionPlaceholder(
-          'Participantes',
-          '${detail.participantsCompletedCount} de ${detail.expectedParticipantsCount ?? detail.participantCount} han llenado el formulario.',
-          Icons.group_outlined,
-        );
+        return _buildParticipantsContent(_participantsSectionController);
       case ReservationDetailSubroute.pagos:
-        return _buildPaymentSection(detail);
+        return _buildPaymentContent(_paymentProofsSectionController);
       case ReservationDetailSubroute.asignaciones:
         return _buildSectionPlaceholder(
           'Asignaciones',
@@ -207,8 +230,8 @@ class _ReservationDetailShellScreenState
         ),
         const SizedBox(height: 10),
         AppEntityRowCard(
-          title: detail.currency != null && detail.quotedTotalAmount != null
-              ? '${detail.quotedTotalAmount} ${detail.currency}'
+          title: detail.quotedTotalAmount != null
+              ? _formatColombianPrice(detail.quotedTotalAmount!)
               : 'Sin cotizacion',
           subtitle: 'Valor cotizado',
           leading: const Icon(Icons.attach_money_rounded, size: 18),
@@ -261,13 +284,288 @@ class _ReservationDetailShellScreenState
     );
   }
 
-  Widget _buildPaymentSection(ReservationDetail detail) {
-    return _buildSectionPlaceholder(
-      'Comprobantes de pago',
-      detail.paymentStatus != null
-          ? 'Estado: ${_paymentStatusLabel(detail.paymentStatus)}'
-          : 'Sin informacion de pago.',
-      Icons.receipt_long_rounded,
+  Widget _buildParticipantsContent(
+      ReservationParticipantsSectionController ctrl) {
+    final pending = ctrl.totalExpected - ctrl.totalCompleted;
+
+    // Build keys for each participant for scroll targeting.
+    _participantKeys.clear();
+    for (final p in ctrl.participants) {
+      _participantKeys[p.id] = GlobalKey(debugLabel: p.id);
+    }
+
+    return SingleChildScrollView(
+      controller: _participantsScrollCtrl,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Summary metrics row.
+          Row(
+            children: [
+              Expanded(
+                child: _metricSmall(
+                  'Registrados',
+                  '${ctrl.totalCompleted}',
+                  Icons.check_circle_outline,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _metricSmall(
+                  'Pendientes',
+                  '$pending',
+                  Icons.pending_outlined,
+                ),
+              ),
+            ],
+          ),
+          if (ctrl.hasMedicalAlert) ...[
+            const SizedBox(height: 8),
+            AppStatusBanner(
+              title: 'Alerta medica',
+              message: 'Toque para localizar al participante.',
+              tone: AppStatusBannerTone.danger,
+              icon: Icons.medical_services_outlined,
+              onTap: () => _highlightAlertParticipant(
+                  ctrl.participants.where((p) => p.hasMedicalAlert)),
+            ),
+          ],
+          if (ctrl.hasFoodRestriction) ...[
+            const SizedBox(height: 8),
+            AppStatusBanner(
+              title: 'Restriccion alimentaria',
+              message: 'Toque para localizar al participante.',
+              tone: AppStatusBannerTone.danger,
+              icon: Icons.restaurant_outlined,
+              onTap: () => _highlightAlertParticipant(
+                  ctrl.participants.where((p) => p.hasFoodRestriction)),
+            ),
+          ],
+          const SizedBox(height: 12),
+          if (ctrl.participants.isEmpty)
+            _buildSectionPlaceholder(
+              'Sin participantes',
+              'Aun no hay participantes registrados.',
+              Icons.person_outline,
+            )
+          else
+            ...ctrl.participants.map((p) => Padding(
+                  key: _participantKeys[p.id],
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildParticipantCard(p,
+                      hasAlertOverride: _highlightedParticipantId == p.id,
+                      selected: _highlightedParticipantId == p.id),
+                )),
+        ],
+      ),
+    );
+  }
+
+  void _highlightAlertParticipant(Iterable<ReservationParticipantDetail> matching) {
+    if (matching.isEmpty) return;
+    final target = matching.first;
+    setState(() => _highlightedParticipantId = target.id);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final key = _participantKeys[target.id];
+      final ctx = key?.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(ctx, alignment: 0.15, duration: const Duration(milliseconds: 400));
+      }
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) setState(() => _highlightedParticipantId = null);
+    });
+  }
+
+  Widget _buildParticipantCard(ReservationParticipantDetail p,
+      {bool hasAlertOverride = false, bool selected = false}) {
+    final hasAlert = hasAlertOverride || p.hasMedicalAlert || p.hasFoodRestriction;
+    final context = this.context;
+    final alertRed = appBadgeToneColors(context, AppBadgeTone.danger).background;
+
+    final info = <String>[];
+    if (p.heightCm != null) info.add('Altura: ${p.heightCm} cm');
+    if (p.weightKg != null) info.add('Peso: ${p.weightKg} kg');
+    if (p.ageYears != null) info.add('Edad: ${p.ageYears} años');
+    if (p.experienceLevel != null) {
+      info.add(_experienceLevelLabel(p.experienceLevel!));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: AppEntityRowCard(
+        title: p.fullName,
+        subtitle: info.isNotEmpty ? info.join(' · ') : '',
+        selected: selected,
+        accentColor: hasAlert ? alertRed : null,
+        badge: hasAlert
+            ? AppBadge(label: 'Alerta', tone: AppBadgeTone.danger, uppercase: false)
+            : AppBadge(
+                label: p.isCompleted ? 'Completo' : 'Incompleto',
+                tone: p.isCompleted ? AppBadgeTone.success : AppBadgeTone.warning,
+                uppercase: false,
+              ),
+        leading: Icon(
+          hasAlert ? Icons.warning_amber_rounded : Icons.person_outline,
+          size: 18,
+          color: hasAlert ? alertRed : null,
+        ),
+        onTap: () => _previewParticipant(p),
+      ),
+    );
+  }
+
+  Widget _metricSmall(String label, String value, IconData icon) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: theme.textTheme.displayLarge?.copyWith(
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 64,
+                    height: 0.95,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(icon, color: scheme.onSurfaceVariant, size: 28),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Formatea [value] (string numérico) en formato pesos colombianos:
+  /// apóstrofe solo para millones, punto para miles, coma decimal.
+  /// Ej: 1'234.567,89 | 500.000,00 | 999,00
+  String _formatColombianPrice(String value) {
+    final number = double.tryParse(value.replaceAll(',', '.').replaceAll("'", ''));
+    if (number == null) return value;
+    final formatted = number.toStringAsFixed(2);
+    final dotPos = formatted.indexOf('.');
+    final intPart = dotPos >= 0 ? formatted.substring(0, dotPos) : formatted;
+    final decPart = dotPos >= 0 ? formatted.substring(dotPos + 1) : '00';
+
+    // Group integer part into chunks of 3 from right
+    final groups = <String>[];
+    int remaining = intPart.length;
+    while (remaining > 0) {
+      final chunkSize = remaining >= 3 ? 3 : remaining;
+      groups.insert(0, intPart.substring(remaining - chunkSize, remaining));
+      remaining -= chunkSize;
+    }
+
+    // Join groups: last separator = '.' (thousands), earlier = "'" (millions+)
+    final buffer = StringBuffer();
+    for (int i = 0; i < groups.length; i++) {
+      if (i > 0) {
+        if (groups.length - i == 1) {
+          buffer.write('.'); // thousands (last separator)
+        } else {
+          buffer.write("'"); // millions and above
+        }
+      }
+      buffer.write(groups[i]);
+    }
+
+    return '${buffer.toString()},$decPart';
+  }
+
+  Widget _buildPaymentContent(
+      ReservationPaymentProofsSectionController ctrl) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          PaymentStatusCard(
+            label: _paymentStatusLabel(ctrl.paymentStatus),
+            backgroundColor:
+                _paymentStatusBgColor(ctrl.paymentStatus),
+            foregroundColor:
+                _paymentStatusFgColor(ctrl.paymentStatus),
+          ),
+          const SizedBox(height: 16),
+          if (ctrl.paymentProofs.isEmpty)
+            _buildSectionPlaceholder(
+              'Sin comprobantes',
+              ctrl.paymentStatus != null
+                  ? 'Estado: ${_paymentStatusLabel(ctrl.paymentStatus)}'
+                  : 'No se han cargado comprobantes.',
+              Icons.receipt_long_rounded,
+            )
+          else
+            ...ctrl.paymentProofs.map((proof) {
+              final statusLabel = _paymentProofStatusLabel(proof.status);
+              final tone = _paymentProofStatusTone(proof.status);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: AppEntityRowCard(
+                  title: proof.filename ?? 'Comprobante',
+                  subtitle: _buildProofSubtitle(proof),
+                  badge: AppBadge(
+                    label: statusLabel,
+                    tone: tone,
+                    uppercase: false,
+                  ),
+                  leading: const Icon(Icons.receipt_long_rounded, size: 18),
+                  onTap: () => _previewProof(proof),
+                ),
+              );
+            }),
+          const SizedBox(height: 16),
+
+          // Locked action buttons
+          AppButton(
+            label: 'Aprobar comprobante — Pendiente de permisos',
+            icon: Icons.lock_outline_rounded,
+            variant: AppButtonVariant.secondary,
+            expanded: true,
+            onPressed: null,
+          ),
+          const SizedBox(height: 8),
+          AppButton(
+            label: 'Rechazar comprobante — Pendiente de permisos',
+            icon: Icons.lock_outline_rounded,
+            variant: AppButtonVariant.secondary,
+            expanded: true,
+            onPressed: null,
+          ),
+          const SizedBox(height: 8),
+          AppButton(
+            label: 'Registrar pago — Pendiente de permisos',
+            icon: Icons.lock_outline_rounded,
+            variant: AppButtonVariant.secondary,
+            expanded: true,
+            onPressed: null,
+          ),
+        ],
+      ),
     );
   }
 
@@ -312,8 +610,9 @@ class _ReservationDetailShellScreenState
   Widget _buildSectionPlaceholder(
     String title,
     String message,
-    IconData icon,
-  ) {
+    IconData icon, {
+    Widget? action,
+  }) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -333,6 +632,10 @@ class _ReservationDetailShellScreenState
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
+          if (action != null) ...[
+            const SizedBox(height: 16),
+            action,
+          ],
         ],
       ),
     );
@@ -423,6 +726,82 @@ class _ReservationDetailShellScreenState
         return Theme.of(context).colorScheme.onSurface;
     }
   }
+
+  String _experienceLevelLabel(String level) {
+    switch (level.toLowerCase()) {
+      case 'basic':
+        return 'Basico';
+      case 'intermediate':
+        return 'Intermedio';
+      case 'advanced':
+        return 'Avanzado';
+      default:
+        return level;
+    }
+  }
+
+  String _paymentProofStatusLabel(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'Pendiente';
+      case 'received':
+        return 'Recibido';
+      case 'verified':
+        return 'Verificado';
+      case 'rejected':
+        return 'Rechazado';
+      default:
+        return status ?? 'Sin estado';
+    }
+  }
+
+  AppBadgeTone _paymentProofStatusTone(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return AppBadgeTone.warning;
+      case 'received':
+        return AppBadgeTone.primary;
+      case 'verified':
+        return AppBadgeTone.success;
+      case 'rejected':
+        return AppBadgeTone.danger;
+      default:
+        return AppBadgeTone.neutral;
+    }
+  }
+
+  String _buildProofSubtitle(ReservationPaymentProofDetail proof) {
+    final parts = <String>[];
+    if (proof.contentType != null) parts.add(proof.contentType!);
+    if (proof.sizeBytes != null) {
+      parts.add('${(proof.sizeBytes! / 1024).toStringAsFixed(0)} KB');
+    }
+    if (proof.uploadedAt != null) {
+      parts.add(formatDate(proof.uploadedAt!.toIso8601String(), fallback: ''));
+    }
+    return parts.join(' · ');
+  }
+
+  void _previewProof(ReservationPaymentProofDetail proof) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _ProofImageViewer(
+          proof: proof,
+          repository: _repo,
+          cache: _proofPreviewCache,
+          onBytesCached: (id, bytes) => _proofPreviewCache[id] = bytes,
+        ),
+      ),
+    );
+  }
+
+  void _previewParticipant(ReservationParticipantDetail p) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _ParticipantDetailView(participant: p),
+      ),
+    );
+  }
 }
 
 /// Fallback repository cuando no se inyecta [ReservationsModule].
@@ -450,6 +829,425 @@ class _FallbackRepository implements ReservationsRepository {
     String reservationId,
   ) async {
     return null;
+  }
+
+  @override
+  Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+}
+
+/// Full-screen payment proof viewer.
+///
+/// Downloads the file via streaming (or uses cached bytes) and renders it:
+/// - images (PNG/JPEG): zoomable + pannable via [InteractiveViewer]
+/// - other types: shows a message
+/// - errors: shows retry button
+class _ProofImageViewer extends StatefulWidget {
+  const _ProofImageViewer({
+    required this.proof,
+    this.repository,
+    this.cache,
+    this.onBytesCached,
+  });
+
+  final ReservationPaymentProofDetail proof;
+  final ReservationsRepository? repository;
+  final Map<String, Uint8List>? cache;
+  final void Function(String id, Uint8List bytes)? onBytesCached;
+
+  @override
+  State<_ProofImageViewer> createState() => _ProofImageViewerState();
+}
+
+class _ProofImageViewerState extends State<_ProofImageViewer> {
+  Uint8List? _bytes;
+  String? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    // Try cache first
+    if (widget.cache != null) {
+      final cached = widget.cache![widget.proof.id];
+      if (cached != null) {
+        setState(() {
+          _bytes = cached;
+          _loading = false;
+        });
+        return;
+      }
+    }
+
+    final repo = widget.repository;
+    if (repo == null) {
+      setState(() {
+        _error = 'Repositorio no disponible.';
+        _loading = false;
+      });
+      return;
+    }
+
+    try {
+      final bytes = await repo.downloadPaymentProofFile(widget.proof.id);
+      widget.cache?[widget.proof.id] = bytes;
+      widget.onBytesCached?.call(widget.proof.id, bytes);
+      setState(() {
+        _bytes = bytes;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Error al descargar: $e';
+        _loading = false;
+      });
+    }
+  }
+
+  bool get _isImage {
+    final ct = widget.proof.contentType?.toLowerCase() ?? '';
+    return ct.contains('image/png') ||
+        ct.contains('image/jpeg') ||
+        ct.contains('image/jpg');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.proof.filename ?? 'Comprobante'),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: AppBadge(
+                label: _paymentProofStatusLabelStatic(widget.proof.status),
+                tone: _paymentProofStatusToneStatic(widget.proof.status),
+                uppercase: false,
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: _buildBody(theme),
+    );
+  }
+
+  Widget _buildBody(ThemeData theme) {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded, size: 48,
+                  color: theme.colorScheme.error),
+              const SizedBox(height: 16),
+              Text(_error!, textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              AppButton(
+                label: 'Reintentar',
+                onPressed: () {
+                  setState(() {
+                    _loading = true;
+                    _error = null;
+                  });
+                  _load();
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_isImage && _bytes != null) {
+      return InteractiveViewer(
+        minScale: 0.5,
+        maxScale: 5.0,
+        child: Center(
+          child: Image.memory(
+            _bytes!,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.broken_image_outlined, size: 48,
+                      color: theme.colorScheme.onSurfaceVariant),
+                  const SizedBox(height: 16),
+                  const Text('No se pudo renderizar la imagen.'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Non-image types
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.description_outlined, size: 48,
+                color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(height: 16),
+            Text(
+              'Vista previa no disponible para ${widget.proof.contentType ?? 'este tipo de archivo'}.',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Full-screen participant detail view.
+///
+/// Shows all fields grouped by category: personal info, physical, health,
+/// dietary restrictions, emergency contact, and consentements.
+class _ParticipantDetailView extends StatelessWidget {
+  const _ParticipantDetailView({required this.participant});
+
+  final ReservationParticipantDetail participant;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final p = participant;
+    final hasAlert = p.hasMedicalAlert || p.hasFoodRestriction;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(p.fullName),
+        actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: AppBadge(
+                label: p.isCompleted ? 'Completo' : 'Incompleto',
+                tone: p.isCompleted ? AppBadgeTone.success : AppBadgeTone.warning,
+                uppercase: false,
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionHeader(context, 'INFORMACION PERSONAL'),
+            _fieldRow(context, 'Nombre', p.firstName),
+            _fieldRow(context, 'Apellido', p.lastName),
+            _fieldRow(context, 'Nacimiento', p.birthDate != null
+                ? '${p.birthDate}${p.ageYears != null ? ' (${p.ageYears} años)' : ''}'
+                : null),
+            _fieldRow(context, 'Documento', _docLabel(p)),
+            _fieldRow(context, 'Teléfono', p.phone),
+            _fieldRow(context, 'País', p.country),
+            _fieldRow(context, 'Ciudad', p.city),
+            const SizedBox(height: 16),
+            _sectionHeader(context, 'FISICO'),
+            _fieldRow(context, 'Altura', p.heightCm != null ? '${p.heightCm} cm' : null),
+            _fieldRow(context, 'Peso', p.weightKg != null ? '${p.weightKg} kg' : null),
+            _fieldRow(context, 'Experiencia', _expLabel(p.experienceLevel)),
+            const SizedBox(height: 16),
+            _sectionHeader(context, 'SALUD',
+                alertTone: p.hasMedicalAlert ? AppBadgeTone.danger : null),
+            if (p.hasMedicalAlert)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: AppStatusBanner(
+                  title: 'Alerta médica',
+                  message: p.healthConditions ?? p.sensoryDisabilities ?? '—',
+                  tone: AppStatusBannerTone.danger,
+                  icon: Icons.medical_services_outlined,
+                ),
+              ),
+            _fieldRow(context, 'Tipo sangre', p.bloodType),
+            _fieldRow(context, 'EPS / Seguro', p.epsOrTravelInsurance),
+            _fieldRow(context, 'Condiciones', p.healthConditions),
+            _fieldRow(context, 'Discapacidad', p.sensoryDisabilities),
+            const SizedBox(height: 16),
+            _sectionHeader(context, 'ALIMENTACION'),
+            if (p.hasFoodRestriction)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: AppStatusBanner(
+                  title: 'Restricción alimentaria',
+                  message: p.dietaryRestrictions ?? '—',
+                  tone: AppStatusBannerTone.warning,
+                  icon: Icons.restaurant_outlined,
+                ),
+              ),
+            _fieldRow(context, 'Restricciones', p.dietaryRestrictions),
+            const SizedBox(height: 16),
+            _sectionHeader(context, 'CONTACTO DE EMERGENCIA'),
+            _fieldRow(context, 'Nombre', p.emergencyContactName),
+            _fieldRow(context, 'Teléfono', p.emergencyContactPhone),
+            _fieldRow(context, 'Relación', p.emergencyContactRelationship),
+            const SizedBox(height: 16),
+            _sectionHeader(context, 'CONSENTIMIENTOS'),
+            _boolRow(context, 'Tratamiento de datos', p.acceptedDataProcessing),
+            _boolRow(context, 'Fotos / Video', p.photoVideoConsent),
+            _boolRow(context, 'Liberación de riesgo', p.acceptedRiskRelease),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String title, {AppBadgeTone? alertTone}) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.8,
+              color: alertTone != null
+                  ? appBadgeToneColors(context, alertTone).foreground
+                  : theme.colorScheme.primary,
+            ),
+          ),
+          if (alertTone != null) ...[
+            const SizedBox(width: 8),
+            Icon(Icons.warning_amber_rounded, size: 16,
+                color: appBadgeToneColors(context, alertTone).foreground),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _fieldRow(BuildContext context, String label, String? value) {
+    final theme = Theme.of(context);
+    final hasValue = value != null && value.isNotEmpty && value != '—';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant)),
+          ),
+          Expanded(
+            child: Text(
+              hasValue ? value : '—',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: hasValue ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _boolRow(BuildContext context, String label, bool? value) {
+    final theme = Theme.of(context);
+    final ok = value == true;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 160,
+            child: Text(label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant)),
+          ),
+          Icon(ok ? Icons.check_circle_rounded : Icons.cancel_outlined,
+              size: 20,
+              color: ok ? theme.colorScheme.primary : theme.colorScheme.error),
+          const SizedBox(width: 6),
+          Text(ok ? 'Aceptado' : 'No aceptado',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                  color: ok ? theme.colorScheme.primary : theme.colorScheme.error)),
+        ],
+      ),
+    );
+  }
+
+  String _docLabel(ReservationParticipantDetail p) {
+    if (p.documentType == null && p.documentNumber == null) return '—';
+    final parts = <String>[];
+    if (p.documentType != null) parts.add(p.documentType!.toUpperCase());
+    if (p.documentNumber != null) parts.add(p.documentNumber!);
+    return parts.join(' · ');
+  }
+
+  String _expLabel(String? level) {
+    if (level == null) return '—';
+    switch (level.toLowerCase()) {
+      case 'basic':
+        return 'Básico';
+      case 'intermediate':
+        return 'Intermedio';
+      case 'advanced':
+        return 'Avanzado';
+      default:
+        return level;
+    }
+  }
+}
+
+// Static helpers so the viewer widget doesn't need context.
+String _paymentProofStatusLabelStatic(String? status) {
+  switch (status?.toLowerCase()) {
+    case 'pending':
+      return 'Pendiente';
+    case 'received':
+      return 'Recibido';
+    case 'verified':
+      return 'Verificado';
+    case 'rejected':
+      return 'Rechazado';
+    default:
+      return status ?? 'Sin estado';
+  }
+}
+
+AppBadgeTone _paymentProofStatusToneStatic(String? status) {
+  switch (status?.toLowerCase()) {
+    case 'pending':
+      return AppBadgeTone.warning;
+    case 'received':
+      return AppBadgeTone.primary;
+    case 'verified':
+      return AppBadgeTone.success;
+    case 'rejected':
+      return AppBadgeTone.danger;
+    default:
+      return AppBadgeTone.neutral;
   }
 }
 

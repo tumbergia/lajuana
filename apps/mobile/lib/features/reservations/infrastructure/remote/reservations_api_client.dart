@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -59,6 +60,16 @@ class ReservationsApiClient {
     );
     final data = _decodeBody(response.body);
     return ReservationDetailDto.fromJson(data);
+  }
+
+  /// Downloads a payment proof file via streaming.
+  /// Returns the raw bytes; caller can interpret based on content type.
+  Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/payment-proofs/$paymentProofId/download',
+    );
+    return response.bodyBytes;
   }
 
   Future<http.Response> _authorizedRequest({

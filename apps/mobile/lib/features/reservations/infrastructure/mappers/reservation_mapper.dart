@@ -1,11 +1,74 @@
 import '../../../../app/widgets/app_badge.dart';
 import '../../domain/models/reservation_detail.dart';
 import '../../domain/models/reservation_list_item.dart';
+import '../../domain/models/reservation_participant_detail.dart';
+import '../../domain/models/reservation_payment_proof_detail.dart';
 import '../../domain/models/reservation_payment_summary.dart';
 import '../../domain/models/reservation_status.dart';
 import '../../domain/models/reservation_timeline_event.dart';
 import '../../presentation/models/reservation_view_models.dart';
 import '../remote/reservation_dtos.dart';
+
+/// Maps a DTO participant to a domain participant detail.
+ReservationParticipantDetail _participantDtoToDetail(
+    ReservationParticipantDto dto) {
+  // Rough age computation from birth_date string.
+  int? ageYears;
+  if (dto.birthDate != null && dto.birthDate!.length >= 10) {
+    try {
+      final year = int.tryParse(dto.birthDate!.substring(0, 4));
+      if (year != null) {
+        ageYears = DateTime.now().year - year;
+      }
+    } catch (_) {}
+  }
+
+  return ReservationParticipantDetail(
+    id: dto.id,
+    reservationId: dto.reservationId,
+    fullName: dto.fullName,
+    firstName: dto.firstName,
+    lastName: dto.lastName,
+    birthDate: dto.birthDate,
+    ageYears: ageYears,
+    heightCm: dto.heightCm,
+    weightKg: dto.weightKg,
+    experienceLevel: dto.experienceLevel,
+    documentType: dto.documentType,
+    documentNumber: dto.documentNumber,
+    phone: dto.phone,
+    country: dto.country,
+    city: dto.city,
+    bloodType: dto.bloodType,
+    epsOrTravelInsurance: dto.epsOrTravelInsurance,
+    dietaryRestrictions: dto.dietaryRestrictions,
+    healthConditions: dto.healthConditions,
+    sensoryDisabilities: dto.sensoryDisabilities,
+    emergencyContactName: dto.emergencyContact.name,
+    emergencyContactPhone: dto.emergencyContact.phone,
+    emergencyContactRelationship: dto.emergencyContact.relationship,
+    acceptedDataProcessing: dto.acceptedDataProcessing,
+    acceptedMediaUsage: dto.acceptedMediaUsage,
+    acceptedRiskRelease: dto.acceptedRiskRelease,
+    isCompleted: dto.isCompleted,
+  );
+}
+
+/// Maps a DTO payment proof to a domain payment proof detail.
+ReservationPaymentProofDetail _paymentProofDtoToDetail(
+    ReservationPaymentProofDto dto) {
+  return ReservationPaymentProofDetail(
+    id: dto.id,
+    reservationId: dto.reservationId,
+    filename: dto.filename,
+    contentType: dto.contentType,
+    sizeBytes: dto.sizeBytes,
+    status: dto.status,
+    uploadedAt: dto.uploadedAt,
+    storageKey: dto.storageKey,
+    sha256: dto.sha256,
+  );
+}
 
 /// Statuses that should appear as "pendiente" in the UI filter group.
 bool _isPendingGroup(ReservationStatus status) {
@@ -168,6 +231,7 @@ ReservationDetail dtoToDetail(ReservationDetailDto dto) {
     completedAt: dto.completedAt?.toIso8601String(),
     paymentSummary: ReservationPaymentSummary(
       status: dto.paymentStatus,
+      proofCount: dto.paymentProofs.length,
     ),
     timeline: const [],
     operationalAlerts: const [],
@@ -198,6 +262,12 @@ ReservationDetail dtoToDetail(ReservationDetailDto dto) {
     paymentSummary: baseDetail.paymentSummary,
     timeline: deriveFallbackTimeline(baseDetail),
     operationalAlerts: baseDetail.operationalAlerts,
+    participants: dto.participants
+        .map(_participantDtoToDetail)
+        .toList(growable: false),
+    paymentProofs: dto.paymentProofs
+        .map(_paymentProofDtoToDetail)
+        .toList(growable: false),
   );
 }
 

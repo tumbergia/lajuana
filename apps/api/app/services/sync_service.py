@@ -95,7 +95,7 @@ class SyncOperationExecutor:
                 entity_remote_id=str(doc.id),
                 version=doc.version,
                 updated_at=doc.updated_at,
-                payload=_entity_to_response_dict(operation.entity_type, doc),
+                payload=await _entity_to_response_dict(operation.entity_type, doc),
                 error=None,
             )
         except ApiError as exc:
@@ -494,7 +494,7 @@ def _ensure_operation_permission(
     )
 
 
-def _entity_to_response_dict(entity_type: str, doc) -> dict:
+async def _entity_to_response_dict(entity_type: str, doc) -> dict:
     if entity_type == "experience":
         return experience_to_response(doc).model_dump(mode="json")
     if entity_type == "schedule":
@@ -504,7 +504,8 @@ def _entity_to_response_dict(entity_type: str, doc) -> dict:
             return doc.reservation_rules.model_dump(mode="json")
         return {}
     if entity_type == "reservation":
-        return reservation_to_response(doc).model_dump(mode="json")
+        result = await reservation_to_response(doc)
+        return result.model_dump(mode="json")
     if entity_type == "participant":
         return participant_to_response(doc).model_dump(mode="json")
     if entity_type == "payment_proof":

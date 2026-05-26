@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../../../app/widgets/app_button.dart';
@@ -338,5 +340,10 @@ class _FallbackRepository implements ReservationsRepository {
     String reservationId,
   ) async {
     return null;
+  }
+
+  @override
+  Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
+    throw Exception('ReservationsModule no inyectado');
   }
 }

@@ -60,7 +60,7 @@ async def create_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.create(payload.model_dump(), actor_id=current_user.id)
-    return reservation_to_response(doc)
+    return await reservation_to_response(doc)
 
 
 @router.get(
@@ -151,7 +151,7 @@ async def get_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.get(reservation_id, actor_role=current_user.role)
-    return reservation_to_response(doc)
+    return await reservation_to_response(doc)
 
 
 @router.patch(
@@ -175,7 +175,7 @@ async def update_reservation(
         payload.model_dump(exclude_none=True),
         actor_id=current_user.id,
     )
-    return reservation_to_response(doc)
+    return await reservation_to_response(doc)
 
 
 @router.post(
@@ -195,7 +195,7 @@ async def confirm_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.confirm_reservation(reservation_id, actor_id=current_user.id)
-    return reservation_to_response(doc)
+    return await reservation_to_response(doc)
 
 
 @router.post(
@@ -219,7 +219,7 @@ async def transition_reservation_status(
         payload.target_status,
         actor_id=current_user.id,
     )
-    return reservation_to_response(doc)
+    return await reservation_to_response(doc)
 
 
 @router.post(
@@ -239,7 +239,7 @@ async def cancel_reservation(
     ],
 ) -> ReservationResponseSchema:
     doc = await reservation_service.cancel_reservation(reservation_id, actor_id=current_user.id)
-    return reservation_to_response(doc)
+    return await reservation_to_response(doc)
 
 
 @router.post(

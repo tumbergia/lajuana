@@ -94,7 +94,23 @@ def schedule_to_response(doc: ScheduleDocument) -> ScheduleResponseSchema:
     )
 
 
-def reservation_to_response(doc: ReservationDocument) -> ReservationResponseSchema:
+async def reservation_to_response(doc: ReservationDocument) -> ReservationResponseSchema:
+    # Resolve participants by IDs (avoids N+1 — single $in query).
+    participants: list[ParticipantResponseSchema] = []
+    if doc.participant_ids:
+        participant_docs = await ParticipantDocument.find(
+            {"_id": {"$in": doc.participant_ids}}
+        ).to_list()
+        participants = [participant_to_response(p) for p in participant_docs]
+
+    # Resolve payment proofs by IDs.
+    payment_proofs: list[PaymentProofResponseSchema] = []
+    if doc.payment_proof_ids:
+        proof_docs = await PaymentProofDocument.find(
+            {"_id": {"$in": doc.payment_proof_ids}}
+        ).to_list()
+        payment_proofs = [payment_proof_to_response(p) for p in proof_docs]
+
     return ReservationResponseSchema(
         id=str(doc.id),
         code=doc.code,
@@ -121,6 +137,8 @@ def reservation_to_response(doc: ReservationDocument) -> ReservationResponseSche
         updated_at=doc.updated_at,
         deleted_at=doc.deleted_at,
         version=doc.version,
+        participants=participants,
+        payment_proofs=payment_proofs,
     )
 
 
@@ -157,35 +175,41 @@ def reservation_to_list_item(
 
 
 def participant_to_response(doc: ParticipantDocument) -> ParticipantResponseSchema:
-    return ParticipantResponseSchema(
-        id=str(doc.id),
-        reservation_id=str(doc.reservation_id),
-        first_name=doc.first_name,
-        last_name=doc.last_name,
-        birth_date=doc.birth_date,
-        document_type=doc.document_type,
-        document_number=doc.document_number,
-        phone=doc.phone,
-        country=doc.country,
-        city=doc.city,
-        height_cm=doc.height_cm,
-        weight_kg=doc.weight_kg,
-        dietary_restrictions=doc.dietary_restrictions,
-        blood_type=doc.blood_type,
-        eps_or_travel_insurance=doc.eps_or_travel_insurance,
-        health_conditions=doc.health_conditions,
-        sensory_disabilities=doc.sensory_disabilities,
-        emergency_contact=doc.emergency_contact,
-        accepted_data_processing=doc.accepted_data_processing,
-        accepted_media_usage=doc.accepted_media_usage,
-        accepted_risk_release=doc.accepted_risk_release,
-        risk_release_text_version=doc.risk_release_text_version,
-        is_completed=doc.is_completed,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
-        version=doc.version,
-    )
+    # Build a flat dict to avoid Pydantic v2 strict-type mismatches
+    # between document model types and response schema types (e.g.
+    # EmergencyContact vs EmergencyContactSchema, enum instances vs str).
+    ec_raw = doc.emergency_contact
+    ec_dict = ec_raw.model_dump() if hasattr(ec_raw, "model_dump") else ec_raw
+    return ParticipantResponseSchema.model_validate({
+        "id": str(doc.id),
+        "reservation_id": str(doc.reservation_id),
+        "first_name": doc.first_name,
+        "last_name": doc.last_name,
+        "birth_date": doc.birth_date,
+        "document_type": doc.document_type,
+        "document_number": doc.document_number,
+        "phone": doc.phone,
+        "country": doc.country,
+        "city": doc.city,
+        "height_cm": doc.height_cm,
+        "weight_kg": doc.weight_kg,
+        "experience_level": doc.experience_level.value if doc.experience_level else None,
+        "dietary_restrictions": doc.dietary_restrictions,
+        "blood_type": doc.blood_type,
+        "eps_or_travel_insurance": doc.eps_or_travel_insurance,
+        "health_conditions": doc.health_conditions,
+        "sensory_disabilities": doc.sensory_disabilities,
+        "emergency_contact": ec_dict,
+        "accepted_data_processing": doc.accepted_data_processing,
+        "accepted_media_usage": doc.accepted_media_usage,
+        "accepted_risk_release": doc.accepted_risk_release,
+        "risk_release_text_version": doc.risk_release_text_version,
+        "is_completed": doc.is_completed,
+        "created_at": doc.created_at,
+        "updated_at": doc.updated_at,
+        "deleted_at": doc.deleted_at,
+        "version": doc.version,
+    })
 
 
 def form_link_to_status_response(

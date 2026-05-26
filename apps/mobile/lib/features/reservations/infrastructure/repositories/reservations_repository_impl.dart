@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../domain/models/reservation_detail.dart';
 import '../../domain/models/reservation_list_item.dart';
 import '../../domain/models/reservation_status.dart';
@@ -83,7 +85,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
       final dto = await _apiClient.getReservationById(reservationId);
       final detail = dtoToDetail(dto);
 
-      // Cache detail
+      // Cache detail with participants and payment_proofs
       await _localDataSource.cacheDetail(
         reservationId,
         {
@@ -110,6 +112,51 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
           'completed_at': dto.completedAt?.toIso8601String(),
           'created_at': dto.createdAt?.toIso8601String(),
           'updated_at': dto.updatedAt?.toIso8601String(),
+          'participants': dto.participants
+              .map((p) => {
+                    'id': p.id,
+                    'reservation_id': p.reservationId,
+                    'first_name': p.firstName,
+                    'last_name': p.lastName,
+                    'birth_date': p.birthDate,
+                    'document_type': p.documentType,
+                    'document_number': p.documentNumber,
+                    'phone': p.phone,
+                    'country': p.country,
+                    'city': p.city,
+                    'height_cm': p.heightCm,
+                    'weight_kg': p.weightKg,
+                    'experience_level': p.experienceLevel,
+                    'dietary_restrictions': p.dietaryRestrictions,
+                    'blood_type': p.bloodType,
+                    'eps_or_travel_insurance': p.epsOrTravelInsurance,
+                    'health_conditions': p.healthConditions,
+                    'sensory_disabilities': p.sensoryDisabilities,
+                    'emergency_contact': {
+                      'name': p.emergencyContact.name,
+                      'phone': p.emergencyContact.phone,
+                      'relationship': p.emergencyContact.relationship,
+                      'country': p.emergencyContact.country,
+                    },
+                    'accepted_data_processing': p.acceptedDataProcessing,
+                    'accepted_media_usage': p.acceptedMediaUsage,
+                    'accepted_risk_release': p.acceptedRiskRelease,
+                    'is_completed': p.isCompleted,
+                  })
+              .toList(growable: false),
+          'payment_proofs': dto.paymentProofs
+              .map((p) => {
+                    'id': p.id,
+                    'reservation_id': p.reservationId,
+                    'storage_key': p.storageKey,
+                    'filename': p.filename,
+                    'content_type': p.contentType,
+                    'size_bytes': p.sizeBytes,
+                    'sha256': p.sha256,
+                    'status': p.status,
+                    'uploaded_at': p.uploadedAt?.toIso8601String(),
+                  })
+              .toList(growable: false),
         },
         dto.updatedAt?.toIso8601String(),
       );
@@ -137,6 +184,11 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
     final cached = await _localDataSource.getCachedDetail(reservationId);
     if (cached == null) return null;
     return dtoToDetail(_payloadToDetailDto(cached.payload));
+  }
+
+  @override
+  Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
+    return _apiClient.downloadPaymentProofFile(paymentProofId);
   }
 
   List<ReservationListItem> _applyFilters(
@@ -230,6 +282,9 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
   }
 
   ReservationDetailDto _payloadToDetailDto(Map<String, dynamic> payload) {
+    final rawParticipants = payload['participants'] as List?;
+    final rawProofs = payload['payment_proofs'] as List?;
+
     return ReservationDetailDto(
       id: payload['id'] as String?,
       code: payload['code'] as String?,
@@ -264,6 +319,18 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
       updatedAt: payload['updated_at'] != null
           ? DateTime.tryParse(payload['updated_at'] as String)
           : null,
+      participants: rawParticipants != null
+          ? rawParticipants
+              .map((e) => ReservationParticipantDto.fromJson(
+                  e as Map<String, dynamic>))
+              .toList(growable: false)
+          : const [],
+      paymentProofs: rawProofs != null
+          ? rawProofs
+              .map((e) => ReservationPaymentProofDto.fromJson(
+                  e as Map<String, dynamic>))
+              .toList(growable: false)
+          : const [],
     );
   }
 }
