@@ -62,6 +62,16 @@ class ReservationDocument(AuditDocument):
         }
         return mapping.get(v, v)  # type: ignore[return-value]
 
+    @field_validator("quoted_total_amount", mode="before")
+    @classmethod
+    def _parse_decimal128(cls, v: object) -> object:
+        """Convert MongoDB Decimal128 to Python Decimal to avoid pydantic parse error."""
+        if v is None:
+            return None
+        if hasattr(v, "to_decimal"):
+            return v.to_decimal()
+        return v
+
     class Settings:
         name = Collections.RESERVATIONS
         indexes = [

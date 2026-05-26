@@ -19,4 +19,17 @@ abstract class ReservationsRepository {
   /// Downloads a payment proof file. The caller decides how to render
   /// based on the content type known from the proof's metadata.
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId);
+
+  /// Approves a payment proof. Returns the full updated reservation detail.
+  Future<ReservationDetail> approvePaymentProof({
+    required String paymentProofId,
+    String? note,
+  });
+
+  /// Rejects a payment proof with a mandatory reason.
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetail> rejectPaymentProof({
+    required String paymentProofId,
+    required String reason,
+  });
 }

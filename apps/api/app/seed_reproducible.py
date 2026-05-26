@@ -513,6 +513,25 @@ async def seed_reservations(
     return reservations
 
 
+def _make_placeholder_png() -> bytes:
+    """Return a minimal valid 1x1 white pixel PNG (~68 bytes)."""
+    import struct, zlib  # noqa: PLC0415 — inline for clarity
+
+    sig = b'\x89PNG\r\n\x1a\n'
+    # IHDR: 1x1 pixel, 8-bit RGB
+    ihdr_data = struct.pack('>IIBBBBB', 1, 1, 8, 2, 0, 0, 0)
+    ihdr_crc = zlib.crc32(b'IHDR' + ihdr_data) & 0xffffffff
+    ihdr = struct.pack('>I', 13) + b'IHDR' + ihdr_data + struct.pack('>I', ihdr_crc)
+    # IDAT: filter byte (0) + white pixel (255,255,255)
+    raw = zlib.compress(b'\x00\xff\xff\xff')
+    idat_crc = zlib.crc32(b'IDAT' + raw) & 0xffffffff
+    idat = struct.pack('>I', len(raw)) + b'IDAT' + raw + struct.pack('>I', idat_crc)
+    # IEND
+    iend_crc = zlib.crc32(b'IEND') & 0xffffffff
+    iend = struct.pack('>I', 0) + b'IEND' + struct.pack('>I', iend_crc)
+    return sig + ihdr + idat + iend
+
+
 async def seed_payment_proofs(
     reservations: list[ReservationDocument],
 ) -> dict[str, PaymentProofDocument]:
@@ -529,15 +548,18 @@ async def seed_payment_proofs(
         if not should_create:
             continue
 
-        digest = hashlib.sha256(reservation.code.encode("utf-8")).hexdigest()
+        # Generate a minimal placeholder PNG for synthetic proofs
+        placeholder_png = _make_placeholder_png()
+        digest = hashlib.sha256(placeholder_png).hexdigest()
         proof = PaymentProofDocument(
             reservation_id=reservation.id,
-            storage_key=f"seed/{reservation.code}.pdf",
-            filename=f"{reservation.code}.pdf",
-            content_type="application/pdf",
-            size_bytes=2048,
+            storage_key=f"seed/{reservation.code}.png",
+            filename=f"{reservation.code}.png",
+            content_type="image/png",
+            size_bytes=len(placeholder_png),
             sha256=digest,
             status=PaymentStatus.VERIFIED,
+            file_data=placeholder_png,
         )
         await proof.insert()
         reservation.payment_proof_ids.append(proof.id)

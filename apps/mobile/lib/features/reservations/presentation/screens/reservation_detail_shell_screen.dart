@@ -3,14 +3,19 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:mobile_core/mobile_core.dart';
 
+import '../../../../app/utils/file_saver.dart';
+
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_button.dart';
 import '../../../../app/widgets/app_centered_loader.dart';
+import '../../../../app/widgets/app_confirm_dialog.dart';
 import '../../../../app/widgets/app_entity_row_card.dart';
 import '../../../../app/widgets/app_scaffold.dart';
 import '../../../../app/widgets/app_segmented_filter.dart';
 import '../../../../app/widgets/app_status_banner.dart';
+import '../../../../app/widgets/app_text_field.dart';
 import '../../../../app/widgets/app_timeline.dart';
+import '../../../auth/presentation/auth_controller.dart';
 import '../../../catalogs/catalogs_module.dart';
 import '../../domain/models/reservation_detail.dart';
 import '../../domain/models/reservation_list_item.dart';
@@ -40,11 +45,13 @@ class ReservationDetailShellScreen extends StatefulWidget {
     required this.reservationId,
     this.reservationsModule,
     this.catalogsModule,
+    this.authController,
   });
 
   final String reservationId;
   final ReservationsModule? reservationsModule;
   final CatalogsModule? catalogsModule;
+  final AuthController? authController;
 
   @override
   State<ReservationDetailShellScreen> createState() =>
@@ -63,6 +70,9 @@ class _ReservationDetailShellScreenState
   final ScrollController _participantsScrollCtrl = ScrollController();
   String? _highlightedParticipantId;
   final Map<String, GlobalKey> _participantKeys = {};
+
+  bool get _isAdmin =>
+      widget.authController?.currentUser?.role == 'admin';
 
   ReservationsRepository? get _repo => widget.reservationsModule?.repository;
 
@@ -499,6 +509,10 @@ class _ReservationDetailShellScreenState
 
   Widget _buildPaymentContent(
       ReservationPaymentProofsSectionController ctrl) {
+    final actionState = _controller.paymentProofActionState;
+    final isBusy = actionState == PaymentProofActionState.approving ||
+        actionState == PaymentProofActionState.rejecting;
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -511,7 +525,30 @@ class _ReservationDetailShellScreenState
                 _paymentStatusFgColor(ctrl.paymentStatus),
           ),
           const SizedBox(height: 16),
-          if (ctrl.paymentProofs.isEmpty)
+
+          // Action feedback (error / success)
+          if (_controller.actionErrorCode != null) ...[
+            AppStatusBanner(
+              title: _actionErrorTitle(_controller.actionErrorCode!),
+              message: _controller.actionErrorMessage ?? '',
+              tone: AppStatusBannerTone.danger,
+              icon: Icons.error_outline_rounded,
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (isBusy) ...[
+            const Center(child: CircularProgressIndicator()),
+            const SizedBox(height: 12),
+          ],
+
+          // Non-admin: hide proofs and actions
+          if (!_isAdmin)
+            _buildSectionPlaceholder(
+              'Comprobantes no disponibles',
+              'Seccion no disponible para tu rol.',
+              Icons.lock_outline_rounded,
+            )
+          else if (ctrl.paymentProofs.isEmpty)
             _buildSectionPlaceholder(
               'Sin comprobantes',
               ctrl.paymentStatus != null
@@ -523,48 +560,142 @@ class _ReservationDetailShellScreenState
             ...ctrl.paymentProofs.map((proof) {
               final statusLabel = _paymentProofStatusLabel(proof.status);
               final tone = _paymentProofStatusTone(proof.status);
+              final isTerminal = proof.status == 'verified' ||
+                  proof.status == 'rejected';
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: AppEntityRowCard(
-                  title: proof.filename ?? 'Comprobante',
-                  subtitle: _buildProofSubtitle(proof),
-                  badge: AppBadge(
-                    label: statusLabel,
-                    tone: tone,
-                    uppercase: false,
-                  ),
-                  leading: const Icon(Icons.receipt_long_rounded, size: 18),
-                  onTap: () => _previewProof(proof),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppEntityRowCard(
+                      title: proof.filename ?? 'Comprobante',
+                      subtitle: _buildProofSubtitle(proof),
+                      badge: AppBadge(
+                        label: statusLabel,
+                        tone: tone,
+                        uppercase: false,
+                      ),
+                      leading: const Icon(Icons.receipt_long_rounded, size: 18),
+                      onTap: () => _previewProof(proof),
+                    ),
+                    if (!isTerminal) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AppButton(
+                              label: 'Aprobar',
+                              icon: Icons.check_circle_outline,
+                              variant: AppButtonVariant.primary,
+                              onPressed: isBusy
+                                  ? null
+                                  : () => _showApproveConfirmation(proof),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: AppButton(
+                              label: 'Rechazar',
+                              icon: Icons.cancel_outlined,
+                              variant: AppButtonVariant.secondary,
+                              onPressed: isBusy
+                                  ? null
+                                  : () => _showRejectDialog(proof),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
                 ),
               );
             }),
-          const SizedBox(height: 16),
-
-          // Locked action buttons
-          AppButton(
-            label: 'Aprobar comprobante — Pendiente de permisos',
-            icon: Icons.lock_outline_rounded,
-            variant: AppButtonVariant.secondary,
-            expanded: true,
-            onPressed: null,
-          ),
-          const SizedBox(height: 8),
-          AppButton(
-            label: 'Rechazar comprobante — Pendiente de permisos',
-            icon: Icons.lock_outline_rounded,
-            variant: AppButtonVariant.secondary,
-            expanded: true,
-            onPressed: null,
-          ),
-          const SizedBox(height: 8),
-          AppButton(
-            label: 'Registrar pago — Pendiente de permisos',
-            icon: Icons.lock_outline_rounded,
-            variant: AppButtonVariant.secondary,
-            expanded: true,
-            onPressed: null,
-          ),
         ],
+      ),
+    );
+  }
+
+  String _actionErrorTitle(String code) {
+    if (code.contains('forbidden') || code.contains('permission')) {
+      return 'Permiso denegado';
+    }
+    if (code.contains('invalid_status_transition') || code == 'common.conflict') {
+      return 'Conflicto de estado';
+    }
+    if (code.contains('network') || code.contains('timeout')) {
+      return 'Error de conexion';
+    }
+    return 'Error al procesar comprobante';
+  }
+
+  void _showApproveConfirmation(ReservationPaymentProofDetail proof) {
+    AppConfirmDialog.show(
+      context: context,
+      icon: Icons.check_circle_outline_rounded,
+      title: 'Aprobar comprobante',
+      message:
+          'El pago quedará validado, pero la reserva no se '
+          'confirmará automáticamente.',
+      confirmLabel: 'Aprobar',
+      height: 280,
+      onConfirm: () {
+        _controller.approvePaymentProof(
+          paymentProofId: proof.id,
+          isAdmin: _isAdmin,
+        );
+      },
+    );
+  }
+
+  void _showRejectDialog(ReservationPaymentProofDetail proof) {
+    final reasonCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Form(
+        key: formKey,
+        child: AlertDialog(
+          title: const Text('Rechazar comprobante'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Motivo del rechazo (obligatorio):'),
+              const SizedBox(height: 8),
+              AppTextField(
+                controller: reasonCtrl,
+                hintText: 'Indica el motivo del rechazo',
+                maxLines: 3,
+                variant: AppTextFieldVariant.filled,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancelar'),
+            ),
+            AppButton(
+              label: 'Rechazar comprobante',
+              onPressed: () {
+                final reason = reasonCtrl.text.trim();
+                if (reason.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Debes indicar un motivo')),
+                  );
+                  return;
+                }
+                Navigator.of(ctx).pop();
+                _controller.rejectPaymentProof(
+                  paymentProofId: proof.id,
+                  reason: reason,
+                  isAdmin: _isAdmin,
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -835,6 +966,22 @@ class _FallbackRepository implements ReservationsRepository {
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
     throw Exception('ReservationsModule no inyectado');
   }
+
+  @override
+  Future<ReservationDetail> approvePaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> rejectPaymentProof({
+    required String paymentProofId,
+    required String reason,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
 }
 
 /// Full-screen payment proof viewer.
@@ -916,6 +1063,29 @@ class _ProofImageViewerState extends State<_ProofImageViewer> {
         ct.contains('image/jpg');
   }
 
+  Future<void> _saveToDevice(Uint8List bytes) async {
+    final filename = widget.proof.filename ?? 'comprobante-${widget.proof.id}';
+    final contentType = widget.proof.contentType ?? 'application/octet-stream';
+    try {
+      saveFile(bytes, filename, contentType);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Descargado: $filename'),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al descargar: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -924,6 +1094,11 @@ class _ProofImageViewerState extends State<_ProofImageViewer> {
       appBar: AppBar(
         title: Text(widget.proof.filename ?? 'Comprobante'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.download_rounded),
+            tooltip: 'Descargar',
+            onPressed: _bytes != null ? () => _saveToDevice(_bytes!) : null,
+          ),
           Center(
             child: Padding(
               padding: const EdgeInsets.only(right: 12),

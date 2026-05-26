@@ -10,7 +10,12 @@ from app.common.enums import PaymentStatus, ReservationStatus, UserRole
 from app.common.labels import ErrorCode
 from app.core.config import settings
 from app.core.errors import ApiError
-from app.documents import FileUploadDocument, PaymentProofDocument, ReservationDocument
+from app.documents import (
+    FileUploadDocument,
+    PaymentProofDocument,
+    ReservationAuditLogDocument,
+    ReservationDocument,
+)
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.schemas.payment_proof import (
     PaymentProofApproveSchema,
@@ -198,6 +203,7 @@ class PaymentProofService:
             )
 
         doc = await self.get(payment_proof_id)
+        previous_status = str(doc.status.value)
         self._ensure_transition_allowed(doc.status, PaymentStatus.VERIFIED)
         reservation = await ReservationDocument.get(doc.reservation_id)
         if reservation is None:
@@ -217,6 +223,18 @@ class PaymentProofService:
         reservation.status = ReservationStatus.PAYMENT_RECEIVED
         reservation.updated_by = actor_id
         await reservation.save()
+
+        # Audit log — best-effort (non-critical, won't roll back on failure)
+        await self._create_audit_log(
+            reservation_id=reservation.id,
+            payment_proof_id=doc.id,
+            actor_user_id=actor_id,
+            actor_role=actor_role,
+            action="payment_proof.approved",
+            previous_status=previous_status,
+            new_status=str(doc.status.value),
+            reason=payload.note,
+        )
 
         if reservation.holder_phone:
             date_str = "próxima fecha agendada"
@@ -281,6 +299,7 @@ class PaymentProofService:
             )
 
         doc = await self.get(payment_proof_id)
+        previous_status = str(doc.status.value)
         self._ensure_transition_allowed(doc.status, PaymentStatus.REJECTED)
         reservation = await ReservationDocument.get(doc.reservation_id)
         if reservation is None:
@@ -296,7 +315,49 @@ class PaymentProofService:
             target_status=PaymentStatus.REJECTED,
             actor_id=actor_id,
         )
+
+        # Audit log — best-effort, won't roll back on failure
+        await self._create_audit_log(
+            reservation_id=reservation.id,
+            payment_proof_id=doc.id,
+            actor_user_id=actor_id,
+            actor_role=actor_role,
+            action="payment_proof.rejected",
+            previous_status=previous_status,
+            new_status=str(doc.status.value),
+            reason=payload.reason,
+        )
+
         return doc
+
+    async def _create_audit_log(
+        self,
+        *,
+        reservation_id: PydanticObjectId,
+        payment_proof_id: PydanticObjectId | None,
+        actor_user_id: PydanticObjectId | None,
+        actor_role: UserRole,
+        action: str,
+        previous_status: str,
+        new_status: str,
+        reason: str | None = None,
+    ) -> None:
+        try:
+            log = ReservationAuditLogDocument(
+                reservation_id=reservation_id,
+                payment_proof_id=payment_proof_id,
+                actor_user_id=actor_user_id,
+                actor_role=actor_role,
+                action=action,
+                previous_status=previous_status,
+                new_status=new_status,
+                reason=reason,
+                source="mobile_app",
+            )
+            await log.insert()
+        except Exception:
+            # Audit failure is non-fatal; payment action already committed
+            pass
 
     async def _sync_proof_and_reservation_payment_status(
         self,
@@ -457,9 +518,15 @@ class PaymentProofService:
     ) -> tuple[str, bytes | None]:
         doc = await self.get(payment_proof_id)
 
+        # 1. Serve from document field (MongoDB storage) — preferred path
+        if doc.file_data is not None:
+            return doc.content_type, doc.file_data
+
+        # 2. WhatsApp proof still pending download from Meta API
         if doc.storage_key.startswith("whatsapp/") and doc.size_bytes == 1:
             return "pending", None
 
+        # 3. Fallback: read from file storage adapter (legacy proofs)
         adapter = get_storage_adapter()
         file_bytes = await adapter.read_bytes(doc.storage_key)
         if file_bytes is None:

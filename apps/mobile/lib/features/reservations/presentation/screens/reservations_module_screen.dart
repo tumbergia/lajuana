@@ -79,6 +79,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen> {
         builder: (context) => ReservationDetailShellScreen(
           reservationId: reservationId,
           reservationsModule: widget.reservationsModule,
+          authController: widget.authController,
         ),
       ),
     );
@@ -344,6 +345,22 @@ class _FallbackRepository implements ReservationsRepository {
 
   @override
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> rejectPaymentProof({
+    required String paymentProofId,
+    required String reason,
+  }) async {
     throw Exception('ReservationsModule no inyectado');
   }
 }

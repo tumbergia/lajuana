@@ -20,3 +20,4 @@ class Collections:
     NOTIFICATION_OUTBOX = "notification_outbox"
     IN_APP_NOTIFICATIONS = "in_app_notifications"
     PARTICIPANT_FORM_LINKS = "participant_form_links"
+    RESERVATION_AUDIT_LOGS = "reservation_audit_logs"

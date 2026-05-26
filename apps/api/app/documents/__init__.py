@@ -22,6 +22,7 @@ from app.documents.participant_document import EmergencyContact, ParticipantDocu
 from app.documents.participant_form_link_document import ParticipantFormLinkDocument
 from app.documents.payment_proof_document import PaymentProofDocument
 from app.documents.ping_document import PingDocument
+from app.documents.reservation_audit_log_document import ReservationAuditLogDocument
 from app.documents.policy_document import PolicyDocument
 from app.documents.provider_document import ProviderDocument, ProviderType
 from app.documents.reservation_document import ReservationDocument
@@ -47,6 +48,7 @@ __all__ = [
     "ParticipantDocument",
     "ParticipantFormLinkDocument",
     "PaymentProofDocument",
+    "ReservationAuditLogDocument",
     "FileUploadDocument",
     "PingDocument",
     "PolicyDocument",

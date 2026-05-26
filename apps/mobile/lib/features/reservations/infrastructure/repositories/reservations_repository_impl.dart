@@ -191,6 +191,118 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
     return _apiClient.downloadPaymentProofFile(paymentProofId);
   }
 
+  @override
+  Future<ReservationDetail> approvePaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    final dto = await _apiClient.approvePaymentProof(
+      paymentProofId: paymentProofId,
+      note: note,
+    );
+    final detail = dtoToDetail(dto);
+
+    // Update reservation detail cache
+    await _cacheDetailPayload(dto);
+
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> rejectPaymentProof({
+    required String paymentProofId,
+    required String reason,
+  }) async {
+    final dto = await _apiClient.rejectPaymentProof(
+      paymentProofId: paymentProofId,
+      reason: reason,
+    );
+    final detail = dtoToDetail(dto);
+
+    // Update reservation detail cache
+    await _cacheDetailPayload(dto);
+
+    return detail;
+  }
+
+  /// Caches a full reservation detail DTO to the local data source.
+  Future<void> _cacheDetailPayload(ReservationDetailDto dto) async {
+    await _localDataSource.cacheDetail(
+      dto.id ?? '',
+      {
+        'id': dto.id,
+        'code': dto.code,
+        'experience_id': dto.experienceId,
+        'schedule_id': dto.scheduleId,
+        'channel': dto.channel,
+        'status': dto.status,
+        'participant_count': dto.participantCount,
+        'payment_status': dto.paymentStatus,
+        'holder_name': dto.holderName,
+        'holder_email': dto.holderEmail,
+        'holder_phone': dto.holderPhone,
+        'requested_date': dto.requestedDate,
+        'quoted_total_amount': dto.quotedTotalAmount,
+        'currency': dto.currency,
+        'expected_participants_count': dto.expectedParticipantsCount,
+        'participants_completed_count': dto.participantsCompletedCount,
+        'participant_form_status': dto.participantFormStatus,
+        'form_url': dto.formUrl,
+        'confirmed_at': dto.confirmedAt?.toIso8601String(),
+        'cancelled_at': dto.cancelledAt?.toIso8601String(),
+        'completed_at': dto.completedAt?.toIso8601String(),
+        'created_at': dto.createdAt?.toIso8601String(),
+        'updated_at': dto.updatedAt?.toIso8601String(),
+        'participants': dto.participants
+            .map((p) => {
+                  'id': p.id,
+                  'reservation_id': p.reservationId,
+                  'first_name': p.firstName,
+                  'last_name': p.lastName,
+                  'birth_date': p.birthDate,
+                  'document_type': p.documentType,
+                  'document_number': p.documentNumber,
+                  'phone': p.phone,
+                  'country': p.country,
+                  'city': p.city,
+                  'height_cm': p.heightCm,
+                  'weight_kg': p.weightKg,
+                  'experience_level': p.experienceLevel,
+                  'dietary_restrictions': p.dietaryRestrictions,
+                  'blood_type': p.bloodType,
+                  'eps_or_travel_insurance': p.epsOrTravelInsurance,
+                  'health_conditions': p.healthConditions,
+                  'sensory_disabilities': p.sensoryDisabilities,
+                  'emergency_contact': {
+                    'name': p.emergencyContact.name,
+                    'phone': p.emergencyContact.phone,
+                    'relationship': p.emergencyContact.relationship,
+                    'country': p.emergencyContact.country,
+                  },
+                  'accepted_data_processing': p.acceptedDataProcessing,
+                  'accepted_media_usage': p.acceptedMediaUsage,
+                  'accepted_risk_release': p.acceptedRiskRelease,
+                  'is_completed': p.isCompleted,
+                })
+            .toList(growable: false),
+        'payment_proofs': dto.paymentProofs
+            .map((p) => {
+                  'id': p.id,
+                  'reservation_id': p.reservationId,
+                  'storage_key': p.storageKey,
+                  'filename': p.filename,
+                  'content_type': p.contentType,
+                  'size_bytes': p.sizeBytes,
+                  'sha256': p.sha256,
+                  'status': p.status,
+                  'uploaded_at': p.uploadedAt?.toIso8601String(),
+                })
+            .toList(growable: false),
+      },
+      dto.updatedAt?.toIso8601String(),
+    );
+  }
+
   List<ReservationListItem> _applyFilters(
     List<ReservationListItem> items, {
     ReservationStatus? status,

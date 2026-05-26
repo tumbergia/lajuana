@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.deps import require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
-from app.documents import UserDocument
+from app.documents import ReservationDocument, UserDocument
 from app.schemas.payment_proof import (
     PaymentProofApproveSchema,
     PaymentProofRejectSchema,
@@ -17,8 +17,9 @@ from app.schemas.payment_proof import (
     PaymentProofUpdateSchema,
     PaymentProofVerifySchema,
 )
+from app.schemas.reservation import ReservationResponseSchema
 from app.services import PaymentProofService
-from app.services.mappers import payment_proof_to_response
+from app.services.mappers import payment_proof_to_response, reservation_to_response
 
 router = APIRouter(prefix="/payment-proofs", tags=["Comprobantes de pago"])
 service = PaymentProofService()
@@ -128,7 +129,7 @@ async def verify_payment_proof(
 
 @router.post(
     "/{payment_proof_id}/approve",
-    response_model=PaymentProofResponseSchema,
+    response_model=ReservationResponseSchema,
     status_code=status.HTTP_200_OK,
     summary="Aprobar comprobante de pago y notificar cliente",
     description=(
@@ -141,20 +142,20 @@ async def approve_payment_proof(
     payment_proof_id: str,
     payload: PaymentProofApproveSchema,
     current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
-) -> PaymentProofResponseSchema:
-    return payment_proof_to_response(
-        await service.approve_payment(
-            payment_proof_id,
-            payload,
-            actor_id=current_user.id,
-            actor_role=current_user.role,
-        )
+) -> ReservationResponseSchema:
+    proof_doc = await service.approve_payment(
+        payment_proof_id,
+        payload,
+        actor_id=current_user.id,
+        actor_role=current_user.role,
     )
+    reservation = await ReservationDocument.get(proof_doc.reservation_id)
+    return await reservation_to_response(reservation)
 
 
 @router.post(
     "/{payment_proof_id}/reject",
-    response_model=PaymentProofResponseSchema,
+    response_model=ReservationResponseSchema,
     status_code=status.HTTP_200_OK,
     summary="Rechazar comprobante de pago",
     operation_id="rejectPaymentProofById",
@@ -163,12 +164,12 @@ async def reject_payment_proof(
     payment_proof_id: str,
     payload: PaymentProofRejectSchema,
     current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
-) -> PaymentProofResponseSchema:
-    return payment_proof_to_response(
-        await service.reject_payment(
-            payment_proof_id,
-            payload,
-            actor_id=current_user.id,
-            actor_role=current_user.role,
-        )
+) -> ReservationResponseSchema:
+    proof_doc = await service.reject_payment(
+        payment_proof_id,
+        payload,
+        actor_id=current_user.id,
+        actor_role=current_user.role,
     )
+    reservation = await ReservationDocument.get(proof_doc.reservation_id)
+    return await reservation_to_response(reservation)

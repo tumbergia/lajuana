@@ -72,9 +72,45 @@ class ReservationsApiClient {
     return response.bodyBytes;
   }
 
+  /// Approves a payment proof. Returns the full updated reservation detail.
+  Future<ReservationDetailDto> approvePaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/payment-proofs/$paymentProofId/approve',
+      body: {
+        'confirmation_token': 'APPROVE_PAYMENT',
+        if (note != null) 'note': note,
+      },
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
+  /// Rejects a payment proof with a mandatory reason.
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetailDto> rejectPaymentProof({
+    required String paymentProofId,
+    required String reason,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/payment-proofs/$paymentProofId/reject',
+      body: {
+        'confirmation_token': 'REJECT_PAYMENT',
+        'reason': reason,
+      },
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
   Future<http.Response> _authorizedRequest({
     required String method,
     required String path,
+    Map<String, dynamic>? body,
     bool retryAuth = true,
   }) async {
     final accessToken = await _readAccessToken();
@@ -89,6 +125,12 @@ class ReservationsApiClient {
       switch (method) {
         case 'GET':
           return _http.get(uri, headers: _headers(accessToken));
+        case 'POST':
+          return _http.post(
+            uri,
+            headers: _headers(accessToken),
+            body: body != null ? jsonEncode(body) : null,
+          );
         default:
           throw UnsupportedError('Método no soportado: $method');
       }
@@ -99,6 +141,7 @@ class ReservationsApiClient {
         return _authorizedRequest(
           method: method,
           path: path,
+          body: body,
           retryAuth: false,
         );
       }

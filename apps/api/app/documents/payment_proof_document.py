@@ -18,6 +18,7 @@ class PaymentProofDocument(AuditDocument):
     uploaded_by: PydanticObjectId | None = None
     uploaded_at: datetime = Field(default_factory=utc_now)
     status: PaymentStatus = PaymentStatus.RECEIVED
+    file_data: bytes | None = None
 
     class Settings:
         name = Collections.PAYMENT_PROOFS

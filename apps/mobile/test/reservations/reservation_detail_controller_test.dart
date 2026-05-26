@@ -43,6 +43,22 @@ class _FakeSuccessRepository implements ReservationsRepository {
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
     throw UnimplementedError();
   }
+
+  @override
+  Future<ReservationDetail> approvePaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> rejectPaymentProof({
+    required String paymentProofId,
+    required String reason,
+  }) async {
+    return detail;
+  }
 }
 
 /// A fake repository that always throws.
@@ -74,6 +90,22 @@ class _FakeErrorRepository implements ReservationsRepository {
   @override
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
     throw UnimplementedError();
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> rejectPaymentProof({
+    required String paymentProofId,
+    required String reason,
+  }) async {
+    throw Exception('Network error');
   }
 }
 
@@ -110,6 +142,22 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   @override
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
     throw UnimplementedError();
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> rejectPaymentProof({
+    required String paymentProofId,
+    required String reason,
+  }) async {
+    throw Exception('Network error');
   }
 }
 

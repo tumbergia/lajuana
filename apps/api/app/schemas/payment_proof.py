@@ -39,7 +39,7 @@ class PaymentProofApproveSchema(BaseModel):
 
 class PaymentProofRejectSchema(BaseModel):
     confirmation_token: Literal["REJECT_PAYMENT"]
-    note: str | None = None
+    reason: str = Field(min_length=1)
 
 
 class PaymentProofResponseSchema(AuditMetadataSchema):
