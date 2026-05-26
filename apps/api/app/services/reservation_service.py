@@ -4,6 +4,7 @@ import secrets
 from datetime import UTC, date, datetime
 
 from beanie import PydanticObjectId
+from beanie.exceptions import CollectionWasNotInitialized
 from pymongo.errors import DuplicateKeyError
 
 from app.common.enums import (
@@ -19,6 +20,7 @@ from app.core.errors import ApiError
 from app.documents import (
     ExperienceDocument,
     ParticipantDocument,
+    ReservationAuditLogDocument,
     ReservationDocument,
     ScheduleDocument,
 )
@@ -82,6 +84,22 @@ class ReservationService:
             return ScheduleStatus.FULL
         return ScheduleStatus.OPEN
 
+    @staticmethod
+    async def _save_schedule_status(schedule: ScheduleDocument) -> None:
+        """Save schedule status, avoiding Beanie datetime.time encoding issue.
+
+        Uses motor collection update_one when available (production), falls back
+        to Beanie .save() for unit tests where Beanie is not initialized.
+        """
+        try:
+            collection = ScheduleDocument.get_motor_collection()
+            await collection.update_one(
+                {"_id": schedule.id},
+                {"$set": {"status": schedule.status.value}},
+            )
+        except CollectionWasNotInitialized:
+            await schedule.save()
+
     async def _sync_day_lock_fields(self, reservation: ReservationDocument) -> None:
         requested_date = reservation.requested_date
 
@@ -103,7 +121,7 @@ class ReservationService:
             "status": {"$in": status_values},
         }
         if exclude_reservation_id is not None:
-            query["_id"] = {"$ne": exclude_reservation_id}
+            query["_id"] = {"$ne": PydanticObjectId(exclude_reservation_id)}
         return await ReservationDocument.find(query).to_list()
 
     async def get_blocking_reservation_for_date(
@@ -411,6 +429,7 @@ class ReservationService:
             )
 
         try:
+            previous_status = reservation.status.value
             await self.transition_status(reservation, ReservationStatus.CONFIRMED)
             await self._sync_day_lock_fields(reservation)
             schedule = await ScheduleDocument.get(schedule.id)
@@ -427,7 +446,7 @@ class ReservationService:
 
             reservation.confirmed_at = datetime.now(UTC)
             reservation.updated_by = actor_id
-            await schedule.save()
+            await self._save_schedule_status(schedule)
             await reservation.save()
 
             try:
@@ -447,6 +466,21 @@ class ReservationService:
             )
             await reservation.save()
 
+            # Audit log — best-effort, non-critical
+            try:
+                log = ReservationAuditLogDocument(
+                    reservation_id=reservation.id,
+                    actor_user_id=actor_id,
+                    actor_role=UserRole.ADMIN,
+                    action="reservation.confirmed",
+                    previous_status=previous_status,
+                    new_status=ReservationStatus.CONFIRMED.value,
+                    source="mobile_app",
+                )
+                await log.insert()
+            except Exception:
+                pass
+
             return reservation
         except Exception:
             await self._rollback_schedule_capacity(
@@ -460,7 +494,7 @@ class ReservationService:
                     is_active=schedule_after_rollback.is_active,
                     available_slots=schedule_after_rollback.available_slots,
                 )
-                await schedule_after_rollback.save()
+                await self._save_schedule_status(schedule_after_rollback)
             raise
 
     async def _commit_schedule_capacity(

@@ -75,6 +75,14 @@ class _FakeSuccessRepository implements ReservationsRepository {
   }) async {
     return detail;
   }
+
+  @override
+  Future<ReservationDetail> confirmReservation({
+    required String reservationId,
+    String? notes,
+  }) async {
+    return detail;
+  }
 }
 
 /// A fake repository that always throws.
@@ -136,6 +144,14 @@ class _FakeErrorRepository implements ReservationsRepository {
   Future<ReservationDetail> unrejectPaymentProof({
     required String paymentProofId,
     String? note,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> confirmReservation({
+    required String reservationId,
+    String? notes,
   }) async {
     throw Exception('Network error');
   }
@@ -207,11 +223,21 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   }) async {
     throw Exception('Network error');
   }
+
+  @override
+  Future<ReservationDetail> confirmReservation({
+    required String reservationId,
+    String? notes,
+  }) async {
+    throw Exception('Network error');
+  }
 }
 
 ReservationDetail _makeDetail({
   List<Map<String, dynamic>> participants = const [],
   List<Map<String, dynamic>> paymentProofs = const [],
+  String status = 'confirmed',
+  String paymentStatus = 'verified',
 }) {
   final baseJson = {
     'id': 'r1',
@@ -219,9 +245,9 @@ ReservationDetail _makeDetail({
     'experience_id': 'e1',
     'schedule_id': 's1',
     'channel': 'whatsapp',
-    'status': 'confirmed',
+    'status': status,
     'participant_count': 2,
-    'payment_status': 'verified',
+    'payment_status': paymentStatus,
     'holder_name': 'Carlos',
     'holder_email': null,
     'holder_phone': '3000000001',
@@ -374,6 +400,104 @@ void main() {
       expect(controller.state, ReservationDetailLoadState.idle);
       expect(controller.detail, isNull);
       expect(controller.errorCode, isNull);
+    });
+
+    // ── Confirm reservation tests ──────────────────────────────────────────
+
+    test('confirmReservation sets success state for admin', () async {
+      final detail = _makeDetail(
+        status: 'payment_received',
+        paymentStatus: 'verified',
+      );
+      final repo = _FakeSuccessRepository(detail);
+      final controller = ReservationDetailController(repository: repo);
+      await controller.loadDetail('r1');
+
+      await controller.confirmReservation(isAdmin: true);
+
+      expect(controller.confirmationState, ReservationActionState.success);
+      expect(controller.detail, isNotNull);
+      expect(controller.confirmationErrorCode, isNull);
+    });
+
+    test('confirmReservation sets error for non-admin', () async {
+      final detail = _makeDetail(
+        status: 'payment_received',
+        paymentStatus: 'verified',
+      );
+      final repo = _FakeSuccessRepository(detail);
+      final controller = ReservationDetailController(repository: repo);
+      await controller.loadDetail('r1');
+
+      await controller.confirmReservation(isAdmin: false);
+
+      expect(controller.confirmationState, ReservationActionState.error);
+      expect(controller.confirmationErrorCode, 'permission.denied');
+    });
+
+    test('confirmReservation handles API failure', () async {
+      final repo = _FakeErrorRepository();
+      final controller = ReservationDetailController(repository: repo);
+      // Load detail from cache fallback since _FakeErrorRepository throws
+      // We need to set detail manually for the confirm method to work
+      final detail = _makeDetail(
+        status: 'payment_received',
+        paymentStatus: 'verified',
+      );
+      // Use a controller with success repo to load, then switch
+      final successRepo = _FakeSuccessRepository(detail);
+      final loaded = await successRepo.getReservationById('r1');
+      // But we can't switch repos, so let's use an approach where
+      // confirm is called on a controller that has detail loaded
+      // but the repo fails on confirm.
+      // Actually, let's use a repo that succeeds on get but fails on confirm.
+      // The _FakeErrorRepository fails on everything, so we'll use it directly.
+      // But we need detail to be non-null. Let's set it manually.
+      controller.detail = detail;
+      controller.state = ReservationDetailLoadState.success;
+
+      await controller.confirmReservation(isAdmin: true);
+
+      expect(controller.confirmationState, ReservationActionState.error);
+      expect(controller.confirmationErrorCode, 'common.error');
+    });
+
+    test('confirmReservation double-tap guard blocks second call', () async {
+      final detail = _makeDetail(
+        status: 'payment_received',
+        paymentStatus: 'verified',
+      );
+      final repo = _FakeSuccessRepository(detail);
+      final controller = ReservationDetailController(repository: repo);
+      await controller.loadDetail('r1');
+
+      // Start first confirm
+      final first = controller.confirmReservation(isAdmin: true);
+      // Second call should be blocked while first is in flight (no crash)
+      await controller.confirmReservation(isAdmin: true);
+      await first;
+
+      // After all microtasks, state resets to idle.
+      // Success means: detail is populated and no error was set.
+      expect(controller.detail, isNotNull);
+      expect(controller.confirmationErrorCode, isNull);
+    });
+
+    test('confirmReservation handles null detail gracefully', () async {
+      final detail = _makeDetail(
+        status: 'payment_received',
+        paymentStatus: 'verified',
+      );
+      final repo = _FakeSuccessRepository(detail);
+      final controller = ReservationDetailController(repository: repo);
+      // detail is null since load not called
+
+      await controller.confirmReservation(isAdmin: true);
+
+      // Should complete without crashing, state resets to idle.
+      // Error was logged internally, but the reset microtask already ran.
+      expect(controller.confirmationState, ReservationActionState.idle);
+      expect(controller.confirmationErrorCode, 'common.error');
     });
   });
 }

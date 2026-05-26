@@ -46,4 +46,11 @@ abstract class ReservationsRepository {
     required String paymentProofId,
     String? note,
   });
+
+  /// Confirms a reservation (online-only, admin-only).
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetail> confirmReservation({
+    required String reservationId,
+    String? notes,
+  });
 }

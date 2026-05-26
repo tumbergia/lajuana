@@ -8,7 +8,7 @@ from app.documents.base import AuditDocument
 class ReservationAuditLogDocument(AuditDocument):
     reservation_id: PydanticObjectId
     payment_proof_id: PydanticObjectId | None = None
-    actor_user_id: PydanticObjectId
+    actor_user_id: PydanticObjectId | None = None
     actor_role: UserRole
     action: str
     previous_status: str

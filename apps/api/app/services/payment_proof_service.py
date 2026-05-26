@@ -10,6 +10,7 @@ from app.common.enums import PaymentStatus, ReservationStatus, UserRole
 from app.common.labels import ErrorCode
 from app.core.config import settings
 from app.core.errors import ApiError
+from app.core.logging import logger
 from app.documents import (
     FileUploadDocument,
     PaymentProofDocument,
@@ -472,9 +473,13 @@ class PaymentProofService:
                 source="mobile_app",
             )
             await log.insert()
-        except Exception:
-            # Audit failure is non-fatal; payment action already committed
-            pass
+        except Exception as exc:
+            logger.warning(
+                "[audit] Failed to create audit log: %s | action=%s reservation=%s",
+                exc,
+                action,
+                reservation_id,
+            )
 
     async def _sync_proof_and_reservation_payment_status(
         self,

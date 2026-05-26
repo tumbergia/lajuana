@@ -23,12 +23,21 @@ enum PaymentProofActionState {
   error,
 }
 
+/// Estado de la accion de confirmar reserva.
+enum ReservationActionState {
+  idle,
+  confirming,
+  success,
+  error,
+}
+
 /// Controlador de detalle de reserva.
 class ReservationDetailController extends ChangeNotifier {
   ReservationDetailController({required ReservationsRepository repository})
       : _repository = repository;
 
   final ReservationsRepository _repository;
+  bool _disposed = false;
 
   ReservationDetailLoadState state = ReservationDetailLoadState.idle;
   ReservationDetail? detail;
@@ -42,11 +51,25 @@ class ReservationDetailController extends ChangeNotifier {
   String? actionErrorCode;
   String? actionErrorMessage;
 
+  // Confirmacion de reserva
+  ReservationActionState confirmationState = ReservationActionState.idle;
+  String? confirmationErrorCode;
+  String? confirmationErrorMessage;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
   void _resetActionState() {
     paymentProofActionState = PaymentProofActionState.idle;
     actingPaymentProofId = null;
     actionErrorCode = null;
     actionErrorMessage = null;
+    confirmationState = ReservationActionState.idle;
+    confirmationErrorCode = null;
+    confirmationErrorMessage = null;
   }
 
   /// Reset action state after a short delay so the UI can show "success" briefly
@@ -56,6 +79,7 @@ class ReservationDetailController extends ChangeNotifier {
   /// [actionErrorCode] / [actionErrorMessage] independently.
   void _resetActionDelayed() {
     Future.microtask(() {
+      if (_disposed) return;
       if (paymentProofActionState != PaymentProofActionState.idle) {
         paymentProofActionState = PaymentProofActionState.idle;
         actingPaymentProofId = null;
@@ -241,6 +265,56 @@ class ReservationDetailController extends ChangeNotifier {
       notifyListeners();
       _resetActionDelayed();
     }
+  }
+
+  /// Confirma la reserva actual. Solo si [isAdmin] es true.
+  /// No ejecuta si ya hay una accion en curso (doble-tap guard).
+  Future<void> confirmReservation({
+    required bool isAdmin,
+    String? notes,
+  }) async {
+    if (!isAdmin) {
+      confirmationErrorCode = 'permission.denied';
+      confirmationErrorMessage = 'No tienes permisos para confirmar reservas.';
+      confirmationState = ReservationActionState.error;
+      notifyListeners();
+      return;
+    }
+    if (confirmationState != ReservationActionState.idle) return;
+
+    confirmationState = ReservationActionState.confirming;
+    confirmationErrorCode = null;
+    confirmationErrorMessage = null;
+    notifyListeners();
+
+    try {
+      detail = await _repository.confirmReservation(
+        reservationId: detail!.id,
+        notes: notes,
+      );
+      confirmationState = ReservationActionState.success;
+    } on ReservationsApiFailure catch (e) {
+      confirmationErrorCode = e.code;
+      confirmationErrorMessage = e.message;
+      confirmationState = ReservationActionState.error;
+    } catch (_) {
+      confirmationErrorCode = 'common.error';
+      confirmationErrorMessage = 'Error inesperado al confirmar reserva.';
+      confirmationState = ReservationActionState.error;
+    } finally {
+      notifyListeners();
+      _resetConfirmationDelayed();
+    }
+  }
+
+  void _resetConfirmationDelayed() {
+    Future.microtask(() {
+      if (_disposed) return;
+      if (confirmationState != ReservationActionState.idle) {
+        confirmationState = ReservationActionState.idle;
+        notifyListeners();
+      }
+    });
   }
 
   Future<void> loadDetail(String reservationId) async {

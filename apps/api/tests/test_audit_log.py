@@ -38,9 +38,16 @@ def test_audit_log_has_required_fields() -> None:
 
 def test_audit_log_action_values() -> None:
     """Verify expected action string constants are valid."""
-    valid_actions = {"payment_proof.approved", "payment_proof.rejected"}
+    valid_actions = {
+        "payment_proof.approved",
+        "payment_proof.rejected",
+        "payment_proof.unverified",
+        "payment_proof.unrejected",
+        "reservation.confirmed",
+    }
     assert "payment_proof.approved" in valid_actions
     assert "payment_proof.rejected" in valid_actions
+    assert "reservation.confirmed" in valid_actions
 
 
 def test_audit_log_role_values() -> None:

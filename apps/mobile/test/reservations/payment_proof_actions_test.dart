@@ -76,6 +76,14 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   }) async {
     return detail;
   }
+
+  @override
+  Future<ReservationDetail> confirmReservation({
+    required String reservationId,
+    String? notes,
+  }) async {
+    return detail;
+  }
 }
 
 /// Fake repository that always throws a permissions error.
@@ -153,6 +161,18 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
     throw ReservationsApiFailure(
       code: 'auth.forbidden',
       message: 'No tienes permisos para deshacer rechazo.',
+      statusCode: 403,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> confirmReservation({
+    required String reservationId,
+    String? notes,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'auth.forbidden',
+      message: 'No tienes permisos.',
       statusCode: 403,
     );
   }
@@ -236,6 +256,18 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
       statusCode: 409,
     );
   }
+
+  @override
+  Future<ReservationDetail> confirmReservation({
+    required String reservationId,
+    String? notes,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'reservation.invalid_status_transition',
+      message: 'No se puede confirmar.',
+      statusCode: 409,
+    );
+  }
 }
 
 /// Fake repository that always throws a network error.
@@ -309,6 +341,18 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
   Future<ReservationDetail> unrejectPaymentProof({
     required String paymentProofId,
     String? note,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'network.unavailable',
+      message: 'No hay conexión con el servidor.',
+      statusCode: 0,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> confirmReservation({
+    required String reservationId,
+    String? notes,
   }) async {
     throw ReservationsApiFailure(
       code: 'network.unavailable',

@@ -225,13 +225,24 @@ class _ReservationDetailShellScreenState
             uppercase: false,
           ),
           selected: true,
+          onTap: () => _showClientDetail(detail),
         ),
-        if (detail.holderEmail != null && detail.holderName != null) ...[
+        if (detail.holderEmail != null) ...[
           const SizedBox(height: 10),
           AppEntityRowCard(
             title: detail.holderEmail!,
             subtitle: 'Email',
             leading: const Icon(Icons.email_outlined, size: 18),
+            onTap: () => _showClientDetail(detail),
+          ),
+        ],
+        if (detail.holderPhone != null) ...[
+          const SizedBox(height: 10),
+          AppEntityRowCard(
+            title: detail.holderPhone!,
+            subtitle: 'Telefono',
+            leading: const Icon(Icons.phone_outlined, size: 18),
+            onTap: () => _showClientDetail(detail),
           ),
         ],
         const SizedBox(height: 10),
@@ -275,15 +286,31 @@ class _ReservationDetailShellScreenState
         ),
         const SizedBox(height: 16),
 
-        // Blocked action buttons
-        AppButton(
-          label: 'Confirmar reserva — Proximamente',
-          icon: Icons.lock_outline_rounded,
-          variant: AppButtonVariant.secondary,
-          expanded: true,
-          onPressed: null,
-        ),
-        const SizedBox(height: 8),
+        // Confirm reservation action (admin only)
+        if (_isAdmin &&
+            detail.status != ReservationStatus.confirmed &&
+            detail.status != ReservationStatus.cancelled &&
+            detail.status != ReservationStatus.completed &&
+            detail.status != ReservationStatus.expired) ...[
+          AppButton(
+            label: _controller.confirmationState ==
+                    ReservationActionState.confirming
+                ? 'Confirmando...'
+                : 'Confirmar reserva',
+            icon: _controller.confirmationState ==
+                    ReservationActionState.confirming
+                ? null
+                : Icons.check_circle_outline_rounded,
+            variant: AppButtonVariant.primary,
+            expanded: true,
+            onPressed: _controller.confirmationState ==
+                    ReservationActionState.confirming
+                ? null
+                : () => _showConfirmConfirmation(),
+          ),
+          const SizedBox(height: 8),
+        ],
+        // Cancel reservation (separate microplan — stays disabled)
         AppButton(
           label: 'Cancelar reserva — Proximamente',
           icon: Icons.lock_outline_rounded,
@@ -562,6 +589,14 @@ class _ReservationDetailShellScreenState
               final tone = _paymentProofStatusTone(proof.status);
               final proofIsActing =
                   _controller.actingPaymentProofId == proof.id;
+              final isApproving = proofIsActing &&
+                  actionState == PaymentProofActionState.approving;
+              final isRejecting = proofIsActing &&
+                  actionState == PaymentProofActionState.rejecting;
+              final isUnverifying = proofIsActing &&
+                  actionState == PaymentProofActionState.unverifying;
+              final isUnrejecting = proofIsActing &&
+                  actionState == PaymentProofActionState.unrejecting;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Column(
@@ -584,14 +619,14 @@ class _ReservationDetailShellScreenState
                         children: [
                           Expanded(
                             child: AppButton(
-                              label: proofIsActing
+                              label: isApproving
                                   ? 'Aprobando...'
                                   : 'Aprobar',
-                              icon: proofIsActing
+                              icon: isApproving
                                   ? null
                                   : Icons.check_circle_outline,
                               variant: AppButtonVariant.primary,
-                              onPressed: proofIsActing
+                              onPressed: isApproving || isRejecting
                                   ? null
                                   : () => _showApproveConfirmation(proof),
                             ),
@@ -599,14 +634,14 @@ class _ReservationDetailShellScreenState
                           const SizedBox(width: 8),
                           Expanded(
                             child: AppButton(
-                              label: proofIsActing
+                              label: isRejecting
                                   ? 'Rechazando...'
                                   : 'Rechazar',
-                              icon: proofIsActing
+                              icon: isRejecting
                                   ? null
                                   : Icons.cancel_outlined,
                               variant: AppButtonVariant.secondary,
-                              onPressed: proofIsActing
+                              onPressed: isApproving || isRejecting
                                   ? null
                                   : () => _showRejectDialog(proof),
                             ),
@@ -615,29 +650,29 @@ class _ReservationDetailShellScreenState
                       ),
                     if (proof.status == 'verified' && _isAdmin)
                       AppButton(
-                        label: proofIsActing
+                        label: isUnverifying
                             ? 'Deshaciendo...'
                             : 'Deshacer verificacion',
-                        icon: proofIsActing
+                        icon: isUnverifying
                             ? null
                             : Icons.undo_rounded,
                         variant: AppButtonVariant.secondary,
                         expanded: true,
-                        onPressed: proofIsActing
+                        onPressed: isUnverifying
                             ? null
                             : () => _showUnverifyConfirm(proof),
                       ),
                     if (proof.status == 'rejected' && _isAdmin)
                       AppButton(
-                        label: proofIsActing
+                        label: isUnrejecting
                             ? 'Deshaciendo...'
                             : 'Deshacer rechazo',
-                        icon: proofIsActing
+                        icon: isUnrejecting
                             ? null
                             : Icons.undo_rounded,
                         variant: AppButtonVariant.secondary,
                         expanded: true,
-                        onPressed: proofIsActing
+                        onPressed: isUnrejecting
                             ? null
                             : () => _showUnrejectConfirm(proof),
                       ),
@@ -829,6 +864,73 @@ class _ReservationDetailShellScreenState
     );
   }
 
+  void _showConfirmConfirmation() {
+    final detail = _controller.detail;
+    if (detail == null) return;
+
+    final paymentOk = detail.paymentStatus == 'verified';
+    final notTerminal = detail.status != ReservationStatus.confirmed &&
+        detail.status != ReservationStatus.cancelled &&
+        detail.status != ReservationStatus.completed &&
+        detail.status != ReservationStatus.expired;
+    final canConfirm = paymentOk && notTerminal;
+
+    AppConfirmDialog.show(
+      context: context,
+      icon: canConfirm
+          ? Icons.check_circle_outline_rounded
+          : Icons.error_outline_rounded,
+      title: canConfirm ? 'Confirmar reserva' : '¡Verifica el pago!',
+      message: canConfirm
+          ? 'El sistema revalidará disponibilidad y descontará cupos.\n\n'
+              'Esta acción requiere conexión.'
+          : !paymentOk
+              ? 'Antes de confirmar la reserva, tienes que aprobar el comprobante de pago.'
+              : 'La reserva ya está en estado terminal.',
+      confirmLabel: canConfirm ? 'Confirmar' : 'Cerrar',
+      style: canConfirm ? DialogStyle.regular : DialogStyle.warning,
+      height: 280,
+      onConfirm: canConfirm
+          ? () {
+              _controller.confirmReservation(isAdmin: _isAdmin).whenComplete(() {
+                if (!mounted) return;
+                if (_controller.confirmationErrorCode != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        _controller.confirmationErrorMessage ??
+                            'Error al confirmar reserva',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: AppColors.danger,
+                    ),
+                  );
+                } else if (_controller.detail?.status ==
+                    ReservationStatus.confirmed) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Reserva confirmada',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              });
+            }
+          : () {},
+    );
+  }
+
+  void _showClientDetail(ReservationDetail detail) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _ClientDetailView(detail: detail),
+      ),
+    );
+  }
+
   Widget _buildTimelineSection(ReservationDetail detail) {
     if (detail.timeline.isEmpty) {
       return _buildSectionPlaceholder(
@@ -926,6 +1028,8 @@ class _ReservationDetailShellScreenState
         return 'Completo';
       case 'revoked':
         return 'Revocado';
+      case 'accepted':
+        return 'Aceptado';
       default:
         return status;
     }
@@ -954,6 +1058,8 @@ class _ReservationDetailShellScreenState
         return 'Verificado';
       case 'rejected':
         return 'Rechazado';
+      case 'accepted':
+        return 'Aceptado';
       default:
         return status ?? 'Sin informacion';
     }
@@ -1124,6 +1230,14 @@ class _FallbackRepository implements ReservationsRepository {
   Future<ReservationDetail> unrejectPaymentProof({
     required String paymentProofId,
     String? note,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> confirmReservation({
+    required String reservationId,
+    String? notes,
   }) async {
     throw Exception('ReservationsModule no inyectado');
   }
@@ -1336,6 +1450,129 @@ class _ProofImageViewerState extends State<_ProofImageViewer> {
         ),
       ),
     );
+  }
+}
+
+/// Full-screen client/holder detail view.
+class _ClientDetailView extends StatelessWidget {
+  const _ClientDetailView({required this.detail});
+
+  final ReservationDetail detail;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    final rows = <Widget>[];
+    void addRow(String label, String? value) {
+      rows.add(Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 120,
+              child: Text(label,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurfaceVariant)),
+            ),
+            Expanded(
+              child: Text(
+                (value != null && value.isNotEmpty) ? value : '—',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: (value != null && value.isNotEmpty)
+                      ? scheme.onSurface
+                      : scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ));
+    }
+
+    addRow('Nombre', detail.holderName);
+    addRow('Email', detail.holderEmail);
+    addRow('Telefono', detail.holderPhone);
+    addRow('Codigo reserva', detail.code);
+    addRow('Valor cotizado', detail.quotedTotalAmount != null
+        ? '\$${detail.quotedTotalAmount!}'
+        : null);
+    addRow('Fecha solicitada', detail.requestedDate);
+    addRow('Estado de pago', _paymentStatusLabel(detail.paymentStatus));
+    addRow('Participantes', '${detail.participantsCompletedCount} / ${detail.expectedParticipantsCount ?? detail.participantCount}');
+    if (detail.participantFormStatus != null) {
+      addRow('Estado formulario', _formStatusLabel(detail.participantFormStatus!));
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(detail.holderName ?? 'Cliente'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionHeader(context, 'INFORMACION DEL CLIENTE'),
+            ...rows,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionHeader(BuildContext context, String title) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        title,
+        style: theme.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.8,
+          color: theme.colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  String _paymentStatusLabel(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'Pendiente';
+      case 'received':
+        return 'Recibido';
+      case 'verified':
+        return 'Verificado';
+      case 'rejected':
+        return 'Rechazado';
+      case 'accepted':
+        return 'Aceptado';
+      default:
+        return status ?? 'Sin informacion';
+    }
+  }
+
+  String _formStatusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'not_sent':
+        return 'No enviado';
+      case 'sent':
+        return 'Enviado';
+      case 'partial':
+        return 'Parcial';
+      case 'complete':
+        return 'Completo';
+      case 'revoked':
+        return 'Revocado';
+      case 'accepted':
+        return 'Aceptado';
+      default:
+        return status;
+    }
   }
 }
 

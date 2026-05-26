@@ -143,6 +143,23 @@ class ReservationsApiClient {
     return ReservationDetailDto.fromJson(data);
   }
 
+  /// Confirms a reservation. Returns the full updated reservation detail.
+  /// Online-only, admin-only.
+  Future<ReservationDetailDto> confirmReservation({
+    required String reservationId,
+    String? notes,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/reservations/$reservationId/confirm',
+      body: {
+        if (notes != null) 'notes': notes,
+      },
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
   Future<http.Response> _authorizedRequest({
     required String method,
     required String path,
