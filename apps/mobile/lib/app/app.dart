@@ -18,6 +18,7 @@ import '../features/auth/infrastructure/repositories/auth_repository_impl.dart';
 import '../features/auth/infrastructure/local/session_local_data_source.dart';
 import '../features/auth/infrastructure/local/user_local_data_source.dart';
 import '../features/auth/infrastructure/remote/auth_api_client.dart';
+import '../features/auth/infrastructure/token_storage.dart';
 import '../features/auth/presentation/auth_controller.dart';
 import '../features/auth/presentation/auth_routes.dart';
 import '../features/auth/presentation/screens/change_password_screen.dart';
@@ -25,6 +26,7 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/session_view_screen.dart';
 import '../features/catalogs/catalogs.dart';
+import '../features/reservations/reservations_module.dart';
 import 'bootstrap/dev_loader_screen.dart';
 import 'bootstrap/startup_gate.dart';
 import 'shell/authenticated_shell.dart';
@@ -52,6 +54,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
   late final AuthController _authController;
   late final AuthApiClient _apiClient;
   late final CatalogsModule _catalogsModule;
+  late final ReservationsModule _reservationsModule;
 
   @override
   void initState() {
@@ -102,11 +105,21 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
       api: catalogsApi,
     );
     _catalogsModule = CatalogsModule(catalogsRepository);
+
+    _reservationsModule = ReservationsModule.create(
+      baseUrl: widget.apiBaseUrl,
+      tokenStorage: SqliteTokenStorage(sessionDs),
+      refreshSession: () async {
+        await _authController.refreshRequested();
+        return _authController.authState == LocalAuthState.signedInVerified;
+      },
+    );
   }
 
   @override
   void dispose() {
     _authController.dispose();
+    _reservationsModule.listController.dispose();
     super.dispose();
   }
 
@@ -168,6 +181,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
                 authController: _authController,
                 contactsApiClient: _apiClient,
                 catalogsModule: _catalogsModule,
+                reservationsModule: _reservationsModule,
               )
             : LoginScreen(controller: _authController);
         break;

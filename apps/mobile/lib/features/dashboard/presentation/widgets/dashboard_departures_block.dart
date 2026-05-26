@@ -22,7 +22,7 @@ class DashboardDeparturesBlock extends StatelessWidget {
           AppEntityRowCard(
             title: ordered[i].slotLabel,
             subtitle: '${ordered[i].clientName} - ${ordered[i].equineName}',
-            badge: ReservationRowCard.statusBadgeFor(ordered[i].status),
+            badge: ReservationRowCard.statusBadgeForLegacy(ordered[i].status),
             leading: const Icon(Icons.schedule_rounded, size: 18),
           ),
           if (i != ordered.length - 1) const SizedBox(height: 10),

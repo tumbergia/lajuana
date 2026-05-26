@@ -27,6 +27,9 @@ from app.services import (
     PaymentProofService,
     ReservationService,
 )
+from beanie import PydanticObjectId
+
+from app.documents import ExperienceDocument, ScheduleDocument
 from app.services.mappers import (
     participant_to_response,
     payment_proof_to_response,
@@ -91,7 +94,45 @@ async def list_reservations(
     ],
 ) -> list[ReservationListItemSchema]:
     docs = await reservation_service.list(actor_role=current_user.role)
-    return [reservation_to_list_item(doc) for doc in docs]
+    if not docs:
+        return []
+
+    # Batch-resolve experience names.
+    exp_ids = list({str(d.experience_id) for d in docs})
+    exp_criteria = {"_id": {"$in": [PydanticObjectId(eid) for eid in exp_ids]}}
+    experiences = {
+        str(e.id): e.name
+        for e in await ExperienceDocument.find(exp_criteria).to_list()
+    }
+
+    # Batch-resolve schedule dates / times.
+    sched_ids = list(
+        {str(d.schedule_id) for d in docs if d.schedule_id}
+    )
+    schedule_map: dict[str, tuple[str, str]] = {}
+    if sched_ids:
+        sched_criteria = {"_id": {"$in": [PydanticObjectId(sid) for sid in sched_ids]}}
+        for s in await ScheduleDocument.find(sched_criteria).to_list():
+            schedule_map[str(s.id)] = (
+                s.date.isoformat() if s.date else "",
+                s.start_time.isoformat() if s.start_time else "",
+            )
+
+    items: list[ReservationListItemSchema] = []
+    for doc in docs:
+        eid = str(doc.experience_id)
+        sid = str(doc.schedule_id) if doc.schedule_id else None
+        sched_date, start_time = schedule_map.get(sid, ("", "")) if sid else ("", "")
+        enriched: dict[str, object] = {}
+        name = experiences.get(eid)
+        if name:
+            enriched["experience_name"] = name
+        if sched_date:
+            enriched["scheduled_date"] = sched_date
+        if start_time:
+            enriched["start_time"] = start_time
+        items.append(reservation_to_list_item(doc, enriched=enriched))
+    return items
 
 
 @router.get(

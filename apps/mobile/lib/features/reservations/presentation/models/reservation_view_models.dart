@@ -9,6 +9,13 @@ class ReservationRecord {
     required this.status,
     required this.hasPendingSync,
     required this.hasSyncError,
+    this.id,
+    this.statusRaw,
+    this.experienceName,
+    this.participantCount,
+    this.registeredCount,
+    this.paymentStatus,
+    this.formStatus,
   });
 
   final String code;
@@ -18,6 +25,15 @@ class ReservationRecord {
   final String status;
   final bool hasPendingSync;
   final bool hasSyncError;
+
+  // New fields for real data
+  final String? id;
+  final dynamic statusRaw; // ReservationStatus or String
+  final String? experienceName;
+  final int? participantCount;
+  final int? registeredCount;
+  final String? paymentStatus;
+  final String? formStatus;
 }
 
 class ReservationParticipantRecord {

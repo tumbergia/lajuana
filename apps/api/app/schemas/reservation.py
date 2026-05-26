@@ -75,3 +75,16 @@ class ReservationListItemSchema(AuditMetadataSchema):
     status: ReservationStatus
     participant_count: int
     payment_status: PaymentStatus
+    holder_name: str | None = None
+    holder_email: str | None = None
+    holder_phone: str | None = None
+    experience_id: str
+    experience_name: str | None = None
+    schedule_id: str | None = None
+    requested_date: date | None = None
+    scheduled_date: str | None = None
+    start_time: str | None = None
+    expected_participants_count: int | None = None
+    participants_completed_count: int = 0
+    participant_form_status: ParticipantFormStatus = ParticipantFormStatus.NOT_SENT
+    channel: Channel | None = None

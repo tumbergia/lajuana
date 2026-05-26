@@ -4,6 +4,61 @@ enum AppBadgeTone { neutral, primary, success, danger, warning, ghost }
 
 enum AppBadgeSize { sm, md }
 
+typedef AppBadgeToneColors = ({
+  Color background,
+  Color foreground,
+  Color border,
+});
+
+AppBadgeToneColors appBadgeToneColors(BuildContext context, AppBadgeTone tone) {
+  final scheme = Theme.of(context).colorScheme;
+
+  return switch (tone) {
+    AppBadgeTone.neutral => (
+      background: scheme.surfaceContainerHigh,
+      foreground: scheme.onSurfaceVariant,
+      border: scheme.outlineVariant.withValues(alpha: 0.35),
+    ),
+    AppBadgeTone.primary => (
+      background: scheme.primary,
+      foreground: scheme.onPrimary,
+      border: Colors.transparent,
+    ),
+    AppBadgeTone.success => (
+      background: const Color(0xFF00A431),
+      foreground: Colors.white,
+      border: Colors.transparent,
+    ),
+    AppBadgeTone.danger => (
+      background: const Color(0xFFB3261E),
+      foreground: Colors.white,
+      border: Colors.transparent,
+    ),
+    AppBadgeTone.warning => (
+      background: const Color(0xFF9A6700),
+      foreground: Colors.white,
+      border: Colors.transparent,
+    ),
+    AppBadgeTone.ghost => (
+      background: Colors.transparent,
+      foreground: scheme.onSurfaceVariant,
+      border: scheme.outlineVariant.withValues(alpha: 0.4),
+    ),
+  };
+}
+
+Color appBadgeToneTint(
+  BuildContext context,
+  AppBadgeTone tone, {
+  double alpha = 0.22,
+}) {
+  final colors = appBadgeToneColors(context, tone);
+  if (colors.background == Colors.transparent) {
+    return Theme.of(context).colorScheme.surfaceContainerLow;
+  }
+  return colors.background.withValues(alpha: alpha);
+}
+
 class AppBadge extends StatelessWidget {
   final String label;
   final AppBadgeTone tone;
@@ -23,41 +78,7 @@ class AppBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    final ({Color background, Color foreground, Color border}) colors =
-        switch (tone) {
-          AppBadgeTone.neutral => (
-            background: scheme.surfaceContainerHigh,
-            foreground: scheme.onSurfaceVariant,
-            border: scheme.outlineVariant.withValues(alpha: 0.35),
-          ),
-          AppBadgeTone.primary => (
-            background: scheme.primary,
-            foreground: scheme.onPrimary,
-            border: Colors.transparent,
-          ),
-          AppBadgeTone.success => (
-            background: const Color(0xFF00A431),
-            foreground: Colors.white,
-            border: Colors.transparent,
-          ),
-          AppBadgeTone.danger => (
-            background: const Color(0xFFB3261E),
-            foreground: Colors.white,
-            border: Colors.transparent,
-          ),
-          AppBadgeTone.warning => (
-            background: const Color(0xFF9A6700),
-            foreground: Colors.white,
-            border: Colors.transparent,
-          ),
-          AppBadgeTone.ghost => (
-            background: Colors.transparent,
-            foreground: scheme.onSurfaceVariant,
-            border: scheme.outlineVariant.withValues(alpha: 0.4),
-          ),
-        };
+    final colors = appBadgeToneColors(context, tone);
 
     final bool isSm = size == AppBadgeSize.sm;
     final EdgeInsets padding = isSm

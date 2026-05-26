@@ -64,6 +64,7 @@ class AppEntityRowCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 title.toUpperCase(),
+                                overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
                                       fontWeight: FontWeight.w800,

@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_core/mobile_core.dart';
 
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_segmented_filter.dart';
+import '../../../../app/widgets/app_centered_loader.dart';
 import '../../../../app/widgets/app_entity_row_card.dart';
 import '../../../../app/widgets/app_scaffold.dart';
-import '../../../../app/widgets/app_section_header.dart';
+import '../../../../app/widgets/app_segmented_filter.dart';
 import '../../../../app/widgets/app_status_banner.dart';
 import '../../../../app/widgets/app_timeline.dart';
-import '../models/reservation_view_models.dart';
+import '../../../catalogs/catalogs_module.dart';
+import '../../domain/models/reservation_detail.dart';
+import '../../domain/models/reservation_list_item.dart';
+import '../../domain/models/reservation_status.dart';
+import '../../domain/repositories/reservations_repository.dart';
+import '../../infrastructure/mappers/reservation_mapper.dart';
+import '../../reservations_module.dart';
+import '../widgets/payment_status_card.dart';
+import '../controllers/reservation_detail_controller.dart';
 
 enum ReservationDetailSubroute {
   resumen,
@@ -18,20 +27,18 @@ enum ReservationDetailSubroute {
   bitacora,
 }
 
-/// Detalle de reserva dentro del shell: sin segunda [AppTopBar]; cabecera de módulo + secciones.
+/// Detalle de reserva: carga por [reservationId] y renderiza datos reales.
 class ReservationDetailShellScreen extends StatefulWidget {
   const ReservationDetailShellScreen({
     super.key,
-    required this.reservation,
-    required this.participants,
-    required this.paymentProofs,
-    required this.assignments,
+    required this.reservationId,
+    this.reservationsModule,
+    this.catalogsModule,
   });
 
-  final ReservationRecord reservation;
-  final List<ReservationParticipantRecord> participants;
-  final List<ReservationPaymentProofRecord> paymentProofs;
-  final List<ReservationAssignmentRecord> assignments;
+  final String reservationId;
+  final ReservationsModule? reservationsModule;
+  final CatalogsModule? catalogsModule;
 
   @override
   State<ReservationDetailShellScreen> createState() =>
@@ -40,280 +47,409 @@ class ReservationDetailShellScreen extends StatefulWidget {
 
 class _ReservationDetailShellScreenState
     extends State<ReservationDetailShellScreen> {
+  late final ReservationDetailController _controller;
   ReservationDetailSubroute _subroute = ReservationDetailSubroute.resumen;
 
   @override
+  void initState() {
+    super.initState();
+    _controller = widget.reservationsModule?.createDetailController() ??
+        ReservationDetailController(
+          repository: widget.reservationsModule?.repository ??
+              (_throwNoModule()),
+        );
+    _controller.addListener(_onStateChanged);
+    _controller.loadDetail(widget.reservationId);
+  }
+
+  ReservationsRepository _throwNoModule() {
+    return _FallbackRepository();
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onStateChanged);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onStateChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final reservation = widget.reservation;
+    final state = _controller.state;
+    final detail = _controller.detail;
 
     return AppScaffold(
+      scrollable: false,
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSectionHeader(
-            eyebrow: 'Reservas',
-            title: 'Detalle ${reservation.code}',
-            subtitle: '${reservation.clientName} - ${reservation.equineName}',
-            trailing: AppButton(
-              label: 'Volver',
-              icon: Icons.arrow_back_rounded,
-              variant: AppButtonVariant.ghost,
-              onPressed: () => Navigator.of(context).maybePop(),
+          AppButton(
+            label: 'Volver',
+            icon: Icons.arrow_back_rounded,
+            variant: AppButtonVariant.ghost,
+            onPressed: () => Navigator.of(context).maybePop(),
+          ),
+          const SizedBox(height: 16),
+
+          if (state == ReservationDetailLoadState.loading)
+            const Expanded(
+              child: AppCenteredLoader(),
+            )
+          else if (state == ReservationDetailLoadState.error) ...[
+            AppStatusBanner(
+              title: 'Error',
+              message: _controller.errorMessage ?? 'No se pudo cargar.',
+              tone: AppStatusBannerTone.danger,
+              icon: Icons.error_outline_rounded,
             ),
-          ),
-          const SizedBox(height: 12),
-          AppSegmentedFilter<int>(
-            value: _subroute.index,
-            onChanged: (index) {
-              setState(() {
-                _subroute = ReservationDetailSubroute.values[index];
-              });
-            },
-            items: const [
-              AppSegmentedFilterItem(label: 'Resumen', value: 0),
-              AppSegmentedFilterItem(label: 'Participantes', value: 1),
-              AppSegmentedFilterItem(label: 'Pagos', value: 2),
-              AppSegmentedFilterItem(label: 'Asignaciones', value: 3),
-              AppSegmentedFilterItem(label: 'Bitacora', value: 4),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ..._buildStatusBanners(reservation),
-          if (_hasStatusBanners(reservation)) const SizedBox(height: 12),
-          _buildSubrouteContent(reservation),
+            const SizedBox(height: 12),
+            AppButton(
+              label: 'Reintentar',
+              onPressed: () => _controller.loadDetail(widget.reservationId),
+            ),
+            const Spacer(),
+          ] else if (detail != null) ...[
+            if (state == ReservationDetailLoadState.offlineFromCache)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AppStatusBanner(
+                  title: 'Sin conexion',
+                  message: 'Mostrando datos almacenados.',
+                  tone: AppStatusBannerTone.warning,
+                  icon: Icons.wifi_off_rounded,
+                  badgeLabel: 'Offline',
+                ),
+              ),
+            AppSegmentedFilter<int>(
+              value: _subroute.index,
+              onChanged: (index) {
+                setState(() {
+                  _subroute = ReservationDetailSubroute.values[index];
+                });
+              },
+              items: const [
+                AppSegmentedFilterItem(label: 'Resumen', value: 0),
+                AppSegmentedFilterItem(label: 'Partic.', value: 1),
+                AppSegmentedFilterItem(label: 'Pagos', value: 2),
+                AppSegmentedFilterItem(label: 'Asignac.', value: 3),
+                AppSegmentedFilterItem(label: 'Bitacora', value: 4),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: _buildSubrouteContent(detail),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  bool _hasStatusBanners(ReservationRecord reservation) {
-    return reservation.hasPendingSync || reservation.hasSyncError;
-  }
-
-  List<Widget> _buildStatusBanners(ReservationRecord reservation) {
-    final banners = <Widget>[];
-    if (reservation.hasPendingSync) {
-      banners.add(
-        const AppStatusBanner(
-          title: 'Cambios pendientes',
-          message: 'Esta reserva tiene cambios locales en espera de sync.',
-          tone: AppStatusBannerTone.warning,
-          icon: Icons.sync_problem_rounded,
-          badgeLabel: 'Pendiente',
-        ),
-      );
-    }
-
-    if (reservation.hasSyncError) {
-      banners.add(
-        const AppStatusBanner(
-          title: 'Error de sincronizacion',
-          message: 'Ultimo intento remoto fallo. Reintenta cuando haya red.',
-          tone: AppStatusBannerTone.danger,
-          icon: Icons.warning_amber_rounded,
-          badgeLabel: 'Error',
-        ),
-      );
-    }
-
-    return banners;
-  }
-
-  Widget _buildSubrouteContent(ReservationRecord reservation) {
+  Widget _buildSubrouteContent(ReservationDetail detail) {
     switch (_subroute) {
       case ReservationDetailSubroute.resumen:
-        return _buildSummary(reservation);
+        return _buildSummary(detail);
       case ReservationDetailSubroute.participantes:
-        return _buildParticipants(reservation);
+        return _buildSectionPlaceholder(
+          'Participantes',
+          '${detail.participantsCompletedCount} de ${detail.expectedParticipantsCount ?? detail.participantCount} han llenado el formulario.',
+          Icons.group_outlined,
+        );
       case ReservationDetailSubroute.pagos:
-        return _buildPaymentProofs(reservation);
+        return _buildPaymentSection(detail);
       case ReservationDetailSubroute.asignaciones:
-        return _buildAssignments(reservation);
+        return _buildSectionPlaceholder(
+          'Asignaciones',
+          'Proximamente',
+          Icons.shield_moon_outlined,
+        );
       case ReservationDetailSubroute.bitacora:
-        return _buildTimeline(reservation);
+        return _buildTimelineSection(detail);
     }
   }
 
-  Widget _buildSummary(ReservationRecord reservation) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppEntityRowCard(
-          title: reservation.clientName,
+  Widget _buildSummary(ReservationDetail detail) {
+    final statusLabel = reservationStatusLabel(detail.status);
+    final statusTone = reservationStatusToBadgeTone(detail.status);
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppEntityRowCard(
+            title: detail.holderName ?? detail.holderEmail ?? 'Sin titular',
           subtitle: 'Cliente principal',
-          badge: _statusBadgeForReservation(reservation),
+          badge: AppBadge(
+            label: statusLabel,
+            tone: statusTone,
+            uppercase: false,
+          ),
           selected: true,
         ),
+        if (detail.holderEmail != null && detail.holderName != null) ...[
+          const SizedBox(height: 10),
+          AppEntityRowCard(
+            title: detail.holderEmail!,
+            subtitle: 'Email',
+            leading: const Icon(Icons.email_outlined, size: 18),
+          ),
+        ],
         const SizedBox(height: 10),
         AppEntityRowCard(
-          title: reservation.equineName,
-          subtitle: 'Equino asignado',
-          leading: const Icon(Icons.hail_rounded, size: 18),
+          title: detail.code,
+          subtitle: 'Codigo de reserva',
+          leading: const Icon(Icons.tag_rounded, size: 18),
         ),
         const SizedBox(height: 10),
         AppEntityRowCard(
-          title: reservation.slotLabel,
-          subtitle: 'Horario operativo',
-          leading: const Icon(Icons.schedule_rounded, size: 18),
+          title: detail.currency != null && detail.quotedTotalAmount != null
+              ? '${detail.quotedTotalAmount} ${detail.currency}'
+              : 'Sin cotizacion',
+          subtitle: 'Valor cotizado',
+          leading: const Icon(Icons.attach_money_rounded, size: 18),
         ),
-      ],
+        const SizedBox(height: 10),
+        AppEntityRowCard(
+          title: formatDate(detail.requestedDate),
+          subtitle: 'Fecha solicitada',
+          leading: const Icon(Icons.calendar_today_rounded, size: 18),
+        ),
+        const SizedBox(height: 10),
+        AppEntityRowCard(
+          title: '${detail.participantsCompletedCount} / ${detail.expectedParticipantsCount ?? detail.participantCount}',
+          subtitle: 'Participantes completados',
+          leading: const Icon(Icons.group_outlined, size: 18),
+          badge: detail.participantFormStatus != null
+              ? AppBadge(
+                  label: _formStatusLabel(detail.participantFormStatus!),
+                  tone: _formStatusTone(detail.participantFormStatus!),
+                  uppercase: false,
+                )
+              : null,
+        ),
+        const SizedBox(height: 10),
+        PaymentStatusCard(
+          label: _paymentStatusLabel(detail.paymentStatus),
+          backgroundColor: _paymentStatusBgColor(detail.paymentStatus),
+          foregroundColor: _paymentStatusFgColor(detail.paymentStatus),
+        ),
+        const SizedBox(height: 16),
+
+        // Blocked action buttons
+        AppButton(
+          label: 'Confirmar reserva — Proximamente',
+          icon: Icons.lock_outline_rounded,
+          variant: AppButtonVariant.secondary,
+          expanded: true,
+          onPressed: null,
+        ),
+        const SizedBox(height: 8),
+        AppButton(
+          label: 'Cancelar reserva — Proximamente',
+          icon: Icons.lock_outline_rounded,
+          variant: AppButtonVariant.secondary,
+          expanded: true,
+          onPressed: null,
+        ),
+          ],
+        ),
     );
   }
 
-  Widget _buildParticipants(ReservationRecord reservation) {
-    final items = widget.participants
-        .where((item) => item.reservationCode == reservation.code)
-        .toList(growable: false);
-    if (items.isEmpty) {
-      return const AppEntityRowCard(
-        title: 'Sin participantes',
-        subtitle: 'No hay registros para esta reserva',
-        selected: true,
+  Widget _buildPaymentSection(ReservationDetail detail) {
+    return _buildSectionPlaceholder(
+      'Comprobantes de pago',
+      detail.paymentStatus != null
+          ? 'Estado: ${_paymentStatusLabel(detail.paymentStatus)}'
+          : 'Sin informacion de pago.',
+      Icons.receipt_long_rounded,
+    );
+  }
+
+  Widget _buildTimelineSection(ReservationDetail detail) {
+    if (detail.timeline.isEmpty) {
+      return _buildSectionPlaceholder(
+        'Historial',
+        'No hay eventos registrados para esta reserva.',
+        Icons.history_rounded,
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < items.length; i++) ...[
-          AppEntityRowCard(
-            title: items[i].fullName,
-            subtitle: 'Completitud ${items[i].completionLabel}',
-            badge: AppBadge(
-              label: items[i].isComplete ? 'Completo' : 'Incompleto',
-              tone: items[i].isComplete
-                  ? AppBadgeTone.success
-                  : AppBadgeTone.warning,
-              uppercase: false,
-            ),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppTimeline(
+            children: detail.timeline.map((event) {
+              return AppTimelineItem(
+                state: _timelineNodeState(event.type),
+                child: AppTimelineEntryCard(
+                  date: formatDate(event.date, fallback: ''),
+                  title: event.title ?? '',
+                  description: event.description,
+                ),
+              );
+            }).toList(),
           ),
-          if (i != items.length - 1) const SizedBox(height: 10),
+          const SizedBox(height: 16),
+          AppButton(
+            label: 'Registrar bitacora — Proximamente',
+            icon: Icons.lock_outline_rounded,
+            variant: AppButtonVariant.secondary,
+            expanded: true,
+            onPressed: null,
+          ),
         ],
-      ],
+      ),
     );
   }
 
-  Widget _buildPaymentProofs(ReservationRecord reservation) {
-    final items = widget.paymentProofs
-        .where((item) => item.reservationCode == reservation.code)
-        .toList(growable: false);
-    if (items.isEmpty) {
-      return const AppEntityRowCard(
-        title: 'Sin comprobantes',
-        subtitle: 'No hay comprobantes registrados para esta reserva',
-        selected: true,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < items.length; i++) ...[
-          AppEntityRowCard(
-            title: items[i].proofCode,
-            subtitle: 'Comprobante de pago',
-            leading: const Icon(Icons.receipt_long_rounded, size: 18),
-            badge: AppBadge(
-              label: items[i].statusLabel,
-              tone: items[i].statusTone,
-              uppercase: false,
+  Widget _buildSectionPlaceholder(
+    String title,
+    String message,
+    IconData icon,
+  ) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          if (i != items.length - 1) const SizedBox(height: 10),
         ],
-      ],
+      ),
     );
   }
 
-  Widget _buildAssignments(ReservationRecord reservation) {
-    final items = widget.assignments
-        .where((item) => item.reservationCode == reservation.code)
-        .toList(growable: false);
-    if (items.isEmpty) {
-      return const AppEntityRowCard(
-        title: 'Sin asignaciones',
-        subtitle: 'No hay asignaciones para esta reserva',
-        selected: true,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < items.length; i++) ...[
-          AppEntityRowCard(
-            title: items[i].equine,
-            subtitle: 'Responsable ${items[i].rider}',
-            leading: const Icon(Icons.shield_moon_outlined, size: 18),
-            badge: AppBadge(
-              label: items[i].statusLabel,
-              tone: items[i].statusTone,
-              uppercase: false,
-            ),
-          ),
-          if (i != items.length - 1) const SizedBox(height: 10),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildTimeline(ReservationRecord reservation) {
-    return AppTimeline(
-      children: [
-        AppTimelineItem(
-          state: AppTimelineNodeState.active,
-          child: AppTimelineEntryCard(
-            date: '${reservation.slotLabel} - 10:05',
-            title: 'Ajuste operativo',
-            badge: const AppBadge(
-              label: 'Pendiente',
-              tone: AppBadgeTone.warning,
-            ),
-            description:
-                'Se valido disponibilidad para ${reservation.equineName}.',
-          ),
-        ),
-        AppTimelineItem(
-          state: AppTimelineNodeState.completed,
-          child: AppTimelineEntryCard(
-            date: '${reservation.slotLabel} - 09:15',
-            title: 'Participante verificado',
-            badge: const AppBadge(label: 'OK', tone: AppBadgeTone.success),
-            description: 'Validacion documental completada para esta reserva.',
-          ),
-        ),
-      ],
-    );
-  }
-
-  AppBadge _statusBadgeForReservation(ReservationRecord reservation) {
-    switch (reservation.status) {
-      case 'pendientes':
-        return const AppBadge(
-          label: 'Pendiente',
-          tone: AppBadgeTone.warning,
-          uppercase: false,
-        );
-      case 'confirmadas':
-        return const AppBadge(
-          label: 'Confirmada',
-          tone: AppBadgeTone.primary,
-          uppercase: false,
-        );
-      case 'finalizadas':
-        return const AppBadge(
-          label: 'Finalizada',
-          tone: AppBadgeTone.success,
-          uppercase: false,
-        );
+  AppTimelineNodeState _timelineNodeState(String? type) {
+    switch (type) {
+      case 'active':
+        return AppTimelineNodeState.active;
+      case 'completed':
+        return AppTimelineNodeState.completed;
+      case 'error':
+        return AppTimelineNodeState.error;
       default:
-        return const AppBadge(
-          label: 'Sin estado',
-          tone: AppBadgeTone.neutral,
-          uppercase: false,
-        );
+        return AppTimelineNodeState.neutral;
     }
+  }
+
+  String _formStatusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'not_sent':
+        return 'No enviado';
+      case 'sent':
+        return 'Enviado';
+      case 'partial':
+        return 'Parcial';
+      case 'complete':
+        return 'Completo';
+      case 'revoked':
+        return 'Revocado';
+      default:
+        return status;
+    }
+  }
+
+  AppBadgeTone _formStatusTone(String status) {
+    switch (status.toLowerCase()) {
+      case 'complete':
+        return AppBadgeTone.success;
+      case 'partial':
+        return AppBadgeTone.warning;
+      case 'revoked':
+        return AppBadgeTone.danger;
+      default:
+        return AppBadgeTone.neutral;
+    }
+  }
+
+  String _paymentStatusLabel(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return 'Pendiente';
+      case 'received':
+        return 'Recibido';
+      case 'verified':
+        return 'Verificado';
+      case 'rejected':
+        return 'Rechazado';
+      default:
+        return status ?? 'Sin informacion';
+    }
+  }
+
+  Color _paymentStatusBgColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+      case 'received':
+        return appBadgeToneColors(context, AppBadgeTone.warning).background;
+      case 'verified':
+        return appBadgeToneColors(context, AppBadgeTone.success).background;
+      case 'rejected':
+        return appBadgeToneColors(context, AppBadgeTone.danger).background;
+      default:
+        return Theme.of(context).colorScheme.surfaceContainerLow;
+    }
+  }
+
+  Color _paymentStatusFgColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+      case 'received':
+        return appBadgeToneColors(context, AppBadgeTone.warning).foreground;
+      case 'verified':
+        return appBadgeToneColors(context, AppBadgeTone.success).foreground;
+      case 'rejected':
+        return appBadgeToneColors(context, AppBadgeTone.danger).foreground;
+      default:
+        return Theme.of(context).colorScheme.onSurface;
+    }
+  }
+}
+
+/// Fallback repository cuando no se inyecta [ReservationsModule].
+class _FallbackRepository implements ReservationsRepository {
+  @override
+  Future<List<ReservationListItem>> listReservations({
+    ReservationStatus? status,
+    String? query,
+  }) async {
+    return const <ReservationListItem>[];
+  }
+
+  @override
+  Future<ReservationDetail> getReservationById(String reservationId) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<List<ReservationListItem>> getCachedReservations() async {
+    return const <ReservationListItem>[];
+  }
+
+  @override
+  Future<ReservationDetail?> getCachedReservationDetail(
+    String reservationId,
+  ) async {
+    return null;
   }
 }
 

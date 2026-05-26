@@ -16,6 +16,7 @@ import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/equines/presentation/screens/equines_module_screen.dart';
 import '../../features/participants/presentation/screens/participants_module_screen.dart';
 import '../../features/reservations/presentation/screens/reservations_module_screen.dart';
+import '../../features/reservations/reservations_module.dart';
 
 class AuthenticatedShell extends StatefulWidget {
   const AuthenticatedShell({
@@ -23,12 +24,14 @@ class AuthenticatedShell extends StatefulWidget {
     required this.authController,
     required this.contactsApiClient,
     this.catalogsModule,
+    this.reservationsModule,
     this.onCallRequested,
   });
 
   final AuthController authController;
   final AuthApiClient contactsApiClient;
   final CatalogsModule? catalogsModule;
+  final ReservationsModule? reservationsModule;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -81,6 +84,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         return ReservationsModuleScreen(
           catalogsModule: widget.catalogsModule,
           authController: widget.authController,
+          reservationsModule: widget.reservationsModule,
         );
       case AppNavItem.equinos:
         return const EquinesModuleScreen();
@@ -140,14 +144,21 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                               enabled: _shellNav.currentTab == tab,
                               child: Navigator(
                                 key: _navigatorKeys[tab],
-                                onGenerateRoute: (settings) {
-                                  return MaterialPageRoute<void>(
-                                    builder: (ctx) => SingleChildScrollView(
-                                      child: _tabRoot(tab),
-                                    ),
-                                    settings: settings,
-                                  );
-                                },
+                                  onGenerateRoute: (settings) {
+                                    return MaterialPageRoute<void>(
+                                      builder: (ctx) {
+                                        // Reservas maneja su propio scroll
+                                        // (RefreshIndicator + ListView).
+                                        if (tab == AppNavItem.reservas) {
+                                          return _tabRoot(tab);
+                                        }
+                                        return SingleChildScrollView(
+                                          child: _tabRoot(tab),
+                                        );
+                                      },
+                                      settings: settings,
+                                    );
+                                  },
                               ),
                             ),
                           ),

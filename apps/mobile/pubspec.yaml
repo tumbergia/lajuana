@@ -45,6 +45,8 @@ dependencies:
   connectivity_plus: ^6.0.5
   device_info_plus: ^11.2.0
   url_launcher: ^6.3.1
+  mobile_core:
+    path: ../../packages/mobile_core
 
 dev_dependencies:
   flutter_test:

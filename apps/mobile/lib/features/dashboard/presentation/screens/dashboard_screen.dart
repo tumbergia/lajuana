@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../app/widgets/app_bottom_nav.dart';
 import '../../../auth/presentation/auth_controller.dart';
 import '../../../reservations/presentation/models/reservation_view_models.dart';
-import '../../../reservations/presentation/screens/reservation_detail_shell_screen.dart';
 import '../../presentation/controllers/dashboard_controller.dart';
 import '../widgets/dashboard_departures_block.dart';
 import '../widgets/dashboard_pending_block.dart';
@@ -50,26 +49,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _openReservationDetail(ReservationRecord reservation) {
-    final participants = _participants
-        .where((item) => item.reservationCode == reservation.code)
-        .toList(growable: false);
-    final paymentProofs = _paymentProofs
-        .where((item) => item.reservationCode == reservation.code)
-        .toList(growable: false);
-    final assignments = _assignments
-        .where((item) => item.reservationCode == reservation.code)
-        .toList(growable: false);
-
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => ReservationDetailShellScreen(
-          reservation: reservation,
-          participants: participants,
-          paymentProofs: paymentProofs,
-          assignments: assignments,
-        ),
-      ),
-    );
+    // Phase 1: redirect to Reservations tab. Detail with real data coming in next phase.
+    widget.onNavigateToTab(AppNavItem.reservas);
   }
 
   @override

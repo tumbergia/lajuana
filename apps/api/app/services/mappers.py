@@ -124,18 +124,36 @@ def reservation_to_response(doc: ReservationDocument) -> ReservationResponseSche
     )
 
 
-def reservation_to_list_item(doc: ReservationDocument) -> ReservationListItemSchema:
-    return ReservationListItemSchema(
-        id=str(doc.id),
-        code=doc.code,
-        status=doc.status,
-        participant_count=doc.participant_count,
-        payment_status=doc.payment_status,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
-        version=doc.version,
-    )
+def reservation_to_list_item(
+    doc: ReservationDocument,
+    enriched: dict | None = None,
+) -> ReservationListItemSchema:
+    kwargs: dict[str, object] = {
+        "id": str(doc.id),
+        "code": doc.code,
+        "status": doc.status,
+        "participant_count": doc.participant_count,
+        "payment_status": doc.payment_status,
+        "holder_name": doc.holder_name,
+        "holder_email": doc.holder_email,
+        "holder_phone": doc.holder_phone,
+        "experience_id": str(doc.experience_id),
+        "schedule_id": str(doc.schedule_id) if doc.schedule_id else None,
+        "requested_date": doc.requested_date,
+        "expected_participants_count": doc.expected_participants_count,
+        "participants_completed_count": doc.participants_completed_count,
+        "participant_form_status": doc.participant_form_status,
+        "channel": doc.channel,
+        "created_at": doc.created_at,
+        "updated_at": doc.updated_at,
+        "deleted_at": doc.deleted_at,
+        "version": doc.version,
+    }
+    if enriched:
+        for key in ("experience_name", "scheduled_date", "start_time"):
+            if key in enriched:
+                kwargs[key] = enriched[key]
+    return ReservationListItemSchema(**kwargs)
 
 
 def participant_to_response(doc: ParticipantDocument) -> ParticipantResponseSchema:

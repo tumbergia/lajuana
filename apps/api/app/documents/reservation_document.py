@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from beanie import Indexed, PydanticObjectId
-from pydantic import EmailStr
+from pydantic import EmailStr, field_validator
 from pymongo import IndexModel
 
 from app.common.collections import Collections
@@ -50,6 +50,17 @@ class ReservationDocument(AuditDocument):
     expire_at: datetime | None = None
     created_by: PydanticObjectId | None = None
     updated_by: PydanticObjectId | None = None
+
+    @field_validator("participant_form_status", mode="before")
+    @classmethod
+    def _migrate_legacy_status(cls, v: object) -> object:
+        """Map old enum values (removed in schema migration) to current values."""
+        mapping = {
+            "active": "sent",
+            "full": "complete",
+            "expired": "revoked",
+        }
+        return mapping.get(v, v)  # type: ignore[return-value]
 
     class Settings:
         name = Collections.RESERVATIONS

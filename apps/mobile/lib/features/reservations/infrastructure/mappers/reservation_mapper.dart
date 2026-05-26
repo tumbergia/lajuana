@@ -1,0 +1,232 @@
+import '../../../../app/widgets/app_badge.dart';
+import '../../domain/models/reservation_detail.dart';
+import '../../domain/models/reservation_list_item.dart';
+import '../../domain/models/reservation_payment_summary.dart';
+import '../../domain/models/reservation_status.dart';
+import '../../domain/models/reservation_timeline_event.dart';
+import '../../presentation/models/reservation_view_models.dart';
+import '../remote/reservation_dtos.dart';
+
+/// Statuses that should appear as "pendiente" in the UI filter group.
+bool _isPendingGroup(ReservationStatus status) {
+  switch (status) {
+    case ReservationStatus.contact:
+    case ReservationStatus.quoted:
+    case ReservationStatus.preReserved:
+    case ReservationStatus.pendingPayment:
+    case ReservationStatus.paymentReceived:
+      return true;
+    case ReservationStatus.confirmed:
+    case ReservationStatus.cancelled:
+    case ReservationStatus.completed:
+    case ReservationStatus.expired:
+    case ReservationStatus.unknown:
+      return false;
+  }
+}
+
+/// Statuses that should appear as "confirmadas" in the UI filter group.
+bool _isConfirmedGroup(ReservationStatus status) {
+  return status == ReservationStatus.confirmed;
+}
+
+/// Maps a backend status string to a UI filter group label.
+String reservationStatusToFilterGroup(ReservationStatus status) {
+  if (_isPendingGroup(status)) return 'pendientes';
+  if (_isConfirmedGroup(status)) return 'confirmadas';
+  return 'cerradas';
+}
+
+/// Maps a backend status string to an AppBadgeTone.
+AppBadgeTone reservationStatusToBadgeTone(ReservationStatus status) {
+  switch (status) {
+    case ReservationStatus.contact:
+    case ReservationStatus.quoted:
+    case ReservationStatus.preReserved:
+      return AppBadgeTone.neutral;
+    case ReservationStatus.pendingPayment:
+    case ReservationStatus.paymentReceived:
+      return AppBadgeTone.warning;
+    case ReservationStatus.confirmed:
+      return AppBadgeTone.primary;
+    case ReservationStatus.cancelled:
+      return AppBadgeTone.danger;
+    case ReservationStatus.completed:
+      return AppBadgeTone.success;
+    case ReservationStatus.expired:
+      return AppBadgeTone.danger;
+    case ReservationStatus.unknown:
+      return AppBadgeTone.neutral;
+  }
+}
+
+/// Maps a backend payment status string to an AppBadgeTone.
+AppBadgeTone paymentStatusToBadgeTone(String? paymentStatus) {
+  switch (paymentStatus?.toLowerCase()) {
+    case 'pending':
+      return AppBadgeTone.warning;
+    case 'received':
+      return AppBadgeTone.primary;
+    case 'verified':
+      return AppBadgeTone.success;
+    case 'rejected':
+      return AppBadgeTone.danger;
+    default:
+      return AppBadgeTone.neutral;
+  }
+}
+
+/// Derives a timeline from reservation state fields when no real timeline exists.
+List<ReservationTimelineEvent> deriveFallbackTimeline(ReservationDetail detail) {
+  final events = <ReservationTimelineEvent>[];
+
+  if (detail.requestedDate != null) {
+    events.add(ReservationTimelineEvent(
+      date: detail.requestedDate,
+      title: 'Fecha solicitada',
+      type: 'completed',
+    ));
+  }
+
+  if (detail.paymentStatus == 'verified' || detail.paymentStatus == 'received') {
+    events.add(ReservationTimelineEvent(
+      title: 'Pago registrado',
+      description: 'Estado: ${detail.paymentStatus}',
+      type: 'completed',
+    ));
+  }
+
+  if (detail.status == ReservationStatus.confirmed && detail.confirmedAt != null) {
+    events.add(ReservationTimelineEvent(
+      date: detail.confirmedAt,
+      title: 'Reserva confirmada',
+      type: 'active',
+    ));
+  }
+
+  if (detail.status == ReservationStatus.completed && detail.completedAt != null) {
+    events.add(ReservationTimelineEvent(
+      date: detail.completedAt,
+      title: 'Reserva completada',
+      type: 'completed',
+    ));
+  }
+
+  return events;
+}
+
+/// DTO -> Domain: ReservationListItemDto -> ReservationListItem
+ReservationListItem dtoToListItem(ReservationListItemDto dto) {
+  return ReservationListItem(
+    id: dto.id ?? '',
+    code: dto.code ?? '',
+    status: parseReservationStatus(dto.status),
+    experienceId: dto.experienceId,
+    experienceName: dto.experienceName,
+    scheduleId: dto.scheduleId,
+    scheduledDate: dto.scheduledDate,
+    startTime: dto.startTime,
+    holderName: dto.holderName,
+    holderEmail: dto.holderEmail,
+    holderPhone: dto.holderPhone,
+    participantCount: dto.participantCount ?? 0,
+    registeredParticipantsCount: dto.participantsCompletedCount,
+    paymentStatus: dto.paymentStatus,
+    participantFormStatus: dto.participantFormStatus,
+    originChannel: dto.channel,
+    hasOperationalAlerts: false,
+    requestedDate: dto.requestedDate,
+    createdAt: dto.createdAt?.toIso8601String(),
+    updatedAt: dto.updatedAt?.toIso8601String(),
+  );
+}
+
+/// DTO -> Domain: ReservationDetailDto -> ReservationDetail
+ReservationDetail dtoToDetail(ReservationDetailDto dto) {
+  // Build basic detail first
+  final baseDetail = ReservationDetail(
+    id: dto.id ?? '',
+    code: dto.code ?? '',
+    status: parseReservationStatus(dto.status),
+    holderName: dto.holderName,
+    holderEmail: dto.holderEmail,
+    holderPhone: dto.holderPhone,
+    experienceId: dto.experienceId,
+    scheduleId: dto.scheduleId,
+    participantCount: dto.participantCount ?? 0,
+    expectedParticipantsCount: dto.expectedParticipantsCount,
+    participantsCompletedCount: dto.participantsCompletedCount ?? 0,
+    paymentStatus: dto.paymentStatus,
+    participantFormStatus: dto.participantFormStatus,
+    formUrl: dto.formUrl,
+    channel: dto.channel,
+    quotedTotalAmount: dto.quotedTotalAmount,
+    currency: dto.currency,
+    requestedDate: dto.requestedDate,
+    confirmedAt: dto.confirmedAt?.toIso8601String(),
+    cancelledAt: dto.cancelledAt?.toIso8601String(),
+    completedAt: dto.completedAt?.toIso8601String(),
+    paymentSummary: ReservationPaymentSummary(
+      status: dto.paymentStatus,
+    ),
+    timeline: const [],
+    operationalAlerts: const [],
+  );
+
+  return ReservationDetail(
+    id: baseDetail.id,
+    code: baseDetail.code,
+    status: baseDetail.status,
+    holderName: baseDetail.holderName,
+    holderEmail: baseDetail.holderEmail,
+    holderPhone: baseDetail.holderPhone,
+    experienceId: baseDetail.experienceId,
+    scheduleId: baseDetail.scheduleId,
+    participantCount: baseDetail.participantCount,
+    expectedParticipantsCount: baseDetail.expectedParticipantsCount,
+    participantsCompletedCount: baseDetail.participantsCompletedCount,
+    paymentStatus: baseDetail.paymentStatus,
+    participantFormStatus: baseDetail.participantFormStatus,
+    formUrl: baseDetail.formUrl,
+    channel: baseDetail.channel,
+    quotedTotalAmount: baseDetail.quotedTotalAmount,
+    currency: baseDetail.currency,
+    requestedDate: baseDetail.requestedDate,
+    confirmedAt: baseDetail.confirmedAt,
+    cancelledAt: baseDetail.cancelledAt,
+    completedAt: baseDetail.completedAt,
+    paymentSummary: baseDetail.paymentSummary,
+    timeline: deriveFallbackTimeline(baseDetail),
+    operationalAlerts: baseDetail.operationalAlerts,
+  );
+}
+
+/// Domain -> ViewModel: ReservationListItem -> ReservationRecord
+ReservationRecord listItemToRecord(
+  ReservationListItem item, {
+  String slotLabel = '',
+}) {
+  final filterGroup = reservationStatusToFilterGroup(item.status);
+  // Build slot label from scheduledDate + startTime if not provided
+  final effectiveSlotLabel = slotLabel.isNotEmpty
+      ? slotLabel
+      : (item.scheduledDate != null && item.scheduledDate!.isNotEmpty
+          ? '${item.scheduledDate}${item.startTime != null && item.startTime!.isNotEmpty ? ' ${item.startTime!.length >= 5 ? item.startTime!.substring(0, 5) : item.startTime!}' : ''}'
+          : '');
+  return ReservationRecord(
+    id: item.id,
+    code: item.code,
+    clientName: item.holderName ?? item.holderEmail ?? 'Sin titular',
+    equineName: item.experienceName ?? '',
+    slotLabel: effectiveSlotLabel,
+    status: filterGroup,
+    statusRaw: item.status,
+    experienceName: item.experienceName,
+    participantCount: item.participantCount,
+    registeredCount: item.registeredParticipantsCount,
+    paymentStatus: item.paymentStatus,
+    formStatus: item.participantFormStatus,
+    hasPendingSync: false,
+    hasSyncError: false,
+  );
+}
