@@ -1,7 +1,14 @@
-from fastapi import APIRouter, Request, status
+from typing import Annotated
 
+from fastapi import APIRouter, Depends, Request, status
+
+from app.api.deps import require_permissions
+from app.common.enums import Permission
 from app.core.config import settings
-from app.documents import ExperienceDocument, ReservationDocument
+from app.documents import ExperienceDocument, ReservationDocument, UserDocument
+from app.notifications.reservation_whatsapp_notification_service import (
+    ReservationWhatsAppNotificationService,
+)
 from app.schemas.participant import (
     ParticipantNestedCreateSchema,
     ParticipantResponseSchema,
@@ -13,8 +20,13 @@ from app.schemas.participant_form_link import (
     ParticipantFormPublicStatusResponse,
     ParticipantFormTokenValidationResponse,
 )
+from app.schemas.reservation import ReservationResponseSchema
 from app.services import ParticipantService
-from app.services.mappers import form_link_to_status_response, participant_to_response
+from app.services.mappers import (
+    form_link_to_status_response,
+    participant_to_response,
+    reservation_to_response,
+)
 from app.services.participant_form_link_service import ParticipantFormLinkService
 
 router = APIRouter()
@@ -156,6 +168,41 @@ async def revoke_participant_form_link(
 ) -> ParticipantFormLinkStatusResponse:
     doc = await form_link_service.revoke(reservation_id)
     return form_link_to_status_response(doc)
+
+
+@router.post(
+    "/reservations/{reservation_id}/participant-form-link/resend",
+    response_model=ReservationResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Reenviar formulario de participantes por WhatsApp",
+    description=(
+        "Reenvía manualmente el enlace del formulario de participantes "
+        "al titular de la reserva vía WhatsApp. Solo administradores."
+    ),
+    operation_id="resendParticipantFormLink",
+    tags=["Formulario de participantes"],
+)
+async def resend_participant_form_link(
+    reservation_id: str,
+    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+) -> ReservationResponseSchema:
+    reservation = await ReservationDocument.get(reservation_id)
+    if reservation is None:
+        from app.core.errors import ApiError
+        from app.common.labels import ErrorCode
+
+        raise ApiError(
+            status_code=404,
+            code=ErrorCode.RESERVATION_NOT_FOUND,
+            message="Reserva no encontrada.",
+        )
+
+    whatsapp_notif = ReservationWhatsAppNotificationService()
+    await whatsapp_notif.resend_participant_form(
+        reservation=reservation,
+        actor_id=current_user.id,
+    )
+    return await reservation_to_response(reservation)
 
 
 @router.get(

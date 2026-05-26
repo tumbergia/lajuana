@@ -17,6 +17,7 @@ from app.common.enums import (
 )
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
+from app.core.logging import logger
 from app.documents import (
     ExperienceDocument,
     ParticipantDocument,
@@ -465,6 +466,23 @@ class ReservationService:
                 f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
             )
             await reservation.save()
+
+            # Send WhatsApp logistics message (deterministic, not chatbot)
+            try:
+                from app.notifications.reservation_whatsapp_notification_service import (
+                    ReservationWhatsAppNotificationService,
+                )
+
+                whatsapp_notif = ReservationWhatsAppNotificationService()
+                await whatsapp_notif.send_reservation_confirmed_logistics(
+                    reservation=reservation,
+                    actor_id=actor_id,
+                )
+            except Exception:
+                logger.exception(
+                    "[reservation=%s] Failed to send logistics WhatsApp",
+                    reservation.id,
+                )
 
             # Audit log — best-effort, non-critical
             try:

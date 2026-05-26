@@ -114,6 +114,69 @@ SEED_TEMPLATES = [
 <p>¡Te esperamos pronto para una nueva aventura!</p>""",
         "variables_allowed": ["customer_name", "reservation_code", "participants_count"],
     },
+    # --- WhatsApp transactional templates (deterministic, not chatbot) ---
+    {
+        "template_key": "payment_approved_form_sent.customer",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hola {{customer_name}}, tu pago para {{experience_name}} "
+            "fue aprobado. Por favor completa el formulario de participantes "
+            "obligatorio en este enlace: {{form_url}}"
+        ),
+        "variables_allowed": [
+            "customer_name", "experience_name", "form_url",
+        ],
+    },
+    {
+        "template_key": "payment_rejected_sent.customer",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hola {{customer_name}}, el comprobante de pago para "
+            "{{experience_name}} fue rechazado. Motivo: {{rejection_reason}}. "
+            "Por favor envía un nuevo comprobante válido para continuar."
+        ),
+        "variables_allowed": [
+            "customer_name", "experience_name", "rejection_reason",
+        ],
+    },
+    {
+        "template_key": "reservation_confirmed_logistics_sent.customer",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hola {{customer_name}}, tu reserva {{reservation_code}} para "
+            "{{experience_name}} está confirmada para el {{scheduled_date}} "
+            "a las {{start_time}}.\n\n"
+            "Lugar de encuentro: {{meeting_point}}\n\n"
+            "Recomendaciones:\n"
+            "- Usar ropa cómoda: pantalón largo, camisa o camiseta manga larga, "
+            "zapatos cerrados, medias que cubran los tobillos, chaqueta rompevientos.\n"
+            "- Hidratación (trae tu botella reutilizable).\n"
+            "- Protección solar y repelente de insectos.\n"
+            "- Sombrero o gorra.\n"
+            "- Cámara y/o binoculares.\n"
+            "- Llegar 15 minutos antes de la hora programada.\n\n"
+            "¡Te esperamos!"
+        ),
+        "variables_allowed": [
+            "customer_name", "reservation_code", "experience_name",
+            "scheduled_date", "start_time", "meeting_point",
+        ],
+    },
+    {
+        "template_key": "participant_form_resent.customer",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hola {{customer_name}}, aquí está nuevamente el enlace del "
+            "formulario de participantes para {{experience_name}}: {{form_url}}"
+        ),
+        "variables_allowed": [
+            "customer_name", "experience_name", "form_url",
+        ],
+    },
 ]
 
 

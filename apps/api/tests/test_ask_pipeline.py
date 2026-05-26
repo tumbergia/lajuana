@@ -216,6 +216,141 @@ def test_policy_blocks_critical_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.action == AssistantAction.ASK_CLARIFYING_QUESTION
 
 
+def test_policy_allows_generate_participant_form_link(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Policy must allow generate_participant_form_link (added to LIMITED_WRITE_TOOLS)."""
+    _apply_mocks(monkeypatch)
+
+    plan = _make_plan(
+        action=AssistantAction.TOOL_CALL,
+        tool_name="generate_participant_form_link",
+        arguments={"reservation_id": "660000000000000000000001"},
+    )
+    orch = AssistantOrchestrator(planner=MockPlanner(plan))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message="genera link formulario",
+                channel="test",
+                conversation_id="demo-006",
+            )
+        )
+
+    result = asyncio.run(run())
+    assert result.action == AssistantAction.TOOL_CALL
+    assert result.tool_name == "generate_participant_form_link"
+
+
+def test_policy_allows_get_participant_form_status(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Policy must allow get_participant_form_status (added to LIMITED_WRITE_TOOLS)."""
+    _apply_mocks(monkeypatch)
+
+    plan = _make_plan(
+        action=AssistantAction.TOOL_CALL,
+        tool_name="get_participant_form_status",
+        arguments={"reservation_id": "660000000000000000000001"},
+    )
+    orch = AssistantOrchestrator(planner=MockPlanner(plan))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message="estado formulario",
+                channel="test",
+                conversation_id="demo-007",
+            )
+        )
+
+    result = asyncio.run(run())
+    assert result.action == AssistantAction.TOOL_CALL
+    assert result.tool_name == "get_participant_form_status"
+
+
+def test_ask_generate_participant_form_link_returns_form_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Chatbot calling generate_participant_form_link tool returns form_url in output."""
+    _apply_mocks(monkeypatch)
+
+    async def fake_registry_call(name: str, **kwargs: Any) -> dict[str, Any]:
+        if name == "generate_participant_form_link":
+            return {
+                "generated": True,
+                "form_url": "http://test/form?t=fake-token",
+                "reservation_id": "660000000000000000000001",
+                "participant_limit": 2,
+                "participants_registered": 0,
+                "participants_remaining": 2,
+            }
+        return {}
+
+    monkeypatch.setattr("app.ai.assistant.orchestrator.registry.call", fake_registry_call)
+
+    plan = _make_plan(
+        action=AssistantAction.TOOL_CALL,
+        tool_name="generate_participant_form_link",
+        arguments={"reservation_id": "660000000000000000000001"},
+    )
+    orch = AssistantOrchestrator(planner=MockPlanner(plan))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message="genera link formulario",
+                channel="test",
+                conversation_id="demo-008",
+            )
+        )
+
+    result = asyncio.run(run())
+    assert result.action == AssistantAction.TOOL_CALL
+    assert result.tool_name == "generate_participant_form_link"
+    assert "form_url" in result.tool_output
+    assert "fake-token" in result.tool_output["form_url"]
+
+
+def test_ask_get_participant_form_status_returns_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Chatbot calling get_participant_form_status tool returns form status."""
+    _apply_mocks(monkeypatch)
+
+    async def fake_registry_call(name: str, **kwargs: Any) -> dict[str, Any]:
+        if name == "get_participant_form_status":
+            return {
+                "found": True,
+                "participant_limit": 2,
+                "participants_registered": 1,
+                "participants_remaining": 1,
+                "form_status": "partial",
+            }
+        return {}
+
+    monkeypatch.setattr("app.ai.assistant.orchestrator.registry.call", fake_registry_call)
+
+    plan = _make_plan(
+        action=AssistantAction.TOOL_CALL,
+        tool_name="get_participant_form_status",
+        arguments={"reservation_id": "660000000000000000000001"},
+    )
+    orch = AssistantOrchestrator(planner=MockPlanner(plan))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message="estado formulario",
+                channel="test",
+                conversation_id="demo-009",
+            )
+        )
+
+    result = asyncio.run(run())
+    assert result.action == AssistantAction.TOOL_CALL
+    assert result.tool_name == "get_participant_form_status"
+    assert result.tool_output.get("found") is True
+    assert result.tool_output.get("participants_registered") == 1
+
+
 def test_tool_call_log_is_created(monkeypatch: pytest.MonkeyPatch) -> None:
     _apply_mocks(monkeypatch)
     _apply_registry_mock(monkeypatch)

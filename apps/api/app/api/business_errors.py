@@ -662,16 +662,6 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_404": ("B404-004",),
         "cases_409": (),
     },
-    ("GET", "/api/v1/public/participant-form/{token}"): {
-        "cases_400": (),
-        "cases_404": ("B410-001",),
-        "cases_409": ("B409-024", "B410-002"),
-    },
-    ("POST", "/api/v1/public/participant-form/{token}"): {
-        "cases_400": (),
-        "cases_404": ("B410-001",),
-        "cases_409": ("B409-024", "B410-002"),
-    },
     ("GET", "/api/v1/participants/{participant_id}"): {
         "cases_400": (),
         "cases_404": ("B404-006",),

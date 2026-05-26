@@ -44,6 +44,12 @@ class ReservationDocument(AuditDocument):
     participants_completed_count: int = 0
     participant_form_status: ParticipantFormStatus = ParticipantFormStatus.NOT_SENT
     form_url: str | None = None
+    participant_form_sent_at: datetime | None = None
+    participant_form_sent_by: PydanticObjectId | None = None
+    participant_form_send_count: int = 0
+    participant_form_last_message_id: str | None = None
+    confirmation_message_sent_at: datetime | None = None
+    confirmation_message_sent_by: PydanticObjectId | None = None
     quote_snapshot: dict | None = None
     quote_trace_id: str | None = None
     pre_reserved_at: datetime | None = None

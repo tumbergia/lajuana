@@ -66,6 +66,11 @@ class ReservationResponseSchema(AuditMetadataSchema):
     participants_completed_count: int
     participant_form_status: ParticipantFormStatus
     form_url: str | None
+    participant_form_sent_at: datetime | None = None
+    participant_form_send_count: int = 0
+    form_sent: bool = False
+    confirmation_message_sent_at: datetime | None = None
+    confirmation_message_sent: bool = False
     confirmed_at: datetime | None
     cancelled_at: datetime | None
     completed_at: datetime | None

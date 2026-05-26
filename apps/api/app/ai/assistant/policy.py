@@ -36,6 +36,8 @@ class ToolPolicyEngine:
         "guide_create_service_log",
         "admin_add_equine_health_event",
         "send_post_service_message",
+        "generate_participant_form_link",
+        "get_participant_form_status",
     }
     WRITE_TOOLS: set[str] = {
         "guide_report_incident",

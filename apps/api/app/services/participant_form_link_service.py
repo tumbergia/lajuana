@@ -46,11 +46,11 @@ class ParticipantFormLinkService:
                 code=ErrorCode.RESERVATION_NOT_FOUND,
                 message="Reserva no encontrada.",
             )
-        if reservation.status != ReservationStatus.CONFIRMED:
+        if reservation.status not in (ReservationStatus.CONFIRMED, ReservationStatus.PAYMENT_RECEIVED):
             raise ApiError(
                 status_code=409,
                 code=ErrorCode.FORM_LINK_RESERVATION_NOT_CONFIRMED,
-                message="La reserva debe estar confirmada para generar el formulario.",
+                message="La reserva debe estar confirmada o tener pago recibido para generar el formulario.",
             )
 
         reservation.expected_participants_count = expected_participants_count

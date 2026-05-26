@@ -162,6 +162,10 @@ class NotificationEventType(StrEnum):
     PARTICIPANT_FORM_LINK_GENERATED = "participant_form_link_generated"
     PRE_SERVICE_REMINDER = "pre_service_reminder"
     POST_SERVICE_COMPLETED = "post_service_completed"
+    PAYMENT_APPROVED_FORM_SENT = "payment_approved_form_sent"
+    PAYMENT_REJECTED_SENT = "payment_rejected_sent"
+    RESERVATION_CONFIRMED_LOGISTICS_SENT = "reservation_confirmed_logistics_sent"
+    PARTICIPANT_FORM_RESENT = "participant_form_resent"
 
 
 class NotificationChannel(StrEnum):

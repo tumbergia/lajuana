@@ -239,34 +239,21 @@ class PaymentProofService:
             reason=payload.note,
         )
 
-        if reservation.holder_phone:
-            date_str = "próxima fecha agendada"
-            if reservation.requested_date:
-                date_str = self._format_date_es(reservation.requested_date)
-
-            name = reservation.holder_name or "Cliente"
-            message = (
-                f"¡Hola {name}! Tu pago ha sido aprobado. "
-                f"Te esperamos el {date_str}."
+        # Send WhatsApp with participant form link (deterministic, not chatbot)
+        try:
+            from app.notifications.reservation_whatsapp_notification_service import (
+                ReservationWhatsAppNotificationService,
             )
 
-            turn = ConversationTurnDocument(
-                trace_id=str(uuid4()),
-                channel="whatsapp",
-                from_phone=reservation.holder_phone,
-                conversation_id=f"payment-approval-{reservation.id}",
-                user_message="",
-                response_text=message,
-                status="responded",
-                responded_at=datetime.now(UTC),
+            whatsapp_notif = ReservationWhatsAppNotificationService()
+            await whatsapp_notif.send_payment_approved_participant_form(
+                reservation=reservation,
+                actor_id=actor_id,
             )
-            await turn.insert()
-
-            outbound_service = WhatsAppOutboundService()
-            await outbound_service.send(
-                turn=turn,
-                to_phone=reservation.holder_phone,
-                text=message,
+        except Exception:
+            logger.exception(
+                "[reservation=%s] Failed to send payment approved WhatsApp",
+                reservation.id,
             )
 
         return doc
@@ -330,6 +317,24 @@ class PaymentProofService:
             new_status=str(doc.status.value),
             reason=payload.reason,
         )
+
+        # Send WhatsApp with rejection reason (deterministic, not chatbot)
+        try:
+            from app.notifications.reservation_whatsapp_notification_service import (
+                ReservationWhatsAppNotificationService,
+            )
+
+            whatsapp_notif = ReservationWhatsAppNotificationService()
+            await whatsapp_notif.send_payment_rejected(
+                reservation=reservation,
+                reason=payload.reason,
+                actor_id=actor_id,
+            )
+        except Exception:
+            logger.exception(
+                "[reservation=%s] Failed to send payment rejected WhatsApp",
+                reservation.id,
+            )
 
         return doc
 

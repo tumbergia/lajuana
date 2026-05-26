@@ -94,10 +94,14 @@ class EmailProvider(NotificationProvider):
             )
 
     async def validate_config(self) -> bool:
-        import aiosmtplib
-
         if not settings.email_user or not settings.email_pass:
             return False
+
+        try:
+            import aiosmtplib  # type: ignore[import-unused]
+        except ImportError:
+            return False
+
         host, port = _resolve_smtp_config()
         try:
             async with aiosmtplib.SMTP(

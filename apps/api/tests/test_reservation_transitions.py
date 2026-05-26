@@ -266,6 +266,7 @@ class _FakeReservationConfirm:
         self.participant_count = 2
         self.confirmed_at = None
         self.updated_by = None
+        self.holder_phone = None
 
     async def save(self) -> None:
         return None
