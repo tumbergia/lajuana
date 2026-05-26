@@ -5,6 +5,8 @@ import 'package:mobile_core/mobile_core.dart';
 
 import '../../../../app/utils/file_saver.dart';
 
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/theme_extensions.dart';
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_button.dart';
 import '../../../../app/widgets/app_centered_loader.dart';
@@ -511,19 +513,21 @@ class _ReservationDetailShellScreenState
       ReservationPaymentProofsSectionController ctrl) {
     final actionState = _controller.paymentProofActionState;
     final isBusy = actionState == PaymentProofActionState.approving ||
-        actionState == PaymentProofActionState.rejecting;
+        actionState == PaymentProofActionState.rejecting ||
+        actionState == PaymentProofActionState.unverifying;
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return RefreshIndicator(
+      onRefresh: () => _controller.loadDetail(widget.reservationId),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          PaymentStatusCard(
-            label: _paymentStatusLabel(ctrl.paymentStatus),
-            backgroundColor:
-                _paymentStatusBgColor(ctrl.paymentStatus),
-            foregroundColor:
-                _paymentStatusFgColor(ctrl.paymentStatus),
-          ),
+            PaymentStatusCard(
+              label: _paymentStatusLabel(ctrl.paymentStatus),
+              backgroundColor:
+                  _paymentStatusBgColor(ctrl.paymentStatus),
+              foregroundColor:
+                  _paymentStatusFgColor(ctrl.paymentStatus),
+            ),
           const SizedBox(height: 16),
 
           // Action feedback (error / success)
@@ -534,10 +538,6 @@ class _ReservationDetailShellScreenState
               tone: AppStatusBannerTone.danger,
               icon: Icons.error_outline_rounded,
             ),
-            const SizedBox(height: 12),
-          ],
-          if (isBusy) ...[
-            const Center(child: CircularProgressIndicator()),
             const SizedBox(height: 12),
           ],
 
@@ -560,8 +560,8 @@ class _ReservationDetailShellScreenState
             ...ctrl.paymentProofs.map((proof) {
               final statusLabel = _paymentProofStatusLabel(proof.status);
               final tone = _paymentProofStatusTone(proof.status);
-              final isTerminal = proof.status == 'verified' ||
-                  proof.status == 'rejected';
+              final proofIsActing =
+                  _controller.actingPaymentProofId == proof.id;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Column(
@@ -578,16 +578,20 @@ class _ReservationDetailShellScreenState
                       leading: const Icon(Icons.receipt_long_rounded, size: 18),
                       onTap: () => _previewProof(proof),
                     ),
-                    if (!isTerminal) ...[
-                      const SizedBox(height: 8),
+                    const SizedBox(height: 8),
+                    if (proof.status == 'received')
                       Row(
                         children: [
                           Expanded(
                             child: AppButton(
-                              label: 'Aprobar',
-                              icon: Icons.check_circle_outline,
+                              label: proofIsActing
+                                  ? 'Aprobando...'
+                                  : 'Aprobar',
+                              icon: proofIsActing
+                                  ? null
+                                  : Icons.check_circle_outline,
                               variant: AppButtonVariant.primary,
-                              onPressed: isBusy
+                              onPressed: proofIsActing
                                   ? null
                                   : () => _showApproveConfirmation(proof),
                             ),
@@ -595,17 +599,48 @@ class _ReservationDetailShellScreenState
                           const SizedBox(width: 8),
                           Expanded(
                             child: AppButton(
-                              label: 'Rechazar',
-                              icon: Icons.cancel_outlined,
+                              label: proofIsActing
+                                  ? 'Rechazando...'
+                                  : 'Rechazar',
+                              icon: proofIsActing
+                                  ? null
+                                  : Icons.cancel_outlined,
                               variant: AppButtonVariant.secondary,
-                              onPressed: isBusy
+                              onPressed: proofIsActing
                                   ? null
                                   : () => _showRejectDialog(proof),
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    if (proof.status == 'verified' && _isAdmin)
+                      AppButton(
+                        label: proofIsActing
+                            ? 'Deshaciendo...'
+                            : 'Deshacer verificacion',
+                        icon: proofIsActing
+                            ? null
+                            : Icons.undo_rounded,
+                        variant: AppButtonVariant.secondary,
+                        expanded: true,
+                        onPressed: proofIsActing
+                            ? null
+                            : () => _showUnverifyConfirm(proof),
+                      ),
+                    if (proof.status == 'rejected' && _isAdmin)
+                      AppButton(
+                        label: proofIsActing
+                            ? 'Deshaciendo...'
+                            : 'Deshacer rechazo',
+                        icon: proofIsActing
+                            ? null
+                            : Icons.undo_rounded,
+                        variant: AppButtonVariant.secondary,
+                        expanded: true,
+                        onPressed: proofIsActing
+                            ? null
+                            : () => _showUnrejectConfirm(proof),
+                      ),
                   ],
                 ),
               );
@@ -653,50 +688,144 @@ class _ReservationDetailShellScreenState
 
     showDialog(
       context: context,
-      builder: (ctx) => Form(
-        key: formKey,
-        child: AlertDialog(
-          title: const Text('Rechazar comprobante'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Motivo del rechazo (obligatorio):'),
-              const SizedBox(height: 8),
-              AppTextField(
-                controller: reasonCtrl,
-                hintText: 'Indica el motivo del rechazo',
-                maxLines: 3,
-                variant: AppTextFieldVariant.filled,
-              ),
-            ],
+      builder: (ctx) {
+        final scheme = Theme.of(ctx).colorScheme;
+        final tokens = Theme.of(ctx).appTokens;
+
+        return AlertDialog(
+          backgroundColor: scheme.surfaceContainerHigh,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: tokens.radiusXl,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancelar'),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          contentPadding: EdgeInsets.zero,
+          content: Form(
+            key: formKey,
+            child: Padding(
+              padding: EdgeInsets.all(tokens.spaceXl),
+                child: SizedBox(
+                height: 320,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Icon(Icons.cancel_rounded,
+                        size: 48, color: AppColors.danger),
+                    SizedBox(height: tokens.spaceLg),
+                    Text(
+                      'Rechazar comprobante',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(ctx)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    SizedBox(height: tokens.spaceSm),
+                    Text(
+                      'Indica el motivo del rechazo',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(ctx)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                    SizedBox(height: tokens.spaceLg),
+                    AppTextField(
+                      controller: reasonCtrl,
+                      hintText: 'Motivo del rechazo',
+                      maxLines: 3,
+                      variant: AppTextFieldVariant.filled,
+                    ),
+                    SizedBox(height: tokens.spaceXl),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            label: 'Cancelar',
+                            variant: AppButtonVariant.secondary,
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            expanded: true,
+                            height: 48,
+                          ),
+                        ),
+                        SizedBox(width: tokens.spaceSm),
+                        Expanded(
+                          child: AppButton(
+                            label: 'Rechazar',
+                            variant: AppButtonVariant.danger,
+                            onPressed: () {
+                              final reason = reasonCtrl.text.trim();
+                              if (reason.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content:
+                                        Text('Debes indicar un motivo'),
+                                  ),
+                                );
+                                return;
+                              }
+                              Navigator.of(ctx).pop();
+                              _controller.rejectPaymentProof(
+                                paymentProofId: proof.id,
+                                reason: reason,
+                                isAdmin: _isAdmin,
+                              );
+                            },
+                            expanded: true,
+                            height: 48,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-            AppButton(
-              label: 'Rechazar comprobante',
-              onPressed: () {
-                final reason = reasonCtrl.text.trim();
-                if (reason.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Debes indicar un motivo')),
-                  );
-                  return;
-                }
-                Navigator.of(ctx).pop();
-                _controller.rejectPaymentProof(
-                  paymentProofId: proof.id,
-                  reason: reason,
-                  isAdmin: _isAdmin,
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showUnverifyConfirm(ReservationPaymentProofDetail proof) {
+    AppConfirmDialog.show(
+      context: context,
+      icon: Icons.undo_rounded,
+      title: 'Deshacer verificacion',
+      message:
+          'El pago volvera a estado "recibido" y la reserva a '
+          '"pendiente de pago".',
+      confirmLabel: 'Deshacer',
+      style: DialogStyle.danger,
+      height: 280,
+      onConfirm: () {
+        _controller.unverifyPaymentProof(
+          paymentProofId: proof.id,
+          isAdmin: _isAdmin,
+        );
+      },
+    );
+  }
+
+  void _showUnrejectConfirm(ReservationPaymentProofDetail proof) {
+    AppConfirmDialog.show(
+      context: context,
+      icon: Icons.undo_rounded,
+      title: 'Deshacer rechazo',
+      message:
+          'El comprobante volvera a estado "recibido". '
+          'La reserva mantiene su estado actual.',
+      confirmLabel: 'Deshacer',
+      style: DialogStyle.danger,
+      height: 280,
+      onConfirm: () {
+        _controller.unrejectPaymentProof(
+          paymentProofId: proof.id,
+          isAdmin: _isAdmin,
+        );
+      },
     );
   }
 
@@ -979,6 +1108,22 @@ class _FallbackRepository implements ReservationsRepository {
   Future<ReservationDetail> rejectPaymentProof({
     required String paymentProofId,
     required String reason,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
   }) async {
     throw Exception('ReservationsModule no inyectado');
   }

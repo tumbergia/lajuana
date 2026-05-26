@@ -89,6 +89,42 @@ class ReservationsApiClient {
     return ReservationDetailDto.fromJson(data);
   }
 
+  /// Un-verifies (undoes) a previously verified payment proof.
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetailDto> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/payment-proofs/$paymentProofId/unverify',
+      body: {
+        'confirmation_token': 'UNVERIFY_PAYMENT',
+        if (note != null) 'note': note,
+      },
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
+  /// Un-rejects (undoes) a previously rejected payment proof.
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetailDto> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/payment-proofs/$paymentProofId/unreject',
+      body: {
+        'confirmation_token': 'UNREJECT_PAYMENT',
+        if (note != null) 'note': note,
+      },
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
   /// Rejects a payment proof with a mandatory reason.
   /// Returns the full updated reservation detail.
   Future<ReservationDetailDto> rejectPaymentProof({

@@ -14,6 +14,8 @@ from app.schemas.payment_proof import (
     PaymentProofApproveSchema,
     PaymentProofRejectSchema,
     PaymentProofResponseSchema,
+    PaymentProofUnrejectSchema,
+    PaymentProofUnverifySchema,
     PaymentProofUpdateSchema,
     PaymentProofVerifySchema,
 )
@@ -166,6 +168,58 @@ async def reject_payment_proof(
     current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
 ) -> ReservationResponseSchema:
     proof_doc = await service.reject_payment(
+        payment_proof_id,
+        payload,
+        actor_id=current_user.id,
+        actor_role=current_user.role,
+    )
+    reservation = await ReservationDocument.get(proof_doc.reservation_id)
+    return await reservation_to_response(reservation)
+
+
+@router.post(
+    "/{payment_proof_id}/unverify",
+    response_model=ReservationResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Deshacer verificacion de comprobante de pago",
+    description=(
+        "Revoca la verificacion del comprobante. "
+        "El comprobante y la reserva vuelven a estado 'received' (no verificado)."
+    ),
+    operation_id="unverifyPaymentProofById",
+)
+async def unverify_payment_proof(
+    payment_proof_id: str,
+    payload: PaymentProofUnverifySchema,
+    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+) -> ReservationResponseSchema:
+    proof_doc = await service.unverify_payment(
+        payment_proof_id,
+        payload,
+        actor_id=current_user.id,
+        actor_role=current_user.role,
+    )
+    reservation = await ReservationDocument.get(proof_doc.reservation_id)
+    return await reservation_to_response(reservation)
+
+
+@router.post(
+    "/{payment_proof_id}/unreject",
+    response_model=ReservationResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Deshacer rechazo de comprobante de pago",
+    description=(
+        "Revoca el rechazo del comprobante. "
+        "El comprobante y la reserva vuelven a estado 'received'."
+    ),
+    operation_id="unrejectPaymentProofById",
+)
+async def unreject_payment_proof(
+    payment_proof_id: str,
+    payload: PaymentProofUnrejectSchema,
+    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+) -> ReservationResponseSchema:
+    proof_doc = await service.unreject_payment(
         payment_proof_id,
         payload,
         actor_id=current_user.id,

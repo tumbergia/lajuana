@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import '../theme/theme_extensions.dart';
 import 'app_button.dart';
+
+/// Estilo visual del [AppConfirmDialog].
+enum DialogStyle {
+  /// Afirmativo — icono primary, botón primary.
+  regular,
+
+  /// Cauteloso — icono tertiary, botón primary.
+  warning,
+
+  /// Destructivo — icono error, botón danger.
+  danger,
+}
 
 /// Diálogo de confirmación reutilizable con icono, título, mensaje y botones.
 ///
@@ -28,7 +41,7 @@ class AppConfirmDialog extends StatelessWidget {
     required this.onConfirm,
     this.cancelLabel = 'Cancelar',
     this.onCancel,
-    this.confirmVariant = AppButtonVariant.primary,
+    this.style = DialogStyle.regular,
     this.height,
   });
 
@@ -42,7 +55,7 @@ class AppConfirmDialog extends StatelessWidget {
     required VoidCallback onConfirm,
     String cancelLabel = 'Cancelar',
     VoidCallback? onCancel,
-    AppButtonVariant confirmVariant = AppButtonVariant.primary,
+    DialogStyle style = DialogStyle.regular,
     double? height,
   }) {
     return showDialog<void>(
@@ -55,7 +68,7 @@ class AppConfirmDialog extends StatelessWidget {
         onConfirm: onConfirm,
         cancelLabel: cancelLabel,
         onCancel: onCancel,
-        confirmVariant: confirmVariant,
+        style: style,
         height: height,
       ),
     );
@@ -82,12 +95,34 @@ class AppConfirmDialog extends StatelessWidget {
   /// Callback al cancelar. Por defecto cierra el diálogo.
   final VoidCallback? onCancel;
 
-  /// Variante visual del botón de confirmación.
-  final AppButtonVariant confirmVariant;
+  /// Estilo visual: [DialogStyle.regular] (default), [DialogStyle.warning]
+  /// o [DialogStyle.danger]. Controla color del icono y variante del botón.
+  final DialogStyle style;
 
   /// Altura fija del contenido del diálogo.
   /// Si es `null` se ajusta al contenido.
   final double? height;
+
+  Color _iconColor(ColorScheme scheme) {
+    switch (style) {
+      case DialogStyle.warning:
+        return scheme.tertiary;
+      case DialogStyle.danger:
+        return AppColors.danger;
+      case DialogStyle.regular:
+        return scheme.primary;
+    }
+  }
+
+  AppButtonVariant _resolveConfirmVariant() {
+    switch (style) {
+      case DialogStyle.danger:
+        return AppButtonVariant.danger;
+      case DialogStyle.warning:
+      case DialogStyle.regular:
+        return AppButtonVariant.primary;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,9 +145,10 @@ class AppConfirmDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Icono ───────────────────────────────────────────────
-              Icon(icon, size: 48, color: scheme.primary),
+              Icon(icon, size: 48, color: _iconColor(scheme)),
               SizedBox(height: tokens.spaceLg),
 
               // ── Título ──────────────────────────────────────────────
@@ -147,20 +183,22 @@ class AppConfirmDialog extends StatelessWidget {
                         onCancel?.call();
                         Navigator.of(context).pop();
                       },
+                      expanded: true,
                       height: 48,
                     ),
                   ),
                   SizedBox(width: tokens.spaceSm),
 
-                  // Confirmar (primary por defecto)
+                  // Confirmar (resuelto según style)
                   Expanded(
                     child: AppButton(
                       label: confirmLabel,
-                      variant: confirmVariant,
+                      variant: _resolveConfirmVariant(),
                       onPressed: () {
                         onConfirm();
                         Navigator.of(context).pop();
                       },
+                      expanded: true,
                       height: 48,
                     ),
                   ),

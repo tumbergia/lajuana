@@ -60,6 +60,22 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   }) async {
     return detail;
   }
+
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    return detail;
+  }
 }
 
 /// Fake repository that always throws a permissions error.
@@ -113,6 +129,30 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
     throw ReservationsApiFailure(
       code: 'auth.forbidden',
       message: 'No tienes permisos para rechazar comprobantes.',
+      statusCode: 403,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'auth.forbidden',
+      message: 'No tienes permisos para deshacer verificacion.',
+      statusCode: 403,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'auth.forbidden',
+      message: 'No tienes permisos para deshacer rechazo.',
       statusCode: 403,
     );
   }
@@ -172,6 +212,30 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
       statusCode: 409,
     );
   }
+
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'reservation.invalid_status_transition',
+      message: 'El comprobante ya cambió de estado.',
+      statusCode: 409,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'reservation.invalid_status_transition',
+      message: 'El comprobante ya cambió de estado.',
+      statusCode: 409,
+    );
+  }
 }
 
 /// Fake repository that always throws a network error.
@@ -221,6 +285,30 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
   Future<ReservationDetail> rejectPaymentProof({
     required String paymentProofId,
     required String reason,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'network.unavailable',
+      message: 'No hay conexión con el servidor.',
+      statusCode: 0,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'network.unavailable',
+      message: 'No hay conexión con el servidor.',
+      statusCode: 0,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
   }) async {
     throw ReservationsApiFailure(
       code: 'network.unavailable',

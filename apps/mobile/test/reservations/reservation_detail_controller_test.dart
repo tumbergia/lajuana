@@ -59,6 +59,22 @@ class _FakeSuccessRepository implements ReservationsRepository {
   }) async {
     return detail;
   }
+
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    return detail;
+  }
 }
 
 /// A fake repository that always throws.
@@ -104,6 +120,22 @@ class _FakeErrorRepository implements ReservationsRepository {
   Future<ReservationDetail> rejectPaymentProof({
     required String paymentProofId,
     required String reason,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
   }) async {
     throw Exception('Network error');
   }
@@ -156,6 +188,22 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   Future<ReservationDetail> rejectPaymentProof({
     required String paymentProofId,
     required String reason,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
   }) async {
     throw Exception('Network error');
   }

@@ -363,4 +363,20 @@ class _FallbackRepository implements ReservationsRepository {
   }) async {
     throw Exception('ReservationsModule no inyectado');
   }
+
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
 }

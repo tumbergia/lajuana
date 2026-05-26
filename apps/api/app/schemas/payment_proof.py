@@ -42,6 +42,16 @@ class PaymentProofRejectSchema(BaseModel):
     reason: str = Field(min_length=1)
 
 
+class PaymentProofUnverifySchema(BaseModel):
+    confirmation_token: Literal["UNVERIFY_PAYMENT"]
+    note: str | None = None
+
+
+class PaymentProofUnrejectSchema(BaseModel):
+    confirmation_token: Literal["UNREJECT_PAYMENT"]
+    note: str | None = None
+
+
 class PaymentProofResponseSchema(AuditMetadataSchema):
     id: str
     reservation_id: str

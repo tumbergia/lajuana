@@ -17,6 +17,8 @@ enum PaymentProofActionState {
   idle,
   approving,
   rejecting,
+  unverifying,
+  unrejecting,
   success,
   error,
 }
@@ -45,6 +47,21 @@ class ReservationDetailController extends ChangeNotifier {
     actingPaymentProofId = null;
     actionErrorCode = null;
     actionErrorMessage = null;
+  }
+
+  /// Reset action state after a short delay so the UI can show "success" briefly
+  /// before enabling buttons again.
+  /// Resets action state after a microtask so buttons become clickable again.
+  /// Works for both success and error — the error banner persists via
+  /// [actionErrorCode] / [actionErrorMessage] independently.
+  void _resetActionDelayed() {
+    Future.microtask(() {
+      if (paymentProofActionState != PaymentProofActionState.idle) {
+        paymentProofActionState = PaymentProofActionState.idle;
+        actingPaymentProofId = null;
+        notifyListeners();
+      }
+    });
   }
 
   /// Aprobar un comprobante. Solo si [isAdmin] es true.
@@ -86,6 +103,7 @@ class ReservationDetailController extends ChangeNotifier {
     } finally {
       actingPaymentProofId = null;
       notifyListeners();
+      _resetActionDelayed();
     }
   }
 
@@ -117,6 +135,7 @@ class ReservationDetailController extends ChangeNotifier {
         reason: reason,
       );
       paymentProofActionState = PaymentProofActionState.success;
+      _resetActionDelayed();
     } on ReservationsApiFailure catch (e) {
       actionErrorCode = e.code;
       actionErrorMessage = e.message;
@@ -128,6 +147,99 @@ class ReservationDetailController extends ChangeNotifier {
     } finally {
       actingPaymentProofId = null;
       notifyListeners();
+      _resetActionDelayed();
+    }
+  }
+
+  /// Deshace la verificacion de un comprobante previamente aprobado.
+  /// Solo si [isAdmin] es true.
+  Future<void> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      actionErrorCode = 'permission.denied';
+      actionErrorMessage =
+          'No tienes permisos para deshacer verificacion.';
+      paymentProofActionState = PaymentProofActionState.error;
+      notifyListeners();
+      return;
+    }
+    if (paymentProofActionState != PaymentProofActionState.idle) return;
+
+    paymentProofActionState = PaymentProofActionState.unverifying;
+    actingPaymentProofId = paymentProofId;
+    actionErrorCode = null;
+    actionErrorMessage = null;
+    notifyListeners();
+
+    try {
+      detail = await _repository.unverifyPaymentProof(
+        paymentProofId: paymentProofId,
+        note: note,
+      );
+      paymentProofActionState = PaymentProofActionState.success;
+      _resetActionDelayed();
+    } on ReservationsApiFailure catch (e) {
+      actionErrorCode = e.code;
+      actionErrorMessage = e.message;
+      paymentProofActionState = PaymentProofActionState.error;
+    } catch (_) {
+      actionErrorCode = 'common.error';
+      actionErrorMessage =
+          'Error inesperado al deshacer verificacion.';
+      paymentProofActionState = PaymentProofActionState.error;
+    } finally {
+      actingPaymentProofId = null;
+      notifyListeners();
+      _resetActionDelayed();
+    }
+  }
+
+  /// Deshace el rechazo de un comprobante previamente rechazado.
+  /// Solo si [isAdmin] es true.
+  Future<void> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      actionErrorCode = 'permission.denied';
+      actionErrorMessage =
+          'No tienes permisos para deshacer rechazo.';
+      paymentProofActionState = PaymentProofActionState.error;
+      notifyListeners();
+      return;
+    }
+    if (paymentProofActionState != PaymentProofActionState.idle) return;
+
+    paymentProofActionState = PaymentProofActionState.unrejecting;
+    actingPaymentProofId = paymentProofId;
+    actionErrorCode = null;
+    actionErrorMessage = null;
+    notifyListeners();
+
+    try {
+      detail = await _repository.unrejectPaymentProof(
+        paymentProofId: paymentProofId,
+        note: note,
+      );
+      paymentProofActionState = PaymentProofActionState.success;
+      _resetActionDelayed();
+    } on ReservationsApiFailure catch (e) {
+      actionErrorCode = e.code;
+      actionErrorMessage = e.message;
+      paymentProofActionState = PaymentProofActionState.error;
+    } catch (_) {
+      actionErrorCode = 'common.error';
+      actionErrorMessage =
+          'Error inesperado al deshacer rechazo.';
+      paymentProofActionState = PaymentProofActionState.error;
+    } finally {
+      actingPaymentProofId = null;
+      notifyListeners();
+      _resetActionDelayed();
     }
   }
 

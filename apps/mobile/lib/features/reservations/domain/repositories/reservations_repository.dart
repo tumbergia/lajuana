@@ -32,4 +32,18 @@ abstract class ReservationsRepository {
     required String paymentProofId,
     required String reason,
   });
+
+  /// Un-verifies (undoes) a previously verified payment proof.
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  });
+
+  /// Un-rejects (undoes) a previously rejected payment proof.
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+  });
 }

@@ -225,6 +225,38 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
     return detail;
   }
 
+  @override
+  Future<ReservationDetail> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    final dto = await _apiClient.unverifyPaymentProof(
+      paymentProofId: paymentProofId,
+      note: note,
+    );
+    final detail = dtoToDetail(dto);
+
+    await _cacheDetailPayload(dto);
+
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+  }) async {
+    final dto = await _apiClient.unrejectPaymentProof(
+      paymentProofId: paymentProofId,
+      note: note,
+    );
+    final detail = dtoToDetail(dto);
+
+    await _cacheDetailPayload(dto);
+
+    return detail;
+  }
+
   /// Caches a full reservation detail DTO to the local data source.
   Future<void> _cacheDetailPayload(ReservationDetailDto dto) async {
     await _localDataSource.cacheDetail(

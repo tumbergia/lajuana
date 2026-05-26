@@ -21,6 +21,8 @@ from app.schemas.payment_proof import (
     PaymentProofApproveSchema,
     PaymentProofCreateSchema,
     PaymentProofRejectSchema,
+    PaymentProofUnrejectSchema,
+    PaymentProofUnverifySchema,
     PaymentProofUpdateSchema,
     PaymentProofVerifySchema,
 )
@@ -34,8 +36,8 @@ ALLOWED_CONTENT_TYPES = {
 
 ALLOWED_PAYMENT_PROOF_TRANSITIONS = {
     PaymentStatus.RECEIVED: {PaymentStatus.VERIFIED, PaymentStatus.REJECTED},
-    PaymentStatus.VERIFIED: set(),
-    PaymentStatus.REJECTED: set(),
+    PaymentStatus.VERIFIED: {PaymentStatus.RECEIVED},
+    PaymentStatus.REJECTED: {PaymentStatus.RECEIVED},
     PaymentStatus.PENDING: set(),
 }
 
@@ -326,6 +328,121 @@ class PaymentProofService:
             previous_status=previous_status,
             new_status=str(doc.status.value),
             reason=payload.reason,
+        )
+
+        return doc
+
+    async def unverify_payment(
+        self,
+        payment_proof_id: str,
+        payload: PaymentProofUnverifySchema,
+        *,
+        actor_id: PydanticObjectId | None,
+        actor_role: UserRole,
+    ) -> PaymentProofDocument:
+        if actor_role != UserRole.ADMIN:
+            raise ApiError(
+                status_code=403,
+                code=ErrorCode.AUTH_FORBIDDEN,
+                message="No tienes permisos para deshacer verificacion de comprobantes.",
+            )
+        if payload.confirmation_token != "UNVERIFY_PAYMENT":
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.VALIDATION_ERROR,
+                message="Token de confirmacion invalido para deshacer verificacion.",
+            )
+
+        doc = await self.get(payment_proof_id)
+        previous_status = str(doc.status.value)
+        self._ensure_transition_allowed(doc.status, PaymentStatus.RECEIVED)
+        reservation = await ReservationDocument.get(doc.reservation_id)
+        if reservation is None:
+            raise ApiError(
+                status_code=404,
+                code=ErrorCode.RESERVATION_NOT_FOUND,
+                message="Reserva no encontrada.",
+            )
+
+        # Revert proof + reservation payment_status to RECEIVED
+        await self._sync_proof_and_reservation_payment_status(
+            doc=doc,
+            reservation=reservation,
+            target_status=PaymentStatus.RECEIVED,
+            actor_id=actor_id,
+        )
+
+        # Revert reservation status to PENDING_PAYMENT (undo approve transition)
+        reservation.status = ReservationStatus.PENDING_PAYMENT
+        reservation.updated_by = actor_id
+        await reservation.save()
+
+        # Audit log — best-effort
+        await self._create_audit_log(
+            reservation_id=reservation.id,
+            payment_proof_id=doc.id,
+            actor_user_id=actor_id,
+            actor_role=actor_role,
+            action="payment_proof.unverified",
+            previous_status=previous_status,
+            new_status=str(doc.status.value),
+            reason=payload.note,
+        )
+
+        return doc
+
+    async def unreject_payment(
+        self,
+        payment_proof_id: str,
+        payload: PaymentProofUnrejectSchema,
+        *,
+        actor_id: PydanticObjectId | None,
+        actor_role: UserRole,
+    ) -> PaymentProofDocument:
+        if actor_role != UserRole.ADMIN:
+            raise ApiError(
+                status_code=403,
+                code=ErrorCode.AUTH_FORBIDDEN,
+                message="No tienes permisos para deshacer rechazo de comprobantes.",
+            )
+        if payload.confirmation_token != "UNREJECT_PAYMENT":
+            raise ApiError(
+                status_code=400,
+                code=ErrorCode.VALIDATION_ERROR,
+                message="Token de confirmacion invalido para deshacer rechazo.",
+            )
+
+        doc = await self.get(payment_proof_id)
+        previous_status = str(doc.status.value)
+        self._ensure_transition_allowed(doc.status, PaymentStatus.RECEIVED)
+        reservation = await ReservationDocument.get(doc.reservation_id)
+        if reservation is None:
+            raise ApiError(
+                status_code=404,
+                code=ErrorCode.RESERVATION_NOT_FOUND,
+                message="Reserva no encontrada.",
+            )
+
+        # Revert proof + reservation payment_status to RECEIVED
+        await self._sync_proof_and_reservation_payment_status(
+            doc=doc,
+            reservation=reservation,
+            target_status=PaymentStatus.RECEIVED,
+            actor_id=actor_id,
+        )
+
+        # Reject does NOT change reservation.status, so no revert needed here
+
+        # Audit log — best-effort
+        await self._create_audit_log(
+            reservation_id=reservation.id,
+            payment_proof_id=doc.id,
+            actor_user_id=actor_id,
+            actor_role=actor_role,
+            action="payment_proof.unrejected",
+            previous_status=previous_status,
+            new_status=str(doc.status.value),
+            reason=payload.note,
         )
 
         return doc

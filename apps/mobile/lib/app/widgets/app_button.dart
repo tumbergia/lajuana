@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 import '../theme/theme_extensions.dart';
 
-/// Las tres familias de botón del mockup Equus Command.
+/// Las familias de botón del mockup Equus Command.
 enum AppButtonVariant {
   /// Fondo primario (blanco en dark), texto oscuro. CTA principal.
   primary,
@@ -11,6 +12,9 @@ enum AppButtonVariant {
 
   /// Sin fondo, texto muted. Acción ligera o ghost.
   ghost,
+
+  /// Fondo error, texto onError. Acción destructiva.
+  danger,
 }
 
 /// Botón editorial fiel al mockup.
@@ -92,6 +96,14 @@ class _AppButtonState extends State<AppButton> {
       side = BorderSide(
         color: scheme.outlineVariant.withValues(alpha: isDisabled ? 0.2 : 0.5),
       );
+    } else if (widget.variant == AppButtonVariant.danger) {
+      bg = isDisabled
+          ? scheme.onSurface.withValues(alpha: 0.12)
+          : AppColors.danger;
+      fg = isDisabled
+          ? scheme.onSurface.withValues(alpha: 0.38)
+          : Colors.white;
+      side = null;
     } else {
       // ghost
       bg = Colors.transparent;
