@@ -8,18 +8,16 @@ from app.common.constants import PARTICIPANT_FORM_LINK_EXPIRY_HOURS, PARTICIPANT
 from app.common.enums import ParticipantFormLinkStatus, ParticipantFormStatus, ReservationStatus
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-
-
-def _utc_now() -> datetime:
-    return datetime.now(UTC).replace(tzinfo=None)
-
-
 from app.documents import (
     ExperienceDocument,
     ParticipantDocument,
     ParticipantFormLinkDocument,
     ReservationDocument,
 )
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class ParticipantFormLinkService:
@@ -52,6 +50,10 @@ class ParticipantFormLinkService:
                 code=ErrorCode.FORM_LINK_RESERVATION_NOT_CONFIRMED,
                 message="La reserva debe estar confirmada o tener pago recibido para generar el formulario.",
             )
+
+        # Guard against invalid counts
+        if expected_participants_count <= 0:
+            expected_participants_count = reservation.participant_count or 1
 
         reservation.expected_participants_count = expected_participants_count
         reservation.participant_form_status = ParticipantFormStatus.SENT
@@ -150,10 +152,10 @@ class ParticipantFormLinkService:
             "requested_date": (
                 reservation.requested_date.isoformat() if reservation.requested_date else None
             ),
-            "completed_count": reservation.participants_completed_count,
+            "completed_count": doc.used_count,
             "expected_count": doc.max_participants,
             "is_complete": (
-                reservation.participants_completed_count >= doc.max_participants
+                doc.used_count >= doc.max_participants
             ),
             "link_status": doc.status,
         }

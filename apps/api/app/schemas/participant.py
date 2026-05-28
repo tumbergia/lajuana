@@ -99,13 +99,13 @@ class ParticipantResponseSchema(AuditMetadataSchema):
     city: str
     height_cm: Decimal
     weight_kg: Decimal
-    experience_level: ExperienceLevel
+    experience_level: ExperienceLevel | None = None
     dietary_restrictions: str | None
     blood_type: str | None
     eps_or_travel_insurance: str | None
     health_conditions: str | None
     sensory_disabilities: str | None
-    emergency_contact: EmergencyContactSchema
+    emergency_contact: EmergencyContactSchema | None = None
     accepted_data_processing: bool
     accepted_media_usage: bool | None
     accepted_risk_release: bool | None

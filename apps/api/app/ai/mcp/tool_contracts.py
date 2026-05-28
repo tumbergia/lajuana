@@ -280,6 +280,7 @@ class CreateReservationDraftInput(BaseModel):
     participant_count: int = Field(ge=1, le=8)
     holder_phone: str
     holder_name: str | None = None
+    holder_email: str | None = None
     requested_date: date
     quote_snapshot: dict
     conversation_id: str | None = None

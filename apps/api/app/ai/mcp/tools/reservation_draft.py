@@ -100,6 +100,7 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
             participant_count=payload.participant_count,
             holder_phone=payload.holder_phone,
             holder_name=payload.holder_name,
+            holder_email=payload.holder_email,
             requested_date=str(payload.requested_date),
             quote_snapshot=payload.quote_snapshot,
             conversation_id=payload.conversation_id,

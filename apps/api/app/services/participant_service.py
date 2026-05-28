@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ParticipantDocument, ReservationDocument
+from app.documents.participant_document import EmergencyContact
 from app.schemas.participant import (
     ParticipantCreateSchema,
     ParticipantNestedCreateSchema,
@@ -117,12 +118,15 @@ class ParticipantService:
             city=payload.city,
             height_cm=payload.height_cm,
             weight_kg=payload.weight_kg,
+            experience_level=payload.experience_level,
             dietary_restrictions=payload.dietary_restrictions,
             blood_type=payload.blood_type,
             eps_or_travel_insurance=payload.eps_or_travel_insurance,
             health_conditions=payload.health_conditions,
             sensory_disabilities=payload.sensory_disabilities,
-            emergency_contact=payload.emergency_contact,
+            emergency_contact=EmergencyContact(
+                **payload.emergency_contact.model_dump()
+            ),
             accepted_data_processing=payload.accepted_data_processing,
             accepted_media_usage=payload.accepted_media_usage,
             accepted_risk_release=payload.accepted_risk_release,

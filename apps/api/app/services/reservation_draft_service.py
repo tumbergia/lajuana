@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import secrets
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 from beanie import PydanticObjectId
 
@@ -29,6 +30,7 @@ class ReservationDraftService:
         quote_snapshot: dict,
         conversation_id: str | None = None,
         trace_id: str | None = None,
+        holder_email: str | None = None,
     ) -> dict:
         # 1. Validate experience exists and is active
         experience = await ExperienceDocument.get(PydanticObjectId(experience_id))
@@ -76,16 +78,27 @@ class ReservationDraftService:
         expire_at = datetime.now(UTC) + timedelta(minutes=rules.reservation_draft_ttl_minutes)
 
         # 8. Create reservation
+        quoted_total = None
+        if quote_snapshot and isinstance(quote_snapshot, dict):
+            raw_subtotal = quote_snapshot.get("subtotal")
+            if raw_subtotal is not None:
+                try:
+                    quoted_total = Decimal(str(raw_subtotal))
+                except Exception:
+                    quoted_total = None
+
         payload = {
             "experience_id": experience_id,
             "participant_count": participant_count,
             "holder_phone": holder_phone,
             "holder_name": holder_name,
+            "holder_email": holder_email,
             "requested_date": requested,
             "channel": "whatsapp",
             "code": code,
             "quote_snapshot": quote_snapshot,
             "quote_trace_id": trace_id,
+            "quoted_total_amount": quoted_total,
             "pre_reserved_at": datetime.now(UTC),
             "expire_at": expire_at,
         }

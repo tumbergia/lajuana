@@ -52,13 +52,24 @@ def _parse_cors_origins(raw: str) -> list[str]:
     return [origin.strip() for origin in raw.split(",") if origin.strip()]
 
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_parse_cors_origins(settings.cors_allowed_origins),
-    allow_origin_regex=settings.cors_allow_origin_regex,
-    allow_credentials=settings.cors_allow_credentials,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if settings.app_env == "local":
+    # En desarrollo local permitir cualquier origen (app móvil con puerto
+    # dinámico, formulario web en Vercel, etc.).
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_parse_cors_origins(settings.cors_allowed_origins),
+        allow_origin_regex=settings.cors_allow_origin_regex,
+        allow_credentials=settings.cors_allow_credentials,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 app.include_router(api_router)
 app.include_router(whatsapp_bare_router)

@@ -13,6 +13,7 @@ from app.jobs.expire_reservation_drafts import ReservationDraftExpireWorker
 from app.jobs.notification_outbox_worker import NotificationOutboxWorker
 from app.jobs.pre_service_reminder_scheduler import PreServiceReminderScheduler
 from app.jobs.whatsapp_media_worker import WhatsAppMediaWorker
+from app.migrations.seed_notification_templates import seed_notification_templates
 
 scheduler = ConversationScheduler()
 expire_worker = ReservationDraftExpireWorker()
@@ -26,6 +27,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     reconfigure_logger()
     logger.info("Application startup")
     await init_db()
+
+    try:
+        seeded = await seed_notification_templates()
+        logger.info("[lifespan] Seeded %s notification templates", seeded)
+    except Exception:
+        logger.warning("[lifespan] Failed to seed notification templates", exc_info=True)
 
     scheduler_task = asyncio.create_task(scheduler.run())
     logger.info("[lifespan] Scheduler started")

@@ -48,3 +48,7 @@ class ParticipantFormTokenValidationResponse(BaseModel):
     expires_at: datetime | None = None
     max_participants: int | None = None
     used_count: int | None = None
+    # Aliases for frontend Vercel compatibility
+    participant_limit: int | None = None
+    participants_registered: int | None = None
+    participants_remaining: int | None = None

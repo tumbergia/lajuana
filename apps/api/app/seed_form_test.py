@@ -154,7 +154,7 @@ async def main():
         expected_participants_count=2,
     )
 
-    form_url = f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
+    form_url = f"{settings.participant_form_base_url}/?token={raw_token}"
     print(f"\n>>> LINK DEL FORMULARIO: {form_url} <<<")
     print(">>> Ábrelo en el navegador para probarlo <<<")
 

@@ -32,6 +32,7 @@ FIELD_LABELS: dict[str, str] = {
     "participant_count": "¿cuántas personas serían?",
     "holder_phone": "¿cuál es tu número de teléfono?",
     "holder_name": "¿cuál es tu nombre completo?",
+    "holder_email": "¿cuál es tu correo electrónico?",
     "schedule_id": "¿para qué fecha?",
     "quote_snapshot": "necesito primero consultar disponibilidad y precio",
     "conversation_id": None,
@@ -42,8 +43,12 @@ FIELD_LABELS: dict[str, str] = {
 def _build_missing_fields_response(missing: list[str]) -> str:
     labels = [FIELD_LABELS.get(f, f) for f in missing if FIELD_LABELS.get(f) is not None]
     if not labels:
-        return "Necesito algunos datos para continuar."
-    return "Para continuar, necesito que me indiques " + ", ".join(labels) + "."
+        return "Necesito algunos datos para continuar. ¿Me los compartes?"
+    return (
+        "Con gusto sigo. Solo necesito que me indiques "
+        + ", ".join(labels)
+        + ". ¿Me ayudas con eso?"
+    )
 
 
 class AssistantOrchestrator:
@@ -199,6 +204,8 @@ class AssistantOrchestrator:
                 "experience_id",
                 "participant_count",
                 "holder_phone",
+                "holder_name",
+                "holder_email",
                 "requested_date",
                 "quote_snapshot",
             ],
@@ -223,21 +230,18 @@ class AssistantOrchestrator:
                     plan_args=plan_args,
                     required_fields=required_fields,
                 )
-                if (
-                    merge.filled_from_session
-                    or plan.action == AssistantAction.ASK_CLARIFYING_QUESTION
-                ):  # noqa: E501
-                    valid_keys = ToolArgs.model_fields.keys()
-                    for key, value in merge.merged.items():
-                        if key in valid_keys:
-                            setattr(plan.arguments, key, value)
-                    if not merge.still_missing:
-                        plan.action = AssistantAction.TOOL_CALL
-                        plan.missing_fields = []
-                    else:
-                        plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
-                        plan.missing_fields = merge.still_missing
-                        plan.response = _build_missing_fields_response(merge.still_missing)
+                # Always apply merged args and check for missing required fields
+                valid_keys = ToolArgs.model_fields.keys()
+                for key, value in merge.merged.items():
+                    if key in valid_keys:
+                        setattr(plan.arguments, key, value)
+                if not merge.still_missing:
+                    plan.action = AssistantAction.TOOL_CALL
+                    plan.missing_fields = []
+                else:
+                    plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
+                    plan.missing_fields = merge.still_missing
+                    plan.response = _build_missing_fields_response(merge.still_missing)
 
         if plan.action in {
             AssistantAction.FINAL_RESPONSE,

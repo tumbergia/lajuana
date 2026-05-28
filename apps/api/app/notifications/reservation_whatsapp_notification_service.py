@@ -290,14 +290,14 @@ class ReservationWhatsAppNotificationService:
         reservation: ReservationDocument,
         actor_id: PydanticObjectId | None,
     ) -> str:
-        """Generate a participant form link if one does not already exist."""
+        """Generate a participant form link and keep reservation.form_url in sync."""
         expected = reservation.expected_participants_count or reservation.participant_count
         _, raw_token = await self._form_link_service.generate(
             reservation_id=str(reservation.id),
             expected_participants_count=expected,
             created_by=actor_id,
         )
-        form_url = f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
+        form_url = f"{settings.participant_form_base_url}/?token={raw_token}"
         reservation.form_url = form_url
         reservation.expected_participants_count = expected
         await reservation.save()

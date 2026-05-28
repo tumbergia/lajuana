@@ -11,6 +11,7 @@ from app.notifications.reservation_whatsapp_notification_service import (
 )
 from app.schemas.participant import (
     ParticipantNestedCreateSchema,
+    ParticipantPublicCreateSchema,
     ParticipantResponseSchema,
 )
 from app.schemas.participant_form_link import (
@@ -45,27 +46,66 @@ participant_service = ParticipantService()
 async def validate_participant_form_token(
     token: str,
 ) -> ParticipantFormTokenValidationResponse:
-    try:
-        doc = await form_link_service.validate_token(token)
-        reservation = await ReservationDocument.get(doc.reservation_id)
-        experience_name = None
-        reservation_code = None
-        if reservation is not None:
-            reservation_code = reservation.code
-            experience = await ExperienceDocument.get(reservation.experience_id)
-            if experience is not None:
-                experience_name = experience.name
+    doc = await form_link_service.validate_token(token)
+    reservation = await ReservationDocument.get(doc.reservation_id)
+    experience_name = None
+    reservation_code = None
+    if reservation is not None:
+        reservation_code = reservation.code
+        experience = await ExperienceDocument.get(reservation.experience_id)
+        if experience is not None:
+            experience_name = experience.name
 
-        return ParticipantFormTokenValidationResponse(
-            valid=True,
-            reservation_code=reservation_code,
-            experience_name=experience_name,
-            expires_at=doc.expires_at,
-            max_participants=doc.max_participants,
-            used_count=doc.used_count,
-        )
-    except Exception:
-        return ParticipantFormTokenValidationResponse(valid=False)
+    return ParticipantFormTokenValidationResponse(
+        valid=True,
+        reservation_code=reservation_code,
+        experience_name=experience_name,
+        expires_at=doc.expires_at,
+        max_participants=doc.max_participants,
+        used_count=doc.used_count,
+        participant_limit=doc.max_participants,
+        participants_registered=doc.used_count,
+        participants_remaining=max(0, doc.max_participants - doc.used_count),
+    )
+
+
+@router.get(
+    "/public/participant-form/{token}",
+    response_model=ParticipantFormTokenValidationResponse,
+    summary="Validar token (formato Vercel)",
+    description=(
+        "Alias compatible con el frontend desplegado en Vercel. "
+        "Valida el token del formulario."
+    ),
+    operation_id="validateParticipantFormTokenVercel",
+    tags=["Formulario de participantes"],
+)
+async def validate_participant_form_token_vercel(
+    token: str,
+) -> ParticipantFormTokenValidationResponse:
+    """Reenvía a la lógica del endpoint /validate estándar."""
+    return await validate_participant_form_token(token)
+
+
+@router.post(
+    "/public/participant-form/{token}",
+    response_model=ParticipantResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar participante (formato Vercel)",
+    description=(
+        "Alias compatible con el frontend desplegado en Vercel. "
+        "Crea un participante mediante el token del formulario."
+    ),
+    operation_id="createParticipantViaFormVercel",
+    tags=["Formulario de participantes"],
+)
+async def create_participant_via_form_vercel(
+    token: str,
+    payload: ParticipantPublicCreateSchema,
+    request: Request,
+) -> ParticipantResponseSchema:
+    """Reenvía a la lógica del endpoint /participants estándar."""
+    return await create_participant_via_form(token, payload, request)
 
 
 @router.get(
@@ -96,15 +136,52 @@ async def get_public_participant_form_status(
     operation_id="createParticipantViaForm",
     tags=["Formulario de participantes"],
 )
+def _convert_public_to_nested(
+    payload: ParticipantPublicCreateSchema,
+) -> ParticipantNestedCreateSchema:
+    """Convert flat frontend fields to the nested schema expected by the service."""
+    eps = payload.eps or payload.travel_insurance or None
+    return ParticipantNestedCreateSchema(
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        email=payload.email,
+        birth_date=payload.birth_date,
+        document_type=payload.document_type,
+        document_number=payload.document_number,
+        phone=payload.phone,
+        country=payload.country,
+        city=payload.city,
+        height_cm=payload.height_cm,
+        weight_kg=payload.weight_kg,
+        experience_level=payload.experience_level,
+        dietary_restrictions=payload.dietary_restrictions,
+        blood_type=payload.blood_type,
+        eps_or_travel_insurance=eps,
+        health_conditions=payload.medical_conditions,
+        sensory_disabilities=payload.functional_conditions,
+        emergency_contact={
+            "name": payload.emergency_contact_name,
+            "phone": payload.emergency_contact_phone,
+            "relationship": payload.emergency_contact_relationship,
+            "country": payload.emergency_contact_country,
+        },
+        accepted_data_processing=payload.accepted_data_processing,
+        accepted_media_usage=payload.accepted_media_usage,
+        accepted_risk_release=payload.accepted_risk_release,
+        risk_release_text_version=payload.risk_release_text_version,
+    )
+
+
 async def create_participant_via_form(
     token: str,
-    payload: ParticipantNestedCreateSchema,
+    payload: ParticipantPublicCreateSchema,
     request: Request,
 ) -> ParticipantResponseSchema:
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+    nested = _convert_public_to_nested(payload)
     doc = await participant_service.create_from_form(
-        token, payload, ip_address=ip_address, user_agent=user_agent
+        token, nested, ip_address=ip_address, user_agent=user_agent
     )
     return participant_to_response(doc)
 
@@ -142,8 +219,8 @@ async def generate_participant_form_link(
         expected_participants_count=payload.expected_participants_count,
     )
     form_url = (
-        f"{settings.app_base_url}"
-        f"/formulario-participantes?t={raw_token}"
+        f"{settings.participant_form_base_url}"
+        f"/?token={raw_token}"
     )
     return ParticipantFormLinkGenerateResponse(
         id=str(doc.id),

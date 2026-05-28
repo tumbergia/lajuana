@@ -101,7 +101,13 @@ async def reservation_to_response(doc: ReservationDocument) -> ReservationRespon
         participant_docs = await ParticipantDocument.find(
             {"_id": {"$in": doc.participant_ids}}
         ).to_list()
-        participants = [participant_to_response(p) for p in participant_docs]
+        for p in participant_docs:
+            try:
+                participants.append(participant_to_response(p))
+            except Exception:
+                # Skip participants that fail to map (e.g. legacy data with
+                # missing fields) so the whole reservation isn't broken.
+                pass
 
     # Resolve payment proofs by IDs.
     payment_proofs: list[PaymentProofResponseSchema] = []

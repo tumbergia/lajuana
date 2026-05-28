@@ -138,8 +138,10 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
             subtotal=subtotal,
             response=(
                 f"{exp_name} para {payload.participant_count} persona(s) "
-                f"sale a ${subtotal} COP "
-                f"(${tier.price_per_person} por persona)."
+                f"sale a ${subtotal:,.0f} COP "
+                f"(${tier.price_per_person:,.0f} por persona).\n\n"
+                f"Si te interesa, puedo apartarte la fecha. "
+                f"Solo necesito confirmarte unos datos. ¿Te parece?"
             ),
             pricing_tier=QuotePricingTier(
                 min_participants=tier.min_participants,
