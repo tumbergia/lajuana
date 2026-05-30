@@ -772,3 +772,262 @@ class AnniversaryAutomationOutput(BaseModel):
     enabled: bool
     message: str
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin CRUD: Experiences ─────────────────────────────────────
+
+
+class AdminCreateExperienceOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    created: bool
+    trace_id: str
+    tool_name: Literal["admin_create_experience"] = "admin_create_experience"
+    experience_id: str | None = None
+    name: str | None = None
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateExperienceOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    updated: bool
+    trace_id: str
+    tool_name: Literal["admin_update_experience"] = "admin_update_experience"
+    experience_id: str | None = None
+    name: str | None = None
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminListExperiencesItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    experience_id: str
+    name: str
+    slug: str | None = None
+    is_active: bool = True
+    status: str | None = None
+    starting_price: int | None = None
+
+
+class AdminListExperiencesOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_experiences_admin"] = "admin_list_experiences_admin"
+    total: int
+    experiences: list[AdminListExperiencesItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminDeactivateExperienceOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    deactivated: bool
+    trace_id: str
+    tool_name: Literal["admin_deactivate_experience"] = "admin_deactivate_experience"
+    experience_id: str | None = None
+    name: str | None = None
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin CRUD: Users ───────────────────────────────────────────
+
+
+class AdminListUsersItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: str
+    email: str
+    full_name: str
+    role: str
+    is_active: bool
+
+
+class AdminListUsersOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_users"] = "admin_list_users"
+    total: int
+    users: list[AdminListUsersItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminCreateUserOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    created: bool
+    trace_id: str
+    tool_name: Literal["admin_create_user"] = "admin_create_user"
+    user_id: str | None = None
+    email: str | None = None
+    role: str | None = None
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateUserOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    updated: bool
+    trace_id: str
+    tool_name: Literal["admin_update_user"] = "admin_update_user"
+    user_id: str | None = None
+    email: str | None = None
+    role: str | None = None
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminDeactivateUserOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    deactivated: bool
+    trace_id: str
+    tool_name: Literal["admin_deactivate_user"] = "admin_deactivate_user"
+    user_id: str | None = None
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin CRUD: Schedules ───────────────────────────────────────
+
+
+class AdminListSchedulesItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schedule_id: str
+    experience_id: str
+    scheduled_date: str
+    start_time: str | None = None
+    capacity_total: int
+    available_slots: int
+    reserved_slots: int
+    held_slots: int
+    blocked_slots: int = 0
+    internal_slots: int = 0
+    status: str
+    is_active: bool
+
+
+class AdminListSchedulesOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_schedules_admin"] = "admin_list_schedules_admin"
+    total: int
+    schedules: list[AdminListSchedulesItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminCreateScheduleOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    created: bool
+    trace_id: str
+    tool_name: Literal["admin_create_schedule"] = "admin_create_schedule"
+    schedule_id: str | None = None
+    experience_id: str | None = None
+    scheduled_date: str = ""
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateScheduleOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    updated: bool
+    trace_id: str
+    tool_name: Literal["admin_update_schedule"] = "admin_update_schedule"
+    schedule_id: str | None = None
+    experience_id: str | None = None
+    scheduled_date: str = ""
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminDeactivateScheduleOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    deactivated: bool
+    trace_id: str
+    tool_name: Literal["admin_deactivate_schedule"] = "admin_deactivate_schedule"
+    schedule_id: str | None = None
+    scheduled_date: str = ""
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin CRUD: Config ──────────────────────────────────────────
+
+
+class AdminGetSystemConfigOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_system_config"] = "admin_get_system_config"
+    min_days_in_advance: int | None = None
+    require_payment_proof_for_confirmation: bool = True
+    reservation_draft_ttl_minutes: int | None = None
+    account_bank: str | None = None
+    account_type: str | None = None
+    account_number: str | None = None
+    account_holder_name: str | None = None
+    transfer_note: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateReservationRulesOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    updated: bool
+    trace_id: str
+    tool_name: Literal["admin_update_reservation_rules"] = "admin_update_reservation_rules"
+    min_days_in_advance: int | None = None
+    require_payment_proof_for_confirmation: bool = True
+    reservation_draft_ttl_minutes: int | None = None
+    message: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminGetPaymentInstructionsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_payment_instructions"] = "admin_get_payment_instructions"
+    account_bank: str
+    account_type: str
+    account_number: str
+    account_holder_name: str
+    account_holder_id: str
+    transfer_note: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin CRUD: Human Reviews ───────────────────────────────────
+
+
+class AdminListHumanReviewRequestsItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    review_id: str
+    conversation_id: str
+    reason_code: str
+    summary: str
+    priority: str
+    status: str
+    created_at: str = ""
+
+
+class AdminListHumanReviewRequestsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_human_review_requests"] = "admin_list_human_review_requests"
+    total: int
+    requests: list[AdminListHumanReviewRequestsItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)

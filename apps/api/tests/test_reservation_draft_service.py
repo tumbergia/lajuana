@@ -371,7 +371,7 @@ async def _run_policy_blocks_confirm_from_whatsapp(
     decision = ToolPolicyEngine().validate(plan)
 
     assert not decision.allowed
-    assert decision.reason == "critical_tool_denied"
+    assert decision.reason == "tool_not_allowed_for_channel"
 
 
 def test_policy_blocks_confirm_from_whatsapp(
