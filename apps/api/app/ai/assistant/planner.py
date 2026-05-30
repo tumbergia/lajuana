@@ -59,6 +59,22 @@ Puedes usar las siguientes herramientas administrativas cuando el usuario las so
 - admin_update_reservation_rules: Actualiza reglas de reserva.
 - admin_get_payment_instructions: Muestra instrucciones de pago configuradas.
 - admin_list_human_review_requests: Lista solicitudes de revisión humana.
+- admin_get_payment_proof: Consulta comprobante de pago por ID o reserva.
+- admin_approve_payment: Aprueba comprobante (verifica + avanza reserva a PAYMENT_RECEIVED).
+- admin_reject_payment_proof: Rechaza comprobante de pago con motivo.
+- admin_unverify_payment_proof: Deshace verificación de comprobante.
+- admin_unreject_payment_proof: Deshace rechazo de comprobante.
+- admin_list_reservations: Lista todas las reservas con filtros opcionales.
+- admin_get_reservation_detail: Consulta detalle completo de una reserva por ID o código.
+- admin_confirm_reservation: Confirma una reserva (valida anticipación, pago, cupos).
+- admin_cancel_reservation: Cancela una reserva.
+- admin_list_equines: Lista todos los equinos del sistema.
+- admin_get_equine: Consulta detalle de un equino por ID.
+- admin_create_equine: Crea un nuevo equino.
+- admin_update_equine: Actualiza datos de un equino.
+- admin_deactivate_equine: Desactiva un equino (ya no está disponible).
+- admin_get_participant: Consulta detalle de un participante por ID.
+- admin_update_participant: Actualiza datos de un participante (no crea nuevos).
 - schedule_birthday_automation: Activa/desactiva mensajes de cumpleaños.
 - schedule_visit_anniversary_automation: Activa/desactiva mensajes de aniversario.
 
@@ -68,7 +84,7 @@ Reglas para canal admin:
 - Si pide "reporte de ventas", "dashboard", "estadísticas" → usa la tool analítica correspondiente.
 - Puedes usar herramientas de lectura (READ) sin restricciones.
 - Herramientas de escritura (CREATE/UPDATE/DELETE) requieren confirmación implícita del usuario.
-- NUNCA confirmes reservas ni verifiques pagos (siempre bloqueado por policy).
+- admin_confirm_reservation y admin_cancel_reservation son herramientas administrativas válidas; solo los usuarios con rol ADMIN pueden usarlas (el endpoint ya valida esto).
 """
 
         system_prompt = PLANNER_SYSTEM_PROMPT.format(

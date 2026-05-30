@@ -1031,3 +1031,274 @@ class AdminListHumanReviewRequestsOutput(BaseModel):
     total: int
     requests: list[AdminListHumanReviewRequestsItem] = Field(default_factory=list)
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin: Payment Proofs ─────────────────────────────────────
+
+
+class AdminGetPaymentProofOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_payment_proof"] = "admin_get_payment_proof"
+    found: bool
+    payment_proof_id: str | None = None
+    reservation_id: str | None = None
+    reservation_code: str | None = None
+    filename: str | None = None
+    content_type: str | None = None
+    size_bytes: int | None = None
+    status: str | None = None
+    uploaded_at: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminApprovePaymentOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_approve_payment"] = "admin_approve_payment"
+    approved: bool
+    payment_proof_id: str | None = None
+    new_status: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminRejectPaymentProofOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_reject_payment_proof"] = "admin_reject_payment_proof"
+    rejected: bool
+    payment_proof_id: str | None = None
+    new_status: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUnverifyPaymentProofOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_unverify_payment_proof"] = "admin_unverify_payment_proof"
+    unverified: bool
+    payment_proof_id: str | None = None
+    new_status: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUnrejectPaymentProofOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_unreject_payment_proof"] = "admin_unreject_payment_proof"
+    unrejected: bool
+    payment_proof_id: str | None = None
+    new_status: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin: Reservations ───────────────────────────────────────
+
+
+class AdminListReservationsItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_id: str
+    code: str
+    status: str
+    participant_count: int
+    payment_status: str
+    holder_name: str | None = None
+    holder_phone: str | None = None
+    experience_id: str
+    experience_name: str | None = None
+    requested_date: str | None = None
+    channel: str | None = None
+
+
+class AdminListReservationsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_reservations"] = "admin_list_reservations"
+    total: int
+    reservations: list[AdminListReservationsItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminGetReservationDetailOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_reservation_detail"] = "admin_get_reservation_detail"
+    found: bool
+    reservation_id: str | None = None
+    code: str | None = None
+    status: str | None = None
+    participant_count: int | None = None
+    payment_status: str | None = None
+    holder_name: str | None = None
+    holder_phone: str | None = None
+    experience_id: str | None = None
+    experience_name: str | None = None
+    requested_date: str | None = None
+    schedule_id: str | None = None
+    quoted_total_amount: str | None = None
+    participant_form_status: str | None = None
+    form_url: str | None = None
+    confirmed_at: str | None = None
+    cancelled_at: str | None = None
+    completed_at: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminConfirmReservationOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_confirm_reservation"] = "admin_confirm_reservation"
+    confirmed: bool
+    reservation_id: str | None = None
+    code: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminCancelReservationOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_cancel_reservation"] = "admin_cancel_reservation"
+    cancelled: bool
+    reservation_id: str | None = None
+    code: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin: Equines ────────────────────────────────────────────
+
+
+class AdminListEquinesItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    equine_id: str
+    name: str
+    is_available: bool
+    breed: str | None = None
+    sex: str | None = None
+    approximate_age_years: int | None = None
+
+
+class AdminListEquinesOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_equines"] = "admin_list_equines"
+    total: int
+    equines: list[AdminListEquinesItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminGetEquineOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_equine"] = "admin_get_equine"
+    found: bool
+    equine_id: str | None = None
+    name: str | None = None
+    approximate_birth_date: str | None = None
+    approximate_age_years: int | None = None
+    weight_kg: str | None = None
+    sex: str | None = None
+    breed: str | None = None
+    gait: str | None = None
+    is_available: bool | None = None
+    availability_notes: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminCreateEquineOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_create_equine"] = "admin_create_equine"
+    created: bool
+    equine_id: str | None = None
+    name: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateEquineOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_update_equine"] = "admin_update_equine"
+    updated: bool
+    equine_id: str | None = None
+    name: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminDeactivateEquineOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_deactivate_equine"] = "admin_deactivate_equine"
+    deactivated: bool
+    equine_id: str | None = None
+    name: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin: Participants ───────────────────────────────────────
+
+
+class AdminGetParticipantOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_participant"] = "admin_get_participant"
+    found: bool
+    participant_id: str | None = None
+    reservation_id: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    birth_date: str | None = None
+    document_type: str | None = None
+    document_number: str | None = None
+    phone: str | None = None
+    country: str | None = None
+    city: str | None = None
+    height_cm: str | None = None
+    weight_kg: str | None = None
+    experience_level: str | None = None
+    dietary_restrictions: str | None = None
+    blood_type: str | None = None
+    health_conditions: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_phone: str | None = None
+    accepted_data_processing: bool | None = None
+    accepted_risk_release: bool | None = None
+    is_completed: bool | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateParticipantOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_update_participant"] = "admin_update_participant"
+    updated: bool
+    participant_id: str | None = None
+    message: str = ""
+    is_completed: bool | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)

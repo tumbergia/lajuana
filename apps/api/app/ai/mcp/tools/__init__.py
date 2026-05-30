@@ -13,6 +13,30 @@ from app.ai.mcp.tools.admin_experiences import (
     admin_list_experiences_admin,
     admin_update_experience,
 )
+from app.ai.mcp.tools.admin_payment_proofs import (
+    admin_approve_payment,
+    admin_get_payment_proof,
+    admin_reject_payment_proof,
+    admin_unreject_payment_proof,
+    admin_unverify_payment_proof,
+)
+from app.ai.mcp.tools.admin_reservations import (
+    admin_cancel_reservation,
+    admin_confirm_reservation,
+    admin_get_reservation_detail,
+    admin_list_reservations,
+)
+from app.ai.mcp.tools.admin_equines import (
+    admin_create_equine,
+    admin_deactivate_equine,
+    admin_get_equine,
+    admin_list_equines,
+    admin_update_equine,
+)
+from app.ai.mcp.tools.admin_participants import (
+    admin_get_participant,
+    admin_update_participant,
+)
 from app.ai.mcp.tools.admin_reviews import admin_list_human_review_requests
 from app.ai.mcp.tools.admin_schedules import (
     admin_create_schedule,
@@ -326,6 +350,22 @@ __all__ = [
     "admin_update_reservation_rules",
     "admin_get_payment_instructions",
     "admin_list_human_review_requests",
+    "admin_list_equines",
+    "admin_get_equine",
+    "admin_create_equine",
+    "admin_update_equine",
+    "admin_deactivate_equine",
+    "admin_get_participant",
+    "admin_update_participant",
+    "admin_get_payment_proof",
+    "admin_approve_payment",
+    "admin_reject_payment_proof",
+    "admin_unverify_payment_proof",
+    "admin_unreject_payment_proof",
+    "admin_list_reservations",
+    "admin_get_reservation_detail",
+    "admin_confirm_reservation",
+    "admin_cancel_reservation",
     "check_experience_availability",
     "get_experience_detail",
     "get_public_business_rules",

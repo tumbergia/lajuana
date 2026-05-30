@@ -61,6 +61,22 @@ class ToolPolicyEngine:
         "schedule_birthday_automation",
         "schedule_visit_anniversary_automation",
         "admin_list_human_review_requests",
+        "admin_get_payment_proof",
+        "admin_approve_payment",
+        "admin_reject_payment_proof",
+        "admin_unverify_payment_proof",
+        "admin_unreject_payment_proof",
+        "admin_list_reservations",
+        "admin_get_reservation_detail",
+        "admin_confirm_reservation",
+        "admin_cancel_reservation",
+        "admin_list_equines",
+        "admin_get_equine",
+        "admin_create_equine",
+        "admin_update_equine",
+        "admin_deactivate_equine",
+        "admin_get_participant",
+        "admin_update_participant",
     }
     READ_TOOLS = {
         "list_experiences",
@@ -85,6 +101,12 @@ class ToolPolicyEngine:
         "admin_get_system_config",
         "admin_get_payment_instructions",
         "admin_list_human_review_requests",
+        "admin_get_payment_proof",
+        "admin_list_reservations",
+        "admin_get_reservation_detail",
+        "admin_list_equines",
+        "admin_get_equine",
+        "admin_get_participant",
     }
     LIMITED_WRITE_TOOLS = {
         "request_human_review",
@@ -97,6 +119,8 @@ class ToolPolicyEngine:
         "get_participant_form_status",
         "admin_create_user",
         "admin_update_user",
+        "admin_update_equine",
+        "admin_update_participant",
     }
     WRITE_TOOLS: set[str] = {
         "guide_report_incident",
@@ -112,6 +136,14 @@ class ToolPolicyEngine:
         "admin_update_schedule",
         "admin_deactivate_schedule",
         "admin_update_reservation_rules",
+        "admin_approve_payment",
+        "admin_reject_payment_proof",
+        "admin_unverify_payment_proof",
+        "admin_unreject_payment_proof",
+        "admin_confirm_reservation",
+        "admin_cancel_reservation",
+        "admin_create_equine",
+        "admin_deactivate_equine",
     }
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
