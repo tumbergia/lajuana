@@ -10,6 +10,7 @@ import '../../../../app/widgets/app_button.dart';
 import '../../../../app/widgets/app_section_header.dart';
 import '../../../../app/widgets/app_text_field.dart';
 import '../../../../app/theme/app_radii.dart';
+import '../../../../app/widgets/dashed_border_painter.dart';
 import '../../domain/models/equine_operational_status.dart';
 import '../equine_labels.dart';
 import '../models/equine_view_models.dart';
@@ -50,6 +51,27 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
   XFile? _selectedImage;
 
   bool get _isEditing => widget.existing != null;
+
+  /// Inventory number label for the header row, e.g. "#123".
+  String? get _headerInventoryNumber {
+    if (!_isEditing) return null;
+    final inv = widget.existing!.inventoryNumber;
+    return inv != null ? '#$inv' : null;
+  }
+
+  /// Species label for the header row.
+  String get _existingSpecies {
+    if (!_isEditing) return '';
+    final s = widget.existing!.species;
+    return s != 'unknown' ? equineSpeciesLabel(s) : '';
+  }
+
+  /// Breed label for the header row.
+  String? get _existingBreed {
+    if (!_isEditing) return null;
+    final b = widget.existing!.breed;
+    return (b != null && b.isNotEmpty) ? b : null;
+  }
 
   @override
   void initState() {
@@ -123,57 +145,177 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
             ),
             const SizedBox(height: 24),
 
-            // ── Image picker ──────────────────────────────────────────────
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: _pickImage,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      if (_imageBase64 != null)
-                        Center(
-                          child: FractionallySizedBox(
-                            widthFactor: 0.4,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: AspectRatio(
-                                aspectRatio: 1.0,
-                                child: Image.memory(
-                                  base64Decode(_imageBase64!),
+            // ── Photo + quick info header ─────────────────────────────────
+            InkWell(
+              onTap: _pickImage,
+              borderRadius: AppRadii.radiusLg,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: AppRadii.radiusLg,
+                      child: SizedBox(
+                        width: 140,
+                        height: 140,
+                        child: Stack(
+                          children: [
+                            // Base image or placeholder with hint
+                            Padding(
+                              padding: const EdgeInsets.all(3),
+                              child: SizedBox.expand(
+                                child: _imageBase64 != null
+                                    ? Image.memory(
+                                        base64Decode(_imageBase64!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Container(
+                                        color:
+                                            scheme.surfaceContainerHigh,
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Symbols
+                                                  .add_photo_alternate,
+                                              size: 36,
+                                              color: scheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Tocar para\nagregar foto',
+                                              textAlign:
+                                                  TextAlign.center,
+                                              style: TextStyle(
+                                                color: scheme
+                                                    .onSurfaceVariant,
+                                                fontSize: 10,
+                                                fontWeight:
+                                                    FontWeight.w500,
+                                                height: 1.3,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            // Semi-transparent overlay + camera + hint
+                            if (_imageBase64 != null)
+                              Padding(
+                                padding: const EdgeInsets.all(3),
+                                child: Container(
                                   width: double.infinity,
-                                  fit: BoxFit.cover,
+                                  height: double.infinity,
+                                  color: Colors.black
+                                      .withValues(alpha: 0.35),
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Symbols.camera_alt_rounded,
+                                        size: 28,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      const Text(
+                                        'Tocar para\ncambiar foto',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            // Dashed border on top
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: CustomPaint(
+                                  painter: DashedBorderPainter(
+                                    color: scheme.outlineVariant,
+                                  ),
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 140,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              _isEditing
+                                  ? widget.existing!.name
+                                  : 'Nuevo equino',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineMedium
+                                  ?.copyWith(
+                                    color: _isEditing
+                                        ? scheme.onSurface
+                                        : scheme.onSurfaceVariant,
+                                  ),
+                            ),
+                            if (_isEditing) ...[
+                              const SizedBox(height: 2),
+                              if (_headerInventoryNumber != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: Text(
+                                    _headerInventoryNumber!,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                          letterSpacing: 1.5,
+                                        ),
+                                  ),
+                                ),
+                              if (_existingSpecies.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 1),
+                                  child: Text(
+                                    _existingSpecies,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium,
+                                  ),
+                                ),
+                              if (_existingBreed != null)
+                                Text(
+                                  _existingBreed!,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ],
                           ),
-                        )
-                      else
-                        Icon(Symbols.add_photo_alternate,
-                            size: 48, color: scheme.onSurfaceVariant),
-                      const SizedBox(height: 8),
-                      Text(
-                        _imageBase64 != null
-                            ? 'Tocar para cambiar foto'
-                            : 'Tocar para agregar foto',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
                       ),
                     ],
                   ),
-                ),
               ),
             ),
-            const SizedBox(height: 16),
 
             // ── Identificación ──────────────────────────────────────────
             _sectionHeader('Identificación'),

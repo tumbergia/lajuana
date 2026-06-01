@@ -8,6 +8,7 @@ import '../../../../app/widgets/app_metric_card.dart';
 import '../../../../app/widgets/app_scaffold.dart';
 import '../../../../app/widgets/app_section_header.dart';
 import '../../../../app/widgets/app_status_banner.dart';
+import '../../../../app/widgets/dashed_border_painter.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../../infrastructure/mappers/equine_mapper.dart';
 import '../equine_labels.dart';
@@ -93,57 +94,100 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Encabezado
+        // Foto + info header
         Padding(
-          padding: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.only(bottom: 24),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      d.name,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      [
-                        if (d.inventoryNumber != null)
-                          '#${d.inventoryNumber}',
-                        if (d.species != 'unknown')
-                          equineSpeciesLabel(d.species),
-                        if (d.breed != null) d.breed!,
-                      ].where((e) => e.isNotEmpty).join(' · '),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
+              ClipRRect(
+                borderRadius: AppRadii.radiusLg,
+                child: SizedBox(
+                  width: 140,
+                  height: 140,
+                  child: Stack(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(3),
+                        child: EquineImageProvider(imageBase64: d.imageBase64),
+                      ),
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: AppBadge(
+                          label: d.statusLabel,
+                          tone: d.statusTone,
+                          uppercase: false,
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: DashedBorderPainter(
+                              color: scheme.outlineVariant,
+                            ),
                           ),
-                    ),
-                  ],
-                ),
-              ),
-              AppBadge(
-                label: d.statusLabel,
-                tone: d.statusTone,
-                uppercase: false,
-              ),
-            ],
-          ),
-        ),
-        // Imagen del equino
-        if (d.imageBase64 != null && d.imageBase64!.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Center(
-              child: FractionallySizedBox(
-                widthFactor: 0.4,
-                child: ClipRRect(
-                  borderRadius: AppRadii.radiusLg,
-                  child: EquineImageProvider(
-                    imageBase64: d.imageBase64,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: SizedBox(
+                    height: 140,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              d.name,
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                            const SizedBox(height: 2),
+                            if (d.inventoryNumber != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Text(
+                                  '#${d.inventoryNumber}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                        letterSpacing: 1.5,
+                                      ),
+                                ),
+                              ),
+                            if (d.species != 'unknown')
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 1),
+                                child: Text(
+                                  equineSpeciesLabel(d.species),
+                                  style:
+                                      Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                            if (d.breed != null && d.breed!.isNotEmpty)
+                              Text(
+                                d.breed!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                        color: scheme.onSurfaceVariant),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         // Métricas
