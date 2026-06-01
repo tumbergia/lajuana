@@ -17,8 +17,8 @@ class SaddleService:
         await doc.insert()
         return doc
 
-    async def list(self) -> list[SaddleDocument]:
-        return await SaddleDocument.find_all().to_list()
+    async def list(self, limit: int = 200, skip: int = 0) -> list[SaddleDocument]:
+        return await SaddleDocument.find_all().skip(skip).limit(limit).to_list()
 
     async def get(self, saddle_id: str) -> SaddleDocument:
         doc = await SaddleDocument.get(saddle_id)

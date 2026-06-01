@@ -210,10 +210,15 @@ class ExperienceService:
             self._raise_conflict_from_duplicate(exc)
         return doc
 
-    async def list(self, is_active: bool | None = None) -> list[ExperienceDocument]:
+    async def list(
+        self,
+        is_active: bool | None = None,
+        limit: int = 200,
+        skip: int = 0,
+    ) -> list[ExperienceDocument]:
         if is_active is None:
-            return await ExperienceDocument.find_all().to_list()
-        return await ExperienceDocument.find({"is_active": is_active}).to_list()
+            return await ExperienceDocument.find_all().skip(skip).limit(limit).to_list()
+        return await ExperienceDocument.find({"is_active": is_active}).skip(skip).limit(limit).to_list()
 
     async def get(self, experience_id: str) -> ExperienceDocument:
         doc = await ExperienceDocument.get(experience_id)

@@ -164,13 +164,11 @@ class ConversationTurnWorker:
             return False
 
         try:
-            events = []
-            for msg_id in reloaded.message_ids:
-                event = await WhatsAppInboundEventDocument.find_one(
-                    {"wa_message_id": msg_id}
-                )
-                if event:
-                    events.append(event)
+            events_docs = await WhatsAppInboundEventDocument.find(
+                {"wa_message_id": {"$in": reloaded.message_ids}}
+            ).to_list()
+            events_dict = {str(e.wa_message_id): e for e in events_docs}
+            events = [events_dict[mid] for mid in reloaded.message_ids if mid in events_dict]
 
             events.sort(key=lambda e: e.received_at or datetime(2020, 1, 1, tzinfo=UTC))
             combined_input = combine_messages(events)

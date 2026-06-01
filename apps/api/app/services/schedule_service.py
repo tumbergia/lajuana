@@ -65,6 +65,8 @@ class ScheduleService:
         date_to: date | None = None,
         status: ScheduleStatus | None = None,
         is_active: bool | None = None,
+        limit: int = 200,
+        skip: int = 0,
     ) -> list[ScheduleDocument]:
         query: dict[str, object] = {}
         if experience_id:
@@ -81,8 +83,8 @@ class ScheduleService:
         if is_active is not None:
             query["is_active"] = is_active
         if not query:
-            return await ScheduleDocument.find_all().to_list()
-        return await ScheduleDocument.find(query).to_list()
+            return await ScheduleDocument.find_all().skip(skip).limit(limit).to_list()
+        return await ScheduleDocument.find(query).skip(skip).limit(limit).to_list()
 
     async def get(self, schedule_id: str) -> ScheduleDocument:
         doc = await ScheduleDocument.get(schedule_id)

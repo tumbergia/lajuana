@@ -1,3 +1,5 @@
+import logging
+
 from app.documents import (
     AssignmentDocument,
     EquineDocument,
@@ -26,6 +28,8 @@ from app.schemas.reservation import ReservationListItemSchema, ReservationRespon
 from app.schemas.saddle import SaddleResponseSchema
 from app.schemas.schedule import ScheduleResponseSchema
 from app.schemas.service_log import ServiceLogResponseSchema
+
+logger = logging.getLogger(__name__)
 
 
 def user_to_response(user: UserDocument) -> UserResponseSchema:
@@ -105,9 +109,12 @@ async def reservation_to_response(doc: ReservationDocument) -> ReservationRespon
             try:
                 participants.append(participant_to_response(p))
             except Exception:
-                # Skip participants that fail to map (e.g. legacy data with
-                # missing fields) so the whole reservation isn't broken.
-                pass
+                logger.warning(
+                    "[mapper] Failed to map participant | reservation=%s | participant=%s",
+                    doc.id,
+                    p.id,
+                    exc_info=True,
+                )
 
     # Resolve payment proofs by IDs.
     payment_proofs: list[PaymentProofResponseSchema] = []

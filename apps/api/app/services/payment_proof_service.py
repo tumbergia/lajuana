@@ -1,9 +1,12 @@
 import asyncio
+import logging
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from uuid import uuid4
 
 from beanie import PydanticObjectId
+
+logger = logging.getLogger(__name__)
 
 from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
 from app.common.enums import PaymentStatus, ReservationStatus, UserRole
@@ -508,7 +511,10 @@ class PaymentProofService:
             try:
                 await doc.save()
             except Exception:
-                pass
+                logger.exception(
+                    "[payment_proof=%s] Failed to rollback payment proof save",
+                    doc.id,
+                )
             raise ApiError(
                 status_code=500,
                 code=ErrorCode.INTERNAL_ERROR,

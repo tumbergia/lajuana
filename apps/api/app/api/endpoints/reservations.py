@@ -1,11 +1,11 @@
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.api.deps import require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
-from app.common.enums import Permission
+from app.common.enums import Permission, UserRole
 from app.documents import UserDocument
 from app.schemas.participant import (
     ParticipantCreateSchema,
@@ -92,8 +92,14 @@ async def list_reservations(
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_READ)),
     ],
+    limit: int = Query(default=200, ge=1, le=1000, description="Max items"),
+    skip: int = Query(default=0, ge=0, description="Items to skip"),
 ) -> list[ReservationListItemSchema]:
-    docs = await reservation_service.list(actor_role=current_user.role)
+    docs = await reservation_service.list(
+        actor_role=current_user.role,
+        limit=limit,
+        skip=skip,
+    )
     if not docs:
         return []
 

@@ -1,3 +1,5 @@
+import asyncio
+
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import (
@@ -12,14 +14,17 @@ from app.schemas.assignment import AssignmentCreateSchema, AssignmentUpdateSchem
 
 class AssignmentService:
     async def create(self, payload: AssignmentCreateSchema) -> AssignmentDocument:
-        reservation = await ReservationDocument.get(payload.reservation_id)
+        reservation, participant, equine = await asyncio.gather(
+            ReservationDocument.get(payload.reservation_id),
+            ParticipantDocument.get(payload.participant_id),
+            EquineDocument.get(payload.equine_id),
+        )
         if reservation is None:
             raise ApiError(
                 status_code=404,
                 code=ErrorCode.RESERVATION_NOT_FOUND,
                 message="Reserva no encontrada.",
             )
-        participant = await ParticipantDocument.get(payload.participant_id)
         if participant is None:
             raise ApiError(
                 status_code=404,
@@ -32,7 +37,6 @@ class AssignmentService:
                 code=ErrorCode.ASSIGNMENT_PARTICIPANT_NOT_IN_RESERVATION,
                 message="El participante no pertenece a la reserva.",
             )
-        equine = await EquineDocument.get(payload.equine_id)
         if equine is None:
             raise ApiError(
                 status_code=404,

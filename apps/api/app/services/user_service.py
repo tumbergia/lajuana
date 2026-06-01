@@ -34,8 +34,8 @@ class UserService:
         await user.insert()
         return user
 
-    async def list_users(self) -> list[UserDocument]:
-        return await UserDocument.find_all().to_list()
+    async def list_users(self, limit: int = 200, skip: int = 0) -> list[UserDocument]:
+        return await UserDocument.find_all().skip(skip).limit(limit).to_list()
 
     async def get_user(self, user_id: str) -> UserDocument:
         user = await UserDocument.get(user_id)

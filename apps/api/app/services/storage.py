@@ -1,8 +1,11 @@
 import base64
 import io
+import logging
 from pathlib import Path
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class LocalStorageAdapter:
@@ -73,7 +76,11 @@ class S3StorageAdapter:
         try:
             self._client.delete_object(Bucket=self.bucket, Key=storage_key)
         except Exception:
-            pass
+            logger.warning(
+                "[s3] Failed to delete object | key=%s",
+                storage_key,
+                exc_info=True,
+            )
 
 
 class _FallbackS3Client:

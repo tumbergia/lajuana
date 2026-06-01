@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime, timedelta
 
 from beanie import PydanticObjectId
@@ -126,78 +127,82 @@ class NotificationService:
     async def enqueue_payment_received(
         self, reservation: ReservationDocument
     ) -> list[NotificationOutboxDocument]:
-        entries: list[NotificationOutboxDocument] = []
-
         internal_users = await UserDocument.find(
             {"is_active": True, "role": UserRole.ADMIN},
         ).to_list()
+
+        vars = self._build_customer_vars(reservation)
+        tasks = []
         for user in internal_users:
             if user.email:
-                entry = await self.enqueue(
+                tasks.append(
+                    self.enqueue(
+                        event_type=NotificationEventType.RESERVATION_CONFIRMED,
+                        reservation_id=str(reservation.id),
+                        channel=NotificationChannel.EMAIL,
+                        recipient_type="internal",
+                        recipient_identifier=user.email,
+                        variables=vars,
+                    )
+                )
+            tasks.append(
+                self.enqueue(
                     event_type=NotificationEventType.RESERVATION_CONFIRMED,
                     reservation_id=str(reservation.id),
-                    channel=NotificationChannel.EMAIL,
+                    channel=NotificationChannel.IN_APP,
                     recipient_type="internal",
-                    recipient_identifier=user.email,
-                    variables=self._build_customer_vars(reservation),
+                    recipient_identifier=str(user.id),
+                    variables=vars,
                 )
-                entries.append(entry)
-
-            in_app = await self.enqueue(
-                event_type=NotificationEventType.RESERVATION_CONFIRMED,
-                reservation_id=str(reservation.id),
-                channel=NotificationChannel.IN_APP,
-                recipient_type="internal",
-                recipient_identifier=str(user.id),
-                variables=self._build_customer_vars(reservation),
             )
-            entries.append(in_app)
 
-        return entries
+        return list(await asyncio.gather(*tasks))
 
     async def enqueue_reservation_confirmed(
         self, reservation: ReservationDocument
     ) -> list[NotificationOutboxDocument]:
-        entries: list[NotificationOutboxDocument] = []
+        vars = self._build_customer_vars(reservation)
+        tasks: list[NotificationOutboxDocument] = []
 
         if reservation.holder_email:
-            vars = self._build_customer_vars(reservation)
-            entry = await self.enqueue(
-                event_type=NotificationEventType.RESERVATION_CONFIRMED,
-                reservation_id=str(reservation.id),
-                channel=NotificationChannel.EMAIL,
-                recipient_type="customer",
-                recipient_identifier=reservation.holder_email,
-                variables=vars,
+            tasks.append(
+                self.enqueue(
+                    event_type=NotificationEventType.RESERVATION_CONFIRMED,
+                    reservation_id=str(reservation.id),
+                    channel=NotificationChannel.EMAIL,
+                    recipient_type="customer",
+                    recipient_identifier=reservation.holder_email,
+                    variables=vars,
+                )
             )
-            entries.append(entry)
 
         internal_users = await UserDocument.find(
             {"is_active": True, "role": UserRole.ADMIN},
         ).to_list()
         for user in internal_users:
             if user.email:
-                entry = await self.enqueue(
+                tasks.append(
+                    self.enqueue(
+                        event_type=NotificationEventType.RESERVATION_CONFIRMED,
+                        reservation_id=str(reservation.id),
+                        channel=NotificationChannel.EMAIL,
+                        recipient_type="internal",
+                        recipient_identifier=user.email,
+                        variables=vars,
+                    )
+                )
+            tasks.append(
+                self.enqueue(
                     event_type=NotificationEventType.RESERVATION_CONFIRMED,
                     reservation_id=str(reservation.id),
-                    channel=NotificationChannel.EMAIL,
+                    channel=NotificationChannel.IN_APP,
                     recipient_type="internal",
-                    recipient_identifier=user.email,
+                    recipient_identifier=str(user.id),
                     variables=vars,
                 )
-                entries.append(entry)
-
-            in_app = await self.enqueue(
-                event_type=NotificationEventType.RESERVATION_CONFIRMED,
-                reservation_id=str(reservation.id),
-                channel=NotificationChannel.IN_APP,
-                recipient_type="internal",
-                recipient_identifier=str(user.id),
-                variables=vars,
             )
-            entries.append(in_app)
 
-        return entries
+        return list(await asyncio.gather(*tasks))
 
     async def enqueue_post_service(
         self, reservation: ReservationDocument

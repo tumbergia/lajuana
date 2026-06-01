@@ -1,11 +1,14 @@
 """Servicio de negocio para el agregado Reservation."""
 
+import logging
 import secrets
 from datetime import UTC, date, datetime
 
 from beanie import PydanticObjectId
 from beanie.exceptions import CollectionWasNotInitialized
 from pymongo.errors import DuplicateKeyError
+
+logger = logging.getLogger(__name__)
 
 from app.common.enums import (
     Channel,
@@ -193,6 +196,11 @@ class ReservationService:
             try:
                 experience = await ExperienceDocument.get(experience_id)
             except Exception:
+                logger.warning(
+                    "[reservation] Failed to resolve experience | id=%s",
+                    experience_id,
+                    exc_info=True,
+                )
                 experience = None
             if experience is None or not getattr(experience, "is_active", True):
                 raise ApiError(
@@ -260,16 +268,24 @@ class ReservationService:
             try:
                 await self.notification_service.enqueue_reservation_created(doc)
             except Exception:
-                pass
+                logger.exception(
+                    "[reservation=%s] Failed to enqueue reservation created",
+                    doc.id,
+                )
 
         return doc
 
-    async def list(self, actor_role: UserRole) -> list[ReservationDocument]:
+    async def list(
+        self,
+        actor_role: UserRole,
+        limit: int = 200,
+        skip: int = 0,
+    ) -> list[ReservationDocument]:
         if actor_role == UserRole.GUIDE:
             return await ReservationDocument.find(
                 {"status": ReservationStatus.CONFIRMED}
-            ).to_list()
-        return await ReservationDocument.find_all().to_list()
+            ).skip(skip).limit(limit).to_list()
+        return await ReservationDocument.find_all().skip(skip).limit(limit).to_list()
 
     async def get(
         self,
@@ -453,7 +469,10 @@ class ReservationService:
             try:
                 await self.notification_service.enqueue_reservation_confirmed(reservation)
             except Exception:
-                pass
+                logger.exception(
+                    "[reservation=%s] Failed to enqueue reservation confirmed",
+                    reservation.id,
+                )
 
             _, raw_token = await self.form_link_service.generate(
                 reservation_id=reservation_id,
@@ -501,7 +520,10 @@ class ReservationService:
                 )
                 await log.insert()
             except Exception:
-                pass
+                logger.exception(
+                    "[reservation=%s] Failed to insert audit log",
+                    reservation.id,
+                )
 
             return reservation
         except Exception:
@@ -624,13 +646,19 @@ class ReservationService:
             try:
                 await self.notification_service.enqueue_payment_received(reservation)
             except Exception:
-                pass
+                logger.exception(
+                    "[reservation=%s] Failed to enqueue payment received",
+                    reservation.id,
+                )
 
         if target_status == ReservationStatus.COMPLETED:
             try:
                 await self.notification_service.enqueue_post_service(reservation)
             except Exception:
-                pass
+                logger.exception(
+                    "[reservation=%s] Failed to enqueue post service",
+                    reservation.id,
+                )
 
         return reservation
 
