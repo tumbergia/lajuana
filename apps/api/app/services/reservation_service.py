@@ -107,6 +107,10 @@ class ReservationService:
                 {"$set": {"status": schedule.status.value}},
             )
         except CollectionWasNotInitialized:
+            logger.warning(
+                "[_save_schedule_status] Collection not initialized, using fallback save | schedule=%s",
+                schedule.id,
+            )
             await schedule.save()
 
     async def _sync_day_lock_fields(self, reservation: ReservationDocument) -> None:
@@ -230,6 +234,10 @@ class ReservationService:
                         Channel(data.get("channel")) if data.get("channel") is not None else None
                     )
                 except ValueError:
+                    logger.debug(
+                        "[reservation] Invalid channel value, defaulting to None | raw=%s",
+                        data.get("channel"),
+                    )
                     channel = None
                 status = (
                     ReservationStatus.QUOTED
@@ -685,6 +693,7 @@ class ReservationService:
         self,
         reservation_id: str,
         actor_id: PydanticObjectId | None = None,
+        notify_client: bool = True,
     ) -> ReservationDocument:
         reservation = await self.get(reservation_id)
         previous_status = reservation.status
@@ -701,6 +710,24 @@ class ReservationService:
         reservation.cancelled_at = datetime.now(UTC)
         reservation.updated_by = actor_id
         await reservation.save()
+
+        # Send WhatsApp cancellation notification (best-effort via outbox)
+        if notify_client:
+            try:
+                from app.documents import ExperienceDocument
+
+                experience = await ExperienceDocument.get(reservation.experience_id)
+                experience_name = experience.name if experience else ""
+                await self.notification_service.enqueue_reservation_cancelled(
+                    reservation=reservation,
+                    experience_name=experience_name,
+                )
+            except Exception:
+                logger.exception(
+                    "[reservation=%s] Failed to enqueue cancellation WhatsApp",
+                    reservation.id,
+                )
+
         return reservation
 
     async def validate_participant_forms_completed(

@@ -10,8 +10,10 @@ from app.api.deps import (
     require_permissions,
 )
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
-from app.common.enums import Permission
-from app.documents import UserDocument
+from app.common.enums import PaymentStatus, Permission
+from app.common.labels import ErrorCode
+from app.core.errors import ApiError
+from app.documents import ReservationDocument, UserDocument
 from app.schemas.participant import (
     ParticipantCreateSchema,
     ParticipantResponseSchema,
@@ -24,6 +26,7 @@ from app.schemas.reservation import (
     ReservationCreateSchema,
     ReservationListItemSchema,
     ReservationResponseSchema,
+    ReservationSelfCancelSchema,
     ReservationStatusTransitionSchema,
     ReservationUpdateSchema,
 )
@@ -259,6 +262,40 @@ async def cancel_reservation(
     reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
     doc = await reservation_service.cancel_reservation(reservation_id, actor_id=current_user.id)
+    return await reservation_to_response(doc)
+
+
+@router.post(
+    "/self-cancel",
+    response_model=ReservationResponseSchema,
+    summary="Cancelar reserva propia",
+    description="Permite al titular de una reserva cancelarla por su propia cuenta si aún no ha realizado el pago.",
+    operation_id="selfCancelReservation",
+)
+async def self_cancel_reservation(
+    payload: ReservationSelfCancelSchema,
+    reservation_service: ReservationService = Depends(get_reservation_service),
+) -> ReservationResponseSchema:
+    reservation = await ReservationDocument.find_one({
+        "code": payload.reservation_code,
+        "holder_phone": payload.holder_phone,
+    })
+    if reservation is None:
+        raise ApiError(
+            status_code=404,
+            code=ErrorCode.RESERVATION_NOT_FOUND,
+            message="Reserva no encontrada.",
+        )
+    if reservation.payment_status != PaymentStatus.PENDING:
+        raise ApiError(
+            status_code=409,
+            code=ErrorCode.RESERVATION_INVALID_STATUS_TRANSITION,
+            message="Solo se pueden cancelar reservas con pago pendiente.",
+        )
+    doc = await reservation_service.cancel_reservation(
+        str(reservation.id),
+        actor_id=None,
+    )
     return await reservation_to_response(doc)
 
 

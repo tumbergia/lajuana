@@ -388,6 +388,27 @@ class NotificationService:
             variables=vars,
         )
 
+    async def enqueue_reservation_cancelled(
+        self,
+        reservation: ReservationDocument,
+        experience_name: str,
+    ) -> NotificationOutboxDocument | None:
+        if not reservation.holder_phone:
+            return None
+        vars = {
+            "customer_name": reservation.holder_name or "Cliente",
+            "reservation_code": reservation.code,
+            "experience_name": experience_name,
+        }
+        return await self.enqueue(
+            event_type=NotificationEventType.RESERVATION_CANCELLED,
+            reservation_id=str(reservation.id),
+            channel=NotificationChannel.WHATSAPP,
+            recipient_type="customer",
+            recipient_identifier=reservation.holder_phone,
+            variables=vars,
+        )
+
     def _build_customer_vars(self, reservation: ReservationDocument) -> dict[str, str]:
         return {
             "customer_name": reservation.holder_name or "Cliente",

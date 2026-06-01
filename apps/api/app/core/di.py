@@ -217,6 +217,10 @@ class Container:
         return self._services["assignment_service"]
 
     @property
+    def ops_service(self) -> Any:
+        return self._services["ops_service"]
+
+    @property
     def service_log_service(self) -> Any:
         return self._services["service_log_service"]
 

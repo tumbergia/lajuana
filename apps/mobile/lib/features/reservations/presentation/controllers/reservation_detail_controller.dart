@@ -56,6 +56,11 @@ class ReservationDetailController extends ChangeNotifier {
   String? confirmationErrorCode;
   String? confirmationErrorMessage;
 
+  // Cancelacion de reserva
+  ReservationActionState cancellationState = ReservationActionState.idle;
+  String? cancellationErrorCode;
+  String? cancellationErrorMessage;
+
   @override
   void dispose() {
     _disposed = true;
@@ -70,6 +75,9 @@ class ReservationDetailController extends ChangeNotifier {
     confirmationState = ReservationActionState.idle;
     confirmationErrorCode = null;
     confirmationErrorMessage = null;
+    cancellationState = ReservationActionState.idle;
+    cancellationErrorCode = null;
+    cancellationErrorMessage = null;
   }
 
   /// Reset action state after a short delay so the UI can show "success" briefly
@@ -305,6 +313,54 @@ class ReservationDetailController extends ChangeNotifier {
       notifyListeners();
       _resetConfirmationDelayed();
     }
+  }
+
+  /// Cancela la reserva actual. Solo si [isAdmin] es true.
+  /// No ejecuta si ya hay una accion en curso (doble-tap guard).
+  Future<void> cancelReservation({
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      cancellationErrorCode = 'permission.denied';
+      cancellationErrorMessage = 'No tienes permisos para cancelar reservas.';
+      cancellationState = ReservationActionState.error;
+      notifyListeners();
+      return;
+    }
+    if (cancellationState != ReservationActionState.idle) return;
+
+    cancellationState = ReservationActionState.confirming;
+    cancellationErrorCode = null;
+    cancellationErrorMessage = null;
+    notifyListeners();
+
+    try {
+      detail = await _repository.cancelReservation(
+        reservationId: detail!.id,
+      );
+      cancellationState = ReservationActionState.success;
+    } on ReservationsApiFailure catch (e) {
+      cancellationErrorCode = e.code;
+      cancellationErrorMessage = e.message;
+      cancellationState = ReservationActionState.error;
+    } catch (_) {
+      cancellationErrorCode = 'common.error';
+      cancellationErrorMessage = 'Error inesperado al cancelar reserva.';
+      cancellationState = ReservationActionState.error;
+    } finally {
+      notifyListeners();
+      _resetCancellationDelayed();
+    }
+  }
+
+  void _resetCancellationDelayed() {
+    Future.microtask(() {
+      if (_disposed) return;
+      if (cancellationState != ReservationActionState.idle) {
+        cancellationState = ReservationActionState.idle;
+        notifyListeners();
+      }
+    });
   }
 
   void _resetConfirmationDelayed() {

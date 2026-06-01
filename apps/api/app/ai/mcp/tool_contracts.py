@@ -368,6 +368,70 @@ class AttachPaymentProofToReservationOutput(BaseModel):
     response: str
 
 
+# ── Cliente: cancelar / modificar reserva ──────────────────────────
+
+
+class CancelReservationInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_code: str
+    holder_phone: str
+
+
+class CancelReservationOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    cancelled: bool
+    trace_id: str
+    tool_name: Literal["cancel_reservation"] = "cancel_reservation"
+    reservation_code: str | None = None
+    message: str = ""
+    response: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class UpdateReservationDateInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_code: str
+    holder_phone: str
+    new_date: date
+
+
+class UpdateReservationDateOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    updated: bool
+    trace_id: str
+    tool_name: Literal["update_reservation_date"] = "update_reservation_date"
+    reservation_code: str | None = None
+    new_date: date | None = None
+    message: str = ""
+    response: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class UpdateReservationParticipantsInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_code: str
+    holder_phone: str
+    new_participant_count: int = Field(ge=1, le=8)
+
+
+class UpdateReservationParticipantsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    updated: bool
+    trace_id: str
+    tool_name: Literal["update_reservation_participants"] = "update_reservation_participants"
+    reservation_code: str | None = None
+    new_participant_count: int | None = None
+    message: str = ""
+    response: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
 # ── Horizonte 4: Formulario de participantes ────────────────────────
 
 

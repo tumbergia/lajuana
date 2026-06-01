@@ -204,6 +204,7 @@ class NotificationEventType(StrEnum):
     PAYMENT_REJECTED_SENT = "payment_rejected_sent"
     RESERVATION_CONFIRMED_LOGISTICS_SENT = "reservation_confirmed_logistics_sent"
     PARTICIPANT_FORM_RESENT = "participant_form_resent"
+    RESERVATION_CANCELLED = "reservation_cancelled"
 
 
 class NotificationChannel(StrEnum):

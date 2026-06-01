@@ -70,6 +70,7 @@ Este documento lista todos los endpoints expuestos por `apps/api` según el esqu
 | POST | `/api/v1/reservations/{reservation_id}/confirm` | `confirmReservationById` | `ReservationConfirmSchema` | `200 ReservationResponseSchema` | `200, 400, 401, 403, 404, 409, 422` |
 | POST | `/api/v1/reservations/{reservation_id}/status` | `transitionReservationStatusById` | `ReservationStatusTransitionSchema` | `200 ReservationResponseSchema` | `200, 401, 403, 404, 409, 422` |
 | POST | `/api/v1/reservations/{reservation_id}/cancel` | `cancelReservationById` | `ReservationCancelSchema` | `200 ReservationResponseSchema` | `200, 400, 401, 403, 404, 409, 422` |
+| POST | `/api/v1/reservations/self-cancel` | `selfCancelReservation` | `ReservationSelfCancelSchema` | `200 ReservationResponseSchema` | `200, 404, 409, 422` |
 | POST | `/api/v1/reservations/{reservation_id}/payment-proofs` | `createPaymentProofForReservation` | `PaymentProofCreateSchema` | `201 PaymentProofResponseSchema` | `201, 400, 401, 403, 404, 422` |
 | POST | `/api/v1/reservations/{reservation_id}/participants` | `createParticipantForReservation` | `ParticipantCreateSchema` | `201 ParticipantResponseSchema` | `201, 400, 401, 403, 404, 422` |
 
@@ -149,9 +150,68 @@ Este documento lista todos los endpoints expuestos por `apps/api` según el esqu
 | GET | `/api/v1/policies/{policy_id}` | `getPolicyById` | — | `200 PolicyResponseSchema` | `200, 401, 403, 404, 422` |
 | PATCH | `/api/v1/policies/{policy_id}` | `updatePolicyById` | `PolicyUpdateSchema` | `200 PolicyResponseSchema` | `200, 401, 403, 404, 409, 422` |
 
+## Files
+
+| Método | Ruta | operation_id | Request body | Respuesta principal | Códigos HTTP |
+|---|---|---|---|---|---|
+| POST | `/api/v1/files/init-upload` | `initFileUpload` | `FileInitUploadRequestSchema` | `200 FileInitUploadResponseSchema` | `200, 400, 401, 422` |
+| POST | `/api/v1/files/{upload_id}/complete` | `completeFileUpload` | `FileCompleteUploadRequestSchema` | `200 FileCompleteUploadResponseSchema` | `200, 400, 401, 404, 422` |
+
+## Notifications
+
+| Método | Ruta | operation_id | Request body | Respuesta principal | Códigos HTTP |
+|---|---|---|---|---|---|
+| GET | `/api/v1/notifications/templates` | `listNotificationTemplates` | — | `200 list[NotificationTemplateResponseSchema]` | `200, 401, 403` |
+| POST | `/api/v1/notifications/reset/{reservation_id}` | `resetReservationNotifications` | — | `200` | `200, 401, 403` |
+| POST | `/api/v1/notifications/test/{reservation_id}` | `testSendNotification` | — | `200 NotificationOutboxResponseSchema` | `200, 401, 403, 404` |
+| GET | `/api/v1/notifications/outbox/{notification_id}` | `getNotificationOutbox` | — | `200 NotificationOutboxResponseSchema` | `200, 401, 403, 404` |
+| POST | `/api/v1/notifications/outbox/{notification_id}/retry` | `retryNotification` | — | `200 NotificationOutboxResponseSchema` | `200, 401, 403, 404` |
+| POST | `/api/v1/notifications/outbox/{notification_id}/cancel` | `cancelNotification` | — | `200 NotificationOutboxResponseSchema` | `200, 401, 403, 404` |
+| GET | `/api/v1/notifications/in-app` | `listInAppNotifications` | — | `200 list[InAppNotificationResponseSchema]` | `200, 401, 403` |
+
+## Participant Forms
+
+| Método | Ruta | operation_id | Request body | Respuesta principal | Códigos HTTP |
+|---|---|---|---|---|---|
+| GET | `/api/v1/public/participant-forms/{token}/validate` | `validateParticipantFormToken` | — | `200 ParticipantFormTokenValidationResponse` | `200, 404, 422` |
+| GET | `/api/v1/public/participant-form/{token}` | `validateParticipantFormTokenVercel` | — | `200 ParticipantFormTokenValidationResponse` | `200, 404, 422` |
+| POST | `/api/v1/public/participant-form/{token}` | `createParticipantViaFormVercel` | `ParticipantPublicCreateSchema` | `201 ParticipantResponseSchema` | `201, 400, 404, 422` |
+| GET | `/api/v1/public/participant-forms/{token}/status` | `getPublicParticipantFormStatus` | — | `200 ParticipantFormPublicStatusResponse` | `200, 404` |
+| POST | `/api/v1/public/participant-forms/{token}/participants` | `createParticipantViaForm` | `ParticipantPublicCreateSchema` | `201 ParticipantResponseSchema` | `201, 400, 404, 422` |
+| GET | `/api/v1/public/participant-forms/risk-release-text` | `getRiskReleaseText` | — | `200` | `200` |
+| POST | `/api/v1/reservations/{reservation_id}/participant-form-link` | `generateParticipantFormLink` | `ParticipantFormLinkGenerateRequest` | `201 ParticipantFormLinkGenerateResponse` | `201, 400, 404, 422` |
+| POST | `/api/v1/reservations/{reservation_id}/participant-form-link/revoke` | `revokeParticipantFormLink` | — | `200 ParticipantFormLinkStatusResponse` | `200, 404` |
+| POST | `/api/v1/reservations/{reservation_id}/participant-form-link/resend` | `resendParticipantFormLink` | — | `200 ReservationResponseSchema` | `200, 401, 403, 404` |
+| GET | `/api/v1/reservations/{reservation_id}/participant-form-link` | `getParticipantFormLinkStatus` | — | `200 ParticipantFormLinkStatusResponse \| null` | `200` |
+
+## Sync
+
+| Método | Ruta | operation_id | Request body | Respuesta principal | Códigos HTTP |
+|---|---|---|---|---|---|
+| GET | `/api/v1/sync/bootstrap` | `getSyncBootstrap` | — | `200` bootstrap payload | `200, 401` |
+| POST | `/api/v1/sync/pull` | `pullSyncChanges` | `SyncPullRequestSchema` | `200 SyncPullResponseSchema` | `200, 400, 401, 422` |
+| POST | `/api/v1/sync/push` | `pushSyncOperations` | `SyncPushRequestSchema` | `200 SyncPushResponseSchema` | `200, 400, 401, 409, 422` |
+
+## WhatsApp Webhooks
+
+| Método | Ruta | operation_id | Request body | Respuesta principal | Códigos HTTP |
+|---|---|---|---|---|---|
+| GET | `/api/v1/whatsapp/webhook` | `verifyWebhook` | — | `200` challenge response | `200, 403` |
+| POST | `/api/v1/whatsapp/webhook` | `receiveWebhook` | `dict` (raw Meta payload) | `200` | `200` |
+
+## Assistant / Ask
+
+| Método | Ruta | operation_id | Request body | Respuesta principal | Códigos HTTP |
+|---|---|---|---|---|---|
+| POST | `/api/v1/ask` | `ask_api_v1_ask_post` | `AskRequest` | `200 AskResponse` | `200` |
+| POST | `/api/v1/admin/ask` | — (inline) | `AdminAskRequest` | `200 AskResponse` | `200, 401, 403` |
+
 ## Notas de mantenimiento
 
 - Esta referencia debe actualizarse cuando cambie cualquier ruta, schema de entrada/salida, `operation_id` o códigos HTTP.
 - La fuente de verdad contractual sigue siendo OpenAPI + `ENDPOINT_DOCS` + `BUSINESS_ERROR_CASES`.
 - Para detalle narrativo de reglas de negocio, usar `docs/architecture/api.md`.
+- Para detalle del pipeline del asistente AI, usar `docs/architecture/chatbot-whatsapp-v2.md`.
+- Para detalle de tools MCP internas, usar `docs/architecture/tools.md`.
+- Para contratos observados de reservas, usar `docs/mobile/reservations-api-contract-observed.md`.
 

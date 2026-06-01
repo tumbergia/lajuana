@@ -36,6 +36,11 @@ class ReservationCancelSchema(BaseModel):
     reason: str | None = None
 
 
+class ReservationSelfCancelSchema(BaseModel):
+    reservation_code: str
+    holder_phone: str
+
+
 class ReservationStatusTransitionSchema(BaseModel):
     target_status: ReservationStatus
 

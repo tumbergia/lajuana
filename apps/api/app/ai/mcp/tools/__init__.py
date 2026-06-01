@@ -78,6 +78,11 @@ from app.ai.mcp.tools.participant_forms import (
     get_participant_form_status,
 )
 from app.ai.mcp.tools.quote import quote_experience
+from app.ai.mcp.tools.client_reservations import (
+    cancel_reservation,
+    update_reservation_date,
+    update_reservation_participants,
+)
 from app.ai.mcp.tools.reservation_draft import (
     attach_payment_proof_to_reservation,
     create_reservation_draft,
@@ -382,6 +387,9 @@ __all__ = [
     "attach_payment_proof_to_reservation",
     "get_reservation_public_summary",
     "get_reservation_status_by_phone",
+    "cancel_reservation",
+    "update_reservation_date",
+    "update_reservation_participants",
     "request_human_review",
     "generate_participant_form_link",
     "get_participant_form_status",

@@ -12,6 +12,7 @@ from app.ai.mcp.tools import (
     admin_get_sales_summary,
     admin_update_equine_availability,
     attach_payment_proof_to_reservation,
+    cancel_reservation,
     check_experience_availability,
     create_reservation_draft,
     generate_participant_form_link,
@@ -30,6 +31,8 @@ from app.ai.mcp.tools import (
     schedule_visit_anniversary_automation,
     send_post_service_message,
     suggest_alternative_dates,
+    update_reservation_date,
+    update_reservation_participants,
 )
 
 # NOTE: This standalone MCP server exposes ALL registered tools without any
@@ -153,6 +156,32 @@ mcp.tool(
         "Consulta el estado de una reserva por telefono del titular. No modifica ningun dato."
     ),
 )(get_reservation_status_by_phone)
+
+mcp.tool(
+    name="cancel_reservation",
+    description=(
+        "Permite al titular de una reserva cancelarla por su propia cuenta. "
+        "Solo funciona si la reserva aun no tiene pago registrado (estado pendiente). "
+        "Requiere codigo de reserva y telefono del titular."
+    ),
+)(cancel_reservation)
+
+mcp.tool(
+    name="update_reservation_date",
+    description=(
+        "Permite al titular de una reserva cambiar la fecha si aun no ha pagado. "
+        "Requiere codigo de reserva, telefono del titular y la nueva fecha. "
+        "Verifica disponibilidad antes de actualizar."
+    ),
+)(update_reservation_date)
+
+mcp.tool(
+    name="update_reservation_participants",
+    description=(
+        "Permite al titular de una reserva cambiar la cantidad de participantes si aun no ha pagado. "
+        "Requiere codigo de reserva, telefono del titular y nueva cantidad (1 a 8)."
+    ),
+)(update_reservation_participants)
 
 mcp.tool(
     name="admin_get_logistics_checklist",

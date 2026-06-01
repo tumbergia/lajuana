@@ -317,14 +317,28 @@ class _ReservationDetailShellScreenState
           ),
           const SizedBox(height: 8),
         ],
-        // Cancel reservation (separate microplan — stays disabled)
-        AppButton(
-          label: 'Cancelar reserva — Proximamente',
-          icon: Icons.lock_outline_rounded,
-          variant: AppButtonVariant.secondary,
-          expanded: true,
-          onPressed: null,
-        ),
+        // Cancel reservation action (admin only)
+        if (_isAdmin &&
+            detail.status != ReservationStatus.cancelled &&
+            detail.status != ReservationStatus.completed &&
+            detail.status != ReservationStatus.expired) ...[
+          AppButton(
+            label: _controller.cancellationState ==
+                    ReservationActionState.confirming
+                ? 'Cancelando...'
+                : 'Cancelar reserva',
+            icon: _controller.cancellationState ==
+                    ReservationActionState.confirming
+                ? null
+                : Icons.cancel_outlined,
+            variant: AppButtonVariant.danger,
+            expanded: true,
+            onPressed: _controller.cancellationState ==
+                    ReservationActionState.confirming
+                ? null
+                : () => _showCancelConfirmation(),
+          ),
+        ],
           ],
         ),
     );
@@ -751,6 +765,61 @@ class _ReservationDetailShellScreenState
                     const SnackBar(
                       content: Text(
                         'Reserva confirmada',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              });
+            }
+          : () {},
+    );
+  }
+
+  void _showCancelConfirmation() {
+    final detail = _controller.detail;
+    if (detail == null) return;
+
+    final canCancel = detail.status != ReservationStatus.cancelled &&
+        detail.status != ReservationStatus.completed &&
+        detail.status != ReservationStatus.expired;
+
+    AppConfirmDialog.show(
+      context: context,
+      icon: canCancel
+          ? Icons.cancel_outlined
+          : Icons.error_outline_rounded,
+      title: canCancel ? 'Cancelar reserva' : 'No se puede cancelar',
+      message: canCancel
+          ? 'La reserva será cancelada y el cliente recibirá una notificación por WhatsApp.\n\n'
+              'Esta acción requiere conexión.'
+          : 'La reserva ya está en estado terminal.',
+      confirmLabel: canCancel ? 'Confirmar cancelación' : 'Cerrar',
+      cancelLabel: canCancel ? 'Volver' : 'Volver',
+      style: canCancel ? DialogStyle.warning : DialogStyle.warning,
+      height: 280,
+      onConfirm: canCancel
+          ? () {
+              _controller.cancelReservation(isAdmin: _isAdmin).whenComplete(() {
+                if (!mounted) return;
+                if (_controller.cancellationErrorCode != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        _controller.cancellationErrorMessage ??
+                            'Error al cancelar reserva',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: AppColors.danger,
+                    ),
+                  );
+                } else if (_controller.detail?.status ==
+                    ReservationStatus.cancelled) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Reserva cancelada',
                         style: TextStyle(color: Colors.white),
                       ),
                       backgroundColor: Colors.green,
