@@ -9,6 +9,8 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/theme_extensions.dart';
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_button.dart';
+import '../../infrastructure/repositories/fallback_repository.dart';
+import '../helpers/reservation_status_labels.dart';
 import '../../../../app/widgets/app_centered_loader.dart';
 import '../../../../app/widgets/app_confirm_dialog.dart';
 import '../../../../app/widgets/app_entity_row_card.dart';
@@ -94,7 +96,7 @@ class _ReservationDetailShellScreenState
   }
 
   ReservationsRepository _throwNoModule() {
-    return _FallbackRepository();
+    return FallbackRepository();
   }
 
   @override
@@ -272,15 +274,15 @@ class _ReservationDetailShellScreenState
           leading: const Icon(Icons.group_outlined, size: 18),
           badge: detail.participantFormStatus != null
               ? AppBadge(
-                  label: _formStatusLabel(detail.participantFormStatus!),
-                  tone: _formStatusTone(detail.participantFormStatus!),
+                  label: formStatusLabel(detail.participantFormStatus!),
+                  tone: formStatusTone(detail.participantFormStatus!),
                   uppercase: false,
                 )
               : null,
         ),
         const SizedBox(height: 10),
         PaymentStatusCard(
-          label: _paymentStatusLabel(detail.paymentStatus),
+          label: paymentStatusLabel(detail.paymentStatus),
           backgroundColor: _paymentStatusBgColor(detail.paymentStatus),
           foregroundColor: _paymentStatusFgColor(detail.paymentStatus),
         ),
@@ -549,7 +551,7 @@ class _ReservationDetailShellScreenState
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
             PaymentStatusCard(
-              label: _paymentStatusLabel(ctrl.paymentStatus),
+              label: paymentStatusLabel(ctrl.paymentStatus),
               backgroundColor:
                   _paymentStatusBgColor(ctrl.paymentStatus),
               foregroundColor:
@@ -579,14 +581,14 @@ class _ReservationDetailShellScreenState
             _buildSectionPlaceholder(
               'Sin comprobantes',
               ctrl.paymentStatus != null
-                  ? 'Estado: ${_paymentStatusLabel(ctrl.paymentStatus)}'
+                  ? 'Estado: ${paymentStatusLabel(ctrl.paymentStatus)}'
                   : 'No se han cargado comprobantes.',
               Icons.receipt_long_rounded,
             )
           else
             ...ctrl.paymentProofs.map((proof) {
-              final statusLabel = _paymentProofStatusLabel(proof.status);
-              final tone = _paymentProofStatusTone(proof.status);
+              final statusLabel = paymentProofStatusLabel(proof.status);
+              final tone = paymentProofStatusTone(proof.status);
               final proofIsActing =
                   _controller.actingPaymentProofId == proof.id;
               final isApproving = proofIsActing &&
@@ -1016,55 +1018,6 @@ class _ReservationDetailShellScreenState
     }
   }
 
-  String _formStatusLabel(String status) {
-    switch (status.toLowerCase()) {
-      case 'not_sent':
-        return 'No enviado';
-      case 'sent':
-        return 'Enviado';
-      case 'partial':
-        return 'Parcial';
-      case 'complete':
-        return 'Completo';
-      case 'revoked':
-        return 'Revocado';
-      case 'accepted':
-        return 'Aceptado';
-      default:
-        return status;
-    }
-  }
-
-  AppBadgeTone _formStatusTone(String status) {
-    switch (status.toLowerCase()) {
-      case 'complete':
-        return AppBadgeTone.success;
-      case 'partial':
-        return AppBadgeTone.warning;
-      case 'revoked':
-        return AppBadgeTone.danger;
-      default:
-        return AppBadgeTone.neutral;
-    }
-  }
-
-  String _paymentStatusLabel(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'Pendiente';
-      case 'received':
-        return 'Recibido';
-      case 'verified':
-        return 'Verificado';
-      case 'rejected':
-        return 'Rechazado';
-      case 'accepted':
-        return 'Aceptado';
-      default:
-        return status ?? 'Sin informacion';
-    }
-  }
-
   Color _paymentStatusBgColor(String? status) {
     switch (status?.toLowerCase()) {
       case 'pending':
@@ -1106,36 +1059,6 @@ class _ReservationDetailShellScreenState
     }
   }
 
-  String _paymentProofStatusLabel(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'Pendiente';
-      case 'received':
-        return 'Recibido';
-      case 'verified':
-        return 'Verificado';
-      case 'rejected':
-        return 'Rechazado';
-      default:
-        return status ?? 'Sin estado';
-    }
-  }
-
-  AppBadgeTone _paymentProofStatusTone(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return AppBadgeTone.warning;
-      case 'received':
-        return AppBadgeTone.primary;
-      case 'verified':
-        return AppBadgeTone.success;
-      case 'rejected':
-        return AppBadgeTone.danger;
-      default:
-        return AppBadgeTone.neutral;
-    }
-  }
-
   String _buildProofSubtitle(ReservationPaymentProofDetail proof) {
     final parts = <String>[];
     if (proof.contentType != null) parts.add(proof.contentType!);
@@ -1167,79 +1090,6 @@ class _ReservationDetailShellScreenState
         builder: (_) => _ParticipantDetailView(participant: p),
       ),
     );
-  }
-}
-
-/// Fallback repository cuando no se inyecta [ReservationsModule].
-class _FallbackRepository implements ReservationsRepository {
-  @override
-  Future<List<ReservationListItem>> listReservations({
-    ReservationStatus? status,
-    String? query,
-  }) async {
-    return const <ReservationListItem>[];
-  }
-
-  @override
-  Future<ReservationDetail> getReservationById(String reservationId) async {
-    throw Exception('ReservationsModule no inyectado');
-  }
-
-  @override
-  Future<List<ReservationListItem>> getCachedReservations() async {
-    return const <ReservationListItem>[];
-  }
-
-  @override
-  Future<ReservationDetail?> getCachedReservationDetail(
-    String reservationId,
-  ) async {
-    return null;
-  }
-
-  @override
-  Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
-    throw Exception('ReservationsModule no inyectado');
-  }
-
-  @override
-  Future<ReservationDetail> approvePaymentProof({
-    required String paymentProofId,
-    String? note,
-  }) async {
-    throw Exception('ReservationsModule no inyectado');
-  }
-
-  @override
-  Future<ReservationDetail> rejectPaymentProof({
-    required String paymentProofId,
-    required String reason,
-  }) async {
-    throw Exception('ReservationsModule no inyectado');
-  }
-
-  @override
-  Future<ReservationDetail> unverifyPaymentProof({
-    required String paymentProofId,
-    String? note,
-  }) async {
-    throw Exception('ReservationsModule no inyectado');
-  }
-
-  @override
-  Future<ReservationDetail> unrejectPaymentProof({
-    required String paymentProofId,
-    String? note,
-  }) async {
-    throw Exception('ReservationsModule no inyectado');
-  }
-
-  @override
-  Future<ReservationDetail> confirmReservation({
-    required String reservationId,
-    String? notes,
-  }) async {
-    throw Exception('ReservationsModule no inyectado');
   }
 }
 
@@ -1362,8 +1212,8 @@ class _ProofImageViewerState extends State<_ProofImageViewer> {
             child: Padding(
               padding: const EdgeInsets.only(right: 12),
               child: AppBadge(
-                label: _paymentProofStatusLabelStatic(widget.proof.status),
-                tone: _paymentProofStatusToneStatic(widget.proof.status),
+                label: paymentProofStatusLabel(widget.proof.status),
+                tone: paymentProofStatusTone(widget.proof.status),
                 uppercase: false,
               ),
             ),
@@ -1501,10 +1351,10 @@ class _ClientDetailView extends StatelessWidget {
         ? '\$${detail.quotedTotalAmount!}'
         : null);
     addRow('Fecha solicitada', detail.requestedDate);
-    addRow('Estado de pago', _paymentStatusLabel(detail.paymentStatus));
+    addRow('Estado de pago', paymentStatusLabel(detail.paymentStatus));
     addRow('Participantes', '${detail.participantsCompletedCount} / ${detail.expectedParticipantsCount ?? detail.participantCount}');
     if (detail.participantFormStatus != null) {
-      addRow('Estado formulario', _formStatusLabel(detail.participantFormStatus!));
+      addRow('Estado formulario', formStatusLabel(detail.participantFormStatus!));
     }
 
     return Scaffold(
@@ -1539,41 +1389,6 @@ class _ClientDetailView extends StatelessWidget {
     );
   }
 
-  String _paymentStatusLabel(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'pending':
-        return 'Pendiente';
-      case 'received':
-        return 'Recibido';
-      case 'verified':
-        return 'Verificado';
-      case 'rejected':
-        return 'Rechazado';
-      case 'accepted':
-        return 'Aceptado';
-      default:
-        return status ?? 'Sin informacion';
-    }
-  }
-
-  String _formStatusLabel(String status) {
-    switch (status.toLowerCase()) {
-      case 'not_sent':
-        return 'No enviado';
-      case 'sent':
-        return 'Enviado';
-      case 'partial':
-        return 'Parcial';
-      case 'complete':
-        return 'Completo';
-      case 'revoked':
-        return 'Revocado';
-      case 'accepted':
-        return 'Aceptado';
-      default:
-        return status;
-    }
-  }
 }
 
 /// Full-screen participant detail view.
@@ -1774,37 +1589,6 @@ class _ParticipantDetailView extends StatelessWidget {
       default:
         return level;
     }
-  }
-}
-
-// Static helpers so the viewer widget doesn't need context.
-String _paymentProofStatusLabelStatic(String? status) {
-  switch (status?.toLowerCase()) {
-    case 'pending':
-      return 'Pendiente';
-    case 'received':
-      return 'Recibido';
-    case 'verified':
-      return 'Verificado';
-    case 'rejected':
-      return 'Rechazado';
-    default:
-      return status ?? 'Sin estado';
-  }
-}
-
-AppBadgeTone _paymentProofStatusToneStatic(String? status) {
-  switch (status?.toLowerCase()) {
-    case 'pending':
-      return AppBadgeTone.warning;
-    case 'received':
-      return AppBadgeTone.primary;
-    case 'verified':
-      return AppBadgeTone.success;
-    case 'rejected':
-      return AppBadgeTone.danger;
-    default:
-      return AppBadgeTone.neutral;
   }
 }
 

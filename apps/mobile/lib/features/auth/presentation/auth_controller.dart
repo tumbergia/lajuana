@@ -2,52 +2,20 @@ import 'dart:async' show StreamSubscription, unawaited;
 
 import 'package:flutter/foundation.dart';
 
-import '../application/bootstrap_session_use_case.dart';
-import '../application/change_password_use_case.dart';
-import '../application/enter_local_mode_use_case.dart';
-import '../application/get_current_local_session_use_case.dart';
-import '../application/logout_use_case.dart';
-import '../application/refresh_session_use_case.dart';
-import '../application/register_use_case.dart';
-import '../application/sign_in_use_case.dart';
-import '../application/sync_profile_from_remote_use_case.dart';
 import '../domain/auth_enums.dart';
 import '../domain/auth_models.dart';
+import '../domain/auth_repository.dart';
 import '../infrastructure/connectivity/network_models.dart';
 import '../infrastructure/connectivity/network_status_resolver.dart';
 
 class AuthController extends ChangeNotifier {
   AuthController({
-    required BootstrapSessionUseCase bootstrapSessionUseCase,
-    required SignInUseCase signInUseCase,
-    required RefreshSessionUseCase refreshSessionUseCase,
-    required LogoutUseCase logoutUseCase,
-    required RegisterUseCase registerUseCase,
-    required ChangePasswordUseCase changePasswordUseCase,
-    required SyncProfileFromRemoteUseCase syncProfileFromRemoteUseCase,
-    required GetCurrentLocalSessionUseCase getCurrentLocalSessionUseCase,
-    required EnterLocalModeUseCase enterLocalModeUseCase,
+    required AuthRepository authRepository,
     required NetworkStatusResolver networkStatusResolver,
-  }) : _bootstrapSessionUseCase = bootstrapSessionUseCase,
-       _signInUseCase = signInUseCase,
-       _refreshSessionUseCase = refreshSessionUseCase,
-       _logoutUseCase = logoutUseCase,
-       _registerUseCase = registerUseCase,
-       _changePasswordUseCase = changePasswordUseCase,
-       _syncProfileFromRemoteUseCase = syncProfileFromRemoteUseCase,
-       _getCurrentLocalSessionUseCase = getCurrentLocalSessionUseCase,
-       _enterLocalModeUseCase = enterLocalModeUseCase,
-       _networkStatusResolver = networkStatusResolver;
+  })  : _authRepository = authRepository,
+        _networkStatusResolver = networkStatusResolver;
 
-  final BootstrapSessionUseCase _bootstrapSessionUseCase;
-  final SignInUseCase _signInUseCase;
-  final RefreshSessionUseCase _refreshSessionUseCase;
-  final LogoutUseCase _logoutUseCase;
-  final RegisterUseCase _registerUseCase;
-  final ChangePasswordUseCase _changePasswordUseCase;
-  final SyncProfileFromRemoteUseCase _syncProfileFromRemoteUseCase;
-  final GetCurrentLocalSessionUseCase _getCurrentLocalSessionUseCase;
-  final EnterLocalModeUseCase _enterLocalModeUseCase;
+  final AuthRepository _authRepository;
   final NetworkStatusResolver _networkStatusResolver;
 
   StreamSubscription<NetworkStatus>? _networkSub;
@@ -81,7 +49,7 @@ class AuthController extends ChangeNotifier {
     _networkSub = _networkStatusResolver.observe().listen(_onNetworkStatus);
 
     try {
-      final snapshot = await _bootstrapSessionUseCase();
+      final snapshot = await _authRepository.bootstrapSession();
       _applySnapshot(snapshot);
       _clearError();
     } on AuthFailure catch (failure) {
@@ -107,7 +75,7 @@ class AuthController extends ChangeNotifier {
   }) async {
     _startLoading();
     try {
-      final snapshot = await _signInUseCase(email: email, password: password);
+      final snapshot = await _authRepository.signIn(email: email, password: password);
       _applySnapshot(snapshot);
       _clearError();
       noticeCode = null;
@@ -122,7 +90,7 @@ class AuthController extends ChangeNotifier {
   Future<void> logoutRequested() async {
     _startLoading();
     try {
-      await _logoutUseCase();
+      await _authRepository.logout();
       authState = LocalAuthState.signedOut;
       currentUser = null;
       hasLocalSession = false;
@@ -139,7 +107,7 @@ class AuthController extends ChangeNotifier {
   Future<void> refreshRequested() async {
     _startLoading();
     try {
-      final snapshot = await _refreshSessionUseCase();
+      final snapshot = await _authRepository.refreshSession();
       _applySnapshot(snapshot);
       _clearError();
     } on AuthFailure catch (failure) {
@@ -155,7 +123,7 @@ class AuthController extends ChangeNotifier {
     if (authState != LocalAuthState.signedInVerified) return;
     _startLoading();
     try {
-      final snapshot = await _syncProfileFromRemoteUseCase();
+      final snapshot = await _authRepository.syncProfileFromRemote();
       _applySnapshot(snapshot);
       _clearError();
     } on AuthFailure catch (failure) {
@@ -183,7 +151,7 @@ class AuthController extends ChangeNotifier {
   }) async {
     _startLoading();
     try {
-      await _registerUseCase(
+      await _authRepository.register(
         fullName: fullName,
         email: email,
         password: password,
@@ -205,7 +173,7 @@ class AuthController extends ChangeNotifier {
   }) async {
     _startLoading();
     try {
-      await _changePasswordUseCase(
+      await _authRepository.changePassword(
         currentPassword: currentPassword,
         newPassword: newPassword,
       );
@@ -226,14 +194,14 @@ class AuthController extends ChangeNotifier {
   Future<void> enterLocalSessionRequested() async {
     _startLoading();
     try {
-      final session = await _getCurrentLocalSessionUseCase();
+      final session = await _authRepository.getCurrentLocalSession();
       if (session == null) {
         throw AuthFailure(
           code: 'auth.local_session_unavailable',
           message: 'No hay sesion local disponible',
         );
       }
-      final snapshot = await _enterLocalModeUseCase();
+      final snapshot = await _authRepository.enterLocalMode();
       _applySnapshot(snapshot);
       _clearError();
     } on AuthFailure catch (failure) {

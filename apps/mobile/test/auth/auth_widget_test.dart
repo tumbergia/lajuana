@@ -3,15 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/app/widgets/app_button.dart';
 import 'package:mobile/app/widgets/app_card.dart';
 import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/auth/application/bootstrap_session_use_case.dart';
-import 'package:mobile/features/auth/application/change_password_use_case.dart';
-import 'package:mobile/features/auth/application/enter_local_mode_use_case.dart';
-import 'package:mobile/features/auth/application/get_current_local_session_use_case.dart';
-import 'package:mobile/features/auth/application/logout_use_case.dart';
-import 'package:mobile/features/auth/application/refresh_session_use_case.dart';
-import 'package:mobile/features/auth/application/register_use_case.dart';
-import 'package:mobile/features/auth/application/sign_in_use_case.dart';
-import 'package:mobile/features/auth/application/sync_profile_from_remote_use_case.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/domain/auth_models.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
@@ -36,15 +27,7 @@ void main() {
       ),
     );
     return AuthController(
-      bootstrapSessionUseCase: BootstrapSessionUseCase(repo),
-      signInUseCase: SignInUseCase(repo),
-      refreshSessionUseCase: RefreshSessionUseCase(repo),
-      logoutUseCase: LogoutUseCase(repo),
-      registerUseCase: RegisterUseCase(repo),
-      changePasswordUseCase: ChangePasswordUseCase(repo),
-      syncProfileFromRemoteUseCase: SyncProfileFromRemoteUseCase(repo),
-      getCurrentLocalSessionUseCase: GetCurrentLocalSessionUseCase(repo),
-      enterLocalModeUseCase: EnterLocalModeUseCase(repo),
+      authRepository: repo,
       networkStatusResolver: networkStatusResolver,
     );
   }

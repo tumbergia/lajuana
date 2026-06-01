@@ -1,14 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../features/auth/application/bootstrap_session_use_case.dart';
-import '../features/auth/application/change_password_use_case.dart';
-import '../features/auth/application/enter_local_mode_use_case.dart';
-import '../features/auth/application/get_current_local_session_use_case.dart';
-import '../features/auth/application/logout_use_case.dart';
-import '../features/auth/application/refresh_session_use_case.dart';
-import '../features/auth/application/register_use_case.dart';
-import '../features/auth/application/sign_in_use_case.dart';
-import '../features/auth/application/sync_profile_from_remote_use_case.dart';
 import '../features/auth/domain/auth_enums.dart';
 import '../features/auth/infrastructure/connectivity/backend_reachability_service.dart';
 import '../features/auth/infrastructure/connectivity/connectivity_service.dart';
@@ -85,15 +76,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
     );
 
     _authController = AuthController(
-      bootstrapSessionUseCase: BootstrapSessionUseCase(repository),
-      signInUseCase: SignInUseCase(repository),
-      refreshSessionUseCase: RefreshSessionUseCase(repository),
-      logoutUseCase: LogoutUseCase(repository),
-      registerUseCase: RegisterUseCase(repository),
-      changePasswordUseCase: ChangePasswordUseCase(repository),
-      syncProfileFromRemoteUseCase: SyncProfileFromRemoteUseCase(repository),
-      getCurrentLocalSessionUseCase: GetCurrentLocalSessionUseCase(repository),
-      enterLocalModeUseCase: EnterLocalModeUseCase(repository),
+      authRepository: repository,
       networkStatusResolver: networkStatusResolver,
     );
 
