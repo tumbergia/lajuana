@@ -467,20 +467,24 @@ class ReservationService:
             )
             await reservation.save()
 
-            # Send WhatsApp logistics message (deterministic, not chatbot)
+            # Enqueue WhatsApp logistics message (via outbox)
             try:
-                from app.notifications.reservation_whatsapp_notification_service import (
-                    ReservationWhatsAppNotificationService,
-                )
-
-                whatsapp_notif = ReservationWhatsAppNotificationService()
-                await whatsapp_notif.send_reservation_confirmed_logistics(
+                experience = await ExperienceDocument.get(reservation.experience_id)
+                experience_name = experience.name if experience else ""
+                schedule = await ScheduleDocument.get(reservation.schedule_id) if reservation.schedule_id else None
+                scheduled_date = reservation.requested_date.isoformat() if reservation.requested_date else ""
+                if not scheduled_date and schedule:
+                    scheduled_date = schedule.date.isoformat()
+                start_time = str(schedule.start_time) if schedule else ""
+                await self.notification_service.enqueue_reservation_confirmed_logistics(
                     reservation=reservation,
-                    actor_id=actor_id,
+                    experience_name=experience_name,
+                    scheduled_date=scheduled_date,
+                    start_time=start_time,
                 )
             except Exception:
                 logger.exception(
-                    "[reservation=%s] Failed to send logistics WhatsApp",
+                    "[reservation=%s] Failed to enqueue logistics WhatsApp",
                     reservation.id,
                 )
 

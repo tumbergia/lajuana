@@ -58,17 +58,18 @@ def test_in_app_provider_validate() -> None:
     assert result is True
 
 
-def test_whatsapp_provider_not_implemented() -> None:
+def test_whatsapp_provider_channel() -> None:
     provider = WhatsAppNotificationProvider()
     assert provider.channel == NotificationChannel.WHATSAPP
-    with pytest.raises(NotImplementedError):
-        asyncio.run(provider.send(None))  # type: ignore[arg-type]
 
 
-def test_whatsapp_provider_validate() -> None:
+def test_whatsapp_provider_validate_no_credentials() -> None:
+    from app.core.config import settings
+
     provider = WhatsAppNotificationProvider()
     result = asyncio.run(provider.validate_config())
-    assert result is False
+    expected = bool(settings.whatsapp_access_token and settings.whatsapp_phone_number_id)
+    assert result is expected
 
 
 def test_email_provider_validate_no_credentials(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -13,9 +13,13 @@ from app.common.enums import (
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.core.logging import logger
-from app.documents import ReservationDocument, UserDocument
+from app.documents import (
+    ReservationDocument,
+    UserDocument,
+)
 from app.documents.notification_outbox_document import NotificationOutboxDocument
 from app.documents.notification_template_document import NotificationTemplateDocument
+from app.documents.reservation_audit_log_document import ReservationAuditLogDocument
 from app.notifications.email_provider import EmailProvider
 from app.notifications.in_app_provider import InAppNotificationProvider
 from app.notifications.provider import NotificationProvider
@@ -233,6 +237,9 @@ class NotificationService:
             entry.status = NotificationStatus.SENT
             entry.sent_at = datetime.now(UTC)
             entry.provider_message_id = result.provider_message_id
+            await entry.save()
+            await self._update_reservation_audit_fields(entry)
+            return
         else:
             entry.attempt_count += 1
             if entry.attempt_count >= entry.max_attempts:
@@ -283,12 +290,184 @@ class NotificationService:
         await doc.save()
         return doc
 
+    async def enqueue_reservation_confirmed_logistics(
+        self,
+        reservation: ReservationDocument,
+        experience_name: str,
+        scheduled_date: str,
+        start_time: str,
+        meeting_point: str = "La Juana (ver coordenadas)",
+    ) -> NotificationOutboxDocument | None:
+        if not reservation.holder_phone:
+            return None
+        vars = {
+            "customer_name": reservation.holder_name or "Cliente",
+            "reservation_code": reservation.code,
+            "experience_name": experience_name,
+            "scheduled_date": scheduled_date,
+            "start_time": start_time,
+            "meeting_point": meeting_point,
+        }
+        return await self.enqueue(
+            event_type=NotificationEventType.RESERVATION_CONFIRMED_LOGISTICS_SENT,
+            reservation_id=str(reservation.id),
+            channel=NotificationChannel.WHATSAPP,
+            recipient_type="customer",
+            recipient_identifier=reservation.holder_phone,
+            variables=vars,
+        )
+
+    async def enqueue_payment_approved_form(
+        self,
+        reservation: ReservationDocument,
+        experience_name: str,
+    ) -> NotificationOutboxDocument | None:
+        if not reservation.holder_phone:
+            return None
+        vars = {
+            "customer_name": reservation.holder_name or "Cliente",
+            "experience_name": experience_name,
+            "form_url": reservation.form_url or "",
+        }
+        return await self.enqueue(
+            event_type=NotificationEventType.PAYMENT_APPROVED_FORM_SENT,
+            reservation_id=str(reservation.id),
+            channel=NotificationChannel.WHATSAPP,
+            recipient_type="customer",
+            recipient_identifier=reservation.holder_phone,
+            variables=vars,
+        )
+
+    async def enqueue_payment_rejected(
+        self,
+        reservation: ReservationDocument,
+        experience_name: str,
+        rejection_reason: str,
+    ) -> NotificationOutboxDocument | None:
+        if not reservation.holder_phone:
+            return None
+        vars = {
+            "customer_name": reservation.holder_name or "Cliente",
+            "experience_name": experience_name,
+            "rejection_reason": rejection_reason,
+        }
+        return await self.enqueue(
+            event_type=NotificationEventType.PAYMENT_REJECTED_SENT,
+            reservation_id=str(reservation.id),
+            channel=NotificationChannel.WHATSAPP,
+            recipient_type="customer",
+            recipient_identifier=reservation.holder_phone,
+            variables=vars,
+        )
+
+    async def enqueue_participant_form_resent(
+        self,
+        reservation: ReservationDocument,
+        experience_name: str,
+    ) -> NotificationOutboxDocument | None:
+        if not reservation.holder_phone:
+            return None
+        vars = {
+            "customer_name": reservation.holder_name or "Cliente",
+            "experience_name": experience_name,
+            "form_url": reservation.form_url or "",
+        }
+        return await self.enqueue(
+            event_type=NotificationEventType.PARTICIPANT_FORM_RESENT,
+            reservation_id=str(reservation.id),
+            channel=NotificationChannel.WHATSAPP,
+            recipient_type="customer",
+            recipient_identifier=reservation.holder_phone,
+            variables=vars,
+        )
+
     def _build_customer_vars(self, reservation: ReservationDocument) -> dict[str, str]:
         return {
             "customer_name": reservation.holder_name or "Cliente",
             "reservation_code": reservation.code,
             "participants_count": str(reservation.participant_count),
         }
+
+    async def _update_reservation_audit_fields(self, entry: NotificationOutboxDocument) -> None:
+        """Update reservation audit fields after a WhatsApp notification is sent."""
+        event_map = {
+            NotificationEventType.RESERVATION_CONFIRMED_LOGISTICS_SENT.value: {
+                "fields": {
+                    "confirmation_message_sent_at": datetime.now(UTC),
+                },
+                "audit_action": "notification.reservation_confirmed_logistics_sent",
+            },
+            NotificationEventType.PAYMENT_APPROVED_FORM_SENT.value: {
+                "fields": {
+                    "participant_form_sent_at": datetime.now(UTC),
+                    "participant_form_send_count": None,  # +1 logic below
+                },
+                "audit_action": "notification.payment_approved_form_sent",
+            },
+            NotificationEventType.PARTICIPANT_FORM_RESENT.value: {
+                "fields": {
+                    "participant_form_sent_at": datetime.now(UTC),
+                    "participant_form_send_count": None,
+                },
+                "audit_action": "notification.participant_form_resent",
+            },
+        }
+
+        cfg = event_map.get(entry.event_type)
+        if cfg is None or entry.reservation_id is None:
+            return
+
+        collection = ReservationDocument.get_motor_collection()
+        set_fields: dict[str, object] = dict(cfg["fields"])
+        if entry.provider_message_id:
+            set_fields["participant_form_last_message_id"] = entry.provider_message_id
+
+        # Increment send count: $inc for those events, $set for timestamp
+        inc_fields: dict[str, int] = {}
+        if cfg["fields"].get("participant_form_send_count") is None:
+            inc_fields["participant_form_send_count"] = 1
+            del set_fields["participant_form_send_count"]
+
+        updates: dict[str, object] = {"$set": set_fields}
+        if inc_fields:
+            updates["$inc"] = inc_fields
+
+        try:
+            await collection.update_one(
+                {"_id": entry.reservation_id},
+                updates,
+            )
+        except Exception as exc:
+            logger.warning(
+                "[outbox=%s] Failed to update reservation audit fields | error=%s",
+                entry.id,
+                exc,
+            )
+
+        # Audit log (best-effort)
+        try:
+            log = ReservationAuditLogDocument(
+                reservation_id=entry.reservation_id,
+                payment_proof_id=None,
+                actor_user_id=None,
+                actor_role=None,
+                action=cfg["audit_action"],
+                source="backend_event",
+                metadata={
+                    "recipient_phone": entry.recipient_identifier,
+                    "template_key": entry.template_key,
+                    "provider_message_id": entry.provider_message_id,
+                    "status": "sent",
+                },
+            )
+            await log.insert()
+        except Exception as exc:
+            logger.warning(
+                "[outbox=%s] Audit log failed | action=%s | error=%s",
+                entry.id,
+                cfg["audit_action"],
+                exc,
+            )
 
     async def process_pending_batch(self, batch_size: int = 10) -> int:
         now = datetime.now(UTC)

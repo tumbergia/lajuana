@@ -6,9 +6,7 @@ from app.api.deps import require_permissions
 from app.common.enums import Permission
 from app.core.config import settings
 from app.documents import ExperienceDocument, ReservationDocument, UserDocument
-from app.notifications.reservation_whatsapp_notification_service import (
-    ReservationWhatsAppNotificationService,
-)
+from app.services.notification_service import NotificationService
 from app.schemas.participant import (
     ParticipantNestedCreateSchema,
     ParticipantPublicCreateSchema,
@@ -274,10 +272,11 @@ async def resend_participant_form_link(
             message="Reserva no encontrada.",
         )
 
-    whatsapp_notif = ReservationWhatsAppNotificationService()
-    await whatsapp_notif.resend_participant_form(
+    experience = await ExperienceDocument.get(reservation.experience_id)
+    notif = NotificationService()
+    await notif.enqueue_participant_form_resent(
         reservation=reservation,
-        actor_id=current_user.id,
+        experience_name=experience.name if experience else "",
     )
     return await reservation_to_response(reservation)
 

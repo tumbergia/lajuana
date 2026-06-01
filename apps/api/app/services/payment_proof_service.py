@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.core.errors import ApiError
 from app.core.logging import logger
 from app.documents import (
+    ExperienceDocument,
     FileUploadDocument,
     PaymentProofDocument,
     ReservationAuditLogDocument,
@@ -239,20 +240,18 @@ class PaymentProofService:
             reason=payload.note,
         )
 
-        # Send WhatsApp with participant form link (deterministic, not chatbot)
+        # Enqueue WhatsApp with participant form link (via outbox)
         try:
-            from app.notifications.reservation_whatsapp_notification_service import (
-                ReservationWhatsAppNotificationService,
-            )
-
-            whatsapp_notif = ReservationWhatsAppNotificationService()
-            await whatsapp_notif.send_payment_approved_participant_form(
+            from app.services.notification_service import NotificationService
+            experience = await ExperienceDocument.get(reservation.experience_id)
+            notif = NotificationService()
+            await notif.enqueue_payment_approved_form(
                 reservation=reservation,
-                actor_id=actor_id,
+                experience_name=experience.name if experience else "",
             )
         except Exception:
             logger.exception(
-                "[reservation=%s] Failed to send payment approved WhatsApp",
+                "[reservation=%s] Failed to enqueue payment approved WhatsApp",
                 reservation.id,
             )
 
@@ -318,21 +317,19 @@ class PaymentProofService:
             reason=payload.reason,
         )
 
-        # Send WhatsApp with rejection reason (deterministic, not chatbot)
+        # Enqueue WhatsApp with rejection reason (via outbox)
         try:
-            from app.notifications.reservation_whatsapp_notification_service import (
-                ReservationWhatsAppNotificationService,
-            )
-
-            whatsapp_notif = ReservationWhatsAppNotificationService()
-            await whatsapp_notif.send_payment_rejected(
+            from app.services.notification_service import NotificationService
+            experience = await ExperienceDocument.get(reservation.experience_id)
+            notif = NotificationService()
+            await notif.enqueue_payment_rejected(
                 reservation=reservation,
-                reason=payload.reason,
-                actor_id=actor_id,
+                experience_name=experience.name if experience else "",
+                rejection_reason=payload.reason,
             )
         except Exception:
             logger.exception(
-                "[reservation=%s] Failed to send payment rejected WhatsApp",
+                "[reservation=%s] Failed to enqueue payment rejected WhatsApp",
                 reservation.id,
             )
 
