@@ -10,6 +10,7 @@ import '../../features/catalogs/catalogs_module.dart';
 import '../navigation/shell_navigation_controller.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../widgets/app_top_bar.dart';
+import '../widgets/refresh_scope.dart';
 import 'widgets/shell_status_region.dart';
 import '../../features/configuration/presentation/screens/more_flow_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -139,35 +140,37 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                 children: [
                   ShellStatusRegion(controller: widget.authController),
                   Expanded(
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        for (final tab in _visitedTabs)
-                          Offstage(
-                            offstage: _shellNav.currentTab != tab,
-                            child: TickerMode(
-                              enabled: _shellNav.currentTab == tab,
-                              child: Navigator(
-                                key: _navigatorKeys[tab],
-                                  onGenerateRoute: (settings) {
-                                    return MaterialPageRoute<void>(
-                                      builder: (ctx) {
-                                        // Reservas maneja su propio scroll
-                                        // (RefreshIndicator + ListView).
-                                        if (tab == AppNavItem.reservas) {
-                                          return _tabRoot(tab);
-                                        }
-                                        return SingleChildScrollView(
-                                          child: _tabRoot(tab),
-                                        );
-                                      },
-                                      settings: settings,
-                                    );
-                                  },
+                    child: RefreshScope(
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          for (final tab in _visitedTabs)
+                            Offstage(
+                              offstage: _shellNav.currentTab != tab,
+                              child: TickerMode(
+                                enabled: _shellNav.currentTab == tab,
+                                child: Navigator(
+                                  key: _navigatorKeys[tab],
+                                    onGenerateRoute: (settings) {
+                                      return MaterialPageRoute<void>(
+                                        builder: (ctx) {
+                                        // El scroll se maneja globalmente via RefreshScope.
+                                          if (tab == AppNavItem.reservas) {
+                                            return _tabRoot(tab);
+                                          }
+                                          return SingleChildScrollView(
+                                            physics: const AlwaysScrollableScrollPhysics(),
+                                            child: _tabRoot(tab),
+                                          );
+                                        },
+                                        settings: settings,
+                                      );
+                                    },
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

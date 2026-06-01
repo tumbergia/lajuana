@@ -6,6 +6,7 @@ import 'package:mobile_core/mobile_core.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_button.dart';
+import '../../../../app/widgets/refresh_scope.dart';
 import '../../infrastructure/repositories/fallback_repository.dart';
 import '../helpers/reservation_status_labels.dart';
 import '../../../../app/widgets/app_centered_loader.dart';
@@ -64,7 +65,7 @@ class ReservationDetailShellScreen extends StatefulWidget {
 }
 
 class _ReservationDetailShellScreenState
-    extends State<ReservationDetailShellScreen> {
+    extends State<ReservationDetailShellScreen> with RefreshableState {
   late final ReservationDetailController _controller;
   late final ReservationParticipantsSectionController
       _participantsSectionController;
@@ -80,6 +81,9 @@ class _ReservationDetailShellScreenState
       widget.authController?.currentUser?.role == 'admin';
 
   ReservationsRepository? get _repo => widget.reservationsModule?.repository;
+
+  @override
+  Future<void> onRefresh() => _controller.loadDetail(widget.reservationId);
 
   @override
   void initState() {
@@ -507,11 +511,9 @@ class _ReservationDetailShellScreenState
       ReservationPaymentProofsSectionController ctrl) {
     final actionState = _controller.paymentProofActionState;
 
-    return RefreshIndicator(
-      onRefresh: () => _controller.loadDetail(widget.reservationId),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
             PaymentStatusCard(
               label: paymentStatusLabel(ctrl.paymentStatus),
               backgroundColor:
@@ -646,8 +648,7 @@ class _ReservationDetailShellScreenState
               );
             }),
         ],
-      ),
-    );
+      );
   }
 
   String _actionErrorTitle(String code) {

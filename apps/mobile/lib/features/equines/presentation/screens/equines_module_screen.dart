@@ -11,6 +11,7 @@ import '../../../../app/widgets/app_section_header.dart';
 import '../../../../app/widgets/app_status_banner.dart';
 import '../../../../app/widgets/cards/app_image_feature_card.dart';
 import '../../../../app/widgets/cards/app_logbook_timeline.dart';
+import '../../../../app/widgets/refresh_scope.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../controllers/equines_controller.dart';
 import '../widgets/app_equine_profile_card.dart';
@@ -31,8 +32,12 @@ class EquinesModuleScreen extends StatefulWidget {
   State<EquinesModuleScreen> createState() => _EquinesModuleScreenState();
 }
 
-class _EquinesModuleScreenState extends State<EquinesModuleScreen> {
+class _EquinesModuleScreenState extends State<EquinesModuleScreen>
+    with RefreshableState {
   late final EquinesController _controller;
+
+  @override
+  Future<void> onRefresh() => _controller.loadEquines();
 
   @override
   void initState() {
