@@ -49,6 +49,7 @@ class EquineMapper {
           ? DateTime.tryParse(dto.lastServiceAt!)?.toUtc()
           : null,
       workloadLast7Days: dto.workloadLast7Days,
+      imageBase64: dto.imageBase64,
       sourceFile: dto.sourceFile,
     );
   }
@@ -67,6 +68,7 @@ class EquineMapper {
       subtitle: _subtitle(equine),
       isAvailable: equine.isAvailable,
       weightKg: equine.weightKg,
+      imageBase64: equine.imageBase64,
     );
   }
 
@@ -107,6 +109,7 @@ class EquineMapper {
       experienceFit: equine.experienceFit,
       lastServiceAt: equine.lastServiceAt,
       workloadLast7Days: equine.workloadLast7Days,
+      imageBase64: equine.imageBase64,
       updatedAt: equine.lastServiceAt,
     );
   }

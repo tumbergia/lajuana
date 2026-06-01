@@ -67,6 +67,24 @@ class EquinesApiClient {
     return EquineDto.fromJson(data);
   }
 
+  Future<EquineDto> createEquine(Map<String, dynamic> data) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/equines',
+      body: data,
+    );
+    return EquineDto.fromJson(_decodeBody(response.body));
+  }
+
+  Future<EquineDto> updateEquine(String equineId, Map<String, dynamic> data) async {
+    final response = await _authorizedRequest(
+      method: 'PATCH',
+      path: '/equines/$equineId',
+      body: data,
+    );
+    return EquineDto.fromJson(_decodeBody(response.body));
+  }
+
   Future<http.Response> _authorizedRequest({
     required String method,
     required String path,
@@ -85,6 +103,18 @@ class EquinesApiClient {
       switch (method) {
         case 'GET':
           return _http.get(uri, headers: _headers(accessToken));
+        case 'POST':
+          return _http.post(
+            uri,
+            headers: _headers(accessToken),
+            body: body != null ? jsonEncode(body) : null,
+          );
+        case 'PATCH':
+          return _http.patch(
+            uri,
+            headers: _headers(accessToken),
+            body: body != null ? jsonEncode(body) : null,
+          );
         default:
           throw UnsupportedError('Método no soportado: $method');
       }

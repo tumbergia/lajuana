@@ -1,8 +1,26 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Annotated
 
 from beanie import Indexed
-from pydantic import Field
+from bson import Decimal128
+from pydantic import BeforeValidator, Field
+
+
+def _decimal_from_mongo(v: object) -> Decimal | None:
+    """Convert MongoDB Decimal128 to Python Decimal."""
+    if v is None:
+        return None
+    if isinstance(v, Decimal128):
+        return v.to_decimal()
+    if isinstance(v, Decimal):
+        return v
+    if isinstance(v, (int, float, str)):
+        return Decimal(v)
+    return v
+
+
+DecimalField = Annotated[Decimal | None, BeforeValidator(_decimal_from_mongo)]
 
 from app.common.collections import Collections
 from app.common.enums import (
@@ -40,8 +58,8 @@ class EquineDocument(AuditDocument):
     sire_name: str | None = None
     dam_name: str | None = None
 
-    weight_kg: Decimal | None = Field(default=None, gt=0)
-    height_m: Decimal | None = Field(default=None, gt=0)
+    weight_kg: DecimalField = Field(default=None, gt=0)
+    height_m: DecimalField = Field(default=None, gt=0)
     last_weight_at: date | None = None
     last_height_at: date | None = None
 
@@ -52,8 +70,9 @@ class EquineDocument(AuditDocument):
     availability_reasons: str | None = None
     rest_until: datetime | None = None
 
-    max_rider_weight_kg: Decimal | None = Field(default=None, gt=0)
+    max_rider_weight_kg: DecimalField = Field(default=None, gt=0)
     experience_fit: EquineExperienceFit | None = EquineExperienceFit.ALL
+    image_base64: str | None = None
 
     last_service_at: datetime | None = None
     workload_last_7_days: int = Field(default=0, ge=0)

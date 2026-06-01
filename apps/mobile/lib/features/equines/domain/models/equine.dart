@@ -38,6 +38,7 @@ class Equine {
     this.lastServiceAt,
     this.workloadLast7Days = 0,
     this.sourceFile,
+    this.imageBase64,
   });
 
   final String id;
@@ -74,4 +75,5 @@ class Equine {
   final DateTime? lastServiceAt;
   final int workloadLast7Days;
   final String? sourceFile;
+  final String? imageBase64;
 }

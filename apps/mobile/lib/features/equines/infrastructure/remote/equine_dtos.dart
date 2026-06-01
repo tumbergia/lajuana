@@ -42,6 +42,7 @@ class EquineDto {
     this.createdAt,
     this.updatedAt,
     this.deletedAt,
+    this.imageBase64,
   });
 
   final String id;
@@ -85,6 +86,7 @@ class EquineDto {
   final String? createdAt;
   final String? updatedAt;
   final String? deletedAt;
+  final String? imageBase64;
 
   factory EquineDto.fromJson(Map<String, dynamic> json) {
     return EquineDto(
@@ -123,6 +125,7 @@ class EquineDto {
       experienceFit: json['experience_fit'] as String?,
       lastServiceAt: json['last_service_at'] as String?,
       workloadLast7Days: json['workload_last_7_days'] as int? ?? 0,
+      imageBase64: json['image_base64'] as String?,
       sourceFile: json['source_file'] as String?,
       sourceSheet: json['source_sheet'] as String?,
       sourceRowNumber: json['source_row_number'] as int?,

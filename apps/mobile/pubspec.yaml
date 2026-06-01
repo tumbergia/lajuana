@@ -48,6 +48,7 @@ dependencies:
   mobile_core:
     path: ../../packages/mobile_core
   material_symbols_icons: ^4.2928.1
+  image_picker: ^1.2.2
 
 dev_dependencies:
   flutter_test:

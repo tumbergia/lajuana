@@ -17,6 +17,7 @@ class EquineRecord {
     this.subtitle,
     this.isAvailable = true,
     this.weightKg,
+    this.imageBase64,
   });
 
   final String id;
@@ -31,6 +32,7 @@ class EquineRecord {
   final String? subtitle;
   final bool isAvailable;
   final double? weightKg;
+  final String? imageBase64;
 }
 
 /// ViewModel completo para el detalle de equino.
@@ -72,6 +74,7 @@ class EquineDetailRecord {
     this.lastServiceAt,
     this.workloadLast7Days = 0,
     this.updatedAt,
+    this.imageBase64,
   });
 
   final String id;
@@ -110,4 +113,5 @@ class EquineDetailRecord {
   final DateTime? lastServiceAt;
   final int workloadLast7Days;
   final DateTime? updatedAt;
+  final String? imageBase64;
 }

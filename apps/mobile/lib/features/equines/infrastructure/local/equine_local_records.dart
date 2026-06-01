@@ -1,3 +1,4 @@
+import '../../domain/models/equine_operational_status.dart';
 import '../../presentation/models/equine_view_models.dart';
 
 /// Registro SQLite plano para el caché local de equinos.
@@ -42,6 +43,7 @@ class EquineLocalRecord {
     this.sourceUpdatedAtLabel,
     this.version = 1,
     this.updatedAt,
+    this.imageBase64,
   });
 
   // ... (all fields as before)
@@ -84,6 +86,7 @@ class EquineLocalRecord {
   final String? sourceUpdatedAtLabel;
   final int version;
   final String? updatedAt;
+  final String? imageBase64;
 
   factory EquineLocalRecord.fromMap(Map<String, Object?> map) {
     return EquineLocalRecord(
@@ -126,6 +129,7 @@ class EquineLocalRecord {
       sourceUpdatedAtLabel: map['source_updated_at_label'] as String?,
       version: map['version'] as int? ?? 1,
       updatedAt: map['updated_at'] as String?,
+      imageBase64: map['image_base64'] as String?,
     );
   }
 
@@ -170,6 +174,7 @@ class EquineLocalRecord {
       'source_updated_at_label': sourceUpdatedAtLabel,
       'version': version,
       'updated_at': updatedAt,
+      'image_base64': imageBase64,
     };
   }
 
@@ -200,7 +205,9 @@ class EquineLocalRecord {
       lastHeightAt: detail.lastHeightAt,
       isActive: detail.isActive ? 1 : 0,
       isAvailable: detail.isAvailable ? 1 : 0,
-      operationalStatus: detail.operationalStatus.name,
+      operationalStatus: detail.operationalStatus == EquineOperationalStatus.inService
+          ? 'in_service'
+          : detail.operationalStatus.name,
       availabilityNotes: detail.availabilityNotes,
       availabilityReasons: detail.availabilityReasons,
       restUntil: detail.restUntil?.toIso8601String(),
@@ -210,6 +217,7 @@ class EquineLocalRecord {
       workloadLast7Days: detail.workloadLast7Days,
       version: 1,
       updatedAt: detail.updatedAt?.toIso8601String(),
+      imageBase64: detail.imageBase64,
     );
   }
 }

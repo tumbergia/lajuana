@@ -64,6 +64,7 @@ class EquineCreateSchema(BaseModel):
     # Asignación
     max_rider_weight_kg: Decimal | None = Field(default=None, gt=0)
     experience_fit: EquineExperienceFit | None = EquineExperienceFit.ALL
+    image_base64: str | None = None
 
     # Resumen calculado / mantenido por servicios
     last_service_at: datetime | None = None
@@ -115,6 +116,7 @@ class EquineUpdateSchema(BaseModel):
 
     max_rider_weight_kg: Decimal | None = Field(default=None, gt=0)
     experience_fit: EquineExperienceFit | None = None
+    image_base64: str | None = None
 
     last_service_at: datetime | None = None
     workload_last_7_days: int | None = Field(default=None, ge=0)
@@ -166,8 +168,9 @@ class EquineResponseSchema(AuditMetadataSchema):
 
     max_rider_weight_kg: Decimal | None
     experience_fit: EquineExperienceFit | None
+    image_base64: str | None = None
 
-    last_service_at: datetime | None
+    last_service_at: datetime | None = None
     workload_last_7_days: int
 
     source_file: str | None
@@ -194,7 +197,8 @@ class EquineListItemSchema(AuditMetadataSchema):
     operational_status: EquineOperationalStatus
     max_rider_weight_kg: Decimal | None
     experience_fit: EquineExperienceFit | None
-    last_service_at: datetime | None
+    image_base64: str | None = None
+    last_service_at: datetime | None = None
     workload_last_7_days: int
 
 

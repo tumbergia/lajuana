@@ -33,6 +33,7 @@ import '../features/equines/infrastructure/repositories/equine_repository_impl.d
 import '../features/reservations/reservations_module.dart';
 import 'bootstrap/dev_loader_screen.dart';
 import 'bootstrap/startup_gate.dart';
+import '../playground/widget_museum_screen.dart';
 import 'shell/authenticated_shell.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_theme_notifier.dart';
@@ -184,6 +185,9 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
     switch (routeName) {
       case AuthRoutes.devLoader:
         screen = const DevWidgetCatalogScreen();
+        break;
+      case AuthRoutes.widgetMuseum:
+        screen = const WidgetMuseumScreen();
         break;
       case AuthRoutes.sessionGate:
         screen = StartupGate(controller: _authController);

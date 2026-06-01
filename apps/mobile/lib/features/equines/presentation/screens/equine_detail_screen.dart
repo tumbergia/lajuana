@@ -7,10 +7,11 @@ import '../../../../app/widgets/app_metric_card.dart';
 import '../../../../app/widgets/app_scaffold.dart';
 import '../../../../app/widgets/app_section_header.dart';
 import '../../../../app/widgets/app_status_banner.dart';
-import '../../domain/models/equine_experience_fit.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../../infrastructure/mappers/equine_mapper.dart';
+import '../equine_labels.dart';
 import '../models/equine_view_models.dart';
+import '../widgets/equine_image_provider.dart';
 
 class EquineDetailScreen extends StatefulWidget {
   const EquineDetailScreen({
@@ -61,7 +62,7 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      scrollable: false,
+      scrollable: true,
       appBar: AppBar(
         title: Text(_detail?.name ?? 'Detalle de equino'),
         leading: IconButton(
@@ -110,7 +111,7 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
                         if (d.inventoryNumber != null)
                           '#${d.inventoryNumber}',
                         if (d.species != 'unknown')
-                          _speciesLabel(d.species),
+                          equineSpeciesLabel(d.species),
                         if (d.breed != null) d.breed!,
                       ].where((e) => e.isNotEmpty).join(' · '),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -128,17 +129,29 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
             ],
           ),
         ),
+        // Imagen del equino
+        if (d.imageBase64 != null && d.imageBase64!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: ClipRRect(
+              borderRadius: AppRadii.radiusLg,
+              child: EquineImageProvider(
+                imageBase64: d.imageBase64,
+                height: 200,
+              ),
+            ),
+          ),
         // Métricas
         _buildMetricsSection(d),
         const SizedBox(height: 16),
         // Ficha técnica
         _buildSection('Ficha técnica', [
-          _row('Especie', _speciesLabel(d.species)),
+          _row('Especie', equineSpeciesLabel(d.species)),
           _row('Raza', d.breed),
-          _row('Sexo', d.sex == 'male' ? 'Macho' : 'Hembra'),
+          _row('Sexo', equineSexLabel(d.sex)),
           _row('Color', d.coatColor),
           _row('Paso', d.gait),
-          _row('Ubicación', _locationLabel(d.locationStatus)),
+          _row('Ubicación', equineLocationLabel(d.locationStatus)),
           if (d.locationNotes != null) _row('Notas ubicación', d.locationNotes),
         ]),
         const SizedBox(height: 12),
@@ -181,7 +194,7 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
           _row('Disponible', d.isAvailable ? 'Sí' : 'No'),
           _row('Activo', d.isActive ? 'Sí' : 'No'),
           if (d.experienceFit != null)
-            _row('Experiencia', _experienceFitLabel(d.experienceFit!)),
+            _row('Experiencia', equineExperienceLabel(d.experienceFit)),
           if (d.workloadLast7Days > 0)
             _row('Carga semanal', '${d.workloadLast7Days} servicios'),
           if (d.lastServiceAt != null)
@@ -201,52 +214,47 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
   }
 
   Widget _buildMetricsSection(EquineDetailRecord d) {
-    final metrics = <Widget>[];
+    final metricPanels = <Widget>[];
     if (d.approximateAgeYears != null) {
-      metrics.add(
-        Expanded(
-          child: AppMetricCard(
-            title: 'Edad',
-            value: '${d.approximateAgeYears}',
-            supportingText: d.birthDateIsApproximate ? 'aproximada' : null,
-          ),
+      metricPanels.add(
+        AppMetricCard(
+          title: 'Edad',
+          value: '${d.approximateAgeYears}',
+          supportingText: d.birthDateIsApproximate ? 'aproximada' : null,
         ),
       );
     }
     if (d.weightKg != null) {
-      metrics.add(
-        Expanded(
-          child: AppMetricCard(
-            title: 'Peso',
-            value: '${d.weightKg!.toStringAsFixed(0)} kg',
-          ),
+      metricPanels.add(
+        AppMetricCard(
+          title: 'Peso',
+          value: '${d.weightKg!.toStringAsFixed(0)} kg',
         ),
       );
     }
     if (d.maxRiderWeightKg != null) {
-      metrics.add(
-        Expanded(
-          child: AppMetricCard(
-            title: 'Carga máx.',
-            value: '${d.maxRiderWeightKg!.toStringAsFixed(0)} kg',
-            supportingText: 'jinete',
-          ),
+      metricPanels.add(
+        AppMetricCard(
+          title: 'Carga máx.',
+          value: '${d.maxRiderWeightKg!.toStringAsFixed(0)} kg',
+          supportingText: 'jinete',
         ),
       );
     }
-    if (metrics.isEmpty) return const SizedBox.shrink();
+    if (metricPanels.isEmpty) return const SizedBox.shrink();
     return Row(
-      children: metrics.asMap().entries.map((entry) {
-        final idx = entry.key;
-        final child = entry.value;
-        return Padding(
-          padding: EdgeInsets.only(
-            left: idx == 0 ? 0 : 8,
-            right: idx == metrics.length - 1 ? 0 : 8,
+      children: [
+        for (int i = 0; i < metricPanels.length; i++)
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: i == 0 ? 0 : 8,
+                right: i == metricPanels.length - 1 ? 0 : 8,
+              ),
+              child: metricPanels[i],
+            ),
           ),
-          child: child,
-        );
-      }).toList(),
+      ],
     );
   }
 
@@ -310,47 +318,6 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
         return AppStatusBannerTone.danger;
       default:
         return AppStatusBannerTone.info;
-    }
-  }
-
-  String _speciesLabel(String species) {
-    switch (species) {
-      case 'mule':
-        return 'Mula';
-      case 'donkey':
-        return 'Asno';
-      case 'horse':
-        return 'Caballo';
-      default:
-        return species;
-    }
-  }
-
-  String _locationLabel(String loc) {
-    switch (loc) {
-      case 'la_juana':
-        return 'La Juana';
-      case 'other':
-        return 'Otras instalaciones';
-      default:
-        return loc;
-    }
-  }
-
-  String _experienceFitLabel(EquineExperienceFit fit) {
-    switch (fit) {
-      case EquineExperienceFit.beginner:
-        return 'Principiante';
-      case EquineExperienceFit.intermediate:
-        return 'Intermedio';
-      case EquineExperienceFit.advanced:
-        return 'Avanzado';
-      case EquineExperienceFit.all:
-        return 'Todos los niveles';
-      case EquineExperienceFit.staffOnly:
-        return 'Solo personal';
-      case EquineExperienceFit.notAssignable:
-        return 'No asignable';
     }
   }
 

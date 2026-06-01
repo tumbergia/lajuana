@@ -1,14 +1,23 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../../app/widgets/app_badge.dart';
+import '../../../../app/widgets/app_button.dart';
 import '../../../../app/widgets/app_centered_loader.dart';
 import '../../../../app/widgets/app_entity_row_card.dart';
+import '../../../../app/widgets/app_section_header.dart';
 import '../../../../app/widgets/app_status_banner.dart';
+import '../../../../app/widgets/cards/app_image_feature_card.dart';
+import '../../../../app/widgets/cards/app_logbook_timeline.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../controllers/equines_controller.dart';
-import '../models/equine_view_models.dart';
+import '../widgets/app_equine_profile_card.dart';
+import '../widgets/equine_form_sheet.dart';
 import 'equine_detail_screen.dart';
+import 'equine_timeline_screen.dart';
 import '../../../shared/presentation/widgets/module_subroute_header.dart';
 
 class EquinesModuleScreen extends StatefulWidget {
@@ -44,8 +53,6 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen> {
     _controller.dispose();
     super.dispose();
   }
-
-  Future<void> _onRefresh() => _controller.loadEquines();
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +93,10 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen> {
       case EquinesLoadState.empty:
         return _buildEmpty();
       case EquinesLoadState.success:
-        return _buildList();
+        if (_controller.subroute == EquinesSubroute.historial) {
+          return _buildTimelineSection();
+        }
+        return _buildSuccessContent();
     }
   }
 
@@ -156,67 +166,252 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen> {
     );
   }
 
-  Widget _buildList() {
+  Widget _buildSuccessContent() {
+    final records = _controller.records;
+    if (records.isEmpty) {
+      return _buildEmptyMessage();
+    }
+
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Botón Registrar equino
+          AppButton(
+            label: 'Registrar equino',
+            icon: Icons.add,
+            expanded: true,
+            onPressed: () async {
+              final result = await showModalBottomSheet<Map<String, dynamic>>(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                builder: (_) => const EquineFormSheet(),
+              );
+              if (result != null && mounted) {
+                final success = await _controller.createEquine(result);
+                if (success && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Equino creado correctamente')),
+                  );
+                }
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Carrusel horizontal de equinos
+          SizedBox(
+            height: 260,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: records.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, i) {
+                final e = records[i];
+                final isSelected = e.id == _controller.selectedEquineId;
+                return AppImageFeatureCard(
+                  title: e.name,
+                  subtitle: e.subtitle ?? e.summary,
+                  image: _equineImage(e.imageBase64),
+                  badge: AppBadge(
+                    label: e.statusLabel,
+                    tone: e.statusTone,
+                    uppercase: false,
+                  ),
+                  selected: isSelected,
+                  onTap: () => _controller.selectEquine(e.id),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Acciones: Ver info · Editar
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Ver info',
+                  icon: Icons.info_outline_rounded,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: _controller.selectedEquineId != null
+                      ? () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => EquineDetailScreen(
+                                equineId: _controller.selectedEquineId!,
+                                repository: widget.repository,
+                              ),
+                            ),
+                          );
+                        }
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: AppButton(
+                  label: 'Editar',
+                  icon: Icons.edit_rounded,
+                  onPressed: _controller.selectedEquineId != null
+                      ? () async {
+                          final detail = _controller.selectedDetail;
+                          final result = await showModalBottomSheet<Map<String, dynamic>>(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Theme.of(context).colorScheme.surface,
+                            builder: (_) => EquineFormSheet(existing: detail),
+                          );
+                          if (result != null && mounted) {
+                            final success = await _controller.updateEquine(
+                              _controller.selectedEquineId!,
+                              result,
+                            );
+                            if (success && mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Equino actualizado correctamente')),
+                              );
+                            }
+                          }
+                        }
+                      : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Ficha del equino seleccionado
+          _buildSelectedEquineSection(),
+          const SizedBox(height: 16),
+
+          // Timeline
+          _buildTimelineSection(),
+          const SizedBox(height: 32),
+        ],
+    );
+  }
+
+  Widget _buildSelectedEquineSection() {
+    final detail = _controller.selectedDetail;
+    final state = _controller.detailLoadState;
+
+    debugPrint('EquineDetailSection: state=$state detail=${detail?.id}');
+
+    if (state == EquinesLoadState.loading) {
+      return const AppCenteredLoader();
+    }
+    if (state == EquinesLoadState.error) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: AppStatusBanner(
+          title: 'Error al cargar detalle',
+          message: _controller.detailErrorMessage,
+          tone: AppStatusBannerTone.danger,
+        ),
+      );
+    }
+    if (detail == null) {
+      return const SizedBox.shrink();
+    }
+    return AppEquineProfileCard(detail: detail);
+  }
+
+  Widget _buildEmptyMessage() {
+    return Center(
+      child: Text(
+        _emptyMessage(),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+      ),
+    );
+  }
+
+  ImageProvider _equineImage(String? base64) {
+    if (base64 == null || base64.isEmpty) {
+      return MemoryImage(Uint8List(0));
+    }
+    try {
+      return MemoryImage(base64Decode(base64));
+    } catch (_) {
+      return MemoryImage(Uint8List(0));
+    }
+  }
+
+  /// Sección de historial reciente para la subruta "Historial".
+  /// Muestra entradas mock del timeline + botón para ver el completo.
+  Widget _buildTimelineSection() {
     final records = _controller.records;
     if (records.isEmpty) {
       return Center(
         child: Text(
-          _emptyMessage(),
+          'Sin historial disponible',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         ),
       );
     }
-    return ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: records.length,
-        itemBuilder: (context, i) {
-          final e = records[i];
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: i < records.length - 1 ? 10 : 0,
-            ),
-            child: AppEntityRowCard(
-              title: e.name,
-              subtitle: e.subtitle ?? e.summary,
-              leading: _speciesIcon(e.species),
-              badge: AppBadge(
-                label: e.statusLabel,
-                tone: e.statusTone,
-                uppercase: false,
-              ),
-              trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => EquineDetailScreen(
-                      equineId: e.id,
-                      repository: widget.repository,
-                    ),
-                  ),
-                );
-              },
-            ),
-          );
-        },
-      );
-  }
 
-  Widget _speciesIcon(String species) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(8),
+    final firstRecord = records.first;
+    final mockEntries = [
+      AppLogbookTimelineEntry(
+        title: 'Servicio de monta',
+        dateLabel: '15/03/2026',
+        reservationLabel: 'RES-001',
+        guideLabel: 'Carlos',
+        durationLabel: '2h',
+        state: AppLogbookEntryState.completed,
       ),
-      child: Icon(
-        Symbols.chess_knight,
-        size: 22,
-        color: Theme.of(context).colorScheme.onPrimaryContainer,
+      AppLogbookTimelineEntry(
+        title: 'Control veterinario',
+        dateLabel: '10/03/2026',
+        reservationLabel: 'VET-023',
+        guideLabel: 'Dra. Martínez',
+        durationLabel: '45min',
+        state: AppLogbookEntryState.completed,
       ),
+      AppLogbookTimelineEntry(
+        title: 'Servicio de cabalgata',
+        dateLabel: '08/03/2026',
+        reservationLabel: 'RES-089',
+        guideLabel: 'María',
+        durationLabel: '3h',
+        state: AppLogbookEntryState.completed,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSectionHeader(
+          title: 'Historial reciente',
+          variant: AppSectionHeaderVariant.compact,
+        ),
+        const SizedBox(height: 16),
+        AppLogbookTimeline(entries: mockEntries),
+        const SizedBox(height: 20),
+        AppButton(
+          label: 'Ver timeline completo',
+          icon: Icons.history_rounded,
+          variant: AppButtonVariant.secondary,
+          expanded: true,
+          onPressed: () {
+            final id = _controller.selectedEquineId ?? firstRecord.id;
+            final record =
+                records.firstWhere((r) => r.id == id, orElse: () => firstRecord);
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => EquineTimelineScreen(
+                  equineId: record.id,
+                  equineName: record.name,
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 

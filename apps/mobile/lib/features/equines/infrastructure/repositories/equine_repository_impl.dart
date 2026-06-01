@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../domain/models/equine.dart';
+import '../../domain/models/equine_operational_status.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../../presentation/models/equine_view_models.dart';
 import '../local/equine_local_records.dart';
@@ -63,6 +64,24 @@ class EquineRepositoryImpl implements EquineRepository {
     }
   }
 
+  @override
+  Future<Equine> createEquine(Map<String, dynamic> data) async {
+    final dto = await _api.createEquine(data);
+    final equine = EquineMapper.dtoToDomain(dto);
+    // Invalidate cache
+    _db.clear().ignore();
+    return equine;
+  }
+
+  @override
+  Future<Equine> updateEquine(String equineId, Map<String, dynamic> data) async {
+    final dto = await _api.updateEquine(equineId, data);
+    final equine = EquineMapper.dtoToDomain(dto);
+    // Invalidate cache for this equine
+    _db.clear().ignore();
+    return equine;
+  }
+
   Future<void> _cacheList(List<Equine> equines) async {
     final records = equines
         .map((e) => EquineMapper.domainToDetailRecord(e))
@@ -98,6 +117,7 @@ class EquineRepositoryImpl implements EquineRepository {
       availabilityReasons: record.availabilityReasons,
       version: record.version,
       updatedAt: record.updatedAt,
+      imageBase64: record.imageBase64,
     );
   }
 
@@ -114,7 +134,9 @@ class EquineRepositoryImpl implements EquineRepository {
       'gait': detail.gait,
       'is_available': detail.isAvailable ? 1 : 0,
       'availability_notes': detail.availabilityNotes,
-      'operational_status': detail.operationalStatus.name,
+      'operational_status': detail.operationalStatus == EquineOperationalStatus.inService
+          ? 'in_service'
+          : detail.operationalStatus.name,
       'max_rider_weight_kg': detail.maxRiderWeightKg,
       'experience_fit': detail.experienceFit?.name,
       'rest_until': detail.restUntil?.toIso8601String(),
@@ -123,6 +145,7 @@ class EquineRepositoryImpl implements EquineRepository {
       'availability_reasons': detail.availabilityReasons,
       'version': 1,
       'updated_at': detail.updatedAt?.toIso8601String(),
+      'image_base64': detail.imageBase64,
     };
   }
 }
