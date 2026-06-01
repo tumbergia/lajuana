@@ -154,9 +154,11 @@ AppBadgeTone _statusTone(EquineOperationalStatus status) {
 }
 
 String _summary(Equine equine) {
-  if (equine.availabilityReasons != null &&
-      equine.availabilityReasons!.isNotEmpty) {
-    return equine.availabilityReasons!;
+  // Si availabilityReasons es un texto técnico/interno (contiene "="),
+  // lo ignoramos y usamos el resumen basado en estado operativo.
+  final reasons = equine.availabilityReasons;
+  if (reasons != null && reasons.isNotEmpty && !reasons.contains('=')) {
+    return reasons;
   }
   switch (equine.operationalStatus) {
     case EquineOperationalStatus.available:
@@ -213,4 +215,28 @@ String _formatDate(DateTime date) {
   final day = date.day.toString().padLeft(2, '0');
   final month = date.month.toString().padLeft(2, '0');
   return '$day/$month';
+}
+
+/// Normaliza availabilityReasons técnicos (ej. "status=restricted")
+/// a texto legible en español. Si no reconoce el patrón, devuelve el original.
+String normalizeReason(String reason) {
+  if (reason.contains('=')) {
+    final parts = reason.split(';');
+    for (final part in parts) {
+      final trimmed = part.trim();
+      if (trimmed.startsWith('status=')) {
+        final status = trimmed.substring(7);
+        switch (status) {
+          case 'restricted':
+            return 'Acceso restringido';
+          case 'active':
+            return 'Disponible';
+        }
+      }
+      if (trimmed.startsWith('is_assignable=false')) {
+        return 'No asignable a participantes';
+      }
+    }
+  }
+  return reason;
 }

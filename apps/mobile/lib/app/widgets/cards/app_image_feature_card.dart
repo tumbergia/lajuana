@@ -12,6 +12,7 @@ class AppImageFeatureCard extends StatelessWidget {
   final VoidCallback? onTap;
   final double width;
   final double imageHeight;
+  final double? imageAspectRatio;
 
   const AppImageFeatureCard({
     super.key,
@@ -23,6 +24,7 @@ class AppImageFeatureCard extends StatelessWidget {
     this.onTap,
     this.width = 240,
     this.imageHeight = 160,
+    this.imageAspectRatio,
   });
 
   @override
@@ -43,22 +45,39 @@ class AppImageFeatureCard extends StatelessWidget {
                   topLeft: Radius.circular(8),
                   topRight: Radius.circular(8),
                 ),
-                child: Image(
-                  image: image,
-                  width: width,
-                  height: imageHeight,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    width: width,
-                    height: imageHeight,
-                    color: scheme.surfaceContainerHigh,
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.image_not_supported_outlined,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
+                child: imageAspectRatio != null
+                    ? AspectRatio(
+                        aspectRatio: imageAspectRatio!,
+                        child: Image(
+                          image: image,
+                          width: width,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Container(
+                            color: scheme.surfaceContainerHigh,
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Image(
+                        image: image,
+                        width: width,
+                        height: imageHeight,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          width: width,
+                          height: imageHeight,
+                          color: scheme.surfaceContainerHigh,
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
               ),
               if (badge != null) Positioned(top: 12, left: 12, child: badge!),
             ],

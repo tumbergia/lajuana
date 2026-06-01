@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../../app/theme/theme_extensions.dart';
 import '../../../../app/widgets/app_badge.dart';
@@ -117,6 +118,8 @@ class AppEquineProfileCard extends StatelessWidget {
           value: d.weightKg!.toStringAsFixed(0),
           suffix: 'kg',
           compact: true,
+          icon: Symbols.weight_rounded,
+          iconSize: 56,
         ),
       );
     }
@@ -127,22 +130,21 @@ class AppEquineProfileCard extends StatelessWidget {
           value: d.maxRiderWeightKg!.toStringAsFixed(0),
           suffix: 'kg',
           compact: true,
+          icon: Symbols.fitness_center_rounded,
+          iconSize: 56,
         ),
       );
     }
     if (metricPanels.isEmpty) return const SizedBox.shrink();
 
-    return Row(
+    return Column(
       children: [
         for (int i = 0; i < metricPanels.length; i++)
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: i == 0 ? 0 : tokens.spaceSm,
-                right: i == metricPanels.length - 1 ? 0 : tokens.spaceSm,
-              ),
-              child: metricPanels[i],
+          Padding(
+            padding: EdgeInsets.only(
+              top: i == 0 ? 0 : tokens.spaceSm,
             ),
+            child: metricPanels[i],
           ),
       ],
     );
@@ -184,7 +186,11 @@ class AppEquineProfileCard extends StatelessWidget {
             context: theme,
             scheme: scheme,
             label: equineLocationFieldLabel(),
-            value: equineLocationLabel(d.locationStatus),
+            trailing: AppBadge(
+              label: equineLocationLabel(d.locationStatus),
+              tone: AppBadgeTone.neutral,
+              uppercase: false,
+            ),
           ),
           if (d.locationNotes != null && d.locationNotes!.isNotEmpty) ...[
             const SizedBox(height: 4),
@@ -204,7 +210,11 @@ class AppEquineProfileCard extends StatelessWidget {
               context: theme,
               scheme: scheme,
               label: equineExperienceFieldLabel(),
-              value: equineExperienceLabel(d.experienceFit),
+              trailing: AppBadge(
+                label: equineExperienceLabel(d.experienceFit),
+                tone: AppBadgeTone.neutral,
+                uppercase: false,
+              ),
             ),
           ],
         ],
@@ -218,6 +228,10 @@ class AppEquineProfileCard extends StatelessWidget {
     ColorScheme scheme,
     AppThemeTokens tokens,
   ) {
+    final hasLastService = d.lastServiceAt != null;
+    final hasWorkload = d.workloadLast7Days > 0;
+    if (!hasLastService && !hasWorkload) return const SizedBox.shrink();
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -233,16 +247,16 @@ class AppEquineProfileCard extends StatelessWidget {
             variant: AppSectionHeaderVariant.compact,
           ),
           const SizedBox(height: 8),
-          if (d.lastServiceAt != null)
+          if (hasLastService)
             _infoRow(
               context: theme,
               scheme: scheme,
               label: equineLastServiceLabel(),
               value: '${d.lastServiceAt!.day.toString().padLeft(2, '0')}/${d.lastServiceAt!.month.toString().padLeft(2, '0')}/${d.lastServiceAt!.year}',
             ),
-          if (d.workloadLast7Days > 0)
+          if (hasWorkload)
             Padding(
-              padding: EdgeInsets.only(top: d.lastServiceAt != null ? 4 : 0),
+              padding: EdgeInsets.only(top: hasLastService ? 4 : 0),
               child: _infoRow(
                 context: theme,
                 scheme: scheme,

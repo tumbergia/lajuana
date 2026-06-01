@@ -8,6 +8,7 @@ class AppMetricCard extends StatelessWidget {
   final String? suffix;
   final String? supportingText;
   final IconData? icon;
+  final double? iconSize;
   final AppMetricCardTone tone;
   final bool compact;
 
@@ -18,6 +19,7 @@ class AppMetricCard extends StatelessWidget {
     this.suffix,
     this.supportingText,
     this.icon,
+    this.iconSize,
     this.tone = AppMetricCardTone.defaultTone,
     this.compact = false,
   });
@@ -57,70 +59,83 @@ class AppMetricCard extends StatelessWidget {
       ),
     };
 
+    final iconSizeFinal = iconSize ?? 28;
+
+    final cardBody = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title.toUpperCase(),
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: colors.title,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ),
+            if (icon != null && iconSizeFinal <= 28)
+              Icon(icon, color: colors.icon, size: iconSizeFinal),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.end,
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            Text(
+              value,
+              style: theme.textTheme.displayLarge?.copyWith(
+                color: colors.value,
+                fontWeight: FontWeight.w800,
+                fontSize: compact ? 56 : 64,
+                height: 0.95,
+              ),
+            ),
+            if (suffix != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  suffix!,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: colors.supporting,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (supportingText != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            supportingText!,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colors.supporting,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ],
+    );
+
     return Container(
       padding: EdgeInsets.all(compact ? 20 : 24),
       decoration: BoxDecoration(
         color: colors.background,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title.toUpperCase(),
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: colors.title,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
-              if (icon != null) Icon(icon, color: colors.icon, size: 28),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.end,
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              Text(
-                value,
-                style: theme.textTheme.displayLarge?.copyWith(
-                  color: colors.value,
-                  fontWeight: FontWeight.w800,
-                  fontSize: compact ? 56 : 64,
-                  height: 0.95,
-                ),
-              ),
-              if (suffix != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    suffix!,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: colors.supporting,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          if (supportingText != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              supportingText!,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: colors.supporting,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ],
-      ),
+      child: icon != null && iconSizeFinal > 28
+          ? Row(
+              children: [
+                Expanded(child: cardBody),
+                const SizedBox(width: 16),
+                Icon(icon, color: colors.icon, size: iconSizeFinal),
+              ],
+            )
+          : cardBody,
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_button.dart';
+import '../../../../app/widgets/app_centered_loader.dart';
 import '../../../../app/widgets/app_entity_row_card.dart';
 import '../../../../app/widgets/app_section_header.dart';
 import '../../../../app/widgets/app_status_banner.dart';
@@ -14,6 +15,7 @@ import '../../../../app/widgets/cards/app_logbook_timeline.dart';
 import '../../../../app/widgets/refresh_scope.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../controllers/equines_controller.dart';
+import '../models/equine_view_models.dart';
 import '../widgets/app_equine_profile_card.dart';
 import '../widgets/equine_form_sheet.dart';
 import 'equine_detail_screen.dart';
@@ -32,9 +34,26 @@ class EquinesModuleScreen extends StatefulWidget {
   State<EquinesModuleScreen> createState() => _EquinesModuleScreenState();
 }
 
+enum _ViewMode { grid, list }
+
 class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     with RefreshableState {
   late final EquinesController _controller;
+
+  _ViewMode _viewMode = _ViewMode.grid;
+  late final TextEditingController _searchController;
+  String _searchQuery = '';
+
+  List<EquineRecord> get _filteredRecords {
+    final q = _searchQuery;
+    if (q.isEmpty) return _controller.records;
+    final lower = q.toLowerCase();
+    return _controller.records.where((r) {
+      return r.name.toLowerCase().contains(lower) ||
+          (r.inventoryNumber?.toString() ?? '').contains(lower) ||
+          (r.subtitle?.toLowerCase() ?? '').contains(lower);
+    }).toList();
+  }
 
   @override
   Future<void> onRefresh() => _controller.loadEquines();
@@ -42,6 +61,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController();
     _controller = EquinesController(repository: widget.repository);
     _controller.addListener(_onChanged);
     _controller.loadEquines();
@@ -55,6 +75,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
   void dispose() {
     _controller.removeListener(_onChanged);
     _controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -68,7 +89,6 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
           ModuleSubrouteHeader(
             eyebrow: 'Equinos',
             title: 'Gestión de equinos',
-            subtitle: 'Disponibilidad, historial y cuidado operativo',
             subrouteLabels: const [
               'Resumen',
               'Historial',
@@ -105,21 +125,10 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
   }
 
   Widget _buildLoading() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: 5,
-      itemBuilder: (_, __) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: AppEntityRowCard(
-          title: 'Cargando...',
-          subtitle: '···',
-          badge: AppBadge(
-            label: '···',
-            tone: AppBadgeTone.neutral,
-            uppercase: false,
-          ),
-        ),
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 48),
+        child: AppCenteredLoader(),
       ),
     );
   }
@@ -179,7 +188,66 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Botón Registrar equino
+          // ── Search + view toggle ──────────────────────────────────────
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (v) => setState(() => _searchQuery = v),
+                  decoration: InputDecoration(
+                    hintText: 'Buscar equino…',
+                    prefixIcon: Icon(Symbols.search_rounded, size: 20),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: Icon(Symbols.close_rounded, size: 18),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          )
+                        : null,
+                    isDense: true,
+                    filled: true,
+                    fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Material(
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => setState(() {
+                    _viewMode = _viewMode == _ViewMode.grid
+                        ? _ViewMode.list
+                        : _ViewMode.grid;
+                  }),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(
+                      _viewMode == _ViewMode.grid
+                          ? Symbols.grid_view_rounded
+                          : Symbols.format_list_bulleted_rounded,
+                      size: 22,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // ── Botón Registrar equino ────────────────────────────────────
           AppButton(
             label: 'Registrar equino',
             icon: Icons.add,
@@ -203,96 +271,270 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
           ),
           const SizedBox(height: 16),
 
-          // Carrusel horizontal de equinos
-          SizedBox(
-            height: 260,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: records.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, i) {
-                final e = records[i];
-                final isSelected = e.id == _controller.selectedEquineId;
-                return AppImageFeatureCard(
-                  title: e.name,
-                  subtitle: e.subtitle ?? e.summary,
-                  image: _equineImage(e.imageBase64),
-                  badge: AppBadge(
-                    label: e.statusLabel,
-                    tone: e.statusTone,
-                    uppercase: false,
-                  ),
-                  selected: isSelected,
-                  onTap: () => _controller.selectEquine(e.id),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Acciones: Ver info · Editar
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: 'Ver info',
-                  icon: Icons.info_outline_rounded,
-                  variant: AppButtonVariant.secondary,
-                  onPressed: _controller.selectedEquineId != null
-                      ? () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => EquineDetailScreen(
-                                equineId: _controller.selectedEquineId!,
-                                repository: widget.repository,
-                              ),
-                            ),
-                          );
-                        }
-                      : null,
-                ),
+          if (_viewMode == _ViewMode.grid) ...[
+            // ── Carrusel horizontal de equinos ──────────────────────────
+            SizedBox(
+              height: 340,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _filteredRecords.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, i) {
+                  final e = _filteredRecords[i];
+                  final isSelected = e.id == _controller.selectedEquineId;
+                  return AppImageFeatureCard(
+                    title: e.name,
+                    subtitle: e.subtitle ?? e.summary,
+                    image: _equineImage(e.imageBase64),
+                    badge: AppBadge(
+                      label: e.statusLabel,
+                      tone: e.statusTone,
+                      uppercase: false,
+                    ),
+                    selected: isSelected,
+                    onTap: () => _controller.selectEquine(e.id),
+                    imageAspectRatio: 1.0,
+                  );
+                },
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppButton(
-                  label: 'Editar',
-                  icon: Icons.edit_rounded,
-                  onPressed: _controller.selectedEquineId != null
-                      ? () async {
-                          final detail = _controller.selectedDetail;
-                          final result = await showModalBottomSheet<Map<String, dynamic>>(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Theme.of(context).colorScheme.surface,
-                            builder: (_) => EquineFormSheet(existing: detail),
-                          );
-                          if (result != null && mounted) {
-                            final success = await _controller.updateEquine(
-                              _controller.selectedEquineId!,
-                              result,
+            ),
+            const SizedBox(height: 12),
+
+            // ── Acciones: Ver info · Editar ─────────────────────────────
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: 'Ver info',
+                    icon: Icons.info_outline_rounded,
+                    variant: AppButtonVariant.secondary,
+                    onPressed: _controller.selectedEquineId != null
+                        ? () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => EquineDetailScreen(
+                                  equineId: _controller.selectedEquineId!,
+                                  repository: widget.repository,
+                                ),
+                              ),
                             );
-                            if (success && mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Equino actualizado correctamente')),
+                          }
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppButton(
+                    label: 'Editar',
+                    icon: Icons.edit_rounded,
+                    onPressed: _controller.selectedEquineId != null
+                        ? () async {
+                            final detail = _controller.selectedDetail;
+                            final result = await showModalBottomSheet<Map<String, dynamic>>(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Theme.of(context).colorScheme.surface,
+                              builder: (_) => EquineFormSheet(existing: detail),
+                            );
+                            if (result != null && mounted) {
+                              final success = await _controller.updateEquine(
+                                _controller.selectedEquineId!,
+                                result,
                               );
+                              if (success && mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Equino actualizado correctamente')),
+                                );
+                              }
                             }
                           }
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // ── Ficha del equino seleccionado ───────────────────────────
+            _buildSelectedEquineSection(),
+            const SizedBox(height: 16),
+
+            // ── Timeline ────────────────────────────────────────────────
+            _buildTimelineSection(),
+            const SizedBox(height: 32),
+          ] else ...[
+            // ── Vista lista ─────────────────────────────────────────────
+            _buildListView(),
+          ],
+        ],
+    );
+  }
+
+  void _showEquineActions(BuildContext context, EquineRecord equine) {
+    final scheme = Theme.of(context).colorScheme;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: scheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                equine.name,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                equine.summary,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  label: 'Ver detalles',
+                  icon: Icons.info_outline_rounded,
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => EquineDetailScreen(
+                          equineId: equine.id,
+                          repository: widget.repository,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  label: 'Editar',
+                  icon: Symbols.edit_rounded,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () {
+                    final messenger = ScaffoldMessenger.of(context);
+                    Navigator.of(ctx).pop();
+                    _controller.selectEquine(equine.id);
+                    final detail = _controller.selectedDetail;
+                    if (detail == null) return;
+                    showModalBottomSheet<Map<String, dynamic>>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: scheme.surface,
+                      builder: (_) => EquineFormSheet(existing: detail),
+                    ).then((result) async {
+                      if (result != null && mounted) {
+                        final success = await _controller.updateEquine(equine.id, result);
+                        if (success && mounted) {
+                          messenger.showSnackBar(
+                            const SnackBar(content: Text('Equino actualizado correctamente')),
+                          );
                         }
-                      : null,
+                      }
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  label: 'Cerrar',
+                  icon: Symbols.close_rounded,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => Navigator.of(ctx).pop(),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+        );
+      },
+    );
+  }
 
-          // Ficha del equino seleccionado
-          _buildSelectedEquineSection(),
-          const SizedBox(height: 16),
+  Widget _buildListView() {
+    final filtered = _filteredRecords;
+    if (filtered.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 48),
+          child: Text(
+            'Sin resultados',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
 
-          // Timeline
-          _buildTimelineSection(),
-          const SizedBox(height: 32),
-        ],
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: filtered.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 6),
+      itemBuilder: (context, i) {
+        final e = filtered[i];
+        return AppEntityRowCard(
+          title: e.name,
+          subtitle: e.summary,
+          badge: AppBadge(
+            label: e.statusLabel,
+            tone: e.statusTone,
+            uppercase: false,
+          ),
+          leading: e.imageBase64 != null && e.imageBase64!.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: Image.memory(
+                    base64Decode(e.imageBase64!),
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _listPlaceholder(),
+                  ),
+                )
+              : _listPlaceholder(),
+          onTap: () => _showEquineActions(context, e),
+        );
+      },
+    );
+  }
+
+  Widget _listPlaceholder() {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(
+        Symbols.chess_knight,
+        size: 24,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
     );
   }
 

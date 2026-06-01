@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../../app/theme/app_radii.dart';
 import '../../../../app/widgets/app_badge.dart';
@@ -133,11 +134,15 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
         if (d.imageBase64 != null && d.imageBase64!.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
-            child: ClipRRect(
-              borderRadius: AppRadii.radiusLg,
-              child: EquineImageProvider(
-                imageBase64: d.imageBase64,
-                height: 200,
+            child: Center(
+              child: FractionallySizedBox(
+                widthFactor: 0.4,
+                child: ClipRRect(
+                  borderRadius: AppRadii.radiusLg,
+                  child: EquineImageProvider(
+                    imageBase64: d.imageBase64,
+                  ),
+                ),
               ),
             ),
           ),
@@ -146,66 +151,69 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
         const SizedBox(height: 16),
         // Ficha técnica
         _buildSection('Ficha técnica', [
-          _row('Especie', equineSpeciesLabel(d.species)),
-          _row('Raza', d.breed),
-          _row('Sexo', equineSexLabel(d.sex)),
-          _row('Color', d.coatColor),
-          _row('Paso', d.gait),
-          _row('Ubicación', equineLocationLabel(d.locationStatus)),
-          if (d.locationNotes != null) _row('Notas ubicación', d.locationNotes),
+          _row('Especie', equineSpeciesLabel(d.species), icon: Symbols.pets_rounded),
+          _row('Raza', d.breed, icon: Symbols.category_rounded),
+          _row('Sexo', equineSexLabel(d.sex), icon: Symbols.wc_rounded),
+          _row('Color', d.coatColor, icon: Symbols.palette_rounded),
+          _row('Paso', d.gait, icon: Symbols.directions_walk_rounded),
+          _row('Ubicación', equineLocationLabel(d.locationStatus), icon: Symbols.location_on_rounded),
+          if (d.locationNotes != null)
+            _row('Notas ubicación', d.locationNotes, icon: Symbols.notes_rounded),
         ]),
         const SizedBox(height: 12),
         // Identificación
         _buildSection('Identificación', [
           if (d.registryNumber != null)
-            _row('# Registro', d.registryNumber),
-          if (d.microchip != null) _row('Microchip', d.microchip),
+            _row('# Registro', d.registryNumber, icon: Symbols.tag_rounded),
+          if (d.microchip != null) _row('Microchip', d.microchip, icon: Symbols.memory_rounded),
         ]),
         const SizedBox(height: 12),
         // Nacimiento
         _buildSection('Nacimiento', [
           if (d.approximateBirthDate != null)
-            _row('Fecha', d.approximateBirthDate!),
-          if (d.birthDateRaw != null) _row('Texto original', d.birthDateRaw),
+            _row('Fecha', d.approximateBirthDate!, icon: Symbols.calendar_month_rounded),
+          if (d.birthDateRaw != null) _row('Texto original', d.birthDateRaw, icon: Symbols.description_rounded),
           if (d.approximateAgeYears != null)
-            _row('Edad aprox.', '${d.approximateAgeYears} años'),
-          if (d.birthPlace != null) _row('Lugar', d.birthPlace),
+            _row('Edad aprox.', '${d.approximateAgeYears} años', icon: Symbols.schedule_rounded),
+          if (d.birthPlace != null) _row('Lugar', d.birthPlace, icon: Symbols.place_rounded),
         ]),
         const SizedBox(height: 12),
         // Genealogía
         _buildSection('Genealogía', [
-          if (d.sireName != null) _row('Padre', d.sireName!),
-          if (d.damName != null) _row('Madre', d.damName!),
+          if (d.sireName != null) _row('Padre', d.sireName!, icon: Symbols.male_rounded),
+          if (d.damName != null) _row('Madre', d.damName!, icon: Symbols.female_rounded),
         ]),
         const SizedBox(height: 12),
         // Medidas
         _buildSection('Medidas', [
-          if (d.weightKg != null) _row('Peso', '${d.weightKg!.toStringAsFixed(0)} kg'),
-          if (d.heightM != null) _row('Alzada', '${d.heightM!.toStringAsFixed(2)} m'),
+          if (d.weightKg != null)
+            _row('Peso', '${d.weightKg!.toStringAsFixed(0)} kg', icon: Symbols.scale_rounded),
+          if (d.heightM != null)
+            _row('Alzada', '${d.heightM!.toStringAsFixed(2)} m', icon: Symbols.height_rounded),
           if (d.maxRiderWeightKg != null)
-            _row('Carga jinete', '${d.maxRiderWeightKg!.toStringAsFixed(0)} kg'),
-          if (d.lastWeightAt != null) _row('Último peso', d.lastWeightAt!),
-          if (d.lastHeightAt != null) _row('Última alzada', d.lastHeightAt!),
+            _row('Carga jinete', '${d.maxRiderWeightKg!.toStringAsFixed(0)} kg', icon: Symbols.fitness_center_rounded),
+          if (d.lastWeightAt != null) _row('Último peso', d.lastWeightAt!, icon: Symbols.scale_rounded),
+          if (d.lastHeightAt != null) _row('Última alzada', d.lastHeightAt!, icon: Symbols.height_rounded),
         ]),
         const SizedBox(height: 12),
         // Operación
         _buildSection('Operación', [
-          _row('Estado', d.statusLabel),
-          _row('Disponible', d.isAvailable ? 'Sí' : 'No'),
-          _row('Activo', d.isActive ? 'Sí' : 'No'),
+          _row('Estado', d.statusLabel, icon: Symbols.radio_button_checked_rounded),
+          _row('Disponible', d.isAvailable ? 'Sí' : 'No', icon: Symbols.check_circle_rounded),
+          _row('Activo', d.isActive ? 'Sí' : 'No', icon: Symbols.offline_bolt_rounded),
           if (d.experienceFit != null)
-            _row('Experiencia', equineExperienceLabel(d.experienceFit)),
+            _row('Experiencia', equineExperienceLabel(d.experienceFit), icon: Symbols.stars_rounded),
           if (d.workloadLast7Days > 0)
-            _row('Carga semanal', '${d.workloadLast7Days} servicios'),
+            _row('Carga semanal', '${d.workloadLast7Days} servicios', icon: Symbols.date_range_rounded),
           if (d.lastServiceAt != null)
-            _row('Último servicio', _formatDate(d.lastServiceAt!)),
+            _row('Último servicio', _formatDate(d.lastServiceAt!), icon: Symbols.history_rounded),
         ]),
         if (d.availabilityReasons != null &&
             d.availabilityReasons!.isNotEmpty) ...[
           const SizedBox(height: 12),
           AppStatusBanner(
             title: 'Motivo',
-            message: d.availabilityReasons!,
+            message: normalizeReason(d.availabilityReasons!),
             tone: _bannerToneFromBadge(d.statusTone),
           ),
         ],
@@ -229,6 +237,8 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
         AppMetricCard(
           title: 'Peso',
           value: '${d.weightKg!.toStringAsFixed(0)} kg',
+          icon: Symbols.weight_rounded,
+          iconSize: 56,
         ),
       );
     }
@@ -283,7 +293,7 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
     );
   }
 
-  Widget _row(String label, String? value) {
+  Widget _row(String label, String? value, {required IconData icon}) {
     if (value == null || value.isEmpty) return const SizedBox.shrink();
     final scheme = Theme.of(context).colorScheme;
     return Padding(
@@ -291,8 +301,10 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(icon, size: 16, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 8),
           SizedBox(
-            width: 120,
+            width: 100,
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -300,6 +312,7 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
                   ),
             ),
           ),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(value, style: Theme.of(context).textTheme.bodyMedium),
           ),

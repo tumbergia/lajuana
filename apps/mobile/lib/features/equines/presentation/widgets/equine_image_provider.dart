@@ -9,13 +9,11 @@ class EquineImageProvider extends StatelessWidget {
     super.key,
     this.imageBase64,
     this.width = double.infinity,
-    this.height = 160,
     this.fit = BoxFit.cover,
   });
 
   final String? imageBase64;
   final double width;
-  final double height;
   final BoxFit fit;
 
   @override
@@ -25,12 +23,14 @@ class EquineImageProvider extends StatelessWidget {
     }
     try {
       final bytes = base64Decode(imageBase64!);
-      return Image.memory(
-        bytes,
-        width: width,
-        height: height,
-        fit: fit,
-        errorBuilder: (_, __, ___) => _fallback(context),
+      return AspectRatio(
+        aspectRatio: 1.0,
+        child: Image.memory(
+          bytes,
+          width: width,
+          fit: fit,
+          errorBuilder: (_, __, ___) => _fallback(context),
+        ),
       );
     } catch (_) {
       return _fallback(context);
@@ -39,12 +39,14 @@ class EquineImageProvider extends StatelessWidget {
 
   Widget _fallback(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: width,
-      height: height,
-      color: scheme.surfaceContainerHigh,
-      alignment: Alignment.center,
-      child: Icon(Symbols.chess_knight, size: 48, color: scheme.onSurfaceVariant),
+    return AspectRatio(
+      aspectRatio: 1.0,
+      child: Container(
+        width: width,
+        color: scheme.surfaceContainerHigh,
+        alignment: Alignment.center,
+        child: Icon(Symbols.chess_knight, size: 48, color: scheme.onSurfaceVariant),
+      ),
     );
   }
 }

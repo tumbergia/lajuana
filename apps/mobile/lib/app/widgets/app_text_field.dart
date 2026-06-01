@@ -28,6 +28,9 @@ class AppTextField extends StatelessWidget {
   /// Widget al final del campo (ej: ícono de búsqueda, mostrar contraseña).
   final Widget? suffix;
 
+  /// Widget al inicio del campo (ej: ícono).
+  final Widget? prefixIcon;
+
   /// Número de líneas. null = ilimitado.
   final int? maxLines;
 
@@ -47,6 +50,7 @@ class AppTextField extends StatelessWidget {
     this.label,
     this.hintText,
     this.suffix,
+    this.prefixIcon,
     this.maxLines = 1,
     this.variant = AppTextFieldVariant.filled,
     this.keyboardType,
@@ -138,6 +142,7 @@ class AppTextField extends StatelessWidget {
             hintStyle: theme.textTheme.bodyMedium?.copyWith(
               color: scheme.onSurfaceVariant,
             ),
+            prefixIcon: prefixIcon,
             suffixIcon: suffix,
             isDense: true,
             filled: variant == AppTextFieldVariant.filled,

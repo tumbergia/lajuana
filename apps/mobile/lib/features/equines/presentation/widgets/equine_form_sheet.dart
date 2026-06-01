@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -137,13 +139,20 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
                   child: Column(
                     children: [
                       if (_imageBase64 != null)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: Image.memory(
-                            base64Decode(_imageBase64!),
-                            height: 160,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
+                        Center(
+                          child: FractionallySizedBox(
+                            widthFactor: 0.4,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: AspectRatio(
+                                aspectRatio: 1.0,
+                                child: Image.memory(
+                                  base64Decode(_imageBase64!),
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
                           ),
                         )
                       else
@@ -173,6 +182,10 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               label: 'Nombre *',
               hintText: 'Ej: Relámpago',
               controller: _nameController,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Symbols.badge_rounded, size: 18, color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 12),
             AppTextField(
@@ -180,6 +193,10 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               hintText: 'Ej: 1234',
               controller: _inventoryNumberController,
               keyboardType: TextInputType.number,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Symbols.tag_rounded, size: 18, color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 20),
 
@@ -197,12 +214,17 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               onChanged: (v) {
                 if (v != null) setState(() => _species = v);
               },
+              prefixIcon: Symbols.pets_rounded,
             ),
             const SizedBox(height: 12),
             AppTextField(
               label: 'Raza',
               hintText: 'Ej: Criollo',
               controller: _breedController,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Symbols.category_rounded, size: 18, color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 12),
             _dropdownField(
@@ -215,18 +237,27 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               onChanged: (v) {
                 if (v != null) setState(() => _sex = v);
               },
+              prefixIcon: Symbols.wc_rounded,
             ),
             const SizedBox(height: 12),
             AppTextField(
               label: 'Color de capa',
               hintText: 'Ej: Zaino',
               controller: _coatColorController,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Symbols.palette_rounded, size: 18, color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 12),
             AppTextField(
               label: 'Paso / Marcha',
               hintText: 'Ej: Picadero',
               controller: _gaitController,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Symbols.directions_walk_rounded, size: 18, color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 20),
 
@@ -238,6 +269,10 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               hintText: 'Ej: 450',
               controller: _weightController,
               keyboardType: TextInputType.number,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Symbols.weight_rounded, size: 18, color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 12),
             AppTextField(
@@ -246,6 +281,10 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               controller: _heightController,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Symbols.height_rounded, size: 18, color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 12),
             AppTextField(
@@ -253,6 +292,10 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               hintText: 'Ej: 90',
               controller: _maxRiderWeightController,
               keyboardType: TextInputType.number,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Symbols.fitness_center_rounded, size: 18, color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 20),
 
@@ -271,10 +314,13 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               onChanged: (v) {
                 if (v != null) setState(() => _status = v);
               },
+              prefixIcon: Symbols.radio_button_checked_rounded,
             ),
             const SizedBox(height: 12),
             Row(
               children: [
+                Icon(Symbols.check_circle_rounded, size: 14, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 6),
                 Text(
                   'DISPONIBLE',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -296,6 +342,10 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               hintText: 'Observaciones adicionales...',
               controller: _notesController,
               maxLines: 3,
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(Symbols.notes_rounded, size: 18, color: scheme.onSurfaceVariant),
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -327,10 +377,20 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
-  Widget _sectionHeader(String title) {
-    return AppSectionHeader(
-      title: title,
-      variant: AppSectionHeaderVariant.compact,
+  Widget _sectionHeader(String title, {IconData? icon}) {
+    return Row(
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+        ],
+        Expanded(
+          child: AppSectionHeader(
+            title: title,
+            variant: AppSectionHeaderVariant.compact,
+          ),
+        ),
+      ],
     );
   }
 
@@ -339,19 +399,28 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
     required T value,
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
+    IconData? prefixIcon,
   }) {
     final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          label.toUpperCase(),
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.8,
-              ),
+        Row(
+          children: [
+            if (prefixIcon != null) ...[
+              Icon(prefixIcon, size: 14, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.8,
+                  ),
+            ),
+          ],
         ),
         const SizedBox(height: 6),
         Container(
@@ -380,6 +449,8 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
   }
 
   Future<void> _pickImage() async {
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
       final picker = ImagePicker();
       final image = await picker.pickImage(
@@ -389,7 +460,13 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
         imageQuality: 80,
       );
       if (image == null) return;
-      final bytes = await image.readAsBytes();
+
+      final supportsNativeCropping = !kIsWeb &&
+          (defaultTargetPlatform == TargetPlatform.android ||
+              defaultTargetPlatform == TargetPlatform.iOS);
+      final bytes = supportsNativeCropping
+          ? await _cropAndRead(image)
+          : await image.readAsBytes();
       setState(() {
         _selectedImage = image;
         _imageBase64 = base64Encode(bytes);
@@ -397,11 +474,35 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
     } catch (e) {
       debugPrint('Error picking image: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text('Error al seleccionar foto: $e')),
         );
       }
     }
+  }
+
+  Future<Uint8List> _cropAndRead(XFile image) async {
+    final cropped = await ImageCropper().cropImage(
+      sourcePath: image.path,
+      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Ajustar recorte',
+          toolbarColor: Theme.of(context).colorScheme.surface,
+          toolbarWidgetColor: Theme.of(context).colorScheme.onSurface,
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          activeControlsWidgetColor: Theme.of(context).colorScheme.primary,
+        ),
+        IOSUiSettings(
+          title: 'Ajustar recorte',
+          aspectRatioLockEnabled: true,
+          resetButtonHidden: true,
+        ),
+      ],
+    );
+    return cropped != null
+        ? await cropped.readAsBytes()
+        : await image.readAsBytes();
   }
 
   void _onSave() {
