@@ -26,9 +26,14 @@ import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/session_view_screen.dart';
 import '../features/catalogs/catalogs.dart';
+import '../features/equines/domain/repositories/equine_repository.dart';
+import '../features/equines/infrastructure/local/equines_database.dart';
+import '../features/equines/infrastructure/remote/equines_api_client.dart';
+import '../features/equines/infrastructure/repositories/equine_repository_impl.dart';
 import '../features/reservations/reservations_module.dart';
 import 'bootstrap/dev_loader_screen.dart';
 import 'bootstrap/startup_gate.dart';
+import '../playground/widget_museum_screen.dart';
 import 'shell/authenticated_shell.dart';
 import 'theme/app_theme.dart';
 import 'theme/app_theme_notifier.dart';
@@ -55,6 +60,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
   late final AuthApiClient _apiClient;
   late final CatalogsModule _catalogsModule;
   late final ReservationsModule _reservationsModule;
+  late final EquineRepository _equineRepository;
 
   @override
   void initState() {
@@ -114,6 +120,20 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
         return _authController.authState == LocalAuthState.signedInVerified;
       },
     );
+
+    final equinesApiClient = EquinesApiClient(
+      baseUrl: widget.apiBaseUrl,
+      readAccessToken: () async =>
+          (await sessionDs.getCurrentSession())?.accessToken,
+      refreshSession: () async {
+        await _authController.refreshRequested();
+        return _authController.authState == LocalAuthState.signedInVerified;
+      },
+    );
+    _equineRepository = EquineRepositoryImpl(
+      apiClient: equinesApiClient,
+      database: EquinesDatabase.instance,
+    );
   }
 
   @override
@@ -166,6 +186,9 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
       case AuthRoutes.devLoader:
         screen = const DevWidgetCatalogScreen();
         break;
+      case AuthRoutes.widgetMuseum:
+        screen = const WidgetMuseumScreen();
+        break;
       case AuthRoutes.sessionGate:
         screen = StartupGate(controller: _authController);
         break;
@@ -182,6 +205,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
                 contactsApiClient: _apiClient,
                 catalogsModule: _catalogsModule,
                 reservationsModule: _reservationsModule,
+                equineRepository: _equineRepository,
               )
             : LoginScreen(controller: _authController);
         break;

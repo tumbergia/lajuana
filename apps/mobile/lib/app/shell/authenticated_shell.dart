@@ -13,6 +13,7 @@ import '../widgets/app_top_bar.dart';
 import 'widgets/shell_status_region.dart';
 import '../../features/configuration/presentation/screens/more_flow_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/equines/domain/repositories/equine_repository.dart';
 import '../../features/equines/presentation/screens/equines_module_screen.dart';
 import '../../features/participants/presentation/screens/participants_module_screen.dart';
 import '../../features/reservations/presentation/screens/reservations_module_screen.dart';
@@ -25,6 +26,7 @@ class AuthenticatedShell extends StatefulWidget {
     required this.contactsApiClient,
     this.catalogsModule,
     this.reservationsModule,
+    required this.equineRepository,
     this.onCallRequested,
   });
 
@@ -32,6 +34,7 @@ class AuthenticatedShell extends StatefulWidget {
   final AuthApiClient contactsApiClient;
   final CatalogsModule? catalogsModule;
   final ReservationsModule? reservationsModule;
+  final EquineRepository equineRepository;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -87,7 +90,9 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           reservationsModule: widget.reservationsModule,
         );
       case AppNavItem.equinos:
-        return const EquinesModuleScreen();
+        return EquinesModuleScreen(
+          repository: widget.equineRepository,
+        );
       case AppNavItem.clientes:
         return const ParticipantsModuleScreen();
       case AppNavItem.mas:

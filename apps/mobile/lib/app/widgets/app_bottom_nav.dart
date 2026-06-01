@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../voice/voice_context.dart';
 import '../voice/voice_route.dart';
 
@@ -138,7 +139,7 @@ class _AppBottomNavState extends State<AppBottomNav>
                     item: AppNavItem.equinos,
                     current: widget.current,
                     label: 'Equinos',
-                    icon: Icons.hail_rounded,
+                    icon: Symbols.chess_knight,
                     onTap: _handleTap,
                     onHoldStart: _onLongPressStart,
                     onHoldEnd: _onLongPressEnd,

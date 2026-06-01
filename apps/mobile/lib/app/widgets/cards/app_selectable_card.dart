@@ -38,30 +38,21 @@ class AppSelectableCard extends StatelessWidget {
     final content = ClipRRect(
       borderRadius: radius,
       child: Container(
-        decoration: BoxDecoration(color: bg, borderRadius: radius),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (selected)
-                Container(
-                  width: 4,
-                  decoration: BoxDecoration(
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: radius,
+          border: selected
+              ? Border(
+                  left: BorderSide(
                     color: accentColor ?? scheme.onSurface,
-                    borderRadius: BorderRadius.only(
-                      topLeft: radius.topLeft,
-                      bottomLeft: radius.bottomLeft,
-                    ),
+                    width: 4,
                   ),
-                ),
-              Expanded(
-                child: Padding(
-                  padding: padding ?? EdgeInsets.all(tokens.spaceXl),
-                  child: child,
-                ),
-              ),
-            ],
-          ),
+                )
+              : null,
+        ),
+        child: Padding(
+          padding: padding ?? EdgeInsets.all(tokens.spaceXl),
+          child: child,
         ),
       ),
     );
