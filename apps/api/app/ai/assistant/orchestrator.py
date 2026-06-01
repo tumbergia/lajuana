@@ -37,6 +37,9 @@ FIELD_LABELS: dict[str, str] = {
     "quote_snapshot": "necesito primero consultar disponibilidad y precio",
     "conversation_id": None,
     "code": "¿cuál es el código de tu reserva?",
+    "reservation_code": "¿cuál es el código de tu reserva?",
+    "new_date": "¿cuál es la nueva fecha?",
+    "new_participant_count": "¿cuántas personas serían ahora?",
 }
 
 
@@ -119,7 +122,14 @@ class AssistantOrchestrator:
         if session.slot_values or conversation_history:
             parts = []
             if session.slot_values:
-                parts.append(f"Datos de la sesión: {session.slot_values}")
+                # Never expose holder_name/holder_email in planner context so the bot
+                # always asks for them explicitly on new reservations.
+                safe_slots = {
+                    k: v for k, v in session.slot_values.items()
+                    if k not in ("holder_name", "holder_email")
+                }
+                if safe_slots:
+                    parts.append(f"Datos de la sesión: {safe_slots}")
             if conversation_history:
                 parts.append(f"Historial de la conversación:\n{conversation_history}")
             enriched_context = "\n\n".join(parts)
@@ -216,6 +226,20 @@ class AssistantOrchestrator:
             "get_reservation_status_by_phone": [
                 "holder_phone",
             ],
+            "cancel_reservation": [
+                "reservation_code",
+                "holder_phone",
+            ],
+            "update_reservation_date": [
+                "reservation_code",
+                "holder_phone",
+                "new_date",
+            ],
+            "update_reservation_participants": [
+                "reservation_code",
+                "holder_phone",
+                "new_participant_count",
+            ],
         }
 
         if (
@@ -225,8 +249,14 @@ class AssistantOrchestrator:
             required_fields = REQUIRED_FIELDS_BY_TOOL.get(plan.tool_name or "", [])
             if required_fields:
                 plan_args = plan.arguments.model_dump()
+                # For new reservations, never auto-fill name/email from session slots
+                # so the bot always asks the user explicitly.
+                slots_for_merge = dict(session.slot_values)
+                if plan.tool_name == "create_reservation_draft":
+                    slots_for_merge.pop("holder_name", None)
+                    slots_for_merge.pop("holder_email", None)
                 merge = merge_slots(
-                    session_slots=session.slot_values,
+                    session_slots=slots_for_merge,
                     plan_args=plan_args,
                     required_fields=required_fields,
                 )
@@ -370,6 +400,9 @@ class AssistantOrchestrator:
             qs = tool_output.get("quote_snapshot")
             if qs:
                 session.slot_values["quote_snapshot"] = qs
+            code = tool_output.get("code")
+            if code:
+                session.slot_values["reservation_code"] = code
 
         session.last_intent = plan.action.value if plan.action else "tool_executed"
         session.last_trace_id = trace_id

@@ -27,6 +27,9 @@ class ToolArgs(BaseModel):
     holder_name: str | None = None
     holder_email: str | None = None
     code: str | None = None
+    reservation_code: str | None = None
+    new_date: str | None = None
+    new_participant_count: int | None = None
     conversation_id: str | None = None
     quote_snapshot: dict | None = None
     exclude_dates: list[str] | None = None

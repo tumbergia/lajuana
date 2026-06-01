@@ -634,6 +634,7 @@ class ReservationService:
         self,
         reservation_id: str,
         actor_id: PydanticObjectId | None = None,
+        notify_client: bool = True,
     ) -> ReservationDocument:
         reservation = await self.get(reservation_id)
         previous_status = reservation.status
@@ -650,6 +651,25 @@ class ReservationService:
         reservation.cancelled_at = datetime.now(UTC)
         reservation.updated_by = actor_id
         await reservation.save()
+
+        # Send WhatsApp cancellation notification (deterministic, not chatbot)
+        if notify_client:
+            try:
+                from app.notifications.reservation_whatsapp_notification_service import (
+                    ReservationWhatsAppNotificationService,
+                )
+
+                whatsapp_notif = ReservationWhatsAppNotificationService()
+                await whatsapp_notif.send_reservation_cancelled(
+                    reservation=reservation,
+                    actor_id=actor_id,
+                )
+            except Exception:
+                logger.exception(
+                    "[reservation=%s] Failed to send cancellation WhatsApp",
+                    reservation.id,
+                )
+
         return reservation
 
     async def validate_participant_forms_completed(

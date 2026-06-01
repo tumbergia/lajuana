@@ -177,6 +177,19 @@ SEED_TEMPLATES = [
             "customer_name", "experience_name", "form_url",
         ],
     },
+    {
+        "template_key": "reservation_cancelled.customer",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hola, lamentamos informarte que tu reserva "
+            "{{reservation_code}} para {{experience_name}} ha sido cancelada. "
+            "Si tienes alguna duda o deseas reprogramar, escríbenos y con gusto te ayudaremos. "
+        ),
+        "variables_allowed": [
+            "customer_name", "reservation_code", "experience_name",
+        ],
+    },
 ]
 
 

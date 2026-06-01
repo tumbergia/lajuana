@@ -281,6 +281,45 @@ class ReservationWhatsAppNotificationService:
         )
         return success
 
+    async def send_reservation_cancelled(
+        self,
+        reservation: ReservationDocument,
+        actor_id: PydanticObjectId | None,
+    ) -> bool:
+        """Send WhatsApp notification when a reservation is cancelled."""
+        if not reservation.holder_phone:
+            logger.warning(
+                "[reservation=%s] No holder_phone, skipping cancellation WhatsApp",
+                reservation.id,
+            )
+            return False
+
+        experience = await ExperienceDocument.get(reservation.experience_id)
+        experience_name = experience.name if experience else ""
+
+        template = await self._load_template("reservation_cancelled.customer")
+        if template is None:
+            logger.error(
+                "[reservation=%s] Template reservation_cancelled.customer not found",
+                reservation.id,
+            )
+            return False
+
+        body = render_template(template.body, {
+            "customer_name": reservation.holder_name or "Cliente",
+            "reservation_code": reservation.code,
+            "experience_name": experience_name,
+        })
+
+        return await self._send_and_audit(
+            reservation=reservation,
+            template_key=template.template_key,
+            body=body,
+            actor_id=actor_id,
+            audit_action="notification.reservation_cancelled",
+            update_fields=None,
+        )
+
     # ----------------------------------------------------------------
     # Internal helpers
     # ----------------------------------------------------------------

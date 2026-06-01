@@ -27,6 +27,9 @@ class ToolPolicyEngine:
         "generate_participant_form_link",
         "get_participant_form_status",
         "send_post_service_message",
+        "cancel_reservation",
+        "update_reservation_date",
+        "update_reservation_participants",
     }
     GUIDE_TOOLS: set[str] = {
         "guide_create_service_log",
@@ -121,6 +124,9 @@ class ToolPolicyEngine:
         "admin_update_user",
         "admin_update_equine",
         "admin_update_participant",
+        "cancel_reservation",
+        "update_reservation_date",
+        "update_reservation_participants",
     }
     WRITE_TOOLS: set[str] = {
         "guide_report_incident",
@@ -147,7 +153,6 @@ class ToolPolicyEngine:
     }
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
-        "cancel_reservation",
         "mark_payment_verified",
         "change_schedule_capacity",
         "block_slots",
