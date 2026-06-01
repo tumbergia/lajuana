@@ -32,17 +32,42 @@ from app.schemas.service_log import ServiceLogResponseSchema
 logger = logging.getLogger(__name__)
 
 
+def document_to_schema(
+    doc: object,
+    schema_cls: type,
+    *,
+    scalar_fields: dict[str, str] | None = None,
+    exclude_fields: set[str] | None = None,
+) -> object:
+    """Build a Pydantic schema from a Beanie Document via model_dump.
+
+    Usage::
+
+        schema = document_to_schema(
+            equine_doc,
+            EquineResponseSchema,
+            scalar_fields={"id": "id"},  # ObjectId → str
+            exclude_fields={"revision_id"},
+        )
+    """
+    model_dump = getattr(doc, "model_dump", None)
+    if model_dump is None:
+        raise TypeError(f"doc has no model_dump (got {type(doc).__name__})")
+
+    data = model_dump(exclude=exclude_fields or {"revision_id"})
+    if scalar_fields:
+        for target, source in scalar_fields.items():
+            val = getattr(doc, source, None)
+            data[target] = str(val) if val is not None else None
+    return schema_cls(**data)
+
+
 def user_to_response(user: UserDocument) -> UserResponseSchema:
-    return UserResponseSchema(
-        id=str(user.id),
-        email=user.email,
-        full_name=user.full_name,
-        role=user.role,
-        is_active=user.is_active,
-        version=user.version,
-        created_at=user.created_at,
-        updated_at=user.updated_at,
-        deleted_at=user.deleted_at,
+    return document_to_schema(
+        user,
+        UserResponseSchema,
+        scalar_fields={"id": "id"},
+        exclude_fields={"revision_id"},
     )
 
 
@@ -265,90 +290,26 @@ def payment_proof_to_response(doc: PaymentProofDocument) -> PaymentProofResponse
 
 
 def equine_to_response(doc: EquineDocument) -> EquineResponseSchema:
-    return EquineResponseSchema(
-        id=str(doc.id),
-        name=doc.name,
-        inventory_number=doc.inventory_number,
-        species=doc.species,
-        location_status=doc.location_status,
-        location_notes=doc.location_notes,
-        breed=doc.breed,
-        sex=doc.sex,
-        coat_color=doc.coat_color,
-        gait=doc.gait,
-        approximate_birth_date=doc.approximate_birth_date,
-        approximate_age_years=doc.approximate_age_years,
-        birth_date_is_approximate=doc.birth_date_is_approximate,
-        birth_date_raw=doc.birth_date_raw,
-        birth_place=doc.birth_place,
-        registry_number=doc.registry_number,
-        microchip=doc.microchip,
-        sire_name=doc.sire_name,
-        dam_name=doc.dam_name,
-        weight_kg=doc.weight_kg,
-        height_m=doc.height_m,
-        last_weight_at=doc.last_weight_at,
-        last_height_at=doc.last_height_at,
-        is_active=doc.is_active,
-        is_available=doc.is_available,
-        operational_status=doc.operational_status,
-        availability_notes=doc.availability_notes,
-        availability_reasons=doc.availability_reasons,
-        rest_until=doc.rest_until,
-        max_rider_weight_kg=doc.max_rider_weight_kg,
-        experience_fit=doc.experience_fit,
-        image_base64=doc.image_base64,
-        last_service_at=doc.last_service_at,
-        workload_last_7_days=doc.workload_last_7_days,
-        source_file=doc.source_file,
-        source_sheet=doc.source_sheet,
-        source_row_number=doc.source_row_number,
-        source_updated_at_label=doc.source_updated_at_label,
-        version=doc.version,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
+    return document_to_schema(
+        doc, EquineResponseSchema,
+        scalar_fields={"id": "id"},
+        exclude_fields={"revision_id"},
     )
 
 
 def equine_to_list_item(doc: EquineDocument) -> EquineListItemSchema:
-    return EquineListItemSchema(
-        id=str(doc.id),
-        name=doc.name,
-        inventory_number=doc.inventory_number,
-        species=doc.species,
-        breed=doc.breed,
-        sex=doc.sex,
-        coat_color=doc.coat_color,
-        gait=doc.gait,
-        weight_kg=doc.weight_kg,
-        height_m=doc.height_m,
-        is_active=doc.is_active,
-        is_available=doc.is_available,
-        operational_status=doc.operational_status,
-        max_rider_weight_kg=doc.max_rider_weight_kg,
-        experience_fit=doc.experience_fit,
-        image_base64=doc.image_base64,
-        last_service_at=doc.last_service_at,
-        workload_last_7_days=doc.workload_last_7_days,
-        version=doc.version,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
+    return document_to_schema(
+        doc, EquineListItemSchema,
+        scalar_fields={"id": "id"},
+        exclude_fields={"revision_id"},
     )
 
 
 def saddle_to_response(doc: SaddleDocument) -> SaddleResponseSchema:
-    return SaddleResponseSchema(
-        id=str(doc.id),
-        code=doc.code,
-        name=doc.name,
-        is_available=doc.is_available,
-        notes=doc.notes,
-        version=doc.version,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
+    return document_to_schema(
+        doc, SaddleResponseSchema,
+        scalar_fields={"id": "id"},
+        exclude_fields={"revision_id"},
     )
 
 
