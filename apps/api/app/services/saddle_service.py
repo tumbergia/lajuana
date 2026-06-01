@@ -20,6 +20,9 @@ class SaddleService:
     async def list(self, limit: int = 200, skip: int = 0) -> list[SaddleDocument]:
         return await SaddleDocument.find_all().skip(skip).limit(limit).to_list()
 
+    async def count(self) -> int:
+        return await SaddleDocument.find_all().count()
+
     async def get(self, saddle_id: str) -> SaddleDocument:
         doc = await SaddleDocument.get(saddle_id)
         if doc is None:

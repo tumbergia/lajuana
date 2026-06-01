@@ -2,7 +2,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, status
 
-from app.api.deps import require_permissions
+from app.api.deps import (
+    get_notification_service,
+    get_participant_form_link_service,
+    get_participant_service,
+    require_permissions,
+)
 from app.common.enums import Permission
 from app.core.config import settings
 from app.documents import ExperienceDocument, ReservationDocument, UserDocument
@@ -29,8 +34,6 @@ from app.services.mappers import (
 from app.services.participant_form_link_service import ParticipantFormLinkService
 
 router = APIRouter()
-form_link_service = ParticipantFormLinkService()
-participant_service = ParticipantService()
 
 
 @router.get(
@@ -43,6 +46,7 @@ participant_service = ParticipantService()
 )
 async def validate_participant_form_token(
     token: str,
+    form_link_service: ParticipantFormLinkService = Depends(get_participant_form_link_service),
 ) -> ParticipantFormTokenValidationResponse:
     doc = await form_link_service.validate_token(token)
     reservation = await ReservationDocument.get(doc.reservation_id)
@@ -80,9 +84,10 @@ async def validate_participant_form_token(
 )
 async def validate_participant_form_token_vercel(
     token: str,
+    form_link_service: ParticipantFormLinkService = Depends(get_participant_form_link_service),
 ) -> ParticipantFormTokenValidationResponse:
     """Reenvía a la lógica del endpoint /validate estándar."""
-    return await validate_participant_form_token(token)
+    return await validate_participant_form_token(token, form_link_service)
 
 
 @router.post(
@@ -101,9 +106,10 @@ async def create_participant_via_form_vercel(
     token: str,
     payload: ParticipantPublicCreateSchema,
     request: Request,
+    participant_service: ParticipantService = Depends(get_participant_service),
 ) -> ParticipantResponseSchema:
     """Reenvía a la lógica del endpoint /participants estándar."""
-    return await create_participant_via_form(token, payload, request)
+    return await create_participant_via_form(token, payload, request, participant_service)
 
 
 @router.get(
@@ -118,6 +124,7 @@ async def create_participant_via_form_vercel(
 )
 async def get_public_participant_form_status(
     token: str,
+    form_link_service: ParticipantFormLinkService = Depends(get_participant_form_link_service),
 ) -> ParticipantFormPublicStatusResponse:
     status_data = await form_link_service.get_public_status(token)
     return ParticipantFormPublicStatusResponse(**status_data)
@@ -134,6 +141,15 @@ async def get_public_participant_form_status(
     operation_id="createParticipantViaForm",
     tags=["Formulario de participantes"],
 )
+async def create_participant_via_form_route(
+    token: str,
+    payload: ParticipantPublicCreateSchema,
+    request: Request,
+    participant_service: ParticipantService = Depends(get_participant_service),
+) -> ParticipantResponseSchema:
+    return await create_participant_via_form(token, payload, request, participant_service)
+
+
 def _convert_public_to_nested(
     payload: ParticipantPublicCreateSchema,
 ) -> ParticipantNestedCreateSchema:
@@ -174,6 +190,7 @@ async def create_participant_via_form(
     token: str,
     payload: ParticipantPublicCreateSchema,
     request: Request,
+    participant_service: ParticipantService,
 ) -> ParticipantResponseSchema:
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
@@ -191,7 +208,9 @@ async def create_participant_via_form(
     operation_id="getRiskReleaseText",
     tags=["Formulario de participantes"],
 )
-async def get_risk_release_text() -> dict:
+async def get_risk_release_text(
+    participant_service: ParticipantService = Depends(get_participant_service),
+) -> dict:
     return {"risk_release_text": participant_service.get_risk_release_text()}
 
 
@@ -211,6 +230,7 @@ async def get_risk_release_text() -> dict:
 async def generate_participant_form_link(
     reservation_id: str,
     payload: ParticipantFormLinkGenerateRequest,
+    form_link_service: ParticipantFormLinkService = Depends(get_participant_form_link_service),
 ) -> ParticipantFormLinkGenerateResponse:
     doc, raw_token = await form_link_service.generate(
         reservation_id=reservation_id,
@@ -240,6 +260,7 @@ async def generate_participant_form_link(
 )
 async def revoke_participant_form_link(
     reservation_id: str,
+    form_link_service: ParticipantFormLinkService = Depends(get_participant_form_link_service),
 ) -> ParticipantFormLinkStatusResponse:
     doc = await form_link_service.revoke(reservation_id)
     return form_link_to_status_response(doc)
@@ -260,6 +281,7 @@ async def revoke_participant_form_link(
 async def resend_participant_form_link(
     reservation_id: str,
     current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+    notification_service: NotificationService = Depends(get_notification_service),
 ) -> ReservationResponseSchema:
     reservation = await ReservationDocument.get(reservation_id)
     if reservation is None:
@@ -273,8 +295,7 @@ async def resend_participant_form_link(
         )
 
     experience = await ExperienceDocument.get(reservation.experience_id)
-    notif = NotificationService()
-    await notif.enqueue_participant_form_resent(
+    await notification_service.enqueue_participant_form_resent(
         reservation=reservation,
         experience_name=experience.name if experience else "",
     )
@@ -291,6 +312,7 @@ async def resend_participant_form_link(
 )
 async def get_participant_form_link_status(
     reservation_id: str,
+    form_link_service: ParticipantFormLinkService = Depends(get_participant_form_link_service),
 ) -> ParticipantFormLinkStatusResponse | None:
     doc = await form_link_service.get_link_by_reservation(reservation_id)
     if doc is None:

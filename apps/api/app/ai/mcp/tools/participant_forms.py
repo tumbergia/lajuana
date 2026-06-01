@@ -14,7 +14,6 @@ from app.ai.mcp.tool_contracts import (
 from app.core.errors import ApiError
 from app.documents import ReservationDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
-from app.services.participant_form_link_service import ParticipantFormLinkService
 
 
 async def generate_participant_form_link(**kwargs: Any) -> dict[str, Any]:
@@ -34,7 +33,8 @@ async def generate_participant_form_link(**kwargs: Any) -> dict[str, Any]:
         }
         payload = GenerateParticipantFormLinkInput.model_validate(filtered)
 
-        service = ParticipantFormLinkService()
+        from app.core.di import Container
+        service = Container.get_instance().participant_form_link_service
         # Get the reservation to know expected participants count
         reservation = await ReservationDocument.get(payload.reservation_id)
         expected_count = reservation.participant_count if reservation else 1

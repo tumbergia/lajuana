@@ -17,7 +17,10 @@ from app.core.errors import ApiError
 from app.schemas.schedule import ScheduleCreateSchema, ScheduleUpdateSchema
 from app.services.schedule_service import ScheduleService
 
-_service = ScheduleService()
+
+def _get_service() -> ScheduleService:
+    from app.core.di import Container
+    return Container.get_instance().schedule_service
 
 
 async def admin_create_schedule(**kwargs: Any) -> dict[str, Any]:
@@ -34,7 +37,7 @@ async def admin_create_schedule(**kwargs: Any) -> dict[str, Any]:
             if k in ScheduleCreateSchema.model_fields
         }
         payload = ScheduleCreateSchema.model_validate(filtered)
-        doc = await _service.create(payload)
+        doc = await _get_service().create(payload)
 
         output = AdminCreateScheduleOutput(
             created=True,
@@ -110,7 +113,7 @@ async def admin_update_schedule(**kwargs: Any) -> dict[str, Any]:
             if k in ScheduleUpdateSchema.model_fields and v is not None
         }
         payload = ScheduleUpdateSchema.model_validate(filtered)
-        doc = await _service.update(schedule_id, payload)
+        doc = await _get_service().update(schedule_id, payload)
 
         output = AdminUpdateScheduleOutput(
             updated=True,
@@ -172,7 +175,7 @@ async def admin_list_schedules_admin(**kwargs: Any) -> dict[str, Any]:
         status = kwargs.get("status")
         is_active = kwargs.get("is_active")
 
-        docs = await _service.list(
+        docs = await _get_service().list(
             experience_id=experience_id,
             date_from=date_from,
             date_to=date_to,
@@ -254,7 +257,7 @@ async def admin_deactivate_schedule(**kwargs: Any) -> dict[str, Any]:
             )
             return output.model_dump(mode="json")
 
-        doc = await _service.deactivate(schedule_id)
+        doc = await _get_service().deactivate(schedule_id)
         output = AdminDeactivateScheduleOutput(
             deactivated=True,
             trace_id=trace_id,

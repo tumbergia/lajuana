@@ -17,7 +17,7 @@ from app.services.experience_catalog_resolver import (
     ExperienceCatalogResolver,
     ExperienceResolutionStatus,
 )
-from app.services.reservation_service import ReservationService
+from app.core.di import Container
 
 
 def _safe_str(value: Any) -> str | None:
@@ -141,7 +141,7 @@ async def check_experience_availability(
             )
             return output.model_dump(mode="json")
 
-        reservation_service = ReservationService()
+        reservation_service = Container.get_instance().reservation_service
         has_active = await reservation_service.has_active_reservation_for_date(
             payload.requested_date
         )

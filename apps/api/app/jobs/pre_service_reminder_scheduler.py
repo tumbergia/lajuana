@@ -16,8 +16,8 @@ PRE_SERVICE_REMINDER_INTERVAL_SECONDS = 60
 
 
 class PreServiceReminderScheduler:
-    def __init__(self) -> None:
-        self._service = NotificationService()
+    def __init__(self, service: NotificationService) -> None:
+        self._service = service
         self._running = False
         self._processed_today: set[str] = set()
         self._current_date: date = date.today()

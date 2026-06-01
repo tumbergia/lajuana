@@ -37,6 +37,9 @@ class UserService:
     async def list_users(self, limit: int = 200, skip: int = 0) -> list[UserDocument]:
         return await UserDocument.find_all().skip(skip).limit(limit).to_list()
 
+    async def count_users(self) -> int:
+        return await UserDocument.find_all().count()
+
     async def get_user(self, user_id: str) -> UserDocument:
         user = await UserDocument.get(user_id)
         if user is None:

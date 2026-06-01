@@ -12,9 +12,9 @@ from app.services.reservation_service import ReservationService
 class BookingService:
     def __init__(
         self,
-        reservation_service: ReservationService | None = None,
+        reservation_service: ReservationService,
     ) -> None:
-        self.reservation_service = reservation_service or ReservationService()
+        self.reservation_service = reservation_service
 
     def _channel(self) -> Channel:
         try:

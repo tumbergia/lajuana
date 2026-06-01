@@ -1,8 +1,9 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
 
+from app.api.deps import get_whatsapp_ingestion_service
 from app.channels.whatsapp.ingestion_service import WhatsAppIngestionService
 from app.core.config import settings
 from app.core.logging import logger
@@ -21,9 +22,11 @@ async def _verify_webhook(
     raise HTTPException(status_code=403, detail="Invalid WhatsApp webhook verification token")
 
 
-async def _receive_webhook(request: Request) -> dict[str, Any]:
+async def _receive_webhook(
+    request: Request,
+    ingestion: WhatsAppIngestionService,
+) -> dict[str, Any]:
     payload = await request.json()
-    ingestion = WhatsAppIngestionService()
     ingested = await ingestion.ingest(payload)
     logger.info("[webhook] Ingested %d message(s)", ingested)
     return {"received": True, "ingested_messages": ingested}
@@ -39,8 +42,11 @@ async def verify_webhook(
 
 
 @router.post("/webhook")
-async def receive_webhook(request: Request) -> dict[str, Any]:
-    return await _receive_webhook(request)
+async def receive_webhook(
+    request: Request,
+    ingestion: WhatsAppIngestionService = Depends(get_whatsapp_ingestion_service),
+) -> dict[str, Any]:
+    return await _receive_webhook(request, ingestion)
 
 
 @bare_router.get("/webhook", response_class=PlainTextResponse)
@@ -53,5 +59,8 @@ async def bare_verify_webhook(
 
 
 @bare_router.post("/webhook")
-async def bare_receive_webhook(request: Request) -> dict[str, Any]:
-    return await _receive_webhook(request)
+async def bare_receive_webhook(
+    request: Request,
+    ingestion: WhatsAppIngestionService = Depends(get_whatsapp_ingestion_service),
+) -> dict[str, Any]:
+    return await _receive_webhook(request, ingestion)

@@ -2,9 +2,9 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
-from app.api.deps import require_permissions
+from app.api.deps import get_equine_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import EquineOperationalStatus, Permission
 from app.documents import UserDocument
@@ -18,7 +18,6 @@ from app.services import EquineService
 from app.services.mappers import equine_to_list_item, equine_to_response
 
 router = APIRouter(prefix="/equines", tags=["Equinos"])
-service = EquineService()
 
 
 @router.post(
@@ -33,6 +32,7 @@ service = EquineService()
 async def create_equine(
     payload: EquineCreateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_CREATE))],
+    service: EquineService = Depends(get_equine_service),
 ) -> EquineResponseSchema:
     return equine_to_response(await service.create(payload))
 
@@ -47,16 +47,28 @@ async def create_equine(
 )
 async def list_equines(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_READ))],
+    response: Response,
     operational_status: EquineOperationalStatus | None = None,
     is_active: bool | None = None,
     is_available: bool | None = None,
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    service: EquineService = Depends(get_equine_service),
 ) -> list[EquineResponseSchema]:
+    total = await service.count(
+        operational_status=operational_status,
+        is_active=is_active,
+        is_available=is_available,
+    )
+    response.headers["X-Total-Count"] = str(total)
     return [
         equine_to_response(item)
         for item in await service.list(
             operational_status=operational_status,
             is_active=is_active,
             is_available=is_available,
+            limit=limit,
+            skip=skip,
         )
     ]
 
@@ -71,16 +83,28 @@ async def list_equines(
 )
 async def list_equine_items(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_READ))],
+    response: Response,
     operational_status: EquineOperationalStatus | None = Query(default=None),
     is_active: bool | None = Query(default=None),
     is_available: bool | None = Query(default=None),
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    service: EquineService = Depends(get_equine_service),
 ) -> list[EquineListItemSchema]:
+    total = await service.count(
+        operational_status=operational_status,
+        is_active=is_active,
+        is_available=is_available,
+    )
+    response.headers["X-Total-Count"] = str(total)
     return [
         equine_to_list_item(item)
         for item in await service.list_items(
             operational_status=operational_status,
             is_active=is_active,
             is_available=is_available,
+            limit=limit,
+            skip=skip,
         )
     ]
 
@@ -96,6 +120,7 @@ async def list_equine_items(
 async def get_equine(
     equine_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_READ))],
+    service: EquineService = Depends(get_equine_service),
 ) -> EquineResponseSchema:
     return equine_to_response(await service.get(equine_id))
 
@@ -112,6 +137,7 @@ async def update_equine(
     equine_id: str,
     payload: EquineUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_UPDATE))],
+    service: EquineService = Depends(get_equine_service),
 ) -> EquineResponseSchema:
     return equine_to_response(await service.update(equine_id, payload))
 
@@ -127,5 +153,6 @@ async def update_equine(
 async def deactivate_equine(
     equine_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_UPDATE))],
+    service: EquineService = Depends(get_equine_service),
 ) -> EquineResponseSchema:
     return equine_to_response(await service.deactivate(equine_id))

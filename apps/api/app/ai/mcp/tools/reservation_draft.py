@@ -15,13 +15,12 @@ from app.ai.mcp.tool_contracts import (
     GetReservationStatusByPhoneOutput,
     ToolBlockingReason,
 )
+from app.core.di import Container
 from app.core.errors import ApiError
 from app.documents import ReservationDocument
 from app.documents.reservation_document import ACTIVE_RESERVATION_STATUSES
 from app.documents.tool_call_log_document import ToolCallLogDocument
-from app.services.config_service import ConfigService
 from app.services.payment_proof_service import ALLOWED_CONTENT_TYPES, PaymentProofService
-from app.services.reservation_draft_service import ReservationDraftService
 
 
 def _format_currency(amount: Any, currency: str) -> str:
@@ -92,8 +91,9 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
         }
         payload = CreateReservationDraftInput.model_validate(filtered)
 
-        service = ReservationDraftService()
-        config_service = ConfigService()
+        container = Container.get_instance()
+        service = container.reservation_draft_service
+        config_service = container.config_service
         result = await service.create_reservation_draft(
             experience_id=payload.experience_id,
             schedule_id=payload.schedule_id,
@@ -349,7 +349,7 @@ async def attach_payment_proof_to_reservation(**kwargs: Any) -> dict[str, Any]:
             )
             return output.model_dump(mode="json")
 
-        service = PaymentProofService()
+        service = Container.get_instance().payment_proof_service
         reservation = await service.get_attachable_reservation(
             reservation_id=payload.reservation_id,
             public_reservation_code=payload.public_reservation_code,

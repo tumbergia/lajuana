@@ -14,8 +14,8 @@ from app.notifications.provider import NotificationProvider, SendResult
 class WhatsAppNotificationProvider(NotificationProvider):
     channel = NotificationChannel.WHATSAPP
 
-    def __init__(self) -> None:
-        self._outbound = WhatsAppOutboundService()
+    def __init__(self, outbound_service: WhatsAppOutboundService) -> None:
+        self._outbound = outbound_service
 
     async def send(self, entry: NotificationOutboxDocument) -> SendResult:
         to_phone = entry.recipient_identifier

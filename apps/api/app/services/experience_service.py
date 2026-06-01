@@ -220,6 +220,11 @@ class ExperienceService:
             return await ExperienceDocument.find_all().skip(skip).limit(limit).to_list()
         return await ExperienceDocument.find({"is_active": is_active}).skip(skip).limit(limit).to_list()
 
+    async def count(self, is_active: bool | None = None) -> int:
+        if is_active is None:
+            return await ExperienceDocument.find_all().count()
+        return await ExperienceDocument.find({"is_active": is_active}).count()
+
     async def get(self, experience_id: str) -> ExperienceDocument:
         doc = await ExperienceDocument.get(experience_id)
         if doc is None:

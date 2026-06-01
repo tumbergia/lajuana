@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.api.deps import require_permissions
+from app.api.deps import get_provider_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
@@ -13,7 +13,6 @@ from app.services import ProviderService
 from app.services.mappers import provider_to_response
 
 router = APIRouter(prefix="/providers", tags=["Proveedores"])
-service = ProviderService()
 
 
 @router.post(
@@ -28,6 +27,7 @@ service = ProviderService()
 async def create_provider(
     payload: ProviderCreateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PROVIDER_CREATE))],
+    service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponseSchema:
     return provider_to_response(await service.create(payload))
 
@@ -43,6 +43,7 @@ async def create_provider(
 async def get_provider(
     provider_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PROVIDER_READ))],
+    service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponseSchema:
     return provider_to_response(await service.get(provider_id))
 
@@ -59,6 +60,7 @@ async def update_provider(
     provider_id: str,
     payload: ProviderUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PROVIDER_UPDATE))],
+    service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponseSchema:
     return provider_to_response(await service.update(provider_id, payload))
 
@@ -74,5 +76,6 @@ async def update_provider(
 async def delete_provider(
     provider_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PROVIDER_DELETE))],
+    service: ProviderService = Depends(get_provider_service),
 ) -> None:
     await service.delete(provider_id)

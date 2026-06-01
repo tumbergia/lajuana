@@ -15,11 +15,18 @@ from app.ai.mcp.tool_contracts import (
     AdminListReservationsOutput,
     ToolBlockingReason,
 )
+from app.core.di import Container
 from app.core.errors import ApiError
-from app.documents import ExperienceDocument, ReservationDocument
-from app.services.reservation_service import ReservationService
+from app.documents import ExperienceDocument
 
-_service = ReservationService()
+_service = None  # lazy via _get_service()
+
+
+def _get_service():
+    global _service
+    if _service is None:
+        _service = Container.get_instance().reservation_service
+    return _service
 
 
 def _safe_str(value: Any) -> str | None:
@@ -43,7 +50,7 @@ async def admin_list_reservations(
     output: AdminListReservationsOutput | None = None
 
     try:
-        docs = await _service.list(actor_role="admin")  # type: ignore[arg-type]
+        docs = await _get_service().list(actor_role="admin")  # type: ignore[arg-type]
 
         # Apply filters
         filtered = docs
@@ -135,9 +142,9 @@ async def admin_get_reservation_detail(
     try:
         doc = None
         if reservation_id:
-            doc = await _service.get(reservation_id)
+            doc = await _get_service().get(reservation_id)
         elif code:
-            doc = await _service.find_by_code_or_id(code)
+            doc = await _get_service().find_by_code_or_id(code)
         else:
             output = AdminGetReservationDetailOutput(
                 trace_id=trace_id,
@@ -241,7 +248,7 @@ async def admin_confirm_reservation(
     output: AdminConfirmReservationOutput | None = None
 
     try:
-        doc = await _service.confirm_reservation(
+        doc = await _get_service().confirm_reservation(
             reservation_id=reservation_id,
             actor_id=None,
         )
@@ -304,7 +311,7 @@ async def admin_cancel_reservation(
     output: AdminCancelReservationOutput | None = None
 
     try:
-        doc = await _service.cancel_reservation(
+        doc = await _get_service().cancel_reservation(
             reservation_id=reservation_id,
             actor_id=None,
         )

@@ -107,7 +107,7 @@ async def get_experience_detail(**kwargs: Any) -> dict[str, Any]:
 
     if experience is None and experience_query:
         query_lower = experience_query.lower()
-        all_experiences = await ExperienceDocument.find_all().to_list()
+        all_experiences = await ExperienceDocument.find_all().to_list()  # known-small: < 100 experiences
         for exp in all_experiences:
             if query_lower in exp.name.lower():
                 experience = exp

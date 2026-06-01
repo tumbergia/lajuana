@@ -6,9 +6,12 @@ import pytest
 from pydantic import ValidationError
 
 from app.common.enums import PaymentStatus, ReservationStatus, ScheduleStatus, UserRole
+from app.core.di import Container
 from app.core.errors import ApiError
 from app.documents import ReservationDocument
 from app.schemas.payment_proof import PaymentProofUpdateSchema
+from app.services.config_service import ConfigService
+from app.services.participant_form_link_service import ParticipantFormLinkService
 from app.services.payment_proof_service import PaymentProofService
 from app.services.reservation_service import ALLOWED_RESERVATION_TRANSITIONS, ReservationService
 
@@ -33,7 +36,7 @@ def test_allowed_transitions(from_status: ReservationStatus, to_status: Reservat
 
 def test_invalid_transition_raises() -> None:
     reservation = type("ReservationStub", (), {"status": ReservationStatus.CONTACT})()
-    service = ReservationService()
+    service = Container.get_instance().reservation_service
     with pytest.raises(ApiError):
         asyncio.run(service.transition_status(reservation, ReservationStatus.CONFIRMED))
 
@@ -278,14 +281,14 @@ class _FakeReservationConfirmSaveFailure(_FakeReservationConfirm):
 
 
 def test_confirm_success_with_capacity_updates_schedule(monkeypatch: pytest.MonkeyPatch) -> None:
-    service = ReservationService()
+    service = Container.get_instance().reservation_service
     reservation = _FakeReservationConfirm()
     schedule = _FakeSchedule()
 
     async def _fake_get(_: str):
         return reservation
 
-    async def _fake_rules():
+    async def _fake_rules(self):
         return SimpleNamespace(min_days_in_advance=0, require_payment_proof_for_confirmation=True)
 
     async def _fake_schedule_get(_: str):
@@ -303,12 +306,12 @@ def test_confirm_success_with_capacity_updates_schedule(monkeypatch: pytest.Monk
         return "token", "raw_token"
 
     monkeypatch.setattr(service, "get", _fake_get)
-    monkeypatch.setattr(service.config_service, "get_reservation_rules", _fake_rules)
+    monkeypatch.setattr(ConfigService, "get_reservation_rules", _fake_rules)
     monkeypatch.setattr("app.services.reservation_service.ScheduleDocument.get", _fake_schedule_get)
     monkeypatch.setattr(service, "_commit_schedule_capacity", _fake_commit)
     monkeypatch.setattr(service, "ensure_date_available", _noop)
     monkeypatch.setattr(service, "_sync_day_lock_fields", _noop)
-    monkeypatch.setattr(service.form_link_service, "generate", _fake_generate)
+    monkeypatch.setattr(ParticipantFormLinkService, "generate", _fake_generate)
 
     result = asyncio.run(service.confirm_reservation(str(reservation.id)))
 
@@ -317,7 +320,7 @@ def test_confirm_success_with_capacity_updates_schedule(monkeypatch: pytest.Monk
 
 
 def test_confirm_failure_without_capacity_keeps_status(monkeypatch: pytest.MonkeyPatch) -> None:
-    service = ReservationService()
+    service = Container.get_instance().reservation_service
     reservation = _FakeReservationConfirm()
     original_status = reservation.status
     schedule = _FakeSchedule()
@@ -325,7 +328,7 @@ def test_confirm_failure_without_capacity_keeps_status(monkeypatch: pytest.Monke
     async def _fake_get(_: str):
         return reservation
 
-    async def _fake_rules():
+    async def _fake_rules(self):
         return SimpleNamespace(min_days_in_advance=0, require_payment_proof_for_confirmation=True)
 
     async def _fake_schedule_get(_: str):
@@ -340,7 +343,7 @@ def test_confirm_failure_without_capacity_keeps_status(monkeypatch: pytest.Monke
         return None
 
     monkeypatch.setattr(service, "get", _fake_get)
-    monkeypatch.setattr(service.config_service, "get_reservation_rules", _fake_rules)
+    monkeypatch.setattr(ConfigService, "get_reservation_rules", _fake_rules)
     monkeypatch.setattr("app.services.reservation_service.ScheduleDocument.get", _fake_schedule_get)
     monkeypatch.setattr(service, "_commit_schedule_capacity", _fake_commit)
     monkeypatch.setattr(service, "ensure_date_available", _noop)
@@ -352,7 +355,7 @@ def test_confirm_failure_without_capacity_keeps_status(monkeypatch: pytest.Monke
 
 
 def test_confirm_failure_after_capacity_commit_rolls_back(monkeypatch: pytest.MonkeyPatch) -> None:
-    service = ReservationService()
+    service = Container.get_instance().reservation_service
     reservation = _FakeReservationConfirm()
     schedule = _FakeSchedule()
     rollback_calls: list[tuple[str, int, str]] = []
@@ -360,7 +363,7 @@ def test_confirm_failure_after_capacity_commit_rolls_back(monkeypatch: pytest.Mo
     async def _fake_get(_: str):
         return reservation
 
-    async def _fake_rules():
+    async def _fake_rules(self):
         return SimpleNamespace(min_days_in_advance=0, require_payment_proof_for_confirmation=True)
 
     async def _fake_schedule_get(_: str):
@@ -386,7 +389,7 @@ def test_confirm_failure_after_capacity_commit_rolls_back(monkeypatch: pytest.Mo
         return None
 
     monkeypatch.setattr(service, "get", _fake_get)
-    monkeypatch.setattr(service.config_service, "get_reservation_rules", _fake_rules)
+    monkeypatch.setattr(ConfigService, "get_reservation_rules", _fake_rules)
     monkeypatch.setattr("app.services.reservation_service.ScheduleDocument.get", _fake_schedule_get)
     monkeypatch.setattr(service, "_commit_schedule_capacity", _fake_commit)
     monkeypatch.setattr(service, "transition_status", _fake_transition)
@@ -403,7 +406,7 @@ def test_confirm_failure_after_capacity_commit_rolls_back(monkeypatch: pytest.Mo
 def test_confirm_failure_after_schedule_save_recomputes_status_after_rollback(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    service = ReservationService()
+    service = Container.get_instance().reservation_service
     reservation = _FakeReservationConfirmSaveFailure()
     schedule = _FakeSchedule()
     schedule.available_slots = 0
@@ -413,7 +416,7 @@ def test_confirm_failure_after_schedule_save_recomputes_status_after_rollback(
     async def _fake_get(_: str):
         return reservation
 
-    async def _fake_rules():
+    async def _fake_rules(self):
         return SimpleNamespace(min_days_in_advance=0, require_payment_proof_for_confirmation=True)
 
     async def _fake_schedule_get(_: str):
@@ -444,7 +447,7 @@ def test_confirm_failure_after_schedule_save_recomputes_status_after_rollback(
 
     schedule.save = _fake_schedule_save
     monkeypatch.setattr(service, "get", _fake_get)
-    monkeypatch.setattr(service.config_service, "get_reservation_rules", _fake_rules)
+    monkeypatch.setattr(ConfigService, "get_reservation_rules", _fake_rules)
     monkeypatch.setattr("app.services.reservation_service.ScheduleDocument.get", _fake_schedule_get)
     monkeypatch.setattr(service, "_commit_schedule_capacity", _fake_commit)
     monkeypatch.setattr(service, "_rollback_schedule_capacity", _fake_rollback)
@@ -457,3 +460,224 @@ def test_confirm_failure_after_schedule_save_recomputes_status_after_rollback(
     assert schedule.available_slots == reservation.participant_count
     assert schedule.status == ScheduleStatus.OPEN
     assert save_calls == 2
+
+
+# ---------------------------------------------------------------------------
+# NO-SHOW transition tests (COMPLETED without payment_received)
+# ---------------------------------------------------------------------------
+
+
+class TestNoShowTransition:
+    """NO-SHOW: marking a reservation as COMPLETED without proper payment.
+
+    Risk: completing a reservation without payment verification can lead
+    to revenue loss. The status COMPLETED is terminal — no further transitions
+    allowed.
+    """
+
+    def test_confirmed_to_completed_is_valid_transition(self) -> None:
+        """CONFIRMED → COMPLETED should be in the allowed transitions."""
+        assert ReservationStatus.COMPLETED in ALLOWED_RESERVATION_TRANSITIONS[
+            ReservationStatus.CONFIRMED
+        ]
+
+    def test_completed_is_terminal_no_outgoing(self) -> None:
+        """COMPLETED should have no outgoing transitions (terminal state)."""
+        assert ALLOWED_RESERVATION_TRANSITIONS[ReservationStatus.COMPLETED] == set()
+
+    def test_completed_cannot_transition_to_any_state(self) -> None:
+        """Attempting any transition from COMPLETED should raise ApiError."""
+        reservation = type(
+            "ReservationStub",
+            (),
+            {"status": ReservationStatus.COMPLETED},
+        )()
+
+        # Build service with minimal mock deps
+        async def _noop(*args: object, **kwargs: object) -> None:
+            pass
+
+        from app.services.reservation_service import ReservationService
+
+        svc = ReservationService(
+            notification_service=SimpleNamespace(
+                enqueue_reservation_created=_noop,
+                enqueue_payment_received=_noop,
+                enqueue_post_service=_noop,
+            ),
+            form_link_service=SimpleNamespace(generate=_noop),
+            config_service=SimpleNamespace(get_reservation_rules=_noop),
+        )
+
+        for target in [
+            ReservationStatus.CONTACT,
+            ReservationStatus.QUOTED,
+            ReservationStatus.PRE_RESERVED,
+            ReservationStatus.PENDING_PAYMENT,
+            ReservationStatus.PAYMENT_RECEIVED,
+            ReservationStatus.CONFIRMED,
+            ReservationStatus.CANCELLED,
+            ReservationStatus.EXPIRED,
+        ]:
+            with pytest.raises(ApiError):
+                asyncio.run(
+                    svc.transition_status(reservation, target)
+                )
+
+    def test_set_status_to_completed_from_confirmed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """set_status to COMPLETED should succeed from CONFIRMED."""
+
+        async def _mock_save() -> None:
+            pass
+
+        res = SimpleNamespace(
+            id="660000000000000000000001",
+            status=ReservationStatus.CONFIRMED,
+            payment_status=PaymentStatus.VERIFIED,
+            updated_by=None,
+            blocks_day=False,
+            availability_lock_key=None,
+            requested_date=date(2026, 7, 15),
+            save=_mock_save,
+        )
+
+        async def run() -> None:
+            # Mock ReservationService.get
+            async def _mock_get(_self: object, rid: str, **kwargs: object) -> object:
+                return res
+
+            monkeypatch.setattr(
+                "app.services.reservation_service.ReservationService.get",
+                _mock_get,
+            )
+
+            # Mock notification_service.enqueue_post_service
+            async def _mock_notify(*args: object, **kwargs: object) -> None:
+                pass
+
+            # Mock _sync_day_lock_fields
+            async def _mock_sync(*args: object, **kwargs: object) -> None:
+                pass
+
+            from app.services.reservation_service import ReservationService
+
+            svc = ReservationService(
+                notification_service=SimpleNamespace(
+                    enqueue_post_service=_mock_notify,
+                ),
+                form_link_service=SimpleNamespace(generate=_mock_notify),
+                config_service=SimpleNamespace(get_reservation_rules=_mock_notify),
+            )
+            monkeypatch.setattr(svc, "_sync_day_lock_fields", _mock_sync)
+
+            result = await svc.set_status(
+                reservation_id="660000000000000000000001",
+                target_status=ReservationStatus.COMPLETED,
+                actor_id="660000000000000000000050",
+            )
+
+            assert result.status == ReservationStatus.COMPLETED
+
+        asyncio.run(run())
+
+    def test_set_status_to_completed_from_cancelled_raises(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """CANCELLED → COMPLETED is an invalid transition."""
+
+        async def _mock_save() -> None:
+            pass
+
+        res = SimpleNamespace(
+            id="660000000000000000000001",
+            status=ReservationStatus.CANCELLED,
+            payment_status=PaymentStatus.PENDING,
+            updated_by=None,
+            blocks_day=False,
+            availability_lock_key=None,
+            save=_mock_save,
+        )
+
+        async def run() -> None:
+            async def _mock_get(_self: object, rid: str, **kwargs: object) -> object:
+                return res
+
+            monkeypatch.setattr(
+                "app.services.reservation_service.ReservationService.get",
+                _mock_get,
+            )
+
+            async def _mock_sync(*args: object, **kwargs: object) -> None:
+                pass
+
+            from app.services.reservation_service import ReservationService
+
+            svc = ReservationService(
+                notification_service=SimpleNamespace(),
+                form_link_service=SimpleNamespace(),
+                config_service=SimpleNamespace(),
+            )
+            monkeypatch.setattr(svc, "_sync_day_lock_fields", _mock_sync)
+
+            with pytest.raises(ApiError) as exc:
+                await svc.set_status(
+                    reservation_id="660000000000000000000001",
+                    target_status=ReservationStatus.COMPLETED,
+                    actor_id="660000000000000000000050",
+                )
+
+            assert exc.value.status_code == 409
+
+        asyncio.run(run())
+
+    def test_set_status_to_completed_from_pre_reserved_raises(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """PRE_RESERVED → COMPLETED is an invalid transition (skips confirmation)."""
+
+        async def _mock_save() -> None:
+            pass
+
+        res = SimpleNamespace(
+            id="660000000000000000000001",
+            status=ReservationStatus.PRE_RESERVED,
+            payment_status=PaymentStatus.PENDING,
+            updated_by=None,
+            blocks_day=False,
+            availability_lock_key=None,
+            save=_mock_save,
+        )
+
+        async def run() -> None:
+            async def _mock_get(_self: object, rid: str, **kwargs: object) -> object:
+                return res
+
+            monkeypatch.setattr(
+                "app.services.reservation_service.ReservationService.get",
+                _mock_get,
+            )
+
+            async def _mock_sync(*args: object, **kwargs: object) -> None:
+                pass
+
+            from app.services.reservation_service import ReservationService
+
+            svc = ReservationService(
+                notification_service=SimpleNamespace(),
+                form_link_service=SimpleNamespace(),
+                config_service=SimpleNamespace(),
+            )
+            monkeypatch.setattr(svc, "_sync_day_lock_fields", _mock_sync)
+
+            with pytest.raises(ApiError) as exc:
+                await svc.set_status(
+                    reservation_id="660000000000000000000001",
+                    target_status=ReservationStatus.COMPLETED,
+                    actor_id="660000000000000000000050",
+                )
+
+            assert exc.value.status_code == 409
+
+        asyncio.run(run())

@@ -6,8 +6,8 @@ from app.services.notification_service import NotificationService
 
 
 class NotificationOutboxWorker:
-    def __init__(self) -> None:
-        self._service = NotificationService()
+    def __init__(self, service: NotificationService) -> None:
+        self._service = service
         self._running = False
         self._poll_interval = settings.notification_outbox_poll_interval
 

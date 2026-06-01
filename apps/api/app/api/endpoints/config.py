@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.api.deps import require_permissions
+from app.api.deps import get_config_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
@@ -14,7 +14,6 @@ from app.schemas.config import (
 from app.services import ConfigService
 
 router = APIRouter(prefix="/config", tags=["Configuracion"])
-service = ConfigService()
 
 
 @router.get(
@@ -26,7 +25,9 @@ service = ConfigService()
     operation_id="getEmergencyContacts",
     responses=endpoint_responses("config_emergency_contacts"),
 )
-async def get_emergency_contacts() -> EmergencyContactsResponseSchema:
+async def get_emergency_contacts(
+    service: ConfigService = Depends(get_config_service),
+) -> EmergencyContactsResponseSchema:
     return await service.get_emergency_contacts()
 
 
@@ -41,6 +42,7 @@ async def get_emergency_contacts() -> EmergencyContactsResponseSchema:
 )
 async def get_reservation_rules(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.CONFIG_READ))],
+    service: ConfigService = Depends(get_config_service),
 ) -> ReservationRulesSchema:
     return await service.get_reservation_rules()
 
@@ -57,5 +59,6 @@ async def get_reservation_rules(
 async def update_reservation_rules(
     payload: ReservationRulesUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.CONFIG_UPDATE))],
+    service: ConfigService = Depends(get_config_service),
 ) -> ReservationRulesSchema:
     return await service.update_reservation_rules(payload)

@@ -245,9 +245,9 @@ class PaymentProofService:
 
         # Enqueue WhatsApp with participant form link (via outbox)
         try:
-            from app.services.notification_service import NotificationService
+            from app.core.di import Container
             experience = await ExperienceDocument.get(reservation.experience_id)
-            notif = NotificationService()
+            notif = Container.get_instance().notification_service
             await notif.enqueue_payment_approved_form(
                 reservation=reservation,
                 experience_name=experience.name if experience else "",
@@ -322,9 +322,9 @@ class PaymentProofService:
 
         # Enqueue WhatsApp with rejection reason (via outbox)
         try:
-            from app.services.notification_service import NotificationService
+            from app.core.di import Container
             experience = await ExperienceDocument.get(reservation.experience_id)
-            notif = NotificationService()
+            notif = Container.get_instance().notification_service
             await notif.enqueue_payment_rejected(
                 reservation=reservation,
                 experience_name=experience.name if experience else "",

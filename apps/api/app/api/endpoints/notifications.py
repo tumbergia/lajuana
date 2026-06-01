@@ -1,8 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
-from app.api.deps import require_permissions
+from app.api.deps import get_notification_service, require_permissions
 from app.common.enums import NotificationStatus, Permission
 from app.documents import UserDocument
 from app.documents.in_app_notification_document import InAppNotificationDocument
@@ -16,7 +16,6 @@ from app.schemas.notification import (
 from app.services.notification_service import NotificationService
 
 router = APIRouter(prefix="/notifications", tags=["Notificaciones"])
-notification_service = NotificationService()
 
 
 @router.get(
@@ -26,8 +25,13 @@ notification_service = NotificationService()
 )
 async def list_templates(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.NOTIFICATION_TEMPLATE_READ))],
+    response: Response,
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
 ) -> list[NotificationTemplateResponseSchema]:
-    docs = await NotificationTemplateDocument.find_all().to_list()
+    total = await NotificationTemplateDocument.find_all().count()
+    response.headers["X-Total-Count"] = str(total)
+    docs = await NotificationTemplateDocument.find_all().skip(skip).limit(limit).to_list()
     return [
         NotificationTemplateResponseSchema(
             id=str(d.id),
@@ -83,6 +87,7 @@ async def reset_reservation_notifications(
 )
 async def test_send_notification(
     reservation_id: str,
+    notification_service: NotificationService = Depends(get_notification_service),
 ) -> NotificationOutboxResponseSchema:
     """Manual test endpoint to trigger notification for a specific reservation."""
     from app.common.enums import NotificationChannel, NotificationEventType
@@ -171,6 +176,7 @@ async def get_outbox(
 async def retry_notification(
     notification_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.NOTIFICATION_UPDATE))],
+    notification_service: NotificationService = Depends(get_notification_service),
 ) -> NotificationOutboxResponseSchema:
     d = await notification_service.retry(notification_id)
     return NotificationOutboxResponseSchema(
@@ -203,6 +209,7 @@ async def retry_notification(
 async def cancel_notification(
     notification_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.NOTIFICATION_UPDATE))],
+    notification_service: NotificationService = Depends(get_notification_service),
 ) -> NotificationOutboxResponseSchema:
     d = await notification_service.cancel(notification_id)
     return NotificationOutboxResponseSchema(

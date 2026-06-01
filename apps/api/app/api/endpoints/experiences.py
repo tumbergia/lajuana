@@ -1,8 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
-from app.api.deps import require_permissions
+from app.api.deps import get_experience_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
@@ -17,7 +17,6 @@ from app.services import ExperienceService
 from app.services.mappers import experience_to_response
 
 router = APIRouter(prefix="/experiences", tags=["Experiencias"])
-service = ExperienceService()
 
 
 @router.post(
@@ -32,6 +31,7 @@ service = ExperienceService()
 async def create_experience(
     payload: ExperienceCreateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_CREATE))],
+    service: ExperienceService = Depends(get_experience_service),
 ) -> ExperienceResponseSchema:
     doc = await service.create(payload)
     return experience_to_response(doc)
@@ -47,9 +47,15 @@ async def create_experience(
 )
 async def list_experiences(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_READ))],
+    response: Response,
     is_active: bool | None = None,
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    service: ExperienceService = Depends(get_experience_service),
 ) -> list[ExperienceResponseSchema]:
-    docs = await service.list(is_active=is_active)
+    total = await service.count(is_active=is_active)
+    response.headers["X-Total-Count"] = str(total)
+    docs = await service.list(is_active=is_active, skip=skip, limit=limit)
     return [experience_to_response(doc) for doc in docs]
 
 
@@ -64,6 +70,7 @@ async def list_experiences(
 async def get_experience(
     experience_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_READ))],
+    service: ExperienceService = Depends(get_experience_service),
 ) -> ExperienceResponseSchema:
     doc = await service.get(experience_id)
     return experience_to_response(doc)
@@ -81,6 +88,7 @@ async def update_experience(
     experience_id: str,
     payload: ExperienceUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_UPDATE))],
+    service: ExperienceService = Depends(get_experience_service),
 ) -> ExperienceResponseSchema:
     doc = await service.update(experience_id, payload)
     return experience_to_response(doc)
@@ -97,6 +105,7 @@ async def update_experience(
 async def deactivate_experience(
     experience_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_DELETE))],
+    service: ExperienceService = Depends(get_experience_service),
 ) -> ExperienceResponseSchema:
     doc = await service.deactivate(experience_id)
     return experience_to_response(doc)
@@ -116,5 +125,6 @@ async def quote_experience(
     experience_id: str,
     payload: ExperienceQuoteRequestSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_READ))],
+    service: ExperienceService = Depends(get_experience_service),
 ) -> ExperienceQuoteResponseSchema:
     return await service.quote(experience_id, payload)

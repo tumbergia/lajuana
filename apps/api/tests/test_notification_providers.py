@@ -3,6 +3,7 @@ import asyncio
 import pytest
 
 from app.common.enums import NotificationChannel
+from app.core.di import Container
 from app.notifications.in_app_provider import InAppNotificationProvider
 from app.notifications.whatsapp_provider import WhatsAppNotificationProvider
 
@@ -59,14 +60,18 @@ def test_in_app_provider_validate() -> None:
 
 
 def test_whatsapp_provider_channel() -> None:
-    provider = WhatsAppNotificationProvider()
+    provider = WhatsAppNotificationProvider(
+        outbound_service=Container.get_instance()._services["whatsapp_outbound_service"],
+    )
     assert provider.channel == NotificationChannel.WHATSAPP
 
 
 def test_whatsapp_provider_validate_no_credentials() -> None:
     from app.core.config import settings
 
-    provider = WhatsAppNotificationProvider()
+    provider = WhatsAppNotificationProvider(
+        outbound_service=Container.get_instance()._services["whatsapp_outbound_service"],
+    )
     result = asyncio.run(provider.validate_config())
     expected = bool(settings.whatsapp_access_token and settings.whatsapp_phone_number_id)
     assert result is expected

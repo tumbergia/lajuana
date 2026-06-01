@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import time
-from collections import Counter
 from datetime import date, datetime
 from typing import Any
 from uuid import uuid4
@@ -107,24 +106,23 @@ async def admin_get_sales_summary(
 
         created_filter = _build_created_at_filter(payload.date_from, payload.date_to)
 
-        reservations: list[ReservationDocument] = []
+        pipeline: list[dict] = []
         if created_filter:
-            reservations = await ReservationDocument.find(
-                {"created_at": {"$in": created_filter}}
-            ).to_list()
-        else:
-            reservations = await ReservationDocument.find_all().to_list()
+            pipeline.append({"$match": {"created_at": created_filter}})
+        pipeline.append({
+            "$group": {
+                "_id": "$status",
+                "count": {"$sum": 1},
+                "total_amount": {"$sum": {"$ifNull": ["$quoted_total_amount", 0]}},
+            }
+        })
+        results = await ReservationDocument.aggregate(pipeline).to_list()
 
-        total = len(reservations)
-        status_counts: Counter = Counter()
-        total_revenue = 0
-        for r in reservations:
-            status_counts[r.status] += 1
-            if r.quoted_total_amount is not None:
-                total_revenue += int(r.quoted_total_amount)
-
+        total = sum(r["count"] for r in results)
+        total_revenue = sum(int(r["total_amount"]) for r in results)
+        status_counts = {r["_id"]: r["count"] for r in results}
         by_status = [
-            StatusSalesItem(status=s.value, count=c)
+            StatusSalesItem(status=s, count=c)
             for s, c in sorted(status_counts.items(), key=lambda x: str(x[0]))
         ]
 
@@ -183,21 +181,18 @@ async def admin_get_reservation_funnel(
 
         created_filter = _build_created_at_filter(payload.date_from, payload.date_to)
 
-        reservations: list[ReservationDocument] = []
+        pipeline: list[dict] = []
         if created_filter:
-            reservations = await ReservationDocument.find(
-                {"created_at": {"$in": created_filter}}
-            ).to_list()
-        else:
-            reservations = await ReservationDocument.find_all().to_list()
-
-        status_counts: Counter = Counter(r.status for r in reservations)
-        total = len(reservations)
+            pipeline.append({"$match": {"created_at": created_filter}})
+        pipeline.append({"$group": {"_id": "$status", "count": {"$sum": 1}}})
+        results = await ReservationDocument.aggregate(pipeline).to_list()
+        total = sum(r["count"] for r in results)
+        status_counts = {r["_id"]: r["count"] for r in results}
         stages: list[FunnelStageItem] = []
         prev_count = total
 
         for status_enum in RESERVATION_FUNNEL_ORDER:
-            count = status_counts.get(status_enum, 0)
+            count = status_counts.get(status_enum.value, 0)
             pct = (count / prev_count * 100) if prev_count > 0 else 0.0
             stages.append(
                 FunnelStageItem(
@@ -209,8 +204,8 @@ async def admin_get_reservation_funnel(
             prev_count = count
 
         confirmed_or_completed = status_counts.get(
-            ReservationStatus.CONFIRMED, 0
-        ) + status_counts.get(ReservationStatus.COMPLETED, 0)
+            ReservationStatus.CONFIRMED.value, 0
+        ) + status_counts.get(ReservationStatus.COMPLETED.value, 0)
 
         output = ReservationFunnelOutput(
             trace_id=trace_id,
@@ -268,36 +263,36 @@ async def admin_get_channel_performance(
 
         created_filter = _build_created_at_filter(payload.date_from, payload.date_to)
 
-        reservations: list[ReservationDocument] = []
+        pipeline: list[dict] = []
         if created_filter:
-            reservations = await ReservationDocument.find(
-                {"created_at": {"$in": created_filter}}
-            ).to_list()
-        else:
-            reservations = await ReservationDocument.find_all().to_list()
-
-        channel_data: dict[str, dict[str, int]] = {}
-        for r in reservations:
-            ch = r.channel.value if hasattr(r.channel, "value") else str(r.channel)
-            if ch not in channel_data:
-                channel_data[ch] = {"count": 0, "confirmed": 0}
-            channel_data[ch]["count"] += 1
-            if r.status in {
-                ReservationStatus.CONFIRMED,
-                ReservationStatus.COMPLETED,
-            }:
-                channel_data[ch]["confirmed"] += 1
+            pipeline.append({"$match": {"created_at": created_filter}})
+        pipeline.append({
+            "$group": {
+                "_id": "$channel",
+                "count": {"$sum": 1},
+                "confirmed": {
+                    "$sum": {
+                        "$cond": [
+                            {"$in": ["$status", ["confirmed", "completed"]]},
+                            1,
+                            0,
+                        ]
+                    }
+                },
+            }
+        })
+        results = await ReservationDocument.aggregate(pipeline).to_list()
 
         channels = [
             ChannelPerformanceItem(
-                channel=ch,
-                count=data["count"],
-                confirmed=data["confirmed"],
+                channel=r["_id"],
+                count=r["count"],
+                confirmed=r["confirmed"],
             )
-            for ch, data in sorted(channel_data.items(), key=lambda x: -x[1]["count"])
+            for r in sorted(results, key=lambda x: -x["count"])
         ]
 
-        total = sum(data["count"] for data in channel_data.values())
+        total = sum(r["count"] for r in results)
 
         output = ChannelPerformanceOutput(
             trace_id=trace_id,
@@ -453,7 +448,7 @@ async def admin_get_equine_workload_report(
     try:
         payload = EquineWorkloadReportInput(date_from=date_from, date_to=date_to)
 
-        equines = await EquineDocument.find_all().to_list()
+        equines = await EquineDocument.find_all().to_list()  # known-small: < 200 equines
         total_assignments = 0
         workload: list[WorkloadSummaryItem] = []
 

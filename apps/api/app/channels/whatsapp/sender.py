@@ -5,8 +5,8 @@ from app.documents.conversation_turn_document import ConversationTurnDocument
 
 
 class WhatsAppSender:
-    def __init__(self) -> None:
-        self._service = WhatsAppOutboundService()
+    def __init__(self, service: WhatsAppOutboundService) -> None:
+        self._service = service
 
     async def send_text(self, *, to_phone: str, text: str) -> bool:
         turn = ConversationTurnDocument(

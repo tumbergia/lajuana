@@ -1,19 +1,12 @@
+"""Schema mappers: document_to_schema helper + thin wrappers + complex mappers."""
+
 import logging
 
 from app.documents import (
-    AssignmentDocument,
-    EquineDocument,
-    ExperienceDocument,
     ParticipantDocument,
     ParticipantFormLinkDocument,
     PaymentProofDocument,
-    PolicyDocument,
-    ProviderDocument,
     ReservationDocument,
-    SaddleDocument,
-    ScheduleDocument,
-    ServiceLogDocument,
-    UserDocument,
 )
 from app.schemas.assignment import AssignmentResponseSchema
 from app.schemas.auth import UserResponseSchema
@@ -32,6 +25,10 @@ from app.schemas.service_log import ServiceLogResponseSchema
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# Core helper
+# ---------------------------------------------------------------------------
+
 def document_to_schema(
     doc: object,
     schema_cls: type,
@@ -45,17 +42,14 @@ def document_to_schema(
     Usage::
 
         schema = document_to_schema(
-            equine_doc,
-            EquineResponseSchema,
-            scalar_fields={"id": "id"},       # ObjectId → str (required)
-            optional_scalar_fields={"saddle_id": "saddle_id"},  # ObjectId → str | None
-            exclude_fields={"revision_id"},
+            equine_doc, EquineResponseSchema,
+            scalar_fields={"id": "id"},
+            optional_scalar_fields={"saddle_id": "saddle_id"},
         )
     """
     model_dump = getattr(doc, "model_dump", None)
     if model_dump is None:
         raise TypeError(f"doc has no model_dump (got {type(doc).__name__})")
-
     data = model_dump(exclude=exclude_fields or {"revision_id"})
     if scalar_fields:
         for target, source in scalar_fields.items():
@@ -68,69 +62,40 @@ def document_to_schema(
     return schema_cls(**data)
 
 
-def user_to_response(user: UserDocument) -> UserResponseSchema:
-    return document_to_schema(
-        user,
-        UserResponseSchema,
-        scalar_fields={"id": "id"},
-        exclude_fields={"revision_id"},
-    )
+# ---------------------------------------------------------------------------
+# Thin wrappers — document_to_schema delegates (no custom logic)
+# ---------------------------------------------------------------------------
+
+user_to_response = lambda u: document_to_schema(u, UserResponseSchema, scalar_fields={"id": "id"})
+experience_to_response = lambda d: document_to_schema(d, ExperienceResponseSchema, scalar_fields={"id": "id"})
+schedule_to_response = lambda d: document_to_schema(d, ScheduleResponseSchema, scalar_fields={"id": "id", "experience_id": "experience_id"})
+payment_proof_to_response = lambda d: document_to_schema(d, PaymentProofResponseSchema, scalar_fields={"id": "id", "reservation_id": "reservation_id"})
+equine_to_response = lambda d: document_to_schema(d, EquineResponseSchema, scalar_fields={"id": "id"})
+equine_to_list_item = lambda d: document_to_schema(d, EquineListItemSchema, scalar_fields={"id": "id"})
+saddle_to_response = lambda d: document_to_schema(d, SaddleResponseSchema, scalar_fields={"id": "id"})
+assignment_to_response = lambda d: document_to_schema(
+    d, AssignmentResponseSchema,
+    scalar_fields={"id": "id", "reservation_id": "reservation_id", "participant_id": "participant_id", "equine_id": "equine_id"},
+    optional_scalar_fields={"saddle_id": "saddle_id"},
+)
+service_log_to_response = lambda d: document_to_schema(
+    d, ServiceLogResponseSchema,
+    scalar_fields={"id": "id", "reservation_id": "reservation_id"},
+    optional_scalar_fields={"related_participant_id": "related_participant_id", "related_equine_id": "related_equine_id"},
+)
+provider_to_response = lambda d: document_to_schema(d, ProviderResponseSchema, scalar_fields={"id": "id"})
+policy_to_response = lambda d: document_to_schema(
+    d, PolicyResponseSchema,
+    scalar_fields={"id": "id", "reservation_id": "reservation_id"},
+    optional_scalar_fields={"provider_id": "provider_id"},
+)
 
 
-def experience_to_response(doc: ExperienceDocument) -> ExperienceResponseSchema:
-    return ExperienceResponseSchema(
-        id=str(doc.id),
-        name=doc.name,
-        slug=doc.slug,
-        subtitle=doc.subtitle,
-        description=doc.description,
-        image_url=doc.image_url,
-        level=doc.level,
-        difficulty=doc.difficulty,
-        category=doc.category,
-        status=doc.status,
-        duration_hours=doc.duration_hours,
-        duration_days=doc.duration_days,
-        base_capacity=doc.base_capacity,
-        duration=doc.duration,
-        route_details=doc.route_details,
-        pricing=doc.pricing,
-        inclusions=doc.inclusions,
-        standard_max_participants=doc.standard_max_participants,
-        min_participants=doc.min_participants,
-        tags=doc.tags,
-        is_active=doc.is_active,
-        version=doc.version,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
-    )
-
-
-def schedule_to_response(doc: ScheduleDocument) -> ScheduleResponseSchema:
-    return ScheduleResponseSchema(
-        id=str(doc.id),
-        experience_id=str(doc.experience_id),
-        date=doc.date,
-        start_time=doc.start_time,
-        is_active=doc.is_active,
-        capacity_total=doc.capacity_total,
-        reserved_slots=doc.reserved_slots,
-        internal_slots=doc.internal_slots,
-        blocked_slots=doc.blocked_slots,
-        available_slots=doc.available_slots,
-        status=doc.status,
-        custom_request_only=doc.custom_request_only,
-        notes=doc.notes,
-        version=doc.version,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
-    )
-
+# ---------------------------------------------------------------------------
+# Complex mappers — custom resolution or nested structures
+# ---------------------------------------------------------------------------
 
 async def reservation_to_response(doc: ReservationDocument) -> ReservationResponseSchema:
-    # Resolve participants by IDs (avoids N+1 — single $in query).
     participants: list[ParticipantResponseSchema] = []
     if doc.participant_ids:
         participant_docs = await ParticipantDocument.find(
@@ -142,12 +107,9 @@ async def reservation_to_response(doc: ReservationDocument) -> ReservationRespon
             except Exception:
                 logger.warning(
                     "[mapper] Failed to map participant | reservation=%s | participant=%s",
-                    doc.id,
-                    p.id,
-                    exc_info=True,
+                    doc.id, p.id, exc_info=True,
                 )
 
-    # Resolve payment proofs by IDs.
     payment_proofs: list[PaymentProofResponseSchema] = []
     if doc.payment_proof_ids:
         proof_docs = await PaymentProofDocument.find(
@@ -155,214 +117,47 @@ async def reservation_to_response(doc: ReservationDocument) -> ReservationRespon
         ).to_list()
         payment_proofs = [payment_proof_to_response(p) for p in proof_docs]
 
-    return ReservationResponseSchema(
-        id=str(doc.id),
-        code=doc.code,
-        experience_id=str(doc.experience_id),
-        schedule_id=str(doc.schedule_id) if doc.schedule_id else None,
-        channel=doc.channel,
-        status=doc.status,
-        participant_count=doc.participant_count,
-        payment_status=doc.payment_status,
-        holder_name=doc.holder_name,
-        holder_email=doc.holder_email,
-        holder_phone=doc.holder_phone,
-        requested_date=doc.requested_date,
-        quoted_total_amount=doc.quoted_total_amount,
-        currency=doc.currency,
-        expected_participants_count=doc.expected_participants_count,
-        participants_completed_count=doc.participants_completed_count,
-        participant_form_status=doc.participant_form_status,
-        form_url=doc.form_url,
-        participant_form_sent_at=doc.participant_form_sent_at,
-        participant_form_send_count=doc.participant_form_send_count,
-        form_sent=doc.participant_form_sent_at is not None,
-        confirmation_message_sent_at=doc.confirmation_message_sent_at,
-        confirmation_message_sent=doc.confirmation_message_sent_at is not None,
-        confirmed_at=doc.confirmed_at,
-        cancelled_at=doc.cancelled_at,
-        completed_at=doc.completed_at,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
-        version=doc.version,
-        participants=participants,
-        payment_proofs=payment_proofs,
-    )
+    data = doc.model_dump(exclude={"revision_id", "id", "participant_ids", "payment_proof_ids"})
+    data["id"] = str(doc.id)
+    data["experience_id"] = str(doc.experience_id) if doc.experience_id else None
+    data["schedule_id"] = str(doc.schedule_id) if doc.schedule_id else None
+    data["participants"] = participants
+    data["payment_proofs"] = payment_proofs
+    data["form_sent"] = doc.participant_form_sent_at is not None
+    data["confirmation_message_sent"] = doc.confirmation_message_sent_at is not None
+    return ReservationResponseSchema(**data)
 
 
 def reservation_to_list_item(
     doc: ReservationDocument,
     enriched: dict | None = None,
 ) -> ReservationListItemSchema:
-    kwargs: dict[str, object] = {
-        "id": str(doc.id),
-        "code": doc.code,
-        "status": doc.status,
-        "participant_count": doc.participant_count,
-        "payment_status": doc.payment_status,
-        "holder_name": doc.holder_name,
-        "holder_email": doc.holder_email,
-        "holder_phone": doc.holder_phone,
-        "experience_id": str(doc.experience_id),
-        "schedule_id": str(doc.schedule_id) if doc.schedule_id else None,
-        "requested_date": doc.requested_date,
-        "expected_participants_count": doc.expected_participants_count,
-        "participants_completed_count": doc.participants_completed_count,
-        "participant_form_status": doc.participant_form_status,
-        "channel": doc.channel,
-        "created_at": doc.created_at,
-        "updated_at": doc.updated_at,
-        "deleted_at": doc.deleted_at,
-        "version": doc.version,
-    }
+    data = doc.model_dump(exclude={"revision_id", "id"})
+    data["id"] = str(doc.id)
+    data["experience_id"] = str(doc.experience_id)
+    data["schedule_id"] = str(doc.schedule_id) if doc.schedule_id else None
     if enriched:
         for key in ("experience_name", "scheduled_date", "start_time"):
             if key in enriched:
-                kwargs[key] = enriched[key]
-    return ReservationListItemSchema(**kwargs)
+                data[key] = enriched[key]
+    return ReservationListItemSchema(**data)
 
 
 def participant_to_response(doc: ParticipantDocument) -> ParticipantResponseSchema:
-    # Build a flat dict to avoid Pydantic v2 strict-type mismatches
-    # between document model types and response schema types (e.g.
-    # EmergencyContact vs EmergencyContactSchema, enum instances vs str).
     ec_raw = doc.emergency_contact
     ec_dict = ec_raw.model_dump() if hasattr(ec_raw, "model_dump") else ec_raw
-    return ParticipantResponseSchema.model_validate({
-        "id": str(doc.id),
-        "reservation_id": str(doc.reservation_id),
-        "first_name": doc.first_name,
-        "last_name": doc.last_name,
-        "birth_date": doc.birth_date,
-        "document_type": doc.document_type,
-        "document_number": doc.document_number,
-        "phone": doc.phone,
-        "country": doc.country,
-        "city": doc.city,
-        "height_cm": doc.height_cm,
-        "weight_kg": doc.weight_kg,
-        "experience_level": doc.experience_level.value if doc.experience_level else None,
-        "dietary_restrictions": doc.dietary_restrictions,
-        "blood_type": doc.blood_type,
-        "eps_or_travel_insurance": doc.eps_or_travel_insurance,
-        "health_conditions": doc.health_conditions,
-        "sensory_disabilities": doc.sensory_disabilities,
-        "emergency_contact": ec_dict,
-        "accepted_data_processing": doc.accepted_data_processing,
-        "accepted_media_usage": doc.accepted_media_usage,
-        "accepted_risk_release": doc.accepted_risk_release,
-        "risk_release_text_version": doc.risk_release_text_version,
-        "is_completed": doc.is_completed,
-        "created_at": doc.created_at,
-        "updated_at": doc.updated_at,
-        "deleted_at": doc.deleted_at,
-        "version": doc.version,
-    })
+    data = doc.model_dump(exclude={"revision_id", "id", "emergency_contact"})
+    data["id"] = str(doc.id)
+    data["emergency_contact"] = ec_dict
+    data["experience_level"] = doc.experience_level.value if doc.experience_level else None
+    return ParticipantResponseSchema.model_validate(data)
 
 
 def form_link_to_status_response(
     doc: ParticipantFormLinkDocument,
 ) -> ParticipantFormLinkStatusResponse:
-    return ParticipantFormLinkStatusResponse(
-        id=str(doc.id),
-        reservation_id=str(doc.reservation_id),
-        status=doc.status,
-        expires_at=doc.expires_at,
-        max_participants=doc.max_participants,
-        used_count=doc.used_count,
-        completed_participants=doc.used_count,
-        created_at=doc.created_at,
-        revoked_at=doc.revoked_at,
-    )
-
-
-def payment_proof_to_response(doc: PaymentProofDocument) -> PaymentProofResponseSchema:
-    return PaymentProofResponseSchema(
-        id=str(doc.id),
-        reservation_id=str(doc.reservation_id),
-        storage_key=doc.storage_key,
-        filename=doc.filename,
-        content_type=doc.content_type,
-        size_bytes=doc.size_bytes,
-        sha256=doc.sha256,
-        status=doc.status,
-        uploaded_at=doc.uploaded_at,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
-        version=doc.version,
-    )
-
-
-def equine_to_response(doc: EquineDocument) -> EquineResponseSchema:
-    return document_to_schema(
-        doc, EquineResponseSchema,
-        scalar_fields={"id": "id"},
-        exclude_fields={"revision_id"},
-    )
-
-
-def equine_to_list_item(doc: EquineDocument) -> EquineListItemSchema:
-    return document_to_schema(
-        doc, EquineListItemSchema,
-        scalar_fields={"id": "id"},
-        exclude_fields={"revision_id"},
-    )
-
-
-def saddle_to_response(doc: SaddleDocument) -> SaddleResponseSchema:
-    return document_to_schema(
-        doc, SaddleResponseSchema,
-        scalar_fields={"id": "id"},
-        exclude_fields={"revision_id"},
-    )
-
-
-def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseSchema:
-    return document_to_schema(
-        doc, AssignmentResponseSchema,
-        scalar_fields={
-            "id": "id",
-            "reservation_id": "reservation_id",
-            "participant_id": "participant_id",
-            "equine_id": "equine_id",
-        },
-        optional_scalar_fields={"saddle_id": "saddle_id"},
-        exclude_fields={"revision_id"},
-    )
-
-
-def service_log_to_response(doc: ServiceLogDocument) -> ServiceLogResponseSchema:
-    return document_to_schema(
-        doc, ServiceLogResponseSchema,
-        scalar_fields={
-            "id": "id",
-            "reservation_id": "reservation_id",
-        },
-        optional_scalar_fields={
-            "related_participant_id": "related_participant_id",
-            "related_equine_id": "related_equine_id",
-        },
-        exclude_fields={"revision_id"},
-    )
-
-
-def provider_to_response(doc: ProviderDocument) -> ProviderResponseSchema:
-    return document_to_schema(
-        doc, ProviderResponseSchema,
-        scalar_fields={"id": "id"},
-        exclude_fields={"revision_id"},
-    )
-
-
-def policy_to_response(doc: PolicyDocument) -> PolicyResponseSchema:
-    return document_to_schema(
-        doc, PolicyResponseSchema,
-        scalar_fields={
-            "id": "id",
-            "reservation_id": "reservation_id",
-        },
-        optional_scalar_fields={"provider_id": "provider_id"},
-        exclude_fields={"revision_id"},
-    )
+    data = doc.model_dump(exclude={"revision_id", "id", "reservation_id"})
+    data["id"] = str(doc.id)
+    data["reservation_id"] = str(doc.reservation_id)
+    data["completed_participants"] = doc.used_count
+    return ParticipantFormLinkStatusResponse(**data)

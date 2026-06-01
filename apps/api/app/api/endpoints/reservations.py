@@ -1,11 +1,16 @@
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
-from app.api.deps import require_permissions
+from app.api.deps import (
+    get_participant_service,
+    get_payment_proof_service,
+    get_reservation_service,
+    require_permissions,
+)
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
-from app.common.enums import Permission, UserRole
+from app.common.enums import Permission
 from app.documents import UserDocument
 from app.schemas.participant import (
     ParticipantCreateSchema,
@@ -38,9 +43,6 @@ from app.services.mappers import (
 )
 
 router = APIRouter(prefix="/reservations", tags=["Reservas"])
-reservation_service = ReservationService()
-participant_service = ParticipantService()
-payment_proof_service = PaymentProofService()
 
 
 @router.post(
@@ -58,6 +60,7 @@ async def create_reservation(
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_CREATE)),
     ],
+    reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
     doc = await reservation_service.create(payload.model_dump(), actor_id=current_user.id)
     return await reservation_to_response(doc)
@@ -74,6 +77,7 @@ async def create_reservation(
 async def check_reservation_availability(
     date: date,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_READ))],
+    reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationAvailabilityResponseSchema:
     availability = await reservation_service.check_availability(requested_date=date)
     return ReservationAvailabilityResponseSchema.model_validate(availability)
@@ -94,7 +98,12 @@ async def list_reservations(
     ],
     limit: int = Query(default=200, ge=1, le=1000, description="Max items"),
     skip: int = Query(default=0, ge=0, description="Items to skip"),
+    reservation_service: ReservationService = Depends(get_reservation_service),
+    response: Response = None,
 ) -> list[ReservationListItemSchema]:
+    total = await reservation_service.count(actor_role=current_user.role)
+    response.headers["X-Total-Count"] = str(total)
+
     docs = await reservation_service.list(
         actor_role=current_user.role,
         limit=limit,
@@ -155,6 +164,7 @@ async def get_reservation(
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_READ)),
     ],
+    reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
     doc = await reservation_service.get(reservation_id, actor_role=current_user.role)
     return await reservation_to_response(doc)
@@ -175,6 +185,7 @@ async def update_reservation(
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_UPDATE)),
     ],
+    reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
     doc = await reservation_service.update(
         reservation_id,
@@ -199,6 +210,7 @@ async def confirm_reservation(
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_CONFIRM)),
     ],
+    reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
     doc = await reservation_service.confirm_reservation(reservation_id, actor_id=current_user.id)
     return await reservation_to_response(doc)
@@ -219,6 +231,7 @@ async def transition_reservation_status(
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_UPDATE)),
     ],
+    reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
     doc = await reservation_service.set_status(
         reservation_id,
@@ -243,6 +256,7 @@ async def cancel_reservation(
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_CANCEL)),
     ],
+    reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
     doc = await reservation_service.cancel_reservation(reservation_id, actor_id=current_user.id)
     return await reservation_to_response(doc)
@@ -264,6 +278,7 @@ async def add_payment_proof(
         UserDocument,
         Depends(require_permissions(Permission.PAYMENT_PROOF_CREATE)),
     ],
+    payment_proof_service: PaymentProofService = Depends(get_payment_proof_service),
 ) -> PaymentProofResponseSchema:
     doc = await payment_proof_service.create(reservation_id, payload, actor_id=current_user.id)
     return payment_proof_to_response(doc)
@@ -282,6 +297,7 @@ async def create_participant(
     reservation_id: str,
     payload: ParticipantCreateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PARTICIPANT_CREATE))],
+    participant_service: ParticipantService = Depends(get_participant_service),
 ) -> ParticipantResponseSchema:
     doc = await participant_service.create(reservation_id, payload)
     return participant_to_response(doc)

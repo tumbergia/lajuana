@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from app.common.enums import EquineOperationalStatus
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
@@ -18,6 +20,8 @@ class EquineService:
         operational_status: EquineOperationalStatus | None = None,
         is_active: bool | None = None,
         is_available: bool | None = None,
+        limit: int = 200,
+        skip: int = 0,
     ) -> list[EquineDocument]:
         query = {}
         if operational_status is not None:
@@ -26,19 +30,26 @@ class EquineService:
             query["is_active"] = is_active
         if is_available is not None:
             query["is_available"] = is_available
-        return await EquineDocument.find(query).to_list()
+        return await EquineDocument.find(query).skip(skip).limit(limit).to_list()
+
+    async def count(self, **query: Any) -> int:
+        return await EquineDocument.find(query).count()
 
     async def list_items(
         self,
         operational_status: EquineOperationalStatus | None = None,
         is_active: bool | None = None,
         is_available: bool | None = None,
+        limit: int = 200,
+        skip: int = 0,
     ) -> list[EquineDocument]:
         """Retorna solo los campos del list item (usa el mismo query pero más liviano)."""
         return await self.list(
             operational_status=operational_status,
             is_active=is_active,
             is_available=is_available,
+            limit=limit,
+            skip=skip,
         )
 
     async def get(self, equine_id: str) -> EquineDocument:

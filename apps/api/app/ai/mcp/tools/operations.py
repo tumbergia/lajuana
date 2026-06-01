@@ -662,7 +662,7 @@ async def admin_get_equine_workload(
                 if e is not None:
                     equines.append(e)
         else:
-            equines = await EquineDocument.find_all().to_list()
+            equines = await EquineDocument.find_all().to_list()  # known-small: < 50 equines
 
         if payload.only_available:
             equines = [e for e in equines if e.is_available]

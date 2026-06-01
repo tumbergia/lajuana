@@ -20,7 +20,10 @@ from app.documents import EquineDocument
 from app.schemas.equine import EquineCreateSchema, EquineUpdateSchema
 from app.services.equine_service import EquineService
 
-_service = EquineService()
+
+def _get_service() -> EquineService:
+    from app.core.di import Container
+    return Container.get_instance().equine_service
 
 
 def _safe_str(value: Any) -> str | None:
@@ -41,7 +44,7 @@ async def admin_list_equines(
     output: AdminListEquinesOutput | None = None
 
     try:
-        docs = await _service.list()
+        docs = await _get_service().list()
         if only_available:
             docs = [d for d in docs if d.is_available]
 
@@ -102,7 +105,7 @@ async def admin_get_equine(
     output: AdminGetEquineOutput | None = None
 
     try:
-        doc = await _service.get(equine_id)
+        doc = await _get_service().get(equine_id)
         output = AdminGetEquineOutput(
             trace_id=trace_id,
             found=True,
@@ -172,7 +175,7 @@ async def admin_create_equine(
             if k in EquineCreateSchema.model_fields
         }
         payload = EquineCreateSchema.model_validate(filtered)
-        doc = await _service.create(payload)
+        doc = await _get_service().create(payload)
 
         output = AdminCreateEquineOutput(
             trace_id=trace_id,
@@ -237,7 +240,7 @@ async def admin_update_equine(
             if k in EquineUpdateSchema.model_fields and v is not None
         }
         payload = EquineUpdateSchema.model_validate(filtered)
-        doc = await _service.update(equine_id, payload)
+        doc = await _get_service().update(equine_id, payload)
 
         output = AdminUpdateEquineOutput(
             trace_id=trace_id,
@@ -299,7 +302,7 @@ async def admin_deactivate_equine(
     output: AdminDeactivateEquineOutput | None = None
 
     try:
-        doc = await _service.deactivate(equine_id)
+        doc = await _get_service().deactivate(equine_id)
 
         output = AdminDeactivateEquineOutput(
             trace_id=trace_id,

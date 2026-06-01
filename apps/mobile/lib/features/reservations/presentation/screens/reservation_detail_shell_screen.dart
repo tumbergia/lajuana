@@ -3,10 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:mobile_core/mobile_core.dart';
 
-import '../../../../app/utils/file_saver.dart';
-
 import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/theme_extensions.dart';
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_button.dart';
 import '../../infrastructure/repositories/fallback_repository.dart';
@@ -17,12 +14,16 @@ import '../../../../app/widgets/app_entity_row_card.dart';
 import '../../../../app/widgets/app_scaffold.dart';
 import '../../../../app/widgets/app_segmented_filter.dart';
 import '../../../../app/widgets/app_status_banner.dart';
-import '../../../../app/widgets/app_text_field.dart';
 import '../../../../app/widgets/app_timeline.dart';
+import '../dialogs/reservation_approve_dialog.dart';
+import '../dialogs/reservation_reject_dialog.dart';
+import '../widgets/reservation_client_detail_view.dart';
+import '../widgets/reservation_participant_detail_view.dart';
+import '../widgets/reservation_proof_image_viewer.dart';
 import '../../../auth/presentation/auth_controller.dart';
 import '../../../catalogs/catalogs_module.dart';
 import '../../domain/models/reservation_detail.dart';
-import '../../domain/models/reservation_list_item.dart';
+
 import '../../domain/models/reservation_status.dart';
 import '../../domain/models/reservation_participant_detail.dart';
 import '../../domain/models/reservation_payment_proof_detail.dart';
@@ -256,7 +257,7 @@ class _ReservationDetailShellScreenState
         const SizedBox(height: 10),
         AppEntityRowCard(
           title: detail.quotedTotalAmount != null
-              ? _formatColombianPrice(detail.quotedTotalAmount!)
+              ? formatColombianPrice(detail.quotedTotalAmount!)
               : 'Sin cotizacion',
           subtitle: 'Valor cotizado',
           leading: const Icon(Icons.attach_money_rounded, size: 18),
@@ -502,48 +503,9 @@ class _ReservationDetailShellScreenState
     );
   }
 
-  /// Formatea [value] (string numérico) en formato pesos colombianos:
-  /// apóstrofe solo para millones, punto para miles, coma decimal.
-  /// Ej: 1'234.567,89 | 500.000,00 | 999,00
-  String _formatColombianPrice(String value) {
-    final number = double.tryParse(value.replaceAll(',', '.').replaceAll("'", ''));
-    if (number == null) return value;
-    final formatted = number.toStringAsFixed(2);
-    final dotPos = formatted.indexOf('.');
-    final intPart = dotPos >= 0 ? formatted.substring(0, dotPos) : formatted;
-    final decPart = dotPos >= 0 ? formatted.substring(dotPos + 1) : '00';
-
-    // Group integer part into chunks of 3 from right
-    final groups = <String>[];
-    int remaining = intPart.length;
-    while (remaining > 0) {
-      final chunkSize = remaining >= 3 ? 3 : remaining;
-      groups.insert(0, intPart.substring(remaining - chunkSize, remaining));
-      remaining -= chunkSize;
-    }
-
-    // Join groups: last separator = '.' (thousands), earlier = "'" (millions+)
-    final buffer = StringBuffer();
-    for (int i = 0; i < groups.length; i++) {
-      if (i > 0) {
-        if (groups.length - i == 1) {
-          buffer.write('.'); // thousands (last separator)
-        } else {
-          buffer.write("'"); // millions and above
-        }
-      }
-      buffer.write(groups[i]);
-    }
-
-    return '${buffer.toString()},$decPart';
-  }
-
   Widget _buildPaymentContent(
       ReservationPaymentProofsSectionController ctrl) {
     final actionState = _controller.paymentProofActionState;
-    final isBusy = actionState == PaymentProofActionState.approving ||
-        actionState == PaymentProofActionState.rejecting ||
-        actionState == PaymentProofActionState.unverifying;
 
     return RefreshIndicator(
       onRefresh: () => _controller.loadDetail(widget.reservationId),
@@ -629,8 +591,9 @@ class _ReservationDetailShellScreenState
                                   : Icons.check_circle_outline,
                               variant: AppButtonVariant.primary,
                               onPressed: isApproving || isRejecting
-                                  ? null
-                                  : () => _showApproveConfirmation(proof),
+              ? null
+                  : () => showApproveConfirmationDialog(
+                      context, proof, _controller, _isAdmin),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -644,8 +607,8 @@ class _ReservationDetailShellScreenState
                                   : Icons.cancel_outlined,
                               variant: AppButtonVariant.secondary,
                               onPressed: isApproving || isRejecting
-                                  ? null
-                                  : () => _showRejectDialog(proof),
+                  ? null
+                  : () => showRejectDialog(context, proof, _controller, _isAdmin),
                             ),
                           ),
                         ],
@@ -698,132 +661,6 @@ class _ReservationDetailShellScreenState
       return 'Error de conexion';
     }
     return 'Error al procesar comprobante';
-  }
-
-  void _showApproveConfirmation(ReservationPaymentProofDetail proof) {
-    AppConfirmDialog.show(
-      context: context,
-      icon: Icons.check_circle_outline_rounded,
-      title: 'Aprobar comprobante',
-      message:
-          'El pago quedará validado, pero la reserva no se '
-          'confirmará automáticamente.',
-      confirmLabel: 'Aprobar',
-      height: 280,
-      onConfirm: () {
-        _controller.approvePaymentProof(
-          paymentProofId: proof.id,
-          isAdmin: _isAdmin,
-        );
-      },
-    );
-  }
-
-  void _showRejectDialog(ReservationPaymentProofDetail proof) {
-    final reasonCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        final scheme = Theme.of(ctx).colorScheme;
-        final tokens = Theme.of(ctx).appTokens;
-
-        return AlertDialog(
-          backgroundColor: scheme.surfaceContainerHigh,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: tokens.radiusXl,
-          ),
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          contentPadding: EdgeInsets.zero,
-          content: Form(
-            key: formKey,
-            child: Padding(
-              padding: EdgeInsets.all(tokens.spaceXl),
-                child: SizedBox(
-                height: 320,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Icon(Icons.cancel_rounded,
-                        size: 48, color: AppColors.danger),
-                    SizedBox(height: tokens.spaceLg),
-                    Text(
-                      'Rechazar comprobante',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(ctx)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    SizedBox(height: tokens.spaceSm),
-                    Text(
-                      'Indica el motivo del rechazo',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(ctx)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: scheme.onSurfaceVariant),
-                    ),
-                    SizedBox(height: tokens.spaceLg),
-                    AppTextField(
-                      controller: reasonCtrl,
-                      hintText: 'Motivo del rechazo',
-                      maxLines: 3,
-                      variant: AppTextFieldVariant.filled,
-                    ),
-                    SizedBox(height: tokens.spaceXl),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppButton(
-                            label: 'Cancelar',
-                            variant: AppButtonVariant.secondary,
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            expanded: true,
-                            height: 48,
-                          ),
-                        ),
-                        SizedBox(width: tokens.spaceSm),
-                        Expanded(
-                          child: AppButton(
-                            label: 'Rechazar',
-                            variant: AppButtonVariant.danger,
-                            onPressed: () {
-                              final reason = reasonCtrl.text.trim();
-                              if (reason.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content:
-                                        Text('Debes indicar un motivo'),
-                                  ),
-                                );
-                                return;
-                              }
-                              Navigator.of(ctx).pop();
-                              _controller.rejectPaymentProof(
-                                paymentProofId: proof.id,
-                                reason: reason,
-                                isAdmin: _isAdmin,
-                              );
-                            },
-                            expanded: true,
-                            height: 48,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 
   void _showUnverifyConfirm(ReservationPaymentProofDetail proof) {
@@ -928,7 +765,7 @@ class _ReservationDetailShellScreenState
   void _showClientDetail(ReservationDetail detail) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => _ClientDetailView(detail: detail),
+        builder: (_) => ClientDetailView(detail: detail),
       ),
     );
   }
@@ -1074,7 +911,7 @@ class _ReservationDetailShellScreenState
   void _previewProof(ReservationPaymentProofDetail proof) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => _ProofImageViewer(
+        builder: (_) => ProofImageViewer(
           proof: proof,
           repository: _repo,
           cache: _proofPreviewCache,
@@ -1087,508 +924,9 @@ class _ReservationDetailShellScreenState
   void _previewParticipant(ReservationParticipantDetail p) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => _ParticipantDetailView(participant: p),
+        builder: (_) => ParticipantDetailView(participant: p),
       ),
     );
-  }
-}
-
-/// Full-screen payment proof viewer.
-///
-/// Downloads the file via streaming (or uses cached bytes) and renders it:
-/// - images (PNG/JPEG): zoomable + pannable via [InteractiveViewer]
-/// - other types: shows a message
-/// - errors: shows retry button
-class _ProofImageViewer extends StatefulWidget {
-  const _ProofImageViewer({
-    required this.proof,
-    this.repository,
-    this.cache,
-    this.onBytesCached,
-  });
-
-  final ReservationPaymentProofDetail proof;
-  final ReservationsRepository? repository;
-  final Map<String, Uint8List>? cache;
-  final void Function(String id, Uint8List bytes)? onBytesCached;
-
-  @override
-  State<_ProofImageViewer> createState() => _ProofImageViewerState();
-}
-
-class _ProofImageViewerState extends State<_ProofImageViewer> {
-  Uint8List? _bytes;
-  String? _error;
-  bool _loading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    // Try cache first
-    if (widget.cache != null) {
-      final cached = widget.cache![widget.proof.id];
-      if (cached != null) {
-        setState(() {
-          _bytes = cached;
-          _loading = false;
-        });
-        return;
-      }
-    }
-
-    final repo = widget.repository;
-    if (repo == null) {
-      setState(() {
-        _error = 'Repositorio no disponible.';
-        _loading = false;
-      });
-      return;
-    }
-
-    try {
-      final bytes = await repo.downloadPaymentProofFile(widget.proof.id);
-      widget.cache?[widget.proof.id] = bytes;
-      widget.onBytesCached?.call(widget.proof.id, bytes);
-      setState(() {
-        _bytes = bytes;
-        _loading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Error al descargar: $e';
-        _loading = false;
-      });
-    }
-  }
-
-  bool get _isImage {
-    final ct = widget.proof.contentType?.toLowerCase() ?? '';
-    return ct.contains('image/png') ||
-        ct.contains('image/jpeg') ||
-        ct.contains('image/jpg');
-  }
-
-  Future<void> _saveToDevice(Uint8List bytes) async {
-    final filename = widget.proof.filename ?? 'comprobante-${widget.proof.id}';
-    final contentType = widget.proof.contentType ?? 'application/octet-stream';
-    try {
-      saveFile(bytes, filename, contentType);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Descargado: $filename'),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al descargar: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.proof.filename ?? 'Comprobante'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download_rounded),
-            tooltip: 'Descargar',
-            onPressed: _bytes != null ? () => _saveToDevice(_bytes!) : null,
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: AppBadge(
-                label: paymentProofStatusLabel(widget.proof.status),
-                tone: paymentProofStatusTone(widget.proof.status),
-                uppercase: false,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: _buildBody(theme),
-    );
-  }
-
-  Widget _buildBody(ThemeData theme) {
-    if (_loading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline_rounded, size: 48,
-                  color: theme.colorScheme.error),
-              const SizedBox(height: 16),
-              Text(_error!, textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              AppButton(
-                label: 'Reintentar',
-                onPressed: () {
-                  setState(() {
-                    _loading = true;
-                    _error = null;
-                  });
-                  _load();
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_isImage && _bytes != null) {
-      return InteractiveViewer(
-        minScale: 0.5,
-        maxScale: 5.0,
-        child: Center(
-          child: Image.memory(
-            _bytes!,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.broken_image_outlined, size: 48,
-                      color: theme.colorScheme.onSurfaceVariant),
-                  const SizedBox(height: 16),
-                  const Text('No se pudo renderizar la imagen.'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // Non-image types
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.description_outlined, size: 48,
-                color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: 16),
-            Text(
-              'Vista previa no disponible para ${widget.proof.contentType ?? 'este tipo de archivo'}.',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Full-screen client/holder detail view.
-class _ClientDetailView extends StatelessWidget {
-  const _ClientDetailView({required this.detail});
-
-  final ReservationDetail detail;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    final rows = <Widget>[];
-    void addRow(String label, String? value) {
-      rows.add(Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 120,
-              child: Text(label,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurfaceVariant)),
-            ),
-            Expanded(
-              child: Text(
-                (value != null && value.isNotEmpty) ? value : '—',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: (value != null && value.isNotEmpty)
-                      ? scheme.onSurface
-                      : scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ));
-    }
-
-    addRow('Nombre', detail.holderName);
-    addRow('Email', detail.holderEmail);
-    addRow('Telefono', detail.holderPhone);
-    addRow('Codigo reserva', detail.code);
-    addRow('Valor cotizado', detail.quotedTotalAmount != null
-        ? '\$${detail.quotedTotalAmount!}'
-        : null);
-    addRow('Fecha solicitada', detail.requestedDate);
-    addRow('Estado de pago', paymentStatusLabel(detail.paymentStatus));
-    addRow('Participantes', '${detail.participantsCompletedCount} / ${detail.expectedParticipantsCount ?? detail.participantCount}');
-    if (detail.participantFormStatus != null) {
-      addRow('Estado formulario', formStatusLabel(detail.participantFormStatus!));
-    }
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(detail.holderName ?? 'Cliente'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _sectionHeader(context, 'INFORMACION DEL CLIENTE'),
-            ...rows,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionHeader(BuildContext context, String title) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: theme.textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.8,
-          color: theme.colorScheme.primary,
-        ),
-      ),
-    );
-  }
-
-}
-
-/// Full-screen participant detail view.
-///
-/// Shows all fields grouped by category: personal info, physical, health,
-/// dietary restrictions, emergency contact, and consentements.
-class _ParticipantDetailView extends StatelessWidget {
-  const _ParticipantDetailView({required this.participant});
-
-  final ReservationParticipantDetail participant;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final p = participant;
-    final hasAlert = p.hasMedicalAlert || p.hasFoodRestriction;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(p.fullName),
-        actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: AppBadge(
-                label: p.isCompleted ? 'Completo' : 'Incompleto',
-                tone: p.isCompleted ? AppBadgeTone.success : AppBadgeTone.warning,
-                uppercase: false,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _sectionHeader(context, 'INFORMACION PERSONAL'),
-            _fieldRow(context, 'Nombre', p.firstName),
-            _fieldRow(context, 'Apellido', p.lastName),
-            _fieldRow(context, 'Nacimiento', p.birthDate != null
-                ? '${p.birthDate}${p.ageYears != null ? ' (${p.ageYears} años)' : ''}'
-                : null),
-            _fieldRow(context, 'Documento', _docLabel(p)),
-            _fieldRow(context, 'Teléfono', p.phone),
-            _fieldRow(context, 'País', p.country),
-            _fieldRow(context, 'Ciudad', p.city),
-            const SizedBox(height: 16),
-            _sectionHeader(context, 'FISICO'),
-            _fieldRow(context, 'Altura', p.heightCm != null ? '${p.heightCm} cm' : null),
-            _fieldRow(context, 'Peso', p.weightKg != null ? '${p.weightKg} kg' : null),
-            _fieldRow(context, 'Experiencia', _expLabel(p.experienceLevel)),
-            const SizedBox(height: 16),
-            _sectionHeader(context, 'SALUD',
-                alertTone: p.hasMedicalAlert ? AppBadgeTone.danger : null),
-            if (p.hasMedicalAlert)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: AppStatusBanner(
-                  title: 'Alerta médica',
-                  message: p.healthConditions ?? p.sensoryDisabilities ?? '—',
-                  tone: AppStatusBannerTone.danger,
-                  icon: Icons.medical_services_outlined,
-                ),
-              ),
-            _fieldRow(context, 'Tipo sangre', p.bloodType),
-            _fieldRow(context, 'EPS / Seguro', p.epsOrTravelInsurance),
-            _fieldRow(context, 'Condiciones', p.healthConditions),
-            _fieldRow(context, 'Discapacidad', p.sensoryDisabilities),
-            const SizedBox(height: 16),
-            _sectionHeader(context, 'ALIMENTACION'),
-            if (p.hasFoodRestriction)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: AppStatusBanner(
-                  title: 'Restricción alimentaria',
-                  message: p.dietaryRestrictions ?? '—',
-                  tone: AppStatusBannerTone.warning,
-                  icon: Icons.restaurant_outlined,
-                ),
-              ),
-            _fieldRow(context, 'Restricciones', p.dietaryRestrictions),
-            const SizedBox(height: 16),
-            _sectionHeader(context, 'CONTACTO DE EMERGENCIA'),
-            _fieldRow(context, 'Nombre', p.emergencyContactName),
-            _fieldRow(context, 'Teléfono', p.emergencyContactPhone),
-            _fieldRow(context, 'Relación', p.emergencyContactRelationship),
-            const SizedBox(height: 16),
-            _sectionHeader(context, 'CONSENTIMIENTOS'),
-            _boolRow(context, 'Tratamiento de datos', p.acceptedDataProcessing),
-            _boolRow(context, 'Fotos / Video', p.photoVideoConsent),
-            _boolRow(context, 'Liberación de riesgo', p.acceptedRiskRelease),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionHeader(BuildContext context, String title, {AppBadgeTone? alertTone}) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-              color: alertTone != null
-                  ? appBadgeToneColors(context, alertTone).foreground
-                  : theme.colorScheme.primary,
-            ),
-          ),
-          if (alertTone != null) ...[
-            const SizedBox(width: 8),
-            Icon(Icons.warning_amber_rounded, size: 16,
-                color: appBadgeToneColors(context, alertTone).foreground),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _fieldRow(BuildContext context, String label, String? value) {
-    final theme = Theme.of(context);
-    final hasValue = value != null && value.isNotEmpty && value != '—';
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurfaceVariant)),
-          ),
-          Expanded(
-            child: Text(
-              hasValue ? value : '—',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: hasValue ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _boolRow(BuildContext context, String label, bool? value) {
-    final theme = Theme.of(context);
-    final ok = value == true;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 160,
-            child: Text(label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurfaceVariant)),
-          ),
-          Icon(ok ? Icons.check_circle_rounded : Icons.cancel_outlined,
-              size: 20,
-              color: ok ? theme.colorScheme.primary : theme.colorScheme.error),
-          const SizedBox(width: 6),
-          Text(ok ? 'Aceptado' : 'No aceptado',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                  color: ok ? theme.colorScheme.primary : theme.colorScheme.error)),
-        ],
-      ),
-    );
-  }
-
-  String _docLabel(ReservationParticipantDetail p) {
-    if (p.documentType == null && p.documentNumber == null) return '—';
-    final parts = <String>[];
-    if (p.documentType != null) parts.add(p.documentType!.toUpperCase());
-    if (p.documentNumber != null) parts.add(p.documentNumber!);
-    return parts.join(' · ');
-  }
-
-  String _expLabel(String? level) {
-    if (level == null) return '—';
-    switch (level.toLowerCase()) {
-      case 'basic':
-        return 'Básico';
-      case 'intermediate':
-        return 'Intermedio';
-      case 'advanced':
-        return 'Avanzado';
-      default:
-        return level;
-    }
   }
 }
 

@@ -2,9 +2,9 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
-from app.api.deps import require_permissions
+from app.api.deps import get_user_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
@@ -13,7 +13,6 @@ from app.services import UserService
 from app.services.mappers import user_to_response
 
 router = APIRouter(prefix="/users", tags=["Usuarios"])
-service = UserService()
 
 
 @router.post(
@@ -28,6 +27,7 @@ service = UserService()
 async def create_user(
     payload: UserCreateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.USER_CREATE))],
+    service: UserService = Depends(get_user_service),
 ) -> UserResponseSchema:
     user = await service.create_user(payload)
     return user_to_response(user)
@@ -44,8 +44,14 @@ async def create_user(
 )
 async def list_users(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.USER_READ))],
+    response: Response,
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    service: UserService = Depends(get_user_service),
 ) -> list[UserResponseSchema]:
-    users = await service.list_users()
+    total = await service.count_users()
+    response.headers["X-Total-Count"] = str(total)
+    users = await service.list_users(limit=limit, skip=skip)
     return [user_to_response(user) for user in users]
 
 
@@ -61,6 +67,7 @@ async def list_users(
 async def get_user(
     user_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.USER_READ))],
+    service: UserService = Depends(get_user_service),
 ) -> UserResponseSchema:
     user = await service.get_user(user_id)
     return user_to_response(user)
@@ -79,6 +86,7 @@ async def update_user(
     user_id: str,
     payload: UserUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.USER_UPDATE))],
+    service: UserService = Depends(get_user_service),
 ) -> UserResponseSchema:
     user = await service.update_user(user_id, payload)
     return user_to_response(user)
@@ -95,5 +103,6 @@ async def update_user(
 async def delete_user(
     user_id: str,
     actor: Annotated[UserDocument, Depends(require_permissions(Permission.USER_DELETE))],
+    service: UserService = Depends(get_user_service),
 ) -> None:
     await service.soft_delete_user(user_id=user_id, actor_id=str(actor.id))

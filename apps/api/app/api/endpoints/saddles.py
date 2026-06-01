@@ -2,9 +2,9 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
-from app.api.deps import require_permissions
+from app.api.deps import get_saddle_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
@@ -13,7 +13,6 @@ from app.services import SaddleService
 from app.services.mappers import saddle_to_response
 
 router = APIRouter(prefix="/saddles", tags=["Sillas"])
-service = SaddleService()
 
 
 @router.post(
@@ -28,6 +27,7 @@ service = SaddleService()
 async def create_saddle(
     payload: SaddleCreateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SADDLE_CREATE))],
+    service: SaddleService = Depends(get_saddle_service),
 ) -> SaddleResponseSchema:
     return saddle_to_response(await service.create(payload))
 
@@ -42,8 +42,14 @@ async def create_saddle(
 )
 async def list_saddles(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SADDLE_READ))],
+    response: Response,
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    service: SaddleService = Depends(get_saddle_service),
 ) -> list[SaddleResponseSchema]:
-    return [saddle_to_response(item) for item in await service.list()]
+    total = await service.count()
+    response.headers["X-Total-Count"] = str(total)
+    return [saddle_to_response(item) for item in await service.list(limit=limit, skip=skip)]
 
 
 @router.get(
@@ -57,6 +63,7 @@ async def list_saddles(
 async def get_saddle(
     saddle_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SADDLE_READ))],
+    service: SaddleService = Depends(get_saddle_service),
 ) -> SaddleResponseSchema:
     return saddle_to_response(await service.get(saddle_id))
 
@@ -73,5 +80,6 @@ async def update_saddle(
     saddle_id: str,
     payload: SaddleUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SADDLE_UPDATE))],
+    service: SaddleService = Depends(get_saddle_service),
 ) -> SaddleResponseSchema:
     return saddle_to_response(await service.update(saddle_id, payload))

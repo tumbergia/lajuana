@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from app.conversations.services.conversation_turn_worker import ConversationTurnWorker
+from app.core.di import Container
 
 
 class FakeTurn:
@@ -22,7 +23,12 @@ class FakeTurn:
 
 @pytest.mark.asyncio
 async def test_media_proof_attaches_when_single_candidate(monkeypatch: pytest.MonkeyPatch) -> None:
-    worker = ConversationTurnWorker()
+    _container = Container.get_instance()
+    worker = ConversationTurnWorker(
+        lock_service=_container._services["conversation_lock_service"],
+        buffer_service=_container._services["message_buffer_service"],
+        outbound_service=_container._services["whatsapp_outbound_service"],
+    )
     sent: list[str] = []
     captured: dict[str, Any] = {}
 
@@ -73,7 +79,12 @@ async def test_media_proof_attaches_when_single_candidate(monkeypatch: pytest.Mo
 async def test_media_proof_asks_code_when_multiple_candidates(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    worker = ConversationTurnWorker()
+    _container = Container.get_instance()
+    worker = ConversationTurnWorker(
+        lock_service=_container._services["conversation_lock_service"],
+        buffer_service=_container._services["message_buffer_service"],
+        outbound_service=_container._services["whatsapp_outbound_service"],
+    )
     sent: list[str] = []
 
     async def fake_find_active_candidates(_: str) -> list[Any]:

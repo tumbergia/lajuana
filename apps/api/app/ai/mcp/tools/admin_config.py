@@ -16,7 +16,10 @@ from app.core.errors import ApiError
 from app.schemas.config import ReservationRulesUpdateSchema
 from app.services.config_service import ConfigService
 
-_service = ConfigService()
+
+def _get_service() -> ConfigService:
+    from app.core.di import Container
+    return Container.get_instance().config_service
 
 
 async def admin_get_system_config(**kwargs: Any) -> dict[str, Any]:
@@ -27,8 +30,8 @@ async def admin_get_system_config(**kwargs: Any) -> dict[str, Any]:
     output: AdminGetSystemConfigOutput | None = None
 
     try:
-        rules = await _service.get_reservation_rules()
-        payment = await _service.get_payment_instructions()
+        rules = await _get_service().get_reservation_rules()
+        payment = await _get_service().get_payment_instructions()
 
         output = AdminGetSystemConfigOutput(
             trace_id=trace_id,
@@ -81,7 +84,7 @@ async def admin_update_reservation_rules(**kwargs: Any) -> dict[str, Any]:
             if k in ReservationRulesUpdateSchema.model_fields and v is not None
         }
         payload = ReservationRulesUpdateSchema.model_validate(filtered)
-        doc = await _service.update_reservation_rules(payload)
+        doc = await _get_service().update_reservation_rules(payload)
 
         output = AdminUpdateReservationRulesOutput(
             updated=True,
@@ -137,7 +140,7 @@ async def admin_get_payment_instructions(**kwargs: Any) -> dict[str, Any]:
     output: AdminGetPaymentInstructionsOutput | None = None
 
     try:
-        payment = await _service.get_payment_instructions()
+        payment = await _get_service().get_payment_instructions()
 
         output = AdminGetPaymentInstructionsOutput(
             trace_id=trace_id,

@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.api.deps import get_current_user, require_permissions
+from app.api.deps import get_auth_service, get_current_user, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
@@ -19,7 +19,6 @@ from app.services import AuthService
 from app.services.mappers import user_to_response
 
 router = APIRouter(prefix="/auth", tags=["Autenticacion"])
-service = AuthService()
 
 
 @router.post(
@@ -31,7 +30,10 @@ service = AuthService()
     operation_id="registerPublicUser",
     responses=endpoint_responses("auth_register"),
 )
-async def register(payload: RegisterRequest) -> UserResponseSchema:
+async def register(
+    payload: RegisterRequest,
+    service: AuthService = Depends(get_auth_service),
+) -> UserResponseSchema:
     user = await service.register(payload)
     return user_to_response(user)
 
@@ -45,7 +47,10 @@ async def register(payload: RegisterRequest) -> UserResponseSchema:
     operation_id="loginUser",
     responses=endpoint_responses("auth_login"),
 )
-async def login(payload: UserLoginSchema) -> TokenResponseSchema:
+async def login(
+    payload: UserLoginSchema,
+    service: AuthService = Depends(get_auth_service),
+) -> TokenResponseSchema:
     _, token = await service.login(payload)
     return token
 
@@ -59,7 +64,10 @@ async def login(payload: UserLoginSchema) -> TokenResponseSchema:
     operation_id="refreshToken",
     responses=endpoint_responses("auth_refresh"),
 )
-async def refresh(refresh_token: str) -> TokenResponseSchema:
+async def refresh(
+    refresh_token: str,
+    service: AuthService = Depends(get_auth_service),
+) -> TokenResponseSchema:
     return await service.refresh(refresh_token)
 
 
@@ -73,6 +81,7 @@ async def refresh(refresh_token: str) -> TokenResponseSchema:
 )
 async def logout(
     current_user: Annotated[UserDocument, Depends(get_current_user)],
+    service: AuthService = Depends(get_auth_service),
 ) -> None:
     await service.logout(str(current_user.id))
 
@@ -91,6 +100,7 @@ async def change_password(
         UserDocument,
         Depends(require_permissions(Permission.AUTH_SELF_UPDATE_PASSWORD)),
     ],
+    service: AuthService = Depends(get_auth_service),
 ) -> None:
     await service.change_password(str(current_user.id), payload)
 

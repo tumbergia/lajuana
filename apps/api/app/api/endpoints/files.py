@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_file_upload_service
 from app.documents import UserDocument
 from app.schemas.file_upload import (
     FileCompleteUploadResponseSchema,
@@ -12,7 +12,6 @@ from app.schemas.file_upload import (
 from app.services.file_upload_service import FileUploadService
 
 router = APIRouter(prefix="/files", tags=["Files"])
-service = FileUploadService()
 
 
 @router.post(
@@ -24,6 +23,7 @@ service = FileUploadService()
 async def init_upload(
     body: FileInitUploadRequestSchema,
     current_user: Annotated[UserDocument, Depends(get_current_user)],
+    service: FileUploadService = Depends(get_file_upload_service),
 ) -> FileInitUploadResponseSchema:
     return await service.init_upload(current_user=current_user, body=body)
 
@@ -37,5 +37,6 @@ async def init_upload(
 async def complete_upload(
     upload_id: str,
     current_user: Annotated[UserDocument, Depends(get_current_user)],
+    service: FileUploadService = Depends(get_file_upload_service),
 ) -> FileCompleteUploadResponseSchema:
     return await service.complete_upload(current_user=current_user, upload_id=upload_id)

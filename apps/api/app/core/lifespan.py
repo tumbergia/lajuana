@@ -16,10 +16,11 @@ from app.jobs.pre_service_reminder_scheduler import PreServiceReminderScheduler
 from app.jobs.whatsapp_media_worker import WhatsAppMediaWorker
 from app.migrations.seed_notification_templates import seed_notification_templates
 
-scheduler = ConversationScheduler()
-expire_worker = ReservationDraftExpireWorker()
-notif_outbox_worker = NotificationOutboxWorker()
-pre_service_scheduler = PreServiceReminderScheduler()
+# Module-level references; actual init happens inside lifespan() after DI is ready
+scheduler: ConversationScheduler | None = None
+expire_worker: ReservationDraftExpireWorker | None = None
+notif_outbox_worker: NotificationOutboxWorker | None = None
+pre_service_scheduler: PreServiceReminderScheduler | None = None
 media_worker = WhatsAppMediaWorker()
 
 
@@ -36,6 +37,21 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         logger.info("[lifespan] Seeded %s notification templates", seeded)
     except Exception:
         logger.warning("[lifespan] Failed to seed notification templates", exc_info=True)
+
+    # ── Initialize workers with DI dependencies ──
+    container = Container.get_instance()
+    global scheduler, expire_worker, notif_outbox_worker, pre_service_scheduler
+
+    scheduler = ConversationScheduler()
+    expire_worker = ReservationDraftExpireWorker(
+        service=container.reservation_draft_service,
+    )
+    notif_outbox_worker = NotificationOutboxWorker(
+        service=container.notification_service,
+    )
+    pre_service_scheduler = PreServiceReminderScheduler(
+        service=container.notification_service,
+    )
 
     scheduler_task = asyncio.create_task(scheduler.run())
     logger.info("[lifespan] Scheduler started")

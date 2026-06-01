@@ -18,7 +18,10 @@ from app.documents import ExperienceDocument
 from app.schemas.experience import ExperienceCreateSchema, ExperienceUpdateSchema
 from app.services.experience_service import ExperienceService
 
-_service = ExperienceService()
+
+def _get_service() -> ExperienceService:
+    from app.core.di import Container
+    return Container.get_instance().experience_service
 
 
 async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
@@ -35,7 +38,7 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
             if k in ExperienceCreateSchema.model_fields
         }
         payload = ExperienceCreateSchema.model_validate(filtered)
-        doc = await _service.create(payload)
+        doc = await _get_service().create(payload)
 
         output = AdminCreateExperienceOutput(
             created=True,
@@ -110,7 +113,7 @@ async def admin_update_experience(**kwargs: Any) -> dict[str, Any]:
             if k in ExperienceUpdateSchema.model_fields and v is not None
         }
         payload = ExperienceUpdateSchema.model_validate(filtered)
-        doc = await _service.update(experience_id, payload)
+        doc = await _get_service().update(experience_id, payload)
 
         output = AdminUpdateExperienceOutput(
             updated=True,
@@ -168,7 +171,7 @@ async def admin_list_experiences_admin(**kwargs: Any) -> dict[str, Any]:
         is_active = kwargs.get("is_active")
         limit = kwargs.get("limit", 50)
 
-        docs = await _service.list(is_active=is_active)
+        docs = await _get_service().list(is_active=is_active)
         docs = docs[:limit]
 
         items = []
@@ -246,7 +249,7 @@ async def admin_deactivate_experience(**kwargs: Any) -> dict[str, Any]:
             )
             return output.model_dump(mode="json")
 
-        doc = await _service.deactivate(experience_id)
+        doc = await _get_service().deactivate(experience_id)
         output = AdminDeactivateExperienceOutput(
             deactivated=True,
             trace_id=trace_id,

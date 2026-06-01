@@ -9,6 +9,7 @@ from beanie import PydanticObjectId
 from app.ai.assistant.policy import ToolPolicyEngine
 from app.common.enums import ReservationStatus
 from app.common.labels import ErrorCode
+from app.core.di import Container
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument, ReservationDocument
 from app.schemas.assistant_plan import AssistantAction, AssistantPlan, ToolArgs
@@ -40,7 +41,6 @@ def _patch_base_deps(
     experience_is_active: bool = True,
     min_days_in_advance: int = 0,
 ) -> tuple[ReservationDraftService, PydanticObjectId]:
-    service = ReservationDraftService()
     exp_id = PydanticObjectId()
 
     async def fake_experience_get(_):
@@ -48,18 +48,33 @@ def _patch_base_deps(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_experience_get)
 
-    async def fake_get_rules(self):
+    async def fake_rules(*args, **kwargs):
         return SimpleNamespace(
             min_days_in_advance=min_days_in_advance,
             reservation_draft_ttl_minutes=30,
         )
 
-    monkeypatch.setattr(ConfigService, "get_reservation_rules", fake_get_rules)
-
-    async def fake_ensure_date_available(self, requested_date):
+    async def fake_noop(*args, **kwargs):
         pass
 
-    monkeypatch.setattr(ReservationService, "ensure_date_available", fake_ensure_date_available)
+    # Build fresh service WITHOUT touching the shared container singleton
+    from app.services.config_service import ConfigService
+    from app.services.reservation_service import ReservationService
+
+    cfg = ConfigService()
+    monkeypatch.setattr(cfg, "get_reservation_rules", fake_rules)
+
+    res_svc = ReservationService(
+        notification_service=SimpleNamespace(
+            enqueue_reservation_created=fake_noop,
+            enqueue_payment_received=fake_noop,
+            enqueue_post_service=fake_noop,
+        ),
+        form_link_service=SimpleNamespace(generate=fake_noop, generate_form_link=fake_noop),
+        config_service=cfg,
+    )
+    monkeypatch.setattr(ReservationService, "ensure_date_available", fake_noop)
+    monkeypatch.setattr(res_svc, "_sync_day_lock_fields", fake_noop)
 
     async def fake_reservation_create(self, payload, **kwargs):
         return SimpleNamespace(id="fake-id")
@@ -70,6 +85,11 @@ def _patch_base_deps(
         reservation.status = target
 
     monkeypatch.setattr(ReservationService, "transition_status", fake_transition_status)
+
+    service = ReservationDraftService(
+        reservation_service=res_svc,
+        config_service=cfg,
+    )
 
     return service, exp_id
 
@@ -108,13 +128,38 @@ def test_create_sets_status_pre_reserved(
 async def _run_create_experience_not_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    service = ReservationDraftService()
     exp_id = PydanticObjectId()
 
     async def fake_get(_):
         return None
 
+    async def fake_noop(*args, **kwargs):
+        pass
+
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
+
+    from app.services.config_service import ConfigService
+    from app.services.reservation_service import ReservationService
+
+    cfg = ConfigService()
+    monkeypatch.setattr(cfg, "get_reservation_rules", lambda *a, **kw: SimpleNamespace(
+        min_days_in_advance=0, reservation_draft_ttl_minutes=30,
+    ))
+
+    res_svc = ReservationService(
+        notification_service=SimpleNamespace(
+            enqueue_reservation_created=fake_noop,
+            enqueue_payment_received=fake_noop,
+            enqueue_post_service=fake_noop,
+        ),
+        form_link_service=SimpleNamespace(generate=fake_noop),
+        config_service=cfg,
+    )
+
+    service = ReservationDraftService(
+        reservation_service=res_svc,
+        config_service=cfg,
+    )
 
     with pytest.raises(ApiError) as exc:
         await service.create_reservation_draft(
@@ -319,7 +364,27 @@ def test_create_schedule_id_optional(
 async def _run_expire_changes_to_expired(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    service = ReservationDraftService()
+    async def fake_noop(*args, **kwargs):
+        pass
+
+    from app.services.config_service import ConfigService
+    from app.services.reservation_service import ReservationService
+
+    cfg = ConfigService()
+    res_svc = ReservationService(
+        notification_service=SimpleNamespace(
+            enqueue_reservation_created=fake_noop,
+            enqueue_payment_received=fake_noop,
+            enqueue_post_service=fake_noop,
+        ),
+        form_link_service=SimpleNamespace(generate=fake_noop),
+        config_service=cfg,
+    )
+
+    service = ReservationDraftService(
+        reservation_service=res_svc,
+        config_service=cfg,
+    )
 
     expiring_doc = FakeReservationDoc(
         code="PR-EXP",

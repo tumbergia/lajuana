@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from app.api.deps import require_permissions
+from app.api.deps import get_policy_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
@@ -13,7 +13,6 @@ from app.services import PolicyService
 from app.services.mappers import policy_to_response
 
 router = APIRouter(prefix="/policies", tags=["Polizas"])
-service = PolicyService()
 
 
 @router.post(
@@ -28,6 +27,7 @@ service = PolicyService()
 async def create_policy(
     payload: PolicyCreateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.POLICY_CREATE))],
+    service: PolicyService = Depends(get_policy_service),
 ) -> PolicyResponseSchema:
     return policy_to_response(await service.create(payload))
 
@@ -43,6 +43,7 @@ async def create_policy(
 async def get_policy(
     policy_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.POLICY_READ))],
+    service: PolicyService = Depends(get_policy_service),
 ) -> PolicyResponseSchema:
     return policy_to_response(await service.get(policy_id))
 
@@ -59,5 +60,6 @@ async def update_policy(
     policy_id: str,
     payload: PolicyUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.POLICY_UPDATE))],
+    service: PolicyService = Depends(get_policy_service),
 ) -> PolicyResponseSchema:
     return policy_to_response(await service.update(policy_id, payload))

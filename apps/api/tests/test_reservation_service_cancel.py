@@ -12,6 +12,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.common.enums import ReservationStatus
+from app.core.di import Container
 from app.core.errors import ApiError
 
 
@@ -91,9 +92,7 @@ class TestCancelReservation:
                 _mock_sync,
             )
 
-            from app.services.reservation_service import ReservationService
-
-            svc = ReservationService()
+            svc = Container.get_instance().reservation_service
             result = await svc.cancel_reservation(
                 reservation_id="660000000000000000000001",
                 actor_id="660000000000000000000050",
@@ -145,9 +144,7 @@ class TestCancelReservation:
                 _mock_sync2,
             )
 
-            from app.services.reservation_service import ReservationService
-
-            svc = ReservationService()
+            svc = Container.get_instance().reservation_service
             result = await svc.cancel_reservation(
                 reservation_id="660000000000000000000001",
                 actor_id="660000000000000000000050",
@@ -185,9 +182,7 @@ class TestCancelReservation:
                 _mock_sync3,
             )
 
-            from app.services.reservation_service import ReservationService
-
-            svc = ReservationService()
+            svc = Container.get_instance().reservation_service
             result = await svc.cancel_reservation(
                 reservation_id="660000000000000000000001",
                 actor_id="660000000000000000000050",
@@ -214,9 +209,7 @@ class TestCancelReservation:
                 pass
             res.save = _mock_save  # type: ignore[assignment]
 
-            from app.services.reservation_service import ReservationService
-
-            svc = ReservationService()
+            svc = Container.get_instance().reservation_service
             with pytest.raises(ApiError) as exc:
                 await svc.cancel_reservation(
                     reservation_id="660000000000000000000001",
@@ -244,9 +237,7 @@ class TestCancelReservation:
                 pass
             res.save = _mock_save  # type: ignore[assignment]
 
-            from app.services.reservation_service import ReservationService
-
-            svc = ReservationService()
+            svc = Container.get_instance().reservation_service
             with pytest.raises(ApiError) as exc:
                 await svc.cancel_reservation(
                     reservation_id="660000000000000000000001",

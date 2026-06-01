@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from app.api.deps import require_permissions
+from app.api.deps import get_payment_proof_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import ReservationDocument, UserDocument
@@ -24,7 +24,6 @@ from app.services import PaymentProofService
 from app.services.mappers import payment_proof_to_response, reservation_to_response
 
 router = APIRouter(prefix="/payment-proofs", tags=["Comprobantes de pago"])
-service = PaymentProofService()
 
 
 _DOWNLOAD_RESPONSES = endpoint_responses("payment_proofs_download")
@@ -54,6 +53,7 @@ _DOWNLOAD_RESPONSES[202] = {
 async def download_payment_proof(
     payment_proof_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_PROOF_READ))],
+    service: PaymentProofService = Depends(get_payment_proof_service),
 ):
     content_type, file_bytes = await service.get_download(payment_proof_id)
     if content_type == "pending":
@@ -86,6 +86,7 @@ async def download_payment_proof(
 async def get_payment_proof(
     payment_proof_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_PROOF_READ))],
+    service: PaymentProofService = Depends(get_payment_proof_service),
 ) -> PaymentProofResponseSchema:
     return payment_proof_to_response(await service.get(payment_proof_id))
 
@@ -103,6 +104,7 @@ async def update_payment_proof(
     payment_proof_id: str,
     payload: PaymentProofUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+    service: PaymentProofService = Depends(get_payment_proof_service),
 ) -> PaymentProofResponseSchema:
     return payment_proof_to_response(await service.update(payment_proof_id, payload))
 
@@ -118,6 +120,7 @@ async def verify_payment_proof(
     payment_proof_id: str,
     payload: PaymentProofVerifySchema,
     current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+    service: PaymentProofService = Depends(get_payment_proof_service),
 ) -> PaymentProofResponseSchema:
     return payment_proof_to_response(
         await service.verify_payment(
@@ -144,6 +147,7 @@ async def approve_payment_proof(
     payment_proof_id: str,
     payload: PaymentProofApproveSchema,
     current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+    service: PaymentProofService = Depends(get_payment_proof_service),
 ) -> ReservationResponseSchema:
     proof_doc = await service.approve_payment(
         payment_proof_id,
@@ -166,6 +170,7 @@ async def reject_payment_proof(
     payment_proof_id: str,
     payload: PaymentProofRejectSchema,
     current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+    service: PaymentProofService = Depends(get_payment_proof_service),
 ) -> ReservationResponseSchema:
     proof_doc = await service.reject_payment(
         payment_proof_id,
@@ -192,6 +197,7 @@ async def unverify_payment_proof(
     payment_proof_id: str,
     payload: PaymentProofUnverifySchema,
     current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+    service: PaymentProofService = Depends(get_payment_proof_service),
 ) -> ReservationResponseSchema:
     proof_doc = await service.unverify_payment(
         payment_proof_id,
@@ -218,6 +224,7 @@ async def unreject_payment_proof(
     payment_proof_id: str,
     payload: PaymentProofUnrejectSchema,
     current_user: Annotated[UserDocument, Depends(require_permissions(Permission.PAYMENT_VERIFY))],
+    service: PaymentProofService = Depends(get_payment_proof_service),
 ) -> ReservationResponseSchema:
     proof_doc = await service.unreject_payment(
         payment_proof_id,

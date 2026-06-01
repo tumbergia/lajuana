@@ -88,10 +88,25 @@ async def _run_returns_summary(monkeypatch: pytest.MonkeyPatch) -> None:
         async def to_list():
             return reservations
 
-    def fake_find_all():
-        return FakeReservationDoc()
+    class FakeAggregateQuery:
+        def __init__(self, data):
+            self._data = data
+        async def to_list(self):
+            return self._data
 
-    monkeypatch.setattr(ReservationDocument, "find_all", fake_find_all)
+    def fake_aggregate(pipeline):
+        status_amounts: dict[str, int] = {}
+        for r in reservations:
+            s = r.status.value if hasattr(r.status, 'value') else str(r.status)
+            amt = int(r.quoted_total_amount) if hasattr(r, 'quoted_total_amount') and r.quoted_total_amount else 0
+            status_amounts[s] = status_amounts.get(s, 0) + amt
+        results = [
+            {"_id": s, "count": sum(1 for r in reservations if (r.status.value if hasattr(r.status, 'value') else str(r.status)) == s), "total_amount": status_amounts[s]}
+            for s in status_amounts
+        ]
+        return FakeAggregateQuery(results)
+
+    monkeypatch.setattr(ReservationDocument, "aggregate", fake_aggregate)
     monkeypatch.setattr("app.ai.mcp.tools.analytics.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await admin_get_sales_summary(trace_id=str(uuid4()))
@@ -124,10 +139,18 @@ async def _run_returns_funnel(monkeypatch: pytest.MonkeyPatch) -> None:
         async def to_list():
             return reservations
 
-    def fake_find_all():
-        return FakeReservationDoc()
+    class FakeAggregateQuery:
+        def __init__(self, data):
+            self._data = data
+        async def to_list(self):
+            return self._data
 
-    monkeypatch.setattr(ReservationDocument, "find_all", fake_find_all)
+    def fake_aggregate(pipeline):
+        from collections import Counter
+        status_counts: Counter = Counter(r.status.value if hasattr(r.status, 'value') else str(r.status) for r in reservations)
+        return FakeAggregateQuery([{"_id": s, "count": c} for s, c in status_counts.items()])
+
+    monkeypatch.setattr(ReservationDocument, "aggregate", fake_aggregate)
     monkeypatch.setattr("app.ai.mcp.tools.analytics.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await admin_get_reservation_funnel(trace_id=str(uuid4()))
@@ -174,10 +197,27 @@ async def _run_returns_channel_performance(monkeypatch: pytest.MonkeyPatch) -> N
         async def to_list():
             return reservations
 
-    def fake_find_all():
-        return FakeReservationDoc()
+    class FakeAggregateQuery:
+        def __init__(self, data):
+            self._data = data
+        async def to_list(self):
+            return self._data
 
-    monkeypatch.setattr(ReservationDocument, "find_all", fake_find_all)
+    def fake_aggregate(pipeline):
+        from collections import Counter
+        channel_counts: Counter = Counter()
+        channel_confirmed: Counter = Counter()
+        for r in reservations:
+            ch = r.channel.value if hasattr(r.channel, 'value') else str(r.channel)
+            channel_counts[ch] += 1
+            if r.status in (ReservationStatus.CONFIRMED, ReservationStatus.COMPLETED):
+                channel_confirmed[ch] += 1
+        return FakeAggregateQuery([
+            {"_id": ch, "count": channel_counts[ch], "confirmed": channel_confirmed[ch]}
+            for ch in channel_counts
+        ])
+
+    monkeypatch.setattr(ReservationDocument, "aggregate", fake_aggregate)
     monkeypatch.setattr("app.ai.mcp.tools.analytics.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await admin_get_channel_performance(trace_id=str(uuid4()))

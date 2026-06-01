@@ -1,15 +1,24 @@
 import asyncio
 
+from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
+from app.conversations.services.conversation_lock_service import (
+    ConversationLockService,
+)
 from app.conversations.services.conversation_turn_worker import (
     ConversationTurnWorker,
 )
+from app.conversations.services.message_buffer_service import MessageBufferService
 from app.core.config import settings
 from app.core.logging import logger
 
 
 class ConversationScheduler:
     def __init__(self) -> None:
-        self._worker = ConversationTurnWorker()
+        self._worker = ConversationTurnWorker(
+            lock_service=ConversationLockService(),
+            buffer_service=MessageBufferService(),
+            outbound_service=WhatsAppOutboundService(),
+        )
         self._running = False
 
     @property

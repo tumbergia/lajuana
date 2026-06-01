@@ -10,6 +10,7 @@ os.environ["APP_SKIP_DB_INIT"] = "true"
 from app.api.deps import get_current_user
 from app.common.enums import Channel, ParticipantFormStatus, PaymentStatus, ReservationStatus, UserRole
 from app.common.labels import ErrorCode
+from app.core.di import Container
 from app.main import app
 
 client = TestClient(app)
@@ -23,23 +24,49 @@ def _guide_user() -> SimpleNamespace:
     return SimpleNamespace(id="660000000000000000000002", role=UserRole.GUIDE, is_active=True)
 
 
-def _proof_doc(status: PaymentStatus) -> SimpleNamespace:
-    now = datetime.now(UTC)
-    return SimpleNamespace(
-        id="660000000000000000000501",
-        reservation_id="660000000000000000000001",
-        storage_key="payment_proof/proof.pdf",
-        filename="proof.pdf",
-        content_type="application/pdf",
-        size_bytes=100,
-        sha256="abc",
-        status=status,
-        uploaded_at=now,
-        created_at=now,
-        updated_at=now,
-        deleted_at=None,
-        version=1,
-    )
+class _FakeProofDoc:
+    """Fake PaymentProofDocument compatible with payment_proof_to_response."""
+
+    def __init__(self, status: PaymentStatus) -> None:
+        now = datetime.now(UTC)
+        self.id = "660000000000000000000501"
+        self.reservation_id = "660000000000000000000001"
+        self.storage_key = "payment_proof/proof.pdf"
+        self.filename = "proof.pdf"
+        self.content_type = "application/pdf"
+        self.size_bytes = 100
+        self.sha256 = "abc"
+        self.status = status
+        self.uploaded_at = now
+        self.created_at = now
+        self.updated_at = now
+        self.deleted_at = None
+        self.version = 1
+
+    def model_dump(self, exclude: set[str] | None = None) -> dict:
+        data = {
+            "id": self.id,
+            "reservation_id": self.reservation_id,
+            "storage_key": self.storage_key,
+            "filename": self.filename,
+            "content_type": self.content_type,
+            "size_bytes": self.size_bytes,
+            "sha256": self.sha256,
+            "status": self.status,
+            "uploaded_at": self.uploaded_at,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "deleted_at": self.deleted_at,
+            "version": self.version,
+        }
+        if exclude:
+            for field in exclude:
+                data.pop(field, None)
+        return data
+
+
+def _proof_doc(status: PaymentStatus) -> _FakeProofDoc:
+    return _FakeProofDoc(status)
 
 
 def _reservation_doc() -> SimpleNamespace:
@@ -133,7 +160,7 @@ def test_verify_payment_proof_endpoint_returns_verified_status(monkeypatch) -> N
         captured["actor_role"] = actor_role
         return _proof_doc(PaymentStatus.VERIFIED)
 
-    monkeypatch.setattr("app.api.endpoints.payment_proofs.service.verify_payment", fake_verify)
+    monkeypatch.setattr(Container.get_instance().payment_proof_service, "verify_payment", fake_verify)
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.post(
         "/api/v1/payment-proofs/660000000000000000000501/verify",
@@ -168,7 +195,7 @@ def test_reject_payment_proof_endpoint_returns_reservation_response(monkeypatch)
     async def fake_to_response(_: object) -> dict:
         return _reservation_response_data()
 
-    monkeypatch.setattr("app.api.endpoints.payment_proofs.service.reject_payment", fake_reject)
+    monkeypatch.setattr(Container.get_instance().payment_proof_service, "reject_payment", fake_reject)
     monkeypatch.setattr("app.api.endpoints.payment_proofs.ReservationDocument.get", fake_get)
     monkeypatch.setattr("app.api.endpoints.payment_proofs.reservation_to_response", fake_to_response)
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
@@ -207,7 +234,7 @@ def test_approve_payment_proof_endpoint_returns_reservation_response(monkeypatch
     async def fake_to_response(_: object) -> dict:
         return _reservation_response_data()
 
-    monkeypatch.setattr("app.api.endpoints.payment_proofs.service.approve_payment", fake_approve)
+    monkeypatch.setattr(Container.get_instance().payment_proof_service, "approve_payment", fake_approve)
     monkeypatch.setattr("app.api.endpoints.payment_proofs.ReservationDocument.get", fake_get)
     monkeypatch.setattr("app.api.endpoints.payment_proofs.reservation_to_response", fake_to_response)
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
@@ -280,7 +307,7 @@ def test_download_with_file_data_returns_bytes(monkeypatch) -> None:
     async def fake_download(_: str) -> tuple[str, bytes | None]:
         return "image/png", b"fake-png-bytes"
 
-    monkeypatch.setattr("app.api.endpoints.payment_proofs.service.get_download", fake_download)
+    monkeypatch.setattr(Container.get_instance().payment_proof_service, "get_download", fake_download)
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.get(
         "/api/v1/payment-proofs/660000000000000000000501/download",
@@ -298,7 +325,7 @@ def test_download_pending_whatsapp_proof_returns_202(monkeypatch) -> None:
     async def fake_download(_: str) -> tuple[str, bytes | None]:
         return "pending", None
 
-    monkeypatch.setattr("app.api.endpoints.payment_proofs.service.get_download", fake_download)
+    monkeypatch.setattr(Container.get_instance().payment_proof_service, "get_download", fake_download)
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.get(
         "/api/v1/payment-proofs/660000000000000000000501/download",
@@ -323,7 +350,7 @@ def test_download_file_not_found_returns_404(monkeypatch) -> None:
             details={"storage_key": "missing/file.pdf"},
         )
 
-    monkeypatch.setattr("app.api.endpoints.payment_proofs.service.get_download", fake_download)
+    monkeypatch.setattr(Container.get_instance().payment_proof_service, "get_download", fake_download)
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.get(
         "/api/v1/payment-proofs/660000000000000000000501/download",

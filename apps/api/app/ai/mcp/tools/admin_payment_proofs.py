@@ -26,7 +26,10 @@ from app.schemas.payment_proof import (
 )
 from app.services.payment_proof_service import PaymentProofService
 
-_service = PaymentProofService()
+
+def _get_service() -> PaymentProofService:
+    from app.core.di import Container
+    return Container.get_instance().payment_proof_service
 
 
 def _safe_str(value: Any) -> str | None:
@@ -146,7 +149,7 @@ async def admin_approve_payment(
             confirmation_token="APPROVE_PAYMENT",
             note=note,
         )
-        doc = await _service.approve_payment(
+        doc = await _get_service().approve_payment(
             payment_proof_id=payment_proof_id,
             payload=payload,
             actor_id=None,
@@ -215,7 +218,7 @@ async def admin_reject_payment_proof(
             confirmation_token="REJECT_PAYMENT",
             reason=reason,
         )
-        doc = await _service.reject_payment(
+        doc = await _get_service().reject_payment(
             payment_proof_id=payment_proof_id,
             payload=payload,
             actor_id=None,
@@ -284,7 +287,7 @@ async def admin_unverify_payment_proof(
             confirmation_token="UNVERIFY_PAYMENT",
             note=note,
         )
-        doc = await _service.unverify_payment(
+        doc = await _get_service().unverify_payment(
             payment_proof_id=payment_proof_id,
             payload=payload,
             actor_id=None,
@@ -353,7 +356,7 @@ async def admin_unreject_payment_proof(
             confirmation_token="UNREJECT_PAYMENT",
             note=note,
         )
-        doc = await _service.unreject_payment(
+        doc = await _get_service().unreject_payment(
             payment_proof_id=payment_proof_id,
             payload=payload,
             actor_id=None,

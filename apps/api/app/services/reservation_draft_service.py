@@ -15,9 +15,13 @@ from app.services.reservation_service import ReservationService
 
 
 class ReservationDraftService:
-    def __init__(self) -> None:
-        self.reservation_service = ReservationService()
-        self.config_service = ConfigService()
+    def __init__(
+        self,
+        reservation_service: ReservationService,
+        config_service: ConfigService,
+    ) -> None:
+        self.reservation_service = reservation_service
+        self.config_service = config_service
 
     async def create_reservation_draft(
         self,

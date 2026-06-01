@@ -9,9 +9,13 @@ from app.core.logging import logger
 
 
 class WhatsAppIngestionService:
-    def __init__(self) -> None:
-        self._resolver = ConversationResolver()
-        self._buffer_service = MessageBufferService()
+    def __init__(
+        self,
+        resolver: ConversationResolver,
+        buffer_service: MessageBufferService,
+    ) -> None:
+        self._resolver = resolver
+        self._buffer_service = buffer_service
 
     async def ingest(self, payload: dict) -> int:
         parsed_messages = parse_whatsapp_payload(payload)

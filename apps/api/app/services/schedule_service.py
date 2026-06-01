@@ -86,6 +86,33 @@ class ScheduleService:
             return await ScheduleDocument.find_all().skip(skip).limit(limit).to_list()
         return await ScheduleDocument.find(query).skip(skip).limit(limit).to_list()
 
+    async def count(
+        self,
+        *,
+        experience_id: str | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
+        status: ScheduleStatus | None = None,
+        is_active: bool | None = None,
+    ) -> int:
+        query: dict[str, object] = {}
+        if experience_id:
+            query["experience_id"] = experience_id
+        date_filter: dict[str, date] = {}
+        if date_from:
+            date_filter["$gte"] = date_from
+        if date_to:
+            date_filter["$lte"] = date_to
+        if date_filter:
+            query["date"] = date_filter
+        if status:
+            query["status"] = status
+        if is_active is not None:
+            query["is_active"] = is_active
+        if not query:
+            return await ScheduleDocument.find_all().count()
+        return await ScheduleDocument.find(query).count()
+
     async def get(self, schedule_id: str) -> ScheduleDocument:
         doc = await ScheduleDocument.get(schedule_id)
         if doc is None:

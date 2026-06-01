@@ -9,6 +9,7 @@ os.environ["APP_SKIP_DB_INIT"] = "true"
 
 from app.api.deps import get_current_user
 from app.common.enums import UserRole
+from app.core.di import Container
 from app.main import app
 from app.schemas.sync import SyncPushOperationSchema
 from app.services.sync_service import SyncOperationExecutor
@@ -45,7 +46,7 @@ def test_sync_bootstrap_contract(monkeypatch) -> None:
             "cursors": {"reservations": ""},
         }
 
-    monkeypatch.setattr("app.api.endpoints.sync.service.build_bootstrap", fake_bootstrap)
+    monkeypatch.setattr(Container.get_instance().sync_service, "build_bootstrap", fake_bootstrap)
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.get("/api/v1/sync/bootstrap")
     app.dependency_overrides.clear()
@@ -66,7 +67,7 @@ def test_files_init_upload_contract(monkeypatch) -> None:
             "expires_at": datetime.now(UTC).isoformat(),
         }
 
-    monkeypatch.setattr("app.api.endpoints.files.service.init_upload", fake_init_upload)
+    monkeypatch.setattr(Container.get_instance().file_upload_service, "init_upload", fake_init_upload)
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.post(
         "/api/v1/files/init-upload",
@@ -101,7 +102,19 @@ def test_sync_executor_rejects_catalog_write_for_guide() -> None:
             "duration_hours": 2,
         },
     )
-    executor = SyncOperationExecutor()
+    _c = Container.get_instance()
+    executor = SyncOperationExecutor(
+        config_service=_c.config_service,
+        experience_service=_c.experience_service,
+        schedule_service=_c.schedule_service,
+        reservation_service=_c.reservation_service,
+        participant_service=_c.participant_service,
+        payment_proof_service=_c.payment_proof_service,
+        assignment_service=_c.assignment_service,
+        service_log_service=_c.service_log_service,
+        provider_service=_c.provider_service,
+        policy_service=_c.policy_service,
+    )
     result = asyncio.run(
         executor.execute(
             current_user=_guide_user(),

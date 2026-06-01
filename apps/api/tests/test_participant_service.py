@@ -3,6 +3,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 
 from app.common.enums import ExperienceLevel
+from app.core.di import Container
 from app.documents.participant_document import EmergencyContact
 from app.services.participant_service import ParticipantService
 
@@ -28,12 +29,12 @@ def _build_participant(
 
 
 def test_participant_completion_true() -> None:
-    service = ParticipantService()
+    service = Container.get_instance().participant_service
     participant = _build_participant()
     assert service._is_completed(participant) is True
 
 
 def test_participant_completion_false_without_data_consent() -> None:
-    service = ParticipantService()
+    service = Container.get_instance().participant_service
     participant = _build_participant(accepted_data_processing=False)
     assert service._is_completed(participant) is False

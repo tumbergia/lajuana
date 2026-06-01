@@ -11,11 +11,18 @@ from app.ai.mcp.tool_contracts import (
     AdminUpdateParticipantOutput,
     ToolBlockingReason,
 )
+from app.core.di import Container
 from app.core.errors import ApiError
 from app.schemas.participant import ParticipantUpdateSchema
-from app.services.participant_service import ParticipantService
 
-_service = ParticipantService()
+_service = None  # lazy via _get_service()
+
+
+def _get_service():
+    global _service
+    if _service is None:
+        _service = Container.get_instance().participant_service
+    return _service
 
 
 def _safe_str(value: Any) -> str | None:
@@ -36,7 +43,7 @@ async def admin_get_participant(
     output: AdminGetParticipantOutput | None = None
 
     try:
-        doc = await _service.get(participant_id)
+        doc = await _get_service().get(participant_id)
         ec = doc.emergency_contact
         output = AdminGetParticipantOutput(
             trace_id=trace_id,
@@ -119,7 +126,7 @@ async def admin_update_participant(
             if k in ParticipantUpdateSchema.model_fields and v is not None
         }
         payload = ParticipantUpdateSchema.model_validate(filtered)
-        doc = await _service.update(participant_id, payload)
+        doc = await _get_service().update(participant_id, payload)
 
         output = AdminUpdateParticipantOutput(
             trace_id=trace_id,

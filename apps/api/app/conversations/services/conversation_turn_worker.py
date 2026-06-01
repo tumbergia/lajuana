@@ -39,11 +39,16 @@ def combine_messages(events: list[_EventLike]) -> str:
 
 
 class ConversationTurnWorker:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        lock_service: ConversationLockService,
+        buffer_service: MessageBufferService,
+        outbound_service: WhatsAppOutboundService,
+    ) -> None:
         self._orchestrator = AssistantOrchestrator()
-        self._lock_service = ConversationLockService()
-        self._buffer_service = MessageBufferService()
-        self._outbound_service = WhatsAppOutboundService()
+        self._lock_service = lock_service
+        self._buffer_service = buffer_service
+        self._outbound_service = outbound_service
 
     async def _find_active_candidates(self, from_phone: str) -> list[ReservationDocument]:
         allowed = [

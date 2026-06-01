@@ -34,8 +34,8 @@ RISK_RELEASE_TEXT = (
 
 
 class ParticipantService:
-    def __init__(self) -> None:
-        self.form_link_service = ParticipantFormLinkService()
+    def __init__(self, form_link_service: ParticipantFormLinkService) -> None:
+        self.form_link_service = form_link_service
 
     async def get(self, participant_id: str) -> ParticipantDocument:
         doc = await ParticipantDocument.get(participant_id)

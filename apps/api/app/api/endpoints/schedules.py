@@ -1,9 +1,9 @@
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
-from app.api.deps import require_permissions
+from app.api.deps import get_schedule_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission, ScheduleStatus
 from app.documents import UserDocument
@@ -12,7 +12,6 @@ from app.services import ScheduleService
 from app.services.mappers import schedule_to_response
 
 router = APIRouter(prefix="/schedules", tags=["Fechas operativas"])
-service = ScheduleService()
 
 
 @router.post(
@@ -27,6 +26,7 @@ service = ScheduleService()
 async def create_schedule(
     payload: ScheduleCreateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SCHEDULE_CREATE))],
+    service: ScheduleService = Depends(get_schedule_service),
 ) -> ScheduleResponseSchema:
     doc = await service.create(payload)
     return schedule_to_response(doc)
@@ -42,18 +42,32 @@ async def create_schedule(
 )
 async def list_schedules(
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SCHEDULE_READ))],
+    response: Response,
     experience_id: str | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
-    status: ScheduleStatus | None = None,
+    status_filter: ScheduleStatus | None = Query(default=None, alias="status"),
     is_active: bool | None = None,
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    service: ScheduleService = Depends(get_schedule_service),
 ) -> list[ScheduleResponseSchema]:
+    total = await service.count(
+        experience_id=experience_id,
+        date_from=date_from,
+        date_to=date_to,
+        status=status_filter,
+        is_active=is_active,
+    )
+    response.headers["X-Total-Count"] = str(total)
     docs = await service.list(
         experience_id=experience_id,
         date_from=date_from,
         date_to=date_to,
-        status=status,
+        status=status_filter,
         is_active=is_active,
+        limit=limit,
+        skip=skip,
     )
     return [schedule_to_response(doc) for doc in docs]
 
@@ -69,6 +83,7 @@ async def list_schedules(
 async def get_schedule(
     schedule_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SCHEDULE_READ))],
+    service: ScheduleService = Depends(get_schedule_service),
 ) -> ScheduleResponseSchema:
     doc = await service.get(schedule_id)
     return schedule_to_response(doc)
@@ -86,6 +101,7 @@ async def update_schedule(
     schedule_id: str,
     payload: ScheduleUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SCHEDULE_UPDATE))],
+    service: ScheduleService = Depends(get_schedule_service),
 ) -> ScheduleResponseSchema:
     doc = await service.update(schedule_id, payload)
     return schedule_to_response(doc)
@@ -102,6 +118,7 @@ async def update_schedule(
 async def deactivate_schedule(
     schedule_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.SCHEDULE_DELETE))],
+    service: ScheduleService = Depends(get_schedule_service),
 ) -> ScheduleResponseSchema:
     doc = await service.deactivate(schedule_id)
     return schedule_to_response(doc)

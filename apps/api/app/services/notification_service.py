@@ -25,15 +25,17 @@ from app.notifications.email_provider import EmailProvider
 from app.notifications.in_app_provider import InAppNotificationProvider
 from app.notifications.provider import NotificationProvider
 from app.notifications.renderer import render_subject, render_template
+from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
 from app.notifications.whatsapp_provider import WhatsAppNotificationProvider
 
 
 class NotificationService:
-    def __init__(self) -> None:
+    def __init__(self, outbound_service: WhatsAppOutboundService | None = None) -> None:
+        outbound = outbound_service or WhatsAppOutboundService()
         self._providers: dict[NotificationChannel, NotificationProvider] = {
             NotificationChannel.EMAIL: EmailProvider(),
             NotificationChannel.IN_APP: InAppNotificationProvider(),
-            NotificationChannel.WHATSAPP: WhatsAppNotificationProvider(),
+            NotificationChannel.WHATSAPP: WhatsAppNotificationProvider(outbound_service=outbound),
         }
 
     def get_provider(self, channel: NotificationChannel) -> NotificationProvider:

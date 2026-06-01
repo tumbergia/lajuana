@@ -152,3 +152,19 @@ def get_provider_service() -> object:
 
 def get_reservation_draft_service() -> object:
     return Container.get_instance().reservation_draft_service
+
+
+def get_assignment_service() -> object:
+    return Container.get_instance().assignment_service
+
+
+def get_service_log_service() -> object:
+    return Container.get_instance().service_log_service
+
+
+def get_participant_form_link_service() -> object:
+    return Container.get_instance().participant_form_link_service
+
+
+def get_whatsapp_ingestion_service() -> object:
+    return Container.get_instance().whatsapp_ingestion_service

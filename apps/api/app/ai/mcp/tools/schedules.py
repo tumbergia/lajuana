@@ -17,7 +17,7 @@ from app.services.experience_catalog_resolver import (
     ExperienceCatalogResolver,
     ExperienceResolutionStatus,
 )
-from app.services.reservation_service import ReservationService
+from app.core.di import Container
 
 
 def _safe_str(value: Any) -> str | None:
@@ -134,7 +134,7 @@ async def list_available_schedules(
 
         candidate_dates = _generate_date_range(date_from, date_to, min_notice_days=7)
 
-        reservation_service = ReservationService()
+        reservation_service = Container.get_instance().reservation_service
         schedule_items: list[AvailableScheduleItem] = []
         for d in candidate_dates:
             if len(schedule_items) >= limit:
@@ -278,7 +278,7 @@ async def suggest_alternative_dates(
 
         candidate_dates = _generate_date_range(date_from, date_to, min_notice_days=7)
 
-        reservation_service = ReservationService()
+        reservation_service = Container.get_instance().reservation_service
         schedule_items: list[AvailableScheduleItem] = []
         for d in candidate_dates:
             if len(schedule_items) >= limit:

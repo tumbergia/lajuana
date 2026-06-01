@@ -24,6 +24,7 @@ async def admin_list_human_review_requests(**kwargs: Any) -> dict[str, Any]:
         status_filter = kwargs.get("status")
         priority_filter = kwargs.get("priority")
         limit = kwargs.get("limit", 50)
+        skip = kwargs.get("skip", 0)
 
         query: dict[str, Any] = {}
         if status_filter:
@@ -32,11 +33,9 @@ async def admin_list_human_review_requests(**kwargs: Any) -> dict[str, Any]:
             query["priority"] = priority_filter
 
         if query:
-            docs = await HumanReviewRequestDocument.find(query).to_list()
+            docs = await HumanReviewRequestDocument.find(query).skip(skip).limit(limit).to_list()
         else:
-            docs = await HumanReviewRequestDocument.find_all().to_list()
-
-        docs = docs[:limit]
+            docs = await HumanReviewRequestDocument.find_all().skip(skip).limit(limit).to_list()
 
         items = []
         for doc in docs:

@@ -17,7 +17,10 @@ from app.core.errors import ApiError
 from app.schemas.auth import UserCreateSchema, UserUpdateSchema
 from app.services.user_service import UserService
 
-_service = UserService()
+
+def _get_service() -> UserService:
+    from app.core.di import Container
+    return Container.get_instance().user_service
 
 
 async def admin_list_users(**kwargs: Any) -> dict[str, Any]:
@@ -28,7 +31,7 @@ async def admin_list_users(**kwargs: Any) -> dict[str, Any]:
     output: AdminListUsersOutput | None = None
 
     try:
-        docs = await _service.list_users()
+        docs = await _get_service().list_users()
         items = []
         for doc in docs:
             items.append(
@@ -88,7 +91,7 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
             if k in UserCreateSchema.model_fields
         }
         payload = UserCreateSchema.model_validate(filtered)
-        doc = await _service.create_user(payload)
+        doc = await _get_service().create_user(payload)
 
         output = AdminCreateUserOutput(
             created=True,
@@ -164,7 +167,7 @@ async def admin_update_user(**kwargs: Any) -> dict[str, Any]:
             if k in UserUpdateSchema.model_fields and v is not None
         }
         payload = UserUpdateSchema.model_validate(filtered)
-        doc = await _service.update_user(user_id, payload)
+        doc = await _get_service().update_user(user_id, payload)
 
         output = AdminUpdateUserOutput(
             updated=True,
@@ -235,7 +238,7 @@ async def admin_deactivate_user(**kwargs: Any) -> dict[str, Any]:
             )
             return output.model_dump(mode="json")
 
-        await _service.soft_delete_user(user_id, actor_id)
+        await _get_service().soft_delete_user(user_id, actor_id)
         output = AdminDeactivateUserOutput(
             deactivated=True,
             trace_id=trace_id,

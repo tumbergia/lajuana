@@ -9,6 +9,7 @@ os.environ["APP_SKIP_DB_INIT"] = "true"
 
 from app.api.business_errors import ENDPOINT_BUSINESS_CASES
 from app.api.deps import get_current_user
+from app.core.di import Container
 from app.common.enums import UserRole
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
@@ -286,7 +287,7 @@ def test_create_experience_duplicate_slug_returns_409(monkeypatch: pytest.Monkey
             details={"field": "slug"},
         )
 
-    monkeypatch.setattr("app.api.endpoints.experiences.service.create", fake_create)
+    monkeypatch.setattr(Container.get_instance().experience_service, "create", fake_create)
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.post(
         "/api/v1/experiences",

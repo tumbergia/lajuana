@@ -7,8 +7,8 @@ PRE_RESERVATION_EXPIRE_INTERVAL_SECONDS = 300  # 5 minutes
 
 
 class ReservationDraftExpireWorker:
-    def __init__(self) -> None:
-        self._service = ReservationDraftService()
+    def __init__(self, service: ReservationDraftService) -> None:
+        self._service = service
         self._running = False
 
     @property

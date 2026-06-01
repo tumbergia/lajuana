@@ -69,17 +69,29 @@ from app.services.service_log_service import ServiceLogService
 
 
 class SyncOperationExecutor:
-    def __init__(self) -> None:
-        self.config_service = ConfigService()
-        self.experience_service = ExperienceService()
-        self.schedule_service = ScheduleService()
-        self.reservation_service = ReservationService()
-        self.participant_service = ParticipantService()
-        self.payment_proof_service = PaymentProofService()
-        self.assignment_service = AssignmentService()
-        self.service_log_service = ServiceLogService()
-        self.provider_service = ProviderService()
-        self.policy_service = PolicyService()
+    def __init__(
+        self,
+        config_service: ConfigService,
+        experience_service: ExperienceService,
+        schedule_service: ScheduleService,
+        reservation_service: ReservationService,
+        participant_service: ParticipantService,
+        payment_proof_service: PaymentProofService,
+        assignment_service: AssignmentService,
+        service_log_service: ServiceLogService,
+        provider_service: ProviderService,
+        policy_service: PolicyService,
+    ) -> None:
+        self.config_service = config_service
+        self.experience_service = experience_service
+        self.schedule_service = schedule_service
+        self.reservation_service = reservation_service
+        self.participant_service = participant_service
+        self.payment_proof_service = payment_proof_service
+        self.assignment_service = assignment_service
+        self.service_log_service = service_log_service
+        self.provider_service = provider_service
+        self.policy_service = policy_service
 
     async def execute(
         self, *, current_user: UserDocument, operation: SyncPushOperationSchema
@@ -267,12 +279,36 @@ class SyncOperationExecutor:
 
 
 class SyncService:
-    def __init__(self) -> None:
-        self.config_service = ConfigService()
-        self.experience_service = ExperienceService()
-        self.schedule_service = ScheduleService()
-        self.equine_service = EquineService()
-        self.executor = SyncOperationExecutor()
+    def __init__(
+        self,
+        config_service: ConfigService,
+        experience_service: ExperienceService,
+        schedule_service: ScheduleService,
+        equine_service: EquineService,
+        reservation_service: ReservationService,
+        participant_service: ParticipantService,
+        payment_proof_service: PaymentProofService,
+        assignment_service: AssignmentService,
+        service_log_service: ServiceLogService,
+        provider_service: ProviderService,
+        policy_service: PolicyService,
+    ) -> None:
+        self.config_service = config_service
+        self.experience_service = experience_service
+        self.schedule_service = schedule_service
+        self.equine_service = equine_service
+        self.executor = SyncOperationExecutor(
+            config_service=config_service,
+            experience_service=experience_service,
+            schedule_service=schedule_service,
+            reservation_service=reservation_service,
+            participant_service=participant_service,
+            payment_proof_service=payment_proof_service,
+            assignment_service=assignment_service,
+            service_log_service=service_log_service,
+            provider_service=provider_service,
+            policy_service=policy_service,
+        )
 
     async def build_bootstrap(self, *, current_user: UserDocument) -> dict:
         can_read_config = Permission.CONFIG_READ in ROLE_PERMISSIONS[current_user.role]

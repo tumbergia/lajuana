@@ -73,13 +73,13 @@ class ReservationService:
 
     def __init__(
         self,
-        notification_service: NotificationService | None = None,
-        form_link_service: ParticipantFormLinkService | None = None,
-        config_service: ConfigService | None = None,
+        notification_service: NotificationService,
+        form_link_service: ParticipantFormLinkService,
+        config_service: ConfigService,
     ) -> None:
-        self.config_service = config_service or ConfigService()
-        self.notification_service = notification_service or NotificationService()
-        self.form_link_service = form_link_service or ParticipantFormLinkService()
+        self.config_service = config_service
+        self.notification_service = notification_service
+        self.form_link_service = form_link_service
 
     @staticmethod
     def _is_blocking_status(status: ReservationStatus) -> bool:
@@ -291,6 +291,14 @@ class ReservationService:
                 {"status": ReservationStatus.CONFIRMED}
             ).skip(skip).limit(limit).to_list()
         return await ReservationDocument.find_all().skip(skip).limit(limit).to_list()
+
+    async def count(self, actor_role: UserRole) -> int:
+        """Total count of visible reservations (for X-Total-Count header)."""
+        if actor_role == UserRole.GUIDE:
+            return await ReservationDocument.find(
+                {"status": ReservationStatus.CONFIRMED}
+            ).count()
+        return await ReservationDocument.find_all().count()
 
     async def get(
         self,
@@ -532,6 +540,12 @@ class ReservationService:
 
             return reservation
         except Exception:
+            logger.warning(
+                "[reservation=%s] Confirm failed — rolling back capacity | schedule=%s",
+                reservation.id,
+                schedule.id,
+                exc_info=True,
+            )
             await self._rollback_schedule_capacity(
                 schedule_id=str(schedule.id),
                 participant_count=reservation.participant_count,

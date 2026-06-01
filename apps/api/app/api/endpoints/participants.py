@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from app.api.deps import require_permissions
+from app.api.deps import get_participant_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
@@ -11,7 +11,6 @@ from app.services import ParticipantService
 from app.services.mappers import participant_to_response
 
 router = APIRouter(prefix="/participants", tags=["Participantes"])
-service = ParticipantService()
 
 
 @router.get(
@@ -25,6 +24,7 @@ service = ParticipantService()
 async def get_participant(
     participant_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PARTICIPANT_READ))],
+    service: ParticipantService = Depends(get_participant_service),
 ) -> ParticipantResponseSchema:
     doc = await service.get(participant_id)
     return participant_to_response(doc)
@@ -42,6 +42,7 @@ async def update_participant(
     participant_id: str,
     payload: ParticipantUpdateSchema,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.PARTICIPANT_UPDATE))],
+    service: ParticipantService = Depends(get_participant_service),
 ) -> ParticipantResponseSchema:
     doc = await service.update(participant_id, payload)
     return participant_to_response(doc)
