@@ -7,7 +7,7 @@ from app.schemas.assistant_plan import AssistantAction
 
 class AskRequest(BaseModel):
     message: str = Field(min_length=1)
-    channel: Literal["test", "whatsapp"] = "test"
+    channel: Literal["test", "whatsapp", "admin_api", "mobile_api"] = "test"
     from_phone: str | None = None
     conversation_id: str | None = None
     trace_id: str | None = None

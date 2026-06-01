@@ -650,16 +650,153 @@ Este documento lista todos los MCP tools del asistente AI expuestos por `apps/ap
 
 ---
 
-## Gobernanza (ToolPolicyEngine)
+## Admin Tools
+
+Tools administrativas disponibles exclusivamente para el canal `admin_api`. Agrupadas por dominio de negocio.
+
+### CRUD — Experiences
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_list_experiences_admin` | READ | Lista experiencias con datos completos (incluye inactivas) |
+| `admin_create_experience` | WRITE | Crea una nueva experiencia |
+| `admin_update_experience` | WRITE | Actualiza una experiencia existente |
+| `admin_deactivate_experience` | WRITE | Desactiva una experiencia |
+
+**Input**: `kwargs` → filtrados por `ExperienceCreateSchema` / `ExperienceUpdateSchema` según el tool.
+**Output**: `AdminCreateExperienceOutput` / `AdminUpdateExperienceOutput` / `AdminListExperiencesOutput` / `AdminDeactivateExperienceOutput`
+
+### CRUD — Users
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_list_users` | READ | Lista todos los usuarios del sistema |
+| `admin_create_user` | LIMITED_WRITE | Crea nuevo usuario (email, full_name, password, role) |
+| `admin_update_user` | LIMITED_WRITE | Actualiza campos de un usuario |
+| `admin_deactivate_user` | WRITE | Desactiva (soft-delete) un usuario |
+
+**Output**: `AdminListUsersOutput` / `AdminCreateUserOutput` / `AdminUpdateUserOutput` / `AdminDeactivateUserOutput`
+
+### CRUD — Schedules
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_list_schedules_admin` | READ | Lista schedules con capacidad, slots, estado, activo |
+| `admin_create_schedule` | WRITE | Crea schedule (experience_id, date, capacity_total) |
+| `admin_update_schedule` | WRITE | Actualiza schedule |
+| `admin_deactivate_schedule` | WRITE | Desactiva schedule |
+
+**Output**: `AdminListSchedulesOutput` / `AdminCreateScheduleOutput` / `AdminUpdateScheduleOutput` / `AdminDeactivateScheduleOutput`
+
+### CRUD — Equines
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_list_equines` | READ | Lista equinos (filtro `only_available`) |
+| `admin_get_equine` | READ | Detalle completo de un equino |
+| `admin_create_equine` | WRITE | Crea un equino |
+| `admin_update_equine` | LIMITED_WRITE | Actualiza campos de un equino |
+| `admin_deactivate_equine` | WRITE | Marca equino como no disponible |
+
+**Output**: `AdminListEquinesOutput` / `AdminGetEquineOutput` / `AdminCreateEquineOutput` / `AdminUpdateEquineOutput` / `AdminDeactivateEquineOutput`
+
+### Configuración del sistema
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_get_system_config` | READ | Muestra reglas de reserva + datos de pago |
+| `admin_update_reservation_rules` | WRITE | Actualiza reglas (min_days, TTL, payment_proof) |
+| `admin_get_payment_instructions` | READ | Muestra datos bancarios configurados |
+
+**Output**: `AdminGetSystemConfigOutput` / `AdminUpdateReservationRulesOutput` / `AdminGetPaymentInstructionsOutput`
+
+### Analítica y reportes
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_get_sales_summary` | READ | Resumen de ventas por rango de fechas |
+| `admin_get_reservation_funnel` | READ | Embudo de conversión de reservas |
+| `admin_get_channel_performance` | READ | Rendimiento por canal de atención |
+| `admin_get_occupancy_report` | READ | Ocupación por fecha/experiencia |
+| `admin_get_equine_workload_report` | READ | Carga de trabajo equina en rango de fechas |
+
+**Input**: `date_from`, `date_to` (formato ISO), `experience_id` (solo occupancy).
+**Output**: `SalesSummaryOutput` / `ReservationFunnelOutput` / `ChannelPerformanceOutput` / `OccupancyReportOutput` / `EquineWorkloadReportOutput`
+
+### Operaciones de campo
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_get_logistics_checklist` | READ | Checklist operativo de una reserva |
+| `admin_close_service_execution` | WRITE | Cierra servicio (reserva CONFIRMED → COMPLETED) |
+| `admin_get_equine_workload` | READ | Carga de trabajo actual de equinos |
+| `admin_update_equine_availability` | WRITE | Cambia disponibilidad de un equino (requiere motivo) |
+| `admin_add_equine_health_event` | LIMITED_WRITE | Registra evento de salud equina |
+
+**Output**: `LogisticsChecklistOutput` / `CloseServiceExecutionOutput` / `EquineWorkloadOutput` / `UpdateEquineAvailabilityOutput` / `EquineHealthEventOutput`
+
+### Gestión de comprobantes de pago
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_get_payment_proof` | READ | Consulta comprobante por ID o reservation_id |
+| `admin_approve_payment` | WRITE | Aprueba pago (verifica + avanza reserva a PAYMENT_RECEIVED + envía WhatsApp) |
+| `admin_reject_payment_proof` | WRITE | Rechaza comprobante con motivo (notifica al cliente) |
+| `admin_unverify_payment_proof` | WRITE | Deshace verificación (revierte reserva a PENDING_PAYMENT) |
+| `admin_unreject_payment_proof` | WRITE | Deshace rechazo |
+
+**Input**: `payment_proof_id` + según operación: `note`, `reason`.
+**Output**: `AdminGetPaymentProofOutput` / `AdminApprovePaymentOutput` / `AdminRejectPaymentProofOutput` / `AdminUnverifyPaymentProofOutput` / `AdminUnrejectPaymentProofOutput`
+
+### Gestión de reservas
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_list_reservations` | READ | Lista reservas (filtros: status, date_from, date_to) |
+| `admin_get_reservation_detail` | READ | Detalle completo por ID o código público |
+| `admin_confirm_reservation` | WRITE | Confirma reserva (valida anticipación, pago verificado, cupos, genera form link + WhatsApp) |
+| `admin_cancel_reservation` | WRITE | Cancela reserva (libera schedule si estaba confirmada) |
+
+**Output**: `AdminListReservationsOutput` / `AdminGetReservationDetailOutput` / `AdminConfirmReservationOutput` / `AdminCancelReservationOutput`
+
+### Participantes
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_get_participant` | READ | Detalle completo de un participante + contacto de emergencia |
+| `admin_update_participant` | LIMITED_WRITE | Actualiza campos de un participante (no crea nuevos) |
+
+**Output**: `AdminGetParticipantOutput` / `AdminUpdateParticipantOutput`
+
+### Automatizaciones
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `schedule_birthday_automation` | WRITE | Activa/desactiva/consulta estado de mensajes de cumpleaños |
+| `schedule_visit_anniversary_automation` | WRITE | Activa/desactiva/consulta estado de mensajes de aniversario |
+| `send_post_service_message` | LIMITED_WRITE | Registra mensaje post-servicio para una reserva completada |
+
+**Input**: `enabled` (bool, opcional — si se omite solo consulta), `reservation_id`.
+**Output**: `BirthdayAutomationOutput` / `AnniversaryAutomationOutput` / `PostServiceMessageOutput`
+
+### Revisiones humanas
+
+| Tool | Categoría | Propósito |
+|---|---|---|
+| `admin_list_human_review_requests` | READ | Lista solicitudes de revisión humana (filtros: status, priority) |
+
+**Output**: `AdminListHumanReviewRequestsOutput`
+
+---
 
 ## Gobernanza (ToolPolicyEngine)
 
 | Clasificación | Tools | Acción |
 |---|---|---|
-| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates`, `get_reservation_public_summary`, `get_reservation_status_by_phone`, `admin_get_logistics_checklist`, `admin_get_equine_workload`, `admin_get_sales_summary`, `admin_get_reservation_funnel`, `admin_get_channel_performance`, `admin_get_occupancy_report`, `admin_get_equine_workload_report` | Permitidos si pasan validaciones de args |
-| `LIMITED_WRITE_TOOLS` | `request_human_review`, `create_reservation_draft`, `attach_payment_proof_to_reservation`, `guide_create_service_log`, `admin_add_equine_health_event`, `send_post_service_message` | Escritura limitada (handoff trazable) |
-| `WRITE_TOOLS` | `guide_report_incident`, `admin_close_service_execution`, `admin_update_equine_availability`, `schedule_birthday_automation`, `schedule_visit_anniversary_automation` | Escritura, pasa por validación de riesgo |
-| `CRITICAL_TOOLS` | `confirm_reservation`, `cancel_reservation`, `mark_payment_verified`, `change_schedule_capacity`, `block_slots` | **Siempre denegados** — requieren intervención humana |
+| `READ_TOOLS` | `list_experiences`, `get_experience_detail`, `get_public_business_rules`, `check_experience_availability`, `list_available_schedules`, `quote_experience`, `suggest_alternative_dates`, `get_reservation_public_summary`, `get_reservation_status_by_phone`, `admin_get_logistics_checklist`, `admin_get_equine_workload`, `admin_get_sales_summary`, `admin_get_reservation_funnel`, `admin_get_channel_performance`, `admin_get_occupancy_report`, `admin_get_equine_workload_report`, `admin_list_experiences_admin`, `admin_list_users`, `admin_list_schedules_admin`, `admin_get_system_config`, `admin_get_payment_instructions`, `admin_list_human_review_requests`, `admin_get_payment_proof`, `admin_list_reservations`, `admin_get_reservation_detail`, `admin_list_equines`, `admin_get_equine`, `admin_get_participant` | Permitidos si pasan validaciones de args |
+| `LIMITED_WRITE_TOOLS` | `request_human_review`, `create_reservation_draft`, `attach_payment_proof_to_reservation`, `guide_create_service_log`, `admin_add_equine_health_event`, `send_post_service_message`, `generate_participant_form_link`, `get_participant_form_status`, `admin_create_user`, `admin_update_user`, `admin_update_equine`, `admin_update_participant` | Escritura limitada (handoff trazable) |
+| `WRITE_TOOLS` | `guide_report_incident`, `admin_close_service_execution`, `admin_update_equine_availability`, `schedule_birthday_automation`, `schedule_visit_anniversary_automation`, `admin_create_experience`, `admin_update_experience`, `admin_deactivate_experience`, `admin_deactivate_user`, `admin_create_schedule`, `admin_update_schedule`, `admin_deactivate_schedule`, `admin_update_reservation_rules`, `admin_approve_payment`, `admin_reject_payment_proof`, `admin_unverify_payment_proof`, `admin_unreject_payment_proof`, `admin_confirm_reservation`, `admin_cancel_reservation`, `admin_create_equine`, `admin_deactivate_equine` | Escritura, pasa por validación de riesgo |
+| `CRITICAL_TOOLS` | `confirm_reservation`, `cancel_reservation`, `mark_payment_verified`, `change_schedule_capacity`, `block_slots` | **Siempre denegados** — requieren intervención humana. Nota: `admin_confirm_reservation` y `admin_cancel_reservation` son independientes (nombres distintos) y están permitidos para canal admin. |
 
 **Reglas de denegación** (orden de evaluación):
 
@@ -743,7 +880,7 @@ Colección: `tool_call_logs`
 | Archivo | `ai/mcp/server.py` |
 | Framework | `FastMCP` |
 | Server name | `lajuana-mcp` |
-| Tools expuestos | `admin_add_equine_health_event`, `admin_close_service_execution`, `admin_get_channel_performance`, `admin_get_equine_workload`, `admin_get_equine_workload_report`, `admin_get_logistics_checklist`, `admin_get_occupancy_report`, `admin_get_reservation_funnel`, `admin_get_sales_summary`, `admin_update_equine_availability`, `attach_payment_proof_to_reservation`, `check_experience_availability`, `create_reservation_draft`, `get_experience_detail`, `get_public_business_rules`, `get_reservation_public_summary`, `get_reservation_status_by_phone`, `guide_create_service_log`, `guide_report_incident`, `list_available_schedules`, `list_experiences`, `quote_experience`, `request_human_review`, `schedule_birthday_automation`, `schedule_visit_anniversary_automation`, `send_post_service_message`, `suggest_alternative_dates` |
+| Tools expuestos | `admin_add_equine_health_event`, `admin_close_service_execution`, `admin_get_channel_performance`, `admin_get_equine_workload`, `admin_get_equine_workload_report`, `admin_get_logistics_checklist`, `admin_get_occupancy_report`, `admin_get_reservation_funnel`, `admin_get_sales_summary`, `admin_update_equine_availability`, `admin_get_payment_proof`, `admin_approve_payment`, `admin_reject_payment_proof`, `admin_unverify_payment_proof`, `admin_unreject_payment_proof`, `admin_list_reservations`, `admin_get_reservation_detail`, `admin_confirm_reservation`, `admin_cancel_reservation`, `admin_list_equines`, `admin_get_equine`, `admin_create_equine`, `admin_update_equine`, `admin_deactivate_equine`, `admin_get_participant`, `admin_update_participant`, `admin_list_experiences_admin`, `admin_create_experience`, `admin_update_experience`, `admin_deactivate_experience`, `admin_list_users`, `admin_create_user`, `admin_update_user`, `admin_deactivate_user`, `admin_list_schedules_admin`, `admin_create_schedule`, `admin_update_schedule`, `admin_deactivate_schedule`, `admin_get_system_config`, `admin_update_reservation_rules`, `admin_get_payment_instructions`, `admin_list_human_review_requests`, `attach_payment_proof_to_reservation`, `check_experience_availability`, `create_reservation_draft`, `get_experience_detail`, `get_public_business_rules`, `get_reservation_public_summary`, `get_reservation_status_by_phone`, `guide_create_service_log`, `guide_report_incident`, `list_available_schedules`, `list_experiences`, `quote_experience`, `request_human_review`, `schedule_birthday_automation`, `schedule_visit_anniversary_automation`, `send_post_service_message`, `suggest_alternative_dates` |
 
 ---
 
@@ -759,39 +896,73 @@ Singleton: `app.ai.mcp.registry.registry`
 
 ## Tools registrados actualmente
 
-| Tool | Alias en registry | Archivo | Contrato Pydantic |
-|---|---|---|---|---|
-| admin_add_equine_health_event | `admin_add_equine_health_event` | `ai/mcp/tools/operations.py` | Sí |
-| admin_close_service_execution | `admin_close_service_execution` | `ai/mcp/tools/operations.py` | Sí |
-| admin_get_channel_performance | `admin_get_channel_performance` | `ai/mcp/tools/analytics.py` | Sí |
-| admin_get_equine_workload | `admin_get_equine_workload` | `ai/mcp/tools/operations.py` | Sí |
-| admin_get_equine_workload_report | `admin_get_equine_workload_report` | `ai/mcp/tools/analytics.py` | Sí |
-| admin_get_logistics_checklist | `admin_get_logistics_checklist` | `ai/mcp/tools/operations.py` | Sí |
-| admin_get_occupancy_report | `admin_get_occupancy_report` | `ai/mcp/tools/analytics.py` | Sí |
-| admin_get_reservation_funnel | `admin_get_reservation_funnel` | `ai/mcp/tools/analytics.py` | Sí |
-| admin_get_sales_summary | `admin_get_sales_summary` | `ai/mcp/tools/analytics.py` | Sí |
-| admin_update_equine_availability | `admin_update_equine_availability` | `ai/mcp/tools/operations.py` | Sí |
-| check_experience_availability | `check_experience_availability` | `ai/mcp/tools/availability.py` | Sí |
-| list_experiences | `list_experiences` | `ai/mcp/tools/catalog.py` | Sí (v2) |
-| quote_experience | `quote_experience` | `ai/mcp/tools/quote.py` | Sí |
-| list_available_schedules | `list_available_schedules` | `ai/mcp/tools/schedules.py` | Sí |
-| suggest_alternative_dates | `suggest_alternative_dates` | `ai/mcp/tools/schedules.py` | Sí |
-| create_reservation_draft | `create_reservation_draft` | `ai/mcp/tools/reservation_draft.py` | Sí |
-| attach_payment_proof_to_reservation | `attach_payment_proof_to_reservation` | `ai/mcp/tools/reservation_draft.py` | Sí |
-| get_reservation_public_summary | `get_reservation_public_summary` | `ai/mcp/tools/reservation_draft.py` | Sí |
-| get_reservation_status_by_phone | `get_reservation_status_by_phone` | `ai/mcp/tools/reservation_draft.py` | Sí |
-| get_experience_detail | `get_experience_detail` | `ai/mcp/tools/__init__.py` | Sí |
-| get_public_business_rules | `get_public_business_rules` | `ai/mcp/tools/__init__.py` | Sí |
-| request_human_review | `request_human_review` | `ai/mcp/tools/__init__.py` | Sí |
-| guide_create_service_log | `guide_create_service_log` | `ai/mcp/tools/operations.py` | Sí |
-| guide_report_incident | `guide_report_incident` | `ai/mcp/tools/operations.py` | Sí |
-| schedule_birthday_automation | `schedule_birthday_automation` | `ai/mcp/tools/automations.py` | Sí |
-| schedule_visit_anniversary_automation | `schedule_visit_anniversary_automation` | `ai/mcp/tools/automations.py` | Sí |
-| send_post_service_message | `send_post_service_message` | `ai/mcp/tools/automations.py` | Sí |
+| Tool | Archivo | Contrato Pydantic |
+|---|---|---|
+| admin_add_equine_health_event | `ai/mcp/tools/operations.py` | Sí |
+| admin_approve_payment | `ai/mcp/tools/admin_payment_proofs.py` | Sí |
+| admin_cancel_reservation | `ai/mcp/tools/admin_reservations.py` | Sí |
+| admin_close_service_execution | `ai/mcp/tools/operations.py` | Sí |
+| admin_confirm_reservation | `ai/mcp/tools/admin_reservations.py` | Sí |
+| admin_create_equine | `ai/mcp/tools/admin_equines.py` | Sí |
+| admin_create_experience | `ai/mcp/tools/admin_experiences.py` | Sí |
+| admin_create_schedule | `ai/mcp/tools/admin_schedules.py` | Sí |
+| admin_create_user | `ai/mcp/tools/admin_users.py` | Sí |
+| admin_deactivate_equine | `ai/mcp/tools/admin_equines.py` | Sí |
+| admin_deactivate_experience | `ai/mcp/tools/admin_experiences.py` | Sí |
+| admin_deactivate_schedule | `ai/mcp/tools/admin_schedules.py` | Sí |
+| admin_deactivate_user | `ai/mcp/tools/admin_users.py` | Sí |
+| admin_get_channel_performance | `ai/mcp/tools/analytics.py` | Sí |
+| admin_get_equine | `ai/mcp/tools/admin_equines.py` | Sí |
+| admin_get_equine_workload | `ai/mcp/tools/operations.py` | Sí |
+| admin_get_equine_workload_report | `ai/mcp/tools/analytics.py` | Sí |
+| admin_get_logistics_checklist | `ai/mcp/tools/operations.py` | Sí |
+| admin_get_occupancy_report | `ai/mcp/tools/analytics.py` | Sí |
+| admin_get_participant | `ai/mcp/tools/admin_participants.py` | Sí |
+| admin_get_payment_instructions | `ai/mcp/tools/admin_config.py` | Sí |
+| admin_get_payment_proof | `ai/mcp/tools/admin_payment_proofs.py` | Sí |
+| admin_get_reservation_detail | `ai/mcp/tools/admin_reservations.py` | Sí |
+| admin_get_reservation_funnel | `ai/mcp/tools/analytics.py` | Sí |
+| admin_get_sales_summary | `ai/mcp/tools/analytics.py` | Sí |
+| admin_get_system_config | `ai/mcp/tools/admin_config.py` | Sí |
+| admin_list_equines | `ai/mcp/tools/admin_equines.py` | Sí |
+| admin_list_experiences_admin | `ai/mcp/tools/admin_experiences.py` | Sí |
+| admin_list_human_review_requests | `ai/mcp/tools/admin_reviews.py` | Sí |
+| admin_list_reservations | `ai/mcp/tools/admin_reservations.py` | Sí |
+| admin_list_schedules_admin | `ai/mcp/tools/admin_schedules.py` | Sí |
+| admin_list_users | `ai/mcp/tools/admin_users.py` | Sí |
+| admin_reject_payment_proof | `ai/mcp/tools/admin_payment_proofs.py` | Sí |
+| admin_unreject_payment_proof | `ai/mcp/tools/admin_payment_proofs.py` | Sí |
+| admin_unverify_payment_proof | `ai/mcp/tools/admin_payment_proofs.py` | Sí |
+| admin_update_equine | `ai/mcp/tools/admin_equines.py` | Sí |
+| admin_update_equine_availability | `ai/mcp/tools/operations.py` | Sí |
+| admin_update_experience | `ai/mcp/tools/admin_experiences.py` | Sí |
+| admin_update_participant | `ai/mcp/tools/admin_participants.py` | Sí |
+| admin_update_reservation_rules | `ai/mcp/tools/admin_config.py` | Sí |
+| admin_update_schedule | `ai/mcp/tools/admin_schedules.py` | Sí |
+| admin_update_user | `ai/mcp/tools/admin_users.py` | Sí |
+| attach_payment_proof_to_reservation | `ai/mcp/tools/reservation_draft.py` | Sí |
+| check_experience_availability | `ai/mcp/tools/availability.py` | Sí |
+| create_reservation_draft | `ai/mcp/tools/reservation_draft.py` | Sí |
+| generate_participant_form_link | `ai/mcp/tools/participant_forms.py` | Sí |
+| get_experience_detail | `ai/mcp/tools/__init__.py` | Sí |
+| get_participant_form_status | `ai/mcp/tools/participant_forms.py` | Sí |
+| get_public_business_rules | `ai/mcp/tools/__init__.py` | Sí |
+| get_reservation_public_summary | `ai/mcp/tools/reservation_draft.py` | Sí |
+| get_reservation_status_by_phone | `ai/mcp/tools/reservation_draft.py` | Sí |
+| guide_create_service_log | `ai/mcp/tools/operations.py` | Sí |
+| guide_report_incident | `ai/mcp/tools/operations.py` | Sí |
+| list_available_schedules | `ai/mcp/tools/schedules.py` | Sí |
+| list_experiences | `ai/mcp/tools/catalog.py` | Sí |
+| quote_experience | `ai/mcp/tools/quote.py` | Sí |
+| request_human_review | `ai/mcp/tools/__init__.py` | Sí |
+| schedule_birthday_automation | `ai/mcp/tools/automations.py` | Sí |
+| schedule_visit_anniversary_automation | `ai/mcp/tools/automations.py` | Sí |
+| send_post_service_message | `ai/mcp/tools/automations.py` | Sí |
+| suggest_alternative_dates | `ai/mcp/tools/schedules.py` | Sí |
 
 ## Notas de mantenimiento
 
 - Esta referencia debe actualizarse cuando se agregue/elimine/modifique un tool MCP.
 - La fuente de verdad contractual sigue siendo `tool_contracts.py` + `ToolPolicyEngine` + `ToolCallLogDocument`.
 - Para detalle narrativo del flujo conversacional, usar `docs/architecture/chatbot-whatsapp-v2.md`.
-- Los `CRITICAL_TOOLS` están definidos pero no implementados como tools reales — existen solo como bloqueo preventivo en `policy.py`.
+- Los nombres en `CRITICAL_TOOLS` (`confirm_reservation`, `cancel_reservation`, etc.) nunca se implementaron como tools — existen solo como bloqueo preventivo en `policy.py`. Las tools `admin_confirm_reservation` y `admin_cancel_reservation` son independientes y están funcionando para el canal admin.

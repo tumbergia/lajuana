@@ -14,6 +14,7 @@ from app.documents.conversation_session_document import ConversationSessionDocum
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.equine_document import EquineDocument
 from app.documents.experience_document import ExperienceDocument
+from app.documents.human_review_request_document import HumanReviewRequestDocument
 from app.documents.file_upload_document import FileUploadDocument
 from app.documents.in_app_notification_document import InAppNotificationDocument
 from app.documents.notification_outbox_document import NotificationOutboxDocument
@@ -45,6 +46,7 @@ __all__ = [
     "EmergencyContact",
     "EquineDocument",
     "ExperienceDocument",
+    "HumanReviewRequestDocument",
     "ParticipantDocument",
     "ParticipantFormLinkDocument",
     "PaymentProofDocument",
