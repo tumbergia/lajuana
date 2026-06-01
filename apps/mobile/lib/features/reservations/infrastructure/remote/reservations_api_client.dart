@@ -160,6 +160,20 @@ class ReservationsApiClient {
     return ReservationDetailDto.fromJson(data);
   }
 
+  /// Cancels a reservation. Returns the full updated reservation detail.
+  /// Online-only, admin-only.
+  Future<ReservationDetailDto> cancelReservation({
+    required String reservationId,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/reservations/$reservationId/cancel',
+      body: {},
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
   Future<http.Response> _authorizedRequest({
     required String method,
     required String path,

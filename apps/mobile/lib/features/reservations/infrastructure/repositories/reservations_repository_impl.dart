@@ -204,6 +204,21 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> cancelReservation({
+    required String reservationId,
+  }) async {
+    final dto = await _apiClient.cancelReservation(
+      reservationId: reservationId,
+    );
+    final detail = dtoToDetail(dto);
+
+    // Update reservation detail cache
+    await _cacheDetailPayload(dto);
+
+    return detail;
+  }
+
+  @override
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
     return _apiClient.downloadPaymentProofFile(paymentProofId);
   }

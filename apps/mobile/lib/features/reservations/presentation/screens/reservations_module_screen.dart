@@ -387,4 +387,11 @@ class _FallbackRepository implements ReservationsRepository {
   }) async {
     throw Exception('ReservationsModule no inyectado');
   }
+
+  @override
+  Future<ReservationDetail> cancelReservation({
+    required String reservationId,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
 }

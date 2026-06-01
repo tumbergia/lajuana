@@ -83,6 +83,13 @@ class _FakeSuccessRepository implements ReservationsRepository {
   }) async {
     return detail;
   }
+
+  @override
+  Future<ReservationDetail> cancelReservation({
+    required String reservationId,
+  }) async {
+    return detail;
+  }
 }
 
 /// A fake repository that always throws.
@@ -152,6 +159,13 @@ class _FakeErrorRepository implements ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> cancelReservation({
+    required String reservationId,
   }) async {
     throw Exception('Network error');
   }
@@ -228,6 +242,13 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> cancelReservation({
+    required String reservationId,
   }) async {
     throw Exception('Network error');
   }

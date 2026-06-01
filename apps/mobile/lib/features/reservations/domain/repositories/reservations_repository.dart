@@ -53,4 +53,10 @@ abstract class ReservationsRepository {
     required String reservationId,
     String? notes,
   });
+
+  /// Cancels a reservation (online-only, admin-only).
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetail> cancelReservation({
+    required String reservationId,
+  });
 }

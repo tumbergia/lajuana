@@ -70,6 +70,7 @@ Este documento lista todos los endpoints expuestos por `apps/api` según el esqu
 | POST | `/api/v1/reservations/{reservation_id}/confirm` | `confirmReservationById` | `ReservationConfirmSchema` | `200 ReservationResponseSchema` | `200, 400, 401, 403, 404, 409, 422` |
 | POST | `/api/v1/reservations/{reservation_id}/status` | `transitionReservationStatusById` | `ReservationStatusTransitionSchema` | `200 ReservationResponseSchema` | `200, 401, 403, 404, 409, 422` |
 | POST | `/api/v1/reservations/{reservation_id}/cancel` | `cancelReservationById` | `ReservationCancelSchema` | `200 ReservationResponseSchema` | `200, 400, 401, 403, 404, 409, 422` |
+| POST | `/api/v1/reservations/self-cancel` | `selfCancelReservation` | `ReservationSelfCancelSchema` | `200 ReservationResponseSchema` | `200, 404, 409, 422` |
 | POST | `/api/v1/reservations/{reservation_id}/payment-proofs` | `createPaymentProofForReservation` | `PaymentProofCreateSchema` | `201 PaymentProofResponseSchema` | `201, 400, 401, 403, 404, 422` |
 | POST | `/api/v1/reservations/{reservation_id}/participants` | `createParticipantForReservation` | `ParticipantCreateSchema` | `201 ParticipantResponseSchema` | `201, 400, 401, 403, 404, 422` |
 
