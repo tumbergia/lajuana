@@ -30,6 +30,7 @@ __pycache__/
 
 # Local AI guidance / scratch
 SKILLS.md
+token_telemetry.txt
 
 # Root guidance files that may exist locally in variants
 AGENTS.md

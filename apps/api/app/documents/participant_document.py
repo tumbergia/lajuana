@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 from app.common.collections import Collections
 from app.common.enums import ExperienceLevel
@@ -29,7 +29,7 @@ class ParticipantDocument(AuditDocument):
     city: str
     height_cm: Decimal
     weight_kg: Decimal
-    experience_level: ExperienceLevel
+    experience_level: ExperienceLevel | None = None
     dietary_restrictions: str | None = None
     blood_type: str | None = None
     eps_or_travel_insurance: str | None = None
@@ -43,6 +43,16 @@ class ParticipantDocument(AuditDocument):
     submitted_at: datetime | None = None
     source_form_link_id: PydanticObjectId | None = None
     is_completed: bool = False
+
+    @field_validator("height_cm", "weight_kg", mode="before")
+    @classmethod
+    def _parse_decimal128(cls, v: object) -> object:
+        """Convert MongoDB Decimal128 to Python Decimal to avoid pydantic parse error."""
+        if v is None:
+            return None
+        if hasattr(v, "to_decimal"):
+            return v.to_decimal()
+        return v
 
     class Settings:
         name = Collections.PARTICIPANTS

@@ -99,6 +99,7 @@ Una sola llamada a Gemini con `response_model=AssistantPlan`. El prompt (`prompt
 - Invocar `list_experiences` para consultas de catálogo ("qué ofrecen", "planes", "experiencias")
 - Invocar `check_experience_availability` cuando hay fecha + participantes + experiencia
 - Invocar `quote_experience` para cotizar precio según participantes
+- Invocar `create_reservation_draft` requiere además `holder_name` y `holder_email` del titular
 - Invocar `list_available_schedules` para consultar fechas disponibles
 - Invocar `suggest_alternative_dates` cuando no hay cupo o el usuario rechaza fechas mostradas
 - Evaluar nivel de riesgo: `low` / `medium` / `high` / `critical`
@@ -127,7 +128,7 @@ Tools de escritura limitada: `request_human_review`, `create_reservation_draft`,
 
 ### ResponseComposer (`ai/assistant/response_composer.py`)
 
-Una sola llamada Gemini con `response_model=ToolResultResponse`, temperatura 0.4, que recibe `user_message`, `plan` y `tool_output` para redactar una respuesta natural. No existe modo "cheap".
+Una sola llamada Gemini con `response_model=ToolResultResponse`, temperatura 0.6, que recibe `user_message`, `plan` y `tool_output` para redactar una respuesta natural y cálida. El prompt instruye terminar con una pregunta breve o invitación a continuar.
 
 ### MCP Tools (`ai/mcp/`)
 
@@ -268,3 +269,7 @@ ai/mcp/tools/        ← tools MCP (disponibilidad, catálogo)
 - Las herramientas críticas (`confirm_reservation`, etc.) están bloqueadas por `ToolPolicyEngine` y no se exponen al LLM.
 - Cada turno y tool call se loguea con trazabilidad completa (`trace_id`).
 - La sesión acumula slots entre turnos hasta completar los datos necesarios para una tool call.
+
+## Notificaciones deterministas
+
+El servicio `ReservationWhatsAppNotificationService` envía mensajes transaccionales (aprobación/rechazo de pago, logística, formulario) directamente vía `WhatsAppOutboundService`, sin pasar por el LLM. Los templates de notificación se seedean automáticamente al arrancar la aplicación (`seed_notification_templates` en `lifespan`) para evitar errores de "template not found".

@@ -35,7 +35,7 @@ async def compose_tool_response(
         system=TOOL_RESULT_RESPONSE_SYSTEM_PROMPT,
         user=str(payload),
         response_model=ToolResultResponse,
-        temperature=0.4,
+        temperature=0.6,
         telemetry_context={"channel": channel, "conversation_id": conversation_id},
     )
     result = llm_result.response

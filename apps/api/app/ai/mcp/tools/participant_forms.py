@@ -45,7 +45,7 @@ async def generate_participant_form_link(**kwargs: Any) -> dict[str, Any]:
 
         from app.core.config import settings
 
-        form_url = f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
+        form_url = f"{settings.participant_form_base_url}/?token={raw_token}"
 
         output = GenerateParticipantFormLinkOutput(
             generated=True,

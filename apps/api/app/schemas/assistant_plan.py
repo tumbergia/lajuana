@@ -25,6 +25,7 @@ class ToolArgs(BaseModel):
     participant_count: int | None = None
     holder_phone: str | None = None
     holder_name: str | None = None
+    holder_email: str | None = None
     code: str | None = None
     conversation_id: str | None = None
     quote_snapshot: dict | None = None

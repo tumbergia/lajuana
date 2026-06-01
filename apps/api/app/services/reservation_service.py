@@ -463,7 +463,7 @@ class ReservationService:
             from app.core.config import settings
 
             reservation.form_url = (
-                f"{settings.app_base_url}/formulario-participantes?t={raw_token}"
+                f"{settings.participant_form_base_url}/?token={raw_token}"
             )
             await reservation.save()
 
