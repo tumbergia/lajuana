@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.api.endpoints.admin_ask import router as admin_ask_router
 from app.api.endpoints.ask import router as ask_router
 from app.api.endpoints.assignments import router as assignments_router
 from app.api.endpoints.auth import router as auth_router
@@ -29,6 +30,7 @@ api_router.include_router(health_router)
 api_router.include_router(diagnostics_router)
 api_router.include_router(auth_router)
 api_router.include_router(ask_router)
+api_router.include_router(admin_ask_router)
 api_router.include_router(users_router)
 api_router.include_router(experiences_router)
 api_router.include_router(schedules_router)

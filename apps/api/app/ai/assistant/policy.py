@@ -11,6 +11,73 @@ class ToolPolicyDecision:
 
 
 class ToolPolicyEngine:
+    CLIENT_TOOLS: set[str] = {
+        "list_experiences",
+        "get_experience_detail",
+        "get_public_business_rules",
+        "check_experience_availability",
+        "list_available_schedules",
+        "quote_experience",
+        "suggest_alternative_dates",
+        "get_reservation_public_summary",
+        "get_reservation_status_by_phone",
+        "create_reservation_draft",
+        "attach_payment_proof_to_reservation",
+        "request_human_review",
+        "generate_participant_form_link",
+        "get_participant_form_status",
+        "send_post_service_message",
+    }
+    GUIDE_TOOLS: set[str] = {
+        "guide_create_service_log",
+        "guide_report_incident",
+        "admin_get_equine_workload",
+    }
+    ADMIN_TOOLS: set[str] = {
+        "admin_get_logistics_checklist",
+        "admin_close_service_execution",
+        "admin_add_equine_health_event",
+        "admin_update_equine_availability",
+        "admin_get_sales_summary",
+        "admin_get_reservation_funnel",
+        "admin_get_channel_performance",
+        "admin_get_occupancy_report",
+        "admin_get_equine_workload_report",
+        "admin_create_experience",
+        "admin_update_experience",
+        "admin_list_experiences_admin",
+        "admin_deactivate_experience",
+        "admin_list_users",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_deactivate_user",
+        "admin_create_schedule",
+        "admin_update_schedule",
+        "admin_list_schedules_admin",
+        "admin_deactivate_schedule",
+        "admin_get_system_config",
+        "admin_update_reservation_rules",
+        "admin_get_payment_instructions",
+        "schedule_birthday_automation",
+        "schedule_visit_anniversary_automation",
+        "admin_list_human_review_requests",
+        "admin_get_payment_proof",
+        "admin_approve_payment",
+        "admin_reject_payment_proof",
+        "admin_unverify_payment_proof",
+        "admin_unreject_payment_proof",
+        "admin_list_reservations",
+        "admin_get_reservation_detail",
+        "admin_confirm_reservation",
+        "admin_cancel_reservation",
+        "admin_list_equines",
+        "admin_get_equine",
+        "admin_create_equine",
+        "admin_update_equine",
+        "admin_deactivate_equine",
+        "admin_get_participant",
+        "admin_update_participant",
+    }
     READ_TOOLS = {
         "list_experiences",
         "get_experience_detail",
@@ -28,6 +95,18 @@ class ToolPolicyEngine:
         "admin_get_channel_performance",
         "admin_get_occupancy_report",
         "admin_get_equine_workload_report",
+        "admin_list_experiences_admin",
+        "admin_list_users",
+        "admin_list_schedules_admin",
+        "admin_get_system_config",
+        "admin_get_payment_instructions",
+        "admin_list_human_review_requests",
+        "admin_get_payment_proof",
+        "admin_list_reservations",
+        "admin_get_reservation_detail",
+        "admin_list_equines",
+        "admin_get_equine",
+        "admin_get_participant",
     }
     LIMITED_WRITE_TOOLS = {
         "request_human_review",
@@ -38,6 +117,10 @@ class ToolPolicyEngine:
         "send_post_service_message",
         "generate_participant_form_link",
         "get_participant_form_status",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_update_equine",
+        "admin_update_participant",
     }
     WRITE_TOOLS: set[str] = {
         "guide_report_incident",
@@ -45,6 +128,22 @@ class ToolPolicyEngine:
         "admin_update_equine_availability",
         "schedule_birthday_automation",
         "schedule_visit_anniversary_automation",
+        "admin_create_experience",
+        "admin_update_experience",
+        "admin_deactivate_experience",
+        "admin_deactivate_user",
+        "admin_create_schedule",
+        "admin_update_schedule",
+        "admin_deactivate_schedule",
+        "admin_update_reservation_rules",
+        "admin_approve_payment",
+        "admin_reject_payment_proof",
+        "admin_unverify_payment_proof",
+        "admin_unreject_payment_proof",
+        "admin_confirm_reservation",
+        "admin_cancel_reservation",
+        "admin_create_equine",
+        "admin_deactivate_equine",
     }
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
@@ -54,7 +153,24 @@ class ToolPolicyEngine:
         "block_slots",
     }
 
-    def validate(self, plan: AssistantPlan) -> ToolPolicyDecision:
+    CHANNEL_ROLE_MAP: dict[str, str] = {
+        "whatsapp": "client",
+        "test": "client",
+        "admin_api": "admin",
+        "mobile_api": "guide",
+    }
+
+    def _get_role_for_channel(self, channel: str) -> str:
+        return self.CHANNEL_ROLE_MAP.get(channel, "client")
+
+    def _get_allowed_tools_for_role(self, role: str) -> set[str]:
+        if role == "admin":
+            return self.CLIENT_TOOLS | self.GUIDE_TOOLS | self.ADMIN_TOOLS
+        if role == "guide":
+            return self.CLIENT_TOOLS | self.GUIDE_TOOLS
+        return self.CLIENT_TOOLS
+
+    def validate(self, plan: AssistantPlan, channel: str = "whatsapp") -> ToolPolicyDecision:
         if plan.confidence < settings.assistant_min_plan_confidence:
             return ToolPolicyDecision(
                 allowed=False,
@@ -68,6 +184,15 @@ class ToolPolicyEngine:
             return ToolPolicyDecision(
                 allowed=False,
                 reason="missing_tool_name",
+            )
+
+        role = self._get_role_for_channel(channel)
+        allowed = self._get_allowed_tools_for_role(role)
+
+        if plan.tool_name not in allowed:
+            return ToolPolicyDecision(
+                allowed=False,
+                reason="tool_not_allowed_for_channel",
             )
 
         if plan.tool_name in self.CRITICAL_TOOLS:

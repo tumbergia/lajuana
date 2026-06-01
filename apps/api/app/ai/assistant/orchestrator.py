@@ -274,7 +274,7 @@ class AssistantOrchestrator:
                     session.slot_values[key] = value
         session.pending_fields = []
 
-        policy_decision = self._policy.validate(plan)
+        policy_decision = self._policy.validate(plan, channel=request.channel)
         if not policy_decision.allowed:
             response = (
                 plan.response

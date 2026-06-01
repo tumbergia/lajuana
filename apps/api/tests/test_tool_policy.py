@@ -32,11 +32,26 @@ def test_blocks_critical_tool() -> None:
         user_goal="Confirmar reserva.",
         audit_summary="El usuario quiere confirmar una reserva.",
     )
-
     decision = ToolPolicyEngine().validate(plan)
 
     assert decision.allowed is False
-    assert decision.reason == "critical_tool_denied"
+    assert decision.reason == "tool_not_allowed_for_channel"
+
+
+def test_critical_tool_blocked_even_from_admin_api() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        confidence=0.95,
+        tool_name="confirm_reservation",
+        arguments={"reservation_id": "abc"},
+        risk_level=RiskLevel.LOW,
+        user_goal="Confirmar reserva.",
+        audit_summary="El usuario quiere confirmar una reserva.",
+    )
+    decision = ToolPolicyEngine().validate(plan, channel="admin_api")
+
+    assert decision.allowed is False
+    assert decision.reason == "tool_not_allowed_for_channel"
 
 
 def test_blocks_availability_without_date() -> None:
@@ -164,3 +179,109 @@ def test_attach_payment_proof_to_reservation_allowed() -> None:
     )
     decision = ToolPolicyEngine().validate(plan)
     assert decision.allowed
+
+
+def test_blocks_admin_tool_from_whatsapp() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        confidence=0.95,
+        tool_name="admin_get_sales_summary",
+        arguments={},
+        risk_level=RiskLevel.LOW,
+        user_goal="get sales summary",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan, channel="whatsapp")
+    assert decision.allowed is False
+    assert decision.reason == "tool_not_allowed_for_channel"
+
+
+def test_allows_admin_tool_from_admin_api() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        confidence=0.95,
+        tool_name="admin_get_sales_summary",
+        arguments={},
+        risk_level=RiskLevel.LOW,
+        user_goal="get sales summary",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan, channel="admin_api")
+    assert decision.allowed is True
+
+
+def test_allows_client_tool_from_whatsapp() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        confidence=0.95,
+        tool_name="check_experience_availability",
+        arguments={
+            "experience_query": "medio día",
+            "requested_date": "2026-06-20",
+            "participant_count": 4,
+        },
+        risk_level=RiskLevel.LOW,
+        user_goal="check availability",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan, channel="whatsapp")
+    assert decision.allowed is True
+
+
+def test_blocks_guide_tool_from_whatsapp() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        confidence=0.95,
+        tool_name="guide_create_service_log",
+        arguments={"reservation_id": "abc123", "event_type": "arrival"},
+        risk_level=RiskLevel.LOW,
+        user_goal="create service log",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan, channel="whatsapp")
+    assert decision.allowed is False
+    assert decision.reason == "tool_not_allowed_for_channel"
+
+
+def test_allows_guide_tool_from_mobile_api() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        confidence=0.95,
+        tool_name="guide_create_service_log",
+        arguments={"reservation_id": "abc123", "event_type": "arrival"},
+        risk_level=RiskLevel.LOW,
+        user_goal="create service log",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan, channel="mobile_api")
+    assert decision.allowed is True
+
+
+def test_admin_api_can_access_all_client_tools() -> None:
+    for tool in {"check_experience_availability", "quote_experience", "list_experiences"}:
+        plan = AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.95,
+            tool_name=tool,
+            arguments={"experience_query": "test", "requested_date": "2026-06-20", "participant_count": 4},
+            risk_level=RiskLevel.LOW,
+            user_goal="test",
+            audit_summary="test",
+        )
+        decision = ToolPolicyEngine().validate(plan, channel="admin_api")
+        assert decision.allowed is True, f"{tool} should be allowed from admin_api"
+
+
+def test_unknown_tool_blocked_regardless_of_channel() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        confidence=0.95,
+        tool_name="nonexistent_tool",
+        arguments={},
+        risk_level=RiskLevel.LOW,
+        user_goal="test",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan, channel="admin_api")
+    assert decision.allowed is False
+    assert decision.reason == "tool_not_allowed_for_channel"

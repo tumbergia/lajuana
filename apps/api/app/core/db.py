@@ -16,6 +16,7 @@ from app.documents import (
     ReservationAuditLogDocument,
     EquineDocument,
     ExperienceDocument,
+    HumanReviewRequestDocument,
     ParticipantDocument,
     ParticipantFormLinkDocument,
     PaymentProofDocument,
@@ -80,6 +81,7 @@ async def init_db() -> None:
             WhatsAppInboundEventDocument,
             MessageBufferDocument,
             OutboundMessageDocument,
+            HumanReviewRequestDocument,
         ],
     )
 

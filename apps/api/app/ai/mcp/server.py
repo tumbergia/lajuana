@@ -32,6 +32,13 @@ from app.ai.mcp.tools import (
     suggest_alternative_dates,
 )
 
+# NOTE: This standalone MCP server exposes ALL registered tools without any
+# authentication or channel-based filtering. Admin tools (admin_*, guide_*)
+# are available here. For production use, consider splitting this into:
+#   - client_mcp.py: only client-safe tools (no admin_/guide_ prefix)
+#   - admin_mcp.py: full tool set behind proper auth
+# The FastAPI endpoint /admin/ask uses the orchestrator with channel="admin_api"
+# and policy-based tool filtering, which is the recommended path for admin access.
 mcp = FastMCP("lajuana-mcp")
 
 mcp.tool(
