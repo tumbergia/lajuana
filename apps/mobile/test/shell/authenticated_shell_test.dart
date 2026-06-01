@@ -21,8 +21,20 @@ import 'package:mobile/features/auth/infrastructure/connectivity/network_models.
 import 'package:mobile/features/auth/infrastructure/connectivity/network_status_resolver.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/equines/domain/models/equine.dart';
+import 'package:mobile/features/equines/domain/repositories/equine_repository.dart';
 
 import '../auth/test_fakes.dart';
+
+/// Stub mínimo para [EquineRepository] usado en tests del shell.
+class _FakeEquineRepository implements EquineRepository {
+  @override
+  Future<List<Equine>> listEquines({String? operationalStatus}) async => [];
+
+  @override
+  Future<Equine> getEquineById(String equineId) async =>
+      throw UnimplementedError('not used in shell test');
+}
 
 void main() {
   AuthController buildController(
@@ -94,6 +106,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          equineRepository: _FakeEquineRepository(),
           onCallRequested: (_) async => true,
         ),
       ),
@@ -124,6 +137,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          equineRepository: _FakeEquineRepository(),
           onCallRequested: (phone) async {
             calledPhone = phone;
             return true;
@@ -185,6 +199,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          equineRepository: _FakeEquineRepository(),
           onCallRequested: (_) async => true,
         ),
       ),
@@ -240,6 +255,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          equineRepository: _FakeEquineRepository(),
           onCallRequested: (_) async => true,
         ),
       ),
@@ -268,6 +284,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          equineRepository: _FakeEquineRepository(),
           onCallRequested: (_) async => true,
         ),
       ),

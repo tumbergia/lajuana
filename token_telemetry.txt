@@ -1,0 +1,20 @@
+[2026-05-26T23:57:39.024162+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=3999 completion_tokens=70 total_tokens=4133 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-26T23:59:23.183164+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=4071 completion_tokens=141 total_tokens=4447 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-26T23:59:29.758477+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=676 completion_tokens=73 total_tokens=1228 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T00:00:08.245012+00:00] model=gemini-3.1-flash-lite api_key=****CLSc prompt_tokens=4197 completion_tokens=198 total_tokens=4395 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T00:00:13.533330+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=655 completion_tokens=72 total_tokens=1025 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T00:01:44.186405+00:00] model=gemini-3.1-flash-lite api_key=****CLSc prompt_tokens=4240 completion_tokens=255 total_tokens=4495 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T00:02:23.608638+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=4387 completion_tokens=164 total_tokens=5212 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T00:56:03.938546+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=4208 completion_tokens=232 total_tokens=5232 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T00:56:09.350588+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=711 completion_tokens=99 total_tokens=1253 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T00:57:40.075171+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=4008 completion_tokens=113 total_tokens=4270 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T00:59:22.771506+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=4099 completion_tokens=175 total_tokens=4426 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T00:59:28.390536+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=676 completion_tokens=94 total_tokens=1309 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T01:00:01.756990+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=4228 completion_tokens=211 total_tokens=5134 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-05-27T01:00:39.390125+00:00] model=gemini-2.5-flash api_key=****CLSc prompt_tokens=4373 completion_tokens=270 total_tokens=5038 channel=whatsapp conversation_id=whatsapp:+573138659839
+[2026-06-01T11:59:36.385822+00:00] model=model-b api_key=****key2 prompt_tokens=10 completion_tokens=5 total_tokens=15
+[2026-06-01T12:04:36.476935+00:00] model=model-b api_key=****key2 prompt_tokens=10 completion_tokens=5 total_tokens=15
+[2026-06-01T12:04:52.507041+00:00] model=model-b api_key=****key2 prompt_tokens=10 completion_tokens=5 total_tokens=15
+[2026-06-01T12:44:02.445137+00:00] model=model-b api_key=****key2 prompt_tokens=10 completion_tokens=5 total_tokens=15
+[2026-06-01T12:49:44.105960+00:00] model=model-b api_key=****key2 prompt_tokens=10 completion_tokens=5 total_tokens=15
+[2026-06-01T13:02:06.087907+00:00] model=model-b api_key=****key2 prompt_tokens=10 completion_tokens=5 total_tokens=15

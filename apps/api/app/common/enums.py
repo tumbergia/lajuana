@@ -1,6 +1,25 @@
 from enum import StrEnum
 
 
+class EquineSpecies(StrEnum):
+    MULE = "mule"
+    DONKEY = "donkey"
+    HORSE = "horse"
+    UNKNOWN = "unknown"
+
+
+class EquineSex(StrEnum):
+    FEMALE = "female"
+    MALE = "male"
+    UNKNOWN = "unknown"
+
+
+class EquineLocationStatus(StrEnum):
+    LA_JUANA = "la_juana"
+    OTHER = "other"
+    UNKNOWN = "unknown"
+
+
 class UserRole(StrEnum):
     ADMIN = "admin"
     GUIDE = "guide"
@@ -67,6 +86,25 @@ class AssignmentPriority(StrEnum):
     STANDARD = "standard"
     CHILD_SAFETY = "child_safety"
     SENIOR_SAFETY = "senior_safety"
+
+
+class EquineOperationalStatus(StrEnum):
+    AVAILABLE = "available"
+    RESTING = "resting"
+    IN_SERVICE = "in_service"
+    INJURED = "injured"
+    RETIRED = "retired"
+    UNAVAILABLE = "unavailable"
+    RESTRICTED = "restricted"
+
+
+class EquineExperienceFit(StrEnum):
+    BEGINNER = "beginner"
+    INTERMEDIATE = "intermediate"
+    ADVANCED = "advanced"
+    ALL = "all"
+    STAFF_ONLY = "staff_only"
+    NOT_ASSIGNABLE = "not_assignable"
 
 
 class ParticipantFormLinkStatus(StrEnum):

@@ -1,0 +1,134 @@
+import 'dart:async';
+
+import '../../domain/models/equine.dart';
+import '../../domain/repositories/equine_repository.dart';
+import '../../presentation/models/equine_view_models.dart';
+import '../local/equine_local_records.dart';
+import '../local/equines_database.dart';
+import '../mappers/equine_mapper.dart';
+import '../remote/equine_dtos.dart';
+import '../remote/equines_api_client.dart';
+
+/// Implementación del repositorio de equinos con cache network-first.
+/// Sigue el mismo patrón que [ReservationsRepositoryImpl].
+class EquineRepositoryImpl implements EquineRepository {
+  EquineRepositoryImpl({
+    required EquinesApiClient apiClient,
+    required EquinesDatabase database,
+  })  : _api = apiClient,
+        _db = database;
+
+  final EquinesApiClient _api;
+  final EquinesDatabase _db;
+
+  @override
+  Future<List<Equine>> listEquines({String? operationalStatus}) async {
+    try {
+      final dtos = await _api.listEquines(
+        operationalStatus: operationalStatus,
+      );
+      final domains = dtos.map(EquineMapper.dtoToDomain).toList(growable: false);
+
+      // Cachear en background (no bloquear respuesta).
+      _cacheList(domains).ignore();
+
+      return domains;
+    } catch (_) {
+      // Fallback a cache local si API falla.
+      final cached = await _db.getAll();
+      if (cached.isEmpty) rethrow;
+      final records =
+          cached.map(EquineLocalRecord.fromMap).toList(growable: false);
+      return records
+          .map((r) => EquineMapper.dtoToDomain(_recordToDto(r)))
+          .toList(growable: false);
+    }
+  }
+
+  @override
+  Future<Equine> getEquineById(String equineId) async {
+    try {
+      final dto = await _api.getEquineById(equineId);
+      final domain = EquineMapper.dtoToDomain(dto);
+
+      // Cachear detalle.
+      _cacheDetail(equineId, domain).ignore();
+
+      return domain;
+    } catch (_) {
+      final cached = await _db.getById(equineId);
+      if (cached == null) rethrow;
+      final record = EquineLocalRecord.fromMap(cached);
+      return EquineMapper.dtoToDomain(_recordToDto(record));
+    }
+  }
+
+  Future<void> _cacheList(List<Equine> equines) async {
+    final records = equines
+        .map((e) => EquineMapper.domainToDetailRecord(e))
+        .map(_detailToLocalMap)
+        .toList(growable: false);
+    await _db.upsertAll(records);
+  }
+
+  Future<void> _cacheDetail(String id, Equine equine) async {
+    final map = _detailToLocalMap(EquineMapper.domainToDetailRecord(equine));
+    await _db.upsertAll([map]);
+  }
+
+  EquineDto _recordToDto(EquineLocalRecord record) {
+    return EquineDto(
+      id: record.id,
+      name: record.name,
+      approximateBirthDate: record.approximateBirthDate,
+      approximateAgeYears: record.approximateAgeYears,
+      birthDateIsApproximate: record.birthDateIsApproximate == 1,
+      weightKg: record.weightKg,
+      sex: record.sex,
+      breed: record.breed,
+      gait: record.gait,
+      isAvailable: record.isAvailable == 1,
+      availabilityNotes: record.availabilityNotes,
+      operationalStatus: record.operationalStatus,
+      maxRiderWeightKg: record.maxRiderWeightKg,
+      experienceFit: record.experienceFit,
+      restUntil: record.restUntil,
+      lastServiceAt: record.lastServiceAt,
+      workloadLast7Days: record.workloadLast7Days,
+      availabilityReasons: record.availabilityReasons,
+      version: record.version,
+      updatedAt: record.updatedAt,
+    );
+  }
+
+  Map<String, Object?> _detailToLocalMap(EquineDetailRecord detail) {
+    return {
+      'id': detail.id,
+      'name': detail.name,
+      'approximate_birth_date': detail.approximateBirthDate,
+      'approximate_age_years': detail.approximateAgeYears,
+      'birth_date_is_approximate': detail.birthDateIsApproximate ? 1 : 0,
+      'weight_kg': detail.weightKg,
+      'sex': detail.sex,
+      'breed': detail.breed,
+      'gait': detail.gait,
+      'is_available': detail.isAvailable ? 1 : 0,
+      'availability_notes': detail.availabilityNotes,
+      'operational_status': detail.operationalStatus.name,
+      'max_rider_weight_kg': detail.maxRiderWeightKg,
+      'experience_fit': detail.experienceFit?.name,
+      'rest_until': detail.restUntil?.toIso8601String(),
+      'last_service_at': detail.lastServiceAt?.toIso8601String(),
+      'workload_last_7_days': detail.workloadLast7Days,
+      'availability_reasons': detail.availabilityReasons,
+      'version': 1,
+      'updated_at': detail.updatedAt?.toIso8601String(),
+    };
+  }
+}
+
+extension _FutureIgnore<T> on Future<T> {
+  void ignore() {
+    unawaited(this);
+  }
+}
