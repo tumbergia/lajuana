@@ -6,7 +6,6 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_centered_loader.dart';
 import '../../../../app/widgets/app_entity_row_card.dart';
 import '../../../../app/widgets/app_section_header.dart';
 import '../../../../app/widgets/app_status_banner.dart';
@@ -294,23 +293,6 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen> {
 
   Widget _buildSelectedEquineSection() {
     final detail = _controller.selectedDetail;
-    final state = _controller.detailLoadState;
-
-    debugPrint('EquineDetailSection: state=$state detail=${detail?.id}');
-
-    if (state == EquinesLoadState.loading) {
-      return const AppCenteredLoader();
-    }
-    if (state == EquinesLoadState.error) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: AppStatusBanner(
-          title: 'Error al cargar detalle',
-          message: _controller.detailErrorMessage,
-          tone: AppStatusBannerTone.danger,
-        ),
-      );
-    }
     if (detail == null) {
       return const SizedBox.shrink();
     }

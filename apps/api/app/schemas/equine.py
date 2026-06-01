@@ -180,12 +180,18 @@ class EquineResponseSchema(AuditMetadataSchema):
 
 
 class EquineListItemSchema(AuditMetadataSchema):
-    """Versión compacta para listados — omite genealogía, fechas, trazabilidad."""
+    """Versión compacta para listados — omite genealogía, fechas de importación, trazabilidad.
+
+    Incluye todos los campos necesarios para las cards de listado y el perfil
+    del equino seleccionado, eliminando la necesidad de un request extra por detalle.
+    """
 
     id: str
     name: str
     inventory_number: int | None
     species: EquineSpecies
+    location_status: EquineLocationStatus = EquineLocationStatus.LA_JUANA
+    location_notes: str | None = None
     breed: str | None
     sex: EquineSex
     coat_color: str | None
@@ -195,11 +201,14 @@ class EquineListItemSchema(AuditMetadataSchema):
     is_active: bool
     is_available: bool
     operational_status: EquineOperationalStatus
+    approximate_age_years: int | None = None
     max_rider_weight_kg: Decimal | None
     experience_fit: EquineExperienceFit | None
     image_base64: str | None = None
     last_service_at: datetime | None = None
     workload_last_7_days: int
+    rest_until: datetime | None = None
+    availability_reasons: str | None = None
 
 
 class EquineEventType(str, Enum):

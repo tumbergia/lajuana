@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../domain/models/equine.dart';
 import '../../../../app/widgets/app_badge.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../../infrastructure/mappers/equine_mapper.dart';
@@ -21,10 +22,11 @@ class EquinesController extends ChangeNotifier {
   List<EquineRecord> _records = const [];
   List<EquineRecord> _allRecords = const [];
 
+  /// Domain objects cacheados para derivar detail sin request extra.
+  List<Equine> _allEquines = const [];
+
   String? _selectedEquineId;
   EquineDetailRecord? _selectedDetail;
-  EquinesLoadState _detailLoadState = EquinesLoadState.idle;
-  String _detailErrorMessage = '';
 
   EquinesSubroute get subroute => _subroute;
   EquinesLoadState get loadState => _loadState;
@@ -32,8 +34,10 @@ class EquinesController extends ChangeNotifier {
   List<EquineRecord> get records => _records;
   String? get selectedEquineId => _selectedEquineId;
   EquineDetailRecord? get selectedDetail => _selectedDetail;
-  EquinesLoadState get detailLoadState => _detailLoadState;
-  String get detailErrorMessage => _detailErrorMessage;
+
+  /// Siempre success porque el detail se deriva de memoria (no hay request).
+  EquinesLoadState get detailLoadState => EquinesLoadState.success;
+  String get detailErrorMessage => '';
 
   void selectSubrouteByIndex(int index) {
     final next = EquinesSubroute.values[index];
@@ -53,24 +57,23 @@ class EquinesController extends ChangeNotifier {
   void selectEquine(String id) {
     if (_selectedEquineId == id) return;
     _selectedEquineId = id;
-    _selectedDetail = null;
-    _detailLoadState = EquinesLoadState.loading;
+    _selectedDetail = _buildDetailFromMemory(id);
     notifyListeners();
-    loadSelectedDetail();
   }
 
-  Future<void> loadSelectedDetail() async {
-    if (_selectedEquineId == null) return;
-    _detailLoadState = EquinesLoadState.loading;
-    notifyListeners();
+  EquineDetailRecord? _buildDetailFromMemory(String id) {
     try {
-      final equine = await _repository.getEquineById(_selectedEquineId!);
-      _selectedDetail = EquineMapper.domainToDetailRecord(equine);
-      _detailLoadState = EquinesLoadState.success;
-    } catch (e) {
-      _detailErrorMessage = e.toString();
-      _detailLoadState = EquinesLoadState.error;
+      final equine = _allEquines.firstWhere((e) => e.id == id);
+      return EquineMapper.domainToDetailRecord(equine);
+    } catch (_) {
+      return null;
     }
+  }
+
+  /// Expone buildDetailFromMemory para uso externo (ej. refresh post-update).
+  void refreshSelectedDetail() {
+    if (_selectedEquineId == null) return;
+    _selectedDetail = _buildDetailFromMemory(_selectedEquineId!);
     notifyListeners();
   }
 
@@ -82,29 +85,28 @@ class EquinesController extends ChangeNotifier {
     try {
       final equines = await _repository.listEquines();
       if (equines.isEmpty) {
+        _allEquines = const [];
         _allRecords = const [];
         _records = const [];
         _selectedEquineId = null;
         _selectedDetail = null;
-        _detailLoadState = EquinesLoadState.idle;
         _loadState = EquinesLoadState.empty;
       } else {
+        _allEquines = equines;
         _allRecords =
             equines.map(EquineMapper.domainToRecord).toList(growable: false);
         _applyFilter();
         _loadState = EquinesLoadState.success;
-        // Auto-select first equine after load.
+        // Auto-select first equine — detail se deriva de memoria, sin request.
         if (_selectedEquineId == null) {
           _selectedEquineId = _records.first.id;
+          _selectedDetail = _buildDetailFromMemory(_selectedEquineId!);
         }
-        // Trigger detail load for selected equine.
-        loadSelectedDetail();
       }
     } catch (e) {
       _errorMessage = e.toString();
       _selectedEquineId = null;
       _selectedDetail = null;
-      _detailLoadState = EquinesLoadState.idle;
       _loadState = EquinesLoadState.error;
     }
     notifyListeners();
@@ -113,7 +115,7 @@ class EquinesController extends ChangeNotifier {
   Future<bool> createEquine(Map<String, dynamic> data) async {
     try {
       await _repository.createEquine(data);
-      await loadEquines(); // reload list
+      await loadEquines(); // reload list (incluye detail desde memoria)
       return true;
     } catch (e) {
       _errorMessage = e.toString();
@@ -126,15 +128,11 @@ class EquinesController extends ChangeNotifier {
   Future<bool> updateEquine(String equineId, Map<String, dynamic> data) async {
     try {
       await _repository.updateEquine(equineId, data);
-      // Reload detail
-      if (_selectedEquineId == equineId) {
-        await loadSelectedDetail();
-      }
-      await loadEquines(); // refresh list
+      await loadEquines(); // refresh list (incluye detail desde memoria)
       return true;
     } catch (e) {
-      _detailErrorMessage = e.toString();
-      _detailLoadState = EquinesLoadState.error;
+      _errorMessage = e.toString();
+      _loadState = EquinesLoadState.error;
       notifyListeners();
       return false;
     }
@@ -145,7 +143,6 @@ class EquinesController extends ChangeNotifier {
       case EquinesSubroute.resumen:
         _records = _allRecords;
       case EquinesSubroute.historial:
-        // Historial: timeline — filtramos solo los que tienen lastServiceAt.
         _records = _allRecords;
       case EquinesSubroute.disponibilidad:
         _records = _allRecords
