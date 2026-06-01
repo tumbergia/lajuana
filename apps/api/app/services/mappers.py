@@ -37,6 +37,7 @@ def document_to_schema(
     schema_cls: type,
     *,
     scalar_fields: dict[str, str] | None = None,
+    optional_scalar_fields: dict[str, str] | None = None,
     exclude_fields: set[str] | None = None,
 ) -> object:
     """Build a Pydantic schema from a Beanie Document via model_dump.
@@ -46,7 +47,8 @@ def document_to_schema(
         schema = document_to_schema(
             equine_doc,
             EquineResponseSchema,
-            scalar_fields={"id": "id"},  # ObjectId → str
+            scalar_fields={"id": "id"},       # ObjectId → str (required)
+            optional_scalar_fields={"saddle_id": "saddle_id"},  # ObjectId → str | None
             exclude_fields={"revision_id"},
         )
     """
@@ -57,6 +59,10 @@ def document_to_schema(
     data = model_dump(exclude=exclude_fields or {"revision_id"})
     if scalar_fields:
         for target, source in scalar_fields.items():
+            val = getattr(doc, source, None)
+            data[target] = str(val) if val is not None else None
+    if optional_scalar_fields:
+        for target, source in optional_scalar_fields.items():
             val = getattr(doc, source, None)
             data[target] = str(val) if val is not None else None
     return schema_cls(**data)
@@ -314,71 +320,49 @@ def saddle_to_response(doc: SaddleDocument) -> SaddleResponseSchema:
 
 
 def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseSchema:
-    return AssignmentResponseSchema(
-        id=str(doc.id),
-        reservation_id=str(doc.reservation_id),
-        participant_id=str(doc.participant_id),
-        equine_id=str(doc.equine_id),
-        saddle_id=str(doc.saddle_id) if doc.saddle_id else None,
-        priority=doc.priority,
-        assigned_manually=doc.assigned_manually,
-        notes=doc.notes,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
-        version=doc.version,
+    return document_to_schema(
+        doc, AssignmentResponseSchema,
+        scalar_fields={
+            "id": "id",
+            "reservation_id": "reservation_id",
+            "participant_id": "participant_id",
+            "equine_id": "equine_id",
+        },
+        optional_scalar_fields={"saddle_id": "saddle_id"},
+        exclude_fields={"revision_id"},
     )
 
 
 def service_log_to_response(doc: ServiceLogDocument) -> ServiceLogResponseSchema:
-    return ServiceLogResponseSchema(
-        id=str(doc.id),
-        reservation_id=str(doc.reservation_id),
-        event_type=doc.event_type,
-        happened_at=doc.happened_at,
-        checkpoint_name=doc.checkpoint_name,
-        notes=doc.notes,
-        related_participant_id=(
-            str(doc.related_participant_id) if doc.related_participant_id else None
-        ),
-        related_equine_id=str(doc.related_equine_id) if doc.related_equine_id else None,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
-        version=doc.version,
+    return document_to_schema(
+        doc, ServiceLogResponseSchema,
+        scalar_fields={
+            "id": "id",
+            "reservation_id": "reservation_id",
+        },
+        optional_scalar_fields={
+            "related_participant_id": "related_participant_id",
+            "related_equine_id": "related_equine_id",
+        },
+        exclude_fields={"revision_id"},
     )
 
 
 def provider_to_response(doc: ProviderDocument) -> ProviderResponseSchema:
-    return ProviderResponseSchema(
-        id=str(doc.id),
-        name=doc.name,
-        provider_type=doc.provider_type,
-        contact_name=doc.contact_name,
-        phone=doc.phone,
-        email=doc.email,
-        location=doc.location,
-        capacity_notes=doc.capacity_notes,
-        rate_notes=doc.rate_notes,
-        is_active=doc.is_active,
-        version=doc.version,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
+    return document_to_schema(
+        doc, ProviderResponseSchema,
+        scalar_fields={"id": "id"},
+        exclude_fields={"revision_id"},
     )
 
 
 def policy_to_response(doc: PolicyDocument) -> PolicyResponseSchema:
-    return PolicyResponseSchema(
-        id=str(doc.id),
-        reservation_id=str(doc.reservation_id),
-        provider_id=str(doc.provider_id) if doc.provider_id else None,
-        policy_number=doc.policy_number,
-        issued_at=doc.issued_at,
-        expires_at=doc.expires_at,
-        notes=doc.notes,
-        version=doc.version,
-        created_at=doc.created_at,
-        updated_at=doc.updated_at,
-        deleted_at=doc.deleted_at,
+    return document_to_schema(
+        doc, PolicyResponseSchema,
+        scalar_fields={
+            "id": "id",
+            "reservation_id": "reservation_id",
+        },
+        optional_scalar_fields={"provider_id": "provider_id"},
+        exclude_fields={"revision_id"},
     )
