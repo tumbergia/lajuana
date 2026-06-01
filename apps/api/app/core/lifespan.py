@@ -8,6 +8,7 @@ from app.conversations.services.conversation_scheduler import (
     ConversationScheduler,
 )
 from app.core.db import close_db, init_db
+from app.core.di import Container
 from app.core.logging import logger, reconfigure_logger
 from app.jobs.expire_reservation_drafts import ReservationDraftExpireWorker
 from app.jobs.notification_outbox_worker import NotificationOutboxWorker
@@ -26,6 +27,8 @@ media_worker = WhatsAppMediaWorker()
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     reconfigure_logger()
     logger.info("Application startup")
+    Container.init()
+    logger.info("[lifespan] DI container initialized")
     await init_db()
 
     try:

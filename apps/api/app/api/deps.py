@@ -1,4 +1,4 @@
-"""Dependencias de autenticacion y autorizacion basadas en permisos."""
+"""Dependencias de autenticacion, autorizacion e inyeccion de servicios."""
 
 from typing import Annotated
 
@@ -8,6 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.common.enums import ROLE_PERMISSIONS, Permission
 from app.common.labels import ErrorCode
+from app.core.di import Container
 from app.core.errors import ApiError
 from app.core.security import decode_token
 from app.documents import UserDocument
@@ -80,3 +81,74 @@ def require_permissions(*required: Permission):
         return current_user
 
     return dependency
+
+
+# ── Service injection dependencies ──────────────────────────────────
+
+
+def get_reservation_service() -> object:
+    return Container.get_instance().reservation_service
+
+
+def get_notification_service() -> object:
+    return Container.get_instance().notification_service
+
+
+def get_booking_service() -> object:
+    return Container.get_instance().booking_service
+
+
+def get_payment_proof_service() -> object:
+    return Container.get_instance().payment_proof_service
+
+
+def get_config_service() -> object:
+    return Container.get_instance().config_service
+
+
+def get_auth_service() -> object:
+    return Container.get_instance().auth_service
+
+
+def get_user_service() -> object:
+    return Container.get_instance().user_service
+
+
+def get_experience_service() -> object:
+    return Container.get_instance().experience_service
+
+
+def get_equine_service() -> object:
+    return Container.get_instance().equine_service
+
+
+def get_saddle_service() -> object:
+    return Container.get_instance().saddle_service
+
+
+def get_schedule_service() -> object:
+    return Container.get_instance().schedule_service
+
+
+def get_participant_service() -> object:
+    return Container.get_instance().participant_service
+
+
+def get_file_upload_service() -> object:
+    return Container.get_instance().file_upload_service
+
+
+def get_sync_service() -> object:
+    return Container.get_instance().sync_service
+
+
+def get_policy_service() -> object:
+    return Container.get_instance().policy_service
+
+
+def get_provider_service() -> object:
+    return Container.get_instance().provider_service
+
+
+def get_reservation_draft_service() -> object:
+    return Container.get_instance().reservation_draft_service

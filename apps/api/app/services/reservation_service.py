@@ -71,10 +71,15 @@ def _today() -> date:
 class ReservationService:
     """Orquesta reglas críticas de confirmación/cancelación de reservas."""
 
-    def __init__(self) -> None:
-        self.config_service = ConfigService()
-        self.notification_service = NotificationService()
-        self.form_link_service = ParticipantFormLinkService()
+    def __init__(
+        self,
+        notification_service: NotificationService | None = None,
+        form_link_service: ParticipantFormLinkService | None = None,
+        config_service: ConfigService | None = None,
+    ) -> None:
+        self.config_service = config_service or ConfigService()
+        self.notification_service = notification_service or NotificationService()
+        self.form_link_service = form_link_service or ParticipantFormLinkService()
 
     @staticmethod
     def _is_blocking_status(status: ReservationStatus) -> bool:
