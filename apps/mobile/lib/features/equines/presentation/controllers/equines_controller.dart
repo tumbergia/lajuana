@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/models/equine.dart';
-import '../../domain/models/equine_operational_status.dart';
-import '../../../../app/widgets/app_badge.dart';
-import '../../domain/repositories/equine_repository.dart';
-import '../../infrastructure/mappers/equine_mapper.dart';
-import '../models/equine_view_models.dart';
+import 'package:mobile_domain/src/equines/equine.dart';
+import 'package:mobile_domain/src/equines/equine_operational_status.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_domain/src/equines/equine_repository.dart';
+import 'package:mobile/features/equines/infrastructure/mappers/equine_mapper.dart';
+import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
 
 enum EquinesSubroute { resumen, historial, disponibilidad, cuidado }
 

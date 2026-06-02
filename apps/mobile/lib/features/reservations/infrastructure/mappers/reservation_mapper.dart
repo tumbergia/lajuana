@@ -1,13 +1,13 @@
-import '../../../../app/widgets/app_badge.dart';
-import '../../domain/models/reservation_detail.dart';
-import '../../domain/models/reservation_list_item.dart';
-import '../../domain/models/reservation_participant_detail.dart';
-import '../../domain/models/reservation_payment_proof_detail.dart';
-import '../../domain/models/reservation_payment_summary.dart';
-import '../../domain/models/reservation_status.dart';
-import '../../domain/models/reservation_timeline_event.dart';
-import '../../presentation/models/reservation_view_models.dart';
-import '../remote/reservation_dtos.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
+import 'package:mobile_domain/src/reservations/reservation_participant_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_payment_summary.dart';
+import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_event.dart';
+import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
+import 'package:mobile/features/reservations/infrastructure/remote/reservation_dtos.dart';
 
 /// Maps a DTO participant to a domain participant detail.
 ReservationParticipantDetail _participantDtoToDetail(

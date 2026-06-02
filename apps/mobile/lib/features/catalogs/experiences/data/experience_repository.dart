@@ -1,5 +1,5 @@
-import '../../data/catalogs_repository.dart';
-import '../domain/experience.dart';
+import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
+import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 
 class ExperienceRepository {
   const ExperienceRepository(this._catalogsRepository);

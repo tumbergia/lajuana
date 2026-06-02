@@ -1,25 +1,25 @@
-import '../features/auth/domain/auth_enums.dart';
-import '../features/auth/infrastructure/connectivity/backend_reachability_service.dart';
-import '../features/auth/infrastructure/connectivity/connectivity_service.dart';
-import '../features/auth/infrastructure/connectivity/network_status_resolver.dart';
-import '../features/auth/infrastructure/local/auth_database.dart';
-import '../features/auth/infrastructure/local/session_local_data_source.dart';
-import '../features/auth/infrastructure/local/user_local_data_source.dart';
-import '../features/auth/infrastructure/remote/auth_api_client.dart';
-import '../features/auth/infrastructure/repositories/auth_repository_impl.dart';
-import '../features/auth/infrastructure/token_storage.dart';
-import '../features/auth/presentation/auth_controller.dart';
-import '../features/assignments/assignments_module.dart';
-import '../features/catalogs/catalogs_module.dart';
-import '../features/catalogs/data/catalogs_database.dart';
-import '../features/catalogs/data/catalogs_repository.dart';
-import '../features/catalogs/data/catalogs_sync_api.dart';
-import '../features/equines/domain/repositories/equine_repository.dart';
-import '../features/equines/infrastructure/local/equines_database.dart';
-import '../features/equines/infrastructure/remote/equines_api_client.dart';
-import '../features/equines/infrastructure/repositories/equine_repository_impl.dart';
-import '../features/reservations/reservations_module.dart';
-import '../features/saddles/saddles_module.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/backend_reachability_service.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/connectivity_service.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_status_resolver.dart';
+import 'package:mobile/features/auth/infrastructure/local/auth_database.dart';
+import 'package:mobile/features/auth/infrastructure/local/session_local_data_source.dart';
+import 'package:mobile/features/auth/infrastructure/local/user_local_data_source.dart';
+import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
+import 'package:mobile/features/auth/infrastructure/repositories/auth_repository_impl.dart';
+import 'package:mobile/features/auth/infrastructure/token_storage.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/assignments/assignments_module.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/data/catalogs_database.dart';
+import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
+import 'package:mobile/features/catalogs/data/catalogs_sync_api.dart';
+import 'package:mobile_domain/src/equines/equine_repository.dart';
+import 'package:mobile/features/equines/infrastructure/local/equines_database.dart';
+import 'package:mobile/features/equines/infrastructure/remote/equines_api_client.dart';
+import 'package:mobile/features/equines/infrastructure/repositories/equine_repository_impl.dart';
+import 'package:mobile/features/reservations/reservations_module.dart';
+import 'package:mobile/features/saddles/saddles_module.dart';
 
 /// Value object holding all initialized application dependencies.
 class AppDependencies {

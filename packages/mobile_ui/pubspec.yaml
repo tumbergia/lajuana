@@ -11,6 +11,9 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
+  auto_size_text: ^3.0.0
+  flutter_svg: ^2.0.10+1
+  material_symbols_icons: ^4.2928.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

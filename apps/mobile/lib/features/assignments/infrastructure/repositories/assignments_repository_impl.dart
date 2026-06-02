@@ -1,8 +1,8 @@
-import '../../domain/models/assignment.dart';
-import '../../domain/models/assignment_board.dart';
-import '../../domain/repositories/assignments_repository.dart';
-import '../local/assignments_local_data_source.dart';
-import '../remote/assignments_api_client.dart';
+import 'package:mobile_domain/src/assignments/assignment.dart';
+import 'package:mobile_domain/src/assignments/assignment_board.dart';
+import 'package:mobile_domain/src/assignments/assignments_repository.dart';
+import 'package:mobile/features/assignments/infrastructure/local/assignments_local_data_source.dart';
+import 'package:mobile/features/assignments/infrastructure/remote/assignments_api_client.dart';
 
 /// Implementation of [AssignmentsRepository] backed by [AssignmentsApiClient]
 /// with local cache fallback for reads.

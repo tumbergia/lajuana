@@ -1,12 +1,1 @@
-import 'package:flutter/material.dart';
-
-class AppCenteredLoader extends StatelessWidget {
-  const AppCenteredLoader({super.key, this.strokeWidth = 2.8});
-
-  final double strokeWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: CircularProgressIndicator(strokeWidth: strokeWidth));
-  }
-}
+// Moved to package:mobile_ui. See packages/mobile_ui/lib/src/app/app_centered_loader.dart

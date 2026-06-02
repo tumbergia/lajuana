@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_centered_loader.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_segmented_filter.dart';
-import '../../../../app/widgets/app_status_banner.dart';
-import '../../../../app/widgets/app_text_field.dart';
-import '../../../../app/widgets/refresh_scope.dart';
-import '../../../assignments/assignments_module.dart';
-import '../../../auth/presentation/auth_controller.dart';
-import '../../../catalogs/catalogs_module.dart';
-import '../../../catalogs/schedules/presentation/pages/schedules_page.dart';
-import '../../domain/repositories/reservations_repository.dart';
-import '../../infrastructure/repositories/fallback_repository.dart';
-import '../../reservations_module.dart';
-import '../controllers/reservations_list_controller.dart';
-import '../widgets/reservation_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
+import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile/features/assignments/assignments_module.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/schedules/presentation/pages/schedules_page.dart';
+import 'package:mobile_domain/src/reservations/reservations_repository.dart';
+import 'package:mobile/features/reservations/infrastructure/repositories/fallback_repository.dart';
+import 'package:mobile/features/reservations/reservations_module.dart';
+import 'package:mobile/features/reservations/presentation/controllers/reservations_list_controller.dart';
+import 'package:mobile/features/reservations/presentation/widgets/reservation_row_card.dart';
 import 'reservation_detail_shell_screen.dart';
 
 class ReservationsModuleScreen extends StatefulWidget {

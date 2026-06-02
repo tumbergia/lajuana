@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_entity_row_card.dart';
-import '../models/saddle_view_models.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile/features/saddles/presentation/models/saddle_view_models.dart';
 
 class SaddleRowCard extends StatelessWidget {
   const SaddleRowCard({

@@ -2,12 +2,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import '../../../../app/utils/file_saver.dart';
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_button.dart';
-import '../../domain/models/reservation_payment_proof_detail.dart';
-import '../../domain/repositories/reservations_repository.dart';
-import '../helpers/reservation_status_labels.dart';
+import 'package:mobile/app/utils/file_saver.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
+import 'package:mobile_domain/src/reservations/reservations_repository.dart';
+import 'package:mobile/features/reservations/presentation/helpers/reservation_status_labels.dart';
 
 /// Full-screen payment proof viewer.
 ///

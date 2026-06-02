@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_segmented_filter.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 
 /// Cabecera de módulo: [AppSectionHeader] + selector de secciones (peers, sin jerarquía falsa con `>`).
 class ModuleSubrouteHeader extends StatelessWidget {

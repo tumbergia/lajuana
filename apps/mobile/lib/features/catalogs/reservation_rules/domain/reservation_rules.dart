@@ -1,4 +1,4 @@
-import '../../../catalogs/data/catalog_sync_status.dart';
+import 'package:mobile/features/catalogs/data/catalog_sync_status.dart';
 
 class CatalogReservationRules {
   const CatalogReservationRules({

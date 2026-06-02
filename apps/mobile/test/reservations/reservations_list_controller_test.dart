@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/features/reservations/domain/repositories/reservations_repository.dart';
+import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservations_list_controller.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservations_list_state.dart';
 

@@ -2,8 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import '../../../../../app/widgets/cards/app_image_feature_card.dart';
-import '../../domain/experience.dart';
+import 'package:mobile_ui/src/widgets/cards/app_image_feature_card.dart';
+import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 import 'experience_status_badge.dart';
 
 class ExperienceCard extends StatelessWidget {

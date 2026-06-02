@@ -1,4 +1,4 @@
-import '../../../../app/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
 
 class SaddleRecord {
   const SaddleRecord({

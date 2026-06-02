@@ -1,6 +1,6 @@
-import '../../domain/models/equine_experience_fit.dart';
-import '../../domain/models/equine_operational_status.dart';
-import '../../../../app/widgets/app_badge.dart';
+import 'package:mobile_domain/src/equines/equine_experience_fit.dart';
+import 'package:mobile_domain/src/equines/equine_operational_status.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
 
 /// ViewModel ligero para el listado de equinos.
 class EquineRecord {

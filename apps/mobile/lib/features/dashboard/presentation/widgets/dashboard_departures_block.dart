@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_entity_row_card.dart';
-import '../../../reservations/presentation/models/reservation_view_models.dart';
-import '../../../reservations/presentation/widgets/reservation_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
+import 'package:mobile/features/reservations/presentation/widgets/reservation_row_card.dart';
 
 class DashboardDeparturesBlock extends StatelessWidget {
   const DashboardDeparturesBlock({super.key, required this.reservations});

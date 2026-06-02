@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../auth/infrastructure/connectivity/network_models.dart';
-import '../../domain/models/assignment_board.dart';
-import '../../domain/models/assignment_status.dart';
-import '../../domain/repositories/assignments_repository.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile_domain/src/assignments/assignment_board.dart';
+import 'package:mobile_domain/mobile_domain.dart';
+import 'package:mobile_domain/src/assignments/assignments_repository.dart';
 
 /// State of the assignment board for a reservation.
 enum BoardLoadState { initial, loading, loaded, error, offlineFromCache }

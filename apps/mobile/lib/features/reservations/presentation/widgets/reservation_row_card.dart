@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:mobile/app/widgets/app_badge.dart';
-import 'package:mobile/app/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 
-import '../../domain/models/reservation_status.dart';
-import '../../infrastructure/mappers/reservation_mapper.dart';
-import '../models/reservation_view_models.dart';
+import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
+import 'package:mobile/features/reservations/infrastructure/mappers/reservation_mapper.dart';
+import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
 
 class ReservationRowCard extends StatelessWidget {
   const ReservationRowCard({

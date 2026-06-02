@@ -5,16 +5,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mobile/app/shell/authenticated_shell.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/app/widgets/app_button.dart';
+import 'package:mobile_ui/src/theme/app_theme.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_status_resolver.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
-import 'package:mobile/features/equines/domain/models/equine.dart';
-import 'package:mobile/features/equines/domain/models/equine_timeline_entry.dart';
-import 'package:mobile/features/equines/domain/repositories/equine_repository.dart';
+import 'package:mobile_domain/src/equines/equine.dart';
+import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
+import 'package:mobile_domain/src/equines/equine_repository.dart';
 
 import '../auth/test_fakes.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/schedule_status.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule_status.dart';
 
 class ScheduleFormController extends ChangeNotifier {
   String experienceId = '';

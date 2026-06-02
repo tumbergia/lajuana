@@ -1,5 +1,5 @@
-import '../../data/catalogs_repository.dart';
-import '../domain/emergency_contact.dart';
+import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
+import 'package:mobile/features/catalogs/emergency_contacts/domain/emergency_contact.dart';
 
 class EmergencyContactsRepository {
   const EmergencyContactsRepository(this._catalogsRepository);

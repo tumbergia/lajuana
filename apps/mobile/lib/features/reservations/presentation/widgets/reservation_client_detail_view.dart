@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models/reservation_detail.dart';
-import '../helpers/reservation_status_labels.dart';
+import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile/features/reservations/presentation/helpers/reservation_status_labels.dart';
 
 /// Full-screen client/holder detail view.
 class ClientDetailView extends StatelessWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_confirm_dialog.dart';
-import '../controllers/assignment_board_controller.dart';
+import 'package:mobile_ui/src/widgets/app_confirm_dialog.dart';
+import 'package:mobile/features/assignments/presentation/controllers/assignment_board_controller.dart';
 
 /// Muestra diálogo de confirmación para finalizar todas las asignaciones.
 void showFinalizeAllConfirm(

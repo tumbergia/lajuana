@@ -1,5 +1,5 @@
-import 'package:mobile/features/saddles/domain/models/saddle_list_item.dart';
-import 'package:mobile/features/saddles/domain/repositories/saddles_repository.dart';
+import 'package:mobile_domain/src/saddles/saddle_list_item.dart';
+import 'package:mobile_domain/src/saddles/saddles_repository.dart';
 
 /// Fake [SaddlesRepository] for testing [SaddlesListController].
 ///

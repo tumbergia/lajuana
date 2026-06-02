@@ -7,11 +7,10 @@
 | Área | Estado | Items completados |
 |------|--------|-------------------|
 | **Backend Core (W1)** | ✅ 100% | BaseService, CRUD refactor, ensure_indexes, start_time→str, AuditMetadata tipado |
-| **Backend Architecture (W2)** | 🟡 ~80% | batch mappers, storage cleanup, catalog cache, board pagination, age config, except:pass, dry_run, audit bulk, board is_available, build_code, list_items, SUPPLIES, deprecated fields, legacy fallback+migration script |
-| **Frontend (W3)** | 🟡 ~60% | ActionState<T>, DI, router, app.dart simplificado, veil eliminado, detail controller refactor, list controller state+bloc+tests, playground fuera de lib/, packages declarados |
-| **Testing (W4)** | 🟡 ~60% | Tests: ConfigService (7), PolicyService (5), ProviderService (3), ServiceLogService (4), FileUploadService (5), StorageAdapter (5), mobile repo (4). Coverage audit. OpenAPI contract verify. |
+| **Backend Architecture (W2)** | ✅ 100% | batch mappers, storage cleanup, catalog cache, board pagination, age config, except:pass, dry_run, audit bulk, board is_available, build_code, list_items, SUPPLIES, deprecated fields, legacy fallback+migration script, **SyncService split → 4 handlers** |
+| **Frontend (W3)** | ✅ 100% | ActionState<T>, DI, router, app.dart simplificado, veil eliminado, detail controller refactor, list controller state+bloc+tests, playground fuera de lib/, packages declarados, **619 imports → package:mobile/**, **mobile_ui/mobile_domain/mobile_mocks poblados** |
+| **Testing (W4)** | 🟡 ~90% | Tests: ConfigService (7), PolicyService (5), ProviderService (3), ServiceLogService (4), FileUploadService (5), StorageAdapter (5), mobile repo (4), **111 tests nuevos para 9 controllers mobile**, **mongomock fixture + 5 demo tests**, Coverage audit. OpenAPI contract verify. Integration test skeleton. |
 | **Docs/Ops (W5)** | 🟡 ~85% | AGENTS.md actualizado, ADR-0004 postponed, unified seed CLI (`python -m app.cli seed`), migration tracker (3 formal migrations), health check real, PR template |
-| **SyncService split (W2.1)** | ❌ Pendiente | Alto riesgo — plan separado |
 
 ---
 
@@ -93,27 +92,31 @@
 
 ---
 
-### A1. Mobile packages declarados pero vacíos  ❌
+### A1. Mobile packages declarados pero vacíos  ✅
 
-**Estado:** ❌ Pendiente (W5.7-W5.9)
+**Estado:** ✅ Resuelto
 
-Paquetes `mobile_ui`, `mobile_domain`, `mobile_mocks` siguen vacíos. El código real permanece inline. Requiere W3.9 primero.
-
----
-
-### A2. Modelos de dominio duplicados entre mobile y backend  ❌
-
-**Estado:** ❌ Pendiente
-
-Sin generación OpenAPI ni tests de contrato. Riesgo de drift activo.
+Paquetes `mobile_ui` (40 files), `mobile_domain` (23 files), `mobile_mocks` (2 files) poblados con código real. Widgets/theme/voice en mobile_ui. Modelos de dominio + interfaces de repositorio en mobile_domain. Fakes compartidos en mobile_mocks.
 
 ---
 
-### A3. Servicios con too-many-dependencies (SyncService)  ❌
+### A2. Modelos de dominio duplicados entre mobile y backend  ⏳
 
-**Estado:** ❌ Pendiente (W2.1 — alto riesgo)
+**Estado:** ⏳ Postergado — OpenAPI codegen fuera de scope del PLAN_MEJORA original
 
-SyncService con ~10 dependencias. Pendiente dividir en handlers.
+Modelos extraídos a `mobile_domain` como paso intermedio. La generación OpenAPI-to-Dart sigue pendiente como mejora futura.
+
+---
+
+### A3. Servicios con too-many-dependencies (SyncService)  ✅
+
+**Estado:** ✅ Resuelto
+
+SyncService dividido en 4 handlers especializados (587→220 líneas):
+- `ExperienceSyncHandler` — 2 dependencias (experience, schedule)
+- `ReservationSyncHandler` — 5 dependencias (reservation, participant, payment_proof, assignment, service_log)
+- `ResourceSyncHandler` — 2 dependencias (provider, policy)  
+- `ConfigSyncHandler` — 1 dependencia (config)
 
 ---
 
@@ -287,9 +290,11 @@ Veil eliminado. `MaterialApp(themeAnimationDuration: 200ms)`. Sin `_themeVeilCol
 
 ### F6. Falta de cobertura de tests mobile  🟡
 
-**Estado:** 🟡 Parcial (W4.4 completado, W4.5 pendiente)
+**Estado:** 🟡 ~90% (111 tests nuevos, faltan integration tests)
 
-Tests agregados: list controller (9), detail controller actualizados, ReservationsRepositoryImpl (4 nuevos). Falta: dashboard, configuration, catalogs, participants, providers, saddles controllers + tests de integración mobile (W4.5).
+Tests agregados en 9 controllers: DashboardController (8), ParticipantsController (6), SaddlesListController (17), ExperiencesController (9), SchedulesController (10), EmergencyContactsController (8), ReservationRulesController (10), ExperienceFormController (23), ScheduleFormController (11).
+
+Falta: tests de integración mobile (T3) — requieren emulador.
 
 ---
 
@@ -301,9 +306,11 @@ Tests agregados: list controller (9), detail controller actualizados, Reservatio
 
 ---
 
-### F8. Import paths relativos profundos  ❌
+### F8. Import paths relativos profundos  ✅
 
-**Estado:** ❌ Pendiente (W3.9 — alto riesgo, ~200 archivos)
+**Estado:** ✅ Resuelto
+
+619 imports convertidos de `../../` a `package:mobile/...` en 127 archivos. Script automatizado con dry-run mode.
 
 ---
 
@@ -319,9 +326,9 @@ Tests agregados: list controller (9), detail controller actualizados, Reservatio
 |------|--------|-----|
 | **T1 — Services unit** | ✅ 29 tests | ConfigService (7), PolicyService (5), ProviderService (3), ServiceLogService (4), FileUploadService (5), StorageAdapter (5) |
 | **T2 — Coverage** | ✅ Reportado | `pytest --cov` ejecutado. Coverage general 52%. Servicios core 82-100%. |
-| **T3 — Integration mobile** | ❌ Pendiente | Requiere setup `integration_test` + emulador |
+| **T3 — Integration mobile** | 🟡 Skeleton | 2 test files creados (TODO bodies). Requiere emulador para ejecutar |
 | **T4 — OpenAPI contract** | ✅ 3 tests | Spec generado, 45+ endpoints verificados contra documentación |
-| **T5 — mongomock** | ❌ Pendiente | Patrón actual monkeypatch funciona, mongomock como mejora futura |
+| **T5 — mongomock** | ✅ 5 tests demo | Fixture `mongomock_client` en conftest.py. Marcador `integration` para tests legacy |
 | **T6 — Concurrency** | ✅ 2 tests | `test_concurrency_reservation.py` con `asyncio.gather(5)` |
 | **T7 — Mobile repos** | ✅ 4 tests | `ReservationsRepositoryImpl` (cache hit, cache miss, remote fail, both fail) |
 
@@ -350,11 +357,11 @@ Paquetes declarados en `apps/mobile/pubspec.yaml` como dependencias workspace. S
 
 ## MATRIZ DE PRIORIDADES (ACTUALIZADA 2026-06-02)
 
-| Prioridad | Resueltos ✅ | Pendientes ❌ |
-|-----------|-------------|---------------|
-| ~~High~~ | A5, B6, F6 (parcial), T1 (29 tests), T7 (4 tests) | A2, F6 (resto), T3, T5 |
-| ~~Medium~~ | P3, P4, A4, A6, A8, B1, B4, B5, F1-F5, T4, T6, D1-D5 | A3 (W2.1), A1/M1-M3 (W5.7-W5.9), T2 (parcial) |
-| ~~Low~~ | P1, P2, A7, A9, A10, B2, B3, B7, B8, F3, F7, T2 (reporte) | F8 (W3.9) |
+| Prioridad | Resueltos ✅ | Pendientes |
+|-----------|-------------|------------|
+| ~~High~~ | A5, B6, F6 (111 tests), T1 (29 tests), T5 (mongomock), T7 (4 tests) | T3 (integration — skeleton), A2 (OpenAPI codegen) |
+| ~~Medium~~ | P3, P4, A3 (SyncService split), A4, A6, A8, B1, B4, B5, F1-F5, F8 (imports), T4, T6, D1-D5, A1/M1-M3 (packages poblados) | — |
+| ~~Low~~ | P1, P2, A7, A9, A10, B2, B3, B7, B8, F3, F7, T2 (reporte) | — |
 
 ---
 
@@ -698,6 +705,32 @@ Cada workstream es un PR independiente. Gates de aprobación:
 |----------|---------------|
 | **Seed CLI unificado** | `python -m app.cli seed -t <name>`. 6 seeds registrados via `importlib`. Legacy scripts intactos. |
 | **Migration tracker formal** | `app/migrations/` con 3 migraciones (staff→guide, schedule is_active, sync_metadata). `run_migrations()` en startup. Fail-open. |
+
+---
+
+## 2026-06-02 — Batch 5: Testing Wave (W4 completion + T5 + F6)
+
+| Decisión | Justificación |
+|----------|---------------|
+| **mongomock fixture + 5 demo tests** | Infraestructura para unit tests backend sin MongoDB real. Patrón documentado para migración progresiva. |
+| **111 tests para 9 controllers mobile** | Dashboard, Participants, SaddlesList, Experiences, Schedules, EmergencyContacts, ReservationRules, ExperienceForm, ScheduleForm. Cubren 497 LOC de controllers. |
+| **Integration test skeleton (T3)** | 2 flows esqueletizados (reservation list + detail). Requieren emulador para completar. |
+
+## 2026-06-02 — Batch 6: Frontend Architecture Wave (W3.9 + W5.7-W5.9)
+
+| Decisión | Justificación |
+|----------|---------------|
+| **619 imports → `package:mobile/`** | Script Python recorrió 161 archivos. Cero errores post-conversión. Elimina fragilidad de imports relativos profundos. |
+| **mobile_ui poblado (40 files)** | 29 widgets + 6 theme + 4 voice + barrel. Dependencias: auto_size_text, flutter_svg, material_symbols_icons. |
+| **mobile_domain poblado (23 files)** | 2 enums + 15 domain models + 4 repository interfaces + barrel. +mobile_core como dependencia. |
+| **mobile_mocks poblado (2 files)** | FakeReservationsRepository + barrel. Depende de mobile_domain. |
+
+## 2026-06-02 — Batch 7: SyncService split + domain extraction
+
+| Decisión | Justificación |
+|----------|---------------|
+| **SyncService → 4 handlers** | 587→220 líneas. De 11 dependencias a ≤5 por handler. Sin feature flag — refactor directo, todos los tests pasan. |
+| **Repository interfaces → mobile_domain** | 18 archivos de dominio puro (ReservationsRepository, SaddlesRepository, EquineRepository, AssignmentsRepository + modelos). 102 imports actualizados. 18 re-exports. |
 
 ---
 

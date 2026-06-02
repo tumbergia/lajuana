@@ -2,11 +2,11 @@ import 'dart:async' show StreamSubscription, unawaited;
 
 import 'package:flutter/foundation.dart';
 
-import '../domain/auth_enums.dart';
-import '../domain/auth_models.dart';
-import '../domain/auth_repository.dart';
-import '../infrastructure/connectivity/network_models.dart';
-import '../infrastructure/connectivity/network_status_resolver.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
+import 'package:mobile/features/auth/domain/auth_repository.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_status_resolver.dart';
 
 class AuthController extends ChangeNotifier {
   AuthController({

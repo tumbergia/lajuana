@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-import '../../domain/auth_models.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
 import 'auth_dtos.dart';
 
 class AuthApiClient {

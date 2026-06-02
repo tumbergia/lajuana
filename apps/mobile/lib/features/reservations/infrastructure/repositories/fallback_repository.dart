@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
-import '../../domain/models/reservation_detail.dart';
-import '../../domain/models/reservation_list_item.dart';
-import '../../domain/models/reservation_status.dart';
-import '../../domain/repositories/reservations_repository.dart';
+import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
+import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
+import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 
 /// Fallback que devuelve valores vacíos/lanza error cuando
 /// [ReservationsModule] no está inyectado.

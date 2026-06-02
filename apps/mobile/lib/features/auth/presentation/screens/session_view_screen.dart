@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_entity_row_card.dart';
-import '../../../../app/widgets/app_scaffold.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_top_bar.dart';
-import '../../domain/auth_enums.dart';
-import '../auth_controller.dart';
-import '../auth_routes.dart';
-import '../auth_ui_helpers.dart';
-import '../user_role_display.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_scaffold.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_top_bar.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/auth/presentation/auth_routes.dart';
+import 'package:mobile/features/auth/presentation/auth_ui_helpers.dart';
+import 'package:mobile/features/auth/presentation/user_role_display.dart';
 
 class SessionViewScreen extends StatelessWidget {
   const SessionViewScreen({super.key, required this.controller});

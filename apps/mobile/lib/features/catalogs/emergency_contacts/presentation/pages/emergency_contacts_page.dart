@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../../app/widgets/app_badge.dart';
-import '../../../../../app/widgets/app_button.dart';
-import '../../../../../app/widgets/app_centered_loader.dart';
-import '../../../../../app/widgets/app_entity_row_card.dart';
-import '../../../../../app/widgets/app_section_header.dart';
-import '../../../../auth/presentation/auth_controller.dart';
-import '../../../catalogs_module.dart';
-import '../controllers/emergency_contacts_controller.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/emergency_contacts/presentation/controllers/emergency_contacts_controller.dart';
 
 class EmergencyContactsPage extends StatefulWidget {
   const EmergencyContactsPage({

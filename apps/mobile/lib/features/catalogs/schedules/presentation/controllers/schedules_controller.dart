@@ -2,9 +2,9 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
-import '../../../data/catalogs_repository.dart';
-import '../../data/schedule_repository.dart';
-import '../../domain/schedule.dart';
+import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
+import 'package:mobile/features/catalogs/schedules/data/schedule_repository.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule.dart';
 
 class SchedulesController extends ChangeNotifier {
   SchedulesController({

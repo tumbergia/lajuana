@@ -1,6 +1,6 @@
 import 'package:http/http.dart' as http;
 
-import '../auth/infrastructure/token_storage.dart';
+import 'package:mobile/features/auth/infrastructure/token_storage.dart';
 import 'domain/repositories/reservations_repository.dart';
 import 'infrastructure/local/reservations_database.dart';
 import 'infrastructure/local/reservations_local_data_source.dart';

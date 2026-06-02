@@ -1,4 +1,4 @@
-import '../domain/auth_models.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
 import 'local/session_local_data_source.dart';
 
 abstract class TokenStorage {

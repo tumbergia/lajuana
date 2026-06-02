@@ -1,4 +1,4 @@
-import '../models/reservation_view_models.dart';
+import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
 
 /// Load states for the reservations list.
 enum ReservationsLoadState {

@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/features/reservations/domain/models/reservation_detail.dart';
-import 'package:mobile/features/reservations/domain/models/reservation_list_item.dart';
+import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
-import 'package:mobile/features/reservations/domain/repositories/reservations_repository.dart';
+import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservation_dtos.dart';
 import 'package:mobile/features/reservations/infrastructure/mappers/reservation_mapper.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservations_api_error.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/models/reservation_detail.dart';
-import '../../domain/models/reservation_payment_proof_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
 
 /// Estado de la subruta Pagos / comprobantes en detalle de reserva.
 ///

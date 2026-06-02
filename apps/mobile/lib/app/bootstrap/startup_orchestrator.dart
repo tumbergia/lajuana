@@ -1,4 +1,4 @@
-import '../../features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
 
 /// Punto único para orquestar arranque técnico antes de decidir ruta de entrada.
 /// Hoy delega en [AuthController.appStarted]; puede absorber más pasos sin tocar UI.

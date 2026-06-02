@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 
 /// Placeholder hasta conectar catálogo real de proveedores.
 class ProvidersModuleScreen extends StatelessWidget {

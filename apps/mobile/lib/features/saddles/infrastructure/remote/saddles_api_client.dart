@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-import '../../domain/models/saddle_list_item.dart';
+import 'package:mobile_domain/src/saddles/saddle_list_item.dart';
 import 'saddles_api_error.dart';
 
 class SaddlesApiClient {

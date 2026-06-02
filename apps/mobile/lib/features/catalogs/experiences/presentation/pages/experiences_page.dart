@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../app/widgets/app_button.dart';
-import '../../../../../app/widgets/app_centered_loader.dart';
-import '../../../../../app/widgets/app_entity_row_card.dart';
-import '../../../../../app/widgets/app_section_header.dart';
-import '../../../../auth/presentation/auth_controller.dart';
-import '../../../catalogs_module.dart';
-import '../controllers/experiences_controller.dart';
-import '../widgets/experience_card.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/experiences/presentation/controllers/experiences_controller.dart';
+import 'package:mobile/features/catalogs/experiences/presentation/widgets/experience_card.dart';
 import 'experience_detail_page.dart';
 import 'experience_form_page.dart';
 

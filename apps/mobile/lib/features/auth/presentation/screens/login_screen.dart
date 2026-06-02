@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_scaffold.dart';
-import '../../../../app/widgets/app_text_field.dart';
-import '../../domain/auth_enums.dart';
-import '../auth_controller.dart';
-import '../auth_routes.dart';
-import '../auth_ui_helpers.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_scaffold.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/auth/presentation/auth_routes.dart';
+import 'package:mobile/features/auth/presentation/auth_ui_helpers.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.controller});

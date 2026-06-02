@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/theme_extensions.dart';
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_centered_loader.dart';
-import '../../../../app/widgets/app_scaffold.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_status_banner.dart';
-import '../../domain/models/assignment_board.dart';
-import '../../domain/models/assignment_status.dart';
-import '../controllers/assignment_board_controller.dart';
-import '../widgets/board_action_buttons.dart';
-import '../widgets/board_equines_grid.dart';
-import '../widgets/board_participant_tile.dart';
-import '../widgets/board_saddles_grid.dart';
-import '../widgets/board_summary_bar.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_scaffold.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_domain/src/assignments/assignment_board.dart';
+import 'package:mobile_domain/mobile_domain.dart';
+import 'package:mobile/features/assignments/presentation/controllers/assignment_board_controller.dart';
+import 'package:mobile/features/assignments/presentation/widgets/board_action_buttons.dart';
+import 'package:mobile/features/assignments/presentation/widgets/board_equines_grid.dart';
+import 'package:mobile/features/assignments/presentation/widgets/board_participant_tile.dart';
+import 'package:mobile/features/assignments/presentation/widgets/board_saddles_grid.dart';
+import 'package:mobile/features/assignments/presentation/widgets/board_summary_bar.dart';
 
 /// Pantalla de tablero de asignaciones para una reserva.
 ///

@@ -1,6 +1,6 @@
-import '../../../../../app/widgets/app_badge.dart';
-import '../../../data/catalog_sync_status.dart';
-import '../../domain/experience.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile/features/catalogs/data/catalog_sync_status.dart';
+import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 
 AppBadge experienceStatusBadgeFor(CatalogExperience experience) {
   if (!experience.isActive) {

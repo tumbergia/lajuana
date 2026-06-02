@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import '../../domain/models/equine.dart';
-import '../../domain/models/equine_operational_status.dart';
-import '../../domain/models/equine_timeline_entry.dart';
-import '../../domain/repositories/equine_repository.dart';
-import '../../presentation/models/equine_view_models.dart';
-import '../local/equine_local_records.dart';
-import '../local/equines_database.dart';
-import '../mappers/equine_mapper.dart';
-import '../remote/equine_dtos.dart';
-import '../remote/equines_api_client.dart';
+import 'package:mobile_domain/src/equines/equine.dart';
+import 'package:mobile_domain/src/equines/equine_operational_status.dart';
+import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
+import 'package:mobile_domain/src/equines/equine_repository.dart';
+import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
+import 'package:mobile/features/equines/infrastructure/local/equine_local_records.dart';
+import 'package:mobile/features/equines/infrastructure/local/equines_database.dart';
+import 'package:mobile/features/equines/infrastructure/mappers/equine_mapper.dart';
+import 'package:mobile/features/equines/infrastructure/remote/equine_dtos.dart';
+import 'package:mobile/features/equines/infrastructure/remote/equines_api_client.dart';
 
 /// Implementación del repositorio de equinos con cache network-first.
 /// Sigue el mismo patrón que [ReservationsRepositoryImpl].

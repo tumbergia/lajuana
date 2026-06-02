@@ -1,5 +1,5 @@
-import '../../domain/models/saddle_list_item.dart';
-import '../../presentation/models/saddle_view_models.dart';
+import 'package:mobile_domain/src/saddles/saddle_list_item.dart';
+import 'package:mobile/features/saddles/presentation/models/saddle_view_models.dart';
 
 /// Domain -> ViewModel: SaddleListItem -> SaddleRecord
 SaddleRecord listItemToRecord(SaddleListItem item) {

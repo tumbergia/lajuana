@@ -102,18 +102,27 @@ def test_sync_executor_rejects_catalog_write_for_guide() -> None:
             "duration_hours": 2,
         },
     )
+    from app.services.sync_handlers import (
+        ConfigSyncHandler, ExperienceSyncHandler, ReservationSyncHandler, ResourceSyncHandler,
+    )
     _c = Container.get_instance()
     executor = SyncOperationExecutor(
-        config_service=_c.config_service,
-        experience_service=_c.experience_service,
-        schedule_service=_c.schedule_service,
-        reservation_service=_c.reservation_service,
-        participant_service=_c.participant_service,
-        payment_proof_service=_c.payment_proof_service,
-        assignment_service=_c.assignment_service,
-        service_log_service=_c.service_log_service,
-        provider_service=_c.provider_service,
-        policy_service=_c.policy_service,
+        experience_handler=ExperienceSyncHandler(
+            experience_service=_c.experience_service,
+            schedule_service=_c.schedule_service,
+        ),
+        reservation_handler=ReservationSyncHandler(
+            reservation_service=_c.reservation_service,
+            participant_service=_c.participant_service,
+            payment_proof_service=_c.payment_proof_service,
+            assignment_service=_c.assignment_service,
+            service_log_service=_c.service_log_service,
+        ),
+        resource_handler=ResourceSyncHandler(
+            provider_service=_c.provider_service,
+            policy_service=_c.policy_service,
+        ),
+        config_handler=ConfigSyncHandler(config_service=_c.config_service),
     )
     result = asyncio.run(
         executor.execute(

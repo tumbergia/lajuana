@@ -2,25 +2,25 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
 
-import '../../features/auth/domain/auth_enums.dart';
-import '../../features/auth/infrastructure/connectivity/network_models.dart';
-import '../../features/auth/infrastructure/remote/auth_api_client.dart';
-import '../../features/auth/presentation/auth_controller.dart';
-import '../../features/catalogs/catalogs_module.dart';
-import '../navigation/shell_navigation_controller.dart';
-import '../widgets/app_bottom_nav.dart';
-import '../widgets/app_top_bar.dart';
-import '../widgets/refresh_scope.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/app/navigation/shell_navigation_controller.dart';
+import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
+import 'package:mobile_ui/src/widgets/app_top_bar.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'widgets/shell_status_region.dart';
-import '../../features/configuration/presentation/screens/more_flow_screen.dart';
-import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
-import '../../features/equines/domain/repositories/equine_repository.dart';
-import '../../features/equines/presentation/screens/equines_module_screen.dart';
-import '../../features/participants/presentation/screens/participants_module_screen.dart';
-import '../../features/assignments/assignments_module.dart';
-import '../../features/reservations/presentation/screens/reservations_module_screen.dart';
-import '../../features/reservations/reservations_module.dart';
-import '../../features/saddles/saddles_module.dart';
+import 'package:mobile/features/configuration/presentation/screens/more_flow_screen.dart';
+import 'package:mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:mobile_domain/src/equines/equine_repository.dart';
+import 'package:mobile/features/equines/presentation/screens/equines_module_screen.dart';
+import 'package:mobile/features/participants/presentation/screens/participants_module_screen.dart';
+import 'package:mobile/features/assignments/assignments_module.dart';
+import 'package:mobile/features/reservations/presentation/screens/reservations_module_screen.dart';
+import 'package:mobile/features/reservations/reservations_module.dart';
+import 'package:mobile/features/saddles/saddles_module.dart';
 
 class AuthenticatedShell extends StatefulWidget {
   const AuthenticatedShell({

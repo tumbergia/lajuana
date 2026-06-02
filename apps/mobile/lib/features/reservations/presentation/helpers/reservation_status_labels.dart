@@ -1,4 +1,4 @@
-import '../../../../app/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
 
 /// Labels y tonos para estados de reserva (formulario, pago, proofs).
 ///

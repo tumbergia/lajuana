@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../widgets/app_bottom_nav.dart';
+import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
 
 /// Dueño del tab primario del shell: índice actual y notificación a listeners.
 class ShellNavigationController extends ChangeNotifier {

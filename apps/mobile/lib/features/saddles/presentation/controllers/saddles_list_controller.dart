@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/repositories/saddles_repository.dart';
-import '../../infrastructure/mappers/saddle_mapper.dart';
-import '../models/saddle_view_models.dart';
+import 'package:mobile_domain/src/saddles/saddles_repository.dart';
+import 'package:mobile/features/saddles/infrastructure/mappers/saddle_mapper.dart';
+import 'package:mobile/features/saddles/presentation/models/saddle_view_models.dart';
 
 enum SaddlesLoadState {
   idle,

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_card.dart';
-import '../../../../app/widgets/app_scaffold.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_text_field.dart';
-import '../../../../app/widgets/app_top_bar.dart';
-import '../../infrastructure/connectivity/network_models.dart';
-import '../auth_controller.dart';
-import '../auth_ui_helpers.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_card.dart';
+import 'package:mobile_ui/src/widgets/app_scaffold.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/app_top_bar.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/auth/presentation/auth_ui_helpers.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key, required this.controller});

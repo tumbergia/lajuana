@@ -1,6 +1,6 @@
-import '../../domain/models/saddle_list_item.dart';
-import '../../domain/repositories/saddles_repository.dart';
-import '../remote/saddles_api_client.dart';
+import 'package:mobile_domain/src/saddles/saddle_list_item.dart';
+import 'package:mobile_domain/src/saddles/saddles_repository.dart';
+import 'package:mobile/features/saddles/infrastructure/remote/saddles_api_client.dart';
 
 class SaddlesRepositoryImpl implements SaddlesRepository {
   SaddlesRepositoryImpl({required SaddlesApiClient apiClient})

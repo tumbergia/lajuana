@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/theme_extensions.dart';
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_text_field.dart';
-import '../../domain/models/reservation_payment_proof_detail.dart';
-import '../controllers/reservation_detail_controller.dart';
+import 'package:mobile_ui/src/theme/app_colors.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
+import 'package:mobile/features/reservations/presentation/controllers/reservation_detail_controller.dart';
 
 /// Shows a dialog with a form to reject a payment proof with a reason.
 Future<void> showRejectDialog(

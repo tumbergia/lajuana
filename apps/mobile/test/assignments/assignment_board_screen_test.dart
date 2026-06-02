@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/app/theme/app_theme.dart';
-import 'package:mobile/features/assignments/domain/models/assignment.dart';
-import 'package:mobile/features/assignments/domain/models/assignment_board.dart';
-import 'package:mobile/features/assignments/domain/models/assignment_status.dart';
-import 'package:mobile/features/assignments/domain/repositories/assignments_repository.dart';
+import 'package:mobile_ui/src/theme/app_theme.dart';
+import 'package:mobile_domain/src/assignments/assignment.dart';
+import 'package:mobile_domain/src/assignments/assignment_board.dart';
+import 'package:mobile_domain/mobile_domain.dart';
+import 'package:mobile_domain/src/assignments/assignments_repository.dart';
 import 'package:mobile/features/assignments/presentation/controllers/assignment_board_controller.dart';
 import 'package:mobile/features/assignments/presentation/screens/assignment_board_screen.dart';
 

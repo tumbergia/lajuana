@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models/assignment_board.dart';
+import 'package:mobile_domain/src/assignments/assignment_board.dart';
 
 /// Grid de equinos disponibles/no disponibles.
 class BoardEquinesGrid extends StatelessWidget {

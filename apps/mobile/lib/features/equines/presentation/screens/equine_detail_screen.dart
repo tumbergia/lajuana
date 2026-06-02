@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import '../../../../app/theme/app_radii.dart';
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_centered_loader.dart';
-import '../../../../app/widgets/app_confirm_dialog.dart';
-import '../../../../app/widgets/app_metric_card.dart';
-import '../../../../app/widgets/app_scaffold.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_status_banner.dart';
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/dashed_border_painter.dart';
-import '../../domain/repositories/equine_repository.dart';
-import '../../infrastructure/mappers/equine_mapper.dart';
-import '../equine_labels.dart';
-import '../models/equine_view_models.dart';
-import '../widgets/equine_image_provider.dart';
+import 'package:mobile_ui/src/theme/app_radii.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_confirm_dialog.dart';
+import 'package:mobile_ui/src/widgets/app_metric_card.dart';
+import 'package:mobile_ui/src/widgets/app_scaffold.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/dashed_border_painter.dart';
+import 'package:mobile_domain/src/equines/equine_repository.dart';
+import 'package:mobile/features/equines/infrastructure/mappers/equine_mapper.dart';
+import 'package:mobile/features/equines/presentation/equine_labels.dart';
+import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
+import 'package:mobile/features/equines/presentation/widgets/equine_image_provider.dart';
 
 class EquineDetailScreen extends StatefulWidget {
   const EquineDetailScreen({

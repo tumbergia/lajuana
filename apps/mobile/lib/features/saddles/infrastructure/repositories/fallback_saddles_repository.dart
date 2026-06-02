@@ -1,5 +1,5 @@
-import '../../domain/models/saddle_list_item.dart';
-import '../../domain/repositories/saddles_repository.dart';
+import 'package:mobile_domain/src/saddles/saddle_list_item.dart';
+import 'package:mobile_domain/src/saddles/saddles_repository.dart';
 
 class FallbackSaddlesRepository implements SaddlesRepository {
   @override

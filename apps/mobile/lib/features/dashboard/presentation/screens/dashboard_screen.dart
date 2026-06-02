@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_bottom_nav.dart';
-import '../../../auth/presentation/auth_controller.dart';
-import '../../../reservations/presentation/models/reservation_view_models.dart';
-import '../../presentation/controllers/dashboard_controller.dart';
-import '../widgets/dashboard_departures_block.dart';
-import '../widgets/dashboard_pending_block.dart';
-import '../widgets/dashboard_summary_block.dart';
-import '../widgets/dashboard_sync_block.dart';
-import '../../../shared/presentation/widgets/module_subroute_header.dart';
+import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
+import 'package:mobile/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:mobile/features/dashboard/presentation/widgets/dashboard_departures_block.dart';
+import 'package:mobile/features/dashboard/presentation/widgets/dashboard_pending_block.dart';
+import 'package:mobile/features/dashboard/presentation/widgets/dashboard_summary_block.dart';
+import 'package:mobile/features/dashboard/presentation/widgets/dashboard_sync_block.dart';
+import 'package:mobile/features/shared/presentation/widgets/module_subroute_header.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({

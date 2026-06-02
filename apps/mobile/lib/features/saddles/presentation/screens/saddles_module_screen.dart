@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_centered_loader.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_segmented_filter.dart';
-import '../../../../app/widgets/app_status_banner.dart';
-import '../../../../app/widgets/app_text_field.dart';
-import '../../../../app/widgets/refresh_scope.dart';
-import '../../domain/repositories/saddles_repository.dart';
-import '../../infrastructure/repositories/fallback_saddles_repository.dart';
-import '../../saddles_module.dart';
-import '../controllers/saddles_list_controller.dart';
-import '../models/saddle_view_models.dart';
-import '../widgets/saddle_form_sheet.dart';
-import '../widgets/saddle_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
+import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_domain/src/saddles/saddles_repository.dart';
+import 'package:mobile/features/saddles/infrastructure/repositories/fallback_saddles_repository.dart';
+import 'package:mobile/features/saddles/saddles_module.dart';
+import 'package:mobile/features/saddles/presentation/controllers/saddles_list_controller.dart';
+import 'package:mobile/features/saddles/presentation/models/saddle_view_models.dart';
+import 'package:mobile/features/saddles/presentation/widgets/saddle_form_sheet.dart';
+import 'package:mobile/features/saddles/presentation/widgets/saddle_row_card.dart';
 
 class SaddlesModuleScreen extends StatefulWidget {
   const SaddlesModuleScreen({

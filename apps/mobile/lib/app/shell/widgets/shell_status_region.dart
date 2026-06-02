@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../features/auth/domain/auth_enums.dart';
-import '../../../features/auth/infrastructure/connectivity/network_models.dart';
-import '../../../features/auth/presentation/auth_controller.dart';
-import '../../widgets/app_status_banner.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 
 /// Banners globales de sesión, conectividad y sync (solo presentación).
 class ShellStatusRegion extends StatelessWidget {

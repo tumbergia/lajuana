@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../reservations/presentation/models/reservation_view_models.dart';
-import '../../../reservations/presentation/widgets/reservation_row_card.dart';
+import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
+import 'package:mobile/features/reservations/presentation/widgets/reservation_row_card.dart';
 
 class DashboardPendingBlock extends StatelessWidget {
   const DashboardPendingBlock({

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_confirm_dialog.dart';
-import '../../domain/models/reservation_payment_proof_detail.dart';
-import '../controllers/reservation_detail_controller.dart';
+import 'package:mobile_ui/src/widgets/app_confirm_dialog.dart';
+import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
+import 'package:mobile/features/reservations/presentation/controllers/reservation_detail_controller.dart';
 
 /// Shows a confirmation dialog for approving a payment proof.
 Future<void> showApproveConfirmationDialog(

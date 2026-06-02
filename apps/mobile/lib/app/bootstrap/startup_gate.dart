@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../features/auth/domain/auth_enums.dart';
-import '../../features/auth/infrastructure/connectivity/network_models.dart';
-import '../../features/auth/presentation/auth_controller.dart';
-import '../../features/auth/presentation/auth_routes.dart';
-import '../widgets/app_badge.dart';
-import '../widgets/app_scaffold.dart';
-import '../../features/auth/presentation/auth_ui_helpers.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/auth/presentation/auth_routes.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_scaffold.dart';
+import 'package:mobile/features/auth/presentation/auth_ui_helpers.dart';
 import 'startup_orchestrator.dart';
 
 /// Puerta de entrada técnica: bootstrap + decisión login vs área autenticada.

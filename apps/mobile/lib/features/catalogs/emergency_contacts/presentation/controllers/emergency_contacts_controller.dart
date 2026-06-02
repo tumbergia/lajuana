@@ -2,9 +2,9 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
-import '../../../data/catalogs_repository.dart';
-import '../../data/emergency_contacts_repository.dart';
-import '../../domain/emergency_contact.dart';
+import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
+import 'package:mobile/features/catalogs/emergency_contacts/data/emergency_contacts_repository.dart';
+import 'package:mobile/features/catalogs/emergency_contacts/domain/emergency_contact.dart';
 
 class EmergencyContactsController extends ChangeNotifier {
   EmergencyContactsController({

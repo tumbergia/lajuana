@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../app/widgets/app_button.dart';
-import '../../../../../app/widgets/app_centered_loader.dart';
-import '../../../../../app/widgets/app_entity_row_card.dart';
-import '../../../../../app/widgets/app_section_header.dart';
-import '../../../../../app/widgets/cards/app_pricing_tiers_table.dart';
-import '../../../../auth/presentation/auth_controller.dart';
-import '../../../catalogs_module.dart';
-import '../../domain/experience.dart';
-import '../widgets/experience_status_badge.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/cards/app_pricing_tiers_table.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
+import 'package:mobile/features/catalogs/experiences/presentation/widgets/experience_status_badge.dart';
 import 'experience_form_page.dart';
 
 class ExperienceDetailPage extends StatefulWidget {

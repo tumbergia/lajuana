@@ -1,7 +1,7 @@
-import '../../../../../app/widgets/app_badge.dart';
-import '../../../data/catalog_sync_status.dart';
-import '../../domain/schedule.dart';
-import '../../domain/schedule_status.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile/features/catalogs/data/catalog_sync_status.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule_status.dart';
 
 AppBadge scheduleStatusBadgeFor(CatalogSchedule schedule) {
   if (!schedule.isActive) {

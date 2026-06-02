@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models/assignment_board.dart';
+import 'package:mobile_domain/src/assignments/assignment_board.dart';
 
 /// Barra de resumen con conteo de asignados/pendientes/bloqueados.
 class BoardSummaryBar extends StatelessWidget {

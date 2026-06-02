@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_entity_row_card.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_button.dart';
-import '../../../auth/presentation/auth_controller.dart';
-import '../../catalogs_module.dart';
-import '../../experiences/presentation/pages/experiences_page.dart';
-import '../../reservation_rules/presentation/pages/reservation_rules_page.dart';
-import '../../schedules/presentation/pages/schedules_page.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/experiences/presentation/pages/experiences_page.dart';
+import 'package:mobile/features/catalogs/reservation_rules/presentation/pages/reservation_rules_page.dart';
+import 'package:mobile/features/catalogs/schedules/presentation/pages/schedules_page.dart';
 
 class CatalogsHomePage extends StatelessWidget {
   const CatalogsHomePage({

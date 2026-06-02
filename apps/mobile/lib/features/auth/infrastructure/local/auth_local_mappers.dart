@@ -1,7 +1,7 @@
 import 'package:mobile_core/mobile_core.dart';
 
-import '../../domain/auth_enums.dart';
-import '../../domain/auth_models.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
 
 String localAuthStateToDb(LocalAuthState state) => switch (state) {
   LocalAuthState.signedOut => 'signed_out',

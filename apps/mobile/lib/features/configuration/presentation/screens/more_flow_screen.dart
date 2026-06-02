@@ -3,24 +3,24 @@ import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_centered_loader.dart';
-import '../../../../app/widgets/app_entity_row_card.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_text_field.dart';
-import '../../../auth/domain/auth_enums.dart';
-import '../../../auth/infrastructure/connectivity/network_models.dart';
-import '../../../auth/infrastructure/remote/auth_api_client.dart';
-import '../../../auth/infrastructure/remote/auth_dtos.dart';
-import '../../../auth/presentation/auth_controller.dart';
-import '../../../auth/presentation/auth_routes.dart';
-import '../../../auth/presentation/user_role_display.dart';
-import '../../../catalogs/catalogs_module.dart';
-import '../../../catalogs/presentation/pages/catalogs_home_page.dart';
-import '../../../providers/presentation/screens/providers_module_screen.dart';
-import '../../../saddles/presentation/screens/saddles_module_screen.dart';
-import '../../../saddles/saddles_module.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
+import 'package:mobile/features/auth/infrastructure/remote/auth_dtos.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/auth/presentation/auth_routes.dart';
+import 'package:mobile/features/auth/presentation/user_role_display.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/presentation/pages/catalogs_home_page.dart';
+import 'package:mobile/features/providers/presentation/screens/providers_module_screen.dart';
+import 'package:mobile/features/saddles/presentation/screens/saddles_module_screen.dart';
+import 'package:mobile/features/saddles/saddles_module.dart';
 
 enum _MoreDestination { menu, profile, contacts, changePassword, providers, sillas }
 

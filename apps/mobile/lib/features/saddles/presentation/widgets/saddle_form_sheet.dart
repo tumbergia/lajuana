@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_text_field.dart';
-import '../models/saddle_view_models.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile/features/saddles/presentation/models/saddle_view_models.dart';
 
 class SaddleFormSheet extends StatefulWidget {
   const SaddleFormSheet({super.key, this.existing});

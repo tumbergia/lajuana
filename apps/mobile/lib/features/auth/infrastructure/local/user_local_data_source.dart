@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
-import '../../domain/auth_models.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
 import 'auth_database.dart';
 import 'auth_local_mappers.dart';
 

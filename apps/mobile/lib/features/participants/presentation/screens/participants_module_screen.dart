@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_entity_row_card.dart';
-import '../../../../app/widgets/app_metric_card.dart';
-import '../../../../app/widgets/app_timeline.dart';
-import '../../../reservations/presentation/models/reservation_view_models.dart';
-import '../controllers/participants_controller.dart';
-import '../../../shared/presentation/widgets/module_subroute_header.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_metric_card.dart';
+import 'package:mobile_ui/src/widgets/app_timeline.dart';
+import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
+import 'package:mobile/features/participants/presentation/controllers/participants_controller.dart';
+import 'package:mobile/features/shared/presentation/widgets/module_subroute_header.dart';
 
 class ParticipantsModuleScreen extends StatefulWidget {
   const ParticipantsModuleScreen({super.key});

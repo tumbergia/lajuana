@@ -2,9 +2,9 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
-import '../../../data/catalogs_repository.dart';
-import '../../data/experience_repository.dart';
-import '../../domain/experience.dart';
+import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
+import 'package:mobile/features/catalogs/experiences/data/experience_repository.dart';
+import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 
 class ExperiencesController extends ChangeNotifier {
   ExperiencesController({

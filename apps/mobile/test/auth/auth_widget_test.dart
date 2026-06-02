@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/app/widgets/app_button.dart';
-import 'package:mobile/app/widgets/app_card.dart';
-import 'package:mobile/app/theme/app_theme.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_card.dart';
+import 'package:mobile_ui/src/theme/app_theme.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/domain/auth_models.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';

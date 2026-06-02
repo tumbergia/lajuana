@@ -2,9 +2,9 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
-import '../../../data/catalogs_repository.dart';
-import '../../data/reservation_rules_repository.dart';
-import '../../domain/reservation_rules.dart';
+import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
+import 'package:mobile/features/catalogs/reservation_rules/data/reservation_rules_repository.dart';
+import 'package:mobile/features/catalogs/reservation_rules/domain/reservation_rules.dart';
 
 class ReservationRulesController extends ChangeNotifier {
   ReservationRulesController({

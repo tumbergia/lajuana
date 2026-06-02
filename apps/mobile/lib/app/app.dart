@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../features/auth/presentation/auth_routes.dart';
+import 'package:mobile/features/auth/presentation/auth_routes.dart';
 import 'dependency_injection.dart';
 import 'navigation/app_router.dart';
-import 'theme/app_theme.dart';
-import 'theme/app_theme_notifier.dart';
+import 'package:mobile_ui/mobile_ui.dart';
 
 class LaJuanaApp extends StatefulWidget {
   const LaJuanaApp({super.key, required this.apiBaseUrl});

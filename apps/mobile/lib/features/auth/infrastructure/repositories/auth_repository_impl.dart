@@ -1,11 +1,11 @@
-import '../../domain/auth_enums.dart';
-import '../../domain/auth_models.dart';
-import '../../domain/auth_repository.dart';
-import '../local/session_local_data_source.dart';
-import '../local/user_local_data_source.dart';
-import '../remote/auth_api_client.dart';
-import '../remote/auth_dtos.dart';
-import '../token_storage.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
+import 'package:mobile/features/auth/domain/auth_repository.dart';
+import 'package:mobile/features/auth/infrastructure/local/session_local_data_source.dart';
+import 'package:mobile/features/auth/infrastructure/local/user_local_data_source.dart';
+import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
+import 'package:mobile/features/auth/infrastructure/remote/auth_dtos.dart';
+import 'package:mobile/features/auth/infrastructure/token_storage.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({

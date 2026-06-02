@@ -11,6 +11,8 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
+  mobile_core:
+    path: ../mobile_core
 
 dev_dependencies:
   flutter_test:

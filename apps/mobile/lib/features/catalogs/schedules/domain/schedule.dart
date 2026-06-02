@@ -1,4 +1,4 @@
-import '../../../catalogs/data/catalog_sync_status.dart';
+import 'package:mobile/features/catalogs/data/catalog_sync_status.dart';
 import 'schedule_status.dart';
 
 class CatalogSchedule {

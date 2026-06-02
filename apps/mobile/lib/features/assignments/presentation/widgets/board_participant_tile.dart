@@ -3,12 +3,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_confirm_dialog.dart';
-import '../../../../app/widgets/cards/app_assignment_card.dart';
-import '../../../../app/widgets/cards/app_assignment_list_item.dart';
-import '../../domain/models/assignment_board.dart';
-import '../../domain/models/assignment_status.dart';
-import '../controllers/assignment_board_controller.dart';
+import 'package:mobile_ui/src/widgets/app_confirm_dialog.dart';
+import 'package:mobile_ui/src/widgets/cards/app_assignment_card.dart';
+import 'package:mobile_ui/src/widgets/cards/app_assignment_list_item.dart';
+import 'package:mobile_domain/src/assignments/assignment_board.dart';
+import 'package:mobile_domain/mobile_domain.dart';
+import 'package:mobile/features/assignments/presentation/controllers/assignment_board_controller.dart';
 
 /// Widget que muestra la asignación de un participante con botones de acción
 /// y dialegs emergentes para elegir equino/silla.

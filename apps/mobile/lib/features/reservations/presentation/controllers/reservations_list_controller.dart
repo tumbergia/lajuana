@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/repositories/reservations_repository.dart';
-import '../../infrastructure/mappers/reservation_mapper.dart';
-import '../models/reservation_view_models.dart';
+import 'package:mobile_domain/src/reservations/reservations_repository.dart';
+import 'package:mobile/features/reservations/infrastructure/mappers/reservation_mapper.dart';
+import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
 import 'reservations_list_state.dart';
 
 export 'reservations_list_state.dart';

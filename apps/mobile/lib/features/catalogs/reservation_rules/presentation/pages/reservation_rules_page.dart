@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../app/widgets/app_badge.dart';
-import '../../../../../app/widgets/app_button.dart';
-import '../../../../../app/widgets/app_centered_loader.dart';
-import '../../../../../app/widgets/app_entity_row_card.dart';
-import '../../../../../app/widgets/app_section_header.dart';
-import '../../../../../app/widgets/app_text_field.dart';
-import '../../../../auth/presentation/auth_controller.dart';
-import '../../../catalogs_module.dart';
-import '../controllers/reservation_rules_controller.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/reservation_rules/presentation/controllers/reservation_rules_controller.dart';
 
 class ReservationRulesPage extends StatefulWidget {
   const ReservationRulesPage({

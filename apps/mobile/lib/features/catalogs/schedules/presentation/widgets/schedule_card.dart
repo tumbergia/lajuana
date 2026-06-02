@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../app/widgets/app_entity_row_card.dart';
-import '../../domain/schedule.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule.dart';
 import 'schedule_status_badge.dart';
 
 class ScheduleCard extends StatelessWidget {

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import '../../../../app/theme/theme_extensions.dart';
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_metric_card.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/cards/app_selectable_card.dart';
-import '../equine_labels.dart';
-import '../models/equine_view_models.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_metric_card.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/cards/app_selectable_card.dart';
+import 'package:mobile/features/equines/presentation/equine_labels.dart';
+import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
 
 /// Detailed profile card for a single equine.
 ///

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_entity_row_card.dart';
-import '../../../../app/widgets/app_metric_card.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_metric_card.dart';
 
 class DashboardSummaryBlock extends StatelessWidget {
   const DashboardSummaryBlock({

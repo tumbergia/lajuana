@@ -1,6 +1,6 @@
 import 'package:http/http.dart' as http;
 
-import '../auth/infrastructure/token_storage.dart';
+import 'package:mobile/features/auth/infrastructure/token_storage.dart';
 import 'domain/repositories/assignments_repository.dart';
 import 'infrastructure/local/assignments_local_data_source.dart';
 import 'infrastructure/remote/assignments_api_client.dart';

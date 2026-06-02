@@ -1,7 +1,7 @@
 import 'package:mobile_core/mobile_core.dart';
 
-import '../../domain/models/equine_operational_status.dart';
-import '../../presentation/models/equine_view_models.dart';
+import 'package:mobile_domain/src/equines/equine_operational_status.dart';
+import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
 
 /// Registro SQLite plano para el caché local de equinos.
 class EquineLocalRecord {

@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:mobile_core/mobile_core.dart';
 
-import '../../domain/models/reservation_detail.dart';
-import '../../domain/repositories/reservations_repository.dart';
-import '../../infrastructure/remote/reservations_api_error.dart';
+import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/reservations/reservations_repository.dart';
+import 'package:mobile/features/reservations/infrastructure/remote/reservations_api_error.dart';
 
 enum ReservationDetailLoadState {
   idle,

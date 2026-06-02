@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../app/widgets/app_badge.dart';
-import '../../../../../app/widgets/app_button.dart';
-import '../../../../../app/widgets/app_section_header.dart';
-import '../../../../../app/widgets/app_term_help.dart';
-import '../../../../../app/widgets/app_text_field.dart';
-import '../../../../auth/presentation/auth_controller.dart';
-import '../../../catalogs_module.dart';
-import '../../domain/experience.dart';
-import '../controllers/experience_form_controller.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_term_help.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
+import 'package:mobile/features/catalogs/experiences/presentation/controllers/experience_form_controller.dart';
 
 class ExperienceFormPage extends StatefulWidget {
   const ExperienceFormPage({

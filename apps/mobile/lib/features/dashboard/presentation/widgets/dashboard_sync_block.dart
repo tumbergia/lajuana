@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_entity_row_card.dart';
-import '../../../auth/presentation/auth_controller.dart';
-import '../../../reservations/presentation/models/reservation_view_models.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
 
 class DashboardSyncBlock extends StatelessWidget {
   const DashboardSyncBlock({

@@ -1,5 +1,5 @@
-import '../domain/models/equine_experience_fit.dart';
-import '../domain/models/equine_operational_status.dart';
+import 'package:mobile_domain/src/equines/equine_experience_fit.dart';
+import 'package:mobile_domain/src/equines/equine_operational_status.dart';
 
 /// Human-readable labels for equine enums and backend codes.
 /// Single source of truth — never expose raw enum values to the user.

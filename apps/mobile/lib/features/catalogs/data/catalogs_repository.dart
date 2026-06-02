@@ -4,11 +4,11 @@ import 'dart:math';
 import 'package:mobile_core/mobile_core.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../emergency_contacts/domain/emergency_contact.dart';
-import '../experiences/domain/experience.dart';
-import '../reservation_rules/domain/reservation_rules.dart';
-import '../schedules/domain/schedule.dart';
-import '../schedules/domain/schedule_status.dart';
+import 'package:mobile/features/catalogs/emergency_contacts/domain/emergency_contact.dart';
+import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
+import 'package:mobile/features/catalogs/reservation_rules/domain/reservation_rules.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule_status.dart';
 import 'catalog_queue_operation.dart';
 import 'catalog_sync_status.dart';
 import 'catalogs_database.dart';

@@ -1,6 +1,6 @@
 import 'package:http/http.dart' as http;
 
-import '../auth/infrastructure/token_storage.dart';
+import 'package:mobile/features/auth/infrastructure/token_storage.dart';
 import 'domain/repositories/saddles_repository.dart';
 import 'infrastructure/remote/saddles_api_client.dart';
 import 'infrastructure/repositories/saddles_repository_impl.dart';

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/app_status_banner.dart';
-import '../../domain/models/reservation_participant_detail.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_domain/src/reservations/reservation_participant_detail.dart';
 
 /// Full-screen participant detail view.
 ///

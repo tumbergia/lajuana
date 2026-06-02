@@ -1,17 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../features/auth/domain/auth_enums.dart';
-import '../../features/auth/presentation/auth_routes.dart';
-import '../../features/auth/presentation/screens/change_password_screen.dart';
-import '../../features/auth/presentation/screens/login_screen.dart';
-import '../../features/auth/presentation/screens/register_screen.dart';
-import '../../features/auth/presentation/screens/session_view_screen.dart';
-import '../bootstrap/dev_loader_screen.dart';
-import '../bootstrap/dev/widget_museum_placeholder.dart';
-import '../bootstrap/startup_gate.dart';
-import '../dependency_injection.dart';
-import '../shell/authenticated_shell.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/presentation/auth_routes.dart';
+import 'package:mobile/features/auth/presentation/screens/change_password_screen.dart';
+import 'package:mobile/features/auth/presentation/screens/login_screen.dart';
+import 'package:mobile/features/auth/presentation/screens/register_screen.dart';
+import 'package:mobile/features/auth/presentation/screens/session_view_screen.dart';
+import 'package:mobile/app/bootstrap/dev_loader_screen.dart';
+import 'package:mobile/app/bootstrap/dev/widget_museum_placeholder.dart';
+import 'package:mobile/app/bootstrap/startup_gate.dart';
+import 'package:mobile/app/dependency_injection.dart';
+import 'package:mobile/app/shell/authenticated_shell.dart';
 
 /// Route generator for La Juana app.
 ///

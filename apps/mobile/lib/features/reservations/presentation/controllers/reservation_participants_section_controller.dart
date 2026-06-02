@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/models/reservation_detail.dart';
-import '../../domain/models/reservation_participant_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_participant_detail.dart';
 
 /// Estado de la subruta Participantes dentro del detalle de reserva.
 ///

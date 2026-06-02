@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/features/equines/domain/models/equine.dart';
-import 'package:mobile/features/equines/domain/models/equine_experience_fit.dart';
-import 'package:mobile/features/equines/domain/models/equine_operational_status.dart';
-import 'package:mobile/features/equines/domain/models/equine_timeline_entry.dart';
+import 'package:mobile_domain/src/equines/equine.dart';
+import 'package:mobile_domain/src/equines/equine_experience_fit.dart';
+import 'package:mobile_domain/src/equines/equine_operational_status.dart';
+import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
 import 'package:mobile/features/equines/infrastructure/mappers/equine_mapper.dart';
 import 'package:mobile/features/equines/infrastructure/remote/equine_dtos.dart';
 

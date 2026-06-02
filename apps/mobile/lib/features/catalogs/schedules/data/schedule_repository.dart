@@ -1,6 +1,6 @@
-import '../../data/catalogs_repository.dart';
-import '../domain/schedule.dart';
-import '../domain/schedule_status.dart';
+import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule_status.dart';
 
 class ScheduleRepository {
   const ScheduleRepository(this._catalogsRepository);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../app/widgets/app_metric_card.dart';
-import '../../domain/schedule.dart';
+import 'package:mobile_ui/src/widgets/app_metric_card.dart';
+import 'package:mobile/features/catalogs/schedules/domain/schedule.dart';
 
 class ScheduleCapacitySummary extends StatelessWidget {
   const ScheduleCapacitySummary({super.key, required this.schedule});

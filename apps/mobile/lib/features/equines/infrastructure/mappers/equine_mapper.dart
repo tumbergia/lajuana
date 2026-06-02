@@ -1,13 +1,13 @@
 import 'dart:ui' show VoidCallback;
 
-import '../../../../app/widgets/app_badge.dart';
-import '../../../../app/widgets/cards/app_logbook_timeline.dart';
-import '../../domain/models/equine.dart';
-import '../../domain/models/equine_experience_fit.dart';
-import '../../domain/models/equine_operational_status.dart';
-import '../../domain/models/equine_timeline_entry.dart';
-import '../../presentation/models/equine_view_models.dart';
-import '../remote/equine_dtos.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/cards/app_logbook_timeline.dart';
+import 'package:mobile_domain/src/equines/equine.dart';
+import 'package:mobile_domain/src/equines/equine_experience_fit.dart';
+import 'package:mobile_domain/src/equines/equine_operational_status.dart';
+import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
+import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
+import 'package:mobile/features/equines/infrastructure/remote/equine_dtos.dart';
 
 /// Mapea EquineDto del backend  →  Equine del dominio  →  ViewModel para UI.
 class EquineMapper {

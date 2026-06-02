@@ -6,14 +6,14 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import '../../../../app/widgets/app_button.dart';
-import '../../../../app/widgets/app_section_header.dart';
-import '../../../../app/widgets/app_text_field.dart';
-import '../../../../app/theme/app_radii.dart';
-import '../../../../app/widgets/dashed_border_painter.dart';
-import '../../domain/models/equine_operational_status.dart';
-import '../equine_labels.dart';
-import '../models/equine_view_models.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/theme/app_radii.dart';
+import 'package:mobile_ui/src/widgets/dashed_border_painter.dart';
+import 'package:mobile_domain/src/equines/equine_operational_status.dart';
+import 'package:mobile/features/equines/presentation/equine_labels.dart';
+import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
 
 /// Modal bottom sheet para crear o editar un equino (V1 simplificada).
 ///

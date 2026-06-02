@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../app/widgets/app_badge.dart';
-import '../domain/auth_enums.dart';
-import '../infrastructure/connectivity/network_models.dart';
+import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 
 AppBadge connectivityBadge(NetworkStatus status) {
   if (status.linkType == LinkType.offline) {

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../../domain/experience.dart';
+import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 
 class ExperiencePricingTierDraft {
   const ExperiencePricingTierDraft({
