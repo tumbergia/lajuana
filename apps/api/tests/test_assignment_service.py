@@ -1120,6 +1120,21 @@ class TestValidateAssignmentCandidate:
             _mock_get_saddle,
         )
 
+        # _validate_and_prepare (dry_run path) runs extra DB checks:
+        # _validate_equine_not_duplicate → AssignmentDocument.find_one
+        # _validate_no_active_assignment → AssignmentDocument.find
+        async def _mock_find_one(_query: object) -> None:
+            return None
+
+        monkeypatch.setattr(
+            "app.services.assignment_service.AssignmentDocument.find_one",
+            _mock_find_one,
+        )
+        monkeypatch.setattr(
+            "app.services.assignment_service.AssignmentDocument.find",
+            lambda _q: FakeFindQuery([]),
+        )
+
     def test_validate_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Valid candidate returns empty safety flags and warnings."""
         self._patch_validate_base(monkeypatch)

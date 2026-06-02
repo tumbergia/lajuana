@@ -721,12 +721,15 @@ class AssignmentService:
         actor_id: PydanticObjectId | None = None,
         actor_role: UserRole | None = None,
         *,
-        # Allow excluding a specific assignment from duplicate checks (for updates)
         exclude_assignment_id: object | None = None,
-    ) -> tuple[dict[str, Any], object, object]:
-        """Validate ALL constraints and return (doc_kwargs, reservation, participant).
+        dry_run: bool = False,
+    ) -> tuple[dict[str, Any], object, object] | tuple[list[str], list[str], None, None]:
+        """Validate ALL constraints. Single validation pipeline for create/update/replace.
 
-        Single validation pipeline used by create(), batch_update(), and replace().
+        When dry_run=True, returns (safety_flags, warnings, None, None) without building
+        document kwargs. Used by validate_assignment_candidate().
+
+        When dry_run=False (default), returns (doc_kwargs, reservation, participant).
         Raises ApiError on any violation.
         """
         reservation, participant, equine = await asyncio.gather(
@@ -757,6 +760,9 @@ class AssignmentService:
         age = _age_from_birth_date(participant.birth_date)
         safety_flags, warnings = self._check_safety(participant, equine, age)
 
+        if dry_run:
+            return safety_flags, warnings, None, None
+
         now = datetime.now(UTC)
         doc_kwargs: dict[str, Any] = dict(
             reservation_id=reservation.id,
@@ -783,23 +789,17 @@ class AssignmentService:
     ) -> tuple[list[str], list[str]]:
         """Retorna (safety_flags, warnings) sin crear la asignación.
 
+        Delega a _validate_and_prepare con dry_run=True.
         Lanza ApiError si hay errores bloqueantes.
         """
-        reservation, participant, equine = await asyncio.gather(
-            ReservationDocument.get(reservation_id),
-            ParticipantDocument.get(participant_id),
-            EquineDocument.get(equine_id),
+        flags, warnings, _, _ = await self._validate_and_prepare(
+            reservation_id=reservation_id,
+            participant_id=participant_id,
+            equine_id=equine_id,
+            saddle_id=saddle_id,
+            dry_run=True,
         )
-        self._validate_reservation(reservation)
-        self._validate_participant_belongs(participant, reservation)
-        self._validate_participant_data(participant)
-        self._validate_equine(equine)
-        if saddle_id:
-            saddle = await SaddleDocument.get(saddle_id)
-            self._validate_saddle(saddle)
-        self._validate_rider_weight(participant, equine)
-        age = _age_from_birth_date(participant.birth_date)
-        return self._check_safety(participant, equine, age)
+        return flags, warnings
 
     # ── Internal validations ──
 
