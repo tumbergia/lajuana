@@ -9,6 +9,7 @@ import 'package:mobile/features/reservations/infrastructure/remote/reservation_d
 import 'package:mobile/features/reservations/infrastructure/mappers/reservation_mapper.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservations_api_error.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_detail_controller.dart';
+import 'package:mobile_core/mobile_core.dart';
 
 /// Fake repository that always succeeds for approve/reject.
 class _FakeSuccessActionRepository implements ReservationsRepository {
@@ -537,8 +538,7 @@ void main() {
         isAdmin: true,
       );
 
-      expect(controller.paymentProofActionState,
-          PaymentProofActionState.success);
+      expect(controller.paymentProofActionState.isSuccess, isTrue);
       expect(controller.detail, isNotNull);
       expect(controller.actionErrorCode, isNull);
     });
@@ -555,8 +555,7 @@ void main() {
         isAdmin: false,
       );
 
-      expect(controller.paymentProofActionState,
-          PaymentProofActionState.error);
+      expect(controller.paymentProofActionState.isError, isTrue);
       expect(controller.actionErrorCode, 'permission.denied');
     });
 
@@ -573,8 +572,7 @@ void main() {
         isAdmin: false,
       );
 
-      expect(controller.paymentProofActionState,
-          PaymentProofActionState.error);
+      expect(controller.paymentProofActionState.isError, isTrue);
       expect(controller.actionErrorCode, 'permission.denied');
     });
 
@@ -586,7 +584,7 @@ void main() {
       await controller.loadDetail('r1');
 
       // Set state to approving manually to simulate in-progress action
-      controller.paymentProofActionState = PaymentProofActionState.approving;
+      controller.approveProofState = ActionState.loading();
       controller.actingPaymentProofId = 'proof1';
 
       // Second call while in approving state should be no-op
@@ -595,9 +593,8 @@ void main() {
         isAdmin: true,
       );
 
-      // State should still be approving with the original proof ID
-      expect(controller.paymentProofActionState,
-          PaymentProofActionState.approving);
+      // State should still be loading with the original proof ID
+      expect(controller.paymentProofActionState.isLoading, isTrue);
       expect(controller.actingPaymentProofId, 'proof1');
     });
 
@@ -611,8 +608,7 @@ void main() {
         isAdmin: true,
       );
 
-      expect(controller.paymentProofActionState,
-          PaymentProofActionState.error);
+      expect(controller.paymentProofActionState.isError, isTrue);
       expect(controller.actionErrorCode, 'auth.forbidden');
       expect(controller.actionErrorMessage,
           contains('No tienes permisos'));
@@ -629,8 +625,7 @@ void main() {
         isAdmin: true,
       );
 
-      expect(controller.paymentProofActionState,
-          PaymentProofActionState.error);
+      expect(controller.paymentProofActionState.isError, isTrue);
       expect(controller.actionErrorCode,
           'reservation.invalid_status_transition');
     });
@@ -644,8 +639,7 @@ void main() {
         isAdmin: true,
       );
 
-      expect(controller.paymentProofActionState,
-          PaymentProofActionState.error);
+      expect(controller.paymentProofActionState.isError, isTrue);
       expect(controller.actionErrorCode, 'network.unavailable');
     });
 
@@ -662,8 +656,7 @@ void main() {
         isAdmin: true,
       );
 
-      expect(controller.paymentProofActionState,
-          PaymentProofActionState.success);
+      expect(controller.paymentProofActionState.isSuccess, isTrue);
       expect(controller.detail, isNotNull);
     });
   });

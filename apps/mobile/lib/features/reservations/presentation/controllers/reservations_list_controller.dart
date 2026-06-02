@@ -3,46 +3,80 @@ import 'package:flutter/foundation.dart';
 import '../../domain/repositories/reservations_repository.dart';
 import '../../infrastructure/mappers/reservation_mapper.dart';
 import '../models/reservation_view_models.dart';
+import 'reservations_list_state.dart';
 
-enum ReservationsLoadState {
-  idle,
-  loading,
-  refreshing,
-  success,
-  empty,
-  error,
-  offlineFromCache,
-}
+export 'reservations_list_state.dart';
 
 /// Controlador de listado de reservas con filtros, búsqueda y carga real.
+///
+/// State inmutable via [ReservationsListState]. Getters mantienen API pública
+/// idéntica a la versión anterior (W3.7).
 class ReservationsListController extends ChangeNotifier {
   ReservationsListController({required ReservationsRepository repository})
       : _repository = repository;
 
   final ReservationsRepository _repository;
+  ReservationsListState _state = const ReservationsListState();
 
-  ReservationsLoadState state = ReservationsLoadState.idle;
-  List<ReservationRecord> items = const <ReservationRecord>[];
-  String searchQuery = '';
-  String? filterGroup; // "pendientes" | "confirmadas" | "cerradas" | "eliminadas"
-  String? errorCode;
-  String? errorMessage;
-  DateTime? lastSyncAt;
+  // ── Getters públicos (API compatible) ──
+  ReservationsLoadState get state => _state.loadState;
+  List<ReservationRecord> get items => _state.items;
+  String get searchQuery => _state.searchQuery;
+  String? get filterGroup => _state.filterGroup;
+  String? get errorCode => _state.errorCode;
+  String? get errorMessage => _state.errorMessage;
+  DateTime? get lastSyncAt => _state.lastSyncAt;
 
-  // Full unfiltered list kept for local filtering.
-  List<ReservationRecord> _allItems = const <ReservationRecord>[];
+  // ── Internal helpers ──
+
+  void _emit(ReservationsListState newState) {
+    _state = newState;
+    notifyListeners();
+  }
+
+  void _applyLocalFilters() {
+    var result = _state.allItems;
+
+    // Apply status group filter
+    final fg = _state.filterGroup;
+    if (fg != null) {
+      if (fg == 'eliminadas') {
+        result = result.where((item) => item.isDeleted).toList(growable: false);
+      } else {
+        result = result.where((item) {
+          return item.status == fg;
+        }).toList(growable: false);
+      }
+    }
+
+    // Apply search query
+    final sq = _state.searchQuery.trim();
+    if (sq.isNotEmpty) {
+      final q = sq.toLowerCase();
+      result = result.where((item) {
+        return item.clientName.toLowerCase().contains(q) ||
+            item.code.toLowerCase().contains(q) ||
+            (item.experienceName?.toLowerCase().contains(q) ?? false);
+      }).toList(growable: false);
+    }
+
+    _state = _state.copyWith(items: result);
+  }
+
+  // ── Public API ──
 
   /// Carga inicial: primero cache local, luego refresh remoto.
   Future<void> loadInitial() async {
-    state = ReservationsLoadState.loading;
-    errorCode = null;
-    errorMessage = null;
-    notifyListeners();
+    _emit(_state.copyWith(
+      loadState: ReservationsLoadState.loading,
+      clearError: true,
+    ));
 
     try {
       final cached = await _repository.getCachedReservations();
       if (cached.isNotEmpty) {
-        _allItems = cached.map((item) => listItemToRecord(item)).toList();
+        final records = cached.map((item) => listItemToRecord(item)).toList();
+        _state = _state.copyWith(allItems: records);
         _applyLocalFilters();
       }
     } catch (_) {
@@ -52,107 +86,78 @@ class ReservationsListController extends ChangeNotifier {
     try {
       await _fetchFromRemote(isRefresh: false);
     } catch (e) {
-      if (_allItems.isNotEmpty) {
-        state = ReservationsLoadState.offlineFromCache;
+      if (_state.allItems.isNotEmpty) {
+        _emit(_state.copyWith(
+          loadState: ReservationsLoadState.offlineFromCache,
+        ));
       } else {
-        state = ReservationsLoadState.error;
-        errorCode = 'network.unavailable';
-        errorMessage = 'No se pudieron cargar las reservas.';
+        _emit(_state.copyWith(
+          loadState: ReservationsLoadState.error,
+          errorCode: 'network.unavailable',
+          errorMessage: 'No se pudieron cargar las reservas.',
+        ));
       }
-      notifyListeners();
     }
   }
 
   /// Pull-to-refresh.
   Future<void> refresh() async {
-    if (state == ReservationsLoadState.loading) return;
-    state = ReservationsLoadState.refreshing;
-    errorCode = null;
-    errorMessage = null;
-    notifyListeners();
+    if (_state.loadState == ReservationsLoadState.loading) return;
+    _emit(_state.copyWith(
+      loadState: ReservationsLoadState.refreshing,
+      clearError: true,
+    ));
 
     try {
       await _fetchFromRemote(isRefresh: true);
     } catch (e) {
-      errorCode = 'network.unavailable';
-      errorMessage = 'No se pudo actualizar.';
-      if (_allItems.isEmpty) {
-        state = ReservationsLoadState.error;
+      if (_state.allItems.isEmpty) {
+        _emit(_state.copyWith(loadState: ReservationsLoadState.error));
       } else {
-        state = ReservationsLoadState.offlineFromCache;
+        _emit(_state.copyWith(
+          loadState: ReservationsLoadState.offlineFromCache,
+        ));
       }
-      notifyListeners();
     }
   }
 
   Future<void> _fetchFromRemote({required bool isRefresh}) async {
-    final includeDeleted = filterGroup == 'eliminadas';
+    final includeDeleted = _state.filterGroup == 'eliminadas';
     final domainItems = await _repository.listReservations(
       includeDeleted: includeDeleted,
     );
-    lastSyncAt = DateTime.now();
+    final now = DateTime.now();
 
     if (domainItems.isEmpty) {
-      _allItems = const <ReservationRecord>[];
-      items = const <ReservationRecord>[];
-      state = ReservationsLoadState.empty;
-      notifyListeners();
+      _emit(_state.copyWith(
+        loadState: ReservationsLoadState.empty,
+        items: const [],
+        allItems: const [],
+        lastSyncAt: now,
+      ));
       return;
     }
 
-    _allItems = domainItems.map((item) => listItemToRecord(item)).toList();
+    final records = domainItems.map((item) => listItemToRecord(item)).toList();
+    _state = _state.copyWith(allItems: records, lastSyncAt: now);
     _applyLocalFilters();
-    state = ReservationsLoadState.success;
-    notifyListeners();
+    _emit(_state.copyWith(loadState: ReservationsLoadState.success));
   }
 
   void setFilterGroup(String? group) {
-    if (filterGroup == group) return;
-    filterGroup = group;
+    if (_state.filterGroup == group) return;
+    _state = _state.copyWith(filterGroup: group);
     // Cada cambio de filtro requiere re-fetch porque includeDeleted cambia.
     refresh();
   }
 
   void setSearchQuery(String query) {
-    searchQuery = query;
+    _state = _state.copyWith(searchQuery: query);
     _applyLocalFilters();
     notifyListeners();
   }
 
-  void _applyLocalFilters() {
-    var result = _allItems;
-
-    // Apply status group filter
-    if (filterGroup != null) {
-      if (filterGroup == 'eliminadas') {
-        // Mostrar solo reservas borradas lógicamente.
-        result = result.where((item) => item.isDeleted).toList(growable: false);
-      } else {
-        result = result.where((item) {
-          return item.status == filterGroup;
-        }).toList(growable: false);
-      }
-    }
-
-    // Apply search query
-    if (searchQuery.trim().isNotEmpty) {
-      final q = searchQuery.toLowerCase().trim();
-      result = result.where((item) {
-        return item.clientName.toLowerCase().contains(q) ||
-            item.code.toLowerCase().contains(q) ||
-            (item.experienceName?.toLowerCase().contains(q) ?? false);
-      }).toList(growable: false);
-    }
-
-    items = result;
-  }
-
   void reset() {
-    filterGroup = null;
-    searchQuery = '';
-    errorCode = null;
-    errorMessage = null;
-    state = ReservationsLoadState.idle;
-    notifyListeners();
+    _emit(const ReservationsListState());
   }
 }

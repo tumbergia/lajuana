@@ -481,9 +481,9 @@ void main() {
 
       await controller.confirmReservation(isAdmin: true);
 
-      expect(controller.confirmationState, ReservationActionState.success);
+      expect(controller.confirmationState.isSuccess, isTrue);
       expect(controller.detail, isNotNull);
-      expect(controller.confirmationErrorCode, isNull);
+      expect(controller.confirmationState.errorCode, isNull);
     });
 
     test('confirmReservation sets error for non-admin', () async {
@@ -497,8 +497,8 @@ void main() {
 
       await controller.confirmReservation(isAdmin: false);
 
-      expect(controller.confirmationState, ReservationActionState.error);
-      expect(controller.confirmationErrorCode, 'permission.denied');
+      expect(controller.confirmationState.isError, isTrue);
+      expect(controller.confirmationState.errorCode, 'permission.denied');
     });
 
     test('confirmReservation handles API failure', () async {
@@ -524,8 +524,8 @@ void main() {
 
       await controller.confirmReservation(isAdmin: true);
 
-      expect(controller.confirmationState, ReservationActionState.error);
-      expect(controller.confirmationErrorCode, 'common.error');
+      expect(controller.confirmationState.isError, isTrue);
+      expect(controller.confirmationState.errorCode, 'common.error');
     });
 
     test('confirmReservation double-tap guard blocks second call', () async {
@@ -546,7 +546,7 @@ void main() {
       // After all microtasks, state resets to idle.
       // Success means: detail is populated and no error was set.
       expect(controller.detail, isNotNull);
-      expect(controller.confirmationErrorCode, isNull);
+      expect(controller.confirmationState.errorCode, isNull);
     });
 
     test('confirmReservation handles null detail gracefully', () async {
@@ -560,10 +560,10 @@ void main() {
 
       await controller.confirmReservation(isAdmin: true);
 
-      // Should complete without crashing, state resets to idle.
-      // Error was logged internally, but the reset microtask already ran.
-      expect(controller.confirmationState, ReservationActionState.idle);
-      expect(controller.confirmationErrorCode, 'common.error');
+      // Should complete without crashing, state reflects the error.
+      // (No more _resetDelayed — ActionState keeps error state)
+      expect(controller.confirmationState.isError, isTrue);
+      expect(controller.confirmationState.errorCode, 'common.error');
     });
   });
 }

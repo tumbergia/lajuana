@@ -172,15 +172,10 @@ policy_to_response = lambda d: document_to_schema(
 
 async def reservation_to_response(doc: ReservationDocument) -> ReservationResponseSchema:
     participants: list[ParticipantResponseSchema] = []
+    participant_docs: list[ParticipantDocument] = []
     if doc.participant_ids:
         participant_docs = await ParticipantDocument.find(
             {"_id": {"$in": doc.participant_ids}}
-        ).to_list()
-    else:
-        # Fallback: query by reservation_id (handles legacy data where
-        # participant_ids was never populated)
-        participant_docs = await ParticipantDocument.find(
-            {"reservation_id": doc.id}
         ).to_list()
     for p in participant_docs:
         try:

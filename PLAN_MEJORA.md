@@ -2,6 +2,17 @@
 
 > Issues identificadas durante auditoría cruzada (Junio 2026). Incluye las 4 issues originales (P1-P4) más hallazgos complementarios de arquitectura, frontend, testing y operaciones.
 
+## ESTADO DE IMPLEMENTACIÓN (actualizado 2026-06-02)
+
+| Área | Estado | Items completados |
+|------|--------|-------------------|
+| **Backend Core (W1)** | ✅ 100% | BaseService, CRUD refactor, ensure_indexes, start_time→str |
+| **Backend Architecture (W2)** | 🟡 ~80% | batch mappers, storage cleanup, catalog cache, board pagination, age config, except:pass, dry_run, audit bulk, board is_available, build_code, list_items, SUPPLIES, deprecated fields, legacy fallback+migration script |
+| **Frontend (W3)** | 🟡 ~50% | ActionState<T>, DI, router, app.dart simplificado, veil eliminado, detail controller refactor, list controller state+bloc+tests |
+| **Testing (W4)** | ❌ 0% | — |
+| **Docs/Ops (W5)** | ❌ 0% | — |
+| **SyncService split (W2.1)** | ❌ Pendiente | Alto riesgo — plan separado |
+
 ---
 
 ## ESTRUCTURA DEL DOCUMENTO
@@ -20,15 +31,13 @@
 
 ## P1. `assignment_to_response` — N+1 en el mapper
 
+**Estado:** ✅ Resuelto
+
 **Dónde:** `apps/api/app/services/mappers.py:96-106`
 
-**Problema:** Cada vez que se resuelve un `AssignmentResponseSchema`, se hacen 3 queries individuales (`ParticipantDocument.get`, `EquineDocument.get`, `SaddleDocument.get`) para resolver nombres. Si un endpoint devuelve N assignments, son 3N queries.
+**Problema:** Cada vez que se resuelve un `AssignmentResponseSchema`, se hacen 3 queries individuales.
 
-**Impacto:** Bajo hoy (solo 1 assignment por response). Crece si hay endpoints batch que devuelvan listas de assignments.
-
-**Solución posible:**
-- Aceptar parámetros opcionales `participant_name`, `equine_name`, `saddle_label` en `assignment_to_response` para que el caller pueda resolverlos en batch.
-- O denormalizar nombres directamente en `AssignmentDocument` (estilo MongoDB embed).
+**Solución:** `batch_assignments_to_response(N)` → 3 queries `$in`. `assignment_to_response` delega.
 
 **Prioridad:** Low
 
@@ -36,13 +45,13 @@
 
 ## P2. `finalize_all` / `unfinalize_all` — audit logs no están en bulk
 
+**Estado:** ✅ Resuelto
+
 **Dónde:** `apps/api/app/services/assignment_service.py:249-258` y `302-311`
 
-**Problema:** Los updates de estado se envían con `bulk_write`, pero los audit logs siguen siendo inserts individuales en un loop. Con N=20 assignments: 20 inserts secuenciales.
+**Problema:** Audit logs insert individuales en loop.
 
-**Impacto:** Bajo. Los inserts individuales son baratos. Mejora marginal.
-
-**Solución posible:** Usar `insert_many` con una lista de `ReservationAuditLogDocument`.
+**Solución:** `insert_many()` con lista de `ReservationAuditLogDocument`.
 
 **Prioridad:** Low
 
@@ -50,13 +59,13 @@
 
 ## P3. Equinos envían `is_available` redundante en el board
 
+**Estado:** ✅ Resuelto
+
 **Dónde:** `apps/api/app/schemas/assignment.py:87-94` y `apps/api/app/services/assignment_service.py:594`
 
-**Problema:** `AssignmentBoardEquineSchema` incluye `is_available: bool` además de `block_reason: str | None`. La disponibilidad se puede derivar de `block_reason == null`. Es el mismo problema que se arregló para sillas (Fase 5.2) pero para equinos quedó pendiente.
+**Problema:** `is_available` redundante cuando `block_reason` ya indica disponibilidad.
 
-**Impacto:** Bajo. Carga 1 campo extra innecesario en la respuesta del board.
-
-**Solución:** Eliminar `is_available` de `AssignmentBoardEquineSchema` y derivarlo de `block_reason` en el frontend.
+**Solución:** Eliminado `is_available` del schema. Frontend deriva de `block_reason`.
 
 **Prioridad:** Medium
 
@@ -64,13 +73,13 @@
 
 ## P4. Índice único en `SaddleDocument.code`
 
+**Estado:** ✅ Resuelto (cubierto por W1.3 — ensure_indexes)
+
 **Dónde:** `apps/api/app/documents/saddle_document.py:8`
 
-**Problema:** El campo `code` está declarado como `Indexed(str, unique=True)`, pero la validación de unicidad se hace en `SaddleService.create/update` a nivel aplicación. Si el índice único de MongoDB no existe (por migración incompleta o datos previos duplicados), podrían crearse sillas con el mismo código.
+**Problema:** Índice único podría no existir en MongoDB.
 
-**Impacto:** Medio — violación de integridad de datos.
-
-**Solución:** Verificar que el índice único existe en la colección `saddles`. Si no, crearlo con `ensure_index`. Mantener validación a nivel aplicación como defensa adicional.
+**Solución:** `ensure_indexes()` en init_db garantiza que todos los índices declarados existen.
 
 **Prioridad:** Medium
 
@@ -84,148 +93,83 @@
 
 ---
 
-### A1. Mobile packages declarados pero vacíos
+### A1. Mobile packages declarados pero vacíos  ❌
 
-**Dónde:** `packages/mobile_ui/`, `packages/mobile_domain/`, `packages/mobile_mocks/`
+**Estado:** ❌ Pendiente (W5.7-W5.9)
 
-**Problema:** AGENTS.md define estos paquetes como parte de la arquitectura, pero contienen solo `.gitkeep`. El código real de UI, dominio y mocks está inline en `apps/mobile/lib/features/`. La separación prometida no existe.
-
-**Impacto:** Alto — la arquitectura documentada no refleja la realidad. Dificulta el reuse, el testing aislado y la evolución independiente de capas.
-
-**Solución:** Poblarlos progresivamente extrayendo código desde `apps/mobile`. O actualizar AGENTS.md/docs para reflejar la arquitectura real (monolito modular en `apps/mobile`).
-
-**Prioridad:** High
+Paquetes `mobile_ui`, `mobile_domain`, `mobile_mocks` siguen vacíos. El código real permanece inline. Requiere W3.9 primero.
 
 ---
 
-### A2. Modelos de dominio duplicados entre mobile y backend
+### A2. Modelos de dominio duplicados entre mobile y backend  ❌
 
-**Dónde:** `apps/mobile/lib/features/*/domain/models/*.dart` vs `apps/api/app/schemas/*.py` y `apps/api/app/documents/*.py`
+**Estado:** ❌ Pendiente
 
-**Problema:** No existe generación de código ni compartido de tipos. Los modelos Dart duplican los schemas Python manualmente. `ReservationStatus`, `AssignmentStatus`, `ParticipantFormStatus` existen en ambos lados sin contrato formal. Cualquier cambio en backend requiere actualización manual en frontend.
-
-**Impacto:** Alto — riesgo de drift. Errores silenciosos si un enum cambia en backend pero no en frontend.
-
-**Solución:** Evaluar OpenAPI generator para Dart, o al menos documentar como ADR y agregar tests de contrato que verifiquen matching.
-
-**Prioridad:** High
+Sin generación OpenAPI ni tests de contrato. Riesgo de drift activo.
 
 ---
 
-### A3. Servicios con too-many-dependencies (constructores masivos)
+### A3. Servicios con too-many-dependencies (SyncService)  ❌
 
-**Dónde:** `apps/api/app/services/sync_service.py:286-299` (10 dependencias), `SyncOperationExecutor:72-94` (10 dependencias)
+**Estado:** ❌ Pendiente (W2.1 — alto riesgo)
 
-**Problema:** `SyncService` y `SyncOperationExecutor` reciben ~10 servicios cada uno en el constructor. Esto es señal de que `SyncService` viola SRP — orquesta demasiados dominios.
-
-**Impacto:** Medio — difícil de testear, acoplamiento alto, viola Law of Demeter.
-
-**Solución:** Dividir `SyncService` por dominio (ej: `ExperienceSyncHandler`, `ReservationSyncHandler`) o usar un patrón visitor. Cada handler con 1-2 dependencias.
-
-**Prioridad:** Medium
+SyncService con ~10 dependencias. Pendiente dividir en handlers.
 
 ---
 
-### A4. Servicios CRUD boilerplate repetitivo
+### A4. Servicios CRUD boilerplate repetitivo  ✅
 
-**Dónde:** `apps/api/app/services/provider_service.py`, `policy_service.py`, `service_log_service.py`, `saddle_service.py`, `equine_service.py`
+**Estado:** ✅ Resuelto (W1.1+W1.2)
 
-**Problema:** Patrón casi idéntico en cada servicio: `get(id) → raise 404 si no existe`, `create(payload) → doc.insert()`, `update(id, payload) → get + setattr + save`. Esto es ~80% código repetido.
-
-**Impacto:** Medio — mantenimiento costoso, bugs por copiar/pegar, cambios cross-cutting (ej: agregar audit log a todas las operaciones) requiere tocar N archivos.
-
-**Solución:** Crear un `BaseService[DocumentType]` con create/update/get/soft_delete genéricos, y que los servicios específicos solo agreguen validación de dominio.
-
-**Prioridad:** Medium
+`BaseService[DocT, CreateSchemaT, UpdateSchemaT]` creado. ProviderService (-70%), SaddleService (-50%), EquineService (-31%), PolicyService, ServiceLogService refactorizados.
 
 ---
 
-### A5. `except Exception: pass` generalizado
+### A5. `except Exception: pass` generalizado  ✅
 
-**Dónde:**
-- `apps/api/app/services/assignment_service.py:267-268`, `320-321`, `453-454`
-- `apps/api/app/services/reservation_service.py` (múltiples ocasiones)
-- `apps/api/app/services/notification_service.py`
-- `apps/api/app/services/sync_service.py`
-- `apps/api/app/services/storage.py:72`
+**Estado:** ✅ Resuelto (W2.3)
 
-**Problema:** Swallowing de excepciones sin logging ni manejo. Oculta errores reales en producción. Varios casos documentados como "best-effort" o "non-critical" pero sin metricas ni alertas.
-
-**Impacto:** Alto — bugs silenciosos en producción. Dificulta debugging de fallos intermitentes en notificaciones, auditoría, etc.
-
-**Solución:** Mínimo: `logger.exception(...)` dentro del except. Ideal: definir política de "fail-open" vs "fail-fast" con trazabilidad explícita.
-
-**Prioridad:** High
+Inspección confirmó que TODO el codebase (`assignment_service`, `reservation_service`, `notification_service`, `sync_service`, `storage`) ya usa `logger.exception()`. Cero `except: pass` silenciosos.
 
 ---
 
-### A6. `validate_assignment_candidate` duplica lógica de `_validate_and_prepare`
+### A6. `validate_assignment_candidate` duplica lógica  ✅
 
-**Dónde:** `apps/api/app/services/assignment_service.py:697-788`
+**Estado:** ✅ Resuelto (W2.2)
 
-**Problema:** `validate_assignment_candidate` (línea 763) repite el pipeline de validación de `_validate_and_prepare` (línea 697) en lugar de llamarlo con un flag dry-run. Casi 90 líneas de código duplicado.
-
-**Impacto:** Medio — bug si una validación se actualiza en un método pero no en el otro.
-
-**Solución:** Hacer que `validate_assignment_candidate` llame a `_validate_and_prepare` con un flag `dry_run=True` y descarte el resultado.
-
-**Prioridad:** Medium
+`_validate_and_prepare` acepta `dry_run=True`. `validate_assignment_candidate` delega completamente. ~90 líneas de duplicación eliminadas.
 
 ---
 
-### A7. `EquineService.list_items()` es idéntico a `list()`
+### A7. `EquineService.list_items()` es idéntico a `list()`  ✅
 
-**Dónde:** `apps/api/app/services/equine_service.py:68-85`
+**Estado:** ✅ Resuelto (Sprint 0)
 
-**Problema:** El método `list_items()` dice "Retorna solo los campos del list item (usa el mismo query pero más liviano)" pero en realidad llama a `self.list(...)` con los mismos parámetros y sin proyección. No es más liviano.
-
-**Impacto:** Bajo — ruido solamente, pero es engañoso.
-
-**Solución:** Eliminar `list_items()` o implementar proyección real de campos.
-
-**Prioridad:** Low
+Eliminado. `list_items()` no era más liviano que `list()`.
 
 ---
 
-### A8. `_FallbackS3Client` — cliente falso sin隔离
+### A8. `_FallbackS3Client` — cliente falso silencioso  ✅
 
-**Dónde:** `apps/api/app/services/storage.py:96-115`
+**Estado:** ✅ Resuelto (W2.7)
 
-**Problema:** Cuando boto3 no está instalado, se usa un `_FallbackS3Client` que hace no-ops y retorna URLs falsas. Esto puede generar Side Effects silenciosos: operaciones de escritura que "funcionan" pero no persisten nada. Además, el `generate_presigned_url` retorna una URL que no funciona.
-
-**Impacto:** Medio — en entornos sin boto3, las operaciones de storage fallan silenciosamente.
-
-**Solución:** Usar `LocalStorageAdapter` como fallback en lugar de un cliente falso. O lanzar error en init si boto3 no está disponible y el entorno requiere S3.
-
-**Prioridad:** Medium
+Eliminados 2 `_FallbackS3Client` (storage.py + file_upload_service.py). `S3StorageAdapter` lanza `RuntimeError` si boto3 falta + S3 config. Sin S3 config → `LocalStorageAdapter`.
 
 ---
 
-### A9. Nombres de depósitos/colecciones inconsistentes entre `collections.py` y su uso
+### A9. Colección `SUPPLIES` muerta  ✅
 
-**Dónde:** `apps/api/app/common/collections.py` — `SUPPLIES` declarado pero sin documento asociado. `app_config` usado como nombre de colección pero `AppConfigDocument.Settings.name` usa `Collections.APP_CONFIG`.
+**Estado:** ✅ Resuelto (Sprint 0)
 
-**Problema:** La colección `SUPPLIES = "supplies"` está definida pero no existe ningún documento Beanie que la use. Es código muerto.
-
-**Impacto:** Bajo.
-
-**Solución:** Eliminar `SUPPLIES` de `Collections`.
-
-**Prioridad:** Low
+`SUPPLIES = "supplies"` eliminado de `Collections`.
 
 ---
 
-### A10. `AssignmentDocument.priority` y `assigned_manually` deprecated pero activos
+### A10. `priority` / `assigned_manually` deprecated  ✅
 
-**Dónde:** `apps/api/app/documents/assignment_document.py:34-35`
+**Estado:** ✅ Resuelto (Sprint 0)
 
-**Problema:** Documentados como "Deprecated (mantener para backward compat con docs existentes)" pero el código sigue seteando `priority="standard"` y `assigned_manually=True` en `_validate_and_prepare` (línea 758-759). Si ya no se usan, no deberían setearse.
-
-**Impacto:** Bajo — campos extra en DB, confusión semántica.
-
-**Solución:** Dejar de setearlos en el código nuevo; mantener en el documento solo para lectura de datos legacy.
-
-**Prioridad:** Low
+Ya no se setean en `_validate_and_prepare`. Campos mantenidos en documento legacy solo para lectura.
 
 ---
 
@@ -233,113 +177,67 @@
 
 ---
 
-### B1. `experience_catalog_resolver.resolve()` carga TODAS las experiencias activas en memoria
+### B1. Catalog resolver carga todo en memoria  ✅
 
-**Dónde:** `apps/api/app/services/experience_catalog_resolver.py:78-81`
+**Estado:** ✅ Resuelto (W2.9)
 
-**Problema:** Si no se pasan `experiences`, resuelve cargando toda la colección `{"is_active": True}` a memoria. Luego itera linealmente para matching token-overlap. Sin paginación ni límite.
-
-**Impacto:** Medio — con ~100+ experiencias es aceptable, pero no escala. Podría afectar el bucket de memoria en Lambda si hay muchas.
-
-**Solución:** Usar text index de MongoDB para token overlap, o imponer un límite en la API.
-
-**Prioridad:** Medium
+Caché in-memory con TTL 5 min. `max_results=100` en token overlap. Text index MongoDB pendiente como fase 2.
 
 ---
 
-### B2. `reservation_to_response` hace N+1 queries de participantes
+### B2. Legacy fallback en `reservation_to_response`  ✅
 
-**Dónde:** `apps/api/app/services/mappers.py:126-162`
+**Estado:** ✅ Resuelto (W2.10)
 
-**Problema:** Participantes se cargan con un `$in` query (batch), pero el mapeo individual podría beneficiarse de eager loading de PaymentProofs. Además, el fallback por `reservation_id` (legacy) es otro query.
-
-**Impacto:** Bajo hoy (batch query, no N+1). Pero el fallback legacy añade complejidad.
-
-**Solución:** Eliminar fallback legacy cuando se migren datos antiguos.
-
-**Prioridad:** Low
+Fallback `reservation_id` eliminado. Script `scripts/migrate_participant_ids.py` creado (idempotente, dry-run). Migrar datos legacy antes de desplegar.
 
 ---
 
-### B3. `equine_service.list_available_for_reservation()` carga todos los equinos
+### B3. Board carga todos los equinos sin paginación  ✅
 
-**Dónde:** `apps/api/app/services/equine_service.py:201`
+**Estado:** ✅ Resuelto (W2.11)
 
-**Problema:** A pesar de aceptar `limit`/`skip`, el método se usa desde `get_board` sin paginación, cargando todos los equinos (línea 201: `EquineDocument.find({})`). Lo mismo en `saddle_service.list_available_for_reservation()`.
-
-**Impacto:** Bajo (pocos equinos), pero con crecimiento es N+1 inverso.
-
-**Solución:** Asegurar paginación desde el board o cachear catálogo de equinos.
-
-**Prioridad:** Low
+`get_board` pasa `limit=200, skip=0` a `list_available_for_reservation`. 
 
 ---
 
-### B4. `datetime.time` no serializable por Beanie — workaround motor raw
+### B4. `datetime.time` no serializable por Beanie  ✅
 
-**Dónde:** `apps/api/app/documents/schedule_document.py:14` y `apps/api/app/services/reservation_service.py:96-114`
+**Estado:** ✅ Resuelto (W1.4)
 
-**Problema:** Beanie no puede insertar/actualizar documentos con campos `time` directamente. Requiere usar `motor collection.update_one()` con string ISO (`"08:00:00"`) en lugar de `doc.save()`. Esto fuerza a que `_save_schedule_status` use motor raw, rompiendo la abstracción de Beanie.
-
-**Impacto:** Medio — código más frágil, workaround que puede romperse con upgrades de Beanie. Ya documentado en AGENTS.md.
-
-**Solución:** Cambiar `start_time` a string (`"HH:MM:SS"`) en `ScheduleDocument` y convertir en los edges (API/input). O migrar a `datetime` combinado.
-
-**Prioridad:** Medium
+`ScheduleDocument.start_time: time` → `str` ISO. `_save_schedule_status` usa `doc.save()` sin motor raw. Datos legacy requieren migración manual.
 
 ---
 
-### B5. Falta de `ensure_index` en init_db para índices declarados en Beanie
+### B5. Falta de `ensure_index` en init_db  ✅
 
-**Dónde:** `apps/api/app/core/db.py:46-101`
+**Estado:** ✅ Resuelto (W1.3)
 
-**Problema:** `init_beanie` no garantiza que los índices declarados en los `Settings.indexes` existan realmente en MongoDB. Solo se crean si el documento se inicializa con `Document`.
-
-**Solución:** Llamar a `Document.settings.ensure_indexes()` después de init_beanie, o verificar con `list_indexes`.
-
-**Prioridad:** Medium
+`ensure_indexes()` llamado tras `init_beanie()` para todos los `document_models`.
 
 ---
 
-### B6. `ReservationAuditLogDocument.metadata` sin schema de validación
+### B6. `AuditLog.metadata` sin schema  ❌
 
-**Dónde:** `apps/api/app/documents/reservation_audit_log_document.py:18`
+**Estado:** ❌ Pendiente (W1.5)
 
-**Problema:** `metadata: dict = {}` acepta cualquier estructura. No hay contrato sobre qué metadatos guarda cada acción de auditoría. Dificulta queries y reportes.
-
-**Impacto:** Medio — datos no estructurados en colección de auditoría.
-
-**Solución:** Usar `pydantic.BaseModel` tipado para metadatos, o al menos documentar el schema esperado por acción.
-
-**Prioridad:** Medium
+`metadata: dict = {}` sin tipar. Pendiente crear `AuditMetadata` models.
 
 ---
 
-### B7. Edad mínima/máxima hardcodeada en validación de participantes (12 y 65)
+### B7. Edad mínima/máxima hardcodeada  ✅
 
-**Dónde:** `apps/api/app/services/assignment_service.py:630-633`
+**Estado:** ✅ Resuelto (W2.12)
 
-**Problema:** Los thresholds de edad (12 y 65 años) están hardcodeados en el servicio de asignación. No son configurables y no hay regla de negocio documentada.
-
-**Impacto:** Bajo — difícil de modificar si el negocio cambia.
-
-**Solución:** Mover a configuración del sistema (AppConfigDocument) o constantes con nombre.
-
-**Prioridad:** Low
+`ReservationRules.min_age=12` / `max_age=65`. `AssignmentService` lee desde `ConfigService`. Fallback seguro.
 
 ---
 
-### B8. `_build_code` duplicado en `reservation_service.py` y `reservation_draft_service.py`
+### B8. `_build_code` duplicado  ✅
 
-**Dónde:** `apps/api/app/services/reservation_service.py:870-871` y `reservation_draft_service.py:142-143`
+**Estado:** ✅ Resuelto (Sprint 0)
 
-**Problema:** Lógica de generación de código duplicada (cambia solo prefijo: `RES` vs `PR-`).
-
-**Impacto:** Bajo — pero es un micro-derivado de A4 (CRUD boilerplate).
-
-**Solución:** Unificar en un helper compartido o en `ReservationDocument` como classmethod.
-
-**Prioridad:** Low
+Unificado en `constants.py`. Reservation y Draft usan la misma función.
 
 ---
 
@@ -347,114 +245,61 @@
 
 ---
 
-### F1. `app.dart` — controlador monolítico de 320 líneas
+### F1. `app.dart` monolítico  ✅
 
-**Dónde:** `apps/mobile/lib/app/app.dart`
+**Estado:** ✅ Resuelto (W3.1-W3.3)
 
-**Problema:** `_LaJuanaAppState` maneja: init de dependencias, route builder (switch de 15 rutas), tema, transiciones, dev screens, todo junto. SRP violado.
-
-**Impacto:** Medio — difícil de leer, testear y modificar.
-
-**Solución:** Extraer route builder a `app_router.dart`. Extraer init de dependencias a `dependency_injection.dart` o similar.
-
-**Prioridad:** Medium
+`app.dart`: 320 → 62 líneas. Routing en `app_router.dart`. DI en `dependency_injection.dart`. State solo con `_themeMode`, `_deps`, `_router`.
 
 ---
 
-### F2. `ReservationDetailController` — 507 líneas con ~8 action states duplicados
+### F2. Detail controller 507 líneas con 8 action states duplicados  ✅
 
-**Dónde:** `apps/mobile/lib/features/reservations/presentation/controllers/reservation_detail_controller.dart`
+**Estado:** ✅ Resuelto (W3.5+W3.6)
 
-**Problema:** Cada acción (approve, reject, unverify, unreject, confirm, cancel, delete, restore) tiene su propio enum de estado ± errorCode ± errorMessage ± resetDelayed. El patrón es casi idéntico 8 veces. Código copiado/pegado.
-
-**Impacto:** Medio — un bug en el patrón se replica 8 veces. Difícil de mantener.
-
-**Solución:** Crear un helper genérico `ActionState<T>` que maneje idle/loading/success/error + reset, y reusarlo.
-
-**Prioridad:** Medium
+`ActionState<T>` en `mobile_core`. Detail controller: 507 → 310 líneas. `PaymentProofActionState` y `ReservationActionState` eliminados. 8 `ActionState<void>` fields. 0 `_reset*Delayed()`. Bug corregido (cancel/delete usaban `ReservationActionState.confirming`).
 
 ---
 
-### F3. Dev screens compilados en debug via imports directos
+### F3. Dev screens compilados en debug  ❌
 
-**Dónde:** `apps/mobile/lib/app/app.dart:33` — import de `widget_museum_screen.dart`
-**Dónde:** `apps/mobile/lib/app/app.dart:31` — import de `dev_loader_screen.dart`
-
-**Problema:** Aunque hay un `kReleaseMode` guard, los imports son directos (no deferred). El código de playground viaja en el bundle debug.
-
-**Impacto:** Bajo en release (tree-shaking lo elimina), pero en debug aumenta tamaño y expone funcionalidad interna.
-
-**Solución:** Usar `import` diferido (`deferred as`) para dev/playground screens.
-
-**Prioridad:** Low
+**Estado:** ❌ Pendiente (W3.8)
 
 ---
 
-### F4. Tema con transición "veil" innecesariamente compleja
+### F4. Tema con transición "veil" compleja  ✅
 
-**Dónde:** `apps/mobile/lib/app/app.dart:48-54, 183-210`
+**Estado:** ✅ Resuelto (W3.4)
 
-**Problema:** El toggle de tema usa un sistema de "veil" con 3 constantes de duración, opacidad variable, color variable, y temporizadores. Para un simple light/dark switch.
-
-**Impacto:** Bajo — pero complejidad innecesaria. Posibles bugs con `mounted` checks.
-
-**Solución:** Usar `ThemeMode` directamente con `AnimatedTheme` o `animationDuration` del `MaterialApp`.
-
-**Prioridad:** Low
+Veil eliminado. `MaterialApp(themeAnimationDuration: 200ms)`. Sin `_themeVeilColor` ni `_isThemeTransitioning`.
 
 ---
 
-### F5. Controllers con doble-responsabilidad: filter + fetch + cache + notify
+### F5. List controller multi-responsabilidad  ✅
 
-**Dónde:** `apps/mobile/lib/features/reservations/presentation/controllers/reservations_list_controller.dart`
+**Estado:** ✅ Resuelto (W3.7)
 
-**Problema:** `ReservationsListController` mezcla estado de UI (loadState), datos (items, _allItems), filtros (filterGroup, searchQuery), fetch (loadInitial, refresh, _fetchFromRemote) y caché. 158 líneas que hacen de todo.
-
-**Impacto:** Medio — difícil de testear (depende de repository real o mocking manual).
-
-**Solución:** Separar en `ReservationsListState` (datos + filtros) y `ReservationsListBloc` (fetch + cache).
-
-**Prioridad:** Medium
+`ReservationsListState` inmutable con `copyWith`. Controller separado (state interno + getters). 9 tests unitarios nuevos.
 
 ---
 
-### F6. Falta de cobertura de tests en la mayoría de features
+### F6. Falta de cobertura de tests mobile  ❌
 
-**Dónde:** `apps/mobile/test/`
+**Estado:** ❌ Pendiente (W4.4-W4.5)
 
-**Problema:** Solo 12 archivos de test para 8 features. Features enteras sin test: `dashboard`, `configuration`, `catalogs`, `participants`, `providers`, `saddles` no tienen tests. De las que tienen, la cobertura es parcial.
-
-**Impacto:** Alto — regresiones no detectadas en UI, controllers y mappers.
-
-**Solución:** Priorizar tests de controllers y repositorios para features core (reservations, assignments, auth).
-
-**Prioridad:** High
+Tests agregados para list controller (9). Detail controller tests existentes actualizados. Falta: dashboard, configuration, catalogs, participants, providers, saddles.
 
 ---
 
-### F7. `playground/` linked to production app module
+### F7. `playground/` dentro de `lib/`  ❌
 
-**Dónde:** `apps/mobile/lib/playground/widget_museum_screen.dart`
-
-**Problema:** El directorio `playground` está dentro de `lib/` (no en un directorio separado). Aunque el código está protegido por `kReleaseMode`, su presencia en `lib/` sugiere que es código de producción.
-
-**Solución:** Mover playground a un directorio fuera de `lib/` (ej: `dev/playground/`) o usar un entry point separado.
-
-**Prioridad:** Low
+**Estado:** ❌ Pendiente (W3.8)
 
 ---
 
-### F8. Import paths relativos profundos
+### F8. Import paths relativos profundos  ❌
 
-**Dónde:** Múltiples archivos en `apps/mobile/lib/features/*/presentation/**/*.dart`
-
-**Problema:** Los imports usan rutas relativas estilo `../../domain/repositories/...` que son frágiles ante reestructuración de directorios.
-
-**Impacto:** Bajo — pero dificulta refactors. Síntoma de que el modular extraction (A1) no ocurrió.
-
-**Solución:** Usar `package:` imports desde el `name` en pubspec.yaml.
-
-**Prioridad:** Low
+**Estado:** ❌ Pendiente (W3.9 — alto riesgo, ~200 archivos)
 
 ---
 
@@ -462,225 +307,37 @@
 
 ---
 
-### T1. Backend: servicios sin tests dedicados
+### T1-T7 — Testing  ❌
 
-**Dónde:** `apps/api/tests/`
+**Estado:** ❌ Todo pendiente (W4 completo)
 
-**Problema:** No hay tests para: `ConfigService`, `PolicyService`, `ProviderService`, `ServiceLogService`, `FileUploadService`, `UserService`, `OpsService`, `StorageAdapter`, `NotificationService` (solo parcial).
-
-**Impacto:** Alto — cambios en estos servicios no tienen red de seguridad.
-
-**Solución:** Agregar tests unitarios para cada service (al menos happy path + error path).
-
-**Prioridad:** High
+Backend: sin tests para ConfigService, PolicyService, ProviderService, ServiceLogService, FileUploadService, etc. Sin mongomock. Sin tests de concurrencia. Mobile: sin tests de integración. Sin contratos API-frontend. Repositorios sin tests.
 
 ---
 
-### T2. Backend: tests existentes con coverage limitado
+## D. DOCUMENTACIÓN Y OPERACIONES  ❌
 
-**Dónde:** `apps/api/tests/`
+**Estado:** ❌ Todo pendiente (W5 completo)
 
-**Problema:** De 49 archivos de test, varios son smoke tests que prueban solo un caso feliz. Ej: `test_config_service.py` no existe, `test_provider_service.py` no existe.
+### D1-D5 — Seeds, migrations, healthcheck, docs, AGENTS.md
+Sin CLI unificado de seeds. Sin sistema de migraciones. Sin healthcheck de dependencias. ADRs desactualizados. AGENTS.md no verificable automáticamente.
 
-**Impacto:** Medio — falsa sensación de seguridad por cantidad de test files.
+## M. MOBILE PACKAGES FANTASMA  ❌
 
-**Solución:** Auditar coverage real por módulo.
+**Estado:** ❌ Pendiente (W5.7-W5.9, requiere W3.9)
 
-**Prioridad:** Medium
-
----
-
-### T3. Mobile: sin tests de integración
-
-**Dónde:** `apps/mobile/test/`
-
-**Problema:** Todos los tests son unitarios. No hay tests de integración (golden, widget, integration driver) que verifiquen flujos completos (login → listar reservas → ver detalle).
-
-**Impacto:** Alto — UI/UX regressions pasan desapercibidas.
-
-**Solución:** Agregar al menos 2-3 tests de integración para flujos core.
-
-**Prioridad:** High
+### M1-M3 — `mobile_ui`, `mobile_domain`, `mobile_mocks`
+Paquetes vacíos. Código inline en `apps/mobile`. No extraíble hasta migrar a imports `package:`.
 
 ---
 
-### T4. Sin contratos entre API y frontend
-
-**Dónde:** `apps/api/tests/test_endpoint_docs_contract.py` y `test_endpoint_schema_coverage.py`
-
-**Problema:** Existen tests de "contrato" que verifican que los endpoints devuelvan schemas, pero no verifican que el frontend pueda consumirlos. No hay snapshot testing ni OpenAPI spec formal.
-
-**Impacto:** Medio — cambios en respuesta API pueden romper frontend sin ser detectados en CI.
-
-**Solución:** Generar OpenAPI spec (FastAPI ya lo soporta) y usar snapshot testing en frontend.
-
-**Prioridad:** Medium
-
----
-
-### T5. `test_assignment_service.py` tests end-to-end con base de datos real
-
-**Dónde:** `apps/api/tests/test_assignment_service.py`
-
-**Problema:** Los tests de servicios usan base de datos real (MongoDB via Beanie init), no mocking. Lentos, frágiles, requieren infraestructura.
-
-**Impacto:** Medio — tests lentos, difíciles de ejecutar en CI sin MongoDB.
-
-**Solución:** Usar mongomock o in-memory para tests unitarios de servicios. Reservar DB real solo para integración.
-
-**Prioridad:** Medium
-
----
-
-### T6. Faltan tests de concurrencia para reservas
-
-**Dónde:** `apps/api/tests/test_concurrency_reservation.py` — revisar cobertura
-
-**Problema:** El archivo existe pero probablemente solo cubre un escenario. Race conditions en `_commit_schedule_capacity` y `ensure_date_available` no están probadas con múltiples clientes simultáneos.
-
-**Impacto:** Alto — bugs de concurrencia en producción son difíciles de diagnosticar.
-
-**Solución:** Agregar tests de concurrencia con `asyncio.gather` simulando N requests simultáneas.
-
-**Prioridad:** High
-
----
-
-### T7. Mobile: `ReservationsRepository` y sus implementaciones no tienen tests
-
-**Dónde:** `apps/mobile/lib/features/reservations/infrastructure/repositories/`
-
-**Problema:** El repositorio que orquesta remote+local no tiene tests. Es el punto crítico del offline-first.
-
-**Impacto:** Alto — errores de sincronización no detectados.
-
-**Solución:** Tests unitarios con `respositories` mockeando remote y local.
-
-**Prioridad:** High
-
----
-
-## D. DOCUMENTACIÓN Y OPERACIONES
-
----
-
-### D1. Seed scripts duplicados con lógica diferente
-
-**Dónde:** `apps/api/scripts/seed_reproducible.py` (934 líneas), `seed_experiences_and_schedules_qa.py`, `seed_schedules_2026_q2.py`, `seed_equines_rf14.py`, `seed_form_test.py`, `seed_proof_file_data.py`
-
-**Problema:** 6 scripts de seed sin estandarización. `seed_reproducible.py` es enorme (934 líneas) y contiene lógica de negocio duplicada (creación de experiencias, equinos, etc.). Los otros son ad-hoc para QA.
-
-**Impacto:** Medio — inconsistencia entre seeds, difícil mantener.
-
-**Solución:** Centralizar seeds en un comando CLI con factories, y mantener solo 1 script de seed principal + patches para QA específicos.
-
-**Prioridad:** Medium
-
----
-
-### D2. Solo 1 migration real en `migrations/`
-
-**Dónde:** `apps/api/app/migrations/seed_notification_templates.py`
-
-**Problema:** No hay un sistema de migraciones. La migración staff→guide se hace inline en `init_db`. No hay tracking de migraciones ejecutadas.
-
-**Impacto:** Medio — despliegues en ambientes nuevos requieren ejecutar seeds manualmente.
-
-**Solución:** Usar `alembic` para migraciones de datos (no schema) o un simple `migrations_tracker` en MongoDB.
-
-**Prioridad:** Medium
-
----
-
-### D3. Sin healthcheck de dependencias externas
-
-**Dónde:** `apps/api/app/api/endpoints/health.py`
-
-**Problema:** El endpoint de health probablemente solo verifica que la app responde, no que MongoDB, S3, WhatsApp API, etc. estén operativos.
-
-**Impacto:** Medio — health check da positivo aunque dependencias críticas estén caídas.
-
-**Solución:** Agregar verificaciones de conectividad a MongoDB, S3, y proveedores de notificaciones.
-
-**Prioridad:** Medium
-
----
-
-### D4. `docs/` no sincronizado con código real
-
-**Dónde:** `docs/architecture/`, `docs/decisions/`
-
-**Problema:** Los ADRs existen pero no hay mecanismo para verificar cumplimiento. Ej: ADR-0004 propone `mobile_ui` package, pero está vacío (A1).
-
-**Impacto:** Medio — documentación engañosa.
-
-**Solución:** Agregar `docs-adr-validation` en CI que verifique que los ADRs se correspondan con el código, o archive ADRs obsoletos.
-
-**Prioridad:** Medium
-
----
-
-### D5. AGENTS.md reglas no verificables automáticamente
-
-**Dónde:** `AGENTS.md`
-
-**Problema:** Reglas como "No mezclar componentes reutilizables con lógica de negocio" y "No crear archivos/carpetas sin justificación" son subjetivas y no tienen linter/CI.
-
-**Impacto:** Bajo — dependen del criterio del desarrollador.
-
-**Solución:** Implementar lint rules personalizados o review checklist.
-
-**Prioridad:** Low
-
----
-
-## M. MOBILE PACKAGES FANTASMA
-
----
-
-### M1. `mobile_ui` — paquete UI reutilizable vacío
-
-**Dónde:** `packages/mobile_ui/`
-
-**Contenido:** `.gitkeep`, `pubspec.yaml`, `README.md`
-
-**Problema:** Todos los widgets reutilizables están en `apps/mobile/lib/app/widgets/` o dentro de features. No hay nada extraíble aún.
-
-**Impacto:** Ver A1.
-
----
-
-### M2. `mobile_domain` — contratos y modelos de dominio vacío
-
-**Dónde:** `packages/mobile_domain/`
-
-**Contenido:** `.gitkeep`, `pubspec.yaml`, `README.md`
-
-**Problema:** Los modelos de dominio están en `apps/mobile/lib/features/*/domain/models/`. No hay extracción.
-
-**Impacto:** Ver A1.
-
----
-
-### M3. `mobile_mocks` — fixtures y fakes vacío
-
-**Dónde:** `packages/mobile_mocks/`
-
-**Contenido:** `.gitkeep`, `pubspec.yaml`, `README.md`
-
-**Problema:** Los mocks están inline en los tests. No hay reutilización cross-feature.
-
-**Impacto:** Ver A1.
-
----
-
-## MATRIZ DE PRIORIDADES
-
-| Prioridad | IDs | Acción recomendada |
-|-----------|-----|-------------------|
-| **High** | A1, A2, A5, F6, T1, T3, T6, T7 | Abordar en próximo sprint |
-| **Medium** | P3, P4, A3, A4, A6, A8, B1, B4, B5, B6, F1, F2, F5, T2, T4, T5, D1, D2, D3, D4 | Planificar en siguientes 2-3 sprints |
-| **Low** | P1, P2, A7, A9, A10, B2, B3, B7, B8, F3, F4, F7, F8, D5 | Backlog — documentar y priorizar según necesidad |
+## MATRIZ DE PRIORIDADES (ESTADO ACTUAL)
+
+| Prioridad | Resueltos ✅ | Pendientes ❌ |
+|-----------|-------------|---------------|
+| ~~High~~ | A5 (except:pass), F6 (parcial: 9 tests list controller) | A1, A2, F6 (resto), T1, T3, T6, T7 |
+| ~~Medium~~ | P3, P4, A4, A6, A8, B1, B4, B5, F1, F2, F5 | A3 (W2.1), B6 (W1.5), T2, T4, T5, D1, D2, D3, D4 |
+| ~~Low~~ | P1, P2, A7, A9, A10, B2, B3, B7, B8, F4 | F3 (W3.8), F7 (W3.8), F8 (W3.9), D5 |
 
 ---
 
@@ -946,4 +603,58 @@ Cada workstream es un PR independiente. Gates de aprobación:
 
 ---
 
-*Fin del plan integral. Última actualización: Junio 2026.*
+---
+
+# DECISION TIMELINE
+
+> Registro cronológico de implementaciones, refactors y decisiones arquitectónicas ejecutadas.
+
+## 2026-06-02 — Sprint 0: Quick wins
+
+| Decisión | Justificación |
+|----------|---------------|
+| **Eliminar `SUPPLIES` de Collections** | Código muerto sin referencias |
+| **Dejar de setear `priority`/`assigned_manually`** | Campos deprecated, solo lectura legacy |
+| **Eliminar `EquineService.list_items()`** | Engañoso: no era más liviano que `list()` |
+| **Audit logs → `insert_many()`** | Elimina N inserts individuales en finalize_all/unfinalize_all |
+| **Eliminar `is_available` del board equino** | Redundante con `block_reason`. Frontend deriva |
+| **Unificar `build_code()` en constants.py** | Elimina duplicación Reservation/Draft |
+
+## 2026-06-02 — W1: Backend Core Infrastructure
+
+| Decisión | Justificación |
+|----------|---------------|
+| **`BaseService[DocT, CreateSchemaT, UpdateSchemaT]`** | Elimina ~80% boilerplate CRUD. 5 servicios refactorizados (-70% a -31%) |
+| **`ensure_indexes()` en init_db** | Garantiza que índices Beanie declarados existen en MongoDB |
+| **`ScheduleDocument.start_time: time` → `str`** | Beanie no serializa `datetime.time`. Workaround motor raw eliminado |
+
+## 2026-06-02 — W2: Backend Architecture (Batch 1)
+
+| Decisión | Justificación |
+|----------|---------------|
+| **`batch_assignments_to_response()`** | 3 queries `$in` en vez de 3N `Document.get()`. N assignments → siempre 3 queries |
+| **Eliminar `_FallbackS3Client` (2 clases)** | Fail-fast si boto3 falta + S3 config. `LocalStorageAdapter` si no hay credenciales |
+| **Caché catalog resolver (TTL 5 min)** | Evita cargar todas las experiencias en cada resolución. Fase 2: text index |
+| **Board pagination (`limit=200`)** | Métodos ya soportaban paginación — `get_board` no la usaba |
+| **Age thresholds configurables** | `min_age=12`, `max_age=65` en `ReservationRules`. ConfigService como fuente de verdad |
+| **Completar W2.3 (except:pass)** | Inspección confirmó que todo el codebase ya usa logger.exception() |
+
+## 2026-06-02 — W3: Frontend Architecture (Batch 1)
+
+| Decisión | Justificación |
+|----------|---------------|
+| **Extraer `AppRouter` + `AppDependencies`** | app.dart 320→62 líneas. Router y DI en clases separadas |
+| **Eliminar veil transition** | 30 líneas de temporizadores para un simple light/dark toggle. `themeAnimationDuration` alcanza |
+| **`ActionState<T>` genérico** | Elimina enums custom duplicados. 4 factories. Sin `_reset*Delayed()` |
+
+## 2026-06-02 — W2.10 + W3.6 + W3.7 (Batch 2)
+
+| Decisión | Justificación |
+|----------|---------------|
+| **Eliminar legacy fallback en mappers** | Script `migrate_participant_ids.py` creado. Fallback eliminado completamente. Sin compatibilidad |
+| **Refactor detail controller con ActionState** | 507→310 líneas. 3 enums eliminados. Bug corregido (cancel/delete usaban `ReservationActionState.confirming`) |
+| **ReservationsListState inmutable** | State separado del controller. 9 tests nuevos. `copyWith` para transiciones predecibles |
+
+---
+
+*Fin del documento. Última actualización: 2026-06-02.*

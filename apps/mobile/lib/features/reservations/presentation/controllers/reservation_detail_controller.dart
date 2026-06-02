@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mobile_core/mobile_core.dart';
 
 import '../../domain/models/reservation_detail.dart';
 import '../../domain/repositories/reservations_repository.dart';
@@ -12,461 +13,95 @@ enum ReservationDetailLoadState {
   offlineFromCache,
 }
 
-/// Estado de una accion sobre un comprobante de pago.
-enum PaymentProofActionState {
-  idle,
-  approving,
-  rejecting,
-  unverifying,
-  unrejecting,
-  success,
-  error,
-}
-
-/// Estado de la accion de confirmar reserva.
-enum ReservationActionState {
-  idle,
-  confirming,
-  success,
-  error,
-}
-
 /// Controlador de detalle de reserva.
+///
+/// Usa [ActionState] para todas las acciones. Sin enums custom de estado.
+/// Cada acción tiene su propio ActionState<void> — no comparten estado.
 class ReservationDetailController extends ChangeNotifier {
   ReservationDetailController({required ReservationsRepository repository})
       : _repository = repository;
 
   final ReservationsRepository _repository;
-  bool _disposed = false;
 
+  // ── Load state (no es acción — se conserva) ──
   ReservationDetailLoadState state = ReservationDetailLoadState.idle;
   ReservationDetail? detail;
   String? errorCode;
   String? errorMessage;
 
-  // Acciones sobre comprobantes de pago
-  PaymentProofActionState paymentProofActionState =
-      PaymentProofActionState.idle;
+  // ── Payment proof actions ──
   String? actingPaymentProofId;
-  String? actionErrorCode;
-  String? actionErrorMessage;
+  ActionState<void> approveProofState = ActionState.idle();
+  ActionState<void> rejectProofState = ActionState.idle();
+  ActionState<void> unverifyProofState = ActionState.idle();
+  ActionState<void> unrejectProofState = ActionState.idle();
 
-  // Confirmacion de reserva
-  ReservationActionState confirmationState = ReservationActionState.idle;
-  String? confirmationErrorCode;
-  String? confirmationErrorMessage;
+  // ── Reservation actions ──
+  ActionState<void> confirmationState = ActionState.idle();
+  ActionState<void> cancellationState = ActionState.idle();
+  ActionState<void> deleteState = ActionState.idle();
+  ActionState<void> restoreState = ActionState.idle();
 
-  // Cancelacion de reserva
-  ReservationActionState cancellationState = ReservationActionState.idle;
-  String? cancellationErrorCode;
-  String? cancellationErrorMessage;
+  // ── Computed helpers for UI (derived from individual ActionStates) ──
 
-  // Delete (soft-delete) de reserva
-  ReservationActionState deleteState = ReservationActionState.idle;
-  String? deleteErrorCode;
-  String? deleteErrorMessage;
+  /// Active payment proof action state (derived — only one action at a time).
+  ActionState<void> get paymentProofActionState {
+    if (approveProofState.isLoading) return approveProofState;
+    if (rejectProofState.isLoading) return rejectProofState;
+    if (unverifyProofState.isLoading) return unverifyProofState;
+    if (unrejectProofState.isLoading) return unrejectProofState;
+    if (approveProofState.isError) return approveProofState;
+    if (rejectProofState.isError) return rejectProofState;
+    if (unverifyProofState.isError) return unverifyProofState;
+    if (unrejectProofState.isError) return unrejectProofState;
+    if (approveProofState.isSuccess) return approveProofState;
+    if (rejectProofState.isSuccess) return rejectProofState;
+    if (unverifyProofState.isSuccess) return unverifyProofState;
+    if (unrejectProofState.isSuccess) return unrejectProofState;
+    return ActionState.idle();
+  }
+
+  /// Error code from the active payment proof action (derived).
+  String? get actionErrorCode {
+    if (approveProofState.isError) return approveProofState.errorCode;
+    if (rejectProofState.isError) return rejectProofState.errorCode;
+    if (unverifyProofState.isError) return unverifyProofState.errorCode;
+    if (unrejectProofState.isError) return unrejectProofState.errorCode;
+    return null;
+  }
+
+  /// Error message from the active payment proof action (derived).
+  String? get actionErrorMessage {
+    if (approveProofState.isError) return approveProofState.errorMessage;
+    if (rejectProofState.isError) return rejectProofState.errorMessage;
+    if (unverifyProofState.isError) return unverifyProofState.errorMessage;
+    if (unrejectProofState.isError) return unrejectProofState.errorMessage;
+    return null;
+  }
+
+  // ── Derived error code/message getters for individual actions ──
+
+  String? get confirmationErrorCode =>
+      confirmationState.isError ? confirmationState.errorCode : null;
+  String? get confirmationErrorMessage =>
+      confirmationState.isError ? confirmationState.errorMessage : null;
+  String? get cancellationErrorCode =>
+      cancellationState.isError ? cancellationState.errorCode : null;
+  String? get cancellationErrorMessage =>
+      cancellationState.isError ? cancellationState.errorMessage : null;
+  String? get deleteErrorCode =>
+      deleteState.isError ? deleteState.errorCode : null;
+  String? get deleteErrorMessage =>
+      deleteState.isError ? deleteState.errorMessage : null;
 
   @override
   void dispose() {
-    _disposed = true;
     super.dispose();
   }
 
-  void _resetActionState() {
-    paymentProofActionState = PaymentProofActionState.idle;
-    actingPaymentProofId = null;
-    actionErrorCode = null;
-    actionErrorMessage = null;
-    confirmationState = ReservationActionState.idle;
-    confirmationErrorCode = null;
-    confirmationErrorMessage = null;
-    cancellationState = ReservationActionState.idle;
-    cancellationErrorCode = null;
-    cancellationErrorMessage = null;
-    deleteState = ReservationActionState.idle;
-    deleteErrorCode = null;
-    deleteErrorMessage = null;
-  }
-
-  /// Reset action state after a short delay so the UI can show "success" briefly
-  /// before enabling buttons again.
-  /// Resets action state after a microtask so buttons become clickable again.
-  /// Works for both success and error — the error banner persists via
-  /// [actionErrorCode] / [actionErrorMessage] independently.
-  void _resetActionDelayed() {
-    Future.microtask(() {
-      if (_disposed) return;
-      if (paymentProofActionState != PaymentProofActionState.idle) {
-        paymentProofActionState = PaymentProofActionState.idle;
-        actingPaymentProofId = null;
-        notifyListeners();
-      }
-    });
-  }
-
-  /// Aprobar un comprobante. Solo si [isAdmin] es true.
-  /// No ejecuta si ya hay una accion en curso (doble-tap guard).
-  Future<void> approvePaymentProof({
-    required String paymentProofId,
-    String? note,
-    required bool isAdmin,
-  }) async {
-    if (!isAdmin) {
-      actionErrorCode = 'permission.denied';
-      actionErrorMessage = 'No tienes permisos para aprobar comprobantes.';
-      paymentProofActionState = PaymentProofActionState.error;
-      notifyListeners();
-      return;
-    }
-    if (paymentProofActionState != PaymentProofActionState.idle) return;
-
-    paymentProofActionState = PaymentProofActionState.approving;
-    actingPaymentProofId = paymentProofId;
-    actionErrorCode = null;
-    actionErrorMessage = null;
-    notifyListeners();
-
-    try {
-      detail = await _repository.approvePaymentProof(
-        paymentProofId: paymentProofId,
-        note: note,
-      );
-      paymentProofActionState = PaymentProofActionState.success;
-    } on ReservationsApiFailure catch (e) {
-      actionErrorCode = e.code;
-      actionErrorMessage = e.message;
-      paymentProofActionState = PaymentProofActionState.error;
-    } catch (_) {
-      actionErrorCode = 'common.error';
-      actionErrorMessage = 'Error inesperado al aprobar comprobante.';
-      paymentProofActionState = PaymentProofActionState.error;
-    } finally {
-      actingPaymentProofId = null;
-      notifyListeners();
-      _resetActionDelayed();
-    }
-  }
-
-  /// Rechazar un comprobante con [reason] obligatoria.
-  /// Solo si [isAdmin] es true.
-  Future<void> rejectPaymentProof({
-    required String paymentProofId,
-    required String reason,
-    required bool isAdmin,
-  }) async {
-    if (!isAdmin) {
-      actionErrorCode = 'permission.denied';
-      actionErrorMessage = 'No tienes permisos para rechazar comprobantes.';
-      paymentProofActionState = PaymentProofActionState.error;
-      notifyListeners();
-      return;
-    }
-    if (paymentProofActionState != PaymentProofActionState.idle) return;
-
-    paymentProofActionState = PaymentProofActionState.rejecting;
-    actingPaymentProofId = paymentProofId;
-    actionErrorCode = null;
-    actionErrorMessage = null;
-    notifyListeners();
-
-    try {
-      detail = await _repository.rejectPaymentProof(
-        paymentProofId: paymentProofId,
-        reason: reason,
-      );
-      paymentProofActionState = PaymentProofActionState.success;
-      _resetActionDelayed();
-    } on ReservationsApiFailure catch (e) {
-      actionErrorCode = e.code;
-      actionErrorMessage = e.message;
-      paymentProofActionState = PaymentProofActionState.error;
-    } catch (_) {
-      actionErrorCode = 'common.error';
-      actionErrorMessage = 'Error inesperado al rechazar comprobante.';
-      paymentProofActionState = PaymentProofActionState.error;
-    } finally {
-      actingPaymentProofId = null;
-      notifyListeners();
-      _resetActionDelayed();
-    }
-  }
-
-  /// Deshace la verificacion de un comprobante previamente aprobado.
-  /// Solo si [isAdmin] es true.
-  Future<void> unverifyPaymentProof({
-    required String paymentProofId,
-    String? note,
-    required bool isAdmin,
-  }) async {
-    if (!isAdmin) {
-      actionErrorCode = 'permission.denied';
-      actionErrorMessage =
-          'No tienes permisos para deshacer verificacion.';
-      paymentProofActionState = PaymentProofActionState.error;
-      notifyListeners();
-      return;
-    }
-    if (paymentProofActionState != PaymentProofActionState.idle) return;
-
-    paymentProofActionState = PaymentProofActionState.unverifying;
-    actingPaymentProofId = paymentProofId;
-    actionErrorCode = null;
-    actionErrorMessage = null;
-    notifyListeners();
-
-    try {
-      detail = await _repository.unverifyPaymentProof(
-        paymentProofId: paymentProofId,
-        note: note,
-      );
-      paymentProofActionState = PaymentProofActionState.success;
-      _resetActionDelayed();
-    } on ReservationsApiFailure catch (e) {
-      actionErrorCode = e.code;
-      actionErrorMessage = e.message;
-      paymentProofActionState = PaymentProofActionState.error;
-    } catch (_) {
-      actionErrorCode = 'common.error';
-      actionErrorMessage =
-          'Error inesperado al deshacer verificacion.';
-      paymentProofActionState = PaymentProofActionState.error;
-    } finally {
-      actingPaymentProofId = null;
-      notifyListeners();
-      _resetActionDelayed();
-    }
-  }
-
-  /// Deshace el rechazo de un comprobante previamente rechazado.
-  /// Solo si [isAdmin] es true.
-  Future<void> unrejectPaymentProof({
-    required String paymentProofId,
-    String? note,
-    required bool isAdmin,
-  }) async {
-    if (!isAdmin) {
-      actionErrorCode = 'permission.denied';
-      actionErrorMessage =
-          'No tienes permisos para deshacer rechazo.';
-      paymentProofActionState = PaymentProofActionState.error;
-      notifyListeners();
-      return;
-    }
-    if (paymentProofActionState != PaymentProofActionState.idle) return;
-
-    paymentProofActionState = PaymentProofActionState.unrejecting;
-    actingPaymentProofId = paymentProofId;
-    actionErrorCode = null;
-    actionErrorMessage = null;
-    notifyListeners();
-
-    try {
-      detail = await _repository.unrejectPaymentProof(
-        paymentProofId: paymentProofId,
-        note: note,
-      );
-      paymentProofActionState = PaymentProofActionState.success;
-      _resetActionDelayed();
-    } on ReservationsApiFailure catch (e) {
-      actionErrorCode = e.code;
-      actionErrorMessage = e.message;
-      paymentProofActionState = PaymentProofActionState.error;
-    } catch (_) {
-      actionErrorCode = 'common.error';
-      actionErrorMessage =
-          'Error inesperado al deshacer rechazo.';
-      paymentProofActionState = PaymentProofActionState.error;
-    } finally {
-      actingPaymentProofId = null;
-      notifyListeners();
-      _resetActionDelayed();
-    }
-  }
-
-  /// Confirma la reserva actual. Solo si [isAdmin] es true.
-  /// No ejecuta si ya hay una accion en curso (doble-tap guard).
-  Future<void> confirmReservation({
-    required bool isAdmin,
-    String? notes,
-  }) async {
-    if (!isAdmin) {
-      confirmationErrorCode = 'permission.denied';
-      confirmationErrorMessage = 'No tienes permisos para confirmar reservas.';
-      confirmationState = ReservationActionState.error;
-      notifyListeners();
-      return;
-    }
-    if (confirmationState != ReservationActionState.idle) return;
-
-    confirmationState = ReservationActionState.confirming;
-    confirmationErrorCode = null;
-    confirmationErrorMessage = null;
-    notifyListeners();
-
-    try {
-      detail = await _repository.confirmReservation(
-        reservationId: detail!.id,
-        notes: notes,
-      );
-      confirmationState = ReservationActionState.success;
-    } on ReservationsApiFailure catch (e) {
-      confirmationErrorCode = e.code;
-      confirmationErrorMessage = e.message;
-      confirmationState = ReservationActionState.error;
-    } catch (_) {
-      confirmationErrorCode = 'common.error';
-      confirmationErrorMessage = 'Error inesperado al confirmar reserva.';
-      confirmationState = ReservationActionState.error;
-    } finally {
-      notifyListeners();
-      _resetConfirmationDelayed();
-    }
-  }
-
-  /// Cancela la reserva actual. Solo si [isAdmin] es true.
-  /// No ejecuta si ya hay una accion en curso (doble-tap guard).
-  Future<void> cancelReservation({
-    required bool isAdmin,
-  }) async {
-    if (!isAdmin) {
-      cancellationErrorCode = 'permission.denied';
-      cancellationErrorMessage = 'No tienes permisos para cancelar reservas.';
-      cancellationState = ReservationActionState.error;
-      notifyListeners();
-      return;
-    }
-    if (cancellationState != ReservationActionState.idle) return;
-
-    cancellationState = ReservationActionState.confirming;
-    cancellationErrorCode = null;
-    cancellationErrorMessage = null;
-    notifyListeners();
-
-    try {
-      detail = await _repository.cancelReservation(
-        reservationId: detail!.id,
-      );
-      cancellationState = ReservationActionState.success;
-    } on ReservationsApiFailure catch (e) {
-      cancellationErrorCode = e.code;
-      cancellationErrorMessage = e.message;
-      cancellationState = ReservationActionState.error;
-    } catch (_) {
-      cancellationErrorCode = 'common.error';
-      cancellationErrorMessage = 'Error inesperado al cancelar reserva.';
-      cancellationState = ReservationActionState.error;
-    } finally {
-      notifyListeners();
-      _resetCancellationDelayed();
-    }
-  }
-
-  /// Soft-delete de la reserva actual. Solo si [isAdmin] es true.
-  Future<void> deleteReservation({
-    required bool isAdmin,
-  }) async {
-    if (!isAdmin) {
-      deleteErrorCode = 'permission.denied';
-      deleteErrorMessage = 'No tienes permisos para eliminar reservas.';
-      deleteState = ReservationActionState.error;
-      notifyListeners();
-      return;
-    }
-    if (deleteState != ReservationActionState.idle) return;
-
-    deleteState = ReservationActionState.confirming;
-    deleteErrorCode = null;
-    deleteErrorMessage = null;
-    notifyListeners();
-
-    try {
-      detail = await _repository.deleteReservation(
-        reservationId: detail!.id,
-      );
-      deleteState = ReservationActionState.success;
-    } on ReservationsApiFailure catch (e) {
-      deleteErrorCode = e.code;
-      deleteErrorMessage = e.message;
-      deleteState = ReservationActionState.error;
-    } catch (_) {
-      deleteErrorCode = 'common.error';
-      deleteErrorMessage = 'Error inesperado al eliminar reserva.';
-      deleteState = ReservationActionState.error;
-    } finally {
-      notifyListeners();
-      _resetDeleteDelayed();
-    }
-  }
-
-  /// Restaura una reserva previamente borrada.
-  Future<void> restoreReservation({
-    required bool isAdmin,
-  }) async {
-    if (!isAdmin) {
-      deleteErrorCode = 'permission.denied';
-      deleteErrorMessage = 'No tienes permisos para restaurar reservas.';
-      deleteState = ReservationActionState.error;
-      notifyListeners();
-      return;
-    }
-    if (deleteState != ReservationActionState.idle) return;
-
-    deleteState = ReservationActionState.confirming;
-    deleteErrorCode = null;
-    deleteErrorMessage = null;
-    notifyListeners();
-
-    try {
-      detail = await _repository.restoreReservation(
-        reservationId: detail!.id,
-      );
-      deleteState = ReservationActionState.success;
-    } on ReservationsApiFailure catch (e) {
-      deleteErrorCode = e.code;
-      deleteErrorMessage = e.message;
-      deleteState = ReservationActionState.error;
-    } catch (_) {
-      deleteErrorCode = 'common.error';
-      deleteErrorMessage = 'Error inesperado al restaurar reserva.';
-      deleteState = ReservationActionState.error;
-    } finally {
-      notifyListeners();
-      _resetDeleteDelayed();
-    }
-  }
-
-  void _resetDeleteDelayed() {
-    Future.microtask(() {
-      if (_disposed) return;
-      if (deleteState != ReservationActionState.idle) {
-        deleteState = ReservationActionState.idle;
-        notifyListeners();
-      }
-    });
-  }
-
-  void _resetCancellationDelayed() {
-    Future.microtask(() {
-      if (_disposed) return;
-      if (cancellationState != ReservationActionState.idle) {
-        cancellationState = ReservationActionState.idle;
-        notifyListeners();
-      }
-    });
-  }
-
-  void _resetConfirmationDelayed() {
-    Future.microtask(() {
-      if (_disposed) return;
-      if (confirmationState != ReservationActionState.idle) {
-        confirmationState = ReservationActionState.idle;
-        notifyListeners();
-      }
-    });
-  }
+  // ── Load detail ──
 
   Future<void> loadDetail(String reservationId) async {
-    _resetActionState();
     state = ReservationDetailLoadState.loading;
     errorCode = null;
     errorMessage = null;
@@ -476,7 +111,6 @@ class ReservationDetailController extends ChangeNotifier {
       detail = await _repository.getReservationById(reservationId);
       state = ReservationDetailLoadState.success;
     } catch (_) {
-      // Try cache
       try {
         detail =
             await _repository.getCachedReservationDetail(reservationId);
@@ -496,12 +130,312 @@ class ReservationDetailController extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── Payment proof actions ──
+
+  Future<void> approvePaymentProof({
+    required String paymentProofId,
+    String? note,
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      approveProofState = ActionState.error(
+        'permission.denied',
+        'No tienes permisos para aprobar comprobantes.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (approveProofState.isLoading) return;
+
+    actingPaymentProofId = paymentProofId;
+    approveProofState = ActionState.loading();
+    notifyListeners();
+
+    try {
+      detail = await _repository.approvePaymentProof(
+        paymentProofId: paymentProofId,
+        note: note,
+      );
+      approveProofState = ActionState.success();
+    } on ReservationsApiFailure catch (e) {
+      approveProofState = ActionState.error(e.code, e.message);
+    } catch (_) {
+      approveProofState = ActionState.error(
+        'common.error',
+        'Error inesperado al aprobar comprobante.',
+      );
+    } finally {
+      actingPaymentProofId = null;
+      notifyListeners();
+    }
+  }
+
+  Future<void> rejectPaymentProof({
+    required String paymentProofId,
+    required String reason,
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      rejectProofState = ActionState.error(
+        'permission.denied',
+        'No tienes permisos para rechazar comprobantes.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (rejectProofState.isLoading) return;
+
+    actingPaymentProofId = paymentProofId;
+    rejectProofState = ActionState.loading();
+    notifyListeners();
+
+    try {
+      detail = await _repository.rejectPaymentProof(
+        paymentProofId: paymentProofId,
+        reason: reason,
+      );
+      rejectProofState = ActionState.success();
+    } on ReservationsApiFailure catch (e) {
+      rejectProofState = ActionState.error(e.code, e.message);
+    } catch (_) {
+      rejectProofState = ActionState.error(
+        'common.error',
+        'Error inesperado al rechazar comprobante.',
+      );
+    } finally {
+      actingPaymentProofId = null;
+      notifyListeners();
+    }
+  }
+
+  Future<void> unverifyPaymentProof({
+    required String paymentProofId,
+    String? note,
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      unverifyProofState = ActionState.error(
+        'permission.denied',
+        'No tienes permisos para deshacer verificacion.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (unverifyProofState.isLoading) return;
+
+    actingPaymentProofId = paymentProofId;
+    unverifyProofState = ActionState.loading();
+    notifyListeners();
+
+    try {
+      detail = await _repository.unverifyPaymentProof(
+        paymentProofId: paymentProofId,
+        note: note,
+      );
+      unverifyProofState = ActionState.success();
+    } on ReservationsApiFailure catch (e) {
+      unverifyProofState = ActionState.error(e.code, e.message);
+    } catch (_) {
+      unverifyProofState = ActionState.error(
+        'common.error',
+        'Error inesperado al deshacer verificacion.',
+      );
+    } finally {
+      actingPaymentProofId = null;
+      notifyListeners();
+    }
+  }
+
+  Future<void> unrejectPaymentProof({
+    required String paymentProofId,
+    String? note,
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      unrejectProofState = ActionState.error(
+        'permission.denied',
+        'No tienes permisos para deshacer rechazo.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (unrejectProofState.isLoading) return;
+
+    actingPaymentProofId = paymentProofId;
+    unrejectProofState = ActionState.loading();
+    notifyListeners();
+
+    try {
+      detail = await _repository.unrejectPaymentProof(
+        paymentProofId: paymentProofId,
+        note: note,
+      );
+      unrejectProofState = ActionState.success();
+    } on ReservationsApiFailure catch (e) {
+      unrejectProofState = ActionState.error(e.code, e.message);
+    } catch (_) {
+      unrejectProofState = ActionState.error(
+        'common.error',
+        'Error inesperado al deshacer rechazo.',
+      );
+    } finally {
+      actingPaymentProofId = null;
+      notifyListeners();
+    }
+  }
+
+  // ── Reservation actions ──
+
+  Future<void> confirmReservation({
+    required bool isAdmin,
+    String? notes,
+  }) async {
+    if (!isAdmin) {
+      confirmationState = ActionState.error(
+        'permission.denied',
+        'No tienes permisos para confirmar reservas.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (confirmationState.isLoading) return;
+
+    confirmationState = ActionState.loading();
+    notifyListeners();
+
+    try {
+      detail = await _repository.confirmReservation(
+        reservationId: detail!.id,
+        notes: notes,
+      );
+      confirmationState = ActionState.success();
+    } on ReservationsApiFailure catch (e) {
+      confirmationState = ActionState.error(e.code, e.message);
+    } catch (_) {
+      confirmationState = ActionState.error(
+        'common.error',
+        'Error inesperado al confirmar reserva.',
+      );
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> cancelReservation({
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      cancellationState = ActionState.error(
+        'permission.denied',
+        'No tienes permisos para cancelar reservas.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (cancellationState.isLoading) return;
+
+    cancellationState = ActionState.loading();
+    notifyListeners();
+
+    try {
+      detail = await _repository.cancelReservation(
+        reservationId: detail!.id,
+      );
+      cancellationState = ActionState.success();
+    } on ReservationsApiFailure catch (e) {
+      cancellationState = ActionState.error(e.code, e.message);
+    } catch (_) {
+      cancellationState = ActionState.error(
+        'common.error',
+        'Error inesperado al cancelar reserva.',
+      );
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteReservation({
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      deleteState = ActionState.error(
+        'permission.denied',
+        'No tienes permisos para eliminar reservas.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (deleteState.isLoading) return;
+
+    deleteState = ActionState.loading();
+    notifyListeners();
+
+    try {
+      detail = await _repository.deleteReservation(
+        reservationId: detail!.id,
+      );
+      deleteState = ActionState.success();
+    } on ReservationsApiFailure catch (e) {
+      deleteState = ActionState.error(e.code, e.message);
+    } catch (_) {
+      deleteState = ActionState.error(
+        'common.error',
+        'Error inesperado al eliminar reserva.',
+      );
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> restoreReservation({
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      restoreState = ActionState.error(
+        'permission.denied',
+        'No tienes permisos para restaurar reservas.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (restoreState.isLoading) return;
+
+    restoreState = ActionState.loading();
+    notifyListeners();
+
+    try {
+      detail = await _repository.restoreReservation(
+        reservationId: detail!.id,
+      );
+      restoreState = ActionState.success();
+    } on ReservationsApiFailure catch (e) {
+      restoreState = ActionState.error(e.code, e.message);
+    } catch (_) {
+      restoreState = ActionState.error(
+        'common.error',
+        'Error inesperado al restaurar reserva.',
+      );
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  // ── Reset ──
+
   void reset() {
-    _resetActionState();
     state = ReservationDetailLoadState.idle;
     detail = null;
     errorCode = null;
     errorMessage = null;
+    actingPaymentProofId = null;
+    approveProofState = ActionState.idle();
+    rejectProofState = ActionState.idle();
+    unverifyProofState = ActionState.idle();
+    unrejectProofState = ActionState.idle();
+    confirmationState = ActionState.idle();
+    cancellationState = ActionState.idle();
+    deleteState = ActionState.idle();
+    restoreState = ActionState.idle();
     notifyListeners();
   }
 }

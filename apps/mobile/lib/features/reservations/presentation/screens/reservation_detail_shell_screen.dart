@@ -303,20 +303,17 @@ class _ReservationDetailShellScreenState
               detail.status != ReservationStatus.expired) ...[
             AppButton(
               label:
-                  _controller.confirmationState ==
-                      ReservationActionState.confirming
+                  _controller.confirmationState.isLoading
                   ? 'Confirmando...'
                   : 'Confirmar reserva',
               icon:
-                  _controller.confirmationState ==
-                      ReservationActionState.confirming
+                  _controller.confirmationState.isLoading
                   ? null
                   : Icons.check_circle_outline_rounded,
               variant: AppButtonVariant.primary,
               expanded: true,
               onPressed:
-                  _controller.confirmationState ==
-                      ReservationActionState.confirming
+                  _controller.confirmationState.isLoading
                   ? null
                   : () => _showConfirmConfirmation(),
             ),
@@ -329,20 +326,17 @@ class _ReservationDetailShellScreenState
               detail.status != ReservationStatus.expired) ...[
             AppButton(
               label:
-                  _controller.cancellationState ==
-                      ReservationActionState.confirming
+                  _controller.cancellationState.isLoading
                   ? 'Cancelando...'
                   : 'Cancelar reserva',
               icon:
-                  _controller.cancellationState ==
-                      ReservationActionState.confirming
+                  _controller.cancellationState.isLoading
                   ? null
                   : Icons.cancel_outlined,
               variant: AppButtonVariant.danger,
               expanded: true,
               onPressed:
-                  _controller.cancellationState ==
-                      ReservationActionState.confirming
+                  _controller.cancellationState.isLoading
                   ? null
                   : () => _showCancelConfirmation(),
             ),
@@ -353,28 +347,28 @@ class _ReservationDetailShellScreenState
             if (detail.deletedAt != null) ...[
               AppButton(
                 label:
-                    _controller.deleteState == ReservationActionState.confirming
+                    _controller.deleteState.isLoading
                     ? 'Restaurando...'
                     : 'Restaurar reserva',
                 icon: Icons.restore_from_trash_rounded,
                 variant: AppButtonVariant.secondary,
                 expanded: true,
                 onPressed:
-                    _controller.deleteState == ReservationActionState.confirming
+                    _controller.deleteState.isLoading
                     ? null
                     : () => _showRestoreConfirmation(),
               ),
             ] else ...[
               AppButton(
                 label:
-                    _controller.deleteState == ReservationActionState.confirming
+                    _controller.deleteState.isLoading
                     ? 'Eliminando...'
                     : 'Eliminar reserva',
                 icon: Icons.delete_outline_rounded,
                 variant: AppButtonVariant.danger,
                 expanded: true,
                 onPressed:
-                    _controller.deleteState == ReservationActionState.confirming
+                    _controller.deleteState.isLoading
                     ? null
                     : () => _showDeleteConfirmation(),
               ),
@@ -634,16 +628,16 @@ class _ReservationDetailShellScreenState
             final proofIsActing = _controller.actingPaymentProofId == proof.id;
             final isApproving =
                 proofIsActing &&
-                actionState == PaymentProofActionState.approving;
+                _controller.approveProofState.isLoading;
             final isRejecting =
                 proofIsActing &&
-                actionState == PaymentProofActionState.rejecting;
+                _controller.rejectProofState.isLoading;
             final isUnverifying =
                 proofIsActing &&
-                actionState == PaymentProofActionState.unverifying;
+                _controller.unverifyProofState.isLoading;
             final isUnrejecting =
                 proofIsActing &&
-                actionState == PaymentProofActionState.unrejecting;
+                _controller.unrejectProofState.isLoading;
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Column(
