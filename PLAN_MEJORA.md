@@ -6,11 +6,11 @@
 
 | Área | Estado | Items completados |
 |------|--------|-------------------|
-| **Backend Core (W1)** | ✅ 100% | BaseService, CRUD refactor, ensure_indexes, start_time→str |
+| **Backend Core (W1)** | ✅ 100% | BaseService, CRUD refactor, ensure_indexes, start_time→str, AuditMetadata tipado |
 | **Backend Architecture (W2)** | 🟡 ~80% | batch mappers, storage cleanup, catalog cache, board pagination, age config, except:pass, dry_run, audit bulk, board is_available, build_code, list_items, SUPPLIES, deprecated fields, legacy fallback+migration script |
-| **Frontend (W3)** | 🟡 ~50% | ActionState<T>, DI, router, app.dart simplificado, veil eliminado, detail controller refactor, list controller state+bloc+tests |
-| **Testing (W4)** | ❌ 0% | — |
-| **Docs/Ops (W5)** | ❌ 0% | — |
+| **Frontend (W3)** | 🟡 ~60% | ActionState<T>, DI, router, app.dart simplificado, veil eliminado, detail controller refactor, list controller state+bloc+tests, playground fuera de lib/, packages declarados |
+| **Testing (W4)** | 🟡 ~60% | Tests: ConfigService (7), PolicyService (5), ProviderService (3), ServiceLogService (4), FileUploadService (5), StorageAdapter (5), mobile repo (4). Coverage audit. OpenAPI contract verify. |
+| **Docs/Ops (W5)** | 🟡 ~85% | AGENTS.md actualizado, ADR-0004 postponed, unified seed CLI (`python -m app.cli seed`), migration tracker (3 formal migrations), health check real, PR template |
 | **SyncService split (W2.1)** | ❌ Pendiente | Alto riesgo — plan separado |
 
 ---
@@ -217,11 +217,11 @@ Fallback `reservation_id` eliminado. Script `scripts/migrate_participant_ids.py`
 
 ---
 
-### B6. `AuditLog.metadata` sin schema  ❌
+### B6. `AuditLog.metadata` sin schema  ✅
 
-**Estado:** ❌ Pendiente (W1.5)
+**Estado:** ✅ Resuelto
 
-`metadata: dict = {}` sin tipar. Pendiente crear `AuditMetadata` models.
+`metadata: dict` → `AuditMetadata \| None` (discriminated union: AssignmentMetadata, ReplacementMetadata, NotificationMetadata). `actor_role` nullable. 5 tests nuevos.
 
 ---
 
@@ -261,9 +261,11 @@ Unificado en `constants.py`. Reservation y Draft usan la misma función.
 
 ---
 
-### F3. Dev screens compilados en debug  ❌
+### F3. Dev screens compilados en debug  ✅
 
-**Estado:** ❌ Pendiente (W3.8)
+**Estado:** ✅ Resuelto (W3.8)
+
+Playground movido de `lib/playground/` a `dev/playground/`. Release build no compila el widget museum.
 
 ---
 
@@ -283,17 +285,19 @@ Veil eliminado. `MaterialApp(themeAnimationDuration: 200ms)`. Sin `_themeVeilCol
 
 ---
 
-### F6. Falta de cobertura de tests mobile  ❌
+### F6. Falta de cobertura de tests mobile  🟡
 
-**Estado:** ❌ Pendiente (W4.4-W4.5)
+**Estado:** 🟡 Parcial (W4.4 completado, W4.5 pendiente)
 
-Tests agregados para list controller (9). Detail controller tests existentes actualizados. Falta: dashboard, configuration, catalogs, participants, providers, saddles.
+Tests agregados: list controller (9), detail controller actualizados, ReservationsRepositoryImpl (4 nuevos). Falta: dashboard, configuration, catalogs, participants, providers, saddles controllers + tests de integración mobile (W4.5).
 
 ---
 
-### F7. `playground/` dentro de `lib/`  ❌
+### F7. `playground/` dentro de `lib/`  ✅
 
-**Estado:** ❌ Pendiente (W3.8)
+**Estado:** ✅ Resuelto (W3.8)
+
+`widget_museum_screen.dart` movido a `dev/playground/`. `lib/playground/` eliminado.
 
 ---
 
@@ -307,37 +311,50 @@ Tests agregados para list controller (9). Detail controller tests existentes act
 
 ---
 
-### T1-T7 — Testing  ❌
+### T1-T7 — Testing  🟡
 
-**Estado:** ❌ Todo pendiente (W4 completo)
+**Estado:** 🟡 ~60% (W4 parcial)
 
-Backend: sin tests para ConfigService, PolicyService, ProviderService, ServiceLogService, FileUploadService, etc. Sin mongomock. Sin tests de concurrencia. Mobile: sin tests de integración. Sin contratos API-frontend. Repositorios sin tests.
+| Item | Estado | Qué |
+|------|--------|-----|
+| **T1 — Services unit** | ✅ 29 tests | ConfigService (7), PolicyService (5), ProviderService (3), ServiceLogService (4), FileUploadService (5), StorageAdapter (5) |
+| **T2 — Coverage** | ✅ Reportado | `pytest --cov` ejecutado. Coverage general 52%. Servicios core 82-100%. |
+| **T3 — Integration mobile** | ❌ Pendiente | Requiere setup `integration_test` + emulador |
+| **T4 — OpenAPI contract** | ✅ 3 tests | Spec generado, 45+ endpoints verificados contra documentación |
+| **T5 — mongomock** | ❌ Pendiente | Patrón actual monkeypatch funciona, mongomock como mejora futura |
+| **T6 — Concurrency** | ✅ 2 tests | `test_concurrency_reservation.py` con `asyncio.gather(5)` |
+| **T7 — Mobile repos** | ✅ 4 tests | `ReservationsRepositoryImpl` (cache hit, cache miss, remote fail, both fail) |
 
 ---
 
-## D. DOCUMENTACIÓN Y OPERACIONES  ❌
+## D. DOCUMENTACIÓN Y OPERACIONES  🟡
 
-**Estado:** ❌ Todo pendiente (W5 completo)
+**Estado:** 🟡 ~85% (W5 casi completo)
 
-### D1-D5 — Seeds, migrations, healthcheck, docs, AGENTS.md
-Sin CLI unificado de seeds. Sin sistema de migraciones. Sin healthcheck de dependencias. ADRs desactualizados. AGENTS.md no verificable automáticamente.
+| Item | Estado | Qué |
+|------|--------|-----|
+| **D1 — Seeds CLI** | ✅ | `python -m app.cli seed -t <name>`. 6 seeds registrados. Legacy scripts intactos. |
+| **D2 — Migration tracker** | ✅ | `app/migrations/` con 3 migraciones formales. `run_migrations()` en startup. |
+| **D3 — Health check** | ✅ | `GET /health` retorna `{"status","checks":{"mongodb":"ok\|error"}}` |
+| **D4 — AGENTS.md + ADR** | ✅ | AGENTS.md actualizado con stubs. ADR-0004 → postponed con criterios. |
+| **D5 — PR template + linter** | ✅ | `.github/PULL_REQUEST_TEMPLATE.md` con checklist. analysis_options actualizado. |
 
-## M. MOBILE PACKAGES FANTASMA  ❌
+## M. MOBILE PACKAGES FANTASMA  🟡
 
-**Estado:** ❌ Pendiente (W5.7-W5.9, requiere W3.9)
+**Estado:** 🟡 Declarados en workspace (W3.10), pendiente poblar (W5.7-W5.9, requiere W3.9)
 
 ### M1-M3 — `mobile_ui`, `mobile_domain`, `mobile_mocks`
-Paquetes vacíos. Código inline en `apps/mobile`. No extraíble hasta migrar a imports `package:`.
+Paquetes declarados en `apps/mobile/pubspec.yaml` como dependencias workspace. Siguen vacíos. Poblar requiere W3.9 (package: imports) para no romper imports existentes.
 
 ---
 
-## MATRIZ DE PRIORIDADES (ESTADO ACTUAL)
+## MATRIZ DE PRIORIDADES (ACTUALIZADA 2026-06-02)
 
 | Prioridad | Resueltos ✅ | Pendientes ❌ |
 |-----------|-------------|---------------|
-| ~~High~~ | A5 (except:pass), F6 (parcial: 9 tests list controller) | A1, A2, F6 (resto), T1, T3, T6, T7 |
-| ~~Medium~~ | P3, P4, A4, A6, A8, B1, B4, B5, F1, F2, F5 | A3 (W2.1), B6 (W1.5), T2, T4, T5, D1, D2, D3, D4 |
-| ~~Low~~ | P1, P2, A7, A9, A10, B2, B3, B7, B8, F4 | F3 (W3.8), F7 (W3.8), F8 (W3.9), D5 |
+| ~~High~~ | A5, B6, F6 (parcial), T1 (29 tests), T7 (4 tests) | A2, F6 (resto), T3, T5 |
+| ~~Medium~~ | P3, P4, A4, A6, A8, B1, B4, B5, F1-F5, T4, T6, D1-D5 | A3 (W2.1), A1/M1-M3 (W5.7-W5.9), T2 (parcial) |
+| ~~Low~~ | P1, P2, A7, A9, A10, B2, B3, B7, B8, F3, F7, T2 (reporte) | F8 (W3.9) |
 
 ---
 
@@ -654,6 +671,33 @@ Cada workstream es un PR independiente. Gates de aprobación:
 | **Eliminar legacy fallback en mappers** | Script `migrate_participant_ids.py` creado. Fallback eliminado completamente. Sin compatibilidad |
 | **Refactor detail controller con ActionState** | 507→310 líneas. 3 enums eliminados. Bug corregido (cancel/delete usaban `ReservationActionState.confirming`) |
 | **ReservationsListState inmutable** | State separado del controller. 9 tests nuevos. `copyWith` para transiciones predecibles |
+
+## 2026-06-02 — Batch 3: Clean infra + hygiene (B6, W3.8, W3.10, W5.1-W5.6)
+
+| Decisión | Justificación |
+|----------|---------------|
+| **`AuditMetadata` tipado** | `metadata: dict` → `AssignmentMetadata \| ReplacementMetadata \| NotificationMetadata`. `actor_role` nullable. 5 tests. |
+| **Playground fuera de `lib/`** | `widget_museum_screen.dart` → `dev/playground/`. Release build no lo compila. |
+| **Packages declarados en pubspec** | `mobile_ui`, `mobile_domain`, `mobile_mocks` como path dependencies. Siguen vacíos. |
+| **Health check real** | `GET /health` → `{"status","checks":{"mongodb":"ok"}}`. Test actualizado. |
+| **PR template + linter** | `.github/PULL_REQUEST_TEMPLATE.md` con checklist AGENTS.md. `analysis_options` documentado. |
+| **ADR-0004 → postponed** | Status actualizado con criterios de extracción. |
+
+## 2026-06-02 — Batch 4: W4 Testing (6 servicios + mobile repo)
+
+| Decisión | Justificación |
+|----------|---------------|
+| **29 tests backend** | ConfigService (7), PolicyService (5), ProviderService (3), ServiceLogService (4), FileUploadService (5), StorageAdapter (5) |
+| **4 tests mobile repo** | ReservationsRepositoryImpl: cache hit, cache miss, remote fail, both fail |
+| **Coverage audit** | `pytest --cov` ejecutado. Coverage general 52%. Servicios core 82-100%. |
+| **OpenAPI contract verify** | 3 tests existentes verifican spec contra 45+ endpoints documentados. |
+
+## 2026-06-02 — Batch 5: W5.3 + W5.4 (Seed CLI + Migration tracker)
+
+| Decisión | Justificación |
+|----------|---------------|
+| **Seed CLI unificado** | `python -m app.cli seed -t <name>`. 6 seeds registrados via `importlib`. Legacy scripts intactos. |
+| **Migration tracker formal** | `app/migrations/` con 3 migraciones (staff→guide, schedule is_active, sync_metadata). `run_migrations()` en startup. Fail-open. |
 
 ---
 

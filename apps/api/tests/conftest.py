@@ -10,6 +10,16 @@ Usage:
 
         from app.core.di import Container
         Container.get_instance()._services["reservation_service"] = mock_service
+
+    Use the ``mongomock_db`` fixture for unit tests that need an in-memory
+    MongoDB — avoids the real DB entirely::
+
+        async def test_foo(mongomock_db) -> None:
+            # mongomock_db is an AsyncIOMotorDatabase
+            ...
+
+    Mark tests that require a real MongoDB with ``@pytest.mark.integration``.
+    Run ``pytest -m "not integration"`` for fast local unit tests.
 """
 
 from __future__ import annotations
@@ -20,6 +30,7 @@ from typing import Any
 # Prevent real DB connection during tests
 os.environ.setdefault("APP_SKIP_DB_INIT", "true")
 
+import mongomock
 import pytest
 
 from app.core.di import Container
@@ -27,19 +38,40 @@ from app.core.di import Container
 
 @pytest.fixture(autouse=True, scope="session")
 def _init_container() -> None:
-    """Initialize the DI container once per test session.
-
-    All services are real instances — no MongoDB queries are made until
-    a Document method (find, insert, save, …) is actually called.
-    Individual tests monkeypatch those Document methods as needed.
-    """
+    """Initialize the DI container once per test session."""
     Container.init()
 
 
 @pytest.fixture(autouse=True)
 def _reset_container() -> None:
     """Reset container state between tests to avoid cross-test pollution."""
-    # Individual tests can swap services via monkeypatch or direct assignment.
-    # This fixture ensures a clean container per test.
-    # Services are singletons — override in the test if needed.
     pass
+
+
+@pytest.fixture(scope="function")
+def mongomock_client() -> mongomock.MongoClient:
+    """In-memory MongoDB via mongomock for unit tests.
+
+    Yields a ``mongomock.MongoClient`` that works as a drop-in replacement
+    for ``pymongo.MongoClient``.  No real MongoDB server required.
+
+    Usage::
+
+        def test_foo(mongomock_client) -> None:
+            db = mongomock_client["test_db"]
+            collection = db["my_collection"]
+            collection.insert_one({"_id": "1", "name": "test"})
+            assert collection.find_one({"_id": "1"}) is not None
+
+    For services backed by Beanie Documents, monkeypatch
+    ``Document.get_motor_collection()`` to return a mongomock collection::
+
+        mock_collection = mongomock_client["test_db"]["experiences"]
+        monkeypatch.setattr(
+            ExperienceDocument, "get_motor_collection", lambda: mock_collection,
+        )
+
+    No setup/teardown required — the mock is ephemeral.
+    """
+    client = mongomock.MongoClient()
+    yield client

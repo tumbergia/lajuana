@@ -7,8 +7,8 @@ import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/session_view_screen.dart';
-import '../../../../dev/playground/widget_museum_screen.dart';
 import '../bootstrap/dev_loader_screen.dart';
+import '../bootstrap/dev/widget_museum_placeholder.dart';
 import '../bootstrap/startup_gate.dart';
 import '../dependency_injection.dart';
 import '../shell/authenticated_shell.dart';
@@ -35,7 +35,7 @@ class AppRouter {
       case AuthRoutes.devLoader:
         return const DevWidgetCatalogScreen();
       case AuthRoutes.widgetMuseum:
-        return const WidgetMuseumScreen();
+        return const WidgetMuseumPlaceholder();
       default:
         return null;
     }

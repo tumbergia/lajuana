@@ -30,6 +30,7 @@ dev = [
 	"pytest-asyncio>=0.24.0,<1.0.0",
 	"ruff>=0.6.0,<1.0.0",
 	"mypy>=1.11.0,<2.0.0",
+	"mongomock>=4.0.0,<6.0.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -64,6 +65,9 @@ indent-style = "space"
 testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
+markers = [
+	"integration: Tests that require a real MongoDB.",
+]
 
 [tool.mypy]
 python_version = "3.11"
