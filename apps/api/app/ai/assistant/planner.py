@@ -112,6 +112,9 @@ def _build_admin_tools_prompt(tools: list[str]) -> str:
 
 
 class GeminiPlanner:
+    def __init__(self) -> None:
+        self.last_token_usage: dict[str, int] | None = None
+
     async def plan(
         self,
         *,
@@ -167,13 +170,17 @@ class GeminiPlanner:
             "user_message": user_message,
         }
 
-        result = await get_llm_provider().generate_structured(
+        provider = get_llm_provider()
+        result = await provider.generate_structured(
             system=system_prompt,
             user=str(context),
             response_model=AssistantPlan,
             temperature=0.1,
             telemetry_context={"channel": channel, "conversation_id": conversation_id},
         )
+
+        # Capturar tokens del último request
+        self.last_token_usage = getattr(provider, "last_token_usage", None)
 
         elapsed_ms = int((time.perf_counter() - started) * 1000)
         logger.info(

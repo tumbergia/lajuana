@@ -39,3 +39,7 @@ tooling/
 
 # Token telemetry
 token_telemetry.txt
+
+# Audit logs (generados por scripts/audit_tools.py y scripts/admin_e2e_test.py)
+scripts/audit_logs/
+scripts/e2e_logs/

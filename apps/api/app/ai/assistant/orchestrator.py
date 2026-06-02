@@ -157,6 +157,7 @@ class AssistantOrchestrator:
                 parts.append(f"Historial de la conversación:\n{conversation_history}")
             enriched_context = "\n\n".join(parts)
 
+        token_usage: dict[str, int] | None = None
         try:
             plan = await self._planner.plan(
                 user_message=request.message,
@@ -164,6 +165,7 @@ class AssistantOrchestrator:
                 conversation_context=enriched_context,
                 conversation_id=conversation_id,
             )
+            token_usage = getattr(self._planner, "last_token_usage", None)
         except GeminiResourceExhausted:
             return AskResponse(
                 trace_id=trace_id,
@@ -477,6 +479,7 @@ class AssistantOrchestrator:
             planner_output=plan.model_dump(mode="json"),
             tool_output=tool_output,
             response=response,
+            token_usage=token_usage,
         )
 
     @staticmethod

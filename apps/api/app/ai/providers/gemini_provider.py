@@ -61,6 +61,7 @@ class GeminiProvider:
         self._models = models
         self._current_key_index = 0
         self._current_model_index = 0
+        self.last_token_usage: dict[str, int] | None = None
 
     @property
     def _current_client(self) -> genai.Client:
@@ -155,12 +156,20 @@ class GeminiProvider:
             try:
                 um = response.usage_metadata
                 if um is not None:
+                    prompt_tokens = getattr(um, "prompt_token_count", 0) or 0
+                    completion_tokens = getattr(um, "candidates_token_count", 0) or 0
+                    total_tokens = getattr(um, "total_token_count", 0) or 0
+                    self.last_token_usage = {
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "total_tokens": total_tokens,
+                    }
                     log_token_usage(
                         api_key_suffix=self._keys[self._current_key_index][-4:],
                         model=self._current_model,
-                        prompt_tokens=getattr(um, "prompt_token_count", 0) or 0,
-                        completion_tokens=getattr(um, "candidates_token_count", 0) or 0,
-                        total_tokens=getattr(um, "total_token_count", 0) or 0,
+                        prompt_tokens=prompt_tokens,
+                        completion_tokens=completion_tokens,
+                        total_tokens=total_tokens,
                         channel=telemetry_context.get("channel") if telemetry_context else None,
                         conversation_id=telemetry_context.get("conversation_id") if telemetry_context else None,
                     )

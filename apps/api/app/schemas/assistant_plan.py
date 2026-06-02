@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AssistantAction(StrEnum):
@@ -18,6 +18,8 @@ class RiskLevel(StrEnum):
 
 
 class ToolArgs(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
     experience_query: str | None = None
     experience_id: str | None = None
     schedule_id: str | None = None
