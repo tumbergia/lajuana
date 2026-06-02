@@ -23,7 +23,7 @@ Incluye:
 - `Experience` representa la plantilla comercial-operativa y `Schedule` la salida fechada con cupos/estado; no se mezclan.
 - La confirmacion de reserva solo se ejecuta en backend.
 - La cotizacion oficial de experiencias se calcula en backend (`POST /api/v1/experiences/{experience_id}/quote`).
-- Los comprobantes guardan metadatos y referencia externa (`storage_key`), no binarios en MongoDB.
+- Los comprobantes guardan binarios en MongoDB (`file_data`). Los proofs legacy (WhatsApp/S3) usan `storage_key` con fallback al storage adapter.
 - `guide` no accede a funciones administrativas ni comerciales sensibles.
 
 ## Capas activas

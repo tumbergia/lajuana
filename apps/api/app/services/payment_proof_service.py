@@ -1,17 +1,11 @@
 import asyncio
-import logging
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 from hashlib import sha256
-from uuid import uuid4
 
 from beanie import PydanticObjectId
 
-logger = logging.getLogger(__name__)
-
-from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
 from app.common.enums import PaymentStatus, ReservationStatus, UserRole
 from app.common.labels import ErrorCode
-from app.core.config import settings
 from app.core.errors import ApiError
 from app.core.logging import logger
 from app.documents import (
@@ -21,7 +15,6 @@ from app.documents import (
     ReservationAuditLogDocument,
     ReservationDocument,
 )
-from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.schemas.payment_proof import (
     PaymentProofApproveSchema,
     PaymentProofCreateSchema,
@@ -43,7 +36,6 @@ ALLOWED_PAYMENT_PROOF_TRANSITIONS = {
     PaymentStatus.RECEIVED: {PaymentStatus.VERIFIED, PaymentStatus.REJECTED},
     PaymentStatus.VERIFIED: {PaymentStatus.RECEIVED},
     PaymentStatus.REJECTED: {PaymentStatus.RECEIVED},
-    PaymentStatus.PENDING: set(),
 }
 
 
@@ -633,7 +625,9 @@ class PaymentProofService:
         reservation.payment_status = PaymentStatus.RECEIVED
         await reservation.save()
 
-        asyncio.create_task(self._background_download(str(doc.id)))
+        proof_id = str(doc.id)
+        task = asyncio.create_task(self._background_download(proof_id))
+        task.add_done_callback(lambda t: self._on_background_download_done(t, proof_id))
 
         return doc
 
@@ -641,6 +635,24 @@ class PaymentProofService:
         from app.services.whatsapp_media_downloader import download_and_store
 
         await download_and_store(proof_id)
+
+    def _on_background_download_done(
+        self, task: asyncio.Task[None], proof_id: str
+    ) -> None:
+        try:
+            exc = task.exception()
+            if exc:
+                logger.error(
+                    "[payment_proof] Background download failed | proof_id=%s | error=%s",
+                    proof_id,
+                    exc,
+                    exc_info=exc,
+                )
+        except asyncio.CancelledError:
+            logger.warning(
+                "[payment_proof] Background download cancelled | proof_id=%s",
+                proof_id,
+            )
 
     async def get_download(
         self,

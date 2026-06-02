@@ -149,3 +149,33 @@ class EquineDto {
     return null;
   }
 }
+
+/// DTO para una entrada del timeline del equino desde la API.
+class EquineTimelineEntryDto {
+  EquineTimelineEntryDto({
+    required this.id,
+    required this.eventType,
+    required this.happenedAt,
+    required this.title,
+    this.reservationId,
+    this.notes,
+  });
+
+  final String id;
+  final String eventType;
+  final String happenedAt;
+  final String title;
+  final String? reservationId;
+  final String? notes;
+
+  factory EquineTimelineEntryDto.fromJson(Map<String, dynamic> json) {
+    return EquineTimelineEntryDto(
+      id: json['id'] as String? ?? '',
+      eventType: json['event_type'] as String? ?? '',
+      happenedAt: json['happened_at'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      reservationId: json['reservation_id'] as String?,
+      notes: json['notes'] as String?,
+    );
+  }
+}

@@ -21,6 +21,8 @@ class AuthController extends ChangeNotifier {
   StreamSubscription<NetworkStatus>? _networkSub;
   bool _didStart = false;
 
+  // TODO: Encapsulate into AuthState value object — direct public field
+  // access is a temporary pattern used across many widgets.
   bool isBootstrapping = true;
   bool isLoading = false;
   NetworkStatus networkStatus = const NetworkStatus(

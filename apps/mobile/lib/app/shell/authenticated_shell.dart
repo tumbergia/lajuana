@@ -93,6 +93,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
       case AppNavItem.equinos:
         return EquinesModuleScreen(
           repository: widget.equineRepository,
+          userRole: widget.authController.currentUser?.role,
         );
       case AppNavItem.clientes:
         return const ParticipantsModuleScreen();

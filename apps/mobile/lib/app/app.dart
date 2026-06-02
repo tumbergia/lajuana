@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../features/auth/domain/auth_enums.dart';
@@ -46,6 +47,9 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
   static const Duration _themeVeilVisibleDuration = Duration(milliseconds: 500);
   static const Duration _themeVeilFadeDuration = Duration(milliseconds: 180);
   static const double _themeVeilOpacity = 1.0;
+
+  /// Dev/playground screens resolver — lazy loaded to avoid shipping in release.
+  Widget Function(String routeName)? _devScreenResolver;
 
   late final AuthController _authController;
   late final AuthApiClient _apiClient;
@@ -117,6 +121,30 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
       apiClient: equinesApiClient,
       database: EquinesDatabase.instance,
     );
+
+    if (!kReleaseMode) {
+      _initDevScreenResolver();
+    }
+  }
+
+  void _initDevScreenResolver() {
+    _devScreenResolver = (String routeName) {
+      // Deferred import pattern — dev screens only in non-release builds
+      switch (routeName) {
+        case AuthRoutes.devLoader:
+          return const DevWidgetCatalogScreen();
+        case AuthRoutes.widgetMuseum:
+          return const WidgetMuseumScreen();
+        default:
+          return _PlaceholderWidget('Unknown dev route: $routeName');
+      }
+    };
+  }
+
+  Widget _resolveDevScreen(String routeName) {
+    final resolver = _devScreenResolver;
+    if (resolver != null) return resolver(routeName);
+    return StartupGate(controller: _authController);
   }
 
   @override
@@ -167,10 +195,13 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
 
     switch (routeName) {
       case AuthRoutes.devLoader:
-        screen = const DevWidgetCatalogScreen();
-        break;
       case AuthRoutes.widgetMuseum:
-        screen = const WidgetMuseumScreen();
+        // Dev routes: block in release builds, lazy-load in debug
+        if (kReleaseMode) {
+          screen = StartupGate(controller: _authController);
+        } else {
+          screen = _resolveDevScreen(routeName);
+        }
         break;
       case AuthRoutes.sessionGate:
         screen = StartupGate(controller: _authController);
@@ -242,6 +273,20 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
           );
         },
       ),
+    );
+  }
+}
+
+/// Fallback widget when a dev screen is not available (release mode).
+class _PlaceholderWidget extends StatelessWidget {
+  const _PlaceholderWidget(this.message);
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Dev Tools')),
+      body: Center(child: Text(message)),
     );
   }
 }

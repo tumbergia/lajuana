@@ -6,20 +6,23 @@ import '../../../../app/widgets/app_button.dart';
 import '../../../../app/widgets/app_centered_loader.dart';
 import '../../../../app/widgets/app_scaffold.dart';
 import '../../../../app/widgets/cards/app_logbook_timeline.dart';
+import '../../domain/repositories/equine_repository.dart';
+import '../../infrastructure/mappers/equine_mapper.dart';
 
 /// Pantalla completa del timeline de un equino.
 ///
-/// Muestra el historial cronológico de servicios, eventos y observaciones.
-/// Por ahora usa datos mock — se conectará al backend cuando el endpoint
-/// esté disponible.
+/// Muestra el historial cronológico de servicios, eventos y observaciones
+/// obtenido desde el backend mediante [EquineRepository.getEquineTimeline].
 class EquineTimelineScreen extends StatefulWidget {
   final String equineId;
   final String equineName;
+  final EquineRepository repository;
 
   const EquineTimelineScreen({
     super.key,
     required this.equineId,
     required this.equineName,
+    required this.repository,
   });
 
   @override
@@ -27,122 +30,43 @@ class EquineTimelineScreen extends StatefulWidget {
 }
 
 class _EquineTimelineScreenState extends State<EquineTimelineScreen> {
-  // TODO: Reemplazar con llamada real al backend.
   bool _isLoading = false;
   List<AppLogbookTimelineEntry> _entries = [];
   bool _hasError = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    _loadMockEntries();
+    _loadTimeline();
   }
 
-  void _loadMockEntries() {
+  Future<void> _loadTimeline() async {
     setState(() {
       _isLoading = true;
       _hasError = false;
+      _errorMessage = '';
     });
 
-    // Simula carga async.
-    Future<void>.delayed(const Duration(milliseconds: 300), () {
+    try {
+      final domainEntries = await widget.repository.getEquineTimeline(
+        widget.equineId,
+      );
       if (!mounted) return;
       setState(() {
-        _entries = _buildMockEntries();
+        _entries = domainEntries
+            .map((e) => EquineMapper.timelineEntryToLogbookEntry(e))
+            .toList(growable: false);
         _isLoading = false;
       });
-    });
-  }
-
-  List<AppLogbookTimelineEntry> _buildMockEntries() {
-    return [
-      AppLogbookTimelineEntry(
-        title: 'Servicio de monta',
-        dateLabel: '15/03/2026',
-        reservationLabel: 'RES-001',
-        guideLabel: 'Carlos',
-        durationLabel: '2h',
-        state: AppLogbookEntryState.completed,
-        badge: AppBadge(
-          label: 'Completado',
-          tone: AppBadgeTone.success,
-          uppercase: false,
-        ),
-        observations:
-            'Equino en buen estado general. Se comportó de manera tranquila durante todo el recorrido.',
-        onTap: () {},
-      ),
-      AppLogbookTimelineEntry(
-        title: 'Control veterinario',
-        dateLabel: '10/03/2026',
-        reservationLabel: 'VET-023',
-        guideLabel: 'Dra. Martínez',
-        durationLabel: '45min',
-        state: AppLogbookEntryState.completed,
-        badge: AppBadge(
-          label: 'Revisión',
-          tone: AppBadgeTone.neutral,
-          uppercase: false,
-        ),
-        observations: 'Vacunación antirrábica al día. Desparasitación interna aplicada. Sin novedades.',
-      ),
-      AppLogbookTimelineEntry(
-        title: 'Servicio de cabalgata',
-        dateLabel: '08/03/2026',
-        reservationLabel: 'RES-089',
-        guideLabel: 'María',
-        durationLabel: '3h',
-        state: AppLogbookEntryState.completed,
-        badge: AppBadge(
-          label: 'Completado',
-          tone: AppBadgeTone.success,
-          uppercase: false,
-        ),
-        observations: 'Recorrido medialuna. Clima favorable. Equino respondedó bien al trote.',
-      ),
-      AppLogbookTimelineEntry(
-        title: 'Mantenimiento de herraje',
-        dateLabel: '01/03/2026',
-        reservationLabel: 'HER-005',
-        guideLabel: 'Pedro',
-        durationLabel: '1h',
-        state: AppLogbookEntryState.completed,
-        badge: AppBadge(
-          label: 'Rutina',
-          tone: AppBadgeTone.neutral,
-          uppercase: false,
-        ),
-        observations: 'Cambio de herraduras traseras. Cascos en buen estado.',
-      ),
-      AppLogbookTimelineEntry(
-        title: 'Servicio de monta',
-        dateLabel: '28/02/2026',
-        reservationLabel: 'RES-076',
-        guideLabel: 'Carlos',
-        durationLabel: '2h',
-        state: AppLogbookEntryState.active,
-        badge: AppBadge(
-          label: 'En curso',
-          tone: AppBadgeTone.primary,
-          uppercase: false,
-        ),
-      ),
-      AppLogbookTimelineEntry(
-        title: 'Observación',
-        dateLabel: '25/02/2026',
-        reservationLabel: 'OBS-012',
-        guideLabel: 'Admin',
-        durationLabel: '—',
-        state: AppLogbookEntryState.warning,
-        badge: AppBadge(
-          label: 'Pendiente',
-          tone: AppBadgeTone.warning,
-          uppercase: false,
-        ),
-        observations:
-            'Se observa leve cojera en miembro anterior derecho. Programar revisión veterinaria.',
-      ),
-    ];
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _hasError = true;
+        _errorMessage = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -150,6 +74,7 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return AppScaffold(
+      scrollable: _entries.isNotEmpty,
       appBar: AppBar(
         title: Text(
           widget.equineName,
@@ -198,7 +123,7 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen> {
             AppButton(
               label: 'Reintentar',
               variant: AppButtonVariant.secondary,
-              onPressed: _loadMockEntries,
+              onPressed: _loadTimeline,
             ),
           ],
         ),

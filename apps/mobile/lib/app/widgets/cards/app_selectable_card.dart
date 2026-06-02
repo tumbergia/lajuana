@@ -43,7 +43,7 @@ class AppSelectableCard extends StatelessWidget {
           borderRadius: radius,
           border: selected
               ? Border(
-                  left: BorderSide(
+                  bottom: BorderSide(
                     color: accentColor ?? scheme.onSurface,
                     width: 4,
                   ),

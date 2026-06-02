@@ -110,7 +110,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
         // ── Fixed header (section, search, filter, banners) ──
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -349,40 +349,6 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
             ),
           ),
         ],
-      ),
-    );
-  }
-  Widget _buildList() {
-    final items = _listController.items;
-    if (items.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.search_off_rounded,
-        title: 'Sin resultados',
-        message: 'No hay reservas para el filtro o busqueda actual.',
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: () => _listController.refresh(),
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: items.length,
-        itemBuilder: (context, i) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: i < items.length - 1 ? 10 : 0,
-            ),
-            child: ReservationRowCard(
-              reservation: items[i],
-              subtitle: items[i].experienceName ?? items[i].equineName,
-              highlightIfPending:
-                  items[i].status == 'pendientes',
-              openDetailsOnTap: true,
-              onOpenDetail: () =>
-                  _openReservationDetail(items[i].id ?? items[i].code),
-            ),
-          );
-        },
       ),
     );
   }

@@ -1,7 +1,11 @@
+import 'dart:ui' show VoidCallback;
+
 import '../../../../app/widgets/app_badge.dart';
+import '../../../../app/widgets/cards/app_logbook_timeline.dart';
 import '../../domain/models/equine.dart';
 import '../../domain/models/equine_experience_fit.dart';
 import '../../domain/models/equine_operational_status.dart';
+import '../../domain/models/equine_timeline_entry.dart';
 import '../../presentation/models/equine_view_models.dart';
 import '../remote/equine_dtos.dart';
 
@@ -51,6 +55,9 @@ class EquineMapper {
       workloadLast7Days: dto.workloadLast7Days,
       imageBase64: dto.imageBase64,
       sourceFile: dto.sourceFile,
+      updatedAt: dto.updatedAt != null
+          ? DateTime.tryParse(dto.updatedAt!)?.toUtc()
+          : null,
     );
   }
 
@@ -110,8 +117,69 @@ class EquineMapper {
       lastServiceAt: equine.lastServiceAt,
       workloadLast7Days: equine.workloadLast7Days,
       imageBase64: equine.imageBase64,
-      updatedAt: equine.lastServiceAt,
+      updatedAt: equine.updatedAt,
     );
+  }
+
+  static EquineTimelineEntry timelineEntryDtoToDomain(EquineTimelineEntryDto dto) {
+    final parsed = DateTime.tryParse(dto.happenedAt)?.toUtc();
+    if (parsed == null) {
+      // Si la fecha no se puede parsear, usar epoch como centinela.
+      // La UI ocultará entradas con happenedAt en 1970.
+      return EquineTimelineEntry(
+        id: dto.id,
+        eventType: dto.eventType,
+        happenedAt: DateTime.utc(1970),
+        title: dto.title,
+        reservationId: dto.reservationId,
+        notes: dto.notes,
+      );
+    }
+    return EquineTimelineEntry(
+      id: dto.id,
+      eventType: dto.eventType,
+      happenedAt: parsed,
+      title: dto.title,
+      reservationId: dto.reservationId,
+      notes: dto.notes,
+    );
+  }
+
+  static AppLogbookTimelineEntry timelineEntryToLogbookEntry(
+    EquineTimelineEntry entry, {
+    VoidCallback? onTap,
+  }) {
+    return AppLogbookTimelineEntry(
+      title: entry.title,
+      dateLabel: _formatDateShort(entry.happenedAt),
+      reservationLabel: entry.reservationId ?? '-',
+      guideLabel: '-',
+      durationLabel: '-',
+      state: _logbookStateFromEventType(entry.eventType),
+      observations: entry.notes,
+      onTap: onTap,
+    );
+  }
+
+  static AppLogbookEntryState _logbookStateFromEventType(String eventType) {
+    switch (eventType) {
+      case 'arrival':
+      case 'departure':
+      case 'closure':
+        return AppLogbookEntryState.completed;
+      case 'checkpoint':
+        return AppLogbookEntryState.active;
+      case 'incident':
+        return AppLogbookEntryState.warning;
+      case 'note':
+        return AppLogbookEntryState.neutral;
+      default:
+        return AppLogbookEntryState.neutral;
+    }
+  }
+
+  static String _formatDateShort(DateTime dt) {
+    return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
   }
 
   static String _statusLabel(EquineOperationalStatus status) {

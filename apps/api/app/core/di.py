@@ -42,14 +42,13 @@ class Container:
         from app.services.config_service import ConfigService
         from app.services.equine_service import EquineService
         from app.services.experience_service import ExperienceService
-        from app.services.ops_service import OpsService
         from app.services.participant_form_link_service import ParticipantFormLinkService
         from app.services.policy_service import PolicyService
         from app.services.provider_service import ProviderService
         from app.services.saddle_service import SaddleService
         from app.services.schedule_service import ScheduleService
         from app.services.service_log_service import ServiceLogService
-        from app.services.storage import LocalStorageAdapter, get_storage_adapter
+        from app.services.storage import get_storage_adapter
         from app.services.user_service import UserService
 
         self._services["assignment_service"] = AssignmentService()
@@ -60,9 +59,6 @@ class Container:
         self._services["experience_service"] = ExperienceService()
         self._services["message_buffer_service"] = MessageBufferService()
         self._services["service_log_service"] = ServiceLogService()
-        self._services["ops_service"] = OpsService(
-            service_log_service=self._services["service_log_service"],
-        )
         self._services["participant_form_link_service"] = ParticipantFormLinkService()
         self._services["policy_service"] = PolicyService()
         self._services["provider_service"] = ProviderService()
@@ -217,10 +213,6 @@ class Container:
         return self._services["assignment_service"]
 
     @property
-    def ops_service(self) -> Any:
-        return self._services["ops_service"]
-
-    @property
     def service_log_service(self) -> Any:
         return self._services["service_log_service"]
 
@@ -233,7 +225,7 @@ class Container:
         return self._services["whatsapp_ingestion_service"]
 
     @property
-    def whataspp_outbound_service(self) -> Any:
+    def whatsapp_outbound_service(self) -> Any:
         return self._services["whatsapp_outbound_service"]
 
     @property

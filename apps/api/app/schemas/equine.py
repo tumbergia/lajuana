@@ -209,6 +209,19 @@ class EquineListItemSchema(AuditMetadataSchema):
     workload_last_7_days: int
     rest_until: datetime | None = None
     availability_reasons: str | None = None
+    block_reason: str | None = None
+    """Non-null when this equine is excluded from being assignable to a reservation."""
+
+
+class EquineTimelineEntrySchema(BaseModel):
+    """Una entrada del timeline del equino — originada de ServiceLog."""
+
+    id: str
+    event_type: str
+    happened_at: datetime
+    title: str
+    reservation_id: str | None = None
+    notes: str | None = None
 
 
 class EquineEventType(str, Enum):

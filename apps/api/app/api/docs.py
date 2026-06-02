@@ -746,6 +746,29 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "error_codes": ["auth.unauthorized", "auth.forbidden", "equine.not_found"],
         "service_docstring": "Realiza inactivación lógica de equino.",
     },
+    "equines_timeline": {
+        "summary": "Timeline del equino",
+        "description": "Retorna el historial cronológico del equino basado en ServiceLogs.",
+        "permissions": ["equine.read"],
+        "responses": {
+            200: "Timeline obtenido correctamente.",
+            401: "No autenticado.",
+            404: "Equino no encontrado.",
+        },
+        "error_codes": ["auth.unauthorized", "equine.not_found"],
+        "service_docstring": "Obtiene timeline de un equino desde ServiceLogs.",
+    },
+    "equines_available_for_reservation": {
+        "summary": "Equinos disponibles para reserva",
+        "description": "Retorna equinos activos y disponibles no asignados a la reserva.",
+        "permissions": ["equine.read"],
+        "responses": {
+            200: "Listado de equinos disponibles obtenido correctamente.",
+            401: "No autenticado.",
+        },
+        "error_codes": ["auth.unauthorized"],
+        "service_docstring": "Lista equinos disponibles para una reserva.",
+    },
     "saddles_create": {
         "summary": "Crear silla",
         "description": "Registra una silla operativa.",
@@ -1249,6 +1272,11 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "equines_get": ("GET", "/api/v1/equines/{equine_id}"),
     "equines_update": ("PATCH", "/api/v1/equines/{equine_id}"),
     "equines_delete": ("DELETE", "/api/v1/equines/{equine_id}"),
+    "equines_timeline": ("GET", "/api/v1/equines/{equine_id}/timeline"),
+    "equines_available_for_reservation": (
+        "GET",
+        "/api/v1/equines/available-for-reservation/{reservation_id}",
+    ),
     "saddles_create": ("POST", "/api/v1/saddles"),
     "saddles_list": ("GET", "/api/v1/saddles"),
     "saddles_get": ("GET", "/api/v1/saddles/{saddle_id}"),

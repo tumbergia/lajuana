@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -76,6 +76,23 @@ class Settings(BaseSettings):
     buffer_max_messages: int = 15
     buffer_lock_seconds: int = 60
     scheduler_loop_seconds: int = 1
+
+    @model_validator(mode="after")
+    def _validate_production_secrets(self) -> "Settings":
+        if self.app_env in ("production", "prod", "staging"):
+            if self.auth_jwt_secret in ("change-me", ""):
+                raise ValueError(
+                    "AUTH_JWT_SECRET must be set in production/staging environment"
+                )
+            if self.whatsapp_verify_token in ("change-me", ""):
+                raise ValueError(
+                    "WHATSAPP_VERIFY_TOKEN must be set in production/staging environment"
+                )
+            if self.participant_form_token_secret in ("change-me", ""):
+                raise ValueError(
+                    "PARTICIPANT_FORM_TOKEN_SECRET must be set in production/staging environment"
+                )
+        return self
 
     model_config = SettingsConfigDict(
         env_file=(".env", "apps/api/.env"),

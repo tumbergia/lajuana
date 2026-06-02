@@ -1,14 +1,11 @@
 """Servicio de negocio para el agregado Reservation."""
 
-import logging
 import secrets
 from datetime import UTC, date, datetime
 
 from beanie import PydanticObjectId
 from beanie.exceptions import CollectionWasNotInitialized
 from pymongo.errors import DuplicateKeyError
-
-logger = logging.getLogger(__name__)
 
 from app.common.enums import (
     Channel,

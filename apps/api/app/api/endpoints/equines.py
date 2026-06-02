@@ -12,6 +12,7 @@ from app.schemas.equine import (
     EquineCreateSchema,
     EquineListItemSchema,
     EquineResponseSchema,
+    EquineTimelineEntrySchema,
     EquineUpdateSchema,
 )
 from app.services import EquineService
@@ -123,6 +124,57 @@ async def get_equine(
     service: EquineService = Depends(get_equine_service),
 ) -> EquineResponseSchema:
     return equine_to_response(await service.get(equine_id))
+
+
+@router.get(
+    "/{equine_id}/timeline",
+    response_model=list[EquineTimelineEntrySchema],
+    summary="Timeline del equino",
+    description="Retorna el historial cronológico del equino basado en ServiceLogs.",
+    operation_id="getEquineTimeline",
+    responses={
+        200: {"description": "Timeline obtenido correctamente."},
+        401: {"description": "No autenticado."},
+        404: {"description": "Equino no encontrado."},
+    },
+)
+async def get_equine_timeline(
+    equine_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_READ))],
+    service: EquineService = Depends(get_equine_service),
+) -> list[EquineTimelineEntrySchema]:
+    return await service.get_timeline(equine_id)
+
+
+@router.get(
+    "/available-for-reservation/{reservation_id}",
+    response_model=list[EquineListItemSchema],
+    summary="Equinos disponibles para reserva",
+    description="Retorna todos los equinos con campo block_reason. Null = asignable. Con texto = motivo de exclusión (inactivo, no disponible, ya asignado, misma fecha).",
+    operation_id="listAvailableEquinesForReservation",
+    responses={
+        200: {"description": "Listado de equinos disponibles."},
+        401: {"description": "No autenticado."},
+    },
+)
+async def list_available_for_reservation(
+    reservation_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_READ))],
+    response: Response,
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    service: EquineService = Depends(get_equine_service),
+) -> list[EquineListItemSchema]:
+    items = await service.list_available_for_reservation(
+        reservation_id, limit=limit, skip=skip,
+    )
+    response.headers["X-Total-Count"] = str(len(items))
+    result: list[EquineListItemSchema] = []
+    for equine_doc, block_reason in items:
+        item = equine_to_list_item(equine_doc)
+        item.block_reason = block_reason
+        result.append(item)
+    return result
 
 
 @router.patch(

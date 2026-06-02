@@ -105,6 +105,8 @@ Este documento lista todos los endpoints expuestos por `apps/api` según el esqu
 | GET | `/api/v1/equines` | `listEquines` | — | `200 list[EquineResponseSchema]` | `200, 401` |
 | POST | `/api/v1/equines` | `createEquine` | `EquineCreateSchema` | `201 EquineResponseSchema` | `201, 400, 401, 403, 422` |
 | GET | `/api/v1/equines/{equine_id}` | `getEquineById` | — | `200 EquineResponseSchema` | `200, 401, 404, 422` |
+| GET | `/api/v1/equines/{equine_id}/timeline` | `getEquineTimeline` | — | `200 list[EquineTimelineEntrySchema]` | `200, 401, 404` |
+| GET | `/api/v1/equines/available-for-reservation/{reservation_id}` | `listAvailableEquinesForReservation` | — | `200 list[EquineListItemSchema]` | `200, 401` |
 | PATCH | `/api/v1/equines/{equine_id}` | `updateEquineById` | `EquineUpdateSchema` | `200 EquineResponseSchema` | `200, 400, 401, 403, 404, 422` |
 | DELETE | `/api/v1/equines/{equine_id}` | `deactivateEquineById` | — | `200 EquineResponseSchema` | `200, 401, 403, 404, 422` |
 

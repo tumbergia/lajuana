@@ -20,10 +20,14 @@ class EquineDetailScreen extends StatefulWidget {
     super.key,
     required this.equineId,
     required this.repository,
+    this.initialDetail,
   });
 
   final String equineId;
   final EquineRepository repository;
+
+  /// Datos precargados del detalle. Si se provee, se evita un request HTTP.
+  final EquineDetailRecord? initialDetail;
 
   @override
   State<EquineDetailScreen> createState() => _EquineDetailScreenState();
@@ -37,7 +41,12 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _load();
+    if (widget.initialDetail != null) {
+      _detail = widget.initialDetail;
+      _isLoading = false;
+    } else {
+      _load();
+    }
   }
 
   Future<void> _load() async {
@@ -71,6 +80,7 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: const [],
       ),
       child: _buildBody(),
     );

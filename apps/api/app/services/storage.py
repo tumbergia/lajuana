@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import io
 import logging
@@ -63,18 +64,27 @@ class S3StorageAdapter:
     async def read_bytes(self, storage_key: str) -> bytes | None:
         try:
             buf = io.BytesIO()
-            self._client.download_fileobj(Bucket=self.bucket, Key=storage_key, Fileobj=buf)
+            await asyncio.to_thread(
+                self._client.download_fileobj,
+                Bucket=self.bucket, Key=storage_key, Fileobj=buf,
+            )
             return buf.getvalue()
         except Exception:
             return None
 
     async def write_bytes(self, storage_key: str, data: bytes) -> str:
-        self._client.put_object(Bucket=self.bucket, Key=storage_key, Body=data)
+        await asyncio.to_thread(
+            self._client.put_object,
+            Bucket=self.bucket, Key=storage_key, Body=data,
+        )
         return storage_key
 
     async def delete(self, storage_key: str) -> None:
         try:
-            self._client.delete_object(Bucket=self.bucket, Key=storage_key)
+            await asyncio.to_thread(
+                self._client.delete_object,
+                Bucket=self.bucket, Key=storage_key,
+            )
         except Exception:
             logger.warning(
                 "[s3] Failed to delete object | key=%s",

@@ -5,7 +5,7 @@ from app.services.booking_service import BookingService
 from app.services.config_service import ConfigService
 from app.services.equine_service import EquineService
 from app.services.experience_service import ExperienceService
-from app.services.ops_service import OpsService
+from app.services.file_upload_service import FileUploadService
 from app.services.participant_form_link_service import ParticipantFormLinkService
 from app.services.participant_service import ParticipantService
 from app.services.payment_proof_service import PaymentProofService
@@ -29,7 +29,6 @@ __all__ = [
     "FileUploadService",
     "ParticipantFormLinkService",
     "ParticipantService",
-    "OpsService",
     "PaymentProofService",
     "PolicyService",
     "ProviderService",

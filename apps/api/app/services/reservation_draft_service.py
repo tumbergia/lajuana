@@ -109,13 +109,10 @@ class ReservationDraftService:
         if schedule_id is not None:
             payload["schedule_id"] = schedule_id
 
-        try:
-            await self.reservation_service.create(
-                payload=payload,
-                initial_status=ReservationStatus.PRE_RESERVED,
-            )
-        except Exception:
-            raise
+        await self.reservation_service.create(
+            payload=payload,
+            initial_status=ReservationStatus.PRE_RESERVED,
+        )
 
         return {
             "created": True,

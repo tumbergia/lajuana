@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../domain/models/equine.dart';
+import '../../domain/models/equine_operational_status.dart';
 import '../../../../app/widgets/app_badge.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../../infrastructure/mappers/equine_mapper.dart';
@@ -25,6 +26,9 @@ class EquinesController extends ChangeNotifier {
   /// Domain objects cacheados para derivar detail sin request extra.
   List<Equine> _allEquines = const [];
 
+  EquineOperationalStatus? _statusFilter;
+  DateTime? _lastSyncedAt;
+
   String? _selectedEquineId;
   EquineDetailRecord? _selectedDetail;
 
@@ -32,8 +36,31 @@ class EquinesController extends ChangeNotifier {
   EquinesLoadState get loadState => _loadState;
   String get errorMessage => _errorMessage;
   List<EquineRecord> get records => _records;
+  bool get hasAnyRecords => _allEquines.isNotEmpty;
   String? get selectedEquineId => _selectedEquineId;
   EquineDetailRecord? get selectedDetail => _selectedDetail;
+
+  EquineMetrics get metrics {
+    final total = _allEquines.length;
+    if (total == 0) return const EquineMetrics(total: 0, available: 0, blocked: 0);
+    var available = 0;
+    var blocked = 0;
+    for (final e in _allEquines) {
+      if (e.isAvailable && e.operationalStatus == EquineOperationalStatus.available) {
+        available++;
+      } else if (e.operationalStatus == EquineOperationalStatus.unavailable ||
+          e.operationalStatus == EquineOperationalStatus.injured ||
+          e.operationalStatus == EquineOperationalStatus.retired ||
+          e.operationalStatus == EquineOperationalStatus.restricted) {
+        blocked++;
+      }
+    }
+    return EquineMetrics(total: total, available: available, blocked: blocked);
+  }
+
+  DateTime? get lastSyncedAt => _lastSyncedAt;
+
+  EquineOperationalStatus? get statusFilter => _statusFilter;
 
   /// Siempre success porque el detail se deriva de memoria (no hay request).
   EquinesLoadState get detailLoadState => EquinesLoadState.success;
@@ -50,6 +77,13 @@ class EquinesController extends ChangeNotifier {
   void reset() {
     if (_subroute == EquinesSubroute.resumen) return;
     _subroute = EquinesSubroute.resumen;
+    _applyFilter();
+    notifyListeners();
+  }
+
+  void setStatusFilter(EquineOperationalStatus? status) {
+    if (_statusFilter == status) return;
+    _statusFilter = status;
     _applyFilter();
     notifyListeners();
   }
@@ -102,6 +136,8 @@ class EquinesController extends ChangeNotifier {
           _selectedEquineId = _records.first.id;
           _selectedDetail = _buildDetailFromMemory(_selectedEquineId!);
         }
+        // Cargar última sincronización en background.
+        loadLastSyncedAt();
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -138,7 +174,20 @@ class EquinesController extends ChangeNotifier {
     }
   }
 
+  Future<void> loadLastSyncedAt() async {
+    try {
+      final dt = await _repository.getLastSyncedAt();
+      if (dt != null) {
+        _lastSyncedAt = dt;
+        notifyListeners();
+      }
+    } catch (_) {
+      // Ignorar errores de lectura de metadatos.
+    }
+  }
+
   void _applyFilter() {
+    // Primero aplica filtro de subruta.
     switch (_subroute) {
       case EquinesSubroute.resumen:
         _records = _allRecords;
@@ -156,6 +205,14 @@ class EquinesController extends ChangeNotifier {
                 r.statusTone == AppBadgeTone.warning ||
                 r.statusTone == AppBadgeTone.danger)
             .toList(growable: false);
+    }
+    // Luego aplica filtro de estado operativo si está activo.
+    if (_statusFilter != null) {
+      _records = _records.where((r) {
+        // Buscar el equine correspondiente para obtener su estado operativo real.
+        final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
+        return equine?.operationalStatus == _statusFilter;
+      }).toList(growable: false);
     }
   }
 }

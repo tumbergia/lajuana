@@ -31,6 +31,8 @@ class AppImageFeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
+    const radius = Radius.circular(8);
+
     final card = AppSelectableCard(
       selected: selected,
       onTap: onTap,
@@ -42,8 +44,8 @@ class AppImageFeatureCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(8),
-                  topRight: Radius.circular(8),
+                  topLeft: radius,
+                  topRight: radius,
                 ),
                 child: imageAspectRatio != null
                     ? AspectRatio(
@@ -51,6 +53,7 @@ class AppImageFeatureCard extends StatelessWidget {
                         child: Image(
                           image: image,
                           width: width,
+                          height: imageHeight,
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => Container(
                             color: scheme.surfaceContainerHigh,
@@ -82,27 +85,33 @@ class AppImageFeatureCard extends StatelessWidget {
               if (badge != null) Positioned(top: 12, left: 12, child: badge!),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title.toUpperCase(),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: scheme.onSurface,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title.toUpperCase(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle.toUpperCase(),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    letterSpacing: 1.0,
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      letterSpacing: 1.0,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

@@ -85,6 +85,56 @@ class EquinesApiClient {
     return EquineDto.fromJson(_decodeBody(response.body));
   }
 
+  Future<List<EquineTimelineEntryDto>> getEquineTimeline(String equineId) async {
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/equines/$equineId/timeline',
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) {
+      throw EquinesApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido en timeline de equino.',
+      );
+    }
+    return decoded
+        .map((item) {
+          if (item is! Map) {
+            throw EquinesApiFailure(
+              code: 'network.invalid_payload',
+              message: 'Payload inválido en timeline de equino.',
+            );
+          }
+          return EquineTimelineEntryDto.fromJson(Map<String, dynamic>.from(item));
+        })
+        .toList(growable: false);
+  }
+
+  Future<List<EquineDto>> listAvailableForReservation(String reservationId) async {
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/equines/available-for-reservation/$reservationId',
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) {
+      throw EquinesApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido en equinos disponibles.',
+      );
+    }
+    return decoded
+        .map((item) {
+          if (item is! Map) {
+            throw EquinesApiFailure(
+              code: 'network.invalid_payload',
+              message: 'Payload inválido en equinos disponibles.',
+            );
+          }
+          return EquineDto.fromJson(Map<String, dynamic>.from(item));
+        })
+        .toList(growable: false);
+  }
+
   Future<http.Response> _authorizedRequest({
     required String method,
     required String path,

@@ -1,3 +1,5 @@
+import logging
+
 from pymongo import AsyncMongoClient
 from pymongo.errors import PyMongoError
 
@@ -13,7 +15,6 @@ from app.documents import (
     AssignmentDocument,
     ConversationSessionDocument,
     ConversationTurnDocument,
-    ReservationAuditLogDocument,
     EquineDocument,
     ExperienceDocument,
     HumanReviewRequestDocument,
@@ -23,6 +24,7 @@ from app.documents import (
     PingDocument,
     PolicyDocument,
     ProviderDocument,
+    ReservationAuditLogDocument,
     ReservationDocument,
     SaddleDocument,
     ScheduleDocument,
@@ -30,6 +32,8 @@ from app.documents import (
     ToolCallLogDocument,
     UserDocument,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class Database:
@@ -47,12 +51,14 @@ async def init_db() -> None:
     database = db.client[settings.mongodb_db_name]
 
     try:
-        await database[Collections.USERS].update_many(
+        result = await database[Collections.USERS].update_many(
             {"role": "staff"},
             {"$set": {"role": "guide"}},
         )
+        if result.modified_count:
+            logger.info("Migrated %d users from staff→guide", result.modified_count)
     except PyMongoError:
-        pass
+        logger.exception("[db] Failed to migrate staff→guide roles")
 
     from beanie import init_beanie
 
@@ -90,7 +96,9 @@ async def init_db() -> None:
             "wa_message_id", unique=True, name="uq_wa_message_id"
         )
     except PyMongoError:
-        pass
+        logger.warning(
+            "[db] Index uq_wa_message_id may already exist — continuing"
+        )
 
 
 async def close_db() -> None:

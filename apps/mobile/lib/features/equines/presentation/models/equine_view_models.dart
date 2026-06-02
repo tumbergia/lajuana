@@ -115,3 +115,16 @@ class EquineDetailRecord {
   final DateTime? updatedAt;
   final String? imageBase64;
 }
+
+/// Métricas resumidas del listado de equinos.
+class EquineMetrics {
+  const EquineMetrics({
+    required this.total,
+    required this.available,
+    required this.blocked,
+  });
+
+  final int total;
+  final int available;
+  final int blocked;
+}

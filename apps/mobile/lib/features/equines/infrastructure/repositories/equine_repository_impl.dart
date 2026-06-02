@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../domain/models/equine.dart';
 import '../../domain/models/equine_operational_status.dart';
+import '../../domain/models/equine_timeline_entry.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../../presentation/models/equine_view_models.dart';
 import '../local/equine_local_records.dart';
@@ -68,8 +69,8 @@ class EquineRepositoryImpl implements EquineRepository {
   Future<Equine> createEquine(Map<String, dynamic> data) async {
     final dto = await _api.createEquine(data);
     final equine = EquineMapper.dtoToDomain(dto);
-    // Invalidate cache
-    _db.clear().ignore();
+    // Cachear el nuevo equino sin limpiar toda la cache.
+    _cacheDetail(equine.id, equine).ignore();
     return equine;
   }
 
@@ -77,9 +78,27 @@ class EquineRepositoryImpl implements EquineRepository {
   Future<Equine> updateEquine(String equineId, Map<String, dynamic> data) async {
     final dto = await _api.updateEquine(equineId, data);
     final equine = EquineMapper.dtoToDomain(dto);
-    // Invalidate cache for this equine
-    _db.clear().ignore();
+    // Invalidar solo el equino actualizado en cache.
+    _db.deleteById(equineId).ignore();
+    _cacheDetail(equineId, equine).ignore();
     return equine;
+  }
+
+  @override
+  Future<List<EquineTimelineEntry>> getEquineTimeline(String equineId) async {
+    final dtos = await _api.getEquineTimeline(equineId);
+    return dtos.map(EquineMapper.timelineEntryDtoToDomain).toList(growable: false);
+  }
+
+  @override
+  Future<List<Equine>> listAvailableForReservation(String reservationId) async {
+    final dtos = await _api.listAvailableForReservation(reservationId);
+    return dtos.map(EquineMapper.dtoToDomain).toList(growable: false);
+  }
+
+  @override
+  Future<DateTime?> getLastSyncedAt() async {
+    return _db.getLastSyncedAt();
   }
 
   Future<void> _cacheList(List<Equine> equines) async {
@@ -88,6 +107,8 @@ class EquineRepositoryImpl implements EquineRepository {
         .map(_detailToLocalMap)
         .toList(growable: false);
     await _db.upsertAll(records);
+    // Actualizar marca de última sincronización.
+    await _db.setLastSyncedAt(DateTime.now());
   }
 
   Future<void> _cacheDetail(String id, Equine equine) async {

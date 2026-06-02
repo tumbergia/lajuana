@@ -13,6 +13,7 @@ import 'package:mobile/features/auth/infrastructure/connectivity/network_status_
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/equines/domain/models/equine.dart';
+import 'package:mobile/features/equines/domain/models/equine_timeline_entry.dart';
 import 'package:mobile/features/equines/domain/repositories/equine_repository.dart';
 
 import '../auth/test_fakes.dart';
@@ -33,6 +34,15 @@ class _FakeEquineRepository implements EquineRepository {
   @override
   Future<Equine> updateEquine(String equineId, Map<String, dynamic> data) async =>
       throw UnimplementedError('not used in shell test');
+
+  @override
+  Future<List<EquineTimelineEntry>> getEquineTimeline(String equineId) async => [];
+
+  @override
+  Future<List<Equine>> listAvailableForReservation(String reservationId) async => [];
+
+  @override
+  Future<DateTime?> getLastSyncedAt() async => null;
 }
 
 void main() {

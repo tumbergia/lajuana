@@ -7,7 +7,7 @@ class EquinesDatabase {
   EquinesDatabase._();
 
   static const String _dbName = 'equines_cache.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3;
 
   static final EquinesDatabase instance = EquinesDatabase._();
 
@@ -36,6 +36,15 @@ class EquinesDatabase {
         'ALTER TABLE equines_cache ADD COLUMN image_base64 TEXT',
       );
     }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS equine_sync_meta (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -63,6 +72,13 @@ class EquinesDatabase {
         version INTEGER NOT NULL DEFAULT 1,
         updated_at TEXT,
         cached_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE equine_sync_meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TEXT NOT NULL
       )
     ''');
   }
@@ -105,5 +121,54 @@ class EquinesDatabase {
   Future<void> clear() async {
     final db = await database;
     await db.delete('equines_cache');
+  }
+
+  Future<void> deleteById(String id) async {
+    final db = await database;
+    await db.delete(
+      'equines_cache',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> upsertSyncMeta(String key, String value) async {
+    final db = await database;
+    final now = DateTime.now().toUtc().toIso8601String();
+    await db.insert(
+      'equine_sync_meta',
+      {
+        'key': key,
+        'value': value,
+        'updated_at': now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<String?> getSyncMeta(String key) async {
+    final db = await database;
+    final rows = await db.query(
+      'equine_sync_meta',
+      columns: ['value'],
+      where: 'key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['value'] as String?;
+  }
+
+  Future<void> setLastSyncedAt(DateTime dt) async {
+    await upsertSyncMeta(
+      'last_synced_at',
+      dt.toUtc().toIso8601String(),
+    );
+  }
+
+  Future<DateTime?> getLastSyncedAt() async {
+    final value = await getSyncMeta('last_synced_at');
+    if (value == null) return null;
+    return DateTime.tryParse(value);
   }
 }

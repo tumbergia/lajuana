@@ -93,7 +93,7 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
     final filename = widget.proof.filename ?? 'comprobante-${widget.proof.id}';
     final contentType = widget.proof.contentType ?? 'application/octet-stream';
     try {
-      saveFile(bytes, filename, contentType);
+      await saveFile(bytes, filename, contentType);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -322,3 +322,162 @@ class TestEquineServiceDeactivate:
             assert exc.value.status_code == 404
 
         asyncio.run(run())
+
+
+VALID_OID = "660000000000000000000001"
+VALID_OID_2 = "660000000000000000000002"
+
+
+class FakeFindQuery:
+    """Reusable fake for Beanie find().skip().limit().to_list() chains."""
+
+    def __init__(self, items: list) -> None:
+        self._items = items
+
+    def skip(self, n: int) -> "FakeFindQuery":
+        return self
+
+    def limit(self, n: int) -> "FakeFindQuery":
+        return self
+
+    async def to_list(self) -> list:
+        return self._items
+
+
+class TestEquineServiceAvailableForReservation:
+    """EquineService.list_available_for_reservation — exclusion logic."""
+
+    def _patch_beanie(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        *,
+        equines: list,
+        assignments_for_my_reservation: list | None = None,
+        assignments_for_same_date: list | None = None,
+        same_date_reservations: list | None = None,
+        requested_date: date | None = date(2026, 6, 15),
+    ) -> None:
+        """Patch all Beanie calls used by list_available_for_reservation."""
+
+        async def _mock_get_reservation(_rid: str) -> SimpleNamespace:
+            return SimpleNamespace(
+                id=VALID_OID, requested_date=requested_date,
+            )
+
+        monkeypatch.setattr(
+            "app.services.equine_service.ReservationDocument.get",
+            _mock_get_reservation,
+        )
+        monkeypatch.setattr(
+            "app.services.equine_service.EquineDocument.find",
+            lambda _q: FakeFindQuery(equines),
+        )
+        monkeypatch.setattr(
+            "app.services.equine_service.ReservationDocument.find",
+            lambda _q: FakeFindQuery(same_date_reservations or []),
+        )
+
+        assignments_call_count = 0
+        my_assignments = assignments_for_my_reservation or []
+        same_date_assigns = assignments_for_same_date or []
+
+        def _fake_assignment_find(query: dict) -> FakeFindQuery:
+            nonlocal assignments_call_count
+            assignments_call_count += 1
+            if assignments_call_count == 1:
+                return FakeFindQuery(my_assignments)
+            return FakeFindQuery(same_date_assigns)
+
+        monkeypatch.setattr(
+            "app.services.equine_service.AssignmentDocument.find",
+            _fake_assignment_find,
+        )
+
+    def test_available_returns_all_equines_with_block_reason(
+        self, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Should return ALL equines, each with a block_reason (None if assignable)."""
+        active = _fake_equine_doc(id=VALID_OID, name="Active", is_active=True, is_available=True)
+        inactive = _fake_equine_doc(id=VALID_OID_2, name="Inactive", is_active=False, is_available=False)
+
+        self._patch_beanie(monkeypatch, equines=[active, inactive])
+
+        service = EquineService()
+
+        async def run() -> None:
+            results = await service.list_available_for_reservation(VALID_OID)
+            assert len(results) == 2
+
+            active_result = next(r for r in results if r[0].id == VALID_OID)
+            assert active_result[1] is None, "Active equine should have no block reason"
+
+            inactive_result = next(r for r in results if r[0].id == VALID_OID_2)
+            assert inactive_result[1] is not None, "Inactive equine should be blocked"
+            assert "inactivo" in inactive_result[1].lower()
+
+        asyncio.run(run())
+
+    def test_available_excludes_already_assigned_to_this_reservation(
+        self, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Equinos ya asignados a esta reserva deben tener block_reason."""
+        equine = _fake_equine_doc(id=VALID_OID, name="Asignado", is_active=True, is_available=True)
+        assigned = SimpleNamespace(equine_id=VALID_OID)
+
+        self._patch_beanie(
+            monkeypatch,
+            equines=[equine],
+            assignments_for_my_reservation=[assigned],
+        )
+
+        service = EquineService()
+
+        async def run() -> None:
+            results = await service.list_available_for_reservation(VALID_OID)
+            assert len(results) == 1
+            _, reason = results[0]
+            assert reason is not None
+            assert "asignado" in reason.lower()
+
+        asyncio.run(run())
+
+    def test_available_excludes_assigned_to_other_reservation_same_date(
+        self, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Equinos asignados a otra reserva en la misma fecha deben tener block_reason."""
+        equine = _fake_equine_doc(id=VALID_OID, name="Ocupado", is_active=True, is_available=True)
+
+        self._patch_beanie(
+            monkeypatch,
+            equines=[equine],
+            same_date_reservations=[SimpleNamespace(id="770000000000000000000001")],
+            assignments_for_same_date=[SimpleNamespace(equine_id=VALID_OID)],
+        )
+
+        service = EquineService()
+
+        async def run() -> None:
+            results = await service.list_available_for_reservation(VALID_OID)
+            assert len(results) == 1
+            _, reason = results[0]
+            assert reason is not None
+
+        asyncio.run(run())
+
+    def test_available_no_requested_date_returns_no_date_conflicts(
+        self, monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Reserva sin requested_date no debe filtrar por fecha."""
+        equine = _fake_equine_doc(id=VALID_OID, name="SinFecha", is_active=True, is_available=True)
+
+        self._patch_beanie(monkeypatch, equines=[equine], requested_date=None)
+
+        service = EquineService()
+
+        async def run() -> None:
+            results = await service.list_available_for_reservation(VALID_OID)
+            assert len(results) == 1
+            _, reason = results[0]
+            assert reason is None, "No block reason expected when no date"
+
+        asyncio.run(run())

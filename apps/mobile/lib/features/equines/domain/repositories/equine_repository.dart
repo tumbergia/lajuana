@@ -1,4 +1,5 @@
 import '../models/equine.dart';
+import '../models/equine_timeline_entry.dart';
 
 /// Contrato del repositorio de equinos.
 abstract class EquineRepository {
@@ -14,4 +15,13 @@ abstract class EquineRepository {
 
   /// Actualiza un equino existente.
   Future<Equine> updateEquine(String equineId, Map<String, dynamic> data);
+
+  /// Retorna el timeline/historial de un equino.
+  Future<List<EquineTimelineEntry>> getEquineTimeline(String equineId);
+
+  /// Retorna equinos disponibles para una reserva específica.
+  Future<List<Equine>> listAvailableForReservation(String reservationId);
+
+  /// Retorna la última fecha/hora de sincronización.
+  Future<DateTime?> getLastSyncedAt();
 }
