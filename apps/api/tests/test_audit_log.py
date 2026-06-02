@@ -54,3 +54,65 @@ def test_audit_log_role_values() -> None:
     """Verify UserRole values used in audit match expectations."""
     assert UserRole.ADMIN.value == "admin"
     assert UserRole.GUIDE.value == "guide"
+
+
+def test_assignment_metadata_serializes() -> None:
+    """Verify AssignmentMetadata shape."""
+    from app.documents.audit_metadata_models import AssignmentMetadata
+
+    m = AssignmentMetadata(assignment_id="abc123")
+    assert m.assignment_id == "abc123"
+    assert m.model_dump() == {"assignment_id": "abc123"}
+
+
+def test_replacement_metadata_serializes() -> None:
+    """Verify ReplacementMetadata shape."""
+    from app.documents.audit_metadata_models import ReplacementMetadata
+
+    m = ReplacementMetadata(replaced_by="new_id")
+    assert m.replaced_by == "new_id"
+    assert m.model_dump() == {"replaced_by": "new_id"}
+
+
+def test_notification_metadata_serializes() -> None:
+    """Verify NotificationMetadata shape (required + optional fields)."""
+    from app.documents.audit_metadata_models import NotificationMetadata
+
+    m = NotificationMetadata(
+        recipient_phone="+573001234567",
+        template_key="welcome",
+        provider_message_id="msg_001",
+        status="sent",
+    )
+    assert m.recipient_phone == "+573001234567"
+    assert m.template_key == "welcome"
+    assert m.provider_message_id == "msg_001"
+    assert m.status == "sent"
+
+    m_minimal = NotificationMetadata(
+        recipient_phone="+573001234567",
+        template_key="welcome",
+        status="sent",
+    )
+    assert m_minimal.provider_message_id is None
+
+
+def test_audit_metadata_union_validates() -> None:
+    """Verify metadata field accepts any AuditMetadata variant."""
+    from app.documents.audit_metadata_models import (
+        AssignmentMetadata,
+        AuditMetadata,
+        NotificationMetadata,
+        ReplacementMetadata,
+    )
+
+    # All three variants should be assignable to AuditMetadata
+    variants: list[AuditMetadata] = [
+        AssignmentMetadata(assignment_id="x"),
+        ReplacementMetadata(replaced_by="y"),
+        NotificationMetadata(
+            recipient_phone="p", template_key="t", status="s"
+        ),
+    ]
+    assert len(variants) == 3
+    assert all(isinstance(v, (AssignmentMetadata, ReplacementMetadata, NotificationMetadata)) for v in variants)

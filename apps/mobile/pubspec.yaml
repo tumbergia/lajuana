@@ -44,6 +44,12 @@ dependencies:
   url_launcher: ^6.3.1
   mobile_core:
     path: ../../packages/mobile_core
+  mobile_ui:
+    path: ../../packages/mobile_ui
+  mobile_domain:
+    path: ../../packages/mobile_domain
+  mobile_mocks:
+    path: ../../packages/mobile_mocks
   material_symbols_icons: ^4.2928.1
   image_picker: ^1.2.2
   image_cropper: ^8.1.0

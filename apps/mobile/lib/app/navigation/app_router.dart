@@ -7,7 +7,7 @@ import '../../features/auth/presentation/screens/change_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/session_view_screen.dart';
-import '../../playground/widget_museum_screen.dart';
+import '../../../../dev/playground/widget_museum_screen.dart';
 import '../bootstrap/dev_loader_screen.dart';
 import '../bootstrap/startup_gate.dart';
 import '../dependency_injection.dart';

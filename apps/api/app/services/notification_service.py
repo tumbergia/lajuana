@@ -20,6 +20,7 @@ from app.documents import (
 )
 from app.documents.notification_outbox_document import NotificationOutboxDocument
 from app.documents.notification_template_document import NotificationTemplateDocument
+from app.documents.audit_metadata_models import NotificationMetadata
 from app.documents.reservation_audit_log_document import ReservationAuditLogDocument
 from app.notifications.email_provider import EmailProvider
 from app.notifications.in_app_provider import InAppNotificationProvider
@@ -481,12 +482,12 @@ class NotificationService:
                 actor_role=None,
                 action=cfg["audit_action"],
                 source="backend_event",
-                metadata={
-                    "recipient_phone": entry.recipient_identifier,
-                    "template_key": entry.template_key,
-                    "provider_message_id": entry.provider_message_id,
-                    "status": "sent",
-                },
+                metadata=NotificationMetadata(
+                    recipient_phone=entry.recipient_identifier,
+                    template_key=entry.template_key,
+                    provider_message_id=entry.provider_message_id,
+                    status="sent",
+                ),
             )
             await log.insert()
         except Exception as exc:

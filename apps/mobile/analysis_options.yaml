@@ -20,9 +20,14 @@ linter:
   # or a specific dart file by using the `// ignore: name_of_lint` and
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
+  #
+  # NOTE: Dart does not provide a built-in `no_relative_imports` lint.
+  # Relative imports (../../) are enforced manually via PR review checklist
+  # (see .github/PULL_REQUEST_TEMPLATE.md). The long-term goal (W3.9) is to
+  # migrate all imports to package:mobile/ and then add a custom lint rule
+  # or use dart_code_metrics to enforce it automatically.
   rules:
     avoid_print: true
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

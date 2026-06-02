@@ -23,6 +23,10 @@ from app.documents import (
     ServiceLogDocument,
     ServiceLogEventType,
 )
+from app.documents.audit_metadata_models import (
+    AssignmentMetadata,
+    ReplacementMetadata,
+)
 from app.schemas.assignment import (
     AssignmentBoardParticipantSchema,
     AssignmentBoardResponseSchema,
@@ -270,7 +274,7 @@ class AssignmentService:
                     previous_status=AssignmentStatus.CONFIRMED.value,
                     new_status=AssignmentStatus.FINAL.value,
                     source="assignment_service",
-                    metadata={"assignment_id": str(doc.id)},
+                    metadata=AssignmentMetadata(assignment_id=str(doc.id)),
                 )
                 for doc in assignments
             ]
@@ -331,7 +335,7 @@ class AssignmentService:
                     previous_status=AssignmentStatus.FINAL.value,
                     new_status=AssignmentStatus.CONFIRMED.value,
                     source="assignment_service",
-                    metadata={"assignment_id": str(doc.id)},
+                    metadata=AssignmentMetadata(assignment_id=str(doc.id)),
                 )
                 for doc in assignments
             ]
@@ -565,7 +569,7 @@ class AssignmentService:
             action="assignment.replaced",
             previous_status=AssignmentStatus.FINAL.value,
             new_status=AssignmentStatus.REPLACED.value,
-            metadata={"replaced_by": str(new_doc.id)},
+            metadata=ReplacementMetadata(replaced_by=str(new_doc.id)),
         )
 
         return new_doc
@@ -1065,7 +1069,7 @@ class AssignmentService:
                 previous_status=previous_status or "",
                 new_status=new_status,
                 source="assignment_service",
-                metadata=metadata or {"assignment_id": str(assignment_id)},
+                metadata=metadata or AssignmentMetadata(assignment_id=str(assignment_id)),
             ).insert()
         except Exception:
             logger.exception("Audit log insert failed — non-blocking")
