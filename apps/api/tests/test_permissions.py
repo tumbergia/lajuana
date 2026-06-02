@@ -19,7 +19,9 @@ def test_role_permissions_unassigned_only_self_auth() -> None:
 def test_role_permissions_guide_no_confirm_reservation() -> None:
     perms = ROLE_PERMISSIONS[UserRole.GUIDE]
     assert Permission.RESERVATION_CONFIRM not in perms
-    assert Permission.ASSIGNMENT_CREATE in perms
+    assert Permission.ASSIGNMENT_CREATE not in perms
+    assert Permission.ASSIGNMENT_UPDATE not in perms
+    assert Permission.ASSIGNMENT_READ in perms
     assert Permission.LOG_CREATE in perms
 
 

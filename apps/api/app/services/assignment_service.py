@@ -14,8 +14,11 @@ from app.documents import (
     AssignmentDocument,
     EquineDocument,
     ParticipantDocument,
+    ReservationAuditLogDocument,
     ReservationDocument,
     SaddleDocument,
+    ServiceLogDocument,
+    ServiceLogEventType,
 )
 from app.schemas.assignment import (
     AssignmentBoardParticipantSchema,
@@ -25,10 +28,7 @@ from app.schemas.assignment import (
     AssignmentOnBoardSchema,
     AssignmentUpdateSchema,
 )
-from app.schemas.equine import EquineListItemSchema
-from app.schemas.saddle import SaddleListItemSchema
 from app.services.equine_service import EquineService
-from app.services.mappers import equine_to_list_item, saddle_to_list_item
 from app.services.saddle_service import SaddleService
 
 
@@ -106,6 +106,15 @@ class AssignmentService:
             assigned_manually=actor_id is not None,
         )
         await doc.insert()
+        await self._log_audit(
+            reservation_id=doc.reservation_id,
+            assignment_id=doc.id,
+            actor_user_id=actor_id,
+            actor_role=actor_role,
+            action="assignment.created",
+            previous_status=None,
+            new_status=doc.status.value,
+        )
         return doc
 
     async def get(self, assignment_id: str) -> AssignmentDocument:
@@ -166,6 +175,15 @@ class AssignmentService:
             doc.notes = updates["notes"]
 
         await doc.save()
+        await self._log_audit(
+            reservation_id=doc.reservation_id,
+            assignment_id=doc.id,
+            actor_user_id=actor_id,
+            actor_role=None,
+            action="assignment.updated",
+            previous_status=None,
+            new_status=doc.status.value,
+        )
         return doc
 
     async def finalize(
@@ -187,7 +205,352 @@ class AssignmentService:
         doc.finalized_by_user_id = actor_id
         doc.finalized_at = now
         await doc.save()
+        await self._log_audit(
+            reservation_id=doc.reservation_id,
+            assignment_id=doc.id,
+            actor_user_id=actor_id,
+            actor_role=None,
+            action="assignment.finalized",
+            previous_status=AssignmentStatus.CONFIRMED.value,
+            new_status=AssignmentStatus.FINAL.value,
+        )
         return doc
+
+    async def unfinalize(
+        self,
+        assignment_id: str,
+        actor_id: PydanticObjectId | None = None,
+    ) -> AssignmentDocument:
+        doc = await self.get(assignment_id)
+
+        if doc.status != AssignmentStatus.FINAL:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.ASSIGNMENT_INVALID_PRIORITY,
+                message="Solo se puede revertir una asignación finalizada.",
+            )
+
+        doc.status = AssignmentStatus.CONFIRMED
+        doc.finalized_by_user_id = None
+        doc.finalized_at = None
+        await doc.save()
+        await self._log_audit(
+            reservation_id=doc.reservation_id,
+            assignment_id=doc.id,
+            actor_user_id=actor_id,
+            actor_role=None,
+            action="assignment.unfinalized",
+            previous_status=AssignmentStatus.FINAL.value,
+            new_status=AssignmentStatus.CONFIRMED.value,
+        )
+        return doc
+
+    async def finalize_all(
+        self,
+        reservation_id: str,
+        actor_id: PydanticObjectId | None = None,
+        notes: str | None = None,
+    ) -> dict[str, Any]:
+        """Finalize all CONFIRMED assignments for a reservation.
+
+        Optionally creates an observation log entry with [notes].
+        Returns the updated board.
+        """
+        assignments = await AssignmentDocument.find(
+            {"reservation_id": reservation_id, "is_active": True, "status": AssignmentStatus.CONFIRMED.value},
+        ).to_list()
+
+        now = datetime.now(UTC)
+        for doc in assignments:
+            doc.status = AssignmentStatus.FINAL
+            doc.finalized_by_user_id = actor_id
+            doc.finalized_at = now
+            await doc.save()
+            await self._log_audit(
+                reservation_id=doc.reservation_id,
+                assignment_id=doc.id,
+                actor_user_id=actor_id,
+                actor_role=None,
+                action="assignment.finalized",
+                previous_status=AssignmentStatus.CONFIRMED.value,
+                new_status=AssignmentStatus.FINAL.value,
+            )
+
+        if notes:
+            try:
+                await ServiceLogDocument(
+                    reservation_id=reservation_id,
+                    event_type=ServiceLogEventType.NOTE,
+                    notes=notes,
+                ).insert()
+            except Exception:
+                pass  # Non-critical — don't block the operation
+
+        return await self.get_board(reservation_id)
+
+    async def unfinalize_all(
+        self,
+        reservation_id: str,
+        actor_id: PydanticObjectId | None = None,
+        notes: str | None = None,
+    ) -> dict[str, Any]:
+        """Revert all FINAL assignments back to CONFIRMED for a reservation.
+
+        Optionally creates an observation log entry with [notes].
+        Returns the updated board.
+        """
+        assignments = await AssignmentDocument.find(
+            {"reservation_id": reservation_id, "is_active": True, "status": AssignmentStatus.FINAL.value},
+        ).to_list()
+
+        now = datetime.now(UTC)
+        for doc in assignments:
+            doc.status = AssignmentStatus.CONFIRMED
+            doc.finalized_by_user_id = None
+            doc.finalized_at = None
+            await doc.save()
+            await self._log_audit(
+                reservation_id=doc.reservation_id,
+                assignment_id=doc.id,
+                actor_user_id=actor_id,
+                actor_role=None,
+                action="assignment.unfinalized",
+                previous_status=AssignmentStatus.FINAL.value,
+                new_status=AssignmentStatus.CONFIRMED.value,
+            )
+
+        if notes:
+            try:
+                await ServiceLogDocument(
+                    reservation_id=reservation_id,
+                    event_type=ServiceLogEventType.NOTE,
+                    notes=notes,
+                ).insert()
+            except Exception:
+                pass
+
+        return await self.get_board(reservation_id)
+
+    async def batch_update(
+        self,
+        reservation_id: str,
+        assignments: list[dict[str, Any]],
+        removals: list[str] | None = None,
+        notes: str | None = None,
+        actor_id: PydanticObjectId | None = None,
+    ) -> dict[str, Any]:
+        """Process a batch of assignment changes (local-first flow).
+
+        - Process removals (cancel assignments).
+        - Process assignments (create or update each, set to FINAL).
+        - Create observation log if notes provided.
+        - Return updated board.
+        """
+        reservation = await ReservationDocument.get(reservation_id)
+        if reservation is None:
+            raise ApiError(
+                status_code=404,
+                code=ErrorCode.RESERVATION_NOT_FOUND,
+                message="Reserva no encontrada.",
+            )
+
+        now = datetime.now(UTC)
+
+        # ── Process removals ──
+        if removals:
+            for aid in removals:
+                doc = await AssignmentDocument.get(aid)
+                if doc is None:
+                    continue
+                if doc.status not in (AssignmentStatus.FINAL, AssignmentStatus.CANCELLED):
+                    prev = doc.status.value
+                    doc.status = AssignmentStatus.CANCELLED
+                    doc.is_active = False
+                    await doc.save()
+                    await self._log_audit(
+                        reservation_id=doc.reservation_id,
+                        assignment_id=doc.id,
+                        actor_user_id=actor_id,
+                        actor_role=None,
+                        action="assignment.removed",
+                        previous_status=prev,
+                        new_status=AssignmentStatus.CANCELLED.value,
+                    )
+
+        # ── Process assignments ──
+        for item in assignments:
+            pid = item.get("participant_id")
+            eid = item.get("equine_id")
+            sid = item.get("saddle_id")
+            if not pid or not eid:
+                continue
+
+            participant = await ParticipantDocument.get(pid)
+            equine = await EquineDocument.get(eid)
+            if participant is None or equine is None:
+                continue
+
+            # Check if participant already has an active assignment (use ObjectId)
+            existing = await AssignmentDocument.find_one({
+                "reservation_id": reservation.id,
+                "participant_id": participant.id,
+                "is_active": True,
+                "status": {"$nin": [AssignmentStatus.CANCELLED.value, AssignmentStatus.REPLACED.value]},
+            })
+
+            if existing:
+                # Update existing → patch equine/saddle + set FINAL
+                existing.equine_id = equine.id
+                existing.saddle_id = sid
+                existing.status = AssignmentStatus.FINAL
+                existing.finalized_by_user_id = actor_id
+                existing.finalized_at = now
+                await existing.save()
+                await self._log_audit(
+                    reservation_id=existing.reservation_id,
+                    assignment_id=existing.id,
+                    actor_user_id=actor_id,
+                    actor_role=None,
+                    action="assignment.updated_and_finalized",
+                    previous_status=existing.status.value,
+                    new_status=AssignmentStatus.FINAL.value,
+                )
+            else:
+                # Create new → validate + create as FINAL
+                self._validate_reservation(reservation)
+                self._validate_participant_belongs(participant, reservation)
+                self._validate_participant_data(participant)
+                self._validate_equine(equine)
+                await self._validate_equine_not_duplicate(reservation.id, equine.id)
+                self._validate_rider_weight(participant, equine)
+                await self._validate_no_active_assignment(participant.id, reservation.id)
+
+                age = _age_from_birth_date(participant.birth_date)
+                safety_flags, warnings = self._check_safety(participant, equine, age)
+
+                doc = AssignmentDocument(
+                    reservation_id=reservation.id,
+                    participant_id=participant.id,
+                    equine_id=equine.id,
+                    saddle_id=sid if sid else None,
+                    status=AssignmentStatus.FINAL,
+                    source=self._resolve_source(actor_id, None),
+                    notes=None,
+                    safety_flags=safety_flags,
+                    validation_warnings=warnings,
+                    assigned_by_user_id=actor_id,
+                    finalized_by_user_id=actor_id,
+                    assigned_at=now,
+                    finalized_at=now,
+                    is_active=True,
+                    priority="standard",
+                    assigned_manually=actor_id is not None,
+                )
+                await doc.insert()
+                await self._log_audit(
+                    reservation_id=doc.reservation_id,
+                    assignment_id=doc.id,
+                    actor_user_id=actor_id,
+                    actor_role=None,
+                    action="assignment.created_and_finalized",
+                    previous_status=None,
+                    new_status=AssignmentStatus.FINAL.value,
+                )
+
+        # ── Observation log ──
+        if notes:
+            try:
+                await ServiceLogDocument(
+                    reservation_id=reservation_id,
+                    event_type=ServiceLogEventType.NOTE,
+                    notes=notes,
+                ).insert()
+            except Exception:
+                pass
+
+        return await self.get_board(reservation_id)
+
+    async def remove(
+        self,
+        assignment_id: str,
+        actor_id: PydanticObjectId | None = None,
+    ) -> AssignmentDocument:
+        doc = await self.get(assignment_id)
+
+        if doc.status in (AssignmentStatus.FINAL, AssignmentStatus.CANCELLED):
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.ASSIGNMENT_INVALID_PRIORITY,
+                message="La asignación no puede quitarse en su estado actual.",
+            )
+
+        previous_status = doc.status.value
+        doc.status = AssignmentStatus.CANCELLED
+        doc.is_active = False
+        await doc.save()
+        await self._log_audit(
+            reservation_id=doc.reservation_id,
+            assignment_id=doc.id,
+            actor_user_id=actor_id,
+            actor_role=None,
+            action="assignment.removed",
+            previous_status=previous_status,
+            new_status=AssignmentStatus.CANCELLED.value,
+        )
+        return doc
+
+    async def replace(
+        self,
+        assignment_id: str,
+        payload: Any,
+        actor_id: PydanticObjectId | None = None,
+        actor_role: UserRole | None = None,
+    ) -> AssignmentDocument:
+        """Reemplaza una asignación finalizada: desactiva la actual y crea una nueva."""
+        from app.schemas.assignment import AssignmentCreateSchema
+
+        old = await self.get(assignment_id)
+
+        if old.status != AssignmentStatus.FINAL:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.ASSIGNMENT_INVALID_PRIORITY,
+                message="Solo se puede reemplazar una asignación finalizada.",
+            )
+
+        # Crear la nueva asignación con los mismos participant/reservation
+        create_payload = AssignmentCreateSchema(
+            reservation_id=str(old.reservation_id),
+            participant_id=str(old.participant_id),
+            equine_id=payload.equine_id,
+            saddle_id=payload.saddle_id,
+            notes=payload.notes or old.notes,
+        )
+        new_doc = await self.create(
+            create_payload,
+            actor_id=actor_id,
+            actor_role=actor_role,
+        )
+
+        # Desactivar la asignación anterior
+        now = datetime.now(UTC)
+        old.status = AssignmentStatus.REPLACED
+        old.is_active = False
+        old.replaced_by_assignment_id = new_doc.id
+        await old.save()
+
+        await self._log_audit(
+            reservation_id=old.reservation_id,
+            assignment_id=old.id,
+            actor_user_id=actor_id,
+            actor_role=actor_role,
+            action="assignment.replaced",
+            previous_status=AssignmentStatus.FINAL.value,
+            new_status=AssignmentStatus.REPLACED.value,
+            metadata={"replaced_by": str(new_doc.id)},
+        )
+
+        return new_doc
 
     # ── Board ──
 
@@ -218,21 +581,30 @@ class AssignmentService:
         for a in assignments:
             assignment_map[str(a.participant_id)] = a
 
-        # Equinos disponibles
-        available_equines: list[EquineListItemSchema] = []
+        # Equinos disponibles — version minimalista para el board
+        available_equines: list = []
         if self._equine_service:
             for eq_doc, reason in await self._equine_service.list_available_for_reservation(reservation_id):
-                item = equine_to_list_item(eq_doc)
-                item.block_reason = reason
-                available_equines.append(item)
+                available_equines.append({
+                    "id": _safe_str(eq_doc.id) or "",
+                    "name": getattr(eq_doc, "name", ""),
+                    "is_available": getattr(eq_doc, "is_available", True),
+                    "max_rider_weight_kg": getattr(eq_doc, "max_rider_weight_kg", None),
+                    "image_base64": getattr(eq_doc, "image_base64", None),
+                    "block_reason": reason,
+                })
 
-        # Sillas disponibles
-        available_saddles: list[SaddleListItemSchema] = []
+        # Sillas disponibles — version minimalista para el board
+        available_saddles: list = []
         if self._saddle_service:
             for sa_doc, reason in await self._saddle_service.list_available_for_reservation(reservation_id):
-                item = saddle_to_list_item(sa_doc)
-                item.block_reason = reason
-                available_saddles.append(item)
+                available_saddles.append({
+                    "id": _safe_str(sa_doc.id) or "",
+                    "code": getattr(sa_doc, "code", ""),
+                    "name": getattr(sa_doc, "name", None),
+                    "is_available": getattr(sa_doc, "is_available", True),
+                    "block_reason": reason,
+                })
 
         # Armar participantes del board
         board_participants = []
@@ -568,3 +940,30 @@ class AssignmentService:
         if actor_role == UserRole.GUIDE:
             return AssignmentSource.MANUAL_GUIDE
         return AssignmentSource.MANUAL_ADMIN
+
+    async def _log_audit(
+        self,
+        reservation_id: object,
+        assignment_id: object,
+        actor_user_id: object | None,
+        actor_role: UserRole | None,
+        action: str,
+        previous_status: str | None,
+        new_status: str,
+        metadata: dict | None = None,
+    ) -> None:
+        """Registra auditoría para operaciones de asignación."""
+        try:
+            await ReservationAuditLogDocument(
+                reservation_id=reservation_id,
+                actor_user_id=actor_user_id,
+                actor_role=actor_role or UserRole.ADMIN,
+                action=action,
+                previous_status=previous_status or "",
+                new_status=new_status,
+                source="assignment_service",
+                metadata=metadata or {"assignment_id": str(assignment_id)},
+            ).insert()
+        except Exception:
+            # No bloquear la operación principal por un fallo de auditoría
+            pass

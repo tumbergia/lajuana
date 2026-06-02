@@ -25,6 +25,13 @@ class AssignmentUpdateSchema(BaseModel):
     notes: str | None = None
 
 
+class AssignmentReplaceSchema(BaseModel):
+    """Reemplaza una asignacion finalizada: desactiva la actual y crea una nueva."""
+    equine_id: str
+    saddle_id: str | None = None
+    notes: str | None = None
+
+
 class AssignmentResponseSchema(AuditMetadataSchema):
     id: str
     reservation_id: str
@@ -77,11 +84,49 @@ class AssignmentBoardSummarySchema(BaseModel):
     blocking_total: int = 0
 
 
+class AssignmentBoardEquineSchema(BaseModel):
+    """Versión minimalista de equino para el tablero de asignación."""
+    id: str
+    name: str
+    is_available: bool = True
+    max_rider_weight_kg: Decimal | None = None
+    image_base64: str | None = None
+    block_reason: str | None = None
+
+
+class AssignmentBoardSaddleSchema(BaseModel):
+    """Versión minimalista de silla para el tablero de asignación."""
+    id: str
+    code: str
+    name: str | None = None
+    is_available: bool = True
+    block_reason: str | None = None
+
+
+class BulkActionSchema(BaseModel):
+    """Request body for bulk finalize/unfinalize actions."""
+    notes: str | None = None
+
+
+class BatchAssignmentItemSchema(BaseModel):
+    """A single assignment in a batch update."""
+    participant_id: str
+    equine_id: str
+    saddle_id: str | None = None
+
+
+class BatchUpdateSchema(BaseModel):
+    """Request body for batch assignment update (local-first finalize)."""
+    assignments: list[BatchAssignmentItemSchema] = []
+    removals: list[str] = []
+    notes: str | None = None
+
+
 class AssignmentBoardResponseSchema(BaseModel):
     reservation_id: str
     reservation_status: str
     scheduled_date: str | None = None
     participants: list[AssignmentBoardParticipantSchema] = []
-    available_equines: list[EquineListItemSchema] = []
-    available_saddles: list[SaddleListItemSchema] = []
+    available_equines: list[AssignmentBoardEquineSchema] = []
+    available_saddles: list[AssignmentBoardSaddleSchema] = []
     summary: AssignmentBoardSummarySchema = AssignmentBoardSummarySchema()

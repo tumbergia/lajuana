@@ -25,6 +25,7 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   }) async {
     return [];
   }
@@ -91,6 +92,20 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   }) async {
     return detail;
   }
+
+  @override
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  }) async {
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> restoreReservation({
+    required String reservationId,
+  }) async {
+    return detail;
+  }
 }
 
 /// Fake repository that always throws a permissions error.
@@ -104,6 +119,7 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   }) async {
     return [];
   }
@@ -194,6 +210,28 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
       statusCode: 403,
     );
   }
+
+  @override
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'auth.forbidden',
+      message: 'No tienes permisos.',
+      statusCode: 403,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> restoreReservation({
+    required String reservationId,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'auth.forbidden',
+      message: 'No tienes permisos.',
+      statusCode: 403,
+    );
+  }
 }
 
 /// Fake repository that always throws a state conflict error.
@@ -207,6 +245,7 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   }) async {
     return [];
   }
@@ -297,6 +336,28 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
       statusCode: 409,
     );
   }
+
+  @override
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'reservation.invalid_status_transition',
+      message: 'No se puede eliminar.',
+      statusCode: 409,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> restoreReservation({
+    required String reservationId,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'reservation.invalid_status_transition',
+      message: 'No se puede restaurar.',
+      statusCode: 409,
+    );
+  }
 }
 
 /// Fake repository that always throws a network error.
@@ -310,6 +371,7 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   }) async {
     return [];
   }
@@ -392,6 +454,28 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail> cancelReservation({
+    required String reservationId,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'network.unavailable',
+      message: 'No hay conexión con el servidor.',
+      statusCode: 0,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'network.unavailable',
+      message: 'No hay conexión con el servidor.',
+      statusCode: 0,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> restoreReservation({
     required String reservationId,
   }) async {
     throw ReservationsApiFailure(

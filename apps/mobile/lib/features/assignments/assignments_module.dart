@@ -2,6 +2,7 @@ import 'package:http/http.dart' as http;
 
 import '../auth/infrastructure/token_storage.dart';
 import 'domain/repositories/assignments_repository.dart';
+import 'infrastructure/local/assignments_local_data_source.dart';
 import 'infrastructure/remote/assignments_api_client.dart';
 import 'infrastructure/repositories/assignments_repository_impl.dart';
 
@@ -16,6 +17,7 @@ class AssignmentsModule {
     required TokenStorage tokenStorage,
     required Future<bool> Function() refreshSession,
     http.Client? httpClient,
+    AssignmentsLocalDataSource? localDataSource,
   }) {
     final apiClient = AssignmentsApiClient(
       baseUrl: baseUrl,
@@ -27,7 +29,10 @@ class AssignmentsModule {
       httpClient: httpClient,
     );
 
-    final repository = AssignmentsRepositoryImpl(api: apiClient);
+    final repository = AssignmentsRepositoryImpl(
+      api: apiClient,
+      local: localDataSource ?? AssignmentsLocalDataSource(),
+    );
 
     return AssignmentsModule(repository: repository);
   }

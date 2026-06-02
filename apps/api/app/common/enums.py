@@ -253,8 +253,6 @@ ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
         Permission.EQUINE_READ,
         Permission.SADDLE_READ,
         Permission.ASSIGNMENT_READ,
-        Permission.ASSIGNMENT_CREATE,
-        Permission.ASSIGNMENT_UPDATE,
         Permission.LOG_READ,
         Permission.LOG_CREATE,
         Permission.LOG_UPDATE,

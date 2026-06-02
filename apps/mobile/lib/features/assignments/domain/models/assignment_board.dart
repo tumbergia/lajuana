@@ -27,15 +27,18 @@ class AssignmentBoard {
       reservationId: json['reservation_id'] as String,
       reservationStatus: json['reservation_status'] as String,
       scheduledDate: json['scheduled_date'] as String?,
-      participants: (json['participants'] as List<dynamic>?)
+      participants:
+          (json['participants'] as List<dynamic>?)
               ?.map((e) => BoardParticipant.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      availableEquines: (json['available_equines'] as List<dynamic>?)
+      availableEquines:
+          (json['available_equines'] as List<dynamic>?)
               ?.map((e) => AvailableEquine.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      availableSaddles: (json['available_saddles'] as List<dynamic>?)
+      availableSaddles:
+          (json['available_saddles'] as List<dynamic>?)
               ?.map((e) => AvailableSaddle.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -120,12 +123,14 @@ class AvailableEquine {
   final String name;
   final String? blockReason;
   final double? maxRiderWeightKg;
+  final String? imageBase64;
 
   const AvailableEquine({
     required this.id,
     required this.name,
     this.blockReason,
     this.maxRiderWeightKg,
+    this.imageBase64,
   });
 
   factory AvailableEquine.fromJson(Map<String, dynamic> json) {
@@ -134,6 +139,7 @@ class AvailableEquine {
       name: json['name'] as String,
       blockReason: json['block_reason'] as String?,
       maxRiderWeightKg: parseDouble(json['max_rider_weight_kg']),
+      imageBase64: json['image_base64'] as String?,
     );
   }
 

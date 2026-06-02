@@ -129,14 +129,20 @@ async def reservation_to_response(doc: ReservationDocument) -> ReservationRespon
         participant_docs = await ParticipantDocument.find(
             {"_id": {"$in": doc.participant_ids}}
         ).to_list()
-        for p in participant_docs:
-            try:
-                participants.append(participant_to_response(p))
-            except Exception:
-                logger.warning(
-                    "[mapper] Failed to map participant | reservation=%s | participant=%s",
-                    doc.id, p.id, exc_info=True,
-                )
+    else:
+        # Fallback: query by reservation_id (handles legacy data where
+        # participant_ids was never populated)
+        participant_docs = await ParticipantDocument.find(
+            {"reservation_id": doc.id}
+        ).to_list()
+    for p in participant_docs:
+        try:
+            participants.append(participant_to_response(p))
+        except Exception:
+            logger.warning(
+                "[mapper] Failed to map participant | reservation=%s | participant=%s",
+                doc.id, p.id, exc_info=True,
+            )
 
     payment_proofs: list[PaymentProofResponseSchema] = []
     if doc.payment_proof_ids:

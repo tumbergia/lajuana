@@ -1,13 +1,20 @@
 import '../../domain/models/assignment.dart';
 import '../../domain/models/assignment_board.dart';
 import '../../domain/repositories/assignments_repository.dart';
+import '../local/assignments_local_data_source.dart';
 import '../remote/assignments_api_client.dart';
 
-/// Implementation of [AssignmentsRepository] backed by [AssignmentsApiClient].
+/// Implementation of [AssignmentsRepository] backed by [AssignmentsApiClient]
+/// with local cache fallback for reads.
 class AssignmentsRepositoryImpl implements AssignmentsRepository {
   final AssignmentsApiClient _api;
+  final AssignmentsLocalDataSource _local;
 
-  AssignmentsRepositoryImpl({required AssignmentsApiClient api}) : _api = api;
+  AssignmentsRepositoryImpl({
+    required AssignmentsApiClient api,
+    AssignmentsLocalDataSource? local,
+  })  : _api = api,
+        _local = local ?? AssignmentsLocalDataSource();
 
   @override
   Future<Assignment> create({
@@ -57,8 +64,113 @@ class AssignmentsRepositoryImpl implements AssignmentsRepository {
   }
 
   @override
+  Future<Assignment> unfinalize(String id) async {
+    final json = await _api.unfinalize(id);
+    return Assignment.fromJson(json);
+  }
+
+  @override
+  Future<Assignment> remove(String id) async {
+    final json = await _api.remove(id);
+    return Assignment.fromJson(json);
+  }
+
+  @override
+  Future<Assignment> replace({
+    required String id,
+    required String equineId,
+    String? saddleId,
+    String? notes,
+  }) async {
+    final body = <String, dynamic>{
+      'equine_id': equineId,
+      if (saddleId != null) 'saddle_id': saddleId,
+      if (notes != null) 'notes': notes,
+    };
+    final json = await _api.replace(id, body);
+    return Assignment.fromJson(json);
+  }
+
+  @override
   Future<AssignmentBoard> getBoard(String reservationId) async {
     final json = await _api.getBoard(reservationId);
-    return AssignmentBoard.fromJson(json);
+    final board = AssignmentBoard.fromJson(json);
+
+    // Cache for offline fallback
+    try {
+      await _local.cacheBoard(reservationId, json);
+    } catch (_) {
+      // Non-critical — don't fail the request
+    }
+
+    return board;
+  }
+
+  @override
+  Future<AssignmentBoard?> getCachedBoard(String reservationId) async {
+    try {
+      final json = await _local.getCachedBoard(reservationId);
+      if (json == null) return null;
+      return AssignmentBoard.fromJson(json);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> cacheBoard(String reservationId, AssignmentBoard board) async {
+    // The getBoard method already caches; this is for explicit cache-on-write
+  }
+
+  @override
+  Future<AssignmentBoard> batchUpdate({
+    required String reservationId,
+    required List<Map<String, dynamic>> assignments,
+    required List<String> removals,
+    String? notes,
+  }) async {
+    final json = await _api.batchUpdate(
+      reservationId: reservationId,
+      assignments: assignments,
+      removals: removals,
+      notes: notes,
+    );
+    final board = AssignmentBoard.fromJson(json);
+    try {
+      await _local.cacheBoard(reservationId, json);
+    } catch (_) {}
+    return board;
+  }
+
+  @override
+  Future<void> finalizeAll({
+    required String reservationId,
+    String? notes,
+  }) async {
+    await _api.finalizeAll(reservationId, notes: notes);
+  }
+
+  @override
+  Future<void> unfinalizeAll({
+    required String reservationId,
+    String? notes,
+  }) async {
+    await _api.unfinalizeAll(reservationId, notes: notes);
+  }
+
+  @override
+  Future<void> createObservation({
+    required String reservationId,
+    required String notes,
+    String? relatedParticipantId,
+    String? relatedEquineId,
+  }) async {
+    await _api.createLog({
+      'reservation_id': reservationId,
+      'event_type': 'note',
+      'notes': notes,
+      if (relatedParticipantId != null) 'related_participant_id': relatedParticipantId,
+      if (relatedEquineId != null) 'related_equine_id': relatedEquineId,
+    });
   }
 }

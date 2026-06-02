@@ -23,8 +23,6 @@ from app.common.enums import (
     ExperienceLevel,
     ReservationStatus,
 )
-from app.schemas.equine import EquineListItemSchema
-from app.schemas.saddle import SaddleListItemSchema
 from app.services.assignment_service import AssignmentService
 
 FAKE_ID = "660000000000000000000001"
@@ -102,60 +100,6 @@ def make_fake_saddle_doc(**overrides: object) -> SimpleNamespace:
     return SimpleNamespace(**defaults)
 
 
-def make_equine_list_item(**overrides: object) -> EquineListItemSchema:
-    """Build a proper EquineListItemSchema with sensible defaults."""
-    defaults: dict = dict(
-        id=FAKE_EQ_ID,
-        name="Pegaso",
-        inventory_number=None,
-        species=EquineSpecies.HORSE,
-        location_status="la_juana",
-        location_notes=None,
-        breed=None,
-        sex=EquineSex.MALE,
-        coat_color=None,
-        gait=None,
-        weight_kg=None,
-        height_m=None,
-        is_active=True,
-        is_available=True,
-        operational_status=EquineOperationalStatus.AVAILABLE,
-        approximate_age_years=None,
-        max_rider_weight_kg=None,
-        experience_fit=EquineExperienceFit.ALL,
-        image_base64=None,
-        last_service_at=None,
-        workload_last_7_days=0,
-        rest_until=None,
-        availability_reasons=None,
-        block_reason=None,
-        # AuditMetadataSchema
-        version=1,
-        created_at=datetime(2026, 1, 1, tzinfo=UTC),
-        updated_at=datetime(2026, 1, 1, tzinfo=UTC),
-        deleted_at=None,
-    )
-    defaults.update(overrides)
-    return EquineListItemSchema(**defaults)
-
-
-def make_saddle_list_item(**overrides: object) -> SaddleListItemSchema:
-    """Build a proper SaddleListItemSchema with sensible defaults."""
-    defaults: dict = dict(
-        id=FAKE_SD_ID,
-        code="S-001",
-        name="Silla Inglesa",
-        is_available=True,
-        notes=None,
-        block_reason=None,
-        # AuditMetadataSchema
-        version=1,
-        created_at=datetime(2026, 1, 1, tzinfo=UTC),
-        updated_at=datetime(2026, 1, 1, tzinfo=UTC),
-        deleted_at=None,
-    )
-    defaults.update(overrides)
-    return SaddleListItemSchema(**defaults)
 
 
 class TestGetBoard:
@@ -309,26 +253,7 @@ class TestGetBoard:
         mock_equine_service = SimpleNamespace(list_available_for_reservation=mock_equine_list)
         mock_saddle_service = SimpleNamespace(list_available_for_reservation=mock_saddle_list)
 
-        # Mock mappers to return proper schema instances
-        equine_items: dict[str, EquineListItemSchema] = {
-            FAKE_EQ_ID: make_equine_list_item(id=FAKE_EQ_ID, name="Pegaso"),
-            FAKE_EQ_ID_2: make_equine_list_item(id=FAKE_EQ_ID_2, name="Relámpago"),
-        }
-
-        def _mock_equine_mapper(doc: SimpleNamespace) -> EquineListItemSchema:
-            return equine_items[str(doc.id)]
-
-        saddle_item = make_saddle_list_item(id=FAKE_SD_ID, code="S-001")
-
-        monkeypatch.setattr(
-            "app.services.assignment_service.equine_to_list_item",
-            _mock_equine_mapper,
-        )
-        monkeypatch.setattr(
-            "app.services.assignment_service.saddle_to_list_item",
-            lambda _d: saddle_item,
-        )
-
+        # Mappers no longer needed — service reads attributes directly
         service = AssignmentService(
             equine_service=mock_equine_service,  # type: ignore[arg-type]
             saddle_service=mock_saddle_service,  # type: ignore[arg-type]

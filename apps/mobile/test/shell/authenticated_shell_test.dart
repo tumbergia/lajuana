@@ -21,7 +21,10 @@ import '../auth/test_fakes.dart';
 /// Stub mínimo para [EquineRepository] usado en tests del shell.
 class _FakeEquineRepository implements EquineRepository {
   @override
-  Future<List<Equine>> listEquines({String? operationalStatus}) async => [];
+  Future<List<Equine>> listEquines({
+    String? operationalStatus,
+    bool includeDeleted = false,
+  }) async => [];
 
   @override
   Future<Equine> getEquineById(String equineId) async =>
@@ -40,6 +43,14 @@ class _FakeEquineRepository implements EquineRepository {
 
   @override
   Future<List<Equine>> listAvailableForReservation(String reservationId) async => [];
+
+  @override
+  Future<Equine> deleteEquine(String equineId) async =>
+      throw UnimplementedError('not used in shell test');
+
+  @override
+  Future<Equine> restoreEquine(String equineId) async =>
+      throw UnimplementedError('not used in shell test');
 
   @override
   Future<DateTime?> getLastSyncedAt() async => null;

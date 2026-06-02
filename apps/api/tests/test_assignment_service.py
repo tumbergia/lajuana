@@ -121,6 +121,8 @@ class FakeAssignmentDocument:
 
     async def insert(self) -> None:
         self._insert_called = True
+        if not hasattr(self, "id") or self.id is None:
+            self.id = FAKE_ID
 
     async def save(self) -> None:
         self._save_called = True
@@ -849,6 +851,7 @@ class TestFinalize:
     ) -> SimpleNamespace:
         doc = SimpleNamespace(
             id=FAKE_ID,
+            reservation_id=FAKE_ID,
             status=status,
             finalized_by_user_id=None,
             finalized_at=None,
@@ -914,6 +917,118 @@ class TestFinalize:
                 await service.finalize(FAKE_ID_3)
             assert exc.value.status_code == 404
             assert exc.value.code == ErrorCode.ASSIGNMENT_NOT_FOUND
+
+        asyncio.run(run())
+
+
+class TestUnfinalize:
+    """AssignmentService.unfinalize — reopen FINAL assignment."""
+
+    def _patch_unfinalize_base(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        status: AssignmentStatus = AssignmentStatus.FINAL,
+    ) -> SimpleNamespace:
+        doc = SimpleNamespace(
+            id=FAKE_ID,
+            reservation_id=FAKE_ID,
+            status=status,
+            finalized_by_user_id=FAKE_ACTOR_ID,
+            finalized_at=datetime(2026, 1, 1, tzinfo=UTC),
+            _save_called=False,
+        )
+
+        async def _mock_save() -> None:
+            doc._save_called = True
+
+        doc.save = _mock_save  # type: ignore[attr-defined]
+
+        async def _mock_get(_aid: str) -> SimpleNamespace:
+            return doc
+
+        monkeypatch.setattr(
+            "app.services.assignment_service.AssignmentDocument.get",
+            _mock_get,
+        )
+        return doc
+
+    def test_unfinalize_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._patch_unfinalize_base(monkeypatch, status=AssignmentStatus.FINAL)
+        service = AssignmentService()
+
+        async def run() -> None:
+            result = await service.unfinalize(FAKE_ID, actor_id=FAKE_ACTOR_ID)
+            assert result.status == AssignmentStatus.CONFIRMED
+            assert result.finalized_by_user_id is None
+            assert result.finalized_at is None
+            assert result._save_called is True
+
+        asyncio.run(run())
+
+    def test_unfinalize_not_final(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._patch_unfinalize_base(monkeypatch, status=AssignmentStatus.CONFIRMED)
+        service = AssignmentService()
+
+        async def run() -> None:
+            with pytest.raises(ApiError) as exc:
+                await service.unfinalize(FAKE_ID)
+            assert exc.value.status_code == 409
+            assert exc.value.code == ErrorCode.ASSIGNMENT_INVALID_PRIORITY
+
+        asyncio.run(run())
+
+
+class TestRemoveAssignment:
+    """AssignmentService.remove — cancel assignment from board."""
+
+    def _patch_remove_base(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        status: AssignmentStatus = AssignmentStatus.CONFIRMED,
+    ) -> SimpleNamespace:
+        doc = SimpleNamespace(
+            id=FAKE_ID,
+            reservation_id=FAKE_ID,
+            status=status,
+            is_active=True,
+            _save_called=False,
+        )
+
+        async def _mock_save() -> None:
+            doc._save_called = True
+
+        doc.save = _mock_save  # type: ignore[attr-defined]
+
+        async def _mock_get(_aid: str) -> SimpleNamespace:
+            return doc
+
+        monkeypatch.setattr(
+            "app.services.assignment_service.AssignmentDocument.get",
+            _mock_get,
+        )
+        return doc
+
+    def test_remove_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._patch_remove_base(monkeypatch, status=AssignmentStatus.CONFIRMED)
+        service = AssignmentService()
+
+        async def run() -> None:
+            result = await service.remove(FAKE_ID, actor_id=FAKE_ACTOR_ID)
+            assert result.status == AssignmentStatus.CANCELLED
+            assert result.is_active is False
+            assert result._save_called is True
+
+        asyncio.run(run())
+
+    def test_remove_final_not_allowed(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._patch_remove_base(monkeypatch, status=AssignmentStatus.FINAL)
+        service = AssignmentService()
+
+        async def run() -> None:
+            with pytest.raises(ApiError) as exc:
+                await service.remove(FAKE_ID)
+            assert exc.value.status_code == 409
+            assert exc.value.code == ErrorCode.ASSIGNMENT_INVALID_PRIORITY
 
         asyncio.run(run())
 

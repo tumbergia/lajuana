@@ -70,12 +70,13 @@ class ReservationDetailShellScreen extends StatefulWidget {
 }
 
 class _ReservationDetailShellScreenState
-    extends State<ReservationDetailShellScreen> with RefreshableState {
+    extends State<ReservationDetailShellScreen>
+    with RefreshableState {
   late final ReservationDetailController _controller;
   late final ReservationParticipantsSectionController
-      _participantsSectionController;
+  _participantsSectionController;
   late final ReservationPaymentProofsSectionController
-      _paymentProofsSectionController;
+  _paymentProofsSectionController;
   AssignmentBoardController? _assignmentBoardController;
   ReservationDetailSubroute _subroute = ReservationDetailSubroute.resumen;
   final Map<String, Uint8List> _proofPreviewCache = {};
@@ -83,8 +84,7 @@ class _ReservationDetailShellScreenState
   String? _highlightedParticipantId;
   final Map<String, GlobalKey> _participantKeys = {};
 
-  bool get _isAdmin =>
-      widget.authController?.currentUser?.role == 'admin';
+  bool get _isAdmin => widget.authController?.currentUser?.role == 'admin';
 
   ReservationsRepository? get _repo => widget.reservationsModule?.repository;
 
@@ -94,10 +94,11 @@ class _ReservationDetailShellScreenState
   @override
   void initState() {
     super.initState();
-    _controller = widget.reservationsModule?.createDetailController() ??
+    _controller =
+        widget.reservationsModule?.createDetailController() ??
         ReservationDetailController(
-          repository: widget.reservationsModule?.repository ??
-              (_throwNoModule()),
+          repository:
+              widget.reservationsModule?.repository ?? (_throwNoModule()),
         );
     _participantsSectionController = ReservationParticipantsSectionController();
     _paymentProofsSectionController =
@@ -151,14 +152,13 @@ class _ReservationDetailShellScreenState
           const SizedBox(height: 16),
 
           if (state == ReservationDetailLoadState.loading)
-            const Expanded(
-              child: AppCenteredLoader(),
-            )
+            const Expanded(child: AppCenteredLoader())
           else if (state == ReservationDetailLoadState.error)
             Expanded(
               child: _buildSectionPlaceholder(
                 'Sin reserva',
-                _controller.errorMessage ?? 'No se pudo cargar el detalle de la reserva.',
+                _controller.errorMessage ??
+                    'No se pudo cargar el detalle de la reserva.',
                 Icons.error_outline_rounded,
                 action: AppButton(
                   label: 'Reintentar',
@@ -194,9 +194,7 @@ class _ReservationDetailShellScreenState
               ],
             ),
             const SizedBox(height: 12),
-            Expanded(
-              child: _buildSubrouteContent(detail),
-            ),
+            Expanded(child: _buildSubrouteContent(detail)),
           ],
         ],
       ),
@@ -228,160 +226,168 @@ class _ReservationDetailShellScreenState
         children: [
           AppEntityRowCard(
             title: detail.holderName ?? detail.holderEmail ?? 'Sin titular',
-          subtitle: 'Cliente principal',
-          badge: AppBadge(
-            label: statusLabel,
-            tone: statusTone,
-            uppercase: false,
-          ),
-          selected: true,
-          onTap: () => _showClientDetail(detail),
-        ),
-        if (detail.holderEmail != null) ...[
-          const SizedBox(height: 10),
-          AppEntityRowCard(
-            title: detail.holderEmail!,
-            subtitle: 'Email',
-            leading: const Icon(Icons.email_outlined, size: 18),
+            subtitle: 'Cliente principal',
+            badge: AppBadge(
+              label: statusLabel,
+              tone: statusTone,
+              uppercase: false,
+            ),
+            selected: true,
             onTap: () => _showClientDetail(detail),
           ),
-        ],
-        if (detail.holderPhone != null) ...[
+          if (detail.holderEmail != null) ...[
+            const SizedBox(height: 10),
+            AppEntityRowCard(
+              title: detail.holderEmail!,
+              subtitle: 'Email',
+              leading: const Icon(Icons.email_outlined, size: 18),
+              onTap: () => _showClientDetail(detail),
+            ),
+          ],
+          if (detail.holderPhone != null) ...[
+            const SizedBox(height: 10),
+            AppEntityRowCard(
+              title: detail.holderPhone!,
+              subtitle: 'Telefono',
+              leading: const Icon(Icons.phone_outlined, size: 18),
+              onTap: () => _showClientDetail(detail),
+            ),
+          ],
           const SizedBox(height: 10),
           AppEntityRowCard(
-            title: detail.holderPhone!,
-            subtitle: 'Telefono',
-            leading: const Icon(Icons.phone_outlined, size: 18),
-            onTap: () => _showClientDetail(detail),
+            title: detail.code,
+            subtitle: 'Codigo de reserva',
+            leading: const Icon(Icons.tag_rounded, size: 18),
           ),
-        ],
-        const SizedBox(height: 10),
-        AppEntityRowCard(
-          title: detail.code,
-          subtitle: 'Codigo de reserva',
-          leading: const Icon(Icons.tag_rounded, size: 18),
-        ),
-        const SizedBox(height: 10),
-        AppEntityRowCard(
-          title: detail.quotedTotalAmount != null
-              ? formatColombianPrice(detail.quotedTotalAmount!)
-              : 'Sin cotizacion',
-          subtitle: 'Valor cotizado',
-          leading: const Icon(Icons.attach_money_rounded, size: 18),
-        ),
-        const SizedBox(height: 10),
-        AppEntityRowCard(
-          title: formatDate(detail.requestedDate),
-          subtitle: 'Fecha solicitada',
-          leading: const Icon(Icons.calendar_today_rounded, size: 18),
-        ),
-        const SizedBox(height: 10),
-        AppEntityRowCard(
-          title: '${detail.participantsCompletedCount} / ${detail.expectedParticipantsCount ?? detail.participantCount}',
-          subtitle: 'Participantes completados',
-          leading: const Icon(Icons.group_outlined, size: 18),
-          badge: detail.participantFormStatus != null
-              ? AppBadge(
-                  label: formStatusLabel(detail.participantFormStatus!),
-                  tone: formStatusTone(detail.participantFormStatus!),
-                  uppercase: false,
-                )
-              : null,
-        ),
-        const SizedBox(height: 10),
-        PaymentStatusCard(
-          label: paymentStatusLabel(detail.paymentStatus),
-          backgroundColor: _paymentStatusBgColor(detail.paymentStatus),
-          foregroundColor: _paymentStatusFgColor(detail.paymentStatus),
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 10),
+          AppEntityRowCard(
+            title: detail.quotedTotalAmount != null
+                ? formatColombianPrice(detail.quotedTotalAmount!)
+                : 'Sin cotizacion',
+            subtitle: 'Valor cotizado',
+            leading: const Icon(Icons.attach_money_rounded, size: 18),
+          ),
+          const SizedBox(height: 10),
+          AppEntityRowCard(
+            title: formatDate(detail.requestedDate),
+            subtitle: 'Fecha solicitada',
+            leading: const Icon(Icons.calendar_today_rounded, size: 18),
+          ),
+          const SizedBox(height: 10),
+          AppEntityRowCard(
+            title:
+                '${detail.participantsCompletedCount} / ${detail.expectedParticipantsCount ?? detail.participantCount}',
+            subtitle: 'Participantes completados',
+            leading: const Icon(Icons.group_outlined, size: 18),
+            badge: detail.participantFormStatus != null
+                ? AppBadge(
+                    label: formStatusLabel(detail.participantFormStatus!),
+                    tone: formStatusTone(detail.participantFormStatus!),
+                    uppercase: false,
+                  )
+                : null,
+          ),
+          const SizedBox(height: 10),
+          PaymentStatusCard(
+            label: paymentStatusLabel(detail.paymentStatus),
+            backgroundColor: _paymentStatusBgColor(detail.paymentStatus),
+            foregroundColor: _paymentStatusFgColor(detail.paymentStatus),
+          ),
+          const SizedBox(height: 16),
 
-        // Confirm reservation action (admin only)
-        if (_isAdmin &&
-            detail.status != ReservationStatus.confirmed &&
-            detail.status != ReservationStatus.cancelled &&
-            detail.status != ReservationStatus.completed &&
-            detail.status != ReservationStatus.expired) ...[
-          AppButton(
-            label: _controller.confirmationState ==
-                    ReservationActionState.confirming
-                ? 'Confirmando...'
-                : 'Confirmar reserva',
-            icon: _controller.confirmationState ==
-                    ReservationActionState.confirming
-                ? null
-                : Icons.check_circle_outline_rounded,
-            variant: AppButtonVariant.primary,
-            expanded: true,
-            onPressed: _controller.confirmationState ==
-                    ReservationActionState.confirming
-                ? null
-                : () => _showConfirmConfirmation(),
-          ),
-          const SizedBox(height: 8),
-        ],
-        // Cancel reservation action (admin only)
-        if (_isAdmin &&
-            detail.status != ReservationStatus.cancelled &&
-            detail.status != ReservationStatus.completed &&
-            detail.status != ReservationStatus.expired) ...[
-          AppButton(
-            label: _controller.cancellationState ==
-                    ReservationActionState.confirming
-                ? 'Cancelando...'
-                : 'Cancelar reserva',
-            icon: _controller.cancellationState ==
-                    ReservationActionState.confirming
-                ? null
-                : Icons.cancel_outlined,
-            variant: AppButtonVariant.danger,
-            expanded: true,
-            onPressed: _controller.cancellationState ==
-                    ReservationActionState.confirming
-                ? null
-                : () => _showCancelConfirmation(),
-          ),
-          const SizedBox(height: 8),
-        ],
-        // Delete reservation action (admin only)
-        if (_isAdmin) ...[
-          if (detail.deletedAt != null) ...[
+          // Confirm reservation action (admin only)
+          if (_isAdmin &&
+              detail.status != ReservationStatus.confirmed &&
+              detail.status != ReservationStatus.cancelled &&
+              detail.status != ReservationStatus.completed &&
+              detail.status != ReservationStatus.expired) ...[
             AppButton(
-              label: _controller.deleteState ==
+              label:
+                  _controller.confirmationState ==
                       ReservationActionState.confirming
-                  ? 'Restaurando...'
-                  : 'Restaurar reserva',
-              icon: Icons.restore_from_trash_rounded,
-              variant: AppButtonVariant.secondary,
-              expanded: true,
-              onPressed: _controller.deleteState ==
+                  ? 'Confirmando...'
+                  : 'Confirmar reserva',
+              icon:
+                  _controller.confirmationState ==
                       ReservationActionState.confirming
                   ? null
-                  : () => _showRestoreConfirmation(),
-            ),
-          ] else ...[
-            AppButton(
-              label: _controller.deleteState ==
+                  : Icons.check_circle_outline_rounded,
+              variant: AppButtonVariant.primary,
+              expanded: true,
+              onPressed:
+                  _controller.confirmationState ==
                       ReservationActionState.confirming
-                  ? 'Eliminando...'
-                  : 'Eliminar reserva',
-              icon: Icons.delete_outline_rounded,
+                  ? null
+                  : () => _showConfirmConfirmation(),
+            ),
+            const SizedBox(height: 8),
+          ],
+          // Cancel reservation action (admin only)
+          if (_isAdmin &&
+              detail.status != ReservationStatus.cancelled &&
+              detail.status != ReservationStatus.completed &&
+              detail.status != ReservationStatus.expired) ...[
+            AppButton(
+              label:
+                  _controller.cancellationState ==
+                      ReservationActionState.confirming
+                  ? 'Cancelando...'
+                  : 'Cancelar reserva',
+              icon:
+                  _controller.cancellationState ==
+                      ReservationActionState.confirming
+                  ? null
+                  : Icons.cancel_outlined,
               variant: AppButtonVariant.danger,
               expanded: true,
-              onPressed: _controller.deleteState ==
+              onPressed:
+                  _controller.cancellationState ==
                       ReservationActionState.confirming
                   ? null
-                  : () => _showDeleteConfirmation(),
+                  : () => _showCancelConfirmation(),
             ),
+            const SizedBox(height: 8),
+          ],
+          // Delete reservation action (admin only)
+          if (_isAdmin) ...[
+            if (detail.deletedAt != null) ...[
+              AppButton(
+                label:
+                    _controller.deleteState == ReservationActionState.confirming
+                    ? 'Restaurando...'
+                    : 'Restaurar reserva',
+                icon: Icons.restore_from_trash_rounded,
+                variant: AppButtonVariant.secondary,
+                expanded: true,
+                onPressed:
+                    _controller.deleteState == ReservationActionState.confirming
+                    ? null
+                    : () => _showRestoreConfirmation(),
+              ),
+            ] else ...[
+              AppButton(
+                label:
+                    _controller.deleteState == ReservationActionState.confirming
+                    ? 'Eliminando...'
+                    : 'Eliminar reserva',
+                icon: Icons.delete_outline_rounded,
+                variant: AppButtonVariant.danger,
+                expanded: true,
+                onPressed:
+                    _controller.deleteState == ReservationActionState.confirming
+                    ? null
+                    : () => _showDeleteConfirmation(),
+              ),
+            ],
           ],
         ],
-          ],
-        ),
+      ),
     );
   }
 
   Widget _buildParticipantsContent(
-      ReservationParticipantsSectionController ctrl) {
+    ReservationParticipantsSectionController ctrl,
+  ) {
     final pending = ctrl.totalExpected - ctrl.totalCompleted;
 
     // Build keys for each participant for scroll targeting.
@@ -423,7 +429,8 @@ class _ReservationDetailShellScreenState
               tone: AppStatusBannerTone.danger,
               icon: Icons.medical_services_outlined,
               onTap: () => _highlightAlertParticipant(
-                  ctrl.participants.where((p) => p.hasMedicalAlert)),
+                ctrl.participants.where((p) => p.hasMedicalAlert),
+              ),
             ),
           ],
           if (ctrl.hasFoodRestriction) ...[
@@ -434,7 +441,8 @@ class _ReservationDetailShellScreenState
               tone: AppStatusBannerTone.danger,
               icon: Icons.restaurant_outlined,
               onTap: () => _highlightAlertParticipant(
-                  ctrl.participants.where((p) => p.hasFoodRestriction)),
+                ctrl.participants.where((p) => p.hasFoodRestriction),
+              ),
             ),
           ],
           const SizedBox(height: 12),
@@ -445,19 +453,25 @@ class _ReservationDetailShellScreenState
               Icons.person_outline,
             )
           else
-            ...ctrl.participants.map((p) => Padding(
-                  key: _participantKeys[p.id],
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _buildParticipantCard(p,
-                      hasAlertOverride: _highlightedParticipantId == p.id,
-                      selected: _highlightedParticipantId == p.id),
-                )),
+            ...ctrl.participants.map(
+              (p) => Padding(
+                key: _participantKeys[p.id],
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _buildParticipantCard(
+                  p,
+                  hasAlertOverride: _highlightedParticipantId == p.id,
+                  selected: _highlightedParticipantId == p.id,
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  void _highlightAlertParticipant(Iterable<ReservationParticipantDetail> matching) {
+  void _highlightAlertParticipant(
+    Iterable<ReservationParticipantDetail> matching,
+  ) {
     if (matching.isEmpty) return;
     final target = matching.first;
     setState(() => _highlightedParticipantId = target.id);
@@ -466,7 +480,11 @@ class _ReservationDetailShellScreenState
       final key = _participantKeys[target.id];
       final ctx = key?.currentContext;
       if (ctx != null) {
-        Scrollable.ensureVisible(ctx, alignment: 0.15, duration: const Duration(milliseconds: 400));
+        Scrollable.ensureVisible(
+          ctx,
+          alignment: 0.15,
+          duration: const Duration(milliseconds: 400),
+        );
       }
     });
 
@@ -475,11 +493,18 @@ class _ReservationDetailShellScreenState
     });
   }
 
-  Widget _buildParticipantCard(ReservationParticipantDetail p,
-      {bool hasAlertOverride = false, bool selected = false}) {
-    final hasAlert = hasAlertOverride || p.hasMedicalAlert || p.hasFoodRestriction;
+  Widget _buildParticipantCard(
+    ReservationParticipantDetail p, {
+    bool hasAlertOverride = false,
+    bool selected = false,
+  }) {
+    final hasAlert =
+        hasAlertOverride || p.hasMedicalAlert || p.hasFoodRestriction;
     final context = this.context;
-    final alertRed = appBadgeToneColors(context, AppBadgeTone.danger).background;
+    final alertRed = appBadgeToneColors(
+      context,
+      AppBadgeTone.danger,
+    ).background;
 
     final info = <String>[];
     if (p.heightCm != null) info.add('Altura: ${p.heightCm} cm');
@@ -497,10 +522,16 @@ class _ReservationDetailShellScreenState
         selected: selected,
         accentColor: hasAlert ? alertRed : null,
         badge: hasAlert
-            ? AppBadge(label: 'Alerta', tone: AppBadgeTone.danger, uppercase: false)
+            ? AppBadge(
+                label: 'Alerta',
+                tone: AppBadgeTone.danger,
+                uppercase: false,
+              )
             : AppBadge(
                 label: p.isCompleted ? 'Completo' : 'Incompleto',
-                tone: p.isCompleted ? AppBadgeTone.success : AppBadgeTone.warning,
+                tone: p.isCompleted
+                    ? AppBadgeTone.success
+                    : AppBadgeTone.warning,
                 uppercase: false,
               ),
         leading: Icon(
@@ -557,155 +588,155 @@ class _ReservationDetailShellScreenState
     );
   }
 
-  Widget _buildPaymentContent(
-      ReservationPaymentProofsSectionController ctrl) {
+  Widget _buildPaymentContent(ReservationPaymentProofsSectionController ctrl) {
     final actionState = _controller.paymentProofActionState;
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
-            PaymentStatusCard(
-              label: paymentStatusLabel(ctrl.paymentStatus),
-              backgroundColor:
-                  _paymentStatusBgColor(ctrl.paymentStatus),
-              foregroundColor:
-                  _paymentStatusFgColor(ctrl.paymentStatus),
-            ),
-          const SizedBox(height: 16),
+        PaymentStatusCard(
+          label: paymentStatusLabel(ctrl.paymentStatus),
+          backgroundColor: _paymentStatusBgColor(ctrl.paymentStatus),
+          foregroundColor: _paymentStatusFgColor(ctrl.paymentStatus),
+        ),
+        const SizedBox(height: 16),
 
-          // Action feedback (error / success)
-          if (_controller.actionErrorCode != null) ...[
-            AppStatusBanner(
-              title: _actionErrorTitle(_controller.actionErrorCode!),
-              message: _controller.actionErrorMessage ?? '',
-              tone: AppStatusBannerTone.danger,
-              icon: Icons.error_outline_rounded,
-            ),
-            const SizedBox(height: 12),
-          ],
-
-          // Non-admin: hide proofs and actions
-          if (!_isAdmin)
-            _buildSectionPlaceholder(
-              'Comprobantes no disponibles',
-              'Seccion no disponible para tu rol.',
-              Icons.lock_outline_rounded,
-            )
-          else if (ctrl.paymentProofs.isEmpty)
-            _buildSectionPlaceholder(
-              'Sin comprobantes',
-              ctrl.paymentStatus != null
-                  ? 'Estado: ${paymentStatusLabel(ctrl.paymentStatus)}'
-                  : 'No se han cargado comprobantes.',
-              Icons.receipt_long_rounded,
-            )
-          else
-            ...ctrl.paymentProofs.map((proof) {
-              final statusLabel = paymentProofStatusLabel(proof.status);
-              final tone = paymentProofStatusTone(proof.status);
-              final proofIsActing =
-                  _controller.actingPaymentProofId == proof.id;
-              final isApproving = proofIsActing &&
-                  actionState == PaymentProofActionState.approving;
-              final isRejecting = proofIsActing &&
-                  actionState == PaymentProofActionState.rejecting;
-              final isUnverifying = proofIsActing &&
-                  actionState == PaymentProofActionState.unverifying;
-              final isUnrejecting = proofIsActing &&
-                  actionState == PaymentProofActionState.unrejecting;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppEntityRowCard(
-                      title: proof.filename ?? 'Comprobante',
-                      subtitle: _buildProofSubtitle(proof),
-                      badge: AppBadge(
-                        label: statusLabel,
-                        tone: tone,
-                        uppercase: false,
-                      ),
-                      leading: const Icon(Icons.receipt_long_rounded, size: 18),
-                      onTap: () => _previewProof(proof),
-                    ),
-                    const SizedBox(height: 8),
-                    if (proof.status == 'received')
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppButton(
-                              label: isApproving
-                                  ? 'Aprobando...'
-                                  : 'Aprobar',
-                              icon: isApproving
-                                  ? null
-                                  : Icons.check_circle_outline,
-                              variant: AppButtonVariant.primary,
-                              onPressed: isApproving || isRejecting
-              ? null
-                  : () => showApproveConfirmationDialog(
-                      context, proof, _controller, _isAdmin),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: AppButton(
-                              label: isRejecting
-                                  ? 'Rechazando...'
-                                  : 'Rechazar',
-                              icon: isRejecting
-                                  ? null
-                                  : Icons.cancel_outlined,
-                              variant: AppButtonVariant.secondary,
-                              onPressed: isApproving || isRejecting
-                  ? null
-                  : () => showRejectDialog(context, proof, _controller, _isAdmin),
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (proof.status == 'verified' && _isAdmin)
-                      AppButton(
-                        label: isUnverifying
-                            ? 'Deshaciendo...'
-                            : 'Deshacer verificacion',
-                        icon: isUnverifying
-                            ? null
-                            : Icons.undo_rounded,
-                        variant: AppButtonVariant.secondary,
-                        expanded: true,
-                        onPressed: isUnverifying
-                            ? null
-                            : () => _showUnverifyConfirm(proof),
-                      ),
-                    if (proof.status == 'rejected' && _isAdmin)
-                      AppButton(
-                        label: isUnrejecting
-                            ? 'Deshaciendo...'
-                            : 'Deshacer rechazo',
-                        icon: isUnrejecting
-                            ? null
-                            : Icons.undo_rounded,
-                        variant: AppButtonVariant.secondary,
-                        expanded: true,
-                        onPressed: isUnrejecting
-                            ? null
-                            : () => _showUnrejectConfirm(proof),
-                      ),
-                  ],
-                ),
-              );
-            }),
+        // Action feedback (error / success)
+        if (_controller.actionErrorCode != null) ...[
+          AppStatusBanner(
+            title: _actionErrorTitle(_controller.actionErrorCode!),
+            message: _controller.actionErrorMessage ?? '',
+            tone: AppStatusBannerTone.danger,
+            icon: Icons.error_outline_rounded,
+          ),
+          const SizedBox(height: 12),
         ],
-      );
+
+        // Non-admin: hide proofs and actions
+        if (!_isAdmin)
+          _buildSectionPlaceholder(
+            'Comprobantes no disponibles',
+            'Seccion no disponible para tu rol.',
+            Icons.lock_outline_rounded,
+          )
+        else if (ctrl.paymentProofs.isEmpty)
+          _buildSectionPlaceholder(
+            'Sin comprobantes',
+            ctrl.paymentStatus != null
+                ? 'Estado: ${paymentStatusLabel(ctrl.paymentStatus)}'
+                : 'No se han cargado comprobantes.',
+            Icons.receipt_long_rounded,
+          )
+        else
+          ...ctrl.paymentProofs.map((proof) {
+            final statusLabel = paymentProofStatusLabel(proof.status);
+            final tone = paymentProofStatusTone(proof.status);
+            final proofIsActing = _controller.actingPaymentProofId == proof.id;
+            final isApproving =
+                proofIsActing &&
+                actionState == PaymentProofActionState.approving;
+            final isRejecting =
+                proofIsActing &&
+                actionState == PaymentProofActionState.rejecting;
+            final isUnverifying =
+                proofIsActing &&
+                actionState == PaymentProofActionState.unverifying;
+            final isUnrejecting =
+                proofIsActing &&
+                actionState == PaymentProofActionState.unrejecting;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppEntityRowCard(
+                    title: proof.filename ?? 'Comprobante',
+                    subtitle: _buildProofSubtitle(proof),
+                    badge: AppBadge(
+                      label: statusLabel,
+                      tone: tone,
+                      uppercase: false,
+                    ),
+                    leading: const Icon(Icons.receipt_long_rounded, size: 18),
+                    onTap: () => _previewProof(proof),
+                  ),
+                  const SizedBox(height: 8),
+                  if (proof.status == 'received')
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            label: isApproving ? 'Aprobando...' : 'Aprobar',
+                            icon: isApproving
+                                ? null
+                                : Icons.check_circle_outline,
+                            variant: AppButtonVariant.primary,
+                            onPressed: isApproving || isRejecting
+                                ? null
+                                : () => showApproveConfirmationDialog(
+                                    context,
+                                    proof,
+                                    _controller,
+                                    _isAdmin,
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: AppButton(
+                            label: isRejecting ? 'Rechazando...' : 'Rechazar',
+                            icon: isRejecting ? null : Icons.cancel_outlined,
+                            variant: AppButtonVariant.secondary,
+                            onPressed: isApproving || isRejecting
+                                ? null
+                                : () => showRejectDialog(
+                                    context,
+                                    proof,
+                                    _controller,
+                                    _isAdmin,
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (proof.status == 'verified' && _isAdmin)
+                    AppButton(
+                      label: isUnverifying
+                          ? 'Deshaciendo...'
+                          : 'Deshacer verificacion',
+                      icon: isUnverifying ? null : Icons.undo_rounded,
+                      variant: AppButtonVariant.secondary,
+                      expanded: true,
+                      onPressed: isUnverifying
+                          ? null
+                          : () => _showUnverifyConfirm(proof),
+                    ),
+                  if (proof.status == 'rejected' && _isAdmin)
+                    AppButton(
+                      label: isUnrejecting
+                          ? 'Deshaciendo...'
+                          : 'Deshacer rechazo',
+                      icon: isUnrejecting ? null : Icons.undo_rounded,
+                      variant: AppButtonVariant.secondary,
+                      expanded: true,
+                      onPressed: isUnrejecting
+                          ? null
+                          : () => _showUnrejectConfirm(proof),
+                    ),
+                ],
+              ),
+            );
+          }),
+      ],
+    );
   }
 
   String _actionErrorTitle(String code) {
     if (code.contains('forbidden') || code.contains('permission')) {
       return 'Permiso denegado';
     }
-    if (code.contains('invalid_status_transition') || code == 'common.conflict') {
+    if (code.contains('invalid_status_transition') ||
+        code == 'common.conflict') {
       return 'Conflicto de estado';
     }
     if (code.contains('network') || code.contains('timeout')) {
@@ -759,7 +790,8 @@ class _ReservationDetailShellScreenState
     if (detail == null) return;
 
     final paymentOk = detail.paymentStatus == 'verified';
-    final notTerminal = detail.status != ReservationStatus.confirmed &&
+    final notTerminal =
+        detail.status != ReservationStatus.confirmed &&
         detail.status != ReservationStatus.cancelled &&
         detail.status != ReservationStatus.completed &&
         detail.status != ReservationStatus.expired;
@@ -773,41 +805,43 @@ class _ReservationDetailShellScreenState
       title: canConfirm ? 'Confirmar reserva' : '¡Verifica el pago!',
       message: canConfirm
           ? 'El sistema revalidará disponibilidad y descontará cupos.\n\n'
-              'Esta acción requiere conexión.'
+                'Esta acción requiere conexión.'
           : !paymentOk
-              ? 'Antes de confirmar la reserva, tienes que aprobar el comprobante de pago.'
-              : 'La reserva ya está en estado terminal.',
+          ? 'Antes de confirmar la reserva, tienes que aprobar el comprobante de pago.'
+          : 'La reserva ya está en estado terminal.',
       confirmLabel: canConfirm ? 'Confirmar' : 'Cerrar',
       style: canConfirm ? DialogStyle.regular : DialogStyle.warning,
       height: 280,
       onConfirm: canConfirm
           ? () {
-              _controller.confirmReservation(isAdmin: _isAdmin).whenComplete(() {
-                if (!mounted) return;
-                if (_controller.confirmationErrorCode != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        _controller.confirmationErrorMessage ??
-                            'Error al confirmar reserva',
-                        style: const TextStyle(color: Colors.white),
+              _controller.confirmReservation(isAdmin: _isAdmin).whenComplete(
+                () {
+                  if (!mounted) return;
+                  if (_controller.confirmationErrorCode != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          _controller.confirmationErrorMessage ??
+                              'Error al confirmar reserva',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: AppColors.danger,
                       ),
-                      backgroundColor: AppColors.danger,
-                    ),
-                  );
-                } else if (_controller.detail?.status ==
-                    ReservationStatus.confirmed) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Reserva confirmada',
-                        style: TextStyle(color: Colors.white),
+                    );
+                  } else if (_controller.detail?.status ==
+                      ReservationStatus.confirmed) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Reserva confirmada',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: Colors.green,
                       ),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              });
+                    );
+                  }
+                },
+              );
             }
           : () {},
     );
@@ -817,19 +851,18 @@ class _ReservationDetailShellScreenState
     final detail = _controller.detail;
     if (detail == null) return;
 
-    final canCancel = detail.status != ReservationStatus.cancelled &&
+    final canCancel =
+        detail.status != ReservationStatus.cancelled &&
         detail.status != ReservationStatus.completed &&
         detail.status != ReservationStatus.expired;
 
     AppConfirmDialog.show(
       context: context,
-      icon: canCancel
-          ? Icons.cancel_outlined
-          : Icons.error_outline_rounded,
+      icon: canCancel ? Icons.cancel_outlined : Icons.error_outline_rounded,
       title: canCancel ? 'Cancelar reserva' : 'No se puede cancelar',
       message: canCancel
           ? 'La reserva será cancelada y el cliente recibirá una notificación por WhatsApp.\n\n'
-              'Esta acción requiere conexión.'
+                'Esta acción requiere conexión.'
           : 'La reserva ya está en estado terminal.',
       confirmLabel: canCancel ? 'Confirmar cancelación' : 'Cerrar',
       cancelLabel: canCancel ? 'Volver' : 'Volver',
@@ -889,8 +922,7 @@ class _ReservationDetailShellScreenState
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  _controller.deleteErrorMessage ??
-                      'Error al eliminar reserva',
+                  _controller.deleteErrorMessage ?? 'Error al eliminar reserva',
                   style: const TextStyle(color: Colors.white),
                 ),
                 backgroundColor: AppColors.danger,
@@ -956,11 +988,9 @@ class _ReservationDetailShellScreenState
   }
 
   void _showClientDetail(ReservationDetail detail) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ClientDetailView(detail: detail),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => ClientDetailView(detail: detail)));
   }
 
   Widget _buildAssignmentContent() {
@@ -974,15 +1004,17 @@ class _ReservationDetailShellScreenState
     }
     _assignmentBoardController ??= AssignmentBoardController(
       repository: repo,
+      isAdmin: _isAdmin,
+      networkStatus: widget.authController?.networkStatus,
     );
     if (_assignmentBoardController!.state == BoardLoadState.initial) {
-      _assignmentBoardController!.load(
-        reservationId: widget.reservationId,
-      );
+      _assignmentBoardController!.load(reservationId: widget.reservationId);
     }
     return AssignmentBoardScreen(
       controller: _assignmentBoardController!,
       reservationId: widget.reservationId,
+      isAdmin: _isAdmin,
+      isOnline: widget.authController?.networkStatus.hasSomeLink ?? true,
       key: ValueKey('assignments_${widget.reservationId}'),
     );
   }
@@ -1035,13 +1067,13 @@ class _ReservationDetailShellScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48,
-              color: Theme.of(context).colorScheme.onSurfaceVariant),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium,
+          Icon(
+            icon,
+            size: 48,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
+          const SizedBox(height: 16),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
             message,
@@ -1050,10 +1082,7 @@ class _ReservationDetailShellScreenState
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          if (action != null) ...[
-            const SizedBox(height: 16),
-            action,
-          ],
+          if (action != null) ...[const SizedBox(height: 16), action],
         ],
       ),
     );
@@ -1140,9 +1169,7 @@ class _ReservationDetailShellScreenState
 
   void _previewParticipant(ReservationParticipantDetail p) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ParticipantDetailView(participant: p),
-      ),
+      MaterialPageRoute(builder: (_) => ParticipantDetailView(participant: p)),
     );
   }
 }

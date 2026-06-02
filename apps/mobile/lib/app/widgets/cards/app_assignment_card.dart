@@ -48,6 +48,7 @@ class AppAssignmentCard extends StatelessWidget {
     this.onTap,
     this.onChangeEquine,
     this.onChangeSaddle,
+    this.onRevertFinalize,
     this.safetyFlags = const [],
   });
 
@@ -62,6 +63,7 @@ class AppAssignmentCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onChangeEquine;
   final VoidCallback? onChangeSaddle;
+  final VoidCallback? onRevertFinalize;
   final List<String> safetyFlags;
 
   @override
@@ -75,10 +77,7 @@ class AppAssignmentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius: tokens.radiusLg,
-        border: Border.all(
-          color: accent.withValues(alpha: 0.25),
-          width: 0.5,
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.25), width: 0.5),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -100,7 +99,6 @@ class AppAssignmentCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ── Header row: reservation badge + time ──
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -118,11 +116,18 @@ class AppAssignmentCard extends StatelessWidget {
                           value: startTimeLabel,
                           icon: Icons.schedule_rounded,
                         ),
+                        if (onRevertFinalize != null) ...[
+                          const SizedBox(width: 8),
+                          _IconActionButton(
+                            icon: Icons.undo_rounded,
+                            tooltip: 'Revertir finalización',
+                            variant: AppButtonVariant.secondary,
+                            onPressed: onRevertFinalize,
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 18),
-
-                    // ── Participant block ──
                     _EntityBox(
                       label: 'Participante',
                       title: participant.name,
@@ -135,8 +140,6 @@ class AppAssignmentCard extends StatelessWidget {
                         if (participant.ageLabel != null) participant.ageLabel!,
                       ],
                     ),
-
-                    // ── Safety flags ──
                     if (safetyFlags.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       Wrap(
@@ -162,10 +165,7 @@ class AppAssignmentCard extends StatelessWidget {
                         }).toList(),
                       ),
                     ],
-
                     const SizedBox(height: 12),
-
-                    // ── Connector arrow ──
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -192,8 +192,6 @@ class AppAssignmentCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-
-                    // ── Equine block ──
                     _EntityBox(
                       label: 'Equino',
                       title: equine.name,
@@ -201,12 +199,8 @@ class AppAssignmentCard extends StatelessWidget {
                       accent: accent,
                       icon: Icons.pets_rounded,
                       image: equine.image,
-                      tags: [
-                        if (equine.statusLabel != null) equine.statusLabel!,
-                      ],
+                      tags: [if (equine.statusLabel != null) equine.statusLabel!],
                     ),
-
-                    // ── Validation warnings ──
                     if (validationMessage != null) ...[
                       const SizedBox(height: 14),
                       _ValidationBanner(
@@ -214,14 +208,9 @@ class AppAssignmentCard extends StatelessWidget {
                         state: state,
                       ),
                     ],
-
                     const SizedBox(height: 16),
-                    Divider(
-                      color: scheme.outlineVariant.withValues(alpha: 0.35),
-                    ),
+                    Divider(color: scheme.outlineVariant.withValues(alpha: 0.35)),
                     const SizedBox(height: 14),
-
-                    // ── Saddle block ──
                     Row(
                       children: [
                         Icon(
@@ -242,24 +231,20 @@ class AppAssignmentCard extends StatelessWidget {
                     ),
                     if (onChangeSaddle != null) ...[
                       const SizedBox(height: 10),
-                      AppButton(
-                        label: 'Cambiar silla',
-                        variant: AppButtonVariant.ghost,
-                        icon: Icons.swap_horiz_rounded,
-                        onPressed: onChangeSaddle,
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _IconActionButton(
+                          icon: Icons.swap_horiz_rounded,
+                          tooltip: 'Cambiar silla',
+                          variant: AppButtonVariant.secondary,
+                          onPressed: onChangeSaddle,
+                        ),
                       ),
                     ],
-
                     const SizedBox(height: 16),
-
-                    // ── Load ratio ──
                     Row(
                       children: [
-                        Icon(
-                          Icons.speed_rounded,
-                          size: 16,
-                          color: accent,
-                        ),
+                        Icon(Icons.speed_rounded, size: 16, color: accent),
                         const SizedBox(width: 6),
                         Text(
                           'CARGA',
@@ -292,16 +277,16 @@ class AppAssignmentCard extends StatelessWidget {
                         letterSpacing: 0.5,
                       ),
                     ),
-
-                    // ── Change equine button ──
                     if (onChangeEquine != null) ...[
                       const SizedBox(height: 16),
-                      AppButton(
-                        label: 'Cambiar equino',
-                        icon: Icons.compare_arrows_rounded,
-                        variant: AppButtonVariant.secondary,
-                        expanded: true,
-                        onPressed: onChangeEquine,
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _IconActionButton(
+                          icon: Icons.compare_arrows_rounded,
+                          tooltip: 'Cambiar equino',
+                          variant: AppButtonVariant.secondary,
+                          onPressed: onChangeEquine,
+                        ),
                       ),
                     ],
                   ],
@@ -383,6 +368,80 @@ class _HeaderInfo extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _IconActionButton extends StatelessWidget {
+  const _IconActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.variant,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final AppButtonVariant variant;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = theme.appTokens;
+    final enabled = onPressed != null;
+
+    final Color bg;
+    final Color fg;
+    final BorderSide? side;
+
+    if (variant == AppButtonVariant.danger) {
+      bg = scheme.error.withValues(alpha: enabled ? 0.12 : 0.08);
+      fg = scheme.error;
+      side = BorderSide(color: scheme.error.withValues(alpha: 0.24));
+    } else if (variant == AppButtonVariant.secondary) {
+      bg = scheme.surfaceContainerLow;
+      fg = scheme.onSurfaceVariant;
+      side = BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.4));
+    } else {
+      bg = Colors.transparent;
+      fg = scheme.onSurfaceVariant;
+      side = null;
+    }
+
+    Widget button = Material(
+      color: bg,
+      borderRadius: tokens.radiusSm,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: tokens.radiusSm,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(icon, size: 18, color: fg),
+        ),
+      ),
+    );
+
+    if (side != null) {
+      button = DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: tokens.radiusSm,
+          border: Border.fromBorderSide(side),
+        ),
+        child: button,
+      );
+    }
+
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: tooltip,
+      child: Tooltip(
+        message: tooltip,
+        child: Opacity(opacity: enabled ? 1 : 0.55, child: button),
+      ),
     );
   }
 }

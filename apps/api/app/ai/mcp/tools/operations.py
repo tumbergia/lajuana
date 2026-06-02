@@ -135,12 +135,57 @@ async def admin_get_logistics_checklist(
         assignments = await AssignmentDocument.find(
             {"reservation_id": reservation.id, "is_active": True}
         ).to_list()
+        assigned_participants = len(assignments)
+        expected_participants = len(participants)
+
+        # Asignaciones completas (todos los participantes tienen asignación)
+        all_assigned = assigned_participants >= expected_participants if expected_participants > 0 else False
+        assignment_details = (
+            f"{assigned_participants}/{expected_participants} participantes asignados"
+            if expected_participants > 0
+            else None
+        )
         items.append(
             LogisticsChecklistItem(
                 category="asignaciones",
-                label=f"Equinos: {len(assignments)} asignados",
-                status="completed" if assignments else "pending",
-                details=None,
+                label=f"Asignaciones: {assigned_participants}/{expected_participants} completas",
+                status="completed" if all_assigned else "pending",
+                details=assignment_details,
+            )
+        )
+
+        # Sillas asignadas — verificar que cada asignación tenga silla
+        all_saddles_assigned = all(a.saddle_id is not None for a in assignments) if assignments else False
+        saddles_detail = None
+        if assignments:
+            missing_saddles = sum(1 for a in assignments if a.saddle_id is None)
+            if missing_saddles > 0:
+                saddles_detail = f"{missing_saddles} asignaciones sin silla"
+        items.append(
+            LogisticsChecklistItem(
+                category="asignaciones",
+                label="Sillas asignadas",
+                status="completed" if (assignments and all_saddles_assigned) else "pending",
+                details=saddles_detail,
+            )
+        )
+
+        # Mulas disponibles — verificar que equinos asignados sigan disponibles
+        equines_unavailable = 0
+        if assignments:
+            for a in assignments:
+                equine = await EquineDocument.get(a.equine_id)
+                if equine is None or not equine.is_available or not equine.is_active:
+                    equines_unavailable += 1
+        equine_availability_detail = (
+            f"{equines_unavailable} equino(s) asignado(s) no disponible(s)" if equines_unavailable > 0 else None
+        )
+        items.append(
+            LogisticsChecklistItem(
+                category="asignaciones",
+                label="Equinos asignados verificados",
+                status="completed" if equines_unavailable == 0 else "pending",
+                details=equine_availability_detail,
             )
         )
 

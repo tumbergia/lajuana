@@ -126,6 +126,11 @@ Este documento lista todos los endpoints expuestos por `apps/api` según el esqu
 | POST | `/api/v1/assignments` | `createAssignment` | `AssignmentCreateSchema` | `201 AssignmentResponseSchema` | `201, 400, 401, 403, 404, 409, 422` |
 | GET | `/api/v1/assignments/{assignment_id}` | `getAssignmentById` | — | `200 AssignmentResponseSchema` | `200, 401, 403, 404, 422` |
 | PATCH | `/api/v1/assignments/{assignment_id}` | `updateAssignmentById` | `AssignmentUpdateSchema` | `200 AssignmentResponseSchema` | `200, 401, 403, 404, 409, 422` |
+| POST | `/api/v1/assignments/{assignment_id}/finalize` | `finalizeAssignment` | — | `200 AssignmentResponseSchema` | `200, 401, 403, 404, 409` |
+| POST | `/api/v1/assignments/{assignment_id}/unfinalize` | `unfinalizeAssignment` | — | `200 AssignmentResponseSchema` | `200, 401, 403, 404, 409` |
+| DELETE | `/api/v1/assignments/{assignment_id}` | `deleteAssignment` | — | `200 AssignmentResponseSchema` | `200, 401, 403, 404, 409` |
+| POST | `/api/v1/assignments/{assignment_id}/replace` | `replaceAssignment` | `AssignmentReplaceSchema` | `201 AssignmentResponseSchema` | `201, 401, 403, 404, 409, 422` |
+| GET | `/api/v1/assignments/board/{reservation_id}` | `getAssignmentBoard` | — | `200 AssignmentBoardResponseSchema` | `200, 401, 403, 404` |
 
 ## Service Logs
 
@@ -216,4 +221,3 @@ Este documento lista todos los endpoints expuestos por `apps/api` según el esqu
 - Para detalle del pipeline del asistente AI, usar `docs/architecture/chatbot-whatsapp-v2.md`.
 - Para detalle de tools MCP internas, usar `docs/architecture/tools.md`.
 - Para contratos observados de reservas, usar `docs/mobile/reservations-api-contract-observed.md`.
-

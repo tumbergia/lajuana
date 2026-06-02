@@ -102,7 +102,7 @@ async def _run_returns_checklist_for_found_reservation(
         ]
 
     async def fake_assignments_list():
-        return [SimpleNamespace(id=PydanticObjectId())]
+        return [SimpleNamespace(id=PydanticObjectId(), saddle_id=PydanticObjectId(), equine_id=PydanticObjectId())]
 
     async def fake_policies_list():
         return [SimpleNamespace(id=PydanticObjectId())]
@@ -134,6 +134,11 @@ async def _run_returns_checklist_for_found_reservation(
         ["reservation_id"],
         fake_logs_list,
     )
+
+    # Mock EquineDocument.get for availability check
+    async def fake_equine_get(_eid: str) -> SimpleNamespace:
+        return SimpleNamespace(id=PydanticObjectId(), is_available=True, is_active=True)
+    monkeypatch.setattr("app.ai.mcp.tools.operations.EquineDocument.get", fake_equine_get)
 
     monkeypatch.setattr("app.ai.mcp.tools.operations.ToolCallLogDocument", FakeToolLogDoc)
 

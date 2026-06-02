@@ -102,6 +102,149 @@ class AssignmentsApiClient {
     return Map<String, dynamic>.from(decoded);
   }
 
+  /// POST /api/v1/assignments/{id}/unfinalize
+  Future<Map<String, dynamic>> unfinalize(String id) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/assignments/$id/unfinalize',
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw AssignmentsApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido',
+      );
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  /// DELETE /api/v1/assignments/{id}
+  Future<Map<String, dynamic>> remove(String id) async {
+    final response = await _authorizedRequest(
+      method: 'DELETE',
+      path: '/assignments/$id',
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw AssignmentsApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido',
+      );
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  /// POST /api/v1/assignments/{id}/replace
+  Future<Map<String, dynamic>> replace(String id, Map<String, dynamic> body) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/assignments/$id/replace',
+      body: body,
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw AssignmentsApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido',
+      );
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  /// POST /api/v1/assignments/reservation/{reservationId}/finalize-all
+  Future<Map<String, dynamic>> finalizeAll(
+    String reservationId, {
+    String? notes,
+  }) async {
+    final body = <String, dynamic>{};
+    if (notes != null && notes.isNotEmpty) {
+      body['notes'] = notes;
+    }
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/assignments/reservation/$reservationId/finalize-all',
+      body: body,
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw AssignmentsApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido',
+      );
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  /// POST /api/v1/assignments/reservation/{reservationId}/unfinalize-all
+  Future<Map<String, dynamic>> unfinalizeAll(
+    String reservationId, {
+    String? notes,
+  }) async {
+    final body = <String, dynamic>{};
+    if (notes != null && notes.isNotEmpty) {
+      body['notes'] = notes;
+    }
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/assignments/reservation/$reservationId/unfinalize-all',
+      body: body,
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw AssignmentsApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido',
+      );
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  /// POST /api/v1/assignments/reservation/{reservationId}/batch
+  Future<Map<String, dynamic>> batchUpdate({
+    required String reservationId,
+    required List<Map<String, dynamic>> assignments,
+    required List<String> removals,
+    String? notes,
+  }) async {
+    final body = <String, dynamic>{
+      'assignments': assignments,
+      'removals': removals,
+    };
+    if (notes != null && notes.isNotEmpty) {
+      body['notes'] = notes;
+    }
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/assignments/reservation/$reservationId/batch',
+      body: body,
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw AssignmentsApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido',
+      );
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
+  /// POST /api/v1/logs — create a service log entry
+  Future<Map<String, dynamic>> createLog(Map<String, dynamic> body) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/logs',
+      body: body,
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw AssignmentsApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido',
+      );
+    }
+    return Map<String, dynamic>.from(decoded);
+  }
+
   /// GET /api/v1/saddles/available-for-reservation/{reservationId}
   Future<List<dynamic>> getAvailableSaddles(String reservationId) async {
     final response = await _authorizedRequest(

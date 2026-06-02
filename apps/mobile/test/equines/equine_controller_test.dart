@@ -16,7 +16,10 @@ class FakeEquineRepository implements EquineRepository {
   bool throwOnTimeline = false;
 
   @override
-  Future<List<Equine>> listEquines({String? operationalStatus}) async {
+  Future<List<Equine>> listEquines({
+    String? operationalStatus,
+    bool includeDeleted = false,
+  }) async {
     if (throwOnList) throw Exception('Network error');
     if (operationalStatus != null) {
       return equines
@@ -49,6 +52,16 @@ class FakeEquineRepository implements EquineRepository {
 
   @override
   Future<List<Equine>> listAvailableForReservation(String reservationId) async {
+    throw UnimplementedError('Not needed for controller tests');
+  }
+
+  @override
+  Future<Equine> deleteEquine(String equineId) async {
+    throw UnimplementedError('Not needed for controller tests');
+  }
+
+  @override
+  Future<Equine> restoreEquine(String equineId) async {
     throw UnimplementedError('Not needed for controller tests');
   }
 

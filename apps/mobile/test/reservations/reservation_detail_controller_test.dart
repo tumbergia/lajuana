@@ -24,6 +24,7 @@ class _FakeSuccessRepository implements ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   }) async {
     return [];
   }
@@ -90,6 +91,20 @@ class _FakeSuccessRepository implements ReservationsRepository {
   }) async {
     return detail;
   }
+
+  @override
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  }) async {
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> restoreReservation({
+    required String reservationId,
+  }) async {
+    return detail;
+  }
 }
 
 /// A fake repository that always throws.
@@ -103,6 +118,7 @@ class _FakeErrorRepository implements ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   }) async {
     return [];
   }
@@ -169,6 +185,20 @@ class _FakeErrorRepository implements ReservationsRepository {
   }) async {
     throw Exception('Network error');
   }
+
+  @override
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> restoreReservation({
+    required String reservationId,
+  }) async {
+    throw Exception('Network error');
+  }
 }
 
 /// A fake repository that fails but has cache fallback.
@@ -186,6 +216,7 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   }) async {
     return [];
   }
@@ -248,6 +279,20 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail> cancelReservation({
+    required String reservationId,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> restoreReservation({
     required String reservationId,
   }) async {
     throw Exception('Network error');
