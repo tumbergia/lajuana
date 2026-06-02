@@ -1,0 +1,21 @@
+"""Migration versions — ordered list of all formal migrations.
+
+Add new migrations at the end. Never reorder or remove applied versions.
+"""
+
+from app.migrations.base import Migration
+from app.migrations.versions.staff_to_guide import StaffToGuideMigration
+from app.migrations.versions.backfill_schedule_is_active import (
+    BackfillScheduleIsActiveMigration,
+)
+from app.migrations.versions.backfill_sync_metadata import (
+    BackfillSyncMetadataMigration,
+)
+
+# Order matters — run in sequence, oldest first.
+# Never remove entries from this list once deployed.
+MIGRATIONS: list[Migration] = [
+    StaffToGuideMigration(),
+    BackfillScheduleIsActiveMigration(),
+    BackfillSyncMetadataMigration(),
+]

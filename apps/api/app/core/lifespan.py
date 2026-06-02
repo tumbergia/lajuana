@@ -8,6 +8,7 @@ from app.conversations.services.conversation_scheduler import (
     ConversationScheduler,
 )
 from app.core.db import close_db, init_db
+from app.migrations import run_migrations
 from app.core.di import Container
 from app.core.logging import logger, reconfigure_logger
 from app.jobs.expire_reservation_drafts import ReservationDraftExpireWorker
@@ -31,6 +32,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Container.init()
     logger.info("[lifespan] DI container initialized")
     await init_db()
+    await run_migrations()
 
     try:
         seeded = await seed_notification_templates()

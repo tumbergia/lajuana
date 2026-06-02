@@ -50,15 +50,7 @@ async def init_db() -> None:
     db.client = AsyncMongoClient(settings.mongodb_uri)
     database = db.client[settings.mongodb_db_name]
 
-    try:
-        result = await database[Collections.USERS].update_many(
-            {"role": "staff"},
-            {"$set": {"role": "guide"}},
-        )
-        if result.modified_count:
-            logger.info("Migrated %d users from staff→guide", result.modified_count)
-    except PyMongoError:
-        logger.exception("[db] Failed to migrate staff→guide roles")
+    # Staff→guide migration handled by 001_staff_to_guide in app.migrations
 
     from beanie import init_beanie
 
