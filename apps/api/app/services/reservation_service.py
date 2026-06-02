@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 from beanie import PydanticObjectId
-from beanie.exceptions import CollectionWasNotInitialized
 from pymongo.errors import DuplicateKeyError
 
 from app.common.enums import (
@@ -95,23 +94,11 @@ class ReservationService:
 
     @staticmethod
     async def _save_schedule_status(schedule: ScheduleDocument) -> None:
-        """Save schedule status, avoiding Beanie datetime.time encoding issue.
-
-        Uses motor collection update_one when available (production), falls back
-        to Beanie .save() for unit tests where Beanie is not initialized.
-        """
+        """Save schedule status using standard Beanie save()."""
         try:
-            collection = ScheduleDocument.get_motor_collection()
-            await collection.update_one(
-                {"_id": schedule.id},
-                {"$set": {"status": schedule.status.value}},
-            )
-        except CollectionWasNotInitialized:
-            logger.warning(
-                "[_save_schedule_status] Collection not initialized, using fallback save | schedule=%s",
-                schedule.id,
-            )
             await schedule.save()
+        except Exception:
+            logger.exception("[_save_schedule_status] Failed to save schedule status")
 
     async def _sync_day_lock_fields(self, reservation: ReservationDocument) -> None:
         requested_date = reservation.requested_date
@@ -524,7 +511,7 @@ class ReservationService:
                 scheduled_date = reservation.requested_date.isoformat() if reservation.requested_date else ""
                 if not scheduled_date and schedule:
                     scheduled_date = schedule.date.isoformat()
-                start_time = str(schedule.start_time) if schedule else ""
+                start_time = schedule.start_time if schedule else ""
                 await self.notification_service.enqueue_reservation_confirmed_logistics(
                     reservation=reservation,
                     experience_name=experience_name,

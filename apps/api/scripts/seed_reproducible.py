@@ -392,7 +392,7 @@ async def seed_schedules(
             id=schedule_id,
             experience_id=experiences_by_slug[item.experience_slug].id,
             date=day,
-            start_time=time(hour=8, minute=0),
+            start_time="08:00:00",
             is_active=True,
             capacity_total=item.capacity,
             reserved_slots=reserved,

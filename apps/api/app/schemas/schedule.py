@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date
 
 from pydantic import BaseModel, Field
 
@@ -9,7 +9,7 @@ from app.schemas.common import AuditMetadataSchema
 class ScheduleCreateSchema(BaseModel):
     experience_id: str
     date: date
-    start_time: time
+    start_time: str
     is_active: bool = True
     capacity_total: int = Field(gt=0)
     reserved_slots: int = Field(default=0, ge=0)
@@ -36,7 +36,7 @@ class ScheduleResponseSchema(AuditMetadataSchema):
     id: str
     experience_id: str
     date: date
-    start_time: time
+    start_time: str
     is_active: bool
     capacity_total: int
     reserved_slots: int
