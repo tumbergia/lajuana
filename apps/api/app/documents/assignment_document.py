@@ -4,7 +4,7 @@ from beanie import PydanticObjectId
 from pymongo import IndexModel
 
 from app.common.collections import Collections
-from app.common.enums import AssignmentPriority, AssignmentSource, AssignmentStatus
+from app.common.enums import AssignmentSource, AssignmentStatus
 from app.documents.base import AuditDocument
 
 
@@ -31,7 +31,7 @@ class AssignmentDocument(AuditDocument):
     replaced_by_assignment_id: PydanticObjectId | None = None
 
     # ── Deprecated (mantener para backward compat con docs existentes) ──
-    priority: AssignmentPriority = AssignmentPriority.STANDARD
+    priority: str = "standard"
     assigned_manually: bool = True
 
     class Settings:

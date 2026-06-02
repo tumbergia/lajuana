@@ -118,12 +118,7 @@ class AssignmentsRepositoryImpl implements AssignmentsRepository {
   }
 
   @override
-  Future<void> cacheBoard(String reservationId, AssignmentBoard board) async {
-    // The getBoard method already caches; this is for explicit cache-on-write
-  }
-
-  @override
-  Future<AssignmentBoard> batchUpdate({
+  Future<BatchUpdateResult> batchUpdate({
     required String reservationId,
     required List<Map<String, dynamic>> assignments,
     required List<String> removals,
@@ -135,11 +130,11 @@ class AssignmentsRepositoryImpl implements AssignmentsRepository {
       removals: removals,
       notes: notes,
     );
-    final board = AssignmentBoard.fromJson(json);
+    final result = BatchUpdateResult.fromJson(json);
     try {
       await _local.cacheBoard(reservationId, json);
     } catch (_) {}
-    return board;
+    return result;
   }
 
   @override

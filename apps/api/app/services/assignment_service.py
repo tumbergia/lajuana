@@ -7,6 +7,8 @@ from beanie import PydanticObjectId
 
 from typing import Any
 
+from pymongo import UpdateOne
+
 from app.common.enums import AssignmentSource, AssignmentStatus, ReservationStatus, UserRole
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
@@ -63,48 +65,17 @@ class AssignmentService:
         actor_id: PydanticObjectId | None = None,
         actor_role: UserRole | None = None,
     ) -> AssignmentDocument:
-        reservation, participant, equine = await asyncio.gather(
-            ReservationDocument.get(payload.reservation_id),
-            ParticipantDocument.get(payload.participant_id),
-            EquineDocument.get(payload.equine_id),
-        )
-
-        self._validate_reservation(reservation)
-        self._validate_participant_belongs(participant, reservation)
-        self._validate_participant_data(participant)
-        self._validate_equine(equine)
-        await self._validate_equine_not_duplicate(reservation.id, equine.id)
-
-        saddle_obj = None
-        if payload.saddle_id:
-            saddle_obj = await SaddleDocument.get(payload.saddle_id)
-            self._validate_saddle(saddle_obj)
-            await self._validate_saddle_not_duplicate(reservation.id, saddle_obj.id)
-
-        self._validate_rider_weight(participant, equine)
-        await self._validate_no_active_assignment(participant.id, reservation.id)
-
-        age = _age_from_birth_date(participant.birth_date)
-        safety_flags, warnings = self._check_safety(participant, equine, age)
-
-        now = datetime.now(UTC)
-        doc = AssignmentDocument(
-            reservation_id=reservation.id,
-            participant_id=participant.id,
-            equine_id=equine.id,
-            saddle_id=saddle_obj.id if saddle_obj else None,
-            status=payload.status,
-            source=self._resolve_source(actor_id, actor_role),
+        doc_kwargs, _, _ = await self._validate_and_prepare(
+            reservation_id=payload.reservation_id,
+            participant_id=payload.participant_id,
+            equine_id=payload.equine_id,
+            saddle_id=payload.saddle_id,
             notes=payload.notes,
-            safety_flags=safety_flags,
-            validation_warnings=warnings,
-            assigned_by_user_id=actor_id,
-            assigned_at=now,
-            is_active=True,
-            # Deprecated fields (backward compat)
-            priority="standard",
-            assigned_manually=actor_id is not None,
+            status=payload.status,
+            actor_id=actor_id,
+            actor_role=actor_role,
         )
+        doc = AssignmentDocument(**doc_kwargs)
         await doc.insert()
         await self._log_audit(
             reservation_id=doc.reservation_id,
@@ -261,20 +232,30 @@ class AssignmentService:
         ).to_list()
 
         now = datetime.now(UTC)
-        for doc in assignments:
-            doc.status = AssignmentStatus.FINAL
-            doc.finalized_by_user_id = actor_id
-            doc.finalized_at = now
-            await doc.save()
-            await self._log_audit(
-                reservation_id=doc.reservation_id,
-                assignment_id=doc.id,
-                actor_user_id=actor_id,
-                actor_role=None,
-                action="assignment.finalized",
-                previous_status=AssignmentStatus.CONFIRMED.value,
-                new_status=AssignmentStatus.FINAL.value,
-            )
+        if assignments:
+            collection = AssignmentDocument.get_motor_collection()
+            operations = [
+                UpdateOne(
+                    {"_id": doc.id},
+                    {"$set": {
+                        "status": AssignmentStatus.FINAL.value,
+                        "finalized_by_user_id": actor_id,
+                        "finalized_at": now,
+                    }},
+                )
+                for doc in assignments
+            ]
+            await collection.bulk_write(operations)
+            for doc in assignments:
+                await self._log_audit(
+                    reservation_id=doc.reservation_id,
+                    assignment_id=doc.id,
+                    actor_user_id=actor_id,
+                    actor_role=None,
+                    action="assignment.finalized",
+                    previous_status=AssignmentStatus.CONFIRMED.value,
+                    new_status=AssignmentStatus.FINAL.value,
+                )
 
         if notes:
             try:
@@ -304,20 +285,30 @@ class AssignmentService:
         ).to_list()
 
         now = datetime.now(UTC)
-        for doc in assignments:
-            doc.status = AssignmentStatus.CONFIRMED
-            doc.finalized_by_user_id = None
-            doc.finalized_at = None
-            await doc.save()
-            await self._log_audit(
-                reservation_id=doc.reservation_id,
-                assignment_id=doc.id,
-                actor_user_id=actor_id,
-                actor_role=None,
-                action="assignment.unfinalized",
-                previous_status=AssignmentStatus.FINAL.value,
-                new_status=AssignmentStatus.CONFIRMED.value,
-            )
+        if assignments:
+            collection = AssignmentDocument.get_motor_collection()
+            operations = [
+                UpdateOne(
+                    {"_id": doc.id},
+                    {"$set": {
+                        "status": AssignmentStatus.CONFIRMED.value,
+                        "finalized_by_user_id": None,
+                        "finalized_at": None,
+                    }},
+                )
+                for doc in assignments
+            ]
+            await collection.bulk_write(operations)
+            for doc in assignments:
+                await self._log_audit(
+                    reservation_id=doc.reservation_id,
+                    assignment_id=doc.id,
+                    actor_user_id=actor_id,
+                    actor_role=None,
+                    action="assignment.unfinalized",
+                    previous_status=AssignmentStatus.FINAL.value,
+                    new_status=AssignmentStatus.CONFIRMED.value,
+                )
 
         if notes:
             try:
@@ -341,10 +332,10 @@ class AssignmentService:
     ) -> dict[str, Any]:
         """Process a batch of assignment changes (local-first flow).
 
-        - Process removals (cancel assignments).
+        - Process removals (cancel assignments), tracking which were skipped.
         - Process assignments (create or update each, set to FINAL).
         - Create observation log if notes provided.
-        - Return updated board.
+        - Return updated board with skipped_removals metadata.
         """
         reservation = await ReservationDocument.get(reservation_id)
         if reservation is None:
@@ -355,6 +346,7 @@ class AssignmentService:
             )
 
         now = datetime.now(UTC)
+        skipped_removals: list[str] = []
 
         # ── Process removals ──
         if removals:
@@ -362,20 +354,22 @@ class AssignmentService:
                 doc = await AssignmentDocument.get(aid)
                 if doc is None:
                     continue
-                if doc.status not in (AssignmentStatus.FINAL, AssignmentStatus.CANCELLED):
-                    prev = doc.status.value
-                    doc.status = AssignmentStatus.CANCELLED
-                    doc.is_active = False
-                    await doc.save()
-                    await self._log_audit(
-                        reservation_id=doc.reservation_id,
-                        assignment_id=doc.id,
-                        actor_user_id=actor_id,
-                        actor_role=None,
-                        action="assignment.removed",
-                        previous_status=prev,
-                        new_status=AssignmentStatus.CANCELLED.value,
-                    )
+                if doc.status in (AssignmentStatus.FINAL, AssignmentStatus.CANCELLED):
+                    skipped_removals.append(aid)
+                    continue
+                prev = doc.status.value
+                doc.status = AssignmentStatus.CANCELLED
+                doc.is_active = False
+                await doc.save()
+                await self._log_audit(
+                    reservation_id=doc.reservation_id,
+                    assignment_id=doc.id,
+                    actor_user_id=actor_id,
+                    actor_role=None,
+                    action="assignment.removed",
+                    previous_status=prev,
+                    new_status=AssignmentStatus.CANCELLED.value,
+                )
 
         # ── Process assignments ──
         for item in assignments:
@@ -390,7 +384,7 @@ class AssignmentService:
             if participant is None or equine is None:
                 continue
 
-            # Check if participant already has an active assignment (use ObjectId)
+            # Check if participant already has an active assignment
             existing = await AssignmentDocument.find_one({
                 "reservation_id": reservation.id,
                 "participant_id": participant.id,
@@ -399,7 +393,14 @@ class AssignmentService:
             })
 
             if existing:
-                # Update existing → patch equine/saddle + set FINAL
+                # Update existing → validate saddle, then patch equine/saddle + set FINAL
+                if sid:
+                    saddle_obj = await SaddleDocument.get(sid)
+                    self._validate_saddle(saddle_obj)
+                    await self._validate_saddle_not_duplicate(
+                        reservation.id, saddle_obj.id, exclude_assignment_id=existing.id,
+                    )
+
                 existing.equine_id = equine.id
                 existing.saddle_id = sid
                 existing.status = AssignmentStatus.FINAL
@@ -416,36 +417,20 @@ class AssignmentService:
                     new_status=AssignmentStatus.FINAL.value,
                 )
             else:
-                # Create new → validate + create as FINAL
-                self._validate_reservation(reservation)
-                self._validate_participant_belongs(participant, reservation)
-                self._validate_participant_data(participant)
-                self._validate_equine(equine)
-                await self._validate_equine_not_duplicate(reservation.id, equine.id)
-                self._validate_rider_weight(participant, equine)
-                await self._validate_no_active_assignment(participant.id, reservation.id)
-
-                age = _age_from_birth_date(participant.birth_date)
-                safety_flags, warnings = self._check_safety(participant, equine, age)
-
-                doc = AssignmentDocument(
-                    reservation_id=reservation.id,
-                    participant_id=participant.id,
-                    equine_id=equine.id,
-                    saddle_id=sid if sid else None,
-                    status=AssignmentStatus.FINAL,
-                    source=self._resolve_source(actor_id, None),
+                # Create new → use shared validation pipeline
+                doc_kwargs, _, _ = await self._validate_and_prepare(
+                    reservation_id=reservation_id,
+                    participant_id=pid,
+                    equine_id=eid,
+                    saddle_id=sid,
                     notes=None,
-                    safety_flags=safety_flags,
-                    validation_warnings=warnings,
-                    assigned_by_user_id=actor_id,
-                    finalized_by_user_id=actor_id,
-                    assigned_at=now,
-                    finalized_at=now,
-                    is_active=True,
-                    priority="standard",
-                    assigned_manually=actor_id is not None,
+                    status=AssignmentStatus.FINAL,
+                    actor_id=actor_id,
+                    actor_role=None,
                 )
+                doc_kwargs["finalized_by_user_id"] = actor_id
+                doc_kwargs["finalized_at"] = now
+                doc = AssignmentDocument(**doc_kwargs)
                 await doc.insert()
                 await self._log_audit(
                     reservation_id=doc.reservation_id,
@@ -468,7 +453,9 @@ class AssignmentService:
             except Exception:
                 pass
 
-        return await self.get_board(reservation_id)
+        result = await self.get_board(reservation_id)
+        result["skipped_removals"] = skipped_removals
+        return result
 
     async def remove(
         self,
@@ -581,6 +568,23 @@ class AssignmentService:
         for a in assignments:
             assignment_map[str(a.participant_id)] = a
 
+        # Batch fetch equinos y sillas de las asignaciones activas
+        assigned_equine_ids = [a.equine_id for a in assignments if a.equine_id]
+        assigned_saddle_ids = [a.saddle_id for a in assignments if a.saddle_id]
+
+        assigned_equines_list = (
+            await EquineDocument.find({"_id": {"$in": assigned_equine_ids}}).to_list()
+            if assigned_equine_ids
+            else []
+        )
+        assigned_saddles_list = (
+            await SaddleDocument.find({"_id": {"$in": assigned_saddle_ids}}).to_list()
+            if assigned_saddle_ids
+            else []
+        )
+        equine_map: dict[str, object] = {str(e.id): e for e in assigned_equines_list}
+        saddle_map: dict[str, object] = {str(s.id): s for s in assigned_saddles_list}
+
         # Equinos disponibles — version minimalista para el board
         available_equines: list = []
         if self._equine_service:
@@ -602,7 +606,6 @@ class AssignmentService:
                     "id": _safe_str(sa_doc.id) or "",
                     "code": getattr(sa_doc, "code", ""),
                     "name": getattr(sa_doc, "name", None),
-                    "is_available": getattr(sa_doc, "is_available", True),
                     "block_reason": reason,
                 })
 
@@ -631,10 +634,8 @@ class AssignmentService:
 
             assignment_on_board = None
             if assignment_doc:
-                equine = await EquineDocument.get(assignment_doc.equine_id)
-                saddle = None
-                if assignment_doc.saddle_id:
-                    saddle = await SaddleDocument.get(assignment_doc.saddle_id)
+                equine = equine_map.get(str(assignment_doc.equine_id)) if assignment_doc.equine_id else None
+                saddle = saddle_map.get(str(assignment_doc.saddle_id)) if assignment_doc.saddle_id else None
 
                 assignment_on_board = AssignmentOnBoardSchema(
                     assignment_id=_safe_str(assignment_doc.id),
@@ -692,6 +693,72 @@ class AssignmentService:
         ).model_dump(mode="json")
 
     # ── Validation helper (without creating) ──
+
+    async def _validate_and_prepare(
+        self,
+        reservation_id: str,
+        participant_id: str,
+        equine_id: str,
+        saddle_id: str | None = None,
+        notes: str | None = None,
+        status: AssignmentStatus = AssignmentStatus.CONFIRMED,
+        actor_id: PydanticObjectId | None = None,
+        actor_role: UserRole | None = None,
+        *,
+        # Allow excluding a specific assignment from duplicate checks (for updates)
+        exclude_assignment_id: object | None = None,
+    ) -> tuple[dict[str, Any], object, object]:
+        """Validate ALL constraints and return (doc_kwargs, reservation, participant).
+
+        Single validation pipeline used by create(), batch_update(), and replace().
+        Raises ApiError on any violation.
+        """
+        reservation, participant, equine = await asyncio.gather(
+            ReservationDocument.get(reservation_id),
+            ParticipantDocument.get(participant_id),
+            EquineDocument.get(equine_id),
+        )
+
+        self._validate_reservation(reservation)
+        self._validate_participant_belongs(participant, reservation)
+        self._validate_participant_data(participant)
+        self._validate_equine(equine)
+        await self._validate_equine_not_duplicate(
+            reservation.id, equine.id, exclude_assignment_id=exclude_assignment_id,
+        )
+
+        saddle_obj = None
+        if saddle_id:
+            saddle_obj = await SaddleDocument.get(saddle_id)
+            self._validate_saddle(saddle_obj)
+            await self._validate_saddle_not_duplicate(
+                reservation.id, saddle_obj.id, exclude_assignment_id=exclude_assignment_id,
+            )
+
+        self._validate_rider_weight(participant, equine)
+        await self._validate_no_active_assignment(participant.id, reservation.id)
+
+        age = _age_from_birth_date(participant.birth_date)
+        safety_flags, warnings = self._check_safety(participant, equine, age)
+
+        now = datetime.now(UTC)
+        doc_kwargs: dict[str, Any] = dict(
+            reservation_id=reservation.id,
+            participant_id=participant.id,
+            equine_id=equine.id,
+            saddle_id=saddle_obj.id if saddle_obj else None,
+            status=status,
+            source=self._resolve_source(actor_id, actor_role),
+            notes=notes,
+            safety_flags=safety_flags,
+            validation_warnings=warnings,
+            assigned_by_user_id=actor_id,
+            assigned_at=now,
+            is_active=True,
+            priority="standard",
+            assigned_manually=actor_id is not None,
+        )
+        return doc_kwargs, reservation, participant
 
     async def validate_assignment_candidate(
         self,

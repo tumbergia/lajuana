@@ -82,12 +82,6 @@ class PaymentStatus(StrEnum):
     REJECTED = "rejected"
 
 
-class AssignmentPriority(StrEnum):
-    STANDARD = "standard"
-    CHILD_SAFETY = "child_safety"
-    SENIOR_SAFETY = "senior_safety"
-
-
 class AssignmentStatus(StrEnum):
     DRAFT = "draft"
     CONFIRMED = "confirmed"

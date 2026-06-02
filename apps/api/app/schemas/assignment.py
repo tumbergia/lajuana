@@ -95,11 +95,12 @@ class AssignmentBoardEquineSchema(BaseModel):
 
 
 class AssignmentBoardSaddleSchema(BaseModel):
-    """Versión minimalista de silla para el tablero de asignación."""
+    """Versión minimalista de silla para el tablero de asignación.
+    block_reason es None → asignable. Con texto → motivo de exclusión.
+    """
     id: str
     code: str
     name: str | None = None
-    is_available: bool = True
     block_reason: str | None = None
 
 

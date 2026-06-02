@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-import 'saddle_dtos.dart';
+import '../../domain/models/saddle_list_item.dart';
 import 'saddles_api_error.dart';
 
 class SaddlesApiClient {
@@ -23,7 +23,7 @@ class SaddlesApiClient {
   final Future<bool> Function() _refreshSession;
   final http.Client _http;
 
-  Future<List<SaddleDto>> listSaddles({bool includeDeleted = false}) async {
+  Future<List<SaddleListItem>> listSaddles({bool includeDeleted = false}) async {
     final queryParams = <String, String>{};
     if (includeDeleted) {
       queryParams['include_deleted'] = 'true';
@@ -49,70 +49,48 @@ class SaddlesApiClient {
               message: 'Payload inválido',
             );
           }
-          return SaddleDto.fromJson(Map<String, dynamic>.from(item));
+          return SaddleListItem.fromJson(Map<String, dynamic>.from(item));
         })
         .toList(growable: false);
   }
 
-  Future<SaddleDto> getSaddleById(String saddleId) async {
+  Future<SaddleListItem> getSaddleById(String saddleId) async {
     final response = await _authorizedRequest(
       method: 'GET',
       path: '/saddles/$saddleId',
     );
     final data = _decodeBody(response.body);
-    return SaddleDto.fromJson(data);
+    return SaddleListItem.fromJson(data);
   }
 
-  Future<SaddleDto> createSaddle(Map<String, dynamic> payload) async {
+  Future<SaddleListItem> createSaddle(Map<String, dynamic> payload) async {
     final response = await _authorizedRequest(
       method: 'POST',
       path: '/saddles',
       body: payload,
     );
     final data = _decodeBody(response.body);
-    return SaddleDto.fromJson(data);
+    return SaddleListItem.fromJson(data);
   }
 
-  Future<SaddleDto> deleteSaddle(String saddleId) async {
+  Future<SaddleListItem> deleteSaddle(String saddleId) async {
     final response = await _authorizedRequest(
       method: 'DELETE',
       path: '/saddles/$saddleId',
     );
     final data = _decodeBody(response.body);
-    return SaddleDto.fromJson(data);
+    return SaddleListItem.fromJson(data);
   }
 
-  Future<SaddleDto> restoreSaddle(String saddleId) async {
+  Future<SaddleListItem> restoreSaddle(String saddleId) async {
     final response = await _authorizedRequest(
       method: 'POST',
       path: '/saddles/$saddleId/restore',
     );
     final data = _decodeBody(response.body);
-    return SaddleDto.fromJson(data);
-  }
-
-  Future<SaddleDto> updateSaddle(
-    String saddleId,
-    Map<String, dynamic> payload,
-  ) async {
-    final response = await _authorizedRequest(
-      method: 'PATCH',
-      path: '/saddles/$saddleId',
-      body: payload,
-    );
-    final data = _decodeBody(response.body);
-    return SaddleDto.fromJson(data);
-  }
-
-  Future<http.Response> _authorizedRequest({
-    required String method,
-    required String path,
-    Map<String, dynamic>? body,
-    bool retryAuth = true,
-  }) async {
-    final accessToken = await _readAccessToken();
-    if (accessToken == null || accessToken.isEmpty) {
-      throw SaddlesApiFailure(
+      return SaddleListItem.fromJson(data);
+    }
+    throw SaddlesApiFailure(
         code: 'auth.session_expired',
         message: 'No hay sesión válida para consultar sillas.',
       );

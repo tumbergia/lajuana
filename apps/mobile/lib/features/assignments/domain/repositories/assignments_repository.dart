@@ -48,11 +48,9 @@ abstract class AssignmentsRepository {
   /// Load cached board (or null if no cache).
   Future<AssignmentBoard?> getCachedBoard(String reservationId);
 
-  /// Save board to local cache.
-  Future<void> cacheBoard(String reservationId, AssignmentBoard board);
-
   /// POST /api/v1/assignments/reservation/{reservationId}/batch
-  Future<AssignmentBoard> batchUpdate({
+  /// Returns board + skipped_removals metadata (FINAL/CANCELLED assignments that could not be removed).
+  Future<BatchUpdateResult> batchUpdate({
     required String reservationId,
     required List<Map<String, dynamic>> assignments,
     required List<String> removals,

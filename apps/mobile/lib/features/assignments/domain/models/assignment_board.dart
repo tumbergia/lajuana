@@ -171,6 +171,24 @@ class AvailableSaddle {
   bool get isAvailable => blockReason == null;
 }
 
+/// Result of a batch update operation — board + metadata about skipped removals.
+class BatchUpdateResult {
+  final AssignmentBoard board;
+  final List<String> skippedRemovals;
+
+  const BatchUpdateResult({
+    required this.board,
+    this.skippedRemovals = const [],
+  });
+
+  factory BatchUpdateResult.fromJson(Map<String, dynamic> json) {
+    return BatchUpdateResult(
+      board: AssignmentBoard.fromJson(json),
+      skippedRemovals: List<String>.from(json['skipped_removals'] ?? []),
+    );
+  }
+}
+
 class BoardSummary {
   final int participantsTotal;
   final int assignedTotal;

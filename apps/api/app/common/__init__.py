@@ -7,7 +7,6 @@ from app.common.constants import (
 )
 from app.common.enums import (
     ROLE_PERMISSIONS,
-    AssignmentPriority,
     Channel,
     ExperienceLevel,
     PaymentStatus,
@@ -19,7 +18,6 @@ from app.common.enums import (
 from app.common.labels import ErrorCode
 
 __all__ = [
-    "AssignmentPriority",
     "BCRYPT_ROUNDS",
     "Channel",
     "Collections",

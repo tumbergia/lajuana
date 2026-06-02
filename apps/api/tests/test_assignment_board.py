@@ -136,14 +136,13 @@ class TestGetBoard:
         def _mock_assignment_find(query: dict) -> FakeFindQuery:
             return FakeFindQuery(assignments)
 
-        async def _mock_get_equine(eid: str) -> SimpleNamespace | None:
-            for p in participants:
-                if hasattr(p, "assigned_equine_id") and p.assigned_equine_id == eid:
-                    return make_fake_equine_doc(id=eid)
-            return make_fake_equine_doc(id=eid)
+        def _mock_equine_find(query: dict) -> FakeFindQuery:
+            eq_ids = query.get("_id", {}).get("$in", [])
+            return FakeFindQuery([make_fake_equine_doc(id=eid) for eid in eq_ids])
 
-        async def _mock_get_saddle(sid: str) -> SimpleNamespace | None:
-            return make_fake_saddle_doc(id=sid)
+        def _mock_saddle_find(query: dict) -> FakeFindQuery:
+            sd_ids = query.get("_id", {}).get("$in", [])
+            return FakeFindQuery([make_fake_saddle_doc(id=sid) for sid in sd_ids])
 
         monkeypatch.setattr(
             "app.services.assignment_service.ReservationDocument.get",
@@ -158,12 +157,12 @@ class TestGetBoard:
             _mock_assignment_find,
         )
         monkeypatch.setattr(
-            "app.services.assignment_service.EquineDocument.get",
-            _mock_get_equine,
+            "app.services.assignment_service.EquineDocument.find",
+            _mock_equine_find,
         )
         monkeypatch.setattr(
-            "app.services.assignment_service.SaddleDocument.get",
-            _mock_get_saddle,
+            "app.services.assignment_service.SaddleDocument.find",
+            _mock_saddle_find,
         )
 
         return created

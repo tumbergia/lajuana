@@ -245,22 +245,6 @@ class AssignmentsApiClient {
     return Map<String, dynamic>.from(decoded);
   }
 
-  /// GET /api/v1/saddles/available-for-reservation/{reservationId}
-  Future<List<dynamic>> getAvailableSaddles(String reservationId) async {
-    final response = await _authorizedRequest(
-      method: 'GET',
-      path: '/saddles/available-for-reservation/$reservationId',
-    );
-    final decoded = jsonDecode(response.body);
-    if (decoded is! List) {
-      throw AssignmentsApiFailure(
-        code: 'network.invalid_payload',
-        message: 'Payload inválido',
-      );
-    }
-    return decoded;
-  }
-
   // ── Auth layer ──
 
   Future<http.Response> _authorizedRequest({

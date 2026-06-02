@@ -1,6 +1,5 @@
 import '../../domain/models/saddle_list_item.dart';
 import '../../domain/repositories/saddles_repository.dart';
-import '../mappers/saddle_mapper.dart';
 import '../remote/saddles_api_client.dart';
 
 class SaddlesRepositoryImpl implements SaddlesRepository {
@@ -15,8 +14,7 @@ class SaddlesRepositoryImpl implements SaddlesRepository {
   @override
   Future<List<SaddleListItem>> listSaddles({bool includeDeleted = false}) async {
     try {
-      final dtos = await _apiClient.listSaddles(includeDeleted: includeDeleted);
-      final items = dtos.map((d) => dtoToListItem(d)).toList(growable: false);
+      final items = await _apiClient.listSaddles(includeDeleted: includeDeleted);
       _cachedItems = items;
       return items;
     } catch (_) {
@@ -27,14 +25,12 @@ class SaddlesRepositoryImpl implements SaddlesRepository {
 
   @override
   Future<SaddleListItem> getSaddleById(String saddleId) async {
-    final dto = await _apiClient.getSaddleById(saddleId);
-    return dtoToListItem(dto);
+    return await _apiClient.getSaddleById(saddleId);
   }
 
   @override
   Future<SaddleListItem> deleteSaddle(String saddleId) async {
-    final dto = await _apiClient.deleteSaddle(saddleId);
-    final item = dtoToListItem(dto);
+    final item = await _apiClient.deleteSaddle(saddleId);
     // Update cache: remove from list
     final cached = _cachedItems;
     if (cached != null) {
@@ -47,8 +43,7 @@ class SaddlesRepositoryImpl implements SaddlesRepository {
 
   @override
   Future<SaddleListItem> restoreSaddle(String saddleId) async {
-    final dto = await _apiClient.restoreSaddle(saddleId);
-    final item = dtoToListItem(dto);
+    final item = await _apiClient.restoreSaddle(saddleId);
     // Update cache: add back to list
     final cached = _cachedItems;
     if (cached != null) {
@@ -70,8 +65,7 @@ class SaddlesRepositoryImpl implements SaddlesRepository {
       'is_available': isAvailable,
       if (notes != null) 'notes': notes,
     };
-    final dto = await _apiClient.createSaddle(payload);
-    final item = dtoToListItem(dto);
+    final item = await _apiClient.createSaddle(payload);
     // Update cache
     final cached = _cachedItems;
     if (cached != null) {
@@ -94,8 +88,7 @@ class SaddlesRepositoryImpl implements SaddlesRepository {
     if (isAvailable != null) payload['is_available'] = isAvailable;
     if (notes != null) payload['notes'] = notes;
 
-    final dto = await _apiClient.updateSaddle(saddleId, payload);
-    final item = dtoToListItem(dto);
+    final item = await _apiClient.updateSaddle(saddleId, payload);
     // Update cache
     final cached = _cachedItems;
     if (cached != null) {

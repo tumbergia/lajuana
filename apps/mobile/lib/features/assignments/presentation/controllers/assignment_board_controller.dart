@@ -280,17 +280,25 @@ class AssignmentBoardController extends ChangeNotifier {
 
       final removalList = _pendingRemovals.toList();
 
-      final updatedBoard = await _repository.batchUpdate(
+      final batchResult = await _repository.batchUpdate(
         reservationId: _reservationId!,
         assignments: assignmentList,
         removals: removalList,
         notes: notes,
       );
 
-      _board = updatedBoard;
+      _board = batchResult.board;
       _clearPendingState();
       _isFinalizing = false;
       _state = BoardLoadState.loaded;
+
+      if (batchResult.skippedRemovals.isNotEmpty) {
+        _actionError =
+            '${batchResult.skippedRemovals.length} asignación(es) no pudieron quitarse '
+            '(estaban finalizadas o canceladas).';
+        _actionErrorCode = 'batchUpdate.skipped_removals';
+      }
+
       notifyListeners();
     } catch (e) {
       _isFinalizing = false;

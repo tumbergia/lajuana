@@ -602,10 +602,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
   Future<AssignmentBoard?> getCachedBoard(String reservationId) async => board;
 
   @override
-  Future<void> cacheBoard(String reservationId, AssignmentBoard b) async {}
-
-  @override
-  Future<AssignmentBoard> batchUpdate({
+  Future<BatchUpdateResult> batchUpdate({
     required String reservationId,
     required List<Map<String, dynamic>> assignments,
     required List<String> removals,
@@ -615,7 +612,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
     lastBatchAssignments = assignments;
     lastBatchRemovals = removals;
     lastBatchNotes = notes;
-    return board;
+    return BatchUpdateResult(board: board);
   }
 
   @override
