@@ -88,9 +88,31 @@ class SaddlesApiClient {
       path: '/saddles/$saddleId/restore',
     );
     final data = _decodeBody(response.body);
-      return SaddleListItem.fromJson(data);
-    }
-    throw SaddlesApiFailure(
+    return SaddleListItem.fromJson(data);
+  }
+
+  Future<SaddleListItem> updateSaddle(
+    String saddleId,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _authorizedRequest(
+      method: 'PATCH',
+      path: '/saddles/$saddleId',
+      body: payload,
+    );
+    final data = _decodeBody(response.body);
+    return SaddleListItem.fromJson(data);
+  }
+
+  Future<http.Response> _authorizedRequest({
+    required String method,
+    required String path,
+    Map<String, dynamic>? body,
+    bool retryAuth = true,
+  }) async {
+    final accessToken = await _readAccessToken();
+    if (accessToken == null || accessToken.isEmpty) {
+      throw SaddlesApiFailure(
         code: 'auth.session_expired',
         message: 'No hay sesión válida para consultar sillas.',
       );
