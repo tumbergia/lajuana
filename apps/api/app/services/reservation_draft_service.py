@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import secrets
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from beanie import PydanticObjectId
 
+from app.common.constants import build_code
 from app.common.enums import ReservationStatus
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
@@ -76,7 +76,7 @@ class ReservationDraftService:
             )
 
         # 6. Generate code with PR- prefix
-        code = self._build_reservation_draft_code()
+        code = build_code("PR")
 
         # 7. Compute TTL
         expire_at = datetime.now(UTC) + timedelta(minutes=rules.reservation_draft_ttl_minutes)
@@ -139,5 +139,4 @@ class ReservationDraftService:
 
         return count
 
-    def _build_reservation_draft_code(self) -> str:
-        return f"PR-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
+

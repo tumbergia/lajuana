@@ -2,7 +2,6 @@ from __future__ import annotations
 
 """Servicio de negocio para el agregado Reservation."""
 
-import secrets
 from datetime import UTC, date, datetime
 
 from beanie import PydanticObjectId
@@ -17,6 +16,7 @@ from app.common.enums import (
     ScheduleStatus,
     UserRole,
 )
+from app.common.constants import build_code
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.core.logging import logger
@@ -252,7 +252,7 @@ class ReservationService:
 
         doc = ReservationDocument(
             **data,
-            code=code or self._build_code(),
+            code=code or build_code(),
             status=status,
             created_by=actor_id,
             updated_by=actor_id,
@@ -867,5 +867,4 @@ class ReservationService:
 
         return result
 
-    def _build_code(self, prefix: str = "RES") -> str:
-        return f"{prefix}-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
+

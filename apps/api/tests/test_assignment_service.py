@@ -240,7 +240,6 @@ class TestCreate:
             assert result.assigned_by_user_id == FAKE_ACTOR_ID
             assert result.source == AssignmentSource.MANUAL_ADMIN
             assert result.is_active is True
-            assert result.assigned_manually is True
             assert result._insert_called is True
 
         asyncio.run(run())
@@ -278,7 +277,6 @@ class TestCreate:
             result = await service.create(payload, actor_id=None)
             assert result.source == AssignmentSource.SYSTEM_SUGGESTED
             assert result.assigned_by_user_id is None
-            assert result.assigned_manually is False
 
         asyncio.run(run())
 

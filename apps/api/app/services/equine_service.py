@@ -5,8 +5,6 @@ from typing import Any
 
 from beanie import PydanticObjectId
 
-from datetime import date
-
 from app.common.enums import EquineOperationalStatus, ReservationStatus
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
@@ -18,13 +16,15 @@ from app.documents import (
     ServiceLogEventType,
 )
 from app.schemas.equine import EquineCreateSchema, EquineTimelineEntrySchema, EquineUpdateSchema
+from app.services.base_service import BaseService
 
 
-class EquineService:
-    async def create(self, payload: EquineCreateSchema) -> EquineDocument:
-        doc = EquineDocument(**payload.model_dump())
-        await doc.insert()
-        return doc
+class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdateSchema]):
+    document_class = EquineDocument
+    not_found_code = ErrorCode.EQUINE_NOT_FOUND
+    not_found_message = "Equino no encontrado."
+
+    # ── List/Count con filtros de dominio ──
 
     async def list(
         self,
@@ -36,7 +36,6 @@ class EquineService:
         skip: int = 0,
     ) -> list[EquineDocument]:
         query: dict[str, object] = {}
-        # Por defecto excluir borrados lógicos.
         if not include_deleted:
             query["deleted_at"] = None
         if operational_status is not None:
@@ -65,41 +64,7 @@ class EquineService:
             query["is_available"] = is_available
         return await EquineDocument.find(query).count()
 
-    async def list_items(
-        self,
-        operational_status: EquineOperationalStatus | None = None,
-        is_active: bool | None = None,
-        is_available: bool | None = None,
-        include_deleted: bool = False,
-        limit: int = 200,
-        skip: int = 0,
-    ) -> list[EquineDocument]:
-        """Retorna solo los campos del list item (usa el mismo query pero más liviano)."""
-        return await self.list(
-            operational_status=operational_status,
-            is_active=is_active,
-            is_available=is_available,
-            include_deleted=include_deleted,
-            limit=limit,
-            skip=skip,
-        )
-
-    async def get(self, equine_id: str) -> EquineDocument:
-        doc = await EquineDocument.get(equine_id)
-        if doc is None:
-            raise ApiError(
-                status_code=404,
-                code=ErrorCode.EQUINE_NOT_FOUND,
-                message="Equino no encontrado.",
-            )
-        return doc
-
-    async def update(self, equine_id: str, payload: EquineUpdateSchema) -> EquineDocument:
-        doc = await self.get(equine_id)
-        for field, value in payload.model_dump(exclude_none=True).items():
-            setattr(doc, field, value)
-        await doc.save()
-        return doc
+    # ── Acciones de dominio ──
 
     async def deactivate(self, equine_id: str) -> EquineDocument:
         doc = await self.get(equine_id)
@@ -110,7 +75,7 @@ class EquineService:
         return doc
 
     async def soft_delete(self, equine_id: str) -> EquineDocument:
-        """Borra lógicamente un equino estableciendo deleted_at y desactivándolo."""
+        """Borra lógicamente un equino: deleted_at + desactivación."""
         doc = await self.get(equine_id)
         doc.deleted_at = datetime.now(UTC)
         doc.is_active = False
@@ -118,9 +83,10 @@ class EquineService:
         return doc
 
     async def restore(self, equine_id: str) -> EquineDocument:
-        """Restaura un equino borrado lógicamente."""
+        """Restaura un equino: reactiva + limpia deleted_at."""
         doc = await self.get(equine_id)
         doc.deleted_at = None
+        doc.is_active = True
         await doc.save()
         return doc
 
@@ -130,7 +96,6 @@ class EquineService:
         limit: int = 50,
     ) -> list[EquineTimelineEntrySchema]:
         """Retorna el timeline del equino desde ServiceLogs."""
-        # Validar que el equino existe primero.
         await self.get(equine_id)
         logs = await ServiceLogDocument.find(
             {"related_equine_id": PydanticObjectId(equine_id)},
@@ -161,23 +126,14 @@ class EquineService:
 
         block_reason is None → equino asignable a la reserva.
         block_reason is set → explica por qué NO puede asignarse.
-
-        Reglas de exclusión:
-        1. Inactivo (is_active=False)
-        2. No disponible (is_available=False)
-        3. Ya asignado a esta reserva
-        4. Ya asignado a otra reserva en la misma fecha
         """
-        # 1. Obtener la reserva objetivo para conocer su fecha
         reservation = await ReservationDocument.get(reservation_id)
 
-        # 2. Encontrar equinos ya asignados a esta reserva
         my_assignments = await AssignmentDocument.find(
             {"reservation_id": PydanticObjectId(reservation_id)},
         ).to_list()
         my_assigned_equine_ids = {str(a.equine_id) for a in my_assignments}
 
-        # 3. Encontrar equinos asignados a otras reservas en la misma fecha
         same_date_equine_ids: set[str] = set()
         if reservation and reservation.requested_date:
             same_date_reservations = await ReservationDocument.find(
@@ -197,7 +153,6 @@ class EquineService:
                 ).to_list()
                 same_date_equine_ids = {str(a.equine_id) for a in same_date_assignments}
 
-        # 4. Cargar todos los equinos (con paginación)
         all_equines = await EquineDocument.find({}).skip(skip).limit(limit).to_list()
 
         result: list[tuple[EquineDocument, str | None]] = []

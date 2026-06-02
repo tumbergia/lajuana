@@ -723,6 +723,16 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
     },
     ("POST", "/api/v1/equines"): {"cases_400": ("B400-026",), "cases_404": (), "cases_409": ()},
     ("GET", "/api/v1/equines"): {"cases_400": (), "cases_404": (), "cases_409": ()},
+    ("GET", "/api/v1/equines/{equine_id}/timeline"): {
+        "cases_400": (),
+        "cases_404": ("B404-007",),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/equines/available-for-reservation/{reservation_id}"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
     ("GET", "/api/v1/equines/{equine_id}"): {
         "cases_400": (),
         "cases_404": ("B404-007",),
@@ -815,6 +825,11 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_400": (),
         "cases_404": ("B404-009",),
         "cases_409": ("B409-024",),
+    },
+    ("POST", "/api/v1/assignments/{assignment_id}/replace"): {
+        "cases_400": (),
+        "cases_404": ("B404-009", "B404-007", "B404-008"),
+        "cases_409": ("B409-011", "B409-012", "B409-013", "B409-014"),
     },
     ("DELETE", "/api/v1/assignments/{assignment_id}"): {
         "cases_400": (),

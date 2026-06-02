@@ -105,7 +105,7 @@ async def list_equine_items(
     response.headers["X-Total-Count"] = str(total)
     return [
         equine_to_list_item(item)
-        for item in await service.list_items(
+        for item in await service.list(
             operational_status=operational_status,
             is_active=is_active,
             is_available=is_available,
@@ -203,8 +203,8 @@ async def update_equine(
 @router.delete(
     "/{equine_id}",
     response_model=EquineResponseSchema,
-    summary="Borrar equino (borrado lógico)",
-    description="Establece deleted_at para ocultar el equino de listados activos. No lo elimina físicamente.",
+    summary=ENDPOINT_DOCS["equines_delete"]["summary"],
+    description=endpoint_description("equines_delete"),
     operation_id="deleteEquine",
     responses=endpoint_responses("equines_delete"),
 )

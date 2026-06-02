@@ -2,9 +2,14 @@ from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import PolicyDocument, ProviderDocument, ReservationDocument
 from app.schemas.policy import PolicyCreateSchema, PolicyUpdateSchema
+from app.services.base_service import BaseService
 
 
-class PolicyService:
+class PolicyService(BaseService[PolicyDocument, PolicyCreateSchema, PolicyUpdateSchema]):
+    document_class = PolicyDocument
+    not_found_code = ErrorCode.POLICY_NOT_FOUND
+    not_found_message = "Póliza no encontrada."
+
     async def create(self, payload: PolicyCreateSchema) -> PolicyDocument:
         reservation = await ReservationDocument.get(payload.reservation_id)
         if reservation is None:
@@ -32,16 +37,6 @@ class PolicyService:
             notes=payload.notes,
         )
         await doc.insert()
-        return doc
-
-    async def get(self, policy_id: str) -> PolicyDocument:
-        doc = await PolicyDocument.get(policy_id)
-        if doc is None:
-            raise ApiError(
-                status_code=404,
-                code=ErrorCode.POLICY_NOT_FOUND,
-                message="Póliza no encontrada.",
-            )
         return doc
 
     async def update(self, policy_id: str, payload: PolicyUpdateSchema) -> PolicyDocument:

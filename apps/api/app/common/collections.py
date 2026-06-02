@@ -11,7 +11,6 @@ class Collections:
     SERVICE_LOGS = "service_logs"
     PROVIDERS = "providers"
     POLICIES = "policies"
-    SUPPLIES = "supplies"
     APP_CONFIG = "app_config"
     FILE_UPLOADS = "file_uploads"
     SYNC_CHANGES = "sync_changes"

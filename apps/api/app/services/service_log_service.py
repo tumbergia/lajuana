@@ -2,9 +2,14 @@ from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ReservationDocument, ServiceLogDocument, ServiceLogEventType
 from app.schemas.service_log import ServiceLogCreateSchema, ServiceLogUpdateSchema
+from app.services.base_service import BaseService
 
 
-class ServiceLogService:
+class ServiceLogService(BaseService[ServiceLogDocument, ServiceLogCreateSchema, ServiceLogUpdateSchema]):
+    document_class = ServiceLogDocument
+    not_found_code = ErrorCode.LOG_NOT_FOUND
+    not_found_message = "Log no encontrado."
+
     async def create(self, payload: ServiceLogCreateSchema) -> ServiceLogDocument:
         reservation = await ReservationDocument.get(payload.reservation_id)
         if reservation is None:
@@ -29,16 +34,6 @@ class ServiceLogService:
             related_equine_id=payload.related_equine_id,
         )
         await doc.insert()
-        return doc
-
-    async def get(self, log_id: str) -> ServiceLogDocument:
-        doc = await ServiceLogDocument.get(log_id)
-        if doc is None:
-            raise ApiError(
-                status_code=404,
-                code=ErrorCode.LOG_NOT_FOUND,
-                message="Log no encontrado.",
-            )
         return doc
 
     async def update(self, log_id: str, payload: ServiceLogUpdateSchema) -> ServiceLogDocument:

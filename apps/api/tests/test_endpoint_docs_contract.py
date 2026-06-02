@@ -51,7 +51,7 @@ OPERATION_DOC_MAP = {
     "listEquines": "equines_list",
     "getEquineById": "equines_get",
     "updateEquineById": "equines_update",
-    "deactivateEquineById": "equines_delete",
+    "deleteEquine": "equines_delete",
     "createSaddle": "saddles_create",
     "listSaddles": "saddles_list",
     "getSaddleById": "saddles_get",

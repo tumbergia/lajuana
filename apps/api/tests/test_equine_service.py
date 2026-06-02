@@ -1,8 +1,4 @@
 """P1: Equine CRUD — create, read, list, update, soft-delete.
-
-Risk: equine inventory management is core to operations. Incorrect CRUD logic
-can lead to assigning unavailable or inactive equines to reservations,
-creating safety risks and operational failures.
 """
 
 from __future__ import annotations
@@ -11,6 +7,7 @@ import asyncio
 from datetime import date, datetime
 from decimal import Decimal
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -23,6 +20,7 @@ from app.common.enums import (
 )
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
+from app.documents import EquineDocument
 from app.schemas.equine import EquineCreateSchema, EquineUpdateSchema
 from app.services.equine_service import EquineService
 
@@ -66,7 +64,7 @@ class TestEquineServiceCreate:
         """Creating an equine with valid data should succeed."""
         inserted_docs: list[object] = []
 
-        class FakeEquineDocument:
+        class FakeEquineDoc:
             def __init__(self, **kwargs: object) -> None:
                 for k, v in kwargs.items():
                     setattr(self, k, v)
@@ -74,10 +72,8 @@ class TestEquineServiceCreate:
             async def insert(self) -> None:
                 inserted_docs.append(self)
 
-        monkeypatch.setattr(
-            "app.services.equine_service.EquineDocument",
-            FakeEquineDocument,
-        )
+        # BaseService.create() uses self.document_class; patch at class level
+        monkeypatch.setattr(EquineService, "document_class", FakeEquineDoc)
 
         service = EquineService()
 
@@ -107,10 +103,8 @@ class TestEquineServiceGet:
         async def _mock_get(_: str) -> object:
             return fake
 
-        monkeypatch.setattr(
-            "app.services.equine_service.EquineDocument.get",
-            _mock_get,
-        )
+        # BaseService.get() calls self.document_class.get(); patch class method
+        monkeypatch.setattr(EquineDocument, "get", _mock_get)
 
         service = EquineService()
 
@@ -126,10 +120,7 @@ class TestEquineServiceGet:
         async def _mock_get(_: str) -> None:
             return None
 
-        monkeypatch.setattr(
-            "app.services.equine_service.EquineDocument.get",
-            _mock_get,
-        )
+        monkeypatch.setattr(EquineDocument, "get", _mock_get)
 
         service = EquineService()
 
@@ -237,10 +228,7 @@ class TestEquineServiceUpdate:
 
         fake.save = _mock_save  # type: ignore[assignment]
 
-        monkeypatch.setattr(
-            "app.services.equine_service.EquineDocument.get",
-            _mock_get,
-        )
+        monkeypatch.setattr(EquineDocument, "get", _mock_get)
 
         service = EquineService()
 
@@ -258,10 +246,7 @@ class TestEquineServiceUpdate:
         async def _mock_get(_: str) -> None:
             return None
 
-        monkeypatch.setattr(
-            "app.services.equine_service.EquineDocument.get",
-            _mock_get,
-        )
+        monkeypatch.setattr(EquineDocument, "get", _mock_get)
 
         service = EquineService()
 
@@ -289,10 +274,7 @@ class TestEquineServiceDeactivate:
 
         fake.save = _mock_save  # type: ignore[assignment]
 
-        monkeypatch.setattr(
-            "app.services.equine_service.EquineDocument.get",
-            _mock_get,
-        )
+        monkeypatch.setattr(EquineDocument, "get", _mock_get)
 
         service = EquineService()
 
@@ -309,10 +291,7 @@ class TestEquineServiceDeactivate:
         async def _mock_get(_: str) -> None:
             return None
 
-        monkeypatch.setattr(
-            "app.services.equine_service.EquineDocument.get",
-            _mock_get,
-        )
+        monkeypatch.setattr(EquineDocument, "get", _mock_get)
 
         service = EquineService()
 

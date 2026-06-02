@@ -12,6 +12,7 @@ from pymongo import UpdateOne
 from app.common.enums import AssignmentSource, AssignmentStatus, ReservationStatus, UserRole
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
+from app.core.logging import logger
 from app.documents import (
     AssignmentDocument,
     EquineDocument,
@@ -246,16 +247,24 @@ class AssignmentService:
                 for doc in assignments
             ]
             await collection.bulk_write(operations)
-            for doc in assignments:
-                await self._log_audit(
+            audit_logs = [
+                ReservationAuditLogDocument(
                     reservation_id=doc.reservation_id,
-                    assignment_id=doc.id,
                     actor_user_id=actor_id,
-                    actor_role=None,
+                    actor_role=UserRole.ADMIN,
                     action="assignment.finalized",
                     previous_status=AssignmentStatus.CONFIRMED.value,
                     new_status=AssignmentStatus.FINAL.value,
+                    source="assignment_service",
+                    metadata={"assignment_id": str(doc.id)},
                 )
+                for doc in assignments
+            ]
+            if audit_logs:
+                try:
+                    await ReservationAuditLogDocument.insert_many(audit_logs)
+                except Exception:
+                    logger.exception("Failed to bulk-insert audit logs for finalize_all")
 
         if notes:
             try:
@@ -265,7 +274,7 @@ class AssignmentService:
                     notes=notes,
                 ).insert()
             except Exception:
-                pass  # Non-critical — don't block the operation
+                logger.exception("Failed to insert service log note (finalize_all)")
 
         return await self.get_board(reservation_id)
 
@@ -299,16 +308,24 @@ class AssignmentService:
                 for doc in assignments
             ]
             await collection.bulk_write(operations)
-            for doc in assignments:
-                await self._log_audit(
+            audit_logs = [
+                ReservationAuditLogDocument(
                     reservation_id=doc.reservation_id,
-                    assignment_id=doc.id,
                     actor_user_id=actor_id,
-                    actor_role=None,
+                    actor_role=UserRole.ADMIN,
                     action="assignment.unfinalized",
                     previous_status=AssignmentStatus.FINAL.value,
                     new_status=AssignmentStatus.CONFIRMED.value,
+                    source="assignment_service",
+                    metadata={"assignment_id": str(doc.id)},
                 )
+                for doc in assignments
+            ]
+            if audit_logs:
+                try:
+                    await ReservationAuditLogDocument.insert_many(audit_logs)
+                except Exception:
+                    logger.exception("Failed to bulk-insert audit logs for unfinalize_all")
 
         if notes:
             try:
@@ -318,7 +335,7 @@ class AssignmentService:
                     notes=notes,
                 ).insert()
             except Exception:
-                pass
+                logger.exception("Failed to insert service log note (unfinalize_all)")
 
         return await self.get_board(reservation_id)
 
@@ -451,7 +468,7 @@ class AssignmentService:
                     notes=notes,
                 ).insert()
             except Exception:
-                pass
+                logger.exception("Failed to insert service log note (batch_update)")
 
         result = await self.get_board(reservation_id)
         result["skipped_removals"] = skipped_removals
@@ -592,7 +609,6 @@ class AssignmentService:
                 available_equines.append({
                     "id": _safe_str(eq_doc.id) or "",
                     "name": getattr(eq_doc, "name", ""),
-                    "is_available": getattr(eq_doc, "is_available", True),
                     "max_rider_weight_kg": getattr(eq_doc, "max_rider_weight_kg", None),
                     "image_base64": getattr(eq_doc, "image_base64", None),
                     "block_reason": reason,
@@ -755,8 +771,6 @@ class AssignmentService:
             assigned_by_user_id=actor_id,
             assigned_at=now,
             is_active=True,
-            priority="standard",
-            assigned_manually=actor_id is not None,
         )
         return doc_kwargs, reservation, participant
 
@@ -1032,5 +1046,4 @@ class AssignmentService:
                 metadata=metadata or {"assignment_id": str(assignment_id)},
             ).insert()
         except Exception:
-            # No bloquear la operación principal por un fallo de auditoría
-            pass
+            logger.exception("Audit log insert failed — non-blocking")

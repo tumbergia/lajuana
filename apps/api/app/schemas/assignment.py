@@ -85,10 +85,11 @@ class AssignmentBoardSummarySchema(BaseModel):
 
 
 class AssignmentBoardEquineSchema(BaseModel):
-    """Versión minimalista de equino para el tablero de asignación."""
+    """Versión minimalista de equino para el tablero de asignación.
+    block_reason es None → asignable. Con texto → motivo de exclusión.
+    """
     id: str
     name: str
-    is_available: bool = True
     max_rider_weight_kg: Decimal | None = None
     image_base64: str | None = None
     block_reason: str | None = None
