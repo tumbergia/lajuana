@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from enum import StrEnum
 
 from beanie import PydanticObjectId
@@ -26,6 +27,8 @@ _ACCENT_MAP = {
 _ACCENT_TABLE = str.maketrans(_ACCENT_MAP)
 
 MIN_TOKEN_LENGTH = 3
+MAX_RESULTS = 100
+CACHE_TTL_SECONDS = 300  # 5 minutos
 
 
 def _strip_accents(text: str) -> str:
@@ -48,6 +51,22 @@ class ExperienceResolutionResult(BaseModel):
 
 
 class ExperienceCatalogResolver:
+    # Cache class-level: {cache_key: (docs, timestamp)}
+    _cache: dict[str, tuple[list[ExperienceDocument], float]] = {}
+
+    async def _load_active(self) -> list[ExperienceDocument]:
+        """Carga experiencias activas con caché in-memory TTL."""
+        now = time.monotonic()
+        cache_key = "active_experiences"
+
+        cached = self._cache.get(cache_key)
+        if cached is not None and (now - cached[1]) < CACHE_TTL_SECONDS:
+            return cached[0]
+
+        docs = await ExperienceDocument.find({"is_active": True}).to_list()
+        self._cache[cache_key] = (docs, now)
+        return docs
+
     async def resolve(
         self,
         query: str,
@@ -78,7 +97,7 @@ class ExperienceCatalogResolver:
         docs = (
             experiences
             if experiences is not None
-            else await ExperienceDocument.find({"is_active": True}).to_list()
+            else await self._load_active()
         )
 
         # 2. Exact match by slug (normalized)
@@ -116,7 +135,7 @@ class ExperienceCatalogResolver:
                     confidence=1.0,
                 )
 
-        # 5. Token overlap (normalized)
+        # 5. Token overlap (normalized) — limitado a MAX_RESULTS por seguridad
         query_tokens = {t for t in norm_text.split() if len(t) >= MIN_TOKEN_LENGTH}
         if not query_tokens:
             return ExperienceResolutionResult(
@@ -124,7 +143,7 @@ class ExperienceCatalogResolver:
             )
 
         scored: list[tuple[int, ExperienceDocument]] = []
-        for doc in docs:
+        for doc in docs[:MAX_RESULTS]:
             raw_haystack = " ".join(
                 [
                     doc.name or "",

@@ -1,5 +1,6 @@
 """Schema mappers: document_to_schema helper + thin wrappers + complex mappers."""
 
+import asyncio
 import logging
 
 from beanie import PydanticObjectId
@@ -81,8 +82,49 @@ saddle_to_response = lambda d: document_to_schema(d, SaddleResponseSchema, scala
 saddle_to_list_item = lambda d: document_to_schema(d, SaddleListItemSchema, scalar_fields={"id": "id"})
 
 
-async def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseSchema:
-    """Build AssignmentResponseSchema with resolved names."""
+async def batch_assignments_to_response(
+    assignments: list[AssignmentDocument],
+) -> list[AssignmentResponseSchema]:
+    """Resuelve N assignments → 3 queries $in (participant, equine, saddle).
+
+    Sin N+1. Colecta todos los IDs, hace queries batch, construye lookup maps.
+    """
+    if not assignments:
+        return []
+
+    # Colectar IDs únicos
+    p_ids = list({
+        a.participant_id for a in assignments if a.participant_id
+    })
+    e_ids = list({
+        a.equine_id for a in assignments if a.equine_id
+    })
+    s_ids = list({
+        a.saddle_id for a in assignments if a.saddle_id
+    })
+
+    # 3 queries $in en paralelo
+    participants, equines, saddles = await asyncio.gather(
+        ParticipantDocument.find({"_id": {"$in": p_ids}}).to_list() if p_ids else [],
+        EquineDocument.find({"_id": {"$in": e_ids}}).to_list() if e_ids else [],
+        SaddleDocument.find({"_id": {"$in": s_ids}}).to_list() if s_ids else [],
+    )
+
+    # Lookup maps
+    p_map: dict[str, ParticipantDocument] = {str(p.id): p for p in participants}
+    e_map: dict[str, EquineDocument] = {str(e.id): e for e in equines}
+    s_map: dict[str, SaddleDocument] = {str(s.id): s for s in saddles}
+
+    return [_map_assignment(a, p_map, e_map, s_map) for a in assignments]
+
+
+def _map_assignment(
+    doc: AssignmentDocument,
+    p_map: dict[str, ParticipantDocument],
+    e_map: dict[str, EquineDocument],
+    s_map: dict[str, SaddleDocument],
+) -> AssignmentResponseSchema:
+    """Mapper sincrónico — construye schema desde documentos y lookups."""
     data = doc.model_dump(exclude={"revision_id"})
     data["id"] = str(doc.id)
     data["reservation_id"] = str(doc.reservation_id) if doc.reservation_id else None
@@ -92,20 +134,25 @@ async def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseS
     data["assigned_by_user_id"] = str(doc.assigned_by_user_id) if doc.assigned_by_user_id else None
     data["finalized_by_user_id"] = str(doc.finalized_by_user_id) if doc.finalized_by_user_id else None
 
-    # Resolve names
+    # Resolve names from lookup maps
     if doc.participant_id:
-        p = await ParticipantDocument.get(doc.participant_id)
+        p = p_map.get(str(doc.participant_id))
         data["participant_name"] = f"{p.first_name} {p.last_name}" if p else None
     if doc.equine_id:
-        e = await EquineDocument.get(doc.equine_id)
+        e = e_map.get(str(doc.equine_id))
         data["equine_name"] = e.name if e else None
     if doc.saddle_id:
-        s = await SaddleDocument.get(doc.saddle_id)
+        s = s_map.get(str(doc.saddle_id))
         data["saddle_label"] = (
             f"{s.code} - {s.name}" if s and s.code else (s.name if s else None)
         )
 
     return AssignmentResponseSchema(**data)
+
+
+async def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseSchema:
+    """Delega a batch (1 assignment → misma lógica, sin N+1)."""
+    return (await batch_assignments_to_response([doc]))[0]
 service_log_to_response = lambda d: document_to_schema(
     d, ServiceLogResponseSchema,
     scalar_fields={"id": "id", "reservation_id": "reservation_id"},

@@ -66,6 +66,7 @@ class Container:
         self._services["assignment_service"] = AssignmentService(
             equine_service=self._services["equine_service"],
             saddle_service=self._services["saddle_service"],
+            config_service=self._services["config_service"],
         )
         self._services["schedule_service"] = ScheduleService()
         self._services["storage_adapter"] = get_storage_adapter()

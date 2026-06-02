@@ -31,6 +31,7 @@ from app.schemas.assignment import (
     AssignmentOnBoardSchema,
     AssignmentUpdateSchema,
 )
+from app.services.config_service import ConfigService
 from app.services.equine_service import EquineService
 from app.services.saddle_service import SaddleService
 
@@ -54,9 +55,22 @@ class AssignmentService:
         self,
         equine_service: EquineService | None = None,
         saddle_service: SaddleService | None = None,
+        config_service: ConfigService | None = None,
     ) -> None:
         self._equine_service = equine_service
         self._saddle_service = saddle_service
+        self._config_service = config_service
+
+    async def _get_age_limits(self) -> tuple[int, int]:
+        """Lee min_age/max_age desde config. Fallback seguro 12/65."""
+        if self._config_service is None:
+            return 12, 65
+        try:
+            rules = await self._config_service.get_reservation_rules()
+            return rules.min_age, rules.max_age
+        except Exception:
+            logger.warning("Failed to read age config, using defaults", exc_info=True)
+        return 12, 65
 
     # ── Core CRUD ──
 
@@ -562,6 +576,7 @@ class AssignmentService:
         """Construye el tablero de asignación para una reserva."""
         from datetime import date
 
+        min_age, max_age = await self._get_age_limits()
         reservation = await ReservationDocument.get(reservation_id)
         if reservation is None:
             raise ApiError(
@@ -605,7 +620,9 @@ class AssignmentService:
         # Equinos disponibles — version minimalista para el board
         available_equines: list = []
         if self._equine_service:
-            for eq_doc, reason in await self._equine_service.list_available_for_reservation(reservation_id):
+            for eq_doc, reason in await self._equine_service.list_available_for_reservation(
+                reservation_id, limit=200, skip=0,
+            ):
                 available_equines.append({
                     "id": _safe_str(eq_doc.id) or "",
                     "name": getattr(eq_doc, "name", ""),
@@ -617,7 +634,9 @@ class AssignmentService:
         # Sillas disponibles — version minimalista para el board
         available_saddles: list = []
         if self._saddle_service:
-            for sa_doc, reason in await self._saddle_service.list_available_for_reservation(reservation_id):
+            for sa_doc, reason in await self._saddle_service.list_available_for_reservation(
+                reservation_id, limit=200, skip=0,
+            ):
                 available_saddles.append({
                     "id": _safe_str(sa_doc.id) or "",
                     "code": getattr(sa_doc, "code", ""),
@@ -643,10 +662,10 @@ class AssignmentService:
                 blocking_reasons.append("Falta peso del participante")
             if not p.experience_level:
                 blocking_reasons.append("Falta nivel de experiencia")
-            if age is not None and age < 12:
-                blocking_reasons.append("Menor de 12 años — requiere verificación")
-            if age is not None and age > 65:
-                blocking_reasons.append("Mayor de 65 años — requiere verificación")
+            if age is not None and age < min_age:
+                blocking_reasons.append(f"Menor de {min_age} años — requiere verificación")
+            if age is not None and age > max_age:
+                blocking_reasons.append(f"Mayor de {max_age} años — requiere verificación")
 
             assignment_on_board = None
             if assignment_doc:
@@ -758,7 +777,8 @@ class AssignmentService:
         await self._validate_no_active_assignment(participant.id, reservation.id)
 
         age = _age_from_birth_date(participant.birth_date)
-        safety_flags, warnings = self._check_safety(participant, equine, age)
+        min_age, max_age = await self._get_age_limits()
+        safety_flags, warnings = self._check_safety(participant, equine, age, min_age, max_age)
 
         if dry_run:
             return safety_flags, warnings, None, None
@@ -991,16 +1011,18 @@ class AssignmentService:
         participant: object,
         equine: object,
         age: int | None,
+        min_age: int = 12,
+        max_age: int = 65,
     ) -> tuple[list[str], list[str]]:
         safety_flags: list[str] = []
         warnings: list[str] = []
 
-        if age is not None and age < 12:
+        if age is not None and age < min_age:
             safety_flags.append("child_rider")
-            warnings.append("Jinete menor de 12 años — verificar equino adecuado")
-        if age is not None and age > 65:
+            warnings.append(f"Jinete menor de {min_age} años — verificar equino adecuado")
+        if age is not None and age > max_age:
             safety_flags.append("senior_rider")
-            warnings.append("Jinete mayor de 65 años — verificar condición física")
+            warnings.append(f"Jinete mayor de {max_age} años — verificar condición física")
 
         max_weight = getattr(equine, "max_rider_weight_kg", None)
         rider_weight = getattr(participant, "weight_kg", None)

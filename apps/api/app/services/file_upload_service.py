@@ -23,7 +23,10 @@ class FileUploadService:
             import boto3
             from botocore.config import Config
         except ImportError:
-            return _FallbackS3Client(bucket=self.bucket, region=self.region)
+            raise RuntimeError(
+                "S3 credentials detected (storage_s3_access_key_id set) but boto3 is not installed. "
+                "Install boto3 or unset S3 credentials.",
+            )
 
         return boto3.client(
             "s3",
@@ -109,16 +112,3 @@ class FileUploadService:
             sha256_hash=doc.sha256_hash,
             status=doc.status,
         )
-
-
-class _FallbackS3Client:
-    def __init__(self, *, bucket: str, region: str) -> None:
-        self.bucket = bucket
-        self.region = region
-
-    def generate_presigned_url(self, *_args, **kwargs) -> str:
-        key = kwargs.get("Params", {}).get("Key", "unknown")
-        return f"https://{self.bucket}.s3.{self.region}.amazonaws.com/{key}?fallback=true"
-
-    def head_object(self, **_kwargs) -> None:
-        return None

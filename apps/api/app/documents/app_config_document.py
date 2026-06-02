@@ -9,6 +9,8 @@ class ReservationRules(BaseModel):
     min_days_in_advance: int = DEFAULT_RESERVATION_MIN_DAYS
     require_payment_proof_for_confirmation: bool = True
     reservation_draft_ttl_minutes: int = 30
+    min_age: int = 12
+    max_age: int = 65
 
 
 class PaymentInstructionsConfig(BaseModel):

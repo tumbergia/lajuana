@@ -237,14 +237,14 @@ class TestGetBoard:
         reservation = created["reservation"]
 
         # Mock equine service
-        async def mock_equine_list(_rid: str) -> list[tuple[SimpleNamespace, str | None]]:
+        async def mock_equine_list(_rid: str, limit: int = 200, skip: int = 0) -> list[tuple[SimpleNamespace, str | None]]:
             return [
                 (make_fake_equine_doc(), None),
                 (make_fake_equine_doc(id=FAKE_EQ_ID_2, name="Relámpago"), "Equino inactivo"),
             ]
 
         # Mock saddle service
-        async def mock_saddle_list(_rid: str) -> list[tuple[SimpleNamespace, str | None]]:
+        async def mock_saddle_list(_rid: str, limit: int = 200, skip: int = 0) -> list[tuple[SimpleNamespace, str | None]]:
             return [
                 (make_fake_saddle_doc(), None),
             ]

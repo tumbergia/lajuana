@@ -37,10 +37,13 @@ class ConfigService:
     async def get_reservation_rules(self) -> ReservationRulesSchema:
         config = await self.get_reservation_rules_document()
         if config is None or config.reservation_rules is None:
+            rules = ReservationRules()
             return ReservationRulesSchema(
-                min_days_in_advance=DEFAULT_RESERVATION_MIN_DAYS,
-                require_payment_proof_for_confirmation=True,
-                reservation_draft_ttl_minutes=30,
+                min_days_in_advance=rules.min_days_in_advance,
+                require_payment_proof_for_confirmation=rules.require_payment_proof_for_confirmation,
+                reservation_draft_ttl_minutes=rules.reservation_draft_ttl_minutes,
+                min_age=rules.min_age,
+                max_age=rules.max_age,
             )
         return ReservationRulesSchema.model_validate(config.reservation_rules.model_dump())
 
