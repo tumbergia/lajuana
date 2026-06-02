@@ -31,10 +31,14 @@ class EquineService:
         operational_status: EquineOperationalStatus | None = None,
         is_active: bool | None = None,
         is_available: bool | None = None,
+        include_deleted: bool = False,
         limit: int = 200,
         skip: int = 0,
     ) -> list[EquineDocument]:
-        query = {}
+        query: dict[str, object] = {}
+        # Por defecto excluir borrados lógicos.
+        if not include_deleted:
+            query["deleted_at"] = None
         if operational_status is not None:
             query["operational_status"] = operational_status
         if is_active is not None:
@@ -43,7 +47,22 @@ class EquineService:
             query["is_available"] = is_available
         return await EquineDocument.find(query).skip(skip).limit(limit).to_list()
 
-    async def count(self, **query: Any) -> int:
+    async def count(
+        self,
+        operational_status: EquineOperationalStatus | None = None,
+        is_active: bool | None = None,
+        is_available: bool | None = None,
+        include_deleted: bool = False,
+    ) -> int:
+        query: dict[str, object] = {}
+        if not include_deleted:
+            query["deleted_at"] = None
+        if operational_status is not None:
+            query["operational_status"] = operational_status
+        if is_active is not None:
+            query["is_active"] = is_active
+        if is_available is not None:
+            query["is_available"] = is_available
         return await EquineDocument.find(query).count()
 
     async def list_items(
@@ -51,6 +70,7 @@ class EquineService:
         operational_status: EquineOperationalStatus | None = None,
         is_active: bool | None = None,
         is_available: bool | None = None,
+        include_deleted: bool = False,
         limit: int = 200,
         skip: int = 0,
     ) -> list[EquineDocument]:
@@ -59,6 +79,7 @@ class EquineService:
             operational_status=operational_status,
             is_active=is_active,
             is_available=is_available,
+            include_deleted=include_deleted,
             limit=limit,
             skip=skip,
         )
@@ -85,6 +106,21 @@ class EquineService:
         doc.is_active = False
         doc.is_available = False
         doc.operational_status = EquineOperationalStatus.RETIRED
+        await doc.save()
+        return doc
+
+    async def soft_delete(self, equine_id: str) -> EquineDocument:
+        """Borra lógicamente un equino estableciendo deleted_at y desactivándolo."""
+        doc = await self.get(equine_id)
+        doc.deleted_at = datetime.now(UTC)
+        doc.is_active = False
+        await doc.save()
+        return doc
+
+    async def restore(self, equine_id: str) -> EquineDocument:
+        """Restaura un equino borrado lógicamente."""
+        doc = await self.get(equine_id)
+        doc.deleted_at = None
         await doc.save()
         return doc
 

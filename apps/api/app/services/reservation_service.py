@@ -288,22 +288,31 @@ class ReservationService:
     async def list(
         self,
         actor_role: UserRole,
+        include_deleted: bool = False,
         limit: int = 200,
         skip: int = 0,
     ) -> list[ReservationDocument]:
+        query: dict[str, object] = {}
+        if not include_deleted:
+            query["deleted_at"] = None
         if actor_role == UserRole.GUIDE:
-            return await ReservationDocument.find(
-                {"status": ReservationStatus.CONFIRMED}
-            ).skip(skip).limit(limit).to_list()
-        return await ReservationDocument.find_all().skip(skip).limit(limit).to_list()
+            query["status"] = ReservationStatus.CONFIRMED
+            return await ReservationDocument.find(query).skip(skip).limit(limit).to_list()
+        return await ReservationDocument.find(query).skip(skip).limit(limit).to_list()
 
-    async def count(self, actor_role: UserRole) -> int:
+    async def count(
+        self,
+        actor_role: UserRole,
+        include_deleted: bool = False,
+    ) -> int:
         """Total count of visible reservations (for X-Total-Count header)."""
+        query: dict[str, object] = {}
+        if not include_deleted:
+            query["deleted_at"] = None
         if actor_role == UserRole.GUIDE:
-            return await ReservationDocument.find(
-                {"status": ReservationStatus.CONFIRMED}
-            ).count()
-        return await ReservationDocument.find_all().count()
+            query["status"] = ReservationStatus.CONFIRMED
+            return await ReservationDocument.find(query).count()
+        return await ReservationDocument.find(query).count()
 
     async def get(
         self,
@@ -726,6 +735,20 @@ class ReservationService:
                 )
 
         return reservation
+
+    async def soft_delete(self, reservation_id: str) -> ReservationDocument:
+        """Borra lógicamente una reserva estableciendo deleted_at."""
+        doc = await self.get(reservation_id)
+        doc.deleted_at = datetime.now(UTC)
+        await doc.save()
+        return doc
+
+    async def restore(self, reservation_id: str) -> ReservationDocument:
+        """Restaura una reserva borrada lógicamente."""
+        doc = await self.get(reservation_id)
+        doc.deleted_at = None
+        await doc.save()
+        return doc
 
     async def validate_participant_forms_completed(
         self, reservation: ReservationDocument

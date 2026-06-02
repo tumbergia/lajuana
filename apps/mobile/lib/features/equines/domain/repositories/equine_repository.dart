@@ -4,8 +4,11 @@ import '../models/equine_timeline_entry.dart';
 /// Contrato del repositorio de equinos.
 abstract class EquineRepository {
   /// Retorna todos los equinos activos. Si [operationalStatus] se provee,
-  /// filtra por ese estado.
-  Future<List<Equine>> listEquines({String? operationalStatus});
+  /// filtra por ese estado. [includeDeleted] incluye borrados lógicos.
+  Future<List<Equine>> listEquines({
+    String? operationalStatus,
+    bool includeDeleted = false,
+  });
 
   /// Retorna detalle de un equino por id.
   Future<Equine> getEquineById(String equineId);
@@ -21,6 +24,12 @@ abstract class EquineRepository {
 
   /// Retorna equinos disponibles para una reserva específica.
   Future<List<Equine>> listAvailableForReservation(String reservationId);
+
+  /// Borrado lógico de un equino (establece deleted_at).
+  Future<Equine> deleteEquine(String equineId);
+
+  /// Restaura un equino borrado lógicamente.
+  Future<Equine> restoreEquine(String equineId);
 
   /// Retorna la última fecha/hora de sincronización.
   Future<DateTime?> getLastSyncedAt();

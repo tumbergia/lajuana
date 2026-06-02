@@ -23,10 +23,13 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   }) async {
     try {
       // 1. Fetch list from backend (summary endpoint).
-      final dtos = await _apiClient.listReservations();
+      final dtos = await _apiClient.listReservations(
+        includeDeleted: includeDeleted,
+      );
 
       // 2. Map directly — no detail hydration needed.
       final items = dtos
@@ -57,6 +60,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
                 'channel': item.originChannel,
                 'created_at': item.createdAt,
                 'updated_at': item.updatedAt,
+                'deleted_at': item.deletedAt?.toIso8601String(),
               })
           .toList(growable: false);
       await _localDataSource.cacheList(listPayloads);
@@ -219,6 +223,34 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  }) async {
+    final dto = await _apiClient.deleteReservation(
+      reservationId: reservationId,
+    );
+    final detail = dtoToDetail(dto);
+
+    await _cacheDetailPayload(dto);
+
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> restoreReservation({
+    required String reservationId,
+  }) async {
+    final dto = await _apiClient.restoreReservation(
+      reservationId: reservationId,
+    );
+    final detail = dtoToDetail(dto);
+
+    await _cacheDetailPayload(dto);
+
+    return detail;
+  }
+
+  @override
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
     return _apiClient.downloadPaymentProofFile(paymentProofId);
   }
@@ -315,6 +347,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
         'confirmed_at': dto.confirmedAt?.toIso8601String(),
         'cancelled_at': dto.cancelledAt?.toIso8601String(),
         'completed_at': dto.completedAt?.toIso8601String(),
+        'deleted_at': dto.deletedAt?.toIso8601String(),
         'created_at': dto.createdAt?.toIso8601String(),
         'updated_at': dto.updatedAt?.toIso8601String(),
         'participants': dto.participants
@@ -454,6 +487,9 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
       updatedAt: payload['updated_at'] != null
           ? DateTime.tryParse(payload['updated_at'] as String)
           : null,
+      deletedAt: payload['deleted_at'] != null
+          ? DateTime.tryParse(payload['deleted_at'] as String)
+          : null,
     );
   }
 
@@ -488,6 +524,9 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
           : null,
       completedAt: payload['completed_at'] != null
           ? DateTime.tryParse(payload['completed_at'] as String)
+          : null,
+      deletedAt: payload['deleted_at'] != null
+          ? DateTime.tryParse(payload['deleted_at'] as String)
           : null,
       createdAt: payload['created_at'] != null
           ? DateTime.tryParse(payload['created_at'] as String)

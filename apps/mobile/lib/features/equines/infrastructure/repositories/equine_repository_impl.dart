@@ -24,10 +24,14 @@ class EquineRepositoryImpl implements EquineRepository {
   final EquinesDatabase _db;
 
   @override
-  Future<List<Equine>> listEquines({String? operationalStatus}) async {
+  Future<List<Equine>> listEquines({
+    String? operationalStatus,
+    bool includeDeleted = false,
+  }) async {
     try {
       final dtos = await _api.listEquines(
         operationalStatus: operationalStatus,
+        includeDeleted: includeDeleted,
       );
       final domains = dtos.map(EquineMapper.dtoToDomain).toList(growable: false);
 
@@ -94,6 +98,22 @@ class EquineRepositoryImpl implements EquineRepository {
   Future<List<Equine>> listAvailableForReservation(String reservationId) async {
     final dtos = await _api.listAvailableForReservation(reservationId);
     return dtos.map(EquineMapper.dtoToDomain).toList(growable: false);
+  }
+
+  @override
+  Future<Equine> deleteEquine(String equineId) async {
+    final dto = await _api.deleteEquine(equineId);
+    final equine = EquineMapper.dtoToDomain(dto);
+    _db.deleteById(equineId).ignore();
+    return equine;
+  }
+
+  @override
+  Future<Equine> restoreEquine(String equineId) async {
+    final dto = await _api.restoreEquine(equineId);
+    final equine = EquineMapper.dtoToDomain(dto);
+    _cacheDetail(equineId, equine).ignore();
+    return equine;
   }
 
   @override

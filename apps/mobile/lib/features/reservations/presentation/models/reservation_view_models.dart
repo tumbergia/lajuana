@@ -16,6 +16,7 @@ class ReservationRecord {
     this.registeredCount,
     this.paymentStatus,
     this.formStatus,
+    this.isDeleted = false,
   });
 
   final String code;
@@ -34,6 +35,7 @@ class ReservationRecord {
   final int? registeredCount;
   final String? paymentStatus;
   final String? formStatus;
+  final bool isDeleted;
 }
 
 class ReservationParticipantRecord {

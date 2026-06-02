@@ -8,6 +8,7 @@ abstract class ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   });
 
   Future<ReservationDetail> getReservationById(String reservationId);
@@ -57,6 +58,16 @@ abstract class ReservationsRepository {
   /// Cancels a reservation (online-only, admin-only).
   /// Returns the full updated reservation detail.
   Future<ReservationDetail> cancelReservation({
+    required String reservationId,
+  });
+
+  /// Soft-deletes a reservation (sets deleted_at).
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  });
+
+  /// Restores a soft-deleted reservation.
+  Future<ReservationDetail> restoreReservation({
     required String reservationId,
   });
 }

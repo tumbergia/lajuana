@@ -24,7 +24,7 @@ class ReservationsListController extends ChangeNotifier {
   ReservationsLoadState state = ReservationsLoadState.idle;
   List<ReservationRecord> items = const <ReservationRecord>[];
   String searchQuery = '';
-  String? filterGroup; // "pendientes" | "confirmadas" | "cerradas"
+  String? filterGroup; // "pendientes" | "confirmadas" | "cerradas" | "eliminadas"
   String? errorCode;
   String? errorMessage;
   DateTime? lastSyncAt;
@@ -86,7 +86,10 @@ class ReservationsListController extends ChangeNotifier {
   }
 
   Future<void> _fetchFromRemote({required bool isRefresh}) async {
-    final domainItems = await _repository.listReservations();
+    final includeDeleted = filterGroup == 'eliminadas';
+    final domainItems = await _repository.listReservations(
+      includeDeleted: includeDeleted,
+    );
     lastSyncAt = DateTime.now();
 
     if (domainItems.isEmpty) {
@@ -106,8 +109,8 @@ class ReservationsListController extends ChangeNotifier {
   void setFilterGroup(String? group) {
     if (filterGroup == group) return;
     filterGroup = group;
-    _applyLocalFilters();
-    notifyListeners();
+    // Cada cambio de filtro requiere re-fetch porque includeDeleted cambia.
+    refresh();
   }
 
   void setSearchQuery(String query) {
@@ -121,9 +124,14 @@ class ReservationsListController extends ChangeNotifier {
 
     // Apply status group filter
     if (filterGroup != null) {
-      result = result.where((item) {
-        return item.status == filterGroup;
-      }).toList(growable: false);
+      if (filterGroup == 'eliminadas') {
+        // Mostrar solo reservas borradas lógicamente.
+        result = result.where((item) => item.isDeleted).toList(growable: false);
+      } else {
+        result = result.where((item) {
+          return item.status == filterGroup;
+        }).toList(growable: false);
+      }
     }
 
     // Apply search query

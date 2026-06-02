@@ -52,6 +52,7 @@ async def list_equines(
     operational_status: EquineOperationalStatus | None = None,
     is_active: bool | None = None,
     is_available: bool | None = None,
+    include_deleted: bool = Query(default=False, description="Incluir equinos borrados logicamente"),
     limit: int = Query(default=200, ge=1, le=1000),
     skip: int = Query(default=0, ge=0),
     service: EquineService = Depends(get_equine_service),
@@ -60,6 +61,7 @@ async def list_equines(
         operational_status=operational_status,
         is_active=is_active,
         is_available=is_available,
+        include_deleted=include_deleted,
     )
     response.headers["X-Total-Count"] = str(total)
     return [
@@ -68,6 +70,7 @@ async def list_equines(
             operational_status=operational_status,
             is_active=is_active,
             is_available=is_available,
+            include_deleted=include_deleted,
             limit=limit,
             skip=skip,
         )
@@ -88,6 +91,7 @@ async def list_equine_items(
     operational_status: EquineOperationalStatus | None = Query(default=None),
     is_active: bool | None = Query(default=None),
     is_available: bool | None = Query(default=None),
+    include_deleted: bool = Query(default=False, description="Incluir equinos borrados logicamente"),
     limit: int = Query(default=200, ge=1, le=1000),
     skip: int = Query(default=0, ge=0),
     service: EquineService = Depends(get_equine_service),
@@ -96,6 +100,7 @@ async def list_equine_items(
         operational_status=operational_status,
         is_active=is_active,
         is_available=is_available,
+        include_deleted=include_deleted,
     )
     response.headers["X-Total-Count"] = str(total)
     return [
@@ -104,6 +109,7 @@ async def list_equine_items(
             operational_status=operational_status,
             is_active=is_active,
             is_available=is_available,
+            include_deleted=include_deleted,
             limit=limit,
             skip=skip,
         )
@@ -197,14 +203,30 @@ async def update_equine(
 @router.delete(
     "/{equine_id}",
     response_model=EquineResponseSchema,
-    summary=ENDPOINT_DOCS["equines_delete"]["summary"],
-    description=endpoint_description("equines_delete"),
-    operation_id="deactivateEquineById",
+    summary="Borrar equino (borrado lógico)",
+    description="Establece deleted_at para ocultar el equino de listados activos. No lo elimina físicamente.",
+    operation_id="deleteEquine",
     responses=endpoint_responses("equines_delete"),
 )
-async def deactivate_equine(
+async def delete_equine(
+    equine_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_DELETE))],
+    service: EquineService = Depends(get_equine_service),
+) -> EquineResponseSchema:
+    return equine_to_response(await service.soft_delete(equine_id))
+
+
+@router.post(
+    "/{equine_id}/restore",
+    response_model=EquineResponseSchema,
+    summary="Restaurar equino borrado",
+    description="Quita el deleted_at para que el equino vuelva a aparecer en listados activos.",
+    operation_id="restoreEquine",
+    responses=endpoint_responses("equines_update"),
+)
+async def restore_equine(
     equine_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_UPDATE))],
     service: EquineService = Depends(get_equine_service),
 ) -> EquineResponseSchema:
-    return equine_to_response(await service.deactivate(equine_id))
+    return equine_to_response(await service.restore(equine_id))

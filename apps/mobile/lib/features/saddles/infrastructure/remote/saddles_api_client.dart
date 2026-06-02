@@ -4,13 +4,11 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-import 'equine_dtos.dart';
-import 'equines_api_error.dart';
+import 'saddle_dtos.dart';
+import 'saddles_api_error.dart';
 
-/// Cliente HTTP para el endpoint /api/v1/equines.
-/// Sigue el mismo patrón que [ReservationsApiClient].
-class EquinesApiClient {
-  EquinesApiClient({
+class SaddlesApiClient {
+  SaddlesApiClient({
     required String baseUrl,
     required Future<String?> Function() readAccessToken,
     required Future<bool> Function() refreshSession,
@@ -25,138 +23,85 @@ class EquinesApiClient {
   final Future<bool> Function() _refreshSession;
   final http.Client _http;
 
-  Future<List<EquineDto>> listEquines({
-    String? operationalStatus,
-    bool includeDeleted = false,
-  }) async {
+  Future<List<SaddleDto>> listSaddles({bool includeDeleted = false}) async {
     final queryParams = <String, String>{};
-    if (operationalStatus != null) {
-      queryParams['operational_status'] = operationalStatus;
-    }
-    // Por defecto solo equinos activos.
-    if (!includeDeleted) {
-      queryParams['is_active'] = 'true';
-    }
     if (includeDeleted) {
       queryParams['include_deleted'] = 'true';
     }
-    final queryString =
-        queryParams.isEmpty ? '' : '?${Uri(queryParameters: queryParams).query}';
+    final path =
+        '/saddles${queryParams.isNotEmpty ? '?${Uri(queryParameters: queryParams).query}' : ''}';
     final response = await _authorizedRequest(
       method: 'GET',
-      path: '/equines/list$queryString',
+      path: path,
     );
     final decoded = jsonDecode(response.body);
     if (decoded is! List) {
-      throw EquinesApiFailure(
+      throw SaddlesApiFailure(
         code: 'network.invalid_payload',
-        message: 'Payload inválido en lista de equinos.',
+        message: 'Payload inválido',
       );
     }
     return decoded
         .map((item) {
           if (item is! Map) {
-            throw EquinesApiFailure(
+            throw SaddlesApiFailure(
               code: 'network.invalid_payload',
-              message: 'Payload inválido en lista de equinos.',
+              message: 'Payload inválido',
             );
           }
-          return EquineDto.fromJson(Map<String, dynamic>.from(item));
+          return SaddleDto.fromJson(Map<String, dynamic>.from(item));
         })
         .toList(growable: false);
   }
 
-  Future<EquineDto> getEquineById(String equineId) async {
+  Future<SaddleDto> getSaddleById(String saddleId) async {
     final response = await _authorizedRequest(
       method: 'GET',
-      path: '/equines/$equineId',
+      path: '/saddles/$saddleId',
     );
     final data = _decodeBody(response.body);
-    return EquineDto.fromJson(data);
+    return SaddleDto.fromJson(data);
   }
 
-  Future<EquineDto> createEquine(Map<String, dynamic> data) async {
+  Future<SaddleDto> createSaddle(Map<String, dynamic> payload) async {
     final response = await _authorizedRequest(
       method: 'POST',
-      path: '/equines',
-      body: data,
+      path: '/saddles',
+      body: payload,
     );
-    return EquineDto.fromJson(_decodeBody(response.body));
+    final data = _decodeBody(response.body);
+    return SaddleDto.fromJson(data);
   }
 
-  Future<EquineDto> updateEquine(String equineId, Map<String, dynamic> data) async {
-    final response = await _authorizedRequest(
-      method: 'PATCH',
-      path: '/equines/$equineId',
-      body: data,
-    );
-    return EquineDto.fromJson(_decodeBody(response.body));
-  }
-
-  Future<List<EquineTimelineEntryDto>> getEquineTimeline(String equineId) async {
-    final response = await _authorizedRequest(
-      method: 'GET',
-      path: '/equines/$equineId/timeline',
-    );
-    final decoded = jsonDecode(response.body);
-    if (decoded is! List) {
-      throw EquinesApiFailure(
-        code: 'network.invalid_payload',
-        message: 'Payload inválido en timeline de equino.',
-      );
-    }
-    return decoded
-        .map((item) {
-          if (item is! Map) {
-            throw EquinesApiFailure(
-              code: 'network.invalid_payload',
-              message: 'Payload inválido en timeline de equino.',
-            );
-          }
-          return EquineTimelineEntryDto.fromJson(Map<String, dynamic>.from(item));
-        })
-        .toList(growable: false);
-  }
-
-  Future<EquineDto> deleteEquine(String equineId) async {
+  Future<SaddleDto> deleteSaddle(String saddleId) async {
     final response = await _authorizedRequest(
       method: 'DELETE',
-      path: '/equines/$equineId',
+      path: '/saddles/$saddleId',
     );
-    return EquineDto.fromJson(_decodeBody(response.body));
+    final data = _decodeBody(response.body);
+    return SaddleDto.fromJson(data);
   }
 
-  Future<EquineDto> restoreEquine(String equineId) async {
+  Future<SaddleDto> restoreSaddle(String saddleId) async {
     final response = await _authorizedRequest(
       method: 'POST',
-      path: '/equines/$equineId/restore',
+      path: '/saddles/$saddleId/restore',
     );
-    return EquineDto.fromJson(_decodeBody(response.body));
+    final data = _decodeBody(response.body);
+    return SaddleDto.fromJson(data);
   }
 
-  Future<List<EquineDto>> listAvailableForReservation(String reservationId) async {
+  Future<SaddleDto> updateSaddle(
+    String saddleId,
+    Map<String, dynamic> payload,
+  ) async {
     final response = await _authorizedRequest(
-      method: 'GET',
-      path: '/equines/available-for-reservation/$reservationId',
+      method: 'PATCH',
+      path: '/saddles/$saddleId',
+      body: payload,
     );
-    final decoded = jsonDecode(response.body);
-    if (decoded is! List) {
-      throw EquinesApiFailure(
-        code: 'network.invalid_payload',
-        message: 'Payload inválido en equinos disponibles.',
-      );
-    }
-    return decoded
-        .map((item) {
-          if (item is! Map) {
-            throw EquinesApiFailure(
-              code: 'network.invalid_payload',
-              message: 'Payload inválido en equinos disponibles.',
-            );
-          }
-          return EquineDto.fromJson(Map<String, dynamic>.from(item));
-        })
-        .toList(growable: false);
+    final data = _decodeBody(response.body);
+    return SaddleDto.fromJson(data);
   }
 
   Future<http.Response> _authorizedRequest({
@@ -167,9 +112,9 @@ class EquinesApiClient {
   }) async {
     final accessToken = await _readAccessToken();
     if (accessToken == null || accessToken.isEmpty) {
-      throw EquinesApiFailure(
+      throw SaddlesApiFailure(
         code: 'auth.session_expired',
-        message: 'No hay sesión válida para consultar equinos.',
+        message: 'No hay sesión válida para consultar sillas.',
       );
     }
     final uri = Uri.parse('$_baseUrl$path');
@@ -189,6 +134,8 @@ class EquinesApiClient {
             headers: _headers(accessToken),
             body: body != null ? jsonEncode(body) : null,
           );
+        case 'DELETE':
+          return _http.delete(uri, headers: _headers(accessToken));
         default:
           throw UnsupportedError('Método no soportado: $method');
       }
@@ -216,26 +163,27 @@ class EquinesApiClient {
   }
 
   Future<http.Response> _execute(
-      Future<http.Response> Function() block) async {
+    Future<http.Response> Function() block,
+  ) async {
     try {
       return await block().timeout(const Duration(seconds: 12));
     } on TimeoutException {
-      throw EquinesApiFailure(
+      throw SaddlesApiFailure(
         code: 'network.timeout',
-        message: 'Tiempo de espera agotado al consultar equinos.',
+        message: 'Tiempo de espera agotado al consultar sillas.',
       );
     } on SocketException {
-      throw EquinesApiFailure(
+      throw SaddlesApiFailure(
         code: 'network.unavailable',
         message: 'No hay conexión con el servidor.',
       );
     } on HttpException {
-      throw EquinesApiFailure(
+      throw SaddlesApiFailure(
         code: 'network.http_error',
-        message: 'Error de red al consultar equinos.',
+        message: 'Error de red al consultar sillas.',
       );
     } on FormatException {
-      throw EquinesApiFailure(
+      throw SaddlesApiFailure(
         code: 'network.invalid_response',
         message: 'Respuesta inválida del servidor.',
       );
@@ -245,9 +193,9 @@ class EquinesApiClient {
   Map<String, dynamic> _decodeBody(String body) {
     final decoded = jsonDecode(body);
     if (decoded is! Map<String, dynamic>) {
-      throw EquinesApiFailure(
+      throw SaddlesApiFailure(
         code: 'network.invalid_payload',
-        message: 'Payload inválido en respuesta de equinos.',
+        message: 'Payload inválido en respuesta de sillas.',
       );
     }
     return decoded;
@@ -256,7 +204,7 @@ class EquinesApiClient {
   void _throwIfError(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) return;
     final error = _decodeApiError(response.body);
-    throw EquinesApiFailure(
+    throw SaddlesApiFailure(
       code: error.$1,
       message: error.$2,
       statusCode: response.statusCode,

@@ -808,6 +808,19 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "error_codes": ["auth.unauthorized", "saddle.not_found"],
         "service_docstring": "Obtiene silla por id.",
     },
+    "saddles_delete": {
+        "summary": "Eliminar silla",
+        "description": "Borra lógicamente una silla estableciendo deleted_at.",
+        "permissions": ["saddle.delete"],
+        "responses": {
+            200: "Silla eliminada correctamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            404: "Silla no existe.",
+        },
+        "error_codes": ["auth.unauthorized", "auth.forbidden", "saddle.not_found"],
+        "service_docstring": "Borra lógicamente una silla.",
+    },
     "saddles_update": {
         "summary": "Actualizar silla",
         "description": "Actualiza atributos de una silla operativa.",
@@ -1281,6 +1294,7 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "saddles_list": ("GET", "/api/v1/saddles"),
     "saddles_get": ("GET", "/api/v1/saddles/{saddle_id}"),
     "saddles_update": ("PATCH", "/api/v1/saddles/{saddle_id}"),
+    "saddles_delete": ("DELETE", "/api/v1/saddles/{saddle_id}"),
     "assignments_create": ("POST", "/api/v1/assignments"),
     "assignments_get": ("GET", "/api/v1/assignments/{assignment_id}"),
     "assignments_update": ("PATCH", "/api/v1/assignments/{assignment_id}"),

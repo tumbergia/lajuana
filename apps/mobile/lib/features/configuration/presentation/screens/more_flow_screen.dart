@@ -19,8 +19,10 @@ import '../../../auth/presentation/user_role_display.dart';
 import '../../../catalogs/catalogs_module.dart';
 import '../../../catalogs/presentation/pages/catalogs_home_page.dart';
 import '../../../providers/presentation/screens/providers_module_screen.dart';
+import '../../../saddles/presentation/screens/saddles_module_screen.dart';
+import '../../../saddles/saddles_module.dart';
 
-enum _MoreDestination { menu, profile, contacts, changePassword, providers }
+enum _MoreDestination { menu, profile, contacts, changePassword, providers, sillas }
 
 class MoreFlowScreen extends StatefulWidget {
   const MoreFlowScreen({
@@ -28,12 +30,14 @@ class MoreFlowScreen extends StatefulWidget {
     required this.controller,
     required this.contactsApiClient,
     this.catalogsModule,
+    this.saddlesModule,
     this.onCallRequested,
   });
 
   final AuthController controller;
   final AuthApiClient contactsApiClient;
   final CatalogsModule? catalogsModule;
+  final SaddlesModule? saddlesModule;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -135,6 +139,8 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
         return _buildChangePassword();
       case _MoreDestination.providers:
         return _buildProvidersEmbedded();
+      case _MoreDestination.sillas:
+        return _buildSillasEmbedded();
     }
   }
 
@@ -163,6 +169,13 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
           subtitle: 'Catalogo operativo',
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.providers),
+        ),
+        const SizedBox(height: 12),
+        AppEntityRowCard(
+          title: 'Sillas',
+          subtitle: 'Inventario de montura',
+          trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+          onTap: () => _open(_MoreDestination.sillas),
         ),
         if (widget.catalogsModule != null) ...[
           const SizedBox(height: 12),
@@ -201,6 +214,29 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
           ),
         ),
         const ProvidersModuleScreen(showHeader: false),
+      ],
+    );
+  }
+
+  Widget _buildSillasEmbedded() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSectionHeader(
+          eyebrow: 'Gestion',
+          title: 'Sillas',
+          trailing: AppButton(
+            label: 'Volver',
+            icon: Icons.arrow_back_rounded,
+            variant: AppButtonVariant.ghost,
+            onPressed: () => _open(_MoreDestination.menu),
+          ),
+        ),
+        const SizedBox(height: 4),
+        SaddlesModuleScreen(
+          saddlesModule: widget.saddlesModule,
+          showHeader: false,
+        ),
       ],
     );
   }

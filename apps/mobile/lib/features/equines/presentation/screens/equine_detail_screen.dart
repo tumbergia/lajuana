@@ -4,10 +4,12 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import '../../../../app/theme/app_radii.dart';
 import '../../../../app/widgets/app_badge.dart';
 import '../../../../app/widgets/app_centered_loader.dart';
+import '../../../../app/widgets/app_confirm_dialog.dart';
 import '../../../../app/widgets/app_metric_card.dart';
 import '../../../../app/widgets/app_scaffold.dart';
 import '../../../../app/widgets/app_section_header.dart';
 import '../../../../app/widgets/app_status_banner.dart';
+import '../../../../app/widgets/app_button.dart';
 import '../../../../app/widgets/dashed_border_painter.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../../infrastructure/mappers/equine_mapper.dart';
@@ -21,6 +23,7 @@ class EquineDetailScreen extends StatefulWidget {
     required this.equineId,
     required this.repository,
     this.initialDetail,
+    this.userRole,
   });
 
   final String equineId;
@@ -28,6 +31,9 @@ class EquineDetailScreen extends StatefulWidget {
 
   /// Datos precargados del detalle. Si se provee, se evita un request HTTP.
   final EquineDetailRecord? initialDetail;
+  final String? userRole;
+
+  bool get canEdit => userRole == 'admin';
 
   @override
   State<EquineDetailScreen> createState() => _EquineDetailScreenState();
@@ -36,6 +42,7 @@ class EquineDetailScreen extends StatefulWidget {
 class _EquineDetailScreenState extends State<EquineDetailScreen> {
   EquineDetailRecord? _detail;
   bool _isLoading = true;
+  bool _isDeleting = false;
   String? _error;
 
   @override
@@ -70,6 +77,61 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
     }
   }
 
+  bool get _isDeleted => _detail == null ? false : !_detail!.isActive;
+
+  void _confirmDelete() {
+    AppConfirmDialog.show(
+      context: context,
+      icon: Icons.delete_outline_rounded,
+      title: 'Eliminar equino',
+      message: 'El equino "${_detail?.name}" se desactivará y '
+          'quedará oculto de los listados activos.\n\n'
+          'Esta acción es reversible.',
+      confirmLabel: 'Eliminar',
+      style: DialogStyle.danger,
+      height: 280,
+      onConfirm: () {
+        _doDelete();
+      },
+    );
+  }
+
+  Future<void> _doDelete() async {
+    setState(() => _isDeleting = true);
+    try {
+      await widget.repository.deleteEquine(widget.equineId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Equino eliminado correctamente')),
+      );
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al eliminar: $e')),
+      );
+    }
+  }
+
+  Future<void> _confirmRestore() async {
+    setState(() => _isDeleting = true);
+    try {
+      await widget.repository.restoreEquine(widget.equineId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Equino restaurado correctamente')),
+      );
+      _load();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isDeleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al restaurar: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
@@ -80,7 +142,20 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: const [],
+        actions: [
+          if (widget.canEdit && !_isDeleted)
+            IconButton(
+              icon: _isDeleting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete_outline_rounded),
+              onPressed: _isDeleting ? null : _confirmDelete,
+              tooltip: 'Eliminar equino',
+            ),
+        ],
       ),
       child: _buildBody(),
     );
@@ -104,6 +179,19 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Deleted banner
+        if (_isDeleted)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: AppStatusBanner(
+              title: 'Equino eliminado',
+              message: 'Está oculto de los listados activos. Toque para restaurar.',
+              tone: AppStatusBannerTone.danger,
+              icon: Icons.delete_outline_rounded,
+              badgeLabel: 'Eliminado',
+              onTap: widget.canEdit ? () => _confirmRestore() : null,
+            ),
+          ),
         // Foto + info header
         Padding(
           padding: const EdgeInsets.only(bottom: 24),
@@ -270,6 +358,27 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
             message: normalizeReason(d.availabilityReasons!),
             tone: _bannerToneFromBadge(d.statusTone),
           ),
+        ],
+        if (widget.canEdit) ...[
+          const SizedBox(height: 24),
+          const Divider(),
+          const SizedBox(height: 12),
+          if (_isDeleted)
+            AppButton(
+              label: _isDeleting ? 'Restaurando...' : 'Restaurar equino',
+              icon: Icons.restore_from_trash_rounded,
+              variant: AppButtonVariant.secondary,
+              expanded: true,
+              onPressed: _isDeleting ? null : _confirmRestore,
+            )
+          else
+            AppButton(
+              label: _isDeleting ? 'Eliminando...' : 'Eliminar equino',
+              icon: Icons.delete_outline_rounded,
+              variant: AppButtonVariant.danger,
+              expanded: true,
+              onPressed: _isDeleting ? null : _confirmDelete,
+            ),
         ],
       ],
     );

@@ -22,6 +22,7 @@ class ReservationListItem {
     this.requestedDate,
     this.createdAt,
     this.updatedAt,
+    this.deletedAt,
   });
 
   final String id;
@@ -44,4 +45,7 @@ class ReservationListItem {
   final String? requestedDate;
   final String? createdAt;
   final String? updatedAt;
+  final DateTime? deletedAt;
+
+  bool get isDeleted => deletedAt != null;
 }

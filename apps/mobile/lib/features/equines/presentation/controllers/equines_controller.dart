@@ -26,7 +26,9 @@ class EquinesController extends ChangeNotifier {
   /// Domain objects cacheados para derivar detail sin request extra.
   List<Equine> _allEquines = const [];
 
-  EquineOperationalStatus? _statusFilter;
+  /// Modo de filtro activo.
+  /// Valores: null (todos), 'available', 'unavailable', 'resting', 'in_service', 'deleted'
+  String? _filterMode;
   DateTime? _lastSyncedAt;
 
   String? _selectedEquineId;
@@ -60,7 +62,14 @@ class EquinesController extends ChangeNotifier {
 
   DateTime? get lastSyncedAt => _lastSyncedAt;
 
-  EquineOperationalStatus? get statusFilter => _statusFilter;
+  String? get filterMode => _filterMode;
+  bool get includeDeleted => _filterMode == 'deleted';
+
+  void setFilterMode(String? mode) {
+    if (_filterMode == mode) return;
+    _filterMode = mode;
+    loadEquines();
+  }
 
   /// Siempre success porque el detail se deriva de memoria (no hay request).
   EquinesLoadState get detailLoadState => EquinesLoadState.success;
@@ -82,8 +91,10 @@ class EquinesController extends ChangeNotifier {
   }
 
   void setStatusFilter(EquineOperationalStatus? status) {
-    if (_statusFilter == status) return;
-    _statusFilter = status;
+    // Migrar desde el filtro anterior (OperationalStatus) a _filterMode.
+    final newMode = status?.name;
+    if (_filterMode == newMode) return;
+    _filterMode = newMode;
     _applyFilter();
     notifyListeners();
   }
@@ -117,7 +128,16 @@ class EquinesController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final equines = await _repository.listEquines();
+      // Derive operationalStatus e includeDeleted desde _filterMode.
+      String? operationalStatus;
+      final includeDeleted = _filterMode == 'deleted';
+      if (_filterMode != null && _filterMode != 'deleted') {
+        operationalStatus = _filterMode;
+      }
+      final equines = await _repository.listEquines(
+        operationalStatus: operationalStatus,
+        includeDeleted: includeDeleted,
+      );
       if (equines.isEmpty) {
         _allEquines = const [];
         _allRecords = const [];
@@ -152,6 +172,32 @@ class EquinesController extends ChangeNotifier {
     try {
       await _repository.createEquine(data);
       await loadEquines(); // reload list (incluye detail desde memoria)
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _loadState = EquinesLoadState.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteEquine(String equineId) async {
+    try {
+      await _repository.deleteEquine(equineId);
+      await loadEquines(); // refresh list
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _loadState = EquinesLoadState.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> restoreEquine(String equineId) async {
+    try {
+      await _repository.restoreEquine(equineId);
+      await loadEquines(); // refresh list
       return true;
     } catch (e) {
       _errorMessage = e.toString();
@@ -206,13 +252,26 @@ class EquinesController extends ChangeNotifier {
                 r.statusTone == AppBadgeTone.danger)
             .toList(growable: false);
     }
-    // Luego aplica filtro de estado operativo si está activo.
-    if (_statusFilter != null) {
-      _records = _records.where((r) {
-        // Buscar el equine correspondiente para obtener su estado operativo real.
-        final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
-        return equine?.operationalStatus == _statusFilter;
-      }).toList(growable: false);
+    // Luego aplica filtro según _filterMode.
+    if (_filterMode != null) {
+      if (_filterMode == 'deleted') {
+        // Mostrar solo equinos borrados (isActive == false).
+        _records = _records.where((r) {
+          final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
+          return equine?.isActive == false;
+        }).toList(growable: false);
+      } else {
+        // Filtro por estado operativo (available, unavailable, etc.).
+        final targetStatus = EquineOperationalStatus.values.where(
+          (e) => e.name == _filterMode,
+        ).firstOrNull;
+        if (targetStatus != null) {
+          _records = _records.where((r) {
+            final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
+            return equine?.operationalStatus == targetStatus;
+          }).toList(growable: false);
+        }
+      }
     }
   }
 }

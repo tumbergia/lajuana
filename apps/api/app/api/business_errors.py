@@ -701,6 +701,11 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_404": ("B404-008",),
         "cases_409": ("B409-010",),
     },
+    ("DELETE", "/api/v1/saddles/{saddle_id}"): {
+        "cases_400": (),
+        "cases_404": ("B404-008",),
+        "cases_409": (),
+    },
     ("POST", "/api/v1/assignments"): {
         "cases_400": ("B400-027", "B400-028"),
         "cases_404": ("B404-004", "B404-006", "B404-007", "B404-008"),

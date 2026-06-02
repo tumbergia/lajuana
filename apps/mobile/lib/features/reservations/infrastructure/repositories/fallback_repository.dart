@@ -12,6 +12,7 @@ class FallbackRepository implements ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
+    bool includeDeleted = false,
   }) async {
     return const <ReservationListItem>[];
   }
@@ -80,6 +81,20 @@ class FallbackRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail> cancelReservation({
+    required String reservationId,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> deleteReservation({
+    required String reservationId,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> restoreReservation({
     required String reservationId,
   }) async {
     throw Exception('ReservationsModule no inyectado');

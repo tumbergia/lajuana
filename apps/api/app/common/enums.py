@@ -159,10 +159,14 @@ class Permission(StrEnum):
     EQUINE_READ = "equine.read"
     EQUINE_CREATE = "equine.create"
     EQUINE_UPDATE = "equine.update"
+    EQUINE_DELETE = "equine.delete"
+
+    RESERVATION_DELETE = "reservation.delete"
 
     SADDLE_READ = "saddle.read"
     SADDLE_CREATE = "saddle.create"
     SADDLE_UPDATE = "saddle.update"
+    SADDLE_DELETE = "saddle.delete"
 
     ASSIGNMENT_READ = "assignment.read"
     ASSIGNMENT_CREATE = "assignment.create"

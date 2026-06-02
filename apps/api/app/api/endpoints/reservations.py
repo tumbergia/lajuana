@@ -99,16 +99,21 @@ async def list_reservations(
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_READ)),
     ],
+    include_deleted: bool = Query(default=False, description="Incluir reservas borradas logicamente"),
     limit: int = Query(default=200, ge=1, le=1000, description="Max items"),
     skip: int = Query(default=0, ge=0, description="Items to skip"),
     reservation_service: ReservationService = Depends(get_reservation_service),
     response: Response = None,
 ) -> list[ReservationListItemSchema]:
-    total = await reservation_service.count(actor_role=current_user.role)
+    total = await reservation_service.count(
+        actor_role=current_user.role,
+        include_deleted=include_deleted,
+    )
     response.headers["X-Total-Count"] = str(total)
 
     docs = await reservation_service.list(
         actor_role=current_user.role,
+        include_deleted=include_deleted,
         limit=limit,
         skip=skip,
     )
@@ -262,6 +267,54 @@ async def cancel_reservation(
     reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
     doc = await reservation_service.cancel_reservation(reservation_id, actor_id=current_user.id)
+    return await reservation_to_response(doc)
+
+
+@router.delete(
+    "/{reservation_id}",
+    response_model=ReservationResponseSchema,
+    summary="Borrar reserva (borrado lógico)",
+    description="Establece deleted_at para ocultar la reserva de listados activos. No la elimina físicamente.",
+    operation_id="deleteReservation",
+    responses={
+        200: {"description": "Reserva borrada lógicamente."},
+        401: {"description": "No autenticado."},
+        404: {"description": "Reserva no encontrada."},
+    },
+)
+async def delete_reservation(
+    reservation_id: str,
+    current_user: Annotated[
+        UserDocument,
+        Depends(require_permissions(Permission.RESERVATION_DELETE)),
+    ],
+    reservation_service: ReservationService = Depends(get_reservation_service),
+) -> ReservationResponseSchema:
+    doc = await reservation_service.soft_delete(reservation_id)
+    return await reservation_to_response(doc)
+
+
+@router.post(
+    "/{reservation_id}/restore",
+    response_model=ReservationResponseSchema,
+    summary="Restaurar reserva borrada",
+    description="Quita el deleted_at para que la reserva vuelva a aparecer en listados activos.",
+    operation_id="restoreReservation",
+    responses={
+        200: {"description": "Reserva restaurada."},
+        401: {"description": "No autenticado."},
+        404: {"description": "Reserva no encontrada."},
+    },
+)
+async def restore_reservation(
+    reservation_id: str,
+    current_user: Annotated[
+        UserDocument,
+        Depends(require_permissions(Permission.RESERVATION_UPDATE)),
+    ],
+    reservation_service: ReservationService = Depends(get_reservation_service),
+) -> ReservationResponseSchema:
+    doc = await reservation_service.restore(reservation_id)
     return await reservation_to_response(doc)
 
 

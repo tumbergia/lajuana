@@ -181,6 +181,8 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                         label: 'Confirmadas', value: 'confirmadas'),
                     AppSegmentedFilterItem(
                         label: 'Cerradas', value: 'cerradas'),
+                    AppSegmentedFilterItem(
+                        label: 'Eliminadas', value: 'eliminadas'),
                   ],
                 ),
 

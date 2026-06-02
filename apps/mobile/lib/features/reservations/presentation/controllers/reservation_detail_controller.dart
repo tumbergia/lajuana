@@ -61,6 +61,11 @@ class ReservationDetailController extends ChangeNotifier {
   String? cancellationErrorCode;
   String? cancellationErrorMessage;
 
+  // Delete (soft-delete) de reserva
+  ReservationActionState deleteState = ReservationActionState.idle;
+  String? deleteErrorCode;
+  String? deleteErrorMessage;
+
   @override
   void dispose() {
     _disposed = true;
@@ -78,6 +83,9 @@ class ReservationDetailController extends ChangeNotifier {
     cancellationState = ReservationActionState.idle;
     cancellationErrorCode = null;
     cancellationErrorMessage = null;
+    deleteState = ReservationActionState.idle;
+    deleteErrorCode = null;
+    deleteErrorMessage = null;
   }
 
   /// Reset action state after a short delay so the UI can show "success" briefly
@@ -351,6 +359,90 @@ class ReservationDetailController extends ChangeNotifier {
       notifyListeners();
       _resetCancellationDelayed();
     }
+  }
+
+  /// Soft-delete de la reserva actual. Solo si [isAdmin] es true.
+  Future<void> deleteReservation({
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      deleteErrorCode = 'permission.denied';
+      deleteErrorMessage = 'No tienes permisos para eliminar reservas.';
+      deleteState = ReservationActionState.error;
+      notifyListeners();
+      return;
+    }
+    if (deleteState != ReservationActionState.idle) return;
+
+    deleteState = ReservationActionState.confirming;
+    deleteErrorCode = null;
+    deleteErrorMessage = null;
+    notifyListeners();
+
+    try {
+      detail = await _repository.deleteReservation(
+        reservationId: detail!.id,
+      );
+      deleteState = ReservationActionState.success;
+    } on ReservationsApiFailure catch (e) {
+      deleteErrorCode = e.code;
+      deleteErrorMessage = e.message;
+      deleteState = ReservationActionState.error;
+    } catch (_) {
+      deleteErrorCode = 'common.error';
+      deleteErrorMessage = 'Error inesperado al eliminar reserva.';
+      deleteState = ReservationActionState.error;
+    } finally {
+      notifyListeners();
+      _resetDeleteDelayed();
+    }
+  }
+
+  /// Restaura una reserva previamente borrada.
+  Future<void> restoreReservation({
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      deleteErrorCode = 'permission.denied';
+      deleteErrorMessage = 'No tienes permisos para restaurar reservas.';
+      deleteState = ReservationActionState.error;
+      notifyListeners();
+      return;
+    }
+    if (deleteState != ReservationActionState.idle) return;
+
+    deleteState = ReservationActionState.confirming;
+    deleteErrorCode = null;
+    deleteErrorMessage = null;
+    notifyListeners();
+
+    try {
+      detail = await _repository.restoreReservation(
+        reservationId: detail!.id,
+      );
+      deleteState = ReservationActionState.success;
+    } on ReservationsApiFailure catch (e) {
+      deleteErrorCode = e.code;
+      deleteErrorMessage = e.message;
+      deleteState = ReservationActionState.error;
+    } catch (_) {
+      deleteErrorCode = 'common.error';
+      deleteErrorMessage = 'Error inesperado al restaurar reserva.';
+      deleteState = ReservationActionState.error;
+    } finally {
+      notifyListeners();
+      _resetDeleteDelayed();
+    }
+  }
+
+  void _resetDeleteDelayed() {
+    Future.microtask(() {
+      if (_disposed) return;
+      if (deleteState != ReservationActionState.idle) {
+        deleteState = ReservationActionState.idle;
+        notifyListeners();
+      }
+    });
   }
 
   void _resetCancellationDelayed() {

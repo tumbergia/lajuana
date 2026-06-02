@@ -31,6 +31,7 @@ class ReservationDetail {
     this.confirmedAt,
     this.cancelledAt,
     this.completedAt,
+    this.deletedAt,
     this.paymentSummary,
     this.timeline = const [],
     this.operationalAlerts = const [],
@@ -62,6 +63,7 @@ class ReservationDetail {
   final String? confirmedAt;
   final String? cancelledAt;
   final String? completedAt;
+  final DateTime? deletedAt;
   final ReservationPaymentSummary? paymentSummary;
   final List<ReservationTimelineEvent> timeline;
   final List<ReservationOperationalAlert> operationalAlerts;

@@ -19,6 +19,7 @@ import '../../features/equines/presentation/screens/equines_module_screen.dart';
 import '../../features/participants/presentation/screens/participants_module_screen.dart';
 import '../../features/reservations/presentation/screens/reservations_module_screen.dart';
 import '../../features/reservations/reservations_module.dart';
+import '../../features/saddles/saddles_module.dart';
 
 class AuthenticatedShell extends StatefulWidget {
   const AuthenticatedShell({
@@ -27,6 +28,7 @@ class AuthenticatedShell extends StatefulWidget {
     required this.contactsApiClient,
     this.catalogsModule,
     this.reservationsModule,
+    this.saddlesModule,
     required this.equineRepository,
     this.onCallRequested,
   });
@@ -35,6 +37,7 @@ class AuthenticatedShell extends StatefulWidget {
   final AuthApiClient contactsApiClient;
   final CatalogsModule? catalogsModule;
   final ReservationsModule? reservationsModule;
+  final SaddlesModule? saddlesModule;
   final EquineRepository equineRepository;
   final Future<bool> Function(String phone)? onCallRequested;
 
@@ -102,6 +105,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           controller: widget.authController,
           contactsApiClient: widget.contactsApiClient,
           catalogsModule: widget.catalogsModule,
+          saddlesModule: widget.saddlesModule,
           onCallRequested: widget.onCallRequested,
         );
       case AppNavItem.none:

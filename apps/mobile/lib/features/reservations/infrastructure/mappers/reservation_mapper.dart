@@ -201,6 +201,7 @@ ReservationListItem dtoToListItem(ReservationListItemDto dto) {
     requestedDate: dto.requestedDate,
     createdAt: dto.createdAt?.toIso8601String(),
     updatedAt: dto.updatedAt?.toIso8601String(),
+    deletedAt: dto.deletedAt,
   );
 }
 
@@ -229,6 +230,7 @@ ReservationDetail dtoToDetail(ReservationDetailDto dto) {
     confirmedAt: dto.confirmedAt?.toIso8601String(),
     cancelledAt: dto.cancelledAt?.toIso8601String(),
     completedAt: dto.completedAt?.toIso8601String(),
+    deletedAt: dto.deletedAt,
     paymentSummary: ReservationPaymentSummary(
       status: dto.paymentStatus,
       proofCount: dto.paymentProofs.length,
@@ -259,6 +261,7 @@ ReservationDetail dtoToDetail(ReservationDetailDto dto) {
     confirmedAt: baseDetail.confirmedAt,
     cancelledAt: baseDetail.cancelledAt,
     completedAt: baseDetail.completedAt,
+    deletedAt: baseDetail.deletedAt,
     paymentSummary: baseDetail.paymentSummary,
     timeline: deriveFallbackTimeline(baseDetail),
     operationalAlerts: baseDetail.operationalAlerts,
@@ -298,5 +301,6 @@ ReservationRecord listItemToRecord(
     formStatus: item.participantFormStatus,
     hasPendingSync: false,
     hasSyncError: false,
+    isDeleted: item.isDeleted,
   );
 }

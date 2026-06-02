@@ -338,6 +338,39 @@ class _ReservationDetailShellScreenState
                 ? null
                 : () => _showCancelConfirmation(),
           ),
+          const SizedBox(height: 8),
+        ],
+        // Delete reservation action (admin only)
+        if (_isAdmin) ...[
+          if (detail.deletedAt != null) ...[
+            AppButton(
+              label: _controller.deleteState ==
+                      ReservationActionState.confirming
+                  ? 'Restaurando...'
+                  : 'Restaurar reserva',
+              icon: Icons.restore_from_trash_rounded,
+              variant: AppButtonVariant.secondary,
+              expanded: true,
+              onPressed: _controller.deleteState ==
+                      ReservationActionState.confirming
+                  ? null
+                  : () => _showRestoreConfirmation(),
+            ),
+          ] else ...[
+            AppButton(
+              label: _controller.deleteState ==
+                      ReservationActionState.confirming
+                  ? 'Eliminando...'
+                  : 'Eliminar reserva',
+              icon: Icons.delete_outline_rounded,
+              variant: AppButtonVariant.danger,
+              expanded: true,
+              onPressed: _controller.deleteState ==
+                      ReservationActionState.confirming
+                  ? null
+                  : () => _showDeleteConfirmation(),
+            ),
+          ],
         ],
           ],
         ),
@@ -829,6 +862,93 @@ class _ReservationDetailShellScreenState
               });
             }
           : () {},
+    );
+  }
+
+  void _showDeleteConfirmation() {
+    final detail = _controller.detail;
+    if (detail == null) return;
+
+    AppConfirmDialog.show(
+      context: context,
+      icon: Icons.delete_outline_rounded,
+      title: 'Eliminar reserva',
+      message:
+          'La reserva "${detail.code}" se ocultará de los listados activos.\n\n'
+          'Esta acción es reversible.',
+      confirmLabel: 'Eliminar',
+      style: DialogStyle.danger,
+      height: 280,
+      onConfirm: () {
+        _controller.deleteReservation(isAdmin: _isAdmin).whenComplete(() {
+          if (!mounted) return;
+          if (_controller.deleteErrorCode != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  _controller.deleteErrorMessage ??
+                      'Error al eliminar reserva',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: AppColors.danger,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Reserva eliminada',
+                  style: TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        });
+      },
+    );
+  }
+
+  void _showRestoreConfirmation() {
+    final detail = _controller.detail;
+    if (detail == null) return;
+
+    AppConfirmDialog.show(
+      context: context,
+      icon: Icons.restore_from_trash_rounded,
+      title: 'Restaurar reserva',
+      message:
+          'La reserva "${detail.code}" volverá a aparecer en los listados activos.',
+      confirmLabel: 'Restaurar',
+      style: DialogStyle.regular,
+      height: 240,
+      onConfirm: () {
+        _controller.restoreReservation(isAdmin: _isAdmin).whenComplete(() {
+          if (!mounted) return;
+          if (_controller.deleteErrorCode != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  _controller.deleteErrorMessage ??
+                      'Error al restaurar reserva',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                backgroundColor: AppColors.danger,
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Reserva restaurada',
+                  style: TextStyle(color: Colors.white),
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        });
+      },
     );
   }
 

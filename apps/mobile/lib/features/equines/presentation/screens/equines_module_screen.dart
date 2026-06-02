@@ -15,7 +15,6 @@ import '../../../../app/widgets/app_status_banner.dart';
 import '../../../../app/widgets/cards/app_image_feature_card.dart';
 import '../../../../app/widgets/cards/app_logbook_timeline.dart';
 import '../../../../app/widgets/refresh_scope.dart';
-import '../../domain/models/equine_operational_status.dart';
 import '../../domain/models/equine_timeline_entry.dart';
 import '../../domain/repositories/equine_repository.dart';
 import '../../infrastructure/mappers/equine_mapper.dart';
@@ -359,6 +358,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                                     equineId: _controller.selectedEquineId!,
                                     repository: widget.repository,
                                     initialDetail: _controller.selectedDetail,
+                                    userRole: widget.userRole,
                                   ),
                                 ),
                               );
@@ -465,6 +465,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                         builder: (_) => EquineDetailScreen(
                           equineId: equine.id,
                           repository: widget.repository,
+                          userRole: widget.userRole,
                         ),
                       ),
                     );
@@ -552,28 +553,37 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
   }
 
   Widget _buildStatusFilter() {
-    return AppSegmentedFilter<EquineOperationalStatus?>(
-      value: _controller.statusFilter,
-      onChanged: (v) => _controller.setStatusFilter(v),
-      items: const [
-        AppSegmentedFilterItem(label: 'TODOS', value: null),
-        AppSegmentedFilterItem(
-          label: 'DISPONIBLES',
-          value: EquineOperationalStatus.available,
+    // Construir opciones base: TODOS + estados operativos + ELIMINADOS.
+    final items = <AppSegmentedFilterItem<String?>>[
+      const AppSegmentedFilterItem(label: 'TODOS', value: null),
+      const AppSegmentedFilterItem(
+        label: 'DISPONIBLES',
+        value: 'available',
+      ),
+      const AppSegmentedFilterItem(
+        label: 'NO DISP.',
+        value: 'unavailable',
+      ),
+      const AppSegmentedFilterItem(
+        label: 'DESCANSO',
+        value: 'resting',
+      ),
+      const AppSegmentedFilterItem(
+        label: 'EN SERVICIO',
+        value: 'in_service',
+      ),
+      if (widget.canEdit)
+        const AppSegmentedFilterItem(
+          label: 'ELIMINADOS',
+          value: 'deleted',
         ),
-        AppSegmentedFilterItem(
-          label: 'NO DISP.',
-          value: EquineOperationalStatus.unavailable,
-        ),
-        AppSegmentedFilterItem(
-          label: 'DESCANSO',
-          value: EquineOperationalStatus.resting,
-        ),
-        AppSegmentedFilterItem(
-          label: 'EN SERVICIO',
-          value: EquineOperationalStatus.inService,
-        ),
-      ],
+    ];
+
+    // Elegir valor actual: _filterMode mapea directamente a los values string.
+    return AppSegmentedFilter<String?>(
+      value: _controller.filterMode,
+      onChanged: (v) => _controller.setFilterMode(v),
+      items: items,
     );
   }
 

@@ -24,10 +24,15 @@ class ReservationsApiClient {
   final Future<bool> Function() _refreshSession;
   final http.Client _http;
 
-  Future<List<ReservationListItemDto>> listReservations() async {
+  Future<List<ReservationListItemDto>> listReservations({
+    bool includeDeleted = false,
+  }) async {
+    final path = includeDeleted
+        ? '/reservations?include_deleted=true'
+        : '/reservations';
     final response = await _authorizedRequest(
       method: 'GET',
-      path: '/reservations',
+      path: path,
     );
     final decoded = jsonDecode(response.body);
     if (decoded is! List) {
@@ -169,6 +174,30 @@ class ReservationsApiClient {
       method: 'POST',
       path: '/reservations/$reservationId/cancel',
       body: {},
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
+  /// Soft-deletes a reservation (sets deleted_at).
+  Future<ReservationDetailDto> deleteReservation({
+    required String reservationId,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'DELETE',
+      path: '/reservations/$reservationId',
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
+  /// Restores a soft-deleted reservation.
+  Future<ReservationDetailDto> restoreReservation({
+    required String reservationId,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/reservations/$reservationId/restore',
     );
     final data = _decodeBody(response.body);
     return ReservationDetailDto.fromJson(data);

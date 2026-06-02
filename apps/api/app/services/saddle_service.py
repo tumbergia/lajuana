@@ -1,3 +1,5 @@
+from datetime import datetime, UTC
+
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import SaddleDocument
@@ -17,11 +19,22 @@ class SaddleService:
         await doc.insert()
         return doc
 
-    async def list(self, limit: int = 200, skip: int = 0) -> list[SaddleDocument]:
-        return await SaddleDocument.find_all().skip(skip).limit(limit).to_list()
+    async def list(
+        self,
+        limit: int = 200,
+        skip: int = 0,
+        include_deleted: bool = False,
+    ) -> list[SaddleDocument]:
+        query: dict[str, object] = {}
+        if not include_deleted:
+            query["deleted_at"] = None
+        return await SaddleDocument.find(query).skip(skip).limit(limit).to_list()
 
-    async def count(self) -> int:
-        return await SaddleDocument.find_all().count()
+    async def count(self, include_deleted: bool = False) -> int:
+        query: dict[str, object] = {}
+        if not include_deleted:
+            query["deleted_at"] = None
+        return await SaddleDocument.find(query).count()
 
     async def get(self, saddle_id: str) -> SaddleDocument:
         doc = await SaddleDocument.get(saddle_id)
@@ -31,6 +44,18 @@ class SaddleService:
                 code=ErrorCode.SADDLE_NOT_FOUND,
                 message="Silla no encontrada.",
             )
+        return doc
+
+    async def soft_delete(self, saddle_id: str) -> SaddleDocument:
+        doc = await self.get(saddle_id)
+        doc.deleted_at = datetime.now(UTC)
+        await doc.save()
+        return doc
+
+    async def restore(self, saddle_id: str) -> SaddleDocument:
+        doc = await self.get(saddle_id)
+        doc.deleted_at = None
+        await doc.save()
         return doc
 
     async def update(self, saddle_id: str, payload: SaddleUpdateSchema) -> SaddleDocument:

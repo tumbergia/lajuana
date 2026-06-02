@@ -45,11 +45,17 @@ async def list_saddles(
     response: Response,
     limit: int = Query(default=200, ge=1, le=1000),
     skip: int = Query(default=0, ge=0),
+    include_deleted: bool = Query(default=False),
     service: SaddleService = Depends(get_saddle_service),
 ) -> list[SaddleResponseSchema]:
-    total = await service.count()
+    total = await service.count(include_deleted=include_deleted)
     response.headers["X-Total-Count"] = str(total)
-    return [saddle_to_response(item) for item in await service.list(limit=limit, skip=skip)]
+    return [
+        saddle_to_response(item)
+        for item in await service.list(
+            limit=limit, skip=skip, include_deleted=include_deleted
+        )
+    ]
 
 
 @router.get(
@@ -83,3 +89,35 @@ async def update_saddle(
     service: SaddleService = Depends(get_saddle_service),
 ) -> SaddleResponseSchema:
     return saddle_to_response(await service.update(saddle_id, payload))
+
+
+@router.delete(
+    "/{saddle_id}",
+    response_model=SaddleResponseSchema,
+    summary="Eliminar silla (borrado lógico)",
+    description="Establece deleted_at para ocultar la silla de listados activos. No la elimina físicamente.",
+    operation_id="deleteSaddle",
+    responses=endpoint_responses("saddles_delete"),
+)
+async def delete_saddle(
+    saddle_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.SADDLE_DELETE))],
+    service: SaddleService = Depends(get_saddle_service),
+) -> SaddleResponseSchema:
+    return saddle_to_response(await service.soft_delete(saddle_id))
+
+
+@router.post(
+    "/{saddle_id}/restore",
+    response_model=SaddleResponseSchema,
+    summary="Restaurar silla borrada",
+    description="Quita el deleted_at para que la silla vuelva a aparecer en listados activos.",
+    operation_id="restoreSaddle",
+    responses=endpoint_responses("saddles_update"),
+)
+async def restore_saddle(
+    saddle_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.SADDLE_UPDATE))],
+    service: SaddleService = Depends(get_saddle_service),
+) -> SaddleResponseSchema:
+    return saddle_to_response(await service.restore(saddle_id))
