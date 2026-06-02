@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:mobile_core/mobile_core.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../emergency_contacts/domain/emergency_contact.dart';
@@ -207,7 +208,7 @@ class CatalogsRepository {
         operationType: row['operation_type'] as String,
         entityLocalId: row['entity_local_id'] as String,
         entityRemoteId: row['entity_remote_id'] as String?,
-        baseVersion: row['base_version'] as int?,
+        baseVersion: parseInt(row['base_version']),
         idempotencyKey: row['idempotency_key'] as String,
         payloadJson: row['payload_json'] as String,
         status: row['status'] as String,
@@ -423,7 +424,7 @@ class CatalogsRepository {
     if (row.isEmpty) return;
     final current = row.first;
     final remoteId = current['remote_id'] as String?;
-    final version = current['version_remote'] as int?;
+    final version = parseInt(current['version_remote']);
     await db.update(
       'experiences_local',
       {
@@ -496,7 +497,7 @@ class CatalogsRepository {
     if (row.isEmpty) return;
     final current = row.first;
     final remoteId = current['remote_id'] as String?;
-    final version = current['version_remote'] as int?;
+    final version = parseInt(current['version_remote']);
     await db.update(
       'experiences_local',
       {
@@ -625,7 +626,7 @@ class CatalogsRepository {
     if (row.isEmpty) return;
     final current = row.first;
     final remoteId = current['remote_id'] as String?;
-    final version = current['version_remote'] as int?;
+    final version = parseInt(current['version_remote']);
     final available = _availableSlots(
       capacityTotal: capacityTotal,
       reservedSlots: reservedSlots,
@@ -681,7 +682,7 @@ class CatalogsRepository {
     if (row.isEmpty) return;
     final current = row.first;
     final remoteId = current['remote_id'] as String?;
-    final version = current['version_remote'] as int?;
+    final version = parseInt(current['version_remote']);
     await db.update(
       'schedules_local',
       {
@@ -733,7 +734,7 @@ class CatalogsRepository {
     );
     final version = current.isEmpty
         ? null
-        : current.first['version_remote'] as int?;
+        : parseInt(current.first['version_remote']);
     await db.insert('reservation_rules_local', {
       'id': 1,
       'min_days_in_advance': minDaysInAdvance,
@@ -976,7 +977,7 @@ class CatalogsRepository {
     required Map<String, dynamic> result,
   }) async {
     final remoteId = result['entity_remote_id'] as String?;
-    final version = result['version'] as int?;
+    final version = parseInt(result['version']);
     final payload = result['payload'];
     if (remoteId != null && remoteId.isNotEmpty) {
       await db.insert('id_map', {
@@ -1064,18 +1065,18 @@ class CatalogsRepository {
       'route_details_json': _encodeNullableJson(payload['route_details']),
       'pricing_json': _encodeNullableJson(payload['pricing']),
       'inclusions_json': _encodeNullableJson(payload['inclusions']),
-      'standard_max_participants': payload['standard_max_participants'] as int?,
-      'min_participants': payload['min_participants'] as int?,
+      'standard_max_participants': parseInt(payload['standard_max_participants']),
+      'min_participants': parseInt(payload['min_participants']),
       'tags_json': _encodeNullableJson(payload['tags']),
-      'duration_hours': payload['duration_hours'] as int?,
-      'duration_days': payload['duration_days'] as int?,
-      'base_capacity': payload['base_capacity'] as int?,
+      'duration_hours': parseInt(payload['duration_hours']),
+      'duration_days': parseInt(payload['duration_days']),
+      'base_capacity': parseInt(payload['base_capacity']),
       'is_active': (payload['is_active'] as bool? ?? true) ? 1 : 0,
       'sync_status': catalogSyncStatusToDb(nextStatus),
       'sync_error': nextStatus == CatalogSyncStatus.synced
           ? null
           : existingByTarget.first['sync_error'],
-      'version_remote': payload['version'] as int?,
+      'version_remote': parseInt(payload['version']),
       'updated_at_remote': payload['updated_at'] as String?,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
@@ -1118,11 +1119,11 @@ class CatalogsRepository {
       'date': payload['date'] as String? ?? '',
       'start_time': payload['start_time'] as String? ?? '00:00:00',
       'is_active': (payload['is_active'] as bool? ?? true) ? 1 : 0,
-      'capacity_total': payload['capacity_total'] as int? ?? 0,
-      'reserved_slots': payload['reserved_slots'] as int? ?? 0,
-      'internal_slots': payload['internal_slots'] as int? ?? 0,
-      'blocked_slots': payload['blocked_slots'] as int? ?? 0,
-      'available_slots': payload['available_slots'] as int? ?? 0,
+      'capacity_total': parseInt(payload['capacity_total']) ?? 0,
+      'reserved_slots': parseInt(payload['reserved_slots']) ?? 0,
+      'internal_slots': parseInt(payload['internal_slots']) ?? 0,
+      'blocked_slots': parseInt(payload['blocked_slots']) ?? 0,
+      'available_slots': parseInt(payload['available_slots']) ?? 0,
       'status': payload['status'] as String? ?? 'open',
       'custom_request_only': (payload['custom_request_only'] as bool? ?? false)
           ? 1
@@ -1132,7 +1133,7 @@ class CatalogsRepository {
       'sync_error': nextStatus == CatalogSyncStatus.synced
           ? null
           : existingByTarget.first['sync_error'],
-      'version_remote': payload['version'] as int?,
+      'version_remote': parseInt(payload['version']),
       'updated_at_remote': payload['updated_at'] as String?,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
@@ -1154,7 +1155,7 @@ class CatalogsRepository {
         : currentStatus;
     await db.insert('reservation_rules_local', {
       'id': 1,
-      'min_days_in_advance': payload['min_days_in_advance'] as int? ?? 0,
+      'min_days_in_advance': parseInt(payload['min_days_in_advance']) ?? 0,
       'require_payment_proof_for_confirmation':
           (payload['require_payment_proof_for_confirmation'] as bool? ?? true)
           ? 1
@@ -1163,7 +1164,7 @@ class CatalogsRepository {
       'sync_error': nextStatus == CatalogSyncStatus.synced
           ? null
           : current.first['sync_error'],
-      'version_remote': payload['version'] as int?,
+      'version_remote': parseInt(payload['version']),
       'updated_at_remote': payload['updated_at'] as String?,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
@@ -1257,8 +1258,8 @@ class CatalogsRepository {
 
   CatalogExperienceDuration? _durationFromMap(Map<String, dynamic>? map) {
     if (map == null) return null;
-    final activity = map['activity_minutes'] as int?;
-    final route = map['route_minutes'] as int?;
+    final activity = parseInt(map['activity_minutes']);
+    final route = parseInt(map['route_minutes']);
     if (activity == null || route == null) return null;
     return CatalogExperienceDuration(
       activityMinutes: activity,
@@ -1274,7 +1275,7 @@ class CatalogsRepository {
     final terrain = map['terrain'] as String?;
     if (terrain == null || terrain.trim().isEmpty) return null;
     return CatalogExperienceRouteDetails(
-      distanceKm: (map['distance_km'] as num?)?.toDouble(),
+      distanceKm: parseDouble(map['distance_km']),
       terrain: terrain,
       terrainNotes: map['terrain_notes'] as String?,
     );
@@ -1288,9 +1289,9 @@ class CatalogsRepository {
     for (final raw in tiersRaw) {
       if (raw is! Map) continue;
       final item = Map<String, dynamic>.from(raw);
-      final minParticipants = item['min_participants'] as int?;
-      final maxParticipants = item['max_participants'] as int?;
-      final pricePerPerson = item['price_per_person'] as int?;
+      final minParticipants = parseInt(item['min_participants']);
+      final maxParticipants = parseInt(item['max_participants']);
+      final pricePerPerson = parseInt(item['price_per_person']);
       if (minParticipants == null ||
           maxParticipants == null ||
           pricePerPerson == null) {
@@ -1373,17 +1374,17 @@ class CatalogsRepository {
       routeDetails: _routeDetailsFromMap(routeDetailsMap),
       pricing: _pricingFromMap(pricingMap),
       inclusions: _inclusionsFromMap(inclusionsMap),
-      standardMaxParticipants: row['standard_max_participants'] as int?,
-      minParticipants: row['min_participants'] as int?,
+      standardMaxParticipants: parseInt(row['standard_max_participants']),
+      minParticipants: parseInt(row['min_participants']),
       tags: tagsRaw == null
           ? const <String>[]
           : tagsRaw.whereType<String>().toList(growable: false),
-      durationHours: row['duration_hours'] as int?,
-      durationDays: row['duration_days'] as int?,
-      baseCapacity: row['base_capacity'] as int?,
-      isActive: (row['is_active'] as int? ?? 1) == 1,
+      durationHours: parseInt(row['duration_hours']),
+      durationDays: parseInt(row['duration_days']),
+      baseCapacity: parseInt(row['base_capacity']),
+      isActive: (parseInt(row['is_active']) ?? 1) == 1,
       syncStatus: catalogSyncStatusFromDb(row['sync_status'] as String),
-      versionRemote: row['version_remote'] as int?,
+      versionRemote: parseInt(row['version_remote']),
       syncError: row['sync_error'] as String?,
       updatedAtRemote: _parseDate(row['updated_at_remote'] as String?),
     );
@@ -1396,17 +1397,17 @@ class CatalogsRepository {
       experienceId: row['experience_id'] as String,
       date: row['date'] as String,
       startTime: row['start_time'] as String,
-      isActive: (row['is_active'] as int? ?? 1) == 1,
-      capacityTotal: row['capacity_total'] as int? ?? 0,
-      reservedSlots: row['reserved_slots'] as int? ?? 0,
-      internalSlots: row['internal_slots'] as int? ?? 0,
-      blockedSlots: row['blocked_slots'] as int? ?? 0,
-      availableSlots: row['available_slots'] as int? ?? 0,
+      isActive: (parseInt(row['is_active']) ?? 1) == 1,
+      capacityTotal: parseInt(row['capacity_total']) ?? 0,
+      reservedSlots: parseInt(row['reserved_slots']) ?? 0,
+      internalSlots: parseInt(row['internal_slots']) ?? 0,
+      blockedSlots: parseInt(row['blocked_slots']) ?? 0,
+      availableSlots: parseInt(row['available_slots']) ?? 0,
       status: parseCatalogScheduleStatus((row['status'] as String?) ?? 'open'),
-      customRequestOnly: (row['custom_request_only'] as int? ?? 0) == 1,
+      customRequestOnly: (parseInt(row['custom_request_only']) ?? 0) == 1,
       notes: row['notes'] as String?,
       syncStatus: catalogSyncStatusFromDb(row['sync_status'] as String),
-      versionRemote: row['version_remote'] as int?,
+      versionRemote: parseInt(row['version_remote']),
       syncError: row['sync_error'] as String?,
       updatedAtRemote: _parseDate(row['updated_at_remote'] as String?),
     );
@@ -1414,11 +1415,11 @@ class CatalogsRepository {
 
   CatalogReservationRules _rulesFromRow(Map<String, Object?> row) {
     return CatalogReservationRules(
-      minDaysInAdvance: row['min_days_in_advance'] as int? ?? 0,
+      minDaysInAdvance: parseInt(row['min_days_in_advance']) ?? 0,
       requirePaymentProofForConfirmation:
-          (row['require_payment_proof_for_confirmation'] as int? ?? 1) == 1,
+          (parseInt(row['require_payment_proof_for_confirmation']) ?? 1) == 1,
       syncStatus: catalogSyncStatusFromDb(row['sync_status'] as String),
-      versionRemote: row['version_remote'] as int?,
+      versionRemote: parseInt(row['version_remote']),
       syncError: row['sync_error'] as String?,
       updatedAtRemote: _parseDate(row['updated_at_remote'] as String?),
     );
@@ -1431,8 +1432,8 @@ class CatalogsRepository {
       description: row['description'] as String,
       phoneNumber: row['phone_number'] as String,
       category: row['category'] as String,
-      isPrimary: (row['is_primary'] as int? ?? 0) == 1,
-      isNational: (row['is_national'] as int? ?? 1) == 1,
+      isPrimary: (parseInt(row['is_primary']) ?? 0) == 1,
+      isNational: (parseInt(row['is_national']) ?? 1) == 1,
     );
   }
 

@@ -1,3 +1,5 @@
+import 'package:mobile_core/mobile_core.dart';
+
 import '../../domain/auth_enums.dart';
 import '../../domain/auth_models.dart';
 
@@ -56,10 +58,10 @@ UserLocal userFromRow(Map<String, Object?> row) => UserLocal(
   fullName: row['full_name'] as String,
   email: row['email'] as String,
   phone: row['phone'] as String?,
-  isActive: (row['is_active'] as int) == 1,
+  isActive: (parseInt(row['is_active']) ?? 0) == 1,
   syncStatus: syncStatusFromDb(row['sync_status'] as String),
   conflictState: row['conflict_state'] as String,
-  versionRemote: row['version_remote'] as int?,
+  versionRemote: parseInt(row['version_remote']),
   updatedAtLocal: parseDt(row['updated_at_local'] as String),
   createdAtRemote: row['created_at_remote'] == null
       ? null

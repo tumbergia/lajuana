@@ -38,7 +38,6 @@ class Container:
         from app.conversations.services.message_buffer_service import (
             MessageBufferService,
         )
-        from app.services.assignment_service import AssignmentService
         from app.services.config_service import ConfigService
         from app.services.equine_service import EquineService
         from app.services.experience_service import ExperienceService
@@ -50,8 +49,6 @@ class Container:
         from app.services.service_log_service import ServiceLogService
         from app.services.storage import get_storage_adapter
         from app.services.user_service import UserService
-
-        self._services["assignment_service"] = AssignmentService()
         self._services["config_service"] = ConfigService()
         self._services["conversation_lock_service"] = ConversationLockService()
         self._services["conversation_resolver"] = ConversationResolver()
@@ -63,6 +60,13 @@ class Container:
         self._services["policy_service"] = PolicyService()
         self._services["provider_service"] = ProviderService()
         self._services["saddle_service"] = SaddleService()
+
+        from app.services.assignment_service import AssignmentService
+
+        self._services["assignment_service"] = AssignmentService(
+            equine_service=self._services["equine_service"],
+            saddle_service=self._services["saddle_service"],
+        )
         self._services["schedule_service"] = ScheduleService()
         self._services["storage_adapter"] = get_storage_adapter()
         self._services["user_service"] = UserService()

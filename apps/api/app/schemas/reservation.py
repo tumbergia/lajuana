@@ -81,6 +81,10 @@ class ReservationResponseSchema(AuditMetadataSchema):
     completed_at: datetime | None
     participants: list[ParticipantResponseSchema] = []
     payment_proofs: list[PaymentProofResponseSchema] = []
+    assignment_status: str | None = None
+    assignments_total: int = 0
+    assignments_pending: int = 0
+    assignment_blocking_reasons: list[str] = []
 
 
 class ReservationListItemSchema(AuditMetadataSchema):
@@ -102,3 +106,7 @@ class ReservationListItemSchema(AuditMetadataSchema):
     participants_completed_count: int = 0
     participant_form_status: ParticipantFormStatus = ParticipantFormStatus.NOT_SENT
     channel: Channel | None = None
+    assignment_status: str | None = None
+    assignments_total: int = 0
+    assignments_pending: int = 0
+    assignment_blocking_reasons: list[str] = []

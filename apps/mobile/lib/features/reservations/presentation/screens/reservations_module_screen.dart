@@ -7,6 +7,7 @@ import '../../../../app/widgets/app_segmented_filter.dart';
 import '../../../../app/widgets/app_status_banner.dart';
 import '../../../../app/widgets/app_text_field.dart';
 import '../../../../app/widgets/refresh_scope.dart';
+import '../../../assignments/assignments_module.dart';
 import '../../../auth/presentation/auth_controller.dart';
 import '../../../catalogs/catalogs_module.dart';
 import '../../../catalogs/schedules/presentation/pages/schedules_page.dart';
@@ -23,11 +24,13 @@ class ReservationsModuleScreen extends StatefulWidget {
     this.catalogsModule,
     this.authController,
     this.reservationsModule,
+    this.assignmentsModule,
   });
 
   final CatalogsModule? catalogsModule;
   final AuthController? authController;
   final ReservationsModule? reservationsModule;
+  final AssignmentsModule? assignmentsModule;
 
   @override
   State<ReservationsModuleScreen> createState() =>
@@ -81,6 +84,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
           reservationId: reservationId,
           reservationsModule: widget.reservationsModule,
           authController: widget.authController,
+          assignmentsModule: widget.assignmentsModule,
         ),
       ),
     );

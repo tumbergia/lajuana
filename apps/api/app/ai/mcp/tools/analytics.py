@@ -453,9 +453,14 @@ async def admin_get_equine_workload_report(
         workload: list[WorkloadSummaryItem] = []
 
         for equine in equines:
-            assignments = await AssignmentDocument.find(
-                {"equine_id": equine.id}
+            all_assignments = await AssignmentDocument.find(
+                {"equine_id": equine.id, "is_active": True}
             ).to_list()
+            # Excluir canceladas y reemplazadas del cómputo de carga
+            assignments = [
+                a for a in all_assignments
+                if a.status not in ("cancelled", "replaced")
+            ]
 
             count_in_range = 0
             for a in assignments:

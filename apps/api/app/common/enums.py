@@ -88,6 +88,20 @@ class AssignmentPriority(StrEnum):
     SENIOR_SAFETY = "senior_safety"
 
 
+class AssignmentStatus(StrEnum):
+    DRAFT = "draft"
+    CONFIRMED = "confirmed"
+    FINAL = "final"
+    REPLACED = "replaced"
+    CANCELLED = "cancelled"
+
+
+class AssignmentSource(StrEnum):
+    MANUAL_ADMIN = "manual_admin"
+    MANUAL_GUIDE = "manual_guide"
+    SYSTEM_SUGGESTED = "system_suggested"
+
+
 class EquineOperationalStatus(StrEnum):
     AVAILABLE = "available"
     RESTING = "resting"

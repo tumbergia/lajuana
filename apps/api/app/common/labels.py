@@ -92,9 +92,16 @@ class ErrorCode:
     SADDLE_UNAVAILABLE = "saddle.unavailable"
 
     ASSIGNMENT_NOT_FOUND = "assignment.not_found"
+    ASSIGNMENT_RESERVATION_NOT_CONFIRMED = "assignment.reservation_not_confirmed"
     ASSIGNMENT_PARTICIPANT_NOT_IN_RESERVATION = "assignment.participant_not_in_reservation"
+    ASSIGNMENT_PARTICIPANT_MISSING_REQUIRED_DATA = "assignment.participant_missing_required_data"
+    ASSIGNMENT_EQUINE_NOT_AVAILABLE = "assignment.equine_not_available"
     ASSIGNMENT_EQUINE_ALREADY_ASSIGNED = "assignment.equine_already_assigned"
+    ASSIGNMENT_SADDLE_NOT_AVAILABLE = "assignment.saddle_not_available"
     ASSIGNMENT_SADDLE_ALREADY_ASSIGNED = "assignment.saddle_already_assigned"
+    ASSIGNMENT_RIDER_WEIGHT_EXCEEDS_LIMIT = "assignment.rider_weight_exceeds_equine_limit"
+    ASSIGNMENT_DUPLICATE_FOR_PARTICIPANT = "assignment.duplicate_for_participant"
+    ASSIGNMENT_UNSAFE_FOR_CHILD_OR_OLDER_ADULT = "assignment.unsafe_for_child_or_older_adult"
     ASSIGNMENT_INVALID_PRIORITY = "assignment.invalid_priority"
 
     LOG_NOT_FOUND = "log.not_found"

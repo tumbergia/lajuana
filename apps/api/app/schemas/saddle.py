@@ -23,3 +23,15 @@ class SaddleResponseSchema(AuditMetadataSchema):
     name: str | None
     is_available: bool
     notes: str | None
+
+
+class SaddleListItemSchema(AuditMetadataSchema):
+    """Versión compacta para listados y tablero de asignación — incluye block_reason."""
+
+    id: str
+    code: str
+    name: str | None = None
+    is_available: bool = True
+    notes: str | None = None
+    block_reason: str | None = None
+    """Non-null when this saddle is excluded from being assignable to a reservation."""

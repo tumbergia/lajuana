@@ -223,7 +223,9 @@ class SyncOperationExecutor:
             return await self.payment_proof_service.update(operation.entity_remote_id, schema)
         if entity == "assignment" and op_type == "create":
             schema = AssignmentCreateSchema(**operation.payload)
-            return await self.assignment_service.create(schema)
+            return await self.assignment_service.create(
+                schema, actor_id=current_user.id, actor_role=current_user.role,
+            )
         if entity == "assignment" and op_type == "update":
             _require_remote_id(operation)
             await _ensure_base_version(
@@ -232,7 +234,9 @@ class SyncOperationExecutor:
                 operation.base_version,
             )
             schema = AssignmentUpdateSchema(**operation.payload)
-            return await self.assignment_service.update(operation.entity_remote_id, schema)
+            return await self.assignment_service.update(
+                operation.entity_remote_id, schema, actor_id=current_user.id,
+            )
         if entity == "service_log" and op_type == "create":
             schema = ServiceLogCreateSchema(**operation.payload)
             return await self.service_log_service.create(schema)
@@ -547,7 +551,8 @@ async def _entity_to_response_dict(entity_type: str, doc) -> dict:
     if entity_type == "payment_proof":
         return payment_proof_to_response(doc).model_dump(mode="json")
     if entity_type == "assignment":
-        return assignment_to_response(doc).model_dump(mode="json")
+        result = await assignment_to_response(doc)
+        return result.model_dump(mode="json")
     if entity_type == "service_log":
         return service_log_to_response(doc).model_dump(mode="json")
     if entity_type == "provider":

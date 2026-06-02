@@ -92,7 +92,7 @@ class EquineDto {
     return EquineDto(
       id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      inventoryNumber: json['inventory_number'] as int?,
+      inventoryNumber: _parseInt(json['inventory_number']),
       species: json['species'] as String? ?? 'mule',
       locationStatus: json['location_status'] as String? ?? 'la_juana',
       locationNotes: json['location_notes'] as String?,
@@ -101,7 +101,7 @@ class EquineDto {
       coatColor: json['coat_color'] as String?,
       gait: json['gait'] as String?,
       approximateBirthDate: json['approximate_birth_date'] as String?,
-      approximateAgeYears: json['approximate_age_years'] as int?,
+      approximateAgeYears: _parseInt(json['approximate_age_years']),
       birthDateIsApproximate:
           json['birth_date_is_approximate'] as bool? ?? true,
       birthDateRaw: json['birth_date_raw'] as String?,
@@ -124,13 +124,13 @@ class EquineDto {
       maxRiderWeightKg: _parseDecimal(json['max_rider_weight_kg']),
       experienceFit: json['experience_fit'] as String?,
       lastServiceAt: json['last_service_at'] as String?,
-      workloadLast7Days: json['workload_last_7_days'] as int? ?? 0,
+      workloadLast7Days: _parseInt(json['workload_last_7_days']) ?? 0,
       imageBase64: json['image_base64'] as String?,
       sourceFile: json['source_file'] as String?,
       sourceSheet: json['source_sheet'] as String?,
-      sourceRowNumber: json['source_row_number'] as int?,
+      sourceRowNumber: _parseInt(json['source_row_number']),
       sourceUpdatedAtLabel: json['source_updated_at_label'] as String?,
-      version: json['version'] as int? ?? 1,
+      version: _parseInt(json['version']) ?? 1,
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
       deletedAt: json['deleted_at'] as String?,
@@ -145,6 +145,19 @@ class EquineDto {
       final trimmed = value.trim();
       if (trimmed.isEmpty) return null;
       return double.tryParse(trimmed);
+    }
+    return null;
+  }
+
+  /// Safe [int] parser that handles [String] values from Pydantic v2.
+  static int? _parseInt(Object? value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) return null;
+      return int.tryParse(trimmed);
     }
     return null;
   }

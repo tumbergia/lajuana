@@ -6,10 +6,10 @@ import '../features/auth/infrastructure/connectivity/backend_reachability_servic
 import '../features/auth/infrastructure/connectivity/connectivity_service.dart';
 import '../features/auth/infrastructure/connectivity/network_status_resolver.dart';
 import '../features/auth/infrastructure/local/auth_database.dart';
-import '../features/auth/infrastructure/repositories/auth_repository_impl.dart';
 import '../features/auth/infrastructure/local/session_local_data_source.dart';
 import '../features/auth/infrastructure/local/user_local_data_source.dart';
 import '../features/auth/infrastructure/remote/auth_api_client.dart';
+import '../features/auth/infrastructure/repositories/auth_repository_impl.dart';
 import '../features/auth/infrastructure/token_storage.dart';
 import '../features/auth/presentation/auth_controller.dart';
 import '../features/auth/presentation/auth_routes.dart';
@@ -17,7 +17,11 @@ import '../features/auth/presentation/screens/change_password_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/session_view_screen.dart';
-import '../features/catalogs/catalogs.dart';
+import '../features/assignments/assignments_module.dart';
+import '../features/catalogs/catalogs_module.dart';
+import '../features/catalogs/data/catalogs_database.dart';
+import '../features/catalogs/data/catalogs_repository.dart';
+import '../features/catalogs/data/catalogs_sync_api.dart';
 import '../features/equines/domain/repositories/equine_repository.dart';
 import '../features/equines/infrastructure/local/equines_database.dart';
 import '../features/equines/infrastructure/remote/equines_api_client.dart';
@@ -57,6 +61,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
   late final CatalogsModule _catalogsModule;
   late final ReservationsModule _reservationsModule;
   late final SaddlesModule _saddlesModule;
+  late final AssignmentsModule _assignmentsModule;
   late final EquineRepository _equineRepository;
 
   @override
@@ -111,6 +116,15 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
     );
 
     _saddlesModule = SaddlesModule.create(
+      baseUrl: widget.apiBaseUrl,
+      tokenStorage: SqliteTokenStorage(sessionDs),
+      refreshSession: () async {
+        await _authController.refreshRequested();
+        return _authController.authState == LocalAuthState.signedInVerified;
+      },
+    );
+
+    _assignmentsModule = AssignmentsModule.create(
       baseUrl: widget.apiBaseUrl,
       tokenStorage: SqliteTokenStorage(sessionDs),
       refreshSession: () async {
@@ -232,6 +246,7 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
                 catalogsModule: _catalogsModule,
                 reservationsModule: _reservationsModule,
                 saddlesModule: _saddlesModule,
+                assignmentsModule: _assignmentsModule,
                 equineRepository: _equineRepository,
               )
             : LoginScreen(controller: _authController);

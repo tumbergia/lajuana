@@ -8,9 +8,14 @@ from app.api.deps import get_saddle_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
 from app.documents import UserDocument
-from app.schemas.saddle import SaddleCreateSchema, SaddleResponseSchema, SaddleUpdateSchema
+from app.schemas.saddle import (
+    SaddleCreateSchema,
+    SaddleListItemSchema,
+    SaddleResponseSchema,
+    SaddleUpdateSchema,
+)
 from app.services import SaddleService
-from app.services.mappers import saddle_to_response
+from app.services.mappers import saddle_to_list_item, saddle_to_response
 
 router = APIRouter(prefix="/saddles", tags=["Sillas"])
 
@@ -56,6 +61,38 @@ async def list_saddles(
             limit=limit, skip=skip, include_deleted=include_deleted
         )
     ]
+
+
+@router.get(
+    "/available-for-reservation/{reservation_id}",
+    response_model=list[SaddleListItemSchema],
+    summary="Sillas disponibles para reserva",
+    description="Retorna todas las sillas con campo block_reason. Null = asignable. Con texto = motivo de exclusión.",
+    operation_id="listAvailableSaddlesForReservation",
+    responses={
+        200: {"description": "Listado de sillas disponibles."},
+        401: {"description": "No autenticado."},
+        404: {"description": "Reserva no encontrada."},
+    },
+)
+async def list_available_saddles_for_reservation(
+    reservation_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.SADDLE_READ))],
+    response: Response,
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    service: SaddleService = Depends(get_saddle_service),
+) -> list[SaddleListItemSchema]:
+    items = await service.list_available_for_reservation(
+        reservation_id, limit=limit, skip=skip,
+    )
+    response.headers["X-Total-Count"] = str(len(items))
+    result: list[SaddleListItemSchema] = []
+    for saddle_doc, block_reason in items:
+        item = saddle_to_list_item(saddle_doc)
+        item.block_reason = block_reason
+        result.append(item)
+    return result
 
 
 @router.get(

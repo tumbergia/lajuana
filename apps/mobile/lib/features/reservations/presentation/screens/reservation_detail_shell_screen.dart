@@ -21,6 +21,9 @@ import '../dialogs/reservation_reject_dialog.dart';
 import '../widgets/reservation_client_detail_view.dart';
 import '../widgets/reservation_participant_detail_view.dart';
 import '../widgets/reservation_proof_image_viewer.dart';
+import '../../../assignments/assignments_module.dart';
+import '../../../assignments/presentation/controllers/assignment_board_controller.dart';
+import '../../../assignments/presentation/screens/assignment_board_screen.dart';
 import '../../../auth/presentation/auth_controller.dart';
 import '../../../catalogs/catalogs_module.dart';
 import '../../domain/models/reservation_detail.dart';
@@ -52,12 +55,14 @@ class ReservationDetailShellScreen extends StatefulWidget {
     this.reservationsModule,
     this.catalogsModule,
     this.authController,
+    this.assignmentsModule,
   });
 
   final String reservationId;
   final ReservationsModule? reservationsModule;
   final CatalogsModule? catalogsModule;
   final AuthController? authController;
+  final AssignmentsModule? assignmentsModule;
 
   @override
   State<ReservationDetailShellScreen> createState() =>
@@ -71,6 +76,7 @@ class _ReservationDetailShellScreenState
       _participantsSectionController;
   late final ReservationPaymentProofsSectionController
       _paymentProofsSectionController;
+  AssignmentBoardController? _assignmentBoardController;
   ReservationDetailSubroute _subroute = ReservationDetailSubroute.resumen;
   final Map<String, Uint8List> _proofPreviewCache = {};
   final ScrollController _participantsScrollCtrl = ScrollController();
@@ -110,6 +116,7 @@ class _ReservationDetailShellScreenState
     _controller.dispose();
     _participantsSectionController.dispose();
     _paymentProofsSectionController.dispose();
+    _assignmentBoardController?.dispose();
     _proofPreviewCache.clear();
     _participantsScrollCtrl.dispose();
     super.dispose();
@@ -205,11 +212,7 @@ class _ReservationDetailShellScreenState
       case ReservationDetailSubroute.pagos:
         return _buildPaymentContent(_paymentProofsSectionController);
       case ReservationDetailSubroute.asignaciones:
-        return _buildSectionPlaceholder(
-          'Asignaciones',
-          'Proximamente',
-          Icons.shield_moon_outlined,
-        );
+        return _buildAssignmentContent();
       case ReservationDetailSubroute.bitacora:
         return _buildTimelineSection(detail);
     }
@@ -957,6 +960,30 @@ class _ReservationDetailShellScreenState
       MaterialPageRoute(
         builder: (_) => ClientDetailView(detail: detail),
       ),
+    );
+  }
+
+  Widget _buildAssignmentContent() {
+    final repo = widget.assignmentsModule?.repository;
+    if (repo == null) {
+      return _buildSectionPlaceholder(
+        'Asignaciones',
+        'Módulo no disponible',
+        Icons.shield_moon_outlined,
+      );
+    }
+    _assignmentBoardController ??= AssignmentBoardController(
+      repository: repo,
+    );
+    if (_assignmentBoardController!.state == BoardLoadState.initial) {
+      _assignmentBoardController!.load(
+        reservationId: widget.reservationId,
+      );
+    }
+    return AssignmentBoardScreen(
+      controller: _assignmentBoardController!,
+      reservationId: widget.reservationId,
+      key: ValueKey('assignments_${widget.reservationId}'),
     );
   }
 

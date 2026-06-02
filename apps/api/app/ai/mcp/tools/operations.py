@@ -133,7 +133,7 @@ async def admin_get_logistics_checklist(
         )
 
         assignments = await AssignmentDocument.find(
-            {"reservation_id": reservation.id}
+            {"reservation_id": reservation.id, "is_active": True}
         ).to_list()
         items.append(
             LogisticsChecklistItem(
@@ -670,7 +670,7 @@ async def admin_get_equine_workload(
         workload: list[EquineWorkloadItem] = []
         for equine in equines:
             assignments = await AssignmentDocument.find(
-                {"equine_id": equine.id}
+                {"equine_id": equine.id, "is_active": True}
             ).to_list()
 
             upcoming = 0

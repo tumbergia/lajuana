@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from datetime import datetime, UTC
+
+from beanie import PydanticObjectId
 
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-from app.documents import SaddleDocument
+from app.documents import AssignmentDocument, ReservationDocument, SaddleDocument
 from app.schemas.saddle import SaddleCreateSchema, SaddleUpdateSchema
 
 
@@ -57,6 +61,42 @@ class SaddleService:
         doc.deleted_at = None
         await doc.save()
         return doc
+
+    async def list_available_for_reservation(
+        self,
+        reservation_id: str,
+        limit: int = 200,
+        skip: int = 0,
+    ) -> list[tuple[object, str | None]]:
+        """Retorna (saddle_doc, block_reason) para cada silla.
+
+        block_reason is None → asignable.
+        block_reason is set → explica por qué NO puede asignarse.
+        """
+        # Obtener sillas ya asignadas a esta reserva (activas)
+        my_assignments = await AssignmentDocument.find(
+            {"reservation_id": PydanticObjectId(reservation_id), "is_active": True},
+        ).to_list()
+        my_assigned_saddle_ids = {
+            str(a.saddle_id) for a in my_assignments if a.saddle_id
+        }
+
+        all_saddles = await SaddleDocument.find({}).skip(skip).limit(limit).to_list()
+
+        result: list[tuple[object, str | None]] = []
+        for saddle in all_saddles:
+            reason: str | None = None
+            sid_str = str(saddle.id)
+
+            if saddle.deleted_at is not None:
+                reason = "Silla eliminada"
+            elif not saddle.is_available:
+                reason = "Silla no disponible"
+            elif sid_str in my_assigned_saddle_ids:
+                reason = "Ya asignada a esta reserva"
+
+            result.append((saddle, reason))
+        return result
 
     async def update(self, saddle_id: str, payload: SaddleUpdateSchema) -> SaddleDocument:
         doc = await self.get(saddle_id)

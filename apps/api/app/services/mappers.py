@@ -2,11 +2,16 @@
 
 import logging
 
+from beanie import PydanticObjectId
+
 from app.documents import (
+    AssignmentDocument,
+    EquineDocument,
     ParticipantDocument,
     ParticipantFormLinkDocument,
     PaymentProofDocument,
     ReservationDocument,
+    SaddleDocument,
 )
 from app.schemas.assignment import AssignmentResponseSchema
 from app.schemas.auth import UserResponseSchema
@@ -18,7 +23,7 @@ from app.schemas.payment_proof import PaymentProofResponseSchema
 from app.schemas.policy import PolicyResponseSchema
 from app.schemas.provider import ProviderResponseSchema
 from app.schemas.reservation import ReservationListItemSchema, ReservationResponseSchema
-from app.schemas.saddle import SaddleResponseSchema
+from app.schemas.saddle import SaddleListItemSchema, SaddleResponseSchema
 from app.schemas.schedule import ScheduleResponseSchema
 from app.schemas.service_log import ServiceLogResponseSchema
 
@@ -73,11 +78,34 @@ payment_proof_to_response = lambda d: document_to_schema(d, PaymentProofResponse
 equine_to_response = lambda d: document_to_schema(d, EquineResponseSchema, scalar_fields={"id": "id"})
 equine_to_list_item = lambda d: document_to_schema(d, EquineListItemSchema, scalar_fields={"id": "id"})
 saddle_to_response = lambda d: document_to_schema(d, SaddleResponseSchema, scalar_fields={"id": "id"})
-assignment_to_response = lambda d: document_to_schema(
-    d, AssignmentResponseSchema,
-    scalar_fields={"id": "id", "reservation_id": "reservation_id", "participant_id": "participant_id", "equine_id": "equine_id"},
-    optional_scalar_fields={"saddle_id": "saddle_id"},
-)
+saddle_to_list_item = lambda d: document_to_schema(d, SaddleListItemSchema, scalar_fields={"id": "id"})
+
+
+async def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseSchema:
+    """Build AssignmentResponseSchema with resolved names."""
+    data = doc.model_dump(exclude={"revision_id"})
+    data["id"] = str(doc.id)
+    data["reservation_id"] = str(doc.reservation_id) if doc.reservation_id else None
+    data["participant_id"] = str(doc.participant_id) if doc.participant_id else None
+    data["equine_id"] = str(doc.equine_id) if doc.equine_id else None
+    data["saddle_id"] = str(doc.saddle_id) if doc.saddle_id else None
+    data["assigned_by_user_id"] = str(doc.assigned_by_user_id) if doc.assigned_by_user_id else None
+    data["finalized_by_user_id"] = str(doc.finalized_by_user_id) if doc.finalized_by_user_id else None
+
+    # Resolve names
+    if doc.participant_id:
+        p = await ParticipantDocument.get(doc.participant_id)
+        data["participant_name"] = f"{p.first_name} {p.last_name}" if p else None
+    if doc.equine_id:
+        e = await EquineDocument.get(doc.equine_id)
+        data["equine_name"] = e.name if e else None
+    if doc.saddle_id:
+        s = await SaddleDocument.get(doc.saddle_id)
+        data["saddle_label"] = (
+            f"{s.code} - {s.name}" if s and s.code else (s.name if s else None)
+        )
+
+    return AssignmentResponseSchema(**data)
 service_log_to_response = lambda d: document_to_schema(
     d, ServiceLogResponseSchema,
     scalar_fields={"id": "id", "reservation_id": "reservation_id"},

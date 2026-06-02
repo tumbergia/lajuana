@@ -17,6 +17,7 @@ import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/equines/domain/repositories/equine_repository.dart';
 import '../../features/equines/presentation/screens/equines_module_screen.dart';
 import '../../features/participants/presentation/screens/participants_module_screen.dart';
+import '../../features/assignments/assignments_module.dart';
 import '../../features/reservations/presentation/screens/reservations_module_screen.dart';
 import '../../features/reservations/reservations_module.dart';
 import '../../features/saddles/saddles_module.dart';
@@ -29,6 +30,7 @@ class AuthenticatedShell extends StatefulWidget {
     this.catalogsModule,
     this.reservationsModule,
     this.saddlesModule,
+    this.assignmentsModule,
     required this.equineRepository,
     this.onCallRequested,
   });
@@ -38,6 +40,7 @@ class AuthenticatedShell extends StatefulWidget {
   final CatalogsModule? catalogsModule;
   final ReservationsModule? reservationsModule;
   final SaddlesModule? saddlesModule;
+  final AssignmentsModule? assignmentsModule;
   final EquineRepository equineRepository;
   final Future<bool> Function(String phone)? onCallRequested;
 
@@ -92,6 +95,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           catalogsModule: widget.catalogsModule,
           authController: widget.authController,
           reservationsModule: widget.reservationsModule,
+          assignmentsModule: widget.assignmentsModule,
         );
       case AppNavItem.equinos:
         return EquinesModuleScreen(

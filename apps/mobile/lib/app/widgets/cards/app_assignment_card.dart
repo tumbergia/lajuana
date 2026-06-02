@@ -48,6 +48,7 @@ class AppAssignmentCard extends StatelessWidget {
     this.onTap,
     this.onChangeEquine,
     this.onChangeSaddle,
+    this.safetyFlags = const [],
   });
 
   final String startTimeLabel;
@@ -61,6 +62,7 @@ class AppAssignmentCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onChangeEquine;
   final VoidCallback? onChangeSaddle;
+  final List<String> safetyFlags;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +75,10 @@ class AppAssignmentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius: tokens.radiusLg,
+        border: Border.all(
+          color: accent.withValues(alpha: 0.25),
+          width: 0.5,
+        ),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -94,6 +100,7 @@ class AppAssignmentCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ── Header row: reservation badge + time ──
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -107,24 +114,58 @@ class AppAssignmentCard extends StatelessWidget {
                                 ),
                         ),
                         _HeaderInfo(
-                          title: 'Hora de inicio',
+                          title: 'Hora',
                           value: startTimeLabel,
+                          icon: Icons.schedule_rounded,
                         ),
                       ],
                     ),
                     const SizedBox(height: 18),
+
+                    // ── Participant block ──
                     _EntityBox(
                       label: 'Participante',
                       title: participant.name,
                       subtitle: participant.weightLabel,
                       accent: accent,
+                      icon: Icons.person_outline_rounded,
                       tags: [
                         if (participant.experienceLabel != null)
                           participant.experienceLabel!,
                         if (participant.ageLabel != null) participant.ageLabel!,
                       ],
                     ),
+
+                    // ── Safety flags ──
+                    if (safetyFlags.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: safetyFlags.map((flag) {
+                          final isChild = flag.contains('child');
+                          final isSenior = flag.contains('senior');
+                          return AppBadge(
+                            label: isChild
+                                ? 'Menor de edad'
+                                : isSenior
+                                    ? 'Adulto mayor'
+                                    : flag,
+                            tone: AppBadgeTone.warning,
+                            icon: isChild
+                                ? Icons.child_care_outlined
+                                : isSenior
+                                    ? Icons.elderly_outlined
+                                    : Icons.warning_amber_rounded,
+                            uppercase: false,
+                          );
+                        }).toList(),
+                      ),
+                    ],
+
                     const SizedBox(height: 12),
+
+                    // ── Connector arrow ──
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -137,9 +178,9 @@ class AppAssignmentCard extends StatelessWidget {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Icon(
-                            Icons.compare_arrows_rounded,
+                            Icons.arrow_downward_rounded,
                             color: accent,
-                            size: 20,
+                            size: 18,
                           ),
                         ),
                         Expanded(
@@ -151,16 +192,21 @@ class AppAssignmentCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
+
+                    // ── Equine block ──
                     _EntityBox(
                       label: 'Equino',
                       title: equine.name,
                       subtitle: equine.capacityLabel,
                       accent: accent,
+                      icon: Icons.pets_rounded,
                       image: equine.image,
                       tags: [
                         if (equine.statusLabel != null) equine.statusLabel!,
                       ],
                     ),
+
+                    // ── Validation warnings ──
                     if (validationMessage != null) ...[
                       const SizedBox(height: 14),
                       _ValidationBanner(
@@ -168,16 +214,31 @@ class AppAssignmentCard extends StatelessWidget {
                         state: state,
                       ),
                     ],
+
                     const SizedBox(height: 16),
                     Divider(
                       color: scheme.outlineVariant.withValues(alpha: 0.35),
                     ),
                     const SizedBox(height: 14),
-                    _HeaderInfo(
-                      title: state == AppAssignmentCardState.ok
-                          ? 'Silla'
-                          : 'Silla recomendada',
-                      value: saddleLabel,
+
+                    // ── Saddle block ──
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.airline_seat_recline_normal_rounded,
+                          size: 18,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _HeaderInfo(
+                            title: state == AppAssignmentCardState.ok
+                                ? 'Silla asignada'
+                                : 'Silla recomendada',
+                            value: saddleLabel,
+                          ),
+                        ),
+                      ],
                     ),
                     if (onChangeSaddle != null) ...[
                       const SizedBox(height: 10),
@@ -188,14 +249,27 @@ class AppAssignmentCard extends StatelessWidget {
                         onPressed: onChangeSaddle,
                       ),
                     ],
+
                     const SizedBox(height: 16),
-                    Text(
-                      'TASA DE CARGA',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.9,
-                      ),
+
+                    // ── Load ratio ──
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.speed_rounded,
+                          size: 16,
+                          color: accent,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'CARGA',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.9,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     ClipRRect(
@@ -218,6 +292,8 @@ class AppAssignmentCard extends StatelessWidget {
                         letterSpacing: 0.5,
                       ),
                     ),
+
+                    // ── Change equine button ──
                     if (onChangeEquine != null) ...[
                       const SizedBox(height: 16),
                       AppButton(
@@ -260,11 +336,18 @@ class AppAssignmentCard extends StatelessWidget {
   }
 }
 
+// ── Header info tile ──
+
 class _HeaderInfo extends StatelessWidget {
-  const _HeaderInfo({required this.title, required this.value});
+  const _HeaderInfo({
+    required this.title,
+    required this.value,
+    this.icon,
+  });
 
   final String title;
   final String value;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -274,14 +357,22 @@ class _HeaderInfo extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(
-          title.toUpperCase(),
-          textAlign: TextAlign.right,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 13, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              title.toUpperCase(),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         Text(
@@ -296,12 +387,15 @@ class _HeaderInfo extends StatelessWidget {
   }
 }
 
+// ── Entity box (participant / equine) ──
+
 class _EntityBox extends StatelessWidget {
   const _EntityBox({
     required this.label,
     required this.title,
     required this.subtitle,
     required this.accent,
+    required this.icon,
     this.tags = const [],
     this.image,
   });
@@ -310,6 +404,7 @@ class _EntityBox extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color accent;
+  final IconData icon;
   final List<String> tags;
   final ImageProvider? image;
 
@@ -329,13 +424,19 @@ class _EntityBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label.toUpperCase(),
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-            ),
+          Row(
+            children: [
+              Icon(icon, size: 14, color: accent),
+              const SizedBox(width: 6),
+              Text(
+                label.toUpperCase(),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
           Row(
@@ -400,6 +501,8 @@ class _EntityBox extends StatelessWidget {
     );
   }
 }
+
+// ── Validation banner ──
 
 class _ValidationBanner extends StatelessWidget {
   const _ValidationBanner({required this.message, required this.state});

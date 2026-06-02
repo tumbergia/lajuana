@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Servicio de negocio para el agregado Reservation."""
 
 import secrets
@@ -19,6 +21,7 @@ from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.core.logging import logger
 from app.documents import (
+    AssignmentDocument,
     ExperienceDocument,
     ParticipantDocument,
     ReservationAuditLogDocument,
@@ -786,6 +789,83 @@ class ReservationService:
                         "no aceptó la liberación de responsabilidad."
                     ),
                 )
+
+    async def _enrich_assignment_statuses(
+        self,
+        reservations: list[ReservationDocument],
+    ) -> dict[str, dict]:
+        """Batch-resolve assignment status for a list of reservations."""
+        if not reservations:
+            return {}
+
+        res_ids = [r.id for r in reservations]
+
+        all_assignments = await AssignmentDocument.find(
+            {"reservation_id": {"$in": res_ids}, "is_active": True},
+        ).to_list()
+
+        from collections import defaultdict
+        per_res: dict[str, list[object]] = defaultdict(list)
+        for a in all_assignments:
+            per_res[str(a.reservation_id)].append(a)
+
+        all_participants = await ParticipantDocument.find(
+            {"reservation_id": {"$in": res_ids}},
+        ).to_list()
+        participants_per_res: dict[str, list[object]] = defaultdict(list)
+        for p in all_participants:
+            participants_per_res[str(p.reservation_id)].append(p)
+
+        result: dict[str, dict] = {}
+        for r in reservations:
+            rid = str(r.id)
+            res_assignments = per_res.get(rid, [])
+            res_participants = participants_per_res.get(rid, [])
+
+            total = len(res_assignments)
+            pending = 0
+            blocking_reasons: list[str] = []
+
+            if not res_participants:
+                status = "blocked"
+                blocking_reasons.append("No hay participantes registrados")
+            else:
+                incomplete = [p for p in res_participants if not getattr(p, "is_completed", False)]
+                no_weight = [p for p in res_participants if not getattr(p, "weight_kg", None)]
+                no_experience = [p for p in res_participants if not getattr(p, "experience_level", None)]
+
+                if incomplete:
+                    blocking_reasons.append(
+                        f"{len(incomplete)} participante(s) no han completado el formulario",
+                    )
+                if no_weight:
+                    blocking_reasons.append(
+                        f"{len(no_weight)} participante(s) sin peso registrado",
+                    )
+                if no_experience:
+                    blocking_reasons.append(
+                        f"{len(no_experience)} participante(s) sin nivel de experiencia",
+                    )
+
+                if blocking_reasons:
+                    status = "blocked"
+                elif total == 0:
+                    status = "pending"
+                    pending = len(res_participants)
+                elif total < len(res_participants):
+                    status = "partial"
+                    pending = len(res_participants) - total
+                else:
+                    status = "complete"
+
+            result[rid] = {
+                "assignment_status": status,
+                "assignments_total": total,
+                "assignments_pending": pending,
+                "assignment_blocking_reasons": blocking_reasons,
+            }
+
+        return result
 
     def _build_code(self, prefix: str = "RES") -> str:
         return f"{prefix}-{datetime.now(UTC).strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}"
