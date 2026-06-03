@@ -39,3 +39,6 @@ tooling/
 
 # Token telemetry
 token_telemetry.txt
+
+# OpenAPI generated spec (regenerated in CI from FastAPI code)
+apps/api/openapi.json

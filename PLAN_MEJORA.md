@@ -9,7 +9,7 @@
 | **Backend Core (W1)** | ✅ 100% | BaseService, CRUD refactor, ensure_indexes, start_time→str, AuditMetadata tipado |
 | **Backend Architecture (W2)** | ✅ 100% | batch mappers, storage cleanup, catalog cache, board pagination, age config, except:pass, dry_run, audit bulk, board is_available, build_code, list_items, SUPPLIES, deprecated fields, legacy fallback+migration script, **SyncService split → 4 handlers** |
 | **Frontend (W3)** | ✅ 100% | ActionState<T>, DI, router, app.dart simplificado, veil eliminado, detail controller refactor, list controller state+bloc+tests, playground fuera de lib/, packages declarados, **619 imports → package:mobile/**, **mobile_ui/mobile_domain/mobile_mocks poblados** |
-| **Testing (W4)** | 🟡 ~90% | Tests: ConfigService (7), PolicyService (5), ProviderService (3), ServiceLogService (4), FileUploadService (5), StorageAdapter (5), mobile repo (4), **111 tests nuevos para 9 controllers mobile**, **mongomock fixture + 5 demo tests**, Coverage audit. OpenAPI contract verify. Integration test skeleton. |
+| **Testing (W4)** | 🟡 ~85% | Tests: ConfigService (7), PolicyService (5), ProviderService (3), ServiceLogService (4), FileUploadService (5), StorageAdapter (5), mobile repo (4), **111 tests nuevos para 9 controllers mobile**, **mongomock fixture + 5 demo tests**, Coverage audit. OpenAPI contract verify. ~~Integration test skeleton~~ (eliminado por decisión). |
 | **Docs/Ops (W5)** | 🟡 ~85% | AGENTS.md actualizado, ADR-0004 postponed, unified seed CLI (`python -m app.cli seed`), migration tracker (3 formal migrations), health check real, PR template |
 
 ---
@@ -294,7 +294,7 @@ Veil eliminado. `MaterialApp(themeAnimationDuration: 200ms)`. Sin `_themeVeilCol
 
 Tests agregados en 9 controllers: DashboardController (8), ParticipantsController (6), SaddlesListController (17), ExperiencesController (9), SchedulesController (10), EmergencyContactsController (8), ReservationRulesController (10), ExperienceFormController (23), ScheduleFormController (11).
 
-Falta: tests de integración mobile (T3) — requieren emulador.
+~~Falta: tests de integración mobile (T3)~~ ❌ Eliminado por decisión.
 
 ---
 
@@ -326,7 +326,7 @@ Falta: tests de integración mobile (T3) — requieren emulador.
 |------|--------|-----|
 | **T1 — Services unit** | ✅ 29 tests | ConfigService (7), PolicyService (5), ProviderService (3), ServiceLogService (4), FileUploadService (5), StorageAdapter (5) |
 | **T2 — Coverage** | ✅ Reportado | `pytest --cov` ejecutado. Coverage general 52%. Servicios core 82-100%. |
-| **T3 — Integration mobile** | 🟡 Skeleton | 2 test files creados (TODO bodies). Requiere emulador para ejecutar |
+| **T3 — Integration mobile** | ~~🟡~~ ❌ Eliminado | Scaffold eliminado por decisión. No se implementarán tests de integración mobile. |
 | **T4 — OpenAPI contract** | ✅ 3 tests | Spec generado, 45+ endpoints verificados contra documentación |
 | **T5 — mongomock** | ✅ 5 tests demo | Fixture `mongomock_client` en conftest.py. Marcador `integration` para tests legacy |
 | **T6 — Concurrency** | ✅ 2 tests | `test_concurrency_reservation.py` con `asyncio.gather(5)` |
@@ -359,7 +359,7 @@ Paquetes declarados en `apps/mobile/pubspec.yaml` como dependencias workspace. S
 
 | Prioridad | Resueltos ✅ | Pendientes |
 |-----------|-------------|------------|
-| ~~High~~ | A5, B6, F6 (111 tests), T1 (29 tests), T5 (mongomock), T7 (4 tests) | T3 (integration — skeleton), A2 (OpenAPI codegen) |
+| ~~High~~ | A5, B6, F6 (111 tests), T1 (29 tests), T5 (mongomock), T7 (4 tests) | A2 (OpenAPI codegen). Tests AuthController + AssignmentBoardController (hallazgo). ~~T3~~ (eliminado) |
 | ~~Medium~~ | P3, P4, A3 (SyncService split), A4, A6, A8, B1, B4, B5, F1-F5, F8 (imports), T4, T6, D1-D5, A1/M1-M3 (packages poblados) | — |
 | ~~Low~~ | P1, P2, A7, A9, A10, B2, B3, B7, B8, F3, F7, T2 (reporte) | — |
 
@@ -490,7 +490,7 @@ Después de implementar el plan completo:
 | W4.2 | T1 | `apps/api/tests/test_config_service.py`, `test_policy_service.py`, etc. (nuevos) | Tests para: ConfigService, PolicyService, ProviderService, ServiceLogService, FileUploadService, StorageAdapter, UserService, OpsService. Mínimo 3 tests cada uno (happy path + error + edge). | Cada servicio nuevo tiene ≥3 tests. | Bajo |
 | W4.3 | T6 | `apps/api/tests/test_concurrency_reservation.py` | Agregar tests con `asyncio.gather(5 clients)` para `_commit_schedule_capacity` y `ensure_date_available`. Verificar que solo 1 reserva se confirma. | Race conditions detectadas en CI. | Bajo |
 | W4.4 | T7 | `apps/mobile/test/features/reservations/repositories/` | Tests para `ReservationsRepository` mockeando remote (API) y local (SQLite). Verificar offline-first: cache hit, cache miss, remote error fallback, sync push. | 100% de repositorios core cubiertos. | Bajo |
-| W4.5 | T3 | `apps/mobile/test/` | 2 tests de integración: (1) login → listar reservas → filtrar, (2) ver detalle de reserva. Usar `integration_test` package. | Flujos core verificados en CI. | Medio — requiere setup integration_test + emulador |
+| W4.5 | ~~T3~~ | ~~`apps/mobile/test/`~~ | ~~2 tests de integración~~ ❌ Eliminado por decisión. | — | — |
 | W4.6 | T2 | `apps/api/tests/` | Auditar coverage real con `pytest --cov`. Agregar edge cases a tests existentes que solo prueban happy path. | Coverage report por módulo. | Bajo |
 | W4.7 | T4 | `apps/api/tests/`, `apps/api/app/api/router.py` | Habilitar `openapi_url` en FastAPI si no está. Agregar test que verifica schemas de respuesta coinciden con spec generado. | Contrato backend verificable en CI. | Bajo |
 
@@ -558,7 +558,7 @@ W5.7-W5.9 (packages) ─────────→ requieren W3.9
 |-------|------|-----------|------|-----------|
 | T1 | Unit (backend) | ConfigService, PolicyService, ProviderService, ServiceLogService, FileUploadService, StorageAdapter, UserService, OpsService | mock DB → assert resultados | Alta |
 | T2 | Coverage (backend) | Edge cases en tests existentes que solo cubren happy path | `pytest --cov` + code review | Media |
-| T3 | Integration (mobile) | Login → listar reservas → detalle | `integration_test` driver | Alta |
+| T3 | ~~Integration (mobile)~~ | ~~Login → listar reservas → detalle~~ | ~~`integration_test` driver~~ | ~~Alta~~ ❌ Eliminado |
 | T4 | Contract (backend) | OpenAPI spec vs schemas reales | `openapi-spec-validator` + test | Media |
 | T5 | Infra (backend) | mongomock fixture para unit tests | `pytest -m "not integration"` | Media |
 | T6 | Concurrency (backend) | Race conditions en schedule capacity | `asyncio.gather(5)` | Alta |
@@ -714,7 +714,7 @@ Cada workstream es un PR independiente. Gates de aprobación:
 |----------|---------------|
 | **mongomock fixture + 5 demo tests** | Infraestructura para unit tests backend sin MongoDB real. Patrón documentado para migración progresiva. |
 | **111 tests para 9 controllers mobile** | Dashboard, Participants, SaddlesList, Experiences, Schedules, EmergencyContacts, ReservationRules, ExperienceForm, ScheduleForm. Cubren 497 LOC de controllers. |
-| **Integration test skeleton (T3)** | 2 flows esqueletizados (reservation list + detail). Requieren emulador para completar. |
+| ~~**Integration test skeleton (T3)**~~ | ❌ Eliminado por decisión. No se implementarán. |
 
 ## 2026-06-02 — Batch 6: Frontend Architecture Wave (W3.9 + W5.7-W5.9)
 

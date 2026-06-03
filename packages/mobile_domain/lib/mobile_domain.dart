@@ -7,7 +7,6 @@ library mobile_domain;
 export 'src/reservation_status.dart';
 export 'src/assignment_status.dart';
 
-
 // -- Extracted from apps/mobile (domain layer) --
 export 'src/assignments/assignment.dart';
 export 'src/assignments/assignment_board.dart';
