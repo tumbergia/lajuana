@@ -109,11 +109,8 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     switch (_controller.loadState) {
       case EquinesLoadState.idle:
       case EquinesLoadState.loading:
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 80),
-            child: AppCenteredLoader(),
-          ),
+        return const Expanded(
+          child: AppCenteredLoader(),
         );
       case EquinesLoadState.error:
         return _buildError();
@@ -717,7 +714,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
-                child: AppCenteredLoader(),
+                child: AppCenteredLoader(fill: false),
               );
             }
             if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {

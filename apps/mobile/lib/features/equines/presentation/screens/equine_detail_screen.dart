@@ -135,7 +135,7 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      scrollable: true,
+      scrollable: !_isLoading,
       appBar: AppBar(
         title: Text(_detail?.name ?? 'Detalle de equino'),
         leading: IconButton(

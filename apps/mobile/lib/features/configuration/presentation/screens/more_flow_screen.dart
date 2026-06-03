@@ -476,7 +476,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
           future: _contactsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const AppCenteredLoader();
+              return const AppCenteredLoader(fill: false);
             }
 
             if (snapshot.hasError) {

@@ -329,21 +329,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
     switch (state) {
       case SaddlesLoadState.idle:
       case SaddlesLoadState.loading:
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 80),
-            child: AppCenteredLoader(),
-          ),
-        );
+        return const AppCenteredLoader();
 
       case SaddlesLoadState.refreshing:
         if (_listController.items.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 80),
-              child: AppCenteredLoader(),
-            ),
-          );
+          return const AppCenteredLoader();
         }
         return _buildListContent(shrinkList: shrinkList);
 

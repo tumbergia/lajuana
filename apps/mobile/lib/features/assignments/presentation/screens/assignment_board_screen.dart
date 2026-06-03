@@ -60,7 +60,11 @@ class _AssignmentBoardScreenState extends State<AssignmentBoardScreen> {
   @override
   Widget build(BuildContext context) {
     final ctrl = widget.controller;
-    return AppScaffold(child: _buildBody(ctrl));
+    final isLoading = ctrl.state == BoardLoadState.initial || ctrl.state == BoardLoadState.loading;
+    return AppScaffold(
+      scrollable: !isLoading,
+      child: _buildBody(ctrl),
+    );
   }
 
   Widget _buildBody(AssignmentBoardController ctrl) {
