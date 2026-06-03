@@ -1,20 +1,19 @@
-# 0001 - Monorepo backend + frontend
+# ADR-0001: Monorepo
+
+**Fecha:** 2026-04-22  
+**Estado:** ✅ Aceptado  
 
 ## Contexto
 
-El proyecto requiere evolución simultánea de app móvil, backend y paquetes internos reutilizables.
+El sistema tiene dos artefactos (backend API + mobile app) que comparten modelos de datos, lógica de negocio y herramientas de build. Mantener repos separados agregaba fricción en cambios cross-cutting.
 
 ## Decisión
 
-Se adopta estructura monorepo con separación entre `apps/` y `packages/`.
+Monorepo con estructura `apps/{api,mobile}` + `packages/` para código compartido. Dart pub workspace coordina dependencias.
 
-## Impacto
+## Consecuencias
 
-- mejor trazabilidad
-- mejor coherencia entre capas
-- posibilidad de compartir paquetes internos del frontend
-
-## Riesgos
-
-- desorden si no se fijan convenciones
-- crecimiento caótico si todo se deja en `apps/mobile`
+- Cambios cross-cutting en un solo PR
+- Builds CI unificados
+- Packages compartidos (`mobile_core`, `mobile_domain`, `mobile_ui`) facilitan extracción futura
+- Versión única para todo el sistema

@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     app_base_url: str = "http://localhost:8080"
 
-    auth_jwt_secret: str = "change-me"
+    auth_jwt_secret: str = "change-me"  # TODO: rotar a 32+ chars (invalida tokens existentes); ver ADR-JWT
     auth_jwt_algorithm: str = "HS256"
     auth_access_token_minutes: int = 30
     auth_refresh_token_days: int = 30

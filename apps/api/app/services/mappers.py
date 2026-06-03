@@ -224,6 +224,7 @@ def participant_to_response(doc: ParticipantDocument) -> ParticipantResponseSche
     ec_dict = ec_raw.model_dump() if hasattr(ec_raw, "model_dump") else ec_raw
     data = doc.model_dump(exclude={"revision_id", "id", "emergency_contact"})
     data["id"] = str(doc.id)
+    data["reservation_id"] = str(doc.reservation_id)
     data["emergency_contact"] = ec_dict
     data["experience_level"] = doc.experience_level.value if doc.experience_level else None
     return ParticipantResponseSchema.model_validate(data)

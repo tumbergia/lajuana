@@ -1,20 +1,23 @@
-# 0002 - Design system propio en Flutter
+# ADR-0002: Design system propio
+
+**Fecha:** 2026-04-22  
+**Estado:** ✅ Aceptado  
 
 ## Contexto
 
-La UI requiere identidad visual consistente y componentes operativos específicos.
+Necesitábamos consistencia visual sin depender de librerías externas (Material You, Shadcn, etc.). El producto tiene branding propio (La Juana) con colores, tipografía (Manrope + Inter) y personalidad visual específica.
 
 ## Decisión
 
-Se construye design system propio con tema global, tokens y widgets custom.
+Design system propio implementado en `packages/mobile_ui/` con:
+- Tokens de color, tipografía, radios (`AppColors`, `AppTextTheme`, `AppRadii`)
+- Widgets base reusables (`AppButton`, `AppCard`, `AppTextField`, etc.)
+- `AppTheme.light()`/`dark()` factory methods
+- `ThemeExtension` para propiedades custom
 
-## Impacto
+## Consecuencias
 
-- consistencia visual
-- menos duplicación
-- base reusable para futuras features
-
-## Riesgos
-
-- sobreabstracción
-- widgets con demasiadas variantes si no se controla el alcance
+- Consistencia visual en toda la app
+- Sin dependencia externa de design system
+- Migración progresiva: widgets estables se mueven de `lib/app/widgets/` a `packages/mobile_ui/`
+- ADR-0004 documenta la estrategia de extracción

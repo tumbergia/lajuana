@@ -138,7 +138,7 @@ async def list_reservations(
         for s in await ScheduleDocument.find(sched_criteria).to_list():
             schedule_map[str(s.id)] = (
                 s.date.isoformat() if s.date else "",
-                s.start_time.isoformat() if s.start_time else "",
+                s.start_time if s.start_time else "",  # str ISO "HH:MM:SS" (ya no es datetime.time)
             )
 
     items: list[ReservationListItemSchema] = []

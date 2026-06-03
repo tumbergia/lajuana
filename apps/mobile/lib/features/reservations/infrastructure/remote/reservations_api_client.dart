@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:mobile_domain/src/gen/reservation_rules.dart' as gen;
 
 import 'reservation_dtos.dart';
 import 'reservations_api_error.dart';
@@ -201,6 +202,15 @@ class ReservationsApiClient {
     );
     final data = _decodeBody(response.body);
     return ReservationDetailDto.fromJson(data);
+  }
+
+  Future<gen.ReservationRules> getReservationRules() async {
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/config/reservation-rules',  // backend: /api/v1/config/reservation-rules
+    );
+    final data = _decodeBody(response.body);
+    return gen.ReservationRules.fromJson(data);
   }
 
   Future<http.Response> _authorizedRequest({

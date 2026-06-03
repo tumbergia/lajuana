@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
+import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 
@@ -97,6 +98,11 @@ class FallbackRepository implements ReservationsRepository {
   Future<ReservationDetail> restoreReservation({
     required String reservationId,
   }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationRules> getRules() async {
     throw Exception('ReservationsModule no inyectado');
   }
 }

@@ -6,6 +6,7 @@ import 'package:mobile/features/reservations/infrastructure/local/reservations_l
 import 'package:mobile/features/reservations/infrastructure/remote/reservation_dtos.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservations_api_client.dart';
 import 'package:mobile/features/reservations/infrastructure/repositories/reservations_repository_impl.dart';
+import 'package:mobile_domain/src/gen/reservation_rules.dart' as gen;
 
 // ── Fakes ───────────────────────────────────────────────────────────────────
 
@@ -83,8 +84,13 @@ class _FakeApiClient implements ReservationsApiClient {
   @override
   Future<ReservationDetailDto> restoreReservation({
     required String reservationId,
-  }) =>
+  }) async =>
       throw UnimplementedError();
+
+  @override
+  Future<gen.ReservationRules> getReservationRules() async {
+    return gen.ReservationRules(minDaysInAdvance: 0);
+  }
 }
 
 class _FakeLocalDataSource implements ReservationsLocalDataSource {

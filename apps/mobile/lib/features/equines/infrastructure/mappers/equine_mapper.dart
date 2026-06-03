@@ -174,6 +174,7 @@ class EquineMapper {
         return 'Restringido';
     }
   }
+}
 
 // ── Helpers privados (top-level, accesibles desde EquineMapper) ──
 // Convención: file-private para mantener el mapper autocontenido.

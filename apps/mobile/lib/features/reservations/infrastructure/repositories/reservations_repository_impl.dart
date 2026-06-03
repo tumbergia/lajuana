@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
+import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile/features/reservations/infrastructure/local/reservations_local_data_source.dart';
@@ -547,5 +548,11 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
               .toList(growable: false)
           : const [],
     );
+  }
+
+  @override
+  Future<ReservationRules> getRules() async {
+    final dto = await _apiClient.getReservationRules();
+    return ReservationRules.fromGen(dto);
   }
 }

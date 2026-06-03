@@ -1,19 +1,39 @@
-# ADRs / decisiones técnicas
+# Decisiones arquitectónicas (ADRs)
 
-Cada decisión importante debe quedar registrada aquí.
+Registro cronológico de decisiones significativas.
 
-## Archivos
+## Índice
 
-- `0001-monorepo.md`
-- `0002-design-system.md`
-- `0003-voice-navigation.md`
-- `0004-mobile-ui-package.md`
-- `0005-roadmap-chatbot.md` — Roadmap del asistente AI v2
-- `0006-list-summary-vs-detail-contract.md` — Contrato list-summary vs detail para endpoints mobile
-- `0007-chatbot-required-holder-data.md` — Datos del titular obligatorios en pre-reserva vía chatbot
-- `adr-auth-network-separation.md` — Separación enlace / reachability / auth en mobile
-- `adr-self-cancel-reservation.md` — Cancelación de reservas con notificación WhatsApp y self-cancel del cliente
+| # | Título | Estado | Fecha |
+|---|--------|--------|-------|
+| 0001 | [Monorepo](0001-monorepo.md) | ✅ Aceptado | 2026-04-22 |
+| 0002 | [Design system propio](0002-design-system.md) | ✅ Aceptado | 2026-04-22 |
+| 0003 | [Navegación por voz](0003-voice.md) | 🟡 Prototipo | 2026-04-22 |
+| 0004 | [Extracción mobile UI a packages](0004-mobile-ui-extract.md) | ⏳ Postergado | 2026-06-02 |
+| 0005 | [Pipeline chatbot v2](0005-chatbot-pipeline.md) | ✅ Aceptado | 2026-05-15 |
+| 0006 | [Contrato list-summary vs detail](0006-list-detail-contract.md) | ✅ Aceptado | 2026-05-25 |
+| 0007 | [Datos holder obligatorios](0007-holder-data.md) | ✅ Aceptado | 2026-06-01 |
+| 0008 | [Protocolo offline-first sync](0008-offline-sync.md) | ✅ Aceptado | 2026-06-01 |
+| 0009 | [Separación auth/network](0009-auth-network.md) | ✅ Aceptado | 2026-04-23 |
 
-## Regla
+## Template para nuevos ADRs
 
-Registrar decisiones reales con contexto, decisión, impacto y riesgos.
+```markdown
+# ADR-XXXX: Título descriptivo
+
+**Fecha:** YYYY-MM-DD
+**Estado:** [Aceptado | Postergado | Rechazado]
+
+## Contexto
+¿Qué problema resolvemos? ¿Qué opciones consideramos?
+
+## Decisión
+¿Qué elegimos y por qué?
+
+## Consecuencias
+Qué cambia, qué se rompe, qué mejora.
+
+## Alternativas consideradas
+- Opción A: pro/contra
+- Opción B: pro/contra
+```

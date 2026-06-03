@@ -41,9 +41,9 @@ class AppRouter {
     dev_ph.loadLibrary();
     switch (routeName) {
       case AuthRoutes.devLoader:
-        return const dev.DevWidgetCatalogScreen();
+        return dev.DevWidgetCatalogScreen();
       case AuthRoutes.widgetMuseum:
-        return const dev_ph.WidgetMuseumPlaceholder();
+        return dev_ph.WidgetMuseumPlaceholder();
       default:
         return null;
     }
