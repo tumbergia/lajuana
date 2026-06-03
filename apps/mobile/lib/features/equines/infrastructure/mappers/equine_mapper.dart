@@ -3,62 +3,42 @@ import 'dart:ui' show VoidCallback;
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/cards/app_logbook_timeline.dart';
 import 'package:mobile_domain/src/equines/equine.dart';
-import 'package:mobile_domain/src/equines/equine_experience_fit.dart';
 import 'package:mobile_domain/src/equines/equine_operational_status.dart';
 import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
+import 'package:mobile_domain/src/gen/equine.dart' as gen;
 import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
 import 'package:mobile/features/equines/infrastructure/remote/equine_dtos.dart';
 
 /// Mapea EquineDto del backend  →  Equine del dominio  →  ViewModel para UI.
 class EquineMapper {
+  /// Convierte [EquineDto] → [Equine] de dominio delegando en [gen.Equine].
+  ///
+  /// Usa [EquineDto.toJson] para generar JSON compatible con [gen.Equine.fromJson],
+  /// luego [Equine.fromGen] para la conversión final. Esto elimina la duplicación
+  /// manual de campo por campo y unifica la fuente de verdad en el modelo generado.
+  /// Valores conocidos de EquineOperationalStatus que el gen model acepta.
+  static const _validOpStatuses = {
+    'available', 'resting', 'in_service', 'injured', 'retired',
+    'unavailable', 'restricted',
+  };
+
   static Equine dtoToDomain(EquineDto dto) {
-    return Equine(
-      id: dto.id,
-      name: dto.name,
-      inventoryNumber: dto.inventoryNumber,
-      species: dto.species,
-      locationStatus: dto.locationStatus,
-      locationNotes: dto.locationNotes,
-      breed: dto.breed,
-      sex: dto.sex,
-      coatColor: dto.coatColor,
-      gait: dto.gait,
-      approximateBirthDate: dto.approximateBirthDate,
-      approximateAgeYears: dto.approximateAgeYears,
-      birthDateIsApproximate: dto.birthDateIsApproximate,
-      birthDateRaw: dto.birthDateRaw,
-      birthPlace: dto.birthPlace,
-      registryNumber: dto.registryNumber,
-      microchip: dto.microchip,
-      sireName: dto.sireName,
-      damName: dto.damName,
-      weightKg: dto.weightKg,
-      heightM: dto.heightM,
-      lastWeightAt: dto.lastWeightAt,
-      lastHeightAt: dto.lastHeightAt,
-      isActive: dto.isActive,
-      isAvailable: dto.isAvailable,
-      operationalStatus:
-          EquineOperationalStatus.fromApi(dto.operationalStatus),
-      availabilityNotes: dto.availabilityNotes,
-      availabilityReasons: dto.availabilityReasons,
-      restUntil: dto.restUntil != null
-          ? DateTime.tryParse(dto.restUntil!)?.toUtc()
-          : null,
-      maxRiderWeightKg: dto.maxRiderWeightKg,
-      experienceFit: dto.experienceFit != null
-          ? EquineExperienceFit.fromApi(dto.experienceFit!)
-          : null,
-      lastServiceAt: dto.lastServiceAt != null
-          ? DateTime.tryParse(dto.lastServiceAt!)?.toUtc()
-          : null,
-      workloadLast7Days: dto.workloadLast7Days,
-      imageBase64: dto.imageBase64,
-      sourceFile: dto.sourceFile,
-      updatedAt: dto.updatedAt != null
-          ? DateTime.tryParse(dto.updatedAt!)?.toUtc()
-          : null,
-    );
+    final json = dto.toJson();
+    // Asegurar fechas no vacías para gen.Equine.fromJson (DateTime.parse).
+    if (json['created_at'] is String && (json['created_at'] as String).isEmpty) {
+      json['created_at'] = '1970-01-01T00:00:00Z';
+    }
+    if (json['updated_at'] is String && (json['updated_at'] as String).isEmpty) {
+      json['updated_at'] = '1970-01-01T00:00:00Z';
+    }
+    // Sanitizar operational_status: el gen model lanza excepción para valores
+    // desconocidos; el manual EquineOperationalStatus.fromApi() fallback a
+    // unavailable. Igualamos ese comportamiento.
+    final opStatus = json['operational_status'] as String?;
+    if (opStatus == null || !_validOpStatuses.contains(opStatus)) {
+      json['operational_status'] = 'unavailable';
+    }
+    return Equine.fromGen(gen.Equine.fromJson(Map<String, dynamic>.from(json)));
   }
 
   static EquineRecord domainToRecord(Equine equine) {

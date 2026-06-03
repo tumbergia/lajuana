@@ -1,5 +1,6 @@
 import 'equine_experience_fit.dart';
 import 'equine_operational_status.dart';
+import '../gen/equine.dart' as gen;
 
 /// Modelo de dominio completo para un equino (CV real).
 class Equine {
@@ -41,6 +42,60 @@ class Equine {
     this.imageBase64,
     this.updatedAt,
   });
+
+  /// Crea un [Equine] de dominio desde el modelo generado [gen.Equine].
+  /// Convierte tipos: String→int?, String→double?, String→DateTime?, enum→String.
+  factory Equine.fromGen(gen.Equine source) {
+    return Equine(
+      id: source.id,
+      name: source.name,
+      inventoryNumber: int.tryParse(source.inventoryNumber),
+      species: source.species.value,
+      locationStatus: source.locationStatus.value,
+      locationNotes: source.locationNotes.isNotEmpty ? source.locationNotes : null,
+      breed: source.breed.isNotEmpty ? source.breed : null,
+      sex: source.sex.value,
+      coatColor: source.coatColor.isNotEmpty ? source.coatColor : null,
+      gait: source.gait.isNotEmpty ? source.gait : null,
+      approximateBirthDate: source.approximateBirthDate.isNotEmpty
+          ? source.approximateBirthDate
+          : null,
+      approximateAgeYears: int.tryParse(source.approximateAgeYears),
+      birthDateIsApproximate: source.birthDateIsApproximate,
+      birthDateRaw: source.birthDateRaw.isNotEmpty ? source.birthDateRaw : null,
+      birthPlace: source.birthPlace.isNotEmpty ? source.birthPlace : null,
+      registryNumber: source.registryNumber.isNotEmpty ? source.registryNumber : null,
+      microchip: source.microchip.isNotEmpty ? source.microchip : null,
+      sireName: source.sireName.isNotEmpty ? source.sireName : null,
+      damName: source.damName.isNotEmpty ? source.damName : null,
+      weightKg: double.tryParse(source.weightKg),
+      heightM: double.tryParse(source.heightM),
+      lastWeightAt: source.lastWeightAt.isNotEmpty ? source.lastWeightAt : null,
+      lastHeightAt: source.lastHeightAt.isNotEmpty ? source.lastHeightAt : null,
+      isActive: source.isActive,
+      isAvailable: source.isAvailable,
+      operationalStatus:
+          EquineOperationalStatus.fromApi(source.operationalStatus.value),
+      availabilityNotes:
+          source.availabilityNotes.isNotEmpty ? source.availabilityNotes : null,
+      availabilityReasons:
+          source.availabilityReasons.isNotEmpty ? source.availabilityReasons : null,
+      restUntil: source.restUntil.isNotEmpty
+          ? DateTime.tryParse(source.restUntil)
+          : null,
+      maxRiderWeightKg: double.tryParse(source.maxRiderWeightKg),
+      experienceFit: source.experienceFit.isNotEmpty
+          ? EquineExperienceFit.fromApi(source.experienceFit)
+          : null,
+      lastServiceAt: source.lastServiceAt != null
+          ? DateTime.tryParse(source.lastServiceAt!)
+          : null,
+      workloadLast7Days: source.workloadLast7Days,
+      sourceFile: source.sourceFile.isNotEmpty ? source.sourceFile : null,
+      imageBase64: source.imageBase64,
+      updatedAt: source.updatedAt,
+    );
+  }
 
   final String id;
   final String name;

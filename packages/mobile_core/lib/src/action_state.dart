@@ -7,7 +7,7 @@
 /// ```dart
 /// ActionState<String> approveState = ActionState.idle();
 /// approveState = ActionState.loading();
-/// approveState = ActionState.success('ok');
+/// approveState = await approveState.run(() => api.approve(id));
 /// approveState = ActionState.error('ERR_01', 'Something failed');
 /// approveState = approveState.reset();
 /// ```
@@ -48,5 +48,24 @@ class ActionState<T> {
   bool get isSuccess => status == ActionStatus.success;
   bool get isError => status == ActionStatus.error;
 
+  /// Resets to idle state.
   ActionState<T> reset() => ActionState.idle();
+
+  /// Executes [action] and returns success/error state.
+  ///
+  /// Caller must set `.loading()` before calling this. Typical usage:
+  /// ```dart
+  /// approveState = ActionState.loading();
+  /// notifyListeners();
+  /// approveState = await approveState.run(() => api.approve(id));
+  /// notifyListeners();
+  /// ```
+  Future<ActionState<T>> run(Future<T> Function() action) async {
+    try {
+      final result = await action();
+      return ActionState.success(result);
+    } on Exception catch (e) {
+      return ActionState.error('ACTION_ERROR', e.toString());
+    }
+  }
 }

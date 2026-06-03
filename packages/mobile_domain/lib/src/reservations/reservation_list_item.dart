@@ -1,4 +1,5 @@
 import '../reservation_status.dart';
+import '../gen/reservation_list_item.dart' as gen;
 
 class ReservationListItem {
   const ReservationListItem({
@@ -48,4 +49,33 @@ class ReservationListItem {
   final DateTime? deletedAt;
 
   bool get isDeleted => deletedAt != null;
+
+  /// Crea un [ReservationListItem] de dominio desde el modelo generado.
+  factory ReservationListItem.fromGen(gen.ReservationListItem source) {
+    return ReservationListItem(
+      id: source.id,
+      code: source.code,
+      status: parseReservationStatus(source.status.value),
+      experienceName: source.experienceName,
+      experienceId: source.experienceId,
+      scheduledDate: source.scheduledDate,
+      startTime: source.startTime,
+      holderName: source.holderName,
+      holderEmail: source.holderEmail,
+      holderPhone: source.holderPhone,
+      participantCount: source.participantCount,
+      registeredParticipantsCount: source.participantsCompletedCount,
+      paymentStatus: source.paymentStatus.value,
+      participantFormStatus: source.participantFormStatus?.value,
+      originChannel: source.channel,
+      scheduleId: source.scheduleId,
+      hasOperationalAlerts: false,
+      requestedDate: source.requestedDate,
+      createdAt: null,
+      updatedAt: null,
+      deletedAt: source.deletedAt != null
+          ? DateTime.tryParse(source.deletedAt!)
+          : null,
+    );
+  }
 }

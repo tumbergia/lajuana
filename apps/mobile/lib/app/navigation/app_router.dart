@@ -7,8 +7,9 @@ import 'package:mobile/features/auth/presentation/screens/change_password_screen
 import 'package:mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:mobile/features/auth/presentation/screens/register_screen.dart';
 import 'package:mobile/features/auth/presentation/screens/session_view_screen.dart';
-import 'package:mobile/app/bootstrap/dev_loader_screen.dart';
-import 'package:mobile/app/bootstrap/dev/widget_museum_placeholder.dart';
+import 'package:mobile/app/bootstrap/dev_loader_screen.dart' deferred as dev;
+import 'package:mobile/app/bootstrap/dev/widget_museum_placeholder.dart'
+    deferred as dev_ph;
 import 'package:mobile/app/bootstrap/startup_gate.dart';
 import 'package:mobile/app/dependency_injection.dart';
 import 'package:mobile/app/shell/authenticated_shell.dart';
@@ -29,13 +30,20 @@ class AppRouter {
   }
 
   /// Resolves dev/playground screens — only in non-release builds.
+  ///
+  /// Uses [deferred] imports so the dev code is tree-shaken in release.
+  /// Note: Flutter AOT (iOS/Android) does not support true lazy loading,
+  /// so [loadLibrary] is called as a no-op for web compat.  The real
+  /// exclusion is the [kReleaseMode] guard (W3.8 del plan de mejora).
   Widget? _devScreen(String routeName) {
     if (kReleaseMode) return null;
+    dev.loadLibrary();
+    dev_ph.loadLibrary();
     switch (routeName) {
       case AuthRoutes.devLoader:
-        return const DevWidgetCatalogScreen();
+        return const dev.DevWidgetCatalogScreen();
       case AuthRoutes.widgetMuseum:
-        return const WidgetMuseumPlaceholder();
+        return const dev_ph.WidgetMuseumPlaceholder();
       default:
         return null;
     }

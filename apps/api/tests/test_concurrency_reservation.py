@@ -187,16 +187,15 @@ class TestConcurrentConfirm:
                 _mock_get_exp,
             )
 
-            # ── Act — fire two confirms simultaneously ──
+            # ── Act — fire 5 confirms simultaneously ──
             results = await asyncio.gather(
-                svc.confirm_reservation(
-                    reservation_id="660000000000000000000001",
-                    actor_id="660000000000000000000050",
-                ),
-                svc.confirm_reservation(
-                    reservation_id="660000000000000000000001",
-                    actor_id="660000000000000000000050",
-                ),
+                *[
+                    svc.confirm_reservation(
+                        reservation_id="660000000000000000000001",
+                        actor_id="660000000000000000000050",
+                    )
+                    for _ in range(5)
+                ],
                 return_exceptions=True,
             )
 
@@ -207,8 +206,8 @@ class TestConcurrentConfirm:
                 f"Expected 1 success, got {len(successes)}. "
                 f"Failures: {[(type(f).__name__, str(f)) for f in failures]}"
             )
-            assert len(failures) == 1, (
-                f"Expected 1 failure, got {len(failures)}"
+            assert len(failures) == 4, (
+                f"Expected 4 failures, got {len(failures)}"
             )
             failure = failures[0]
             assert isinstance(failure, ApiError), (
@@ -350,14 +349,13 @@ class TestConcurrentConfirm:
             )
 
             results = await asyncio.gather(
-                svc.confirm_reservation(
-                    reservation_id="660000000000000000000001",
-                    actor_id="660000000000000000000050",
-                ),
-                svc.confirm_reservation(
-                    reservation_id="660000000000000000000001",
-                    actor_id="660000000000000000000050",
-                ),
+                *[
+                    svc.confirm_reservation(
+                        reservation_id="660000000000000000000001",
+                        actor_id="660000000000000000000050",
+                    )
+                    for _ in range(5)
+                ],
                 return_exceptions=True,
             )
 
@@ -367,8 +365,8 @@ class TestConcurrentConfirm:
                 f"Expected 1 success, got {len(successes)}. "
                 f"Failures: {[(type(f).__name__, str(f)[:100]) for f in failures]}"
             )
-            assert len(failures) == 1, (
-                f"Expected 1 failure, got {len(failures)}"
+            assert len(failures) == 4, (
+                f"Expected 4 failures, got {len(failures)}"
             )
 
         asyncio.run(run())

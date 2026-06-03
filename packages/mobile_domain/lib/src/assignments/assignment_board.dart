@@ -1,9 +1,38 @@
 import 'package:mobile_core/mobile_core.dart';
 
 import '../assignment_status.dart';
+import '../gen/assignment_board.dart' as gen;
+import '../gen/assignment_board_participant.dart' as gen_part;
+import '../gen/assignment_board_equine.dart' as gen_equine;
+import '../gen/assignment_board_saddle.dart' as gen_saddle;
+import '../gen/assignment_board_summary.dart' as gen_summary;
 
 /// Mirrors backend AssignmentBoardResponseSchema.
 class AssignmentBoard {
+  /// Crea un [AssignmentBoard] de dominio desde el modelo generado.
+  factory AssignmentBoard.fromGen(gen.AssignmentBoard source) {
+    return AssignmentBoard(
+      reservationId: source.reservationId,
+      reservationStatus: source.reservationStatus,
+      scheduledDate: source.scheduledDate,
+      participants: source.participants
+              ?.map((p) => BoardParticipant.fromGen(p))
+              .toList() ??
+          [],
+      availableEquines: source.availableEquines
+              ?.map((e) => AvailableEquine.fromGen(e))
+              .toList() ??
+          [],
+      availableSaddles: source.availableSaddles
+              ?.map((s) => AvailableSaddle.fromGen(s))
+              .toList() ??
+          [],
+      summary: source.summary != null
+          ? BoardSummary.fromGen(source.summary!)
+          : BoardSummary(),
+    );
+  }
+
   final String reservationId;
   final String reservationStatus;
   final String? scheduledDate;
@@ -48,6 +77,20 @@ class AssignmentBoard {
 }
 
 class BoardParticipant {
+  /// Crea un [BoardParticipant] de dominio desde el modelo generado.
+  factory BoardParticipant.fromGen(gen_part.AssignmentBoardParticipant source) {
+    return BoardParticipant(
+      participantId: source.participantId,
+      fullName: source.fullName,
+      ageYears: source.ageYears != null ? int.tryParse(source.ageYears!) : null,
+      weightKg: source.weightKg != null ? double.tryParse(source.weightKg!) : null,
+      heightCm: source.heightCm != null ? double.tryParse(source.heightCm!) : null,
+      experienceLevel: source.experienceLevel,
+      assignment: null, // gen model has assignment as String?, not BoardAssignment
+      blockingReasons: source.blockingReasons ?? [],
+    );
+  }
+
   final String participantId;
   final String fullName;
   final int? ageYears;
@@ -119,6 +162,18 @@ class BoardAssignment {
 }
 
 class AvailableEquine {
+  /// Crea un [AvailableEquine] de dominio desde el modelo generado.
+  factory AvailableEquine.fromGen(gen_equine.AssignmentBoardEquine source) {
+    return AvailableEquine(
+      id: source.id,
+      name: source.name,
+      blockReason: source.blockReason,
+      maxRiderWeightKg:
+          source.maxRiderWeightKg != null ? double.tryParse(source.maxRiderWeightKg!) : null,
+      imageBase64: source.imageBase64,
+    );
+  }
+
   final String id;
   final String name;
   final String? blockReason;
@@ -147,6 +202,16 @@ class AvailableEquine {
 }
 
 class AvailableSaddle {
+  /// Crea un [AvailableSaddle] de dominio desde el modelo generado.
+  factory AvailableSaddle.fromGen(gen_saddle.AssignmentBoardSaddle source) {
+    return AvailableSaddle(
+      id: source.id,
+      code: source.code,
+      name: source.name,
+      blockReason: source.blockReason,
+    );
+  }
+
   final String id;
   final String code;
   final String? name;
@@ -190,6 +255,16 @@ class BatchUpdateResult {
 }
 
 class BoardSummary {
+  /// Crea un [BoardSummary] de dominio desde el modelo generado.
+  factory BoardSummary.fromGen(gen_summary.AssignmentBoardSummary source) {
+    return BoardSummary(
+      participantsTotal: source.participantsTotal ?? 0,
+      assignedTotal: source.assignedTotal ?? 0,
+      pendingTotal: source.pendingTotal ?? 0,
+      blockingTotal: source.blockingTotal ?? 0,
+    );
+  }
+
   final int participantsTotal;
   final int assignedTotal;
   final int pendingTotal;

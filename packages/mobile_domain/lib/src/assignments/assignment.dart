@@ -1,4 +1,5 @@
 import '../assignment_status.dart';
+import '../gen/assignment.dart' as gen;
 
 /// Mirrors backend AssignmentResponseSchema.
 class Assignment {
@@ -45,6 +46,36 @@ class Assignment {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  /// Crea un [Assignment] de dominio desde el modelo generado.
+  factory Assignment.fromGen(gen.Assignment source) {
+    return Assignment(
+      id: source.id,
+      reservationId: source.reservationId,
+      participantId: source.participantId,
+      participantName: source.participantName,
+      equineId: source.equineId,
+      equineName: source.equineName,
+      saddleId: source.saddleId,
+      saddleLabel: source.saddleLabel,
+      status: AssignmentStatus.fromApi(source.status.value),
+      source: AssignmentSource.fromApi(source.source.value),
+      safetyFlags: source.safetyFlags ?? [],
+      validationWarnings: source.validationWarnings ?? [],
+      notes: source.notes,
+      isActive: source.isActive ?? true,
+      assignedByUserId: source.assignedByUserId,
+      finalizedByUserId: source.finalizedByUserId,
+      assignedAt: source.assignedAt != null
+          ? DateTime.tryParse(source.assignedAt!)
+          : null,
+      finalizedAt: source.finalizedAt != null
+          ? DateTime.tryParse(source.finalizedAt!)
+          : null,
+      createdAt: source.createdAt,
+      updatedAt: source.updatedAt,
+    );
+  }
 
   factory Assignment.fromJson(Map<String, dynamic> json) {
     return Assignment(

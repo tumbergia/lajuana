@@ -23,6 +23,7 @@ export 'src/reservations/reservation_participant_detail.dart';
 export 'src/reservations/reservation_payment_proof_detail.dart';
 export 'src/reservations/reservation_payment_summary.dart';
 export 'src/reservations/reservation_timeline_event.dart';
+export 'src/reservations/reservation_rules.dart';
 export 'src/reservations/reservations_repository.dart';
 export 'src/saddles/saddle_list_item.dart';
 export 'src/saddles/saddles_repository.dart';

@@ -1,8 +1,9 @@
 import 'dart:typed_data';
 
+import 'package:mobile_domain/src/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
-import 'package:mobile_domain/src/reservation_status.dart';
+import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 
 abstract class ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
@@ -16,6 +17,9 @@ abstract class ReservationsRepository {
   Future<List<ReservationListItem>> getCachedReservations();
 
   Future<ReservationDetail?> getCachedReservationDetail(String reservationId);
+
+  /// Returns the current reservation rules from remote config.
+  Future<ReservationRules> getRules();
 
   /// Downloads a payment proof file. The caller decides how to render
   /// based on the content type known from the proof's metadata.

@@ -54,34 +54,33 @@ async def init_db() -> None:
 
     from beanie import init_beanie
 
-    await init_beanie(
-        database=database,
-        document_models=[
-            PingDocument,
-            UserDocument,
-            ExperienceDocument,
-            ScheduleDocument,
-            ReservationDocument,
-            ParticipantDocument,
-            ParticipantFormLinkDocument,
-            PaymentProofDocument,
-            AppConfigDocument,
-            EquineDocument,
-            SaddleDocument,
-            AssignmentDocument,
-            ServiceLogDocument,
-            ProviderDocument,
-            PolicyDocument,
-            ConversationSessionDocument,
-            ConversationTurnDocument,
-            ReservationAuditLogDocument,
-            ToolCallLogDocument,
-            WhatsAppInboundEventDocument,
-            MessageBufferDocument,
-            OutboundMessageDocument,
-            HumanReviewRequestDocument,
-        ],
-    )
+    document_models = [
+        PingDocument,
+        UserDocument,
+        ExperienceDocument,
+        ScheduleDocument,
+        ReservationDocument,
+        ParticipantDocument,
+        ParticipantFormLinkDocument,
+        PaymentProofDocument,
+        AppConfigDocument,
+        EquineDocument,
+        SaddleDocument,
+        AssignmentDocument,
+        ServiceLogDocument,
+        ProviderDocument,
+        PolicyDocument,
+        ConversationSessionDocument,
+        ConversationTurnDocument,
+        ReservationAuditLogDocument,
+        ToolCallLogDocument,
+        WhatsAppInboundEventDocument,
+        MessageBufferDocument,
+        OutboundMessageDocument,
+        HumanReviewRequestDocument,
+    ]
+
+    await init_beanie(database=database, document_models=document_models)
 
     try:
         await database["whatsapp_inbound_events"].create_index(

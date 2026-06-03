@@ -161,6 +161,52 @@ class EquineDto {
     }
     return null;
   }
+
+  /// Serializa de vuelta al formato JSON snake_case que espera gen.Equine.fromJson.
+  Map<String, dynamic> toJson() => {
+    'version': version,
+    'created_at': createdAt ?? '',
+    'updated_at': updatedAt ?? '',
+    'deleted_at': deletedAt,
+    'id': id,
+    'name': name,
+    'inventory_number': inventoryNumber?.toString() ?? '',
+    'species': species,
+    'location_status': locationStatus,
+    'location_notes': locationNotes ?? '',
+    'breed': breed ?? '',
+    'sex': sex,
+    'coat_color': coatColor ?? '',
+    'gait': gait ?? '',
+    'approximate_birth_date': approximateBirthDate ?? '',
+    'approximate_age_years': approximateAgeYears?.toString() ?? '',
+    'birth_date_is_approximate': birthDateIsApproximate,
+    'birth_date_raw': birthDateRaw ?? '',
+    'birth_place': birthPlace ?? '',
+    'registry_number': registryNumber ?? '',
+    'microchip': microchip ?? '',
+    'sire_name': sireName ?? '',
+    'dam_name': damName ?? '',
+    'weight_kg': weightKg?.toString() ?? '',
+    'height_m': heightM?.toString() ?? '',
+    'last_weight_at': lastWeightAt ?? '',
+    'last_height_at': lastHeightAt ?? '',
+    'is_active': isActive,
+    'is_available': isAvailable,
+    'operational_status': operationalStatus,
+    'availability_notes': availabilityNotes ?? '',
+    'availability_reasons': availabilityReasons ?? '',
+    'rest_until': restUntil ?? '',
+    'max_rider_weight_kg': maxRiderWeightKg?.toString() ?? '',
+    'experience_fit': experienceFit ?? '',
+    'last_service_at': lastServiceAt,
+    'workload_last_7_days': workloadLast7Days,
+    'image_base64': imageBase64,
+    'source_file': sourceFile ?? '',
+    'source_sheet': sourceSheet ?? '',
+    'source_row_number': sourceRowNumber?.toString() ?? '',
+    'source_updated_at_label': sourceUpdatedAtLabel ?? '',
+  };
 }
 
 /// DTO para una entrada del timeline del equino desde la API.
