@@ -164,9 +164,9 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                                       return MaterialPageRoute<void>(
                                         builder: (ctx) {
                                         // El scroll se maneja globalmente via RefreshScope.
-                                          if (tab == AppNavItem.reservas) {
-                                            return _tabRoot(tab);
-                                          }
+                                        if (tab == AppNavItem.reservas || tab == AppNavItem.equinos) {
+                                          return _tabRoot(tab);
+                                        }
                                           return SingleChildScrollView(
                                             physics: const AlwaysScrollableScrollPhysics(),
                                             child: _tabRoot(tab),

@@ -99,19 +99,17 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
             variant: AppSectionHeaderVariant.hero,
           ),
           const SizedBox(height: 20),
-          _buildSubrouteContent(),
+          Expanded(child: _buildBodyContent()),
         ],
       ),
     );
   }
 
-  Widget _buildSubrouteContent() {
+  Widget _buildBodyContent() {
     switch (_controller.loadState) {
       case EquinesLoadState.idle:
       case EquinesLoadState.loading:
-        return const Expanded(
-          child: AppCenteredLoader(),
-        );
+        return const AppCenteredLoader();
       case EquinesLoadState.error:
         return _buildError();
       case EquinesLoadState.empty:
@@ -143,23 +141,23 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-                  Symbols.chess_knight,
-                  size: 56,
+              Symbols.chess_knight,
+              size: 56,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
             Text(
               'No hay equinos sincronizados',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Conectate al backend o verifica la conexion',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
@@ -201,7 +199,10 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                   color: Theme.of(context).colorScheme.outlineVariant,
                 ),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
             ),
           ),
         ),
@@ -264,33 +265,25 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
 
     // ── Empty filter: llenar viewport + centrar mensaje ────────────
     if (filteredEmpty && hasEquines) {
-      final vh = (Scrollable.maybeOf(context)?.position.viewportDimension)
-          ?? MediaQuery.of(context).size.height;
-      return SizedBox(
-        height: vh,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildMetricsRow(),
-            const SizedBox(height: 8),
-            _buildStatusFilter(),
-            const SizedBox(height: 12),
-            _buildSearchRow(),
-            const SizedBox(height: 12),
-            _buildRegisterButton(),
-            const SizedBox(height: 16),
-            Expanded(
-              child: Center(
-                child: _buildEmptyFilterMessage(),
-              ),
-            ),
-          ],
-        ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildMetricsRow(),
+          const SizedBox(height: 8),
+          _buildStatusFilter(),
+          const SizedBox(height: 12),
+          _buildSearchRow(),
+          const SizedBox(height: 12),
+          _buildRegisterButton(),
+          const SizedBox(height: 16),
+          Expanded(child: Center(child: _buildEmptyFilterMessage())),
+        ],
       );
     }
 
     // ── Con contenido (grid o lista) ────────────────────────────────
-    return Column(
+    return SingleChildScrollView(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (hasEquines) _buildMetricsRow(),
@@ -368,15 +361,22 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                     child: AppButton(
                       label: 'Editar',
                       icon: Icons.edit_rounded,
-                      onPressed: _controller.selectedEquineId != null && widget.canEdit
+                      onPressed:
+                          _controller.selectedEquineId != null && widget.canEdit
                           ? () async {
                               final detail = _controller.selectedDetail;
-                              final result = await showModalBottomSheet<Map<String, dynamic>>(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Theme.of(context).colorScheme.surface,
-                                builder: (_) => EquineFormSheet(existing: detail),
-                              );
+                              final result =
+                                  await showModalBottomSheet<
+                                    Map<String, dynamic>
+                                  >(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.surface,
+                                    builder: (_) =>
+                                        EquineFormSheet(existing: detail),
+                                  );
                               if (result != null && mounted) {
                                 final success = await _controller.updateEquine(
                                   _controller.selectedEquineId!,
@@ -384,7 +384,11 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                                 );
                                 if (success && mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Equino actualizado correctamente')),
+                                    const SnackBar(
+                                      content: Text(
+                                        'Equino actualizado correctamente',
+                                      ),
+                                    ),
                                   );
                                 }
                               }
@@ -408,8 +412,8 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
               _buildListView(),
             ],
           ],
-
         ],
+      ),
     );
   }
 
@@ -438,16 +442,16 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
               const SizedBox(height: 16),
               Text(
                 equine.name,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
                 equine.summary,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -490,10 +494,17 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                         builder: (_) => EquineFormSheet(existing: detail),
                       ).then((result) async {
                         if (result != null && mounted) {
-                          final success = await _controller.updateEquine(equine.id, result);
+                          final success = await _controller.updateEquine(
+                            equine.id,
+                            result,
+                          );
                           if (success && mounted) {
                             messenger.showSnackBar(
-                              const SnackBar(content: Text('Equino actualizado correctamente')),
+                              const SnackBar(
+                                content: Text(
+                                  'Equino actualizado correctamente',
+                                ),
+                              ),
                             );
                           }
                         }
@@ -553,27 +564,15 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     // Construir opciones base: TODOS + estados operativos + ELIMINADOS.
     final items = <AppSegmentedFilterItem<String?>>[
       const AppSegmentedFilterItem(label: 'TODOS', value: null),
+      const AppSegmentedFilterItem(label: 'DISPONIBLES', value: 'available'),
       const AppSegmentedFilterItem(
-        label: 'DISPONIBLES',
-        value: 'available',
-      ),
-      const AppSegmentedFilterItem(
-        label: 'NO DISP.',
+        label: 'NO DISPONIBLE',
         value: 'unavailable',
       ),
-      const AppSegmentedFilterItem(
-        label: 'DESCANSO',
-        value: 'resting',
-      ),
-      const AppSegmentedFilterItem(
-        label: 'EN SERVICIO',
-        value: 'in_service',
-      ),
+      const AppSegmentedFilterItem(label: 'DESCANSO', value: 'resting'),
+      const AppSegmentedFilterItem(label: 'EN SERVICIO', value: 'in_service'),
       if (widget.canEdit)
-        const AppSegmentedFilterItem(
-          label: 'ELIMINADOS',
-          value: 'deleted',
-        ),
+        const AppSegmentedFilterItem(label: 'ELIMINADOS', value: 'deleted'),
     ];
 
     // Elegir valor actual: _filterMode mapea directamente a los values string.
@@ -661,14 +660,17 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Symbols.search_off_rounded, size: 40,
-          color: Theme.of(context).colorScheme.onSurfaceVariant),
+        Icon(
+          Symbols.search_off_rounded,
+          size: 40,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         const SizedBox(height: 8),
         Text(
           'No hay equinos con ese estado',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -694,10 +696,9 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
 
     final firstRecord = records.first;
     final equineId = _controller.selectedEquineId ?? firstRecord.id;
-    final equineName = records.firstWhere(
-      (r) => r.id == equineId,
-      orElse: () => firstRecord,
-    ).name;
+    final equineName = records
+        .firstWhere((r) => r.id == equineId, orElse: () => firstRecord)
+        .name;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -717,7 +718,9 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                 child: AppCenteredLoader(fill: false),
               );
             }
-            if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+            if (snapshot.hasError ||
+                !snapshot.hasData ||
+                snapshot.data!.isEmpty) {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
@@ -758,5 +761,4 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
       ],
     );
   }
-
 }

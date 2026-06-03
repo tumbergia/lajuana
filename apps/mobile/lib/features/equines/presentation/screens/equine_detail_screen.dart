@@ -233,58 +233,55 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                  child: SizedBox(
-                    height: 140,
-                    child: Column(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              d.name,
-                              style: Theme.of(context).textTheme.headlineMedium,
-                            ),
-                            const SizedBox(height: 2),
-                            if (d.inventoryNumber != null)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 2),
-                                child: Text(
-                                  '#${d.inventoryNumber}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
-                                      ?.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                        letterSpacing: 1.5,
-                                      ),
-                                ),
-                              ),
-                            if (d.species != 'unknown')
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 1),
-                                child: Text(
-                                  equineSpeciesLabel(d.species),
-                                  style:
-                                      Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ),
-                            if (d.breed != null && d.breed!.isNotEmpty)
-                              Text(
-                                d.breed!,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                        color: scheme.onSurfaceVariant),
-                              ),
-                          ],
+                        Text(
+                          d.name,
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
+                        const SizedBox(height: 2),
+                        if (d.inventoryNumber != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Text(
+                              '#${d.inventoryNumber}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                    letterSpacing: 1.5,
+                                  ),
+                            ),
+                          ),
+                        if (d.species != 'unknown')
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 1),
+                            child: Text(
+                              equineSpeciesLabel(d.species),
+                              style:
+                                  Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        if (d.breed != null && d.breed!.isNotEmpty)
+                          Text(
+                            d.breed!,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(
+                                    color: scheme.onSurfaceVariant),
+                          ),
                       ],
                     ),
-                  ),
+                  ],
                 ),
+              ),
               ],
             ),
           ),

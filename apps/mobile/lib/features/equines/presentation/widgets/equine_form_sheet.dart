@@ -252,68 +252,65 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: SizedBox(
-                        height: 140,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _isEditing
-                                  ? widget.existing!.name
-                                  : 'Nuevo equino',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium
-                                  ?.copyWith(
-                                    color: _isEditing
-                                        ? scheme.onSurface
-                                        : scheme.onSurfaceVariant,
-                                  ),
-                            ),
-                            if (_isEditing) ...[
-                              const SizedBox(height: 2),
-                              if (_headerInventoryNumber != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 2),
-                                  child: Text(
-                                    _headerInventoryNumber!,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(
-                                          color: scheme.onSurfaceVariant,
-                                          letterSpacing: 1.5,
-                                        ),
-                                  ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _isEditing
+                                ? widget.existing!.name
+                                : 'Nuevo equino',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(
+                                  color: _isEditing
+                                      ? scheme.onSurface
+                                      : scheme.onSurfaceVariant,
                                 ),
-                              if (_existingSpecies.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 1),
-                                  child: Text(
-                                    _existingSpecies,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
-                                  ),
-                                ),
-                              if (_existingBreed != null)
-                                Text(
-                                  _existingBreed!,
+                          ),
+                          if (_isEditing) ...[
+                            const SizedBox(height: 2),
+                            if (_headerInventoryNumber != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Text(
+                                  _headerInventoryNumber!,
                                   style: Theme.of(context)
                                       .textTheme
-                                      .bodySmall
+                                      .labelSmall
                                       ?.copyWith(
                                         color: scheme.onSurfaceVariant,
+                                        letterSpacing: 1.5,
                                       ),
                                 ),
-                              ],
-                            ],
-                          ),
-                        ),
+                              ),
+                            if (_existingSpecies.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 1),
+                                child: Text(
+                                  _existingSpecies,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium,
+                                ),
+                              ),
+                            if (_existingBreed != null)
+                              Text(
+                                _existingBreed!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                              ),
+                          ],
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
