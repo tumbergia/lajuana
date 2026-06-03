@@ -42,3 +42,7 @@ token_telemetry.txt
 
 # OpenAPI generated spec (regenerated in CI from FastAPI code)
 apps/api/openapi.json
+
+# Audit logs (generados por scripts/audit_tools.py y scripts/admin_e2e_test.py)
+scripts/audit_logs/
+scripts/e2e_logs/

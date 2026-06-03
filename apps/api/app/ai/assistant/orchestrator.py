@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from datetime import date
+from datetime import date, datetime, timezone
 from uuid import uuid4
 
 from app.ai.assistant.date_extractor import extract_date_from_message
@@ -40,6 +40,55 @@ FIELD_LABELS: dict[str, str] = {
     "reservation_code": "¿cuál es el código de tu reserva?",
     "new_date": "¿cuál es la nueva fecha?",
     "new_participant_count": "¿cuántas personas serían ahora?",
+}
+
+# Constants extracted for testability (W3.6, conv. #6: no lógica en métodos)
+CONFIRM_WORDS: set[str] = {
+    "sí", "si", "yes", "confirmar", "confirmo", "ok", "okay",
+    "dale", "adelante", "hazlo", "ejecutar",
+}
+CANCEL_WORDS: set[str] = {
+    "no", "cancelar", "cancelo", "nope", "abortar", "detener",
+    "deten", "no quiero", "olvídalo",
+}
+
+REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
+    "check_availability": ["experience_id", "requested_date", "participant_count"],
+    "create_reservation": ["experience_id", "requested_date", "participant_count"],
+    "suggest_alternative_dates": ["experience_id"],
+    "create_reservation_draft": [
+        "experience_id",
+        "participant_count",
+        "holder_phone",
+        "holder_name",
+        "holder_email",
+        "requested_date",
+        "quote_snapshot",
+    ],
+    "get_reservation_public_summary": ["code", "holder_phone"],
+    "get_reservation_status_by_phone": ["holder_phone"],
+    "cancel_reservation": ["reservation_code", "holder_phone"],
+    "update_reservation_date": ["reservation_code", "holder_phone", "new_date"],
+    "update_reservation_participants": [
+        "reservation_code", "holder_phone", "new_participant_count",
+    ],
+}
+
+# Tools requiring user confirmation before execution
+WRITE_TOOLS_REQUIRING_CONFIRMATION: set[str] = {
+    "admin_deactivate_experience",
+    "admin_deactivate_user",
+    "admin_deactivate_schedule",
+    "admin_deactivate_equine",
+    "admin_close_service_execution",
+    "admin_cancel_reservation",
+    "admin_confirm_reservation",
+    "admin_approve_payment",
+    "admin_reject_payment_proof",
+    "admin_unverify_payment_proof",
+    "admin_unreject_payment_proof",
+    "admin_update_equine_availability",
+    "admin_update_reservation_rules",
 }
 
 
@@ -92,6 +141,29 @@ class AssistantOrchestrator:
         if phone and "holder_phone" not in session.slot_values:
             session.slot_values["holder_phone"] = phone
 
+        # Handle pending tool confirmations
+        pending_tool = session.slot_values.get("_pending_tool_name")
+        if pending_tool and self._is_confirmation(request.message):
+            # User confirmed, execute pending tool
+            return await self._execute_pending_tool(
+                request=request,
+                session=session,
+                trace_id=trace_id,
+                conversation_key=conversation_key,
+            )
+        elif pending_tool and self._is_cancellation(request.message):
+            # User cancelled, clear pending tool
+            session.slot_values.pop("_pending_tool_name", None)
+            session.slot_values.pop("_pending_tool_args", None)
+            session.last_intent = "confirmation_cancelled"
+            session.turn_count += 1
+            await session.save()
+            return AskResponse(
+                trace_id=trace_id,
+                action=AssistantAction.FINAL_RESPONSE,
+                response="Operación cancelada. ¿En qué más puedo ayudarte?",
+            )
+
         history_turns = (
             await ConversationTurnDocument.find(
                 {"conversation_id": conversation_key, "status": "responded"},
@@ -134,6 +206,7 @@ class AssistantOrchestrator:
                 parts.append(f"Historial de la conversación:\n{conversation_history}")
             enriched_context = "\n\n".join(parts)
 
+        token_usage: dict[str, int] | None = None
         try:
             plan = await self._planner.plan(
                 user_message=request.message,
@@ -141,6 +214,7 @@ class AssistantOrchestrator:
                 conversation_context=enriched_context,
                 conversation_id=conversation_id,
             )
+            token_usage = getattr(self._planner, "last_token_usage", None)
         except GeminiResourceExhausted:
             return AskResponse(
                 trace_id=trace_id,
@@ -206,42 +280,7 @@ class AssistantOrchestrator:
                     session.slot_values[key] = value
 
         # Session merge: fill null plan args from session slots
-        REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
-            "check_availability": ["experience_id", "requested_date", "participant_count"],
-            "create_reservation": ["experience_id", "requested_date", "participant_count"],
-            "suggest_alternative_dates": ["experience_id"],
-            "create_reservation_draft": [
-                "experience_id",
-                "participant_count",
-                "holder_phone",
-                "holder_name",
-                "holder_email",
-                "requested_date",
-                "quote_snapshot",
-            ],
-            "get_reservation_public_summary": [
-                "code",
-                "holder_phone",
-            ],
-            "get_reservation_status_by_phone": [
-                "holder_phone",
-            ],
-            "cancel_reservation": [
-                "reservation_code",
-                "holder_phone",
-            ],
-            "update_reservation_date": [
-                "reservation_code",
-                "holder_phone",
-                "new_date",
-            ],
-            "update_reservation_participants": [
-                "reservation_code",
-                "holder_phone",
-                "new_participant_count",
-            ],
-        }
-
+        # REQUIRED_FIELDS_BY_TOOL definido a nivel módulo (ver arriba)
         if (
             plan.action in {AssistantAction.TOOL_CALL, AssistantAction.ASK_CLARIFYING_QUESTION}
             and plan.arguments
@@ -288,7 +327,7 @@ class AssistantOrchestrator:
             session.last_intent = plan.action.value
             session.last_trace_id = trace_id
             session.turn_count += 1
-            session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
+            session.updated_at = datetime.now(timezone.utc)
             await session.save()
             return AskResponse(
                 trace_id=trace_id,
@@ -314,7 +353,7 @@ class AssistantOrchestrator:
             session.last_intent = "blocked_by_policy"
             session.last_trace_id = trace_id
             session.turn_count += 1
-            session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
+            session.updated_at = datetime.now(timezone.utc)
             await session.save()
             return AskResponse(
                 trace_id=trace_id,
@@ -323,6 +362,28 @@ class AssistantOrchestrator:
                 planner_output=plan.model_dump(mode="json"),
                 tool_output={},
                 response=response,
+            )
+
+        # Confirmación pre-ejecución (constante module-level, ver arriba)
+        if plan.tool_name in WRITE_TOOLS_REQUIRING_CONFIRMATION:
+            confirm_msg = (
+                f"Voy a ejecutar: {plan.tool_name}. "
+                f"¿Estás seguro? Responde 'sí' para confirmar o 'no' para cancelar."
+            )
+            session.slot_values["_pending_tool_name"] = plan.tool_name
+            session.slot_values["_pending_tool_args"] = plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
+            session.last_intent = "pending_confirmation"
+            session.last_trace_id = trace_id
+            session.turn_count += 1
+            session.updated_at = datetime.now(timezone.utc)
+            await session.save()
+            return AskResponse(
+                trace_id=trace_id,
+                action=AssistantAction.ASK_CLARIFYING_QUESTION,
+                tool_name=plan.tool_name,
+                planner_output=plan.model_dump(mode="json"),
+                tool_output={},
+                response=confirm_msg,
             )
 
         started = time.perf_counter()
@@ -407,7 +468,7 @@ class AssistantOrchestrator:
         session.last_intent = plan.action.value if plan.action else "tool_executed"
         session.last_trace_id = trace_id
         session.turn_count += 1
-        session.updated_at = __import__("datetime").datetime.now(__import__("datetime").UTC)
+        session.updated_at = datetime.now(timezone.utc)
         await session.save()
 
         return AskResponse(
@@ -415,6 +476,79 @@ class AssistantOrchestrator:
             action=plan.action,
             tool_name=plan.tool_name,
             planner_output=plan.model_dump(mode="json"),
+            tool_output=tool_output,
+            response=response,
+            token_usage=token_usage,
+        )
+
+    @staticmethod
+    def _is_confirmation(message: str) -> bool:
+        """Detecta si el mensaje es una confirmación afirmativa."""
+        msg_lower = message.lower().strip()
+        return msg_lower in CONFIRM_WORDS or any(word in msg_lower for word in CONFIRM_WORDS)
+
+    @staticmethod
+    def _is_cancellation(message: str) -> bool:
+        """Detecta si el mensaje es una cancelación."""
+        msg_lower = message.lower().strip()
+        return msg_lower in CANCEL_WORDS or any(word in msg_lower for word in CANCEL_WORDS)
+
+    async def _execute_pending_tool(
+        self,
+        *,
+        request: AskRequest,
+        session: ConversationSessionDocument,
+        trace_id: str,
+        conversation_key: str,
+    ) -> AskResponse:
+        """Ejecuta una tool pendiente de confirmación."""
+        from app.ai.mcp.registry import registry
+        from app.documents.tool_call_log_document import ToolCallLogDocument
+
+        pending_tool_name = session.slot_values.pop("_pending_tool_name", None)
+        pending_args = session.slot_values.pop("_pending_tool_args", {})
+        pending_args["conversation_id_for_log"] = conversation_key
+        pending_args["trace_id"] = trace_id
+        pending_args["conversation_turn_id"] = str(uuid4())
+
+        started = time.perf_counter()
+        error_code: str | None = None
+        tool_output: dict = {}
+
+        try:
+            tool_output = await registry.call(pending_tool_name, **pending_args)
+            status = "success"
+            response = tool_output.get("response", f"Tool {pending_tool_name} ejecutada correctamente.")
+        except Exception as exc:
+            error_code = "tool.execution_failed"
+            status = "error"
+            tool_output = {"error": str(exc), "trace_id": trace_id}
+            response = f"Error al ejecutar {pending_tool_name}: {str(exc)}"
+
+        latency_ms = int((time.perf_counter() - started) * 1000)
+
+        await ToolCallLogDocument(
+            trace_id=trace_id,
+            conversation_turn_id=pending_args.get("conversation_turn_id"),
+            tool_name=pending_tool_name or "unknown",
+            input=pending_args,
+            output=tool_output,
+            status=status,
+            error_code=error_code,
+            latency_ms=latency_ms,
+        ).insert()
+
+        session.last_intent = "tool_executed_after_confirmation"
+        session.last_trace_id = trace_id
+        session.turn_count += 1
+        session.updated_at = datetime.now(timezone.utc)
+        await session.save()
+
+        return AskResponse(
+            trace_id=trace_id,
+            action=AssistantAction.TOOL_CALL,
+            tool_name=pending_tool_name,
+            planner_output={},
             tool_output=tool_output,
             response=response,
         )

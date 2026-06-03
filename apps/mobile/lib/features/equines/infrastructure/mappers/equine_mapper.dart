@@ -16,12 +16,6 @@ class EquineMapper {
   /// Usa [EquineDto.toJson] para generar JSON compatible con [gen.Equine.fromJson],
   /// luego [Equine.fromGen] para la conversión final. Esto elimina la duplicación
   /// manual de campo por campo y unifica la fuente de verdad en el modelo generado.
-  /// Valores conocidos de EquineOperationalStatus que el gen model acepta.
-  static const _validOpStatuses = {
-    'available', 'resting', 'in_service', 'injured', 'retired',
-    'unavailable', 'restricted',
-  };
-
   static Equine dtoToDomain(EquineDto dto) {
     final json = dto.toJson();
     // Asegurar fechas no vacías para gen.Equine.fromJson (DateTime.parse).
@@ -180,7 +174,15 @@ class EquineMapper {
         return 'Restringido';
     }
   }
-}
+
+// ── Helpers privados (top-level, accesibles desde EquineMapper) ──
+// Convención: file-private para mantener el mapper autocontenido.
+
+/// Valores de operational_status aceptados por el gen model.
+const _validOpStatuses = {
+  'available', 'resting', 'in_service', 'injured', 'retired',
+  'unavailable', 'restricted',
+};
 
 AppBadgeTone _statusTone(EquineOperationalStatus status) {
   switch (status) {
@@ -202,8 +204,6 @@ AppBadgeTone _statusTone(EquineOperationalStatus status) {
 }
 
 String _summary(Equine equine) {
-  // Si availabilityReasons es un texto técnico/interno (contiene "="),
-  // lo ignoramos y usamos el resumen basado en estado operativo.
   final reasons = equine.availabilityReasons;
   if (reasons != null && reasons.isNotEmpty && !reasons.contains('=')) {
     return reasons;
