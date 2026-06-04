@@ -123,11 +123,22 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 80),
-        child: AppStatusBanner(
-          title: 'Error al cargar equinos',
-          message: _controller.errorMessage,
-          tone: AppStatusBannerTone.danger,
-          onTap: _controller.loadEquines,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppStatusBanner(
+              title: 'Error al cargar equinos',
+              message: _controller.errorMessage,
+              tone: AppStatusBannerTone.danger,
+              badgeLabel: 'ERROR',
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _controller.loadEquines,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reintentar'),
+            ),
+          ],
         ),
       ),
     );

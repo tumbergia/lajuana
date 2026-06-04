@@ -146,11 +146,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
             const SizedBox(height: 24),
 
             // ── Photo + quick info header ─────────────────────────────────
-            InkWell(
-              onTap: _pickImage,
-              borderRadius: AppRadii.radiusLg,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: InkWell(
+                onTap: _pickImage,
+                borderRadius: AppRadii.radiusLg,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
