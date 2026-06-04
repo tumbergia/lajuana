@@ -3,6 +3,8 @@ from typing import Protocol
 from uuid import uuid4
 
 from app.ai.assistant.orchestrator import AssistantOrchestrator
+from app.ai.language.detector import detect_language
+from app.ai.language.messages import t
 from app.ai.mcp.registry import registry
 from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
 from app.common.enums import ReservationStatus
@@ -73,6 +75,9 @@ class ConversationTurnWorker:
         normalized_phone: str,
         turn: ConversationTurnDocument,
     ) -> bool:
+        combined_text = combine_messages(events)
+        lang = detect_language(combined_text)
+
         media_events = [e for e in events if e.media_id and e.message_type in {"image", "document"}]
         if not media_events:
             return False
@@ -80,10 +85,7 @@ class ConversationTurnWorker:
         candidates = await self._find_active_candidates(normalized_phone)
         if len(candidates) == 0:
             turn.status = "responded"
-            turn.response_text = (
-                "Recibimos tu archivo, pero no encuentro una pre-reserva activa con este número. "
-                "Primero te ayudo a crear la pre-reserva y luego adjuntamos el comprobante."
-            )
+            turn.response_text = t("media_no_reservation", lang)
             turn.responded_at = datetime.now(UTC)
             await turn.save()
             await self._outbound_service.send(
@@ -95,10 +97,7 @@ class ConversationTurnWorker:
 
         if len(candidates) > 1:
             turn.status = "responded"
-            turn.response_text = (
-                "Recibi tu comprobante. Como tienes varias reservas activas, "
-                "enviame el codigo de la reserva (ej. PR-XXXX) para asociarlo correctamente."
-            )
+            turn.response_text = t("media_multiple_reservations", lang)
             turn.responded_at = datetime.now(UTC)
             await turn.save()
             await self._outbound_service.send(
@@ -129,7 +128,7 @@ class ConversationTurnWorker:
         turn.status = "responded"
         turn.response_text = result.get(
             "response",
-            "Recibimos tu comprobante y queda en revision administrativa.",
+            t("media_proof_received", lang),
         )
         turn.responded_at = datetime.now(UTC)
         await turn.save()

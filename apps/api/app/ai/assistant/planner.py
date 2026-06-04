@@ -2,6 +2,7 @@ import difflib
 import time
 
 from app.ai.assistant.prompts.planner import PLANNER_SYSTEM_PROMPT
+from app.ai.language.messages import build_language_instruction
 from app.ai.providers.factory import get_llm_provider
 from app.core.logging import logger
 from app.core.time import format_colombia_today_es, now_colombia
@@ -122,6 +123,7 @@ class GeminiPlanner:
         channel: str,
         conversation_context: str | None = None,
         conversation_id: str | None = None,
+        language: str = "es",
     ) -> AssistantPlan:
         logger.info(
             "[conversation_id=%s] LLM receives message | channel=%s",
@@ -154,10 +156,13 @@ class GeminiPlanner:
                     len(_ADMIN_TOOL_DESCRIPTIONS),
                 )
 
+        language_instruction = build_language_instruction(language)
+
         system_prompt = PLANNER_SYSTEM_PROMPT.format(
             today_formatted=today_formatted,
             today_year=str(now.year),
             admin_tools_section=admin_tools_section,
+            language_instruction=language_instruction,
         )
 
         context = {

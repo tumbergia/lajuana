@@ -12,6 +12,8 @@ from app.ai.assistant.date_guard import (
 from app.ai.assistant.planner import GeminiPlanner
 from app.ai.assistant.policy import ToolPolicyEngine
 from app.ai.assistant.response_composer import compose_tool_response
+from app.ai.language.detector import detect_language
+from app.ai.language.messages import t
 from app.ai.mcp import registry
 from app.ai.providers.gemini_provider import (
     GeminiModelUnavailable,
@@ -26,20 +28,20 @@ from app.schemas.ask import AskRequest, AskResponse
 from app.schemas.assistant_plan import AssistantAction, ToolArgs
 from app.schemas.conversation_session import merge_slots
 
-FIELD_LABELS: dict[str, str] = {
-    "experience_id": "¿qué experiencia te interesa?",
-    "requested_date": "¿para qué fecha?",
-    "participant_count": "¿cuántas personas serían?",
-    "holder_phone": "¿cuál es tu número de teléfono?",
-    "holder_name": "¿cuál es tu nombre completo?",
-    "holder_email": "¿cuál es tu correo electrónico?",
-    "schedule_id": "¿para qué fecha?",
-    "quote_snapshot": "necesito primero consultar disponibilidad y precio",
+FIELD_LABELS: dict[str, tuple[str, str]] = {
+    "experience_id": ("¿qué experiencia te interesa?", "which experience are you interested in?"),
+    "requested_date": ("¿para qué fecha?", "what date?"),
+    "participant_count": ("¿cuántas personas serían?", "how many people?"),
+    "holder_phone": ("¿cuál es tu número de teléfono?", "what's your phone number?"),
+    "holder_name": ("¿cuál es tu nombre completo?", "what's your full name?"),
+    "holder_email": ("¿cuál es tu correo electrónico?", "what's your email?"),
+    "schedule_id": ("¿para qué fecha?", "what date?"),
+    "quote_snapshot": ("necesito primero consultar disponibilidad y precio", "I need to check availability and price first"),
     "conversation_id": None,
-    "code": "¿cuál es el código de tu reserva?",
-    "reservation_code": "¿cuál es el código de tu reserva?",
-    "new_date": "¿cuál es la nueva fecha?",
-    "new_participant_count": "¿cuántas personas serían ahora?",
+    "code": ("¿cuál es el código de tu reserva?", "what's your reservation code?"),
+    "reservation_code": ("¿cuál es el código de tu reserva?", "what's your reservation code?"),
+    "new_date": ("¿cuál es la nueva fecha?", "what's the new date?"),
+    "new_participant_count": ("¿cuántas personas serían ahora?", "how many people now?"),
 }
 
 # Constants extracted for testability (W3.6, conv. #6: no lógica en métodos)
@@ -92,15 +94,17 @@ WRITE_TOOLS_REQUIRING_CONFIRMATION: set[str] = {
 }
 
 
-def _build_missing_fields_response(missing: list[str]) -> str:
-    labels = [FIELD_LABELS.get(f, f) for f in missing if FIELD_LABELS.get(f) is not None]
+def _build_missing_fields_response(missing: list[str], language: str = "es") -> str:
+    idx = 0 if language == "es" else 1
+    labels = []
+    for f in missing:
+        entry = FIELD_LABELS.get(f)
+        if entry is None:
+            continue
+        labels.append(entry[idx] if isinstance(entry, tuple) else entry)
     if not labels:
-        return "Necesito algunos datos para continuar. ¿Me los compartes?"
-    return (
-        "Con gusto sigo. Solo necesito que me indiques "
-        + ", ".join(labels)
-        + ". ¿Me ayudas con eso?"
-    )
+        return t("missing_fields_default", language)
+    return t("missing_fields", language, fields=", ".join(labels))
 
 
 class AssistantOrchestrator:
@@ -136,6 +140,12 @@ class AssistantOrchestrator:
             trace_id=trace_id,
         )
 
+        detected_lang = detect_language(request.message)
+        if session.language != detected_lang:
+            session.language = detected_lang
+            session.updated_at = datetime.now(timezone.utc)
+            await session.save()
+
         # Propagate from_phone as holder_phone in slot_values
         phone = request.from_phone or getattr(session, "from_phone", None)
         if phone and "holder_phone" not in session.slot_values:
@@ -161,7 +171,7 @@ class AssistantOrchestrator:
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.FINAL_RESPONSE,
-                response="Operación cancelada. ¿En qué más puedo ayudarte?",
+                response=t("operation_cancelled", session.language),
             )
 
         history_turns = (
@@ -182,11 +192,11 @@ class AssistantOrchestrator:
         )
 
         history_lines = []
-        for t in reversed(history_turns):
-            if t.user_message:
-                history_lines.append(f"Usuario: {t.user_message}")
-            if t.response_text:
-                history_lines.append(f"Asistente: {t.response_text}")
+        for turn_history in reversed(history_turns):
+            if turn_history.user_message:
+                history_lines.append(f"Usuario: {turn_history.user_message}")
+            if turn_history.response_text:
+                history_lines.append(f"Asistente: {turn_history.response_text}")
 
         conversation_history = "\n".join(history_lines)
 
@@ -213,6 +223,7 @@ class AssistantOrchestrator:
                 channel=request.channel,
                 conversation_context=enriched_context,
                 conversation_id=conversation_id,
+                language=session.language,
             )
             token_usage = getattr(self._planner, "last_token_usage", None)
         except GeminiResourceExhausted:
@@ -221,7 +232,7 @@ class AssistantOrchestrator:
                 action=AssistantAction.FINAL_RESPONSE,
                 planner_output={},
                 tool_output={},
-                response="Servicio de IA sobrepasado. Intenta en unos minutos.",
+                response=t("resource_exhausted", session.language),
             )
         except GeminiModelUnavailable:
             return AskResponse(
@@ -229,7 +240,7 @@ class AssistantOrchestrator:
                 action=AssistantAction.HUMAN_HANDOFF,
                 planner_output={},
                 tool_output={},
-                response="Modelo no disponible. Te transfiero con un asesor.",
+                response=t("model_unavailable", session.language),
             )
         except GeminiProviderError:
             return AskResponse(
@@ -237,11 +248,7 @@ class AssistantOrchestrator:
                 action=AssistantAction.HUMAN_HANDOFF,
                 planner_output={},
                 tool_output={},
-                response=(
-                    "Ocurrió un error temporal en mi sistema de procesamiento. "
-                    "Voy a transferirte con un asesor humano para que no te quedes "
-                    "sin atención."
-                ),
+                response=t("provider_error", session.language),
             )
 
         # Fallback: if planner didn't extract date but user message has one
@@ -261,10 +268,7 @@ class AssistantOrchestrator:
                 validate_requested_date_for_business(parsed_date)
             except (InvalidRequestedDateError, ValueError):
                 plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
-                plan.response = (
-                    "Para evitar errores con la reserva, necesito que me confirmes "
-                    "la fecha exacta en formato día, mes y año."
-                )
+                plan.response = t("invalid_date", session.language)
                 plan.arguments.requested_date = None
 
         turn.planner_output = plan.model_dump(mode="json")
@@ -310,7 +314,7 @@ class AssistantOrchestrator:
                 else:
                     plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
                     plan.missing_fields = merge.still_missing
-                    plan.response = _build_missing_fields_response(merge.still_missing)
+                    plan.response = _build_missing_fields_response(merge.still_missing, session.language)
 
         if plan.action in {
             AssistantAction.FINAL_RESPONSE,
@@ -319,8 +323,8 @@ class AssistantOrchestrator:
         }:
             response = (
                 plan.response
-                or _build_missing_fields_response(plan.missing_fields)
-                or "Necesito más información."
+                or _build_missing_fields_response(plan.missing_fields, session.language)
+                or t("needs_more_info", session.language)
             )
             if plan.action == AssistantAction.ASK_CLARIFYING_QUESTION:
                 session.pending_fields = plan.missing_fields
@@ -347,8 +351,8 @@ class AssistantOrchestrator:
         if not policy_decision.allowed:
             response = (
                 plan.response
-                or _build_missing_fields_response(plan.missing_fields)
-                or "Necesito confirmar datos antes de avanzar."
+                or _build_missing_fields_response(plan.missing_fields, session.language)
+                or t("policy_blocked", session.language)
             )
             session.last_intent = "blocked_by_policy"
             session.last_trace_id = trace_id
@@ -366,10 +370,7 @@ class AssistantOrchestrator:
 
         # Confirmación pre-ejecución (constante module-level, ver arriba)
         if plan.tool_name in WRITE_TOOLS_REQUIRING_CONFIRMATION:
-            confirm_msg = (
-                f"Voy a ejecutar: {plan.tool_name}. "
-                f"¿Estás seguro? Responde 'sí' para confirmar o 'no' para cancelar."
-            )
+            confirm_msg = t("tool_confirmation", session.language, tool_name=plan.tool_name or "")
             session.slot_values["_pending_tool_name"] = plan.tool_name
             session.slot_values["_pending_tool_args"] = plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
             session.last_intent = "pending_confirmation"
@@ -418,16 +419,14 @@ class AssistantOrchestrator:
             latency_ms=latency_ms,
         ).insert()
 
-        if tool_output and isinstance(tool_output, dict) and tool_output.get("response"):
-            response = tool_output["response"]
-        else:
-            response = await compose_tool_response(
-                user_message=request.message,
-                plan=plan,
-                tool_output=tool_output,
-                conversation_id=conversation_id,
-                channel=request.channel,
-            )
+        response = await compose_tool_response(
+            user_message=request.message,
+            plan=plan,
+            tool_output=tool_output,
+            conversation_id=conversation_id,
+            channel=request.channel,
+            language=session.language,
+        )
 
         if (
             plan.tool_name == "suggest_alternative_dates"
@@ -435,11 +434,7 @@ class AssistantOrchestrator:
             and not tool_output.get("blocking_reasons")
         ):
             plan.action = AssistantAction.HUMAN_HANDOFF
-            response = (
-                "Lo siento, no encontré más fechas disponibles para "
-                "esta experiencia. Un asesor humano podrá revisar opciones "
-                "alternativas y ayudarte con lo que necesites. Te transfiero ahora."
-            )
+            response = t("no_alternative_dates", session.language)
 
         turn.tool_output = tool_output
         turn.response_text = response
@@ -502,9 +497,11 @@ class AssistantOrchestrator:
         conversation_key: str,
     ) -> AskResponse:
         """Ejecuta una tool pendiente de confirmación."""
+        from app.ai.language.messages import t as _t
         from app.ai.mcp.registry import registry
         from app.documents.tool_call_log_document import ToolCallLogDocument
 
+        lang = session.language
         pending_tool_name = session.slot_values.pop("_pending_tool_name", None)
         pending_args = session.slot_values.pop("_pending_tool_args", {})
         pending_args["conversation_id_for_log"] = conversation_key
@@ -518,12 +515,12 @@ class AssistantOrchestrator:
         try:
             tool_output = await registry.call(pending_tool_name, **pending_args)
             status = "success"
-            response = tool_output.get("response", f"Tool {pending_tool_name} ejecutada correctamente.")
+            response = tool_output.get("response", _t("tool_success", lang, tool_name=pending_tool_name or ""))
         except Exception as exc:
             error_code = "tool.execution_failed"
             status = "error"
             tool_output = {"error": str(exc), "trace_id": trace_id}
-            response = f"Error al ejecutar {pending_tool_name}: {str(exc)}"
+            response = _t("provider_error", lang)
 
         latency_ms = int((time.perf_counter() - started) * 1000)
 

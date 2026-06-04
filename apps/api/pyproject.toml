@@ -22,6 +22,7 @@ dependencies = [
 	"boto3>=1.34.0,<2.0.0",
 	"tzdata>=2024.0,<2026.0",
 	"aiosmtplib>=3.0.0,<4.0.0",
+	"langdetect>=1.0.9,<2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -53,9 +54,13 @@ select = ["E", "F", "I", "UP", "B"]
 "scripts/seed_reproducible.py" = ["E501"]
 "app/migrations/seed_notification_templates.py" = ["E501"]
 "app/ai/assistant/prompts/planner.py" = ["E501"]
+"app/ai/assistant/planner.py" = ["E501"]
+"app/ai/assistant/orchestrator.py" = ["E501"]
+"app/ai/assistant/response_composer.py" = ["E501"]
 "app/ai/mcp/tool_contracts.py" = ["E501"]
 "app/ai/mcp/tools/reservation_draft.py" = ["E501"]
 "tests/*" = ["E501"]
+"app/ai/language/messages.py" = ["E501"]
 
 [tool.ruff.format]
 quote-style = "double"

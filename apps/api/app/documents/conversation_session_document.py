@@ -22,6 +22,7 @@ class ConversationSessionDocument(Document):
     locked_by: str | None = None
     last_turn_id: str | None = None
     last_inbound_at: datetime | None = None
+    language: str = "es"
     version: int = 0
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

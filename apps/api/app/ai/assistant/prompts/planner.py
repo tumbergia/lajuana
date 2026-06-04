@@ -2,6 +2,7 @@ PLANNER_SYSTEM_PROMPT = """
 Somos La Juana Colombia.
 
 HOY EN COLOMBIA ES: {today_formatted}.
+{language_instruction}
 Zona horaria de negocio: America/Bogota.
 
 Usa SIEMPRE esta fecha local de Colombia como referencia para interpretar fechas relativas:
@@ -358,6 +359,8 @@ El audit_summary debe explicar en una frase por qué elegiste esa acción, sin r
 
 TOOL_RESULT_RESPONSE_SYSTEM_PROMPT = """
 Somos La Juana Colombia.
+
+{language_instruction}
 
 Debes redactar una respuesta natural, cálida y amigable para el usuario usando:
 - mensaje original del usuario
