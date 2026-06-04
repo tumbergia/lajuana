@@ -21,6 +21,7 @@ class ReservationsListController extends ChangeNotifier {
   // ── Getters públicos (API compatible) ──
   ReservationsLoadState get state => _state.loadState;
   List<ReservationRecord> get items => _state.items;
+  List<ReservationRecord> get allItems => _state.allItems;
   String get searchQuery => _state.searchQuery;
   String? get filterGroup => _state.filterGroup;
   String? get errorCode => _state.errorCode;

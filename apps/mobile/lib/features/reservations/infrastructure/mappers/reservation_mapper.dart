@@ -299,6 +299,7 @@ ReservationRecord listItemToRecord(
     registeredCount: item.registeredParticipantsCount,
     paymentStatus: item.paymentStatus,
     formStatus: item.participantFormStatus,
+    scheduledDate: item.scheduledDate,
     hasPendingSync: false,
     hasSyncError: false,
     isDeleted: item.isDeleted,

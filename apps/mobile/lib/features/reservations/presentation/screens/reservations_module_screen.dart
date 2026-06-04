@@ -10,7 +10,7 @@ import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile/features/assignments/assignments_module.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
-import 'package:mobile/features/catalogs/schedules/presentation/pages/schedules_page.dart';
+import 'package:mobile/features/reservations/presentation/widgets/reservation_calendar.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile/features/reservations/infrastructure/repositories/fallback_repository.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
@@ -90,13 +90,15 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
     );
   }
 
-  void _openSchedules() {
-    if (widget.catalogsModule == null || widget.authController == null) return;
+  void _openReservationCalendar() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => SchedulesPage(
-          module: widget.catalogsModule!,
-          authController: widget.authController!,
+        builder: (_) => ReservationCalendarSheet(
+          controller: _listController,
+          onOpenDetail: (id) {
+            Navigator.of(context).pop();
+            _openReservationDetail(id);
+          },
         ),
       ),
     );
@@ -148,21 +150,12 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                         borderRadius: BorderRadius.circular(8),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(8),
-                          onTap: widget.catalogsModule != null &&
-                                  widget.authController != null
-                              ? _openSchedules
-                              : null,
+                          onTap: _openReservationCalendar,
                           child: Center(
                             child: Icon(
                               Icons.calendar_today_rounded,
                               size: 20,
-                              color: widget.catalogsModule != null &&
-                                      widget.authController != null
-                                  ? Theme.of(context).colorScheme.onSurface
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant
-                                      .withValues(alpha: 0.4),
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ),
