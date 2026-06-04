@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
@@ -600,12 +599,7 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
       );
       if (image == null) return;
 
-      final supportsNativeCropping = !kIsWeb &&
-          (defaultTargetPlatform == TargetPlatform.android ||
-              defaultTargetPlatform == TargetPlatform.iOS);
-      final bytes = supportsNativeCropping
-          ? await _cropAndRead(image)
-          : await image.readAsBytes();
+      final bytes = await image.readAsBytes();
       setState(() {
         _selectedImage = image;
         _imageBase64 = base64Encode(bytes);
@@ -618,30 +612,6 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
         );
       }
     }
-  }
-
-  Future<Uint8List> _cropAndRead(XFile image) async {
-    final cropped = await ImageCropper().cropImage(
-      sourcePath: image.path,
-      aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Ajustar recorte',
-          toolbarColor: Theme.of(context).colorScheme.surface,
-          toolbarWidgetColor: Theme.of(context).colorScheme.onSurface,
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          activeControlsWidgetColor: Theme.of(context).colorScheme.primary,
-        ),
-        IOSUiSettings(
-          title: 'Ajustar recorte',
-          aspectRatioLockEnabled: true,
-          resetButtonHidden: true,
-        ),
-      ],
-    );
-    return cropped != null
-        ? await cropped.readAsBytes()
-        : await image.readAsBytes();
   }
 
   void _onSave() {
