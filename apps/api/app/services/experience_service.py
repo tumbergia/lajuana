@@ -136,7 +136,11 @@ class ExperienceService:
         if inclusions is None:
             return
         items = getattr(inclusions, "items", None)
-        if not isinstance(items, list) or len(items) == 0:
+        display_text = getattr(inclusions, "display_text", None)
+        has_display_text = isinstance(display_text, str) and display_text.strip()
+        if not isinstance(items, list):
+            return
+        if len(items) == 0 and not has_display_text:
             raise ApiError(
                 status_code=400,
                 code=ErrorCode.EXPERIENCE_INCLUSIONS_REQUIRED,

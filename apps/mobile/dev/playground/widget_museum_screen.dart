@@ -839,9 +839,9 @@ final List<_WidgetEntry> _navEntries = [
     name: 'AppBottomNav',
     filePath: 'app/widgets/app_bottom_nav.dart',
     description: 'Barra de navegación inferior con 5 tabs: Inicio, '
-        'Reservas, Equinos, Clientes, Más. Long-press para voz. '
+        'Reservas, Equinos, Experiencias, Más. Long-press para voz. '
         'Animaciones de selección y voz.',
-    enumValues: ['AppNavItem.inicio', 'AppNavItem.reservas', 'AppNavItem.equinos', 'AppNavItem.clientes', 'AppNavItem.mas'],
+    enumValues: ['AppNavItem.inicio', 'AppNavItem.reservas', 'AppNavItem.equinos', 'AppNavItem.experiencias', 'AppNavItem.mas'],
     constructorParams: [
       'required AppNavItem current',
       'ValueChanged<AppNavItem>? onTap',

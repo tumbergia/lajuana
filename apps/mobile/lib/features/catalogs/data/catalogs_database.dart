@@ -18,7 +18,7 @@ class CatalogsDatabase {
     final path = p.join(databasesPath, 'la_juana_catalogs_v1.db');
     _database = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE experiences_local (
@@ -33,6 +33,7 @@ class CatalogsDatabase {
             base_capacity INTEGER NULL,
             subtitle TEXT NULL,
             image_url TEXT NULL,
+            image_base64 TEXT NULL,
             difficulty TEXT NULL,
             category TEXT NULL,
             status TEXT NULL,
@@ -131,6 +132,11 @@ class CatalogsDatabase {
         ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 3) {
+          await db.execute(
+            'ALTER TABLE experiences_local ADD COLUMN image_base64 TEXT NULL',
+          );
+        }
         if (oldVersion < 2) {
           await db.execute(
             'ALTER TABLE experiences_local ADD COLUMN subtitle TEXT NULL',

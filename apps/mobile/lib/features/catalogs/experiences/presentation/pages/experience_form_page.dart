@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
@@ -30,10 +33,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   final ExperienceFormController _controller = ExperienceFormController();
 
   late final TextEditingController _nombreCtrl;
-  late final TextEditingController _identificadorUrlCtrl;
-  late final TextEditingController _subtituloCtrl;
   late final TextEditingController _descripcionCtrl;
-  late final TextEditingController _imagenCtrl;
 
   late final TextEditingController _duracionExperienciaCtrl;
   late final TextEditingController _duracionRecorridoCtrl;
@@ -64,12 +64,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
       _controller.loadFromExperience(widget.editing!);
     }
     _nombreCtrl = TextEditingController(text: _controller.nombre);
-    _identificadorUrlCtrl = TextEditingController(
-      text: _controller.identificadorUrl,
-    );
-    _subtituloCtrl = TextEditingController(text: _controller.subtitulo ?? '');
     _descripcionCtrl = TextEditingController(text: _controller.descripcion);
-    _imagenCtrl = TextEditingController(text: _controller.urlImagen ?? '');
 
     _duracionExperienciaCtrl = TextEditingController(
       text: _controller.duracionExperienciaMinutos?.toString() ?? '',
@@ -101,10 +96,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   @override
   void dispose() {
     _nombreCtrl.dispose();
-    _identificadorUrlCtrl.dispose();
-    _subtituloCtrl.dispose();
     _descripcionCtrl.dispose();
-    _imagenCtrl.dispose();
 
     _duracionExperienciaCtrl.dispose();
     _duracionRecorridoCtrl.dispose();
@@ -123,6 +115,21 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
 
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 80,
+    );
+    if (image == null) return;
+    final bytes = await image.readAsBytes();
+    if (!mounted) return;
+    final base64 = base64Encode(bytes);
+    _controller.actualizarImageBase64(base64);
   }
 
   void _agregarTarifa() {
@@ -153,12 +160,43 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     });
   }
 
+  Future<void> _editarTarifa(int index) async {
+    final tier = _controller.tarifas[index];
+
+    final result = await showModalBottomSheet<Map<String, int>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (_) => _TarifaEditSheet(
+        minInicial: tier.minParticipants,
+        maxInicial: tier.maxParticipants,
+        valorInicial: tier.pricePerPerson,
+      ),
+    );
+
+    if (result != null && mounted) {
+      _controller.actualizarTarifa(
+        index,
+        ExperiencePricingTierDraft(
+          minParticipants: result['min']!,
+          maxParticipants: result['max']!,
+          pricePerPerson: result['val']!,
+        ),
+      );
+    }
+  }
+
   void _agregarIncluye() {
     _controller.agregarIncluye(_incluyeInputCtrl.text);
     _incluyeInputCtrl.clear();
   }
 
   Future<void> _guardar() async {
+    // Capturar texto pendiente en inputs antes de validar
+    if (_incluyeInputCtrl.text.trim().isNotEmpty) {
+      _agregarIncluye();
+    }
+
     setState(() {
       _error = _controller.validar();
     });
@@ -175,8 +213,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
           slug: _controller.identificadorUrl.trim(),
           description: _controller.descripcion.trim(),
           level: _controller.nivel,
-          subtitle: _controller.subtitulo,
-          imageUrl: _controller.urlImagen,
+          imageBase64: _controller.imageBase64,
           difficulty: _controller.dificultad,
           duration: _controller.buildDuration(),
           routeDetails: _controller.buildRouteDetails(),
@@ -190,8 +227,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
           slug: _controller.identificadorUrl.trim(),
           description: _controller.descripcion.trim(),
           level: _controller.nivel,
-          subtitle: _controller.subtitulo,
-          imageUrl: _controller.urlImagen,
+          imageBase64: _controller.imageBase64,
           difficulty: _controller.dificultad,
           duration: _controller.buildDuration(),
           routeDetails: _controller.buildRouteDetails(),
@@ -227,7 +263,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AppSectionHeader(
-                eyebrow: 'Catalogos > Experiencias',
+                eyebrow: 'Experiencias',
                 title: _esEdicion ? 'Editar experiencia' : 'Nueva experiencia',
                 subtitle:
                     'Completa la ficha comercial y operativa base de la experiencia.',
@@ -243,27 +279,8 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _nombreCtrl,
                           label: 'Nombre de la experiencia',
                           hintText: 'Ej: Sendero de pino y bosque alto',
+                          prefixIcon: const Icon(Icons.label_rounded, size: 20),
                           onChanged: _controller.actualizarNombre,
-                        ),
-                        const SizedBox(height: 10),
-                        _HelpLabel(
-                          label: 'Identificador URL',
-                          helpTitle: 'Identificador URL',
-                          helpMessage:
-                              'Es una version corta del nombre para enlaces y para sincronizacion tecnica. Puedes editarlo cuando lo necesites.',
-                        ),
-                        AppTextField(
-                          controller: _identificadorUrlCtrl,
-                          label: null,
-                          hintText: 'ejemplo-sendero-pino',
-                          onChanged: _controller.actualizarIdentificadorUrl,
-                        ),
-                        const SizedBox(height: 10),
-                        AppTextField(
-                          controller: _subtituloCtrl,
-                          label: 'Subtitulo (opcional)',
-                          hintText: 'Frase corta para resaltar la experiencia',
-                          onChanged: _controller.actualizarSubtitulo,
                         ),
                         const SizedBox(height: 10),
                         AppTextField(
@@ -272,15 +289,11 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           hintText:
                               'Describe de forma clara que hara el cliente.',
                           maxLines: 3,
+                          prefixIcon: const Icon(Icons.description_rounded, size: 20),
                           onChanged: _controller.actualizarDescripcion,
                         ),
                         const SizedBox(height: 10),
-                        AppTextField(
-                          controller: _imagenCtrl,
-                          label: 'URL de imagen (opcional)',
-                          hintText: 'https://...',
-                          onChanged: _controller.actualizarUrlImagen,
-                        ),
+                        _buildImagePicker(),
                       ],
                     ),
                     _FormBlock(
@@ -301,6 +314,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionExperienciaCtrl,
                                     label: 'Duracion experiencia (minutos)',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.schedule_rounded, size: 20),
                                     onChanged: (value) => _controller
                                         .actualizarDuracionExperiencia(
                                           int.tryParse(value.trim()),
@@ -311,6 +325,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionRecorridoCtrl,
                                     label: 'Duracion recorrido (minutos)',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.timer_rounded, size: 20),
                                     onChanged: (value) =>
                                         _controller.actualizarDuracionRecorrido(
                                           int.tryParse(value.trim()),
@@ -326,6 +341,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionExperienciaCtrl,
                                     label: 'Duracion experiencia (minutos)',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.schedule_rounded, size: 20),
                                     onChanged: (value) => _controller
                                         .actualizarDuracionExperiencia(
                                           int.tryParse(value.trim()),
@@ -338,6 +354,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionRecorridoCtrl,
                                     label: 'Duracion recorrido (minutos)',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.timer_rounded, size: 20),
                                     onChanged: (value) =>
                                         _controller.actualizarDuracionRecorrido(
                                           int.tryParse(value.trim()),
@@ -355,6 +372,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           hintText:
                               'Ej: Actividad 5 horas aprox. Recorrido 2 horas aprox.',
                           maxLines: 2,
+                          prefixIcon: const Icon(Icons.text_fields_rounded, size: 20),
                           onChanged: _controller.actualizarTextoDuracionVisible,
                         ),
                       ],
@@ -366,6 +384,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _terrenoCtrl,
                           label: 'Terreno',
                           hintText: 'Ej: Camino destapado entre bosque de pino',
+                          prefixIcon: const Icon(Icons.terrain_rounded, size: 20),
                           onChanged: _controller.actualizarTerreno,
                         ),
                         const SizedBox(height: 10),
@@ -375,6 +394,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          prefixIcon: const Icon(Icons.straighten_rounded, size: 20),
                           onChanged: (value) =>
                               _controller.actualizarDistanciaKm(
                                 double.tryParse(
@@ -387,6 +407,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _notasTerrenoCtrl,
                           label: 'Notas de ruta (opcional)',
                           maxLines: 2,
+                          prefixIcon: const Icon(Icons.notes_rounded, size: 20),
                           onChanged: _controller.actualizarNotasTerreno,
                         ),
                       ],
@@ -396,7 +417,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                       children: [
                         _InfoText(
                           text:
-                              'Agrega rangos sin cruces. Ejemplo: 1 a 2 personas, luego 3 a 4 personas.',
+                              'Agrega rangos sin cruces. Toca una tarifa para editarla.',
                         ),
                         const SizedBox(height: 10),
                         _HelpLabel(
@@ -409,6 +430,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _monedaCtrl,
                           label: null,
                           hintText: 'COP',
+                          prefixIcon: const Icon(Icons.attach_money_rounded, size: 20),
                           onChanged: _controller.actualizarMoneda,
                         ),
                         const SizedBox(height: 10),
@@ -422,6 +444,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _notasTarifaCtrl,
                           label: 'Notas de tarifa (opcional)',
                           maxLines: 2,
+                          prefixIcon: const Icon(Icons.receipt_rounded, size: 20),
                           onChanged: _controller.actualizarNotasTarifa,
                         ),
                         const SizedBox(height: 10),
@@ -435,18 +458,21 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMinCtrl,
                                     label: 'Personas desde',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.person_rounded, size: 20),
                                   ),
                                   const SizedBox(height: 10),
                                   AppTextField(
                                     controller: _tarifaMaxCtrl,
                                     label: 'Personas hasta',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.group_add_rounded, size: 20),
                                   ),
                                   const SizedBox(height: 10),
                                   AppTextField(
                                     controller: _tarifaValorCtrl,
                                     label: 'Valor por persona',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.payments_rounded, size: 20),
                                   ),
                                 ],
                               );
@@ -458,6 +484,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMinCtrl,
                                     label: 'Personas desde',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.person_rounded, size: 20),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -466,6 +493,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMaxCtrl,
                                     label: 'Personas hasta',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.group_add_rounded, size: 20),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -474,6 +502,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaValorCtrl,
                                     label: 'Valor por persona',
                                     keyboardType: TextInputType.number,
+                                    prefixIcon: const Icon(Icons.payments_rounded, size: 20),
                                   ),
                                 ),
                               ],
@@ -501,6 +530,8 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                             child: _LineItem(
                               text:
                                   '${item.minParticipants}-${item.maxParticipants} personas | $valueLabel por persona',
+                              icon: Icons.paid_rounded,
+                              onTap: () => _editarTarifa(index),
                               onRemove: () => _controller.eliminarTarifa(index),
                             ),
                           );
@@ -519,6 +550,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _incluyeInputCtrl,
                           label: 'Nuevo item incluido',
                           hintText: 'Ej: Almuerzo tradicional campesino',
+                          prefixIcon: const Icon(Icons.playlist_add_rounded, size: 20),
                         ),
                         const SizedBox(height: 10),
                         AppButton(
@@ -539,6 +571,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                             padding: const EdgeInsets.only(bottom: 8),
                             child: _LineItem(
                               text: entry.value,
+                              icon: Icons.check_circle_rounded,
                               onRemove: () =>
                                   _controller.eliminarIncluye(index),
                             ),
@@ -549,6 +582,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _incluyeTextoCtrl,
                           label: 'Texto visible de incluye (opcional)',
                           maxLines: 2,
+                          prefixIcon: const Icon(Icons.text_fields_rounded, size: 20),
                           onChanged: _controller.actualizarTextoIncluyeVisible,
                         ),
                       ],
@@ -624,6 +658,190 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildImagePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'IMAGEN'.toUpperCase(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.8,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: _pickImage,
+          child: Container(
+            width: double.infinity,
+            height: 160,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            child: _controller.imageBase64 != null &&
+                    _controller.imageBase64!.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(7),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.memory(
+                          base64Decode(_controller.imageBase64!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Material(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surface
+                                .withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(20),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: () {
+                                _controller.actualizarImageBase64(null);
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_photo_alternate_rounded,
+                        size: 40,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Toca para seleccionar imagen',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Bottom sheet content for editing a pricing tier.
+/// StatefulWidget ensures TextEditingController lifecycle is managed properly.
+class _TarifaEditSheet extends StatefulWidget {
+  const _TarifaEditSheet({
+    required this.minInicial,
+    required this.maxInicial,
+    required this.valorInicial,
+  });
+
+  final int minInicial;
+  final int maxInicial;
+  final int valorInicial;
+
+  @override
+  State<_TarifaEditSheet> createState() => _TarifaEditSheetState();
+}
+
+class _TarifaEditSheetState extends State<_TarifaEditSheet> {
+  late final TextEditingController _minCtrl;
+  late final TextEditingController _maxCtrl;
+  late final TextEditingController _valCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _minCtrl = TextEditingController(text: widget.minInicial.toString());
+    _maxCtrl = TextEditingController(text: widget.maxInicial.toString());
+    _valCtrl = TextEditingController(text: widget.valorInicial.toString());
+  }
+
+  @override
+  void dispose() {
+    _minCtrl.dispose();
+    _maxCtrl.dispose();
+    _valCtrl.dispose();
+    super.dispose();
+  }
+
+  void _guardar() {
+    final min = int.tryParse(_minCtrl.text.trim());
+    final max = int.tryParse(_maxCtrl.text.trim());
+    final val = int.tryParse(_valCtrl.text.trim());
+    if (min != null && max != null && val != null) {
+      Navigator.of(context).pop(<String, int>{'min': min, 'max': max, 'val': val});
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 24, right: 24, top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40, height: 4,
+            decoration: BoxDecoration(
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text('Editar tarifa', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _minCtrl,
+            decoration: const InputDecoration(labelText: 'Personas desde', isDense: true, filled: true),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _maxCtrl,
+            decoration: const InputDecoration(labelText: 'Personas hasta', isDense: true, filled: true),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _valCtrl,
+            decoration: const InputDecoration(labelText: 'Valor por persona', isDense: true, filled: true),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          Row(children: [
+            Expanded(child: AppButton(label: 'Cancelar', variant: AppButtonVariant.ghost, onPressed: () => Navigator.of(context).pop())),
+            const SizedBox(width: 10),
+            Expanded(child: AppButton(label: 'Guardar', onPressed: _guardar)),
+          ]),
+        ],
+      ),
     );
   }
 }
@@ -729,26 +947,45 @@ class _FormSwitch extends StatelessWidget {
 }
 
 class _LineItem extends StatelessWidget {
-  const _LineItem({required this.text, required this.onRemove});
+  const _LineItem({
+    required this.text,
+    this.onTap,
+    required this.onRemove,
+    this.icon,
+  });
 
   final String text;
+  final VoidCallback? onTap;
   final VoidCallback onRemove;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
         children: [
+          if (icon != null) ...[
+            Icon(icon, size: 18, color: scheme.primary),
+            const SizedBox(width: 10),
+          ],
           Expanded(child: Text(text)),
+          if (onTap != null) ...[
+            IconButton(
+              onPressed: onTap,
+              icon: Icon(Icons.edit_rounded, size: 16, color: scheme.primary),
+              tooltip: 'Editar',
+            ),
+          ],
           IconButton(
             onPressed: onRemove,
-            icon: const Icon(Icons.close_rounded, size: 16),
+            icon: Icon(Icons.close_rounded, size: 16, color: scheme.error),
+            tooltip: 'Eliminar',
           ),
         ],
       ),

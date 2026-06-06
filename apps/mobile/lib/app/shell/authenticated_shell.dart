@@ -15,8 +15,8 @@ import 'widgets/shell_status_region.dart';
 import 'package:mobile/features/configuration/presentation/screens/more_flow_screen.dart';
 import 'package:mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
+import 'package:mobile/features/catalogs/experiences/presentation/screens/experiences_module_screen.dart';
 import 'package:mobile/features/equines/presentation/screens/equines_module_screen.dart';
-import 'package:mobile/features/participants/presentation/screens/participants_module_screen.dart';
 import 'package:mobile/features/assignments/assignments_module.dart';
 import 'package:mobile/features/reservations/presentation/screens/reservations_module_screen.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
@@ -102,8 +102,11 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           repository: widget.equineRepository,
           userRole: widget.authController.currentUser?.role,
         );
-      case AppNavItem.clientes:
-        return const ParticipantsModuleScreen();
+      case AppNavItem.experiencias:
+        return ExperiencesModuleScreen(
+          catalogsModule: widget.catalogsModule,
+          authController: widget.authController,
+        );
       case AppNavItem.mas:
         return MoreFlowScreen(
           controller: widget.authController,
@@ -164,7 +167,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                                       return MaterialPageRoute<void>(
                                         builder: (ctx) {
                                         // El scroll se maneja globalmente via RefreshScope.
-                                        if (tab == AppNavItem.reservas || tab == AppNavItem.equinos) {
+                                        if (tab == AppNavItem.reservas || tab == AppNavItem.equinos || tab == AppNavItem.experiencias) {
                                           return _tabRoot(tab);
                                         }
                                           return SingleChildScrollView(

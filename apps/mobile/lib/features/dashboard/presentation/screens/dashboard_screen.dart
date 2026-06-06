@@ -103,7 +103,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           todayCount: todayCount,
           onOpenReservations: () => widget.onNavigateToTab(AppNavItem.reservas),
           onOpenEquines: () => widget.onNavigateToTab(AppNavItem.equinos),
-          onOpenParticipants: () => widget.onNavigateToTab(AppNavItem.clientes),
+          onOpenExperiencias: () => widget.onNavigateToTab(AppNavItem.experiencias),
         );
       case DashboardSubroute.pendientes:
         return DashboardPendingBlock(

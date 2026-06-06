@@ -10,14 +10,14 @@ class DashboardSummaryBlock extends StatelessWidget {
     required this.todayCount,
     required this.onOpenReservations,
     required this.onOpenEquines,
-    required this.onOpenParticipants,
+    required this.onOpenExperiencias,
   });
 
   final int pendingCount;
   final int todayCount;
   final VoidCallback onOpenReservations;
   final VoidCallback onOpenEquines;
-  final VoidCallback onOpenParticipants;
+  final VoidCallback onOpenExperiencias;
 
   @override
   Widget build(BuildContext context) {
@@ -53,10 +53,10 @@ class DashboardSummaryBlock extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         AppEntityRowCard(
-          title: 'Abrir participantes',
-          subtitle: 'Completitud y validaciones por reserva',
+          title: 'Abrir experiencias',
+          subtitle: 'Catalogo operativo de productos',
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-          onTap: onOpenParticipants,
+          onTap: onOpenExperiencias,
         ),
       ],
     );

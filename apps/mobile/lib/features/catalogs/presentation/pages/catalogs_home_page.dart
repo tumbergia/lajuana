@@ -5,7 +5,6 @@ import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
-import 'package:mobile/features/catalogs/experiences/presentation/pages/experiences_page.dart';
 import 'package:mobile/features/catalogs/reservation_rules/presentation/pages/reservation_rules_page.dart';
 import 'package:mobile/features/catalogs/schedules/presentation/pages/schedules_page.dart';
 
@@ -40,22 +39,6 @@ class CatalogsHomePage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          AppEntityRowCard(
-            title: 'Experiencias',
-            subtitle: 'Catalogo base de productos operativos',
-            trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => ExperiencesPage(
-                    module: module,
-                    authController: authController,
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 10),
           AppEntityRowCard(
             title: 'Fechas operativas',
             subtitle: 'Control de cupos y estados por salida',

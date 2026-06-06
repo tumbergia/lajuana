@@ -45,7 +45,10 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
             ...[widget.leading!, const SizedBox(width: 12)],
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: widget.subtitle.isNotEmpty
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
               children: [
                 Row(
                   children: [
@@ -68,17 +71,19 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
                     ?widget.trailing,
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  widget.subtitle.toUpperCase(),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
+                if (widget.subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.subtitle.toUpperCase(),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ],
               ],
             ),
           ),

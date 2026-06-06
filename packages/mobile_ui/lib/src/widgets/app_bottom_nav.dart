@@ -4,7 +4,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:mobile_ui/src/voice/voice_context.dart';
 import 'package:mobile_ui/src/voice/voice_route.dart';
 
-enum AppNavItem { none, inicio, reservas, equinos, clientes, mas }
+enum AppNavItem { none, inicio, reservas, equinos, experiencias, mas }
 
 class AppBottomNav extends StatefulWidget {
   final AppNavItem current;
@@ -74,8 +74,8 @@ class _AppBottomNavState extends State<AppBottomNav>
         return VoiceContext.reservas;
       case AppNavItem.equinos:
         return VoiceContext.equinos;
-      case AppNavItem.clientes:
-        return VoiceContext.clientes;
+      case AppNavItem.experiencias:
+        return VoiceContext.experiencias;
       case AppNavItem.mas:
         return VoiceContext.mas;
       case AppNavItem.none:
@@ -149,15 +149,15 @@ class _AppBottomNavState extends State<AppBottomNav>
                 ),
                 Expanded(
                   child: _NavButton(
-                    item: AppNavItem.clientes,
+                    item: AppNavItem.experiencias,
                     current: widget.current,
-                    label: 'Clientes',
-                    icon: Icons.groups_2_rounded,
+                    label: 'Experiencias',
+                    icon: Symbols.explore,
                     onTap: _handleTap,
                     onHoldStart: _onLongPressStart,
                     onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.clientes,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.clientes,
+                    pressed: _pressedItem == AppNavItem.experiencias,
+                    launchingVoice: _voiceLaunchingItem == AppNavItem.experiencias,
                   ),
                 ),
                 Expanded(

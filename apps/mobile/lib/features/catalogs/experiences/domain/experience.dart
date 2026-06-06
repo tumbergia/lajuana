@@ -68,6 +68,7 @@ class CatalogExperience {
     required this.syncStatus,
     this.subtitle,
     this.imageUrl,
+    this.imageBase64,
     this.difficulty,
     this.category,
     this.status,
@@ -94,6 +95,7 @@ class CatalogExperience {
   final String? subtitle;
   final String description;
   final String? imageUrl;
+  final String? imageBase64;
   final String level;
   final String? difficulty;
   final String? category;

@@ -3,23 +3,22 @@ import 'package:flutter/foundation.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 
 class ExperiencePricingTierDraft {
-  const ExperiencePricingTierDraft({
+  ExperiencePricingTierDraft({
     required this.minParticipants,
     required this.maxParticipants,
     required this.pricePerPerson,
   });
 
-  final int minParticipants;
-  final int maxParticipants;
-  final int pricePerPerson;
+  int minParticipants;
+  int maxParticipants;
+  int pricePerPerson;
 }
 
 class ExperienceFormController extends ChangeNotifier {
   String nombre = '';
   String identificadorUrl = '';
   String descripcion = '';
-  String? subtitulo;
-  String? urlImagen;
+  String? imageBase64;
 
   String nivel = 'basic';
   String dificultad = 'basic';
@@ -46,8 +45,7 @@ class ExperienceFormController extends ChangeNotifier {
     nombre = value.name;
     identificadorUrl = value.slug;
     descripcion = value.description;
-    subtitulo = value.subtitle;
-    urlImagen = value.imageUrl;
+    imageBase64 = value.imageBase64;
     nivel = value.level;
     dificultad = value.difficulty ?? value.level;
     activa = value.isActive;
@@ -83,9 +81,6 @@ class ExperienceFormController extends ChangeNotifier {
 
   String? validar() {
     if (nombre.trim().isEmpty) return 'Escribe el nombre de la experiencia.';
-    if (identificadorUrl.trim().isEmpty) {
-      return 'Escribe el identificador URL.';
-    }
     if (descripcion.trim().isEmpty) return 'Escribe una descripcion.';
     if ((duracionExperienciaMinutos ?? 0) <= 0) {
       return 'Ingresa la duracion de la experiencia en minutos.';
@@ -111,7 +106,6 @@ class ExperienceFormController extends ChangeNotifier {
       }
       previa = tarifa;
     }
-    if (incluye.isEmpty) return 'Agrega al menos un item en "Incluye".';
     return null;
   }
 
@@ -123,23 +117,13 @@ class ExperienceFormController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void actualizarIdentificadorUrl(String value) {
-    identificadorUrl = value.trim();
-    notifyListeners();
-  }
-
   void actualizarDescripcion(String value) {
     descripcion = value;
     notifyListeners();
   }
 
-  void actualizarSubtitulo(String value) {
-    subtitulo = _nullable(value);
-    notifyListeners();
-  }
-
-  void actualizarUrlImagen(String value) {
-    urlImagen = _nullable(value);
+  void actualizarImageBase64(String? value) {
+    imageBase64 = value;
     notifyListeners();
   }
 
@@ -213,6 +197,12 @@ class ExperienceFormController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void actualizarTarifa(int index, ExperiencePricingTierDraft value) {
+    if (index < 0 || index >= tarifas.length) return;
+    tarifas[index] = value;
+    notifyListeners();
+  }
+
   void eliminarTarifa(int index) {
     if (index < 0 || index >= tarifas.length) return;
     tarifas.removeAt(index);
@@ -268,9 +258,12 @@ class ExperienceFormController extends ChangeNotifier {
     );
   }
 
-  CatalogExperienceInclusions buildInclusions() {
+  CatalogExperienceInclusions? buildInclusions() {
+    final hasItems = incluye.isNotEmpty;
+    final hasDisplayText = textoIncluyeVisible != null && textoIncluyeVisible!.isNotEmpty;
+    if (!hasItems && !hasDisplayText) return null;
     return CatalogExperienceInclusions(
-      items: List<String>.from(incluye),
+      items: hasItems ? List<String>.from(incluye) : <String>[],
       displayText: textoIncluyeVisible,
     );
   }

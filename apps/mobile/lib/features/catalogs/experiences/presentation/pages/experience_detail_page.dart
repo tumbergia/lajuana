@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
@@ -8,7 +11,6 @@ import 'package:mobile_ui/src/widgets/cards/app_pricing_tiers_table.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
-import 'package:mobile/features/catalogs/experiences/presentation/widgets/experience_status_badge.dart';
 import 'experience_form_page.dart';
 
 class ExperienceDetailPage extends StatefulWidget {
@@ -78,7 +80,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSectionHeader(
-            eyebrow: 'Catalogos > Experiencias',
+            eyebrow: 'Experiencias',
             title: 'Detalle de experiencia',
             trailing: AppButton(
               label: 'Volver',
@@ -100,49 +102,141 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage> {
                           selected: true,
                         )
                       else if (experience != null) ...[
-                        AppEntityRowCard(
+                        _buildImageSection(experience),
+                        const SizedBox(height: 10),
+
+                        // ── Nombre + slug ──
+                        _infoRow(
+                          icon: Icons.description_rounded,
                           title: experience.name,
                           subtitle: experience.description,
-                          badge: experienceStatusBadgeFor(experience),
-                          selected: true,
                         ),
-                        if ((experience.subtitle ?? '').isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          AppEntityRowCard(
-                            title: 'Subtitulo',
-                            subtitle: experience.subtitle!,
-                          ),
-                        ],
-                        const SizedBox(height: 10),
-                        AppEntityRowCard(
-                          title: 'Identificador URL',
-                          subtitle: experience.slug,
+                        _spacer(),
+
+                        // ── Estado activo/inactivo ──
+                        _infoRow(
+                          icon: experience.isActive
+                              ? Icons.check_circle_rounded
+                              : Icons.cancel_rounded,
+                          title: experience.isActive
+                              ? 'Activa'
+                              : 'Inactiva',
+                          subtitle: experience.isActive
+                              ? 'Disponible para reservas'
+                              : 'Desactivada del catalogo',
                         ),
-                        if (experience.standardMaxParticipants != null) ...[
-                          const SizedBox(height: 10),
-                          AppEntityRowCard(
-                            title: 'Capacidad estandar',
-                            subtitle: '${experience.standardMaxParticipants}',
+                        _spacer(),
+
+                        // ── Nivel ──
+                        if (experience.level.isNotEmpty)
+                          _infoRow(
+                            icon: Icons.bar_chart_rounded,
+                            title: 'Nivel',
+                            subtitle: _levelLabel(experience.level),
                           ),
-                        ],
-                        if (experience.duration != null) ...[
-                          const SizedBox(height: 10),
-                          AppEntityRowCard(
-                            title: 'Duraciones',
-                            subtitle:
-                                'Experiencia ${experience.duration!.activityMinutes} min | Recorrido ${experience.duration!.routeMinutes} min',
+                        _spacer(),
+
+                        // ── Dificultad ──
+                        if (experience.difficulty != null &&
+                            experience.difficulty!.isNotEmpty)
+                          _infoRow(
+                            icon: Icons.trending_up_rounded,
+                            title: 'Dificultad',
+                            subtitle: _difficultyLabel(experience.difficulty!),
                           ),
-                        ],
+                        _spacer(),
+
+                        // ── Categoría ──
+                        if (experience.category != null &&
+                            experience.category!.isNotEmpty)
+                          _infoRow(
+                            icon: Icons.category_rounded,
+                            title: 'Categoria',
+                            subtitle: experience.category!,
+                          ),
+                        _spacer(),
+
+                        // ── Estado operativo ──
+                        if (experience.status != null &&
+                            experience.status!.isNotEmpty)
+                          _infoRow(
+                            icon: Icons.info_outline_rounded,
+                            title: 'Estado operativo',
+                            subtitle: experience.status!,
+                          ),
+                        _spacer(),
+
+                        // ── Duración ──
+                        _buildDurationSection(experience),
+                        _spacer(),
+
+                        // ── Ruta ──
                         if (experience.routeDetails != null) ...[
-                          const SizedBox(height: 10),
-                          AppEntityRowCard(
-                            title: 'Ruta',
-                            subtitle:
-                                '${experience.routeDetails!.terrain} | ${experience.routeDetails!.distanceKm ?? '-'} km',
+                          _infoRow(
+                            icon: Icons.route_rounded,
+                            title: 'Terreno',
+                            subtitle: experience.routeDetails!.terrain,
                           ),
+                          if (experience.routeDetails!.distanceKm != null)
+                            _infoRow(
+                              icon: Icons.straighten_rounded,
+                              title: 'Distancia',
+                              subtitle:
+                                  '${experience.routeDetails!.distanceKm} km',
+                            ),
+                          if (experience.routeDetails!.terrainNotes != null &&
+                              experience.routeDetails!.terrainNotes!.isNotEmpty)
+                            _infoRow(
+                              icon: Icons.notes_rounded,
+                              title: 'Notas de ruta',
+                              subtitle: experience.routeDetails!.terrainNotes!,
+                            ),
+                          _spacer(),
                         ],
+
+                        // ── Capacidad ──
+                        if (experience.standardMaxParticipants != null ||
+                            experience.minParticipants != null ||
+                            experience.baseCapacity != null) ...[
+                          if (experience.standardMaxParticipants != null)
+                            _infoRow(
+                              icon: Icons.groups_rounded,
+                              title: 'Capacidad estandar',
+                              subtitle:
+                                  '${experience.standardMaxParticipants} personas',
+                            ),
+                          if (experience.minParticipants != null)
+                            _infoRow(
+                              icon: Icons.person_outline_rounded,
+                              title: 'Minimo de participantes',
+                              subtitle:
+                                  '${experience.minParticipants} personas',
+                            ),
+                          if (experience.baseCapacity != null)
+                            _infoRow(
+                              icon: Icons.inventory_2_rounded,
+                              title: 'Capacidad base',
+                              subtitle:
+                                  '${experience.baseCapacity}',
+                            ),
+                          _spacer(),
+                        ],
+
+                        // ── Tarifas ──
                         if (experience.pricing != null &&
                             experience.pricing!.tiers.isNotEmpty) ...[
+                          _infoRow(
+                            icon: Icons.attach_money_rounded,
+                            title: 'Moneda',
+                            subtitle: experience.pricing!.currency,
+                          ),
+                          if (experience.pricing!.pricingNotes != null &&
+                              experience.pricing!.pricingNotes!.isNotEmpty)
+                            _infoRow(
+                              icon: Icons.receipt_rounded,
+                              title: 'Notas de tarifa',
+                              subtitle: experience.pricing!.pricingNotes!,
+                            ),
                           const SizedBox(height: 10),
                           AppPricingTiersTable(
                             currency: experience.pricing!.currency,
@@ -158,17 +252,40 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage> {
                                 )
                                 .toList(growable: false),
                           ),
+                          _spacer(),
                         ],
+
+                        // ── Incluye ──
                         if (experience.inclusions != null &&
                             experience.inclusions!.items.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          AppEntityRowCard(
+                          _infoRow(
+                            icon: Icons.checklist_rounded,
                             title: 'Incluye',
-                            subtitle: experience.inclusions!.items.join(', '),
+                            subtitle:
+                                experience.inclusions!.items.join(', '),
                           ),
+                          if (experience.inclusions!.displayText != null &&
+                              experience.inclusions!.displayText!.isNotEmpty)
+                            _infoRow(
+                              icon: Icons.text_fields_rounded,
+                              title: 'Texto visible',
+                              subtitle: experience.inclusions!.displayText!,
+                            ),
+                          _spacer(),
                         ],
+
+                        // ── Tags ──
+                        if (experience.tags.isNotEmpty)
+                          _infoRow(
+                            icon: Icons.sell_rounded,
+                            title: 'Tags',
+                            subtitle: experience.tags.join(', '),
+                          ),
+                        _spacer(),
+
+                        // ── Acciones admin ──
                         if (_isAdmin) ...[
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 8),
                           AppButton(
                             label: 'Editar',
                             icon: Icons.edit_rounded,
@@ -202,5 +319,123 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage> {
         ],
       ),
     );
+  }
+
+  // ── Helpers ──
+
+  Widget _infoRow({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: AppEntityRowCard(
+        title: title,
+        subtitle: subtitle,
+        leading: Icon(icon, size: 20),
+      ),
+    );
+  }
+
+  Widget _spacer() => const SizedBox(height: 2);
+
+  void _spacerIf(bool condition) {
+    // no-op, spacer added inline
+  }
+
+  Widget _buildDurationSection(CatalogExperience e) {
+    final parts = <String>[];
+    if (e.duration != null) {
+      parts.add('Actividad ${e.duration!.activityMinutes} min');
+      parts.add('Recorrido ${e.duration!.routeMinutes} min');
+    }
+    if (e.durationHours != null) {
+      parts.add('${e.durationHours}h');
+    }
+    if (e.durationDays != null) {
+      parts.add('${e.durationDays} dia(s)');
+    }
+    if (parts.isEmpty && e.duration?.displayText == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _infoRow(
+          icon: Icons.schedule_rounded,
+          title: 'Duraciones',
+          subtitle: parts.isNotEmpty ? parts.join(' | ') : '',
+        ),
+        if (e.duration?.displayText != null &&
+            e.duration!.displayText!.isNotEmpty)
+          _infoRow(
+            icon: Icons.text_fields_rounded,
+            title: 'Texto visible',
+            subtitle: e.duration!.displayText!,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildImageSection(CatalogExperience experience) {
+    Widget imageWidget;
+    if (experience.imageBase64 != null && experience.imageBase64!.isNotEmpty) {
+      try {
+        final bytes = base64Decode(experience.imageBase64!);
+        imageWidget = Image.memory(
+          bytes,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+        );
+      } catch (_) {
+        imageWidget = const SizedBox.shrink();
+      }
+    } else if (experience.imageUrl != null && experience.imageUrl!.isNotEmpty) {
+      imageWidget = Image.network(
+        experience.imageUrl!,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: imageWidget,
+      ),
+    );
+  }
+
+  String _levelLabel(String level) {
+    switch (level) {
+      case 'basic':
+        return 'Basico';
+      case 'intermediate':
+        return 'Intermedio';
+      case 'advanced':
+        return 'Avanzado';
+      default:
+        return level;
+    }
+  }
+
+  String _difficultyLabel(String difficulty) {
+    switch (difficulty) {
+      case 'basic':
+        return 'Basica';
+      case 'intermediate':
+        return 'Intermedia';
+      case 'advanced':
+        return 'Avanzada';
+      default:
+        return difficulty;
+    }
   }
 }

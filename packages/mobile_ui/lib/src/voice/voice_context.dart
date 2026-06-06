@@ -1,4 +1,4 @@
-enum VoiceContext { inicio, reservas, equinos, clientes, mas }
+enum VoiceContext { inicio, reservas, equinos, experiencias, mas }
 
 extension VoiceContextX on VoiceContext {
   String get label {
@@ -9,8 +9,8 @@ extension VoiceContextX on VoiceContext {
         return 'Reservas';
       case VoiceContext.equinos:
         return 'Equinos';
-      case VoiceContext.clientes:
-        return 'Clientes';
+      case VoiceContext.experiencias:
+        return 'Experiencias';
       case VoiceContext.mas:
         return 'Más';
     }
@@ -24,8 +24,8 @@ extension VoiceContextX on VoiceContext {
         return 'Habla sobre reservas';
       case VoiceContext.equinos:
         return 'Habla sobre equinos';
-      case VoiceContext.clientes:
-        return 'Habla sobre clientes';
+      case VoiceContext.experiencias:
+        return 'Habla sobre experiencias';
       case VoiceContext.mas:
         return 'Habla para navegar';
     }
@@ -39,8 +39,8 @@ extension VoiceContextX on VoiceContext {
         return 'Ej: mostrar pendientes o crear reserva';
       case VoiceContext.equinos:
         return 'Ej: ver historial o registrar actividad';
-      case VoiceContext.clientes:
-        return 'Ej: buscar cliente o registrar participante';
+      case VoiceContext.experiencias:
+        return 'Ej: buscar experiencia o crear una nueva';
       case VoiceContext.mas:
         return 'Ej: abrir configuración o reportes';
     }
