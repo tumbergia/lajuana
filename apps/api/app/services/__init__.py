@@ -3,6 +3,7 @@ from app.services.auth_service import AuthService
 from app.services.notification_service import NotificationService
 from app.services.booking_service import BookingService
 from app.services.config_service import ConfigService
+from app.services.equine_event_service import EquineEventService
 from app.services.equine_service import EquineService
 from app.services.experience_service import ExperienceService
 from app.services.file_upload_service import FileUploadService
@@ -24,6 +25,7 @@ __all__ = [
     "AssignmentService",
     "BookingService",
     "ConfigService",
+    "EquineEventService",
     "EquineService",
     "ExperienceService",
     "FileUploadService",

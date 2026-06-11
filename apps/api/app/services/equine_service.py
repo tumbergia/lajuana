@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from typing import Any
 
@@ -11,6 +12,7 @@ from app.core.errors import ApiError
 from app.documents import (
     AssignmentDocument,
     EquineDocument,
+    EquineEventDocument,
     ReservationDocument,
     ServiceLogDocument,
     ServiceLogEventType,
@@ -95,26 +97,70 @@ class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdate
         equine_id: str,
         limit: int = 50,
     ) -> list[EquineTimelineEntrySchema]:
-        """Retorna el timeline del equino desde ServiceLogs."""
+        """Retorna timeline unificado: ServiceLogs + EquineEvents."""
         await self.get(equine_id)
-        logs = await ServiceLogDocument.find(
-            {"related_equine_id": PydanticObjectId(equine_id)},
-        ).sort(-ServiceLogDocument.happened_at).limit(limit).to_list()
+        equine_oid = PydanticObjectId(equine_id)
+
+        logs, events = await asyncio.gather(
+            ServiceLogDocument.find(
+                {"related_equine_id": equine_oid, "deleted_at": None},
+            )
+            .sort([("happened_at", -1)])
+            .limit(limit)
+            .to_list(),
+            EquineEventDocument.find(
+                {"equine_id": equine_oid, "deleted_at": None},
+            )
+            .sort([("happened_at", -1)])
+            .limit(limit)
+            .to_list(),
+        )
 
         entries: list[EquineTimelineEntrySchema] = []
+
         for log in logs:
-            title = _timeline_title(log.event_type, log.checkpoint_name)
             entries.append(
                 EquineTimelineEntrySchema(
                     id=str(log.id),
+                    source="service_log",
                     event_type=log.event_type.value,
                     happened_at=log.happened_at,
-                    title=title,
+                    title=_timeline_title(log.event_type, log.checkpoint_name),
                     reservation_id=str(log.reservation_id),
+                    participant_id=(
+                        str(log.related_participant_id)
+                        if log.related_participant_id
+                        else None
+                    ),
                     notes=log.notes,
                 )
             )
-        return entries
+
+        for event in events:
+            entries.append(
+                EquineTimelineEntrySchema(
+                    id=str(event.id),
+                    source="equine_event",
+                    event_type=event.event_type.value,
+                    happened_at=event.happened_at,
+                    title=event.title,
+                    reservation_id=(
+                        str(event.reservation_id) if event.reservation_id else None
+                    ),
+                    assignment_id=(
+                        str(event.assignment_id) if event.assignment_id else None
+                    ),
+                    participant_id=(
+                        str(event.participant_id) if event.participant_id else None
+                    ),
+                    notes=event.description,
+                    severity=event.severity,
+                    affects_availability=event.affects_availability,
+                )
+            )
+
+        entries.sort(key=lambda e: e.happened_at, reverse=True)
+        return entries[:limit]
 
     async def list_available_for_reservation(
         self,

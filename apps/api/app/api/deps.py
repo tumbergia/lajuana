@@ -122,6 +122,10 @@ def get_equine_service() -> object:
     return Container.get_instance().equine_service
 
 
+def get_equine_event_service() -> object:
+    return Container.get_instance().equine_event_service
+
+
 def get_saddle_service() -> object:
     return Container.get_instance().saddle_service
 

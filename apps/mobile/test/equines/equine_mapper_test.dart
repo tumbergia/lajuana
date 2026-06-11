@@ -154,6 +154,7 @@ void main() {
     test('maps timeline DTO correctly', () {
       final dto = EquineTimelineEntryDto(
         id: 'log-1',
+        source: 'service_log',
         eventType: 'arrival',
         happenedAt: '2026-06-01T10:00:00Z',
         title: 'Llegada a la finca',
@@ -171,6 +172,7 @@ void main() {
     test('handles missing optional fields', () {
       final dto = EquineTimelineEntryDto(
         id: 'log-2',
+        source: 'service_log',
         eventType: 'checkpoint',
         happenedAt: '2026-06-01T12:00:00Z',
         title: 'Punto de control',
@@ -186,6 +188,7 @@ void main() {
     test('maps arrival entry to completed state', () {
       final entry = EquineTimelineEntry(
         id: 'log-1',
+        source: 'service_log',
         eventType: 'arrival',
         happenedAt: DateTime(2026, 6, 1, 10),
         title: 'Llegada',
@@ -198,6 +201,7 @@ void main() {
     test('maps incident to warning state', () {
       final entry = EquineTimelineEntry(
         id: 'log-2',
+        source: 'service_log',
         eventType: 'incident',
         happenedAt: DateTime(2026, 6, 1),
         title: 'Incidencia',

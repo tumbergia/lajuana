@@ -15,6 +15,7 @@ import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/cards/app_image_feature_card.dart';
 import 'package:mobile_ui/src/widgets/cards/app_logbook_timeline.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
 import 'package:mobile/features/equines/infrastructure/mappers/equine_mapper.dart';
@@ -29,10 +30,12 @@ class EquinesModuleScreen extends StatefulWidget {
   const EquinesModuleScreen({
     super.key,
     required this.repository,
+    required this.eventRepository,
     this.userRole,
   });
 
   final EquineRepository repository;
+  final EquineEventRepository eventRepository;
   final String? userRole;
 
   bool get canEdit => userRole == 'admin';
@@ -764,6 +767,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                   equineId: equineId,
                   equineName: equineName,
                   repository: widget.repository,
+                  eventRepository: widget.eventRepository,
                 ),
               ),
             );

@@ -39,6 +39,7 @@ class Container:
             MessageBufferService,
         )
         from app.services.config_service import ConfigService
+        from app.services.equine_event_service import EquineEventService
         from app.services.equine_service import EquineService
         from app.services.experience_service import ExperienceService
         from app.services.participant_form_link_service import ParticipantFormLinkService
@@ -53,6 +54,7 @@ class Container:
         self._services["conversation_lock_service"] = ConversationLockService()
         self._services["conversation_resolver"] = ConversationResolver()
         self._services["equine_service"] = EquineService()
+        self._services["equine_event_service"] = EquineEventService()
         self._services["experience_service"] = ExperienceService()
         self._services["message_buffer_service"] = MessageBufferService()
         self._services["service_log_service"] = ServiceLogService()
@@ -180,6 +182,10 @@ class Container:
     @property
     def equine_service(self) -> Any:
         return self._services["equine_service"]
+
+    @property
+    def equine_event_service(self) -> Any:
+        return self._services["equine_event_service"]
 
     @property
     def saddle_service(self) -> Any:

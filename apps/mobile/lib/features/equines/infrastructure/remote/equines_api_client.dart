@@ -93,6 +93,18 @@ class EquinesApiClient {
     return EquineDto.fromJson(_decodeBody(response.body));
   }
 
+  Future<EquineEventDto> createEquineEvent(
+    String equineId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/equines/$equineId/events',
+      body: data,
+    );
+    return EquineEventDto.fromJson(_decodeBody(response.body));
+  }
+
   Future<List<EquineTimelineEntryDto>> getEquineTimeline(String equineId) async {
     final response = await _authorizedRequest(
       method: 'GET',

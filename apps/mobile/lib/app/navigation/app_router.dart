@@ -80,6 +80,7 @@ class AppRouter {
                 saddlesModule: deps.saddlesModule,
                 assignmentsModule: deps.assignmentsModule,
                 equineRepository: deps.equineRepository,
+                equineEventRepository: deps.equineEventRepository,
               )
             : LoginScreen(controller: deps.authController);
         break;

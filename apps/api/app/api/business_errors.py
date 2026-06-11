@@ -244,6 +244,41 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "pricing es nulo o tiers vacio",
         "detail_keys": ("experience_id",),
     },
+    "B400-034": {
+        "http_status": 400,
+        "code": ErrorCode.EQUINE_EVENT_INVALID_HAPPENED_AT,
+        "name": "Fecha de evento invalida",
+        "trigger": "happened_at demasiado en el futuro",
+        "detail_keys": ("happened_at",),
+    },
+    "B400-035": {
+        "http_status": 400,
+        "code": ErrorCode.EQUINE_EVENT_WEIGHT_REQUIRED,
+        "name": "Peso medido requerido",
+        "trigger": "event_type weight sin measured_weight_kg",
+        "detail_keys": ("event_type",),
+    },
+    "B400-036": {
+        "http_status": 400,
+        "code": ErrorCode.EQUINE_EVENT_HEIGHT_REQUIRED,
+        "name": "Altura medida requerida",
+        "trigger": "event_type height sin measured_height_m",
+        "detail_keys": ("event_type",),
+    },
+    "B400-037": {
+        "http_status": 400,
+        "code": ErrorCode.EQUINE_EVENT_AVAILABILITY_FIELDS_REQUIRED,
+        "name": "Campos de disponibilidad requeridos",
+        "trigger": "affects_availability sin resulting_operational_status ni rest_until",
+        "detail_keys": ("affects_availability",),
+    },
+    "B400-038": {
+        "http_status": 400,
+        "code": ErrorCode.EQUINE_EVENT_ASSIGNMENT_EQUINE_MISMATCH,
+        "name": "Asignacion no corresponde al equino",
+        "trigger": "assignment.equine_id distinto al equino del evento",
+        "detail_keys": ("assignment_id", "equine_id"),
+    },
     "B404-001": {
         "http_status": 404,
         "code": ErrorCode.USER_NOT_FOUND,
@@ -510,6 +545,13 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "storage_key no existe en el almacenamiento",
         "detail_keys": ("storage_key",),
     },
+    "B404-016": {
+        "http_status": 404,
+        "code": ErrorCode.EQUINE_EVENT_NOT_FOUND,
+        "name": "Evento de equino no existe",
+        "trigger": "equine_event objetivo no existe",
+        "detail_keys": ("event_id",),
+    },
     "B409-024": {
         "http_status": 409,
         "code": ErrorCode.ASSIGNMENT_RESERVATION_NOT_CONFIRMED,
@@ -726,6 +768,43 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
     ("GET", "/api/v1/equines/{equine_id}/timeline"): {
         "cases_400": (),
         "cases_404": ("B404-007",),
+        "cases_409": (),
+    },
+    ("POST", "/api/v1/equines/{equine_id}/events"): {
+        "cases_400": (
+            "B400-034",
+            "B400-035",
+            "B400-036",
+            "B400-037",
+            "B400-038",
+        ),
+        "cases_404": ("B404-007", "B404-004", "B404-009"),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/equines/{equine_id}/events"): {
+        "cases_400": (),
+        "cases_404": ("B404-007",),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/equine-events/{event_id}"): {
+        "cases_400": (),
+        "cases_404": ("B404-016",),
+        "cases_409": (),
+    },
+    ("PATCH", "/api/v1/equine-events/{event_id}"): {
+        "cases_400": (
+            "B400-034",
+            "B400-035",
+            "B400-036",
+            "B400-037",
+            "B400-038",
+        ),
+        "cases_404": ("B404-016", "B404-004", "B404-009"),
+        "cases_409": (),
+    },
+    ("DELETE", "/api/v1/equine-events/{event_id}"): {
+        "cases_400": (),
+        "cases_404": ("B404-016",),
         "cases_409": (),
     },
     ("GET", "/api/v1/equines/available-for-reservation/{reservation_id}"): {

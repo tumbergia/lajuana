@@ -6,8 +6,12 @@ import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_scaffold.dart';
 import 'package:mobile_ui/src/widgets/cards/app_logbook_timeline.dart';
+import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
+import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
 import 'package:mobile/features/equines/infrastructure/mappers/equine_mapper.dart';
+import 'package:mobile/features/equines/presentation/controllers/equine_events_controller.dart';
+import 'package:mobile/features/equines/presentation/screens/equine_event_form_screen.dart';
 
 /// Pantalla completa del timeline de un equino.
 ///
@@ -17,12 +21,14 @@ class EquineTimelineScreen extends StatefulWidget {
   final String equineId;
   final String equineName;
   final EquineRepository repository;
+  final EquineEventRepository eventRepository;
 
   const EquineTimelineScreen({
     super.key,
     required this.equineId,
     required this.equineName,
     required this.repository,
+    required this.eventRepository,
   });
 
   @override
@@ -49,12 +55,23 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen> {
     });
 
     try {
+      await widget.eventRepository.flushPendingEvents(
+        equineId: widget.equineId,
+      );
       final domainEntries = await widget.repository.getEquineTimeline(
         widget.equineId,
       );
+      final pending = await widget.eventRepository.listPendingEvents(
+        widget.equineId,
+      );
+      final merged = <EquineTimelineEntry>[
+        ...domainEntries,
+        ...pending.map(EquineMapper.eventToTimelineEntry),
+      ]..sort((a, b) => b.happenedAt.compareTo(a.happenedAt));
+
       if (!mounted) return;
       setState(() {
-        _entries = domainEntries
+        _entries = merged
             .map((e) => EquineMapper.timelineEntryToLogbookEntry(e))
             .toList(growable: false);
         _isLoading = false;
@@ -219,12 +236,21 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen> {
     );
   }
 
-  void _onAddEntry() {
-    // TODO: Abrir formulario de nuevo registro para el timeline.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Nuevo registro — funcionalidad próximamente'),
+  Future<void> _onAddEntry() async {
+    final controller = EquineEventsController(
+      repository: widget.eventRepository,
+    );
+    final saved = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => EquineEventFormScreen(
+          equineId: widget.equineId,
+          equineName: widget.equineName,
+          controller: controller,
+        ),
       ),
     );
+    if (saved == true) {
+      await _loadTimeline();
+    }
   }
 }

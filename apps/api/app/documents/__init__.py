@@ -13,6 +13,7 @@ from app.documents.assignment_document import AssignmentDocument
 from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.equine_document import EquineDocument
+from app.documents.equine_event_document import EquineEventDocument, EquineEventType
 from app.documents.experience_document import ExperienceDocument
 from app.documents.human_review_request_document import HumanReviewRequestDocument
 from app.documents.file_upload_document import FileUploadDocument
@@ -45,6 +46,8 @@ __all__ = [
     "ToolCallLogDocument",
     "EmergencyContact",
     "EquineDocument",
+    "EquineEventDocument",
+    "EquineEventType",
     "ExperienceDocument",
     "HumanReviewRequestDocument",
     "ParticipantDocument",

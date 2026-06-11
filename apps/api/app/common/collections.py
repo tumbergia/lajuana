@@ -9,6 +9,7 @@ class Collections:
     SADDLES = "saddles"
     ASSIGNMENTS = "assignments"
     SERVICE_LOGS = "service_logs"
+    EQUINE_EVENTS = "equine_events"
     PROVIDERS = "providers"
     POLICIES = "policies"
     APP_CONFIG = "app_config"

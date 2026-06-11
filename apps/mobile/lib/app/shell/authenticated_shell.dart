@@ -14,6 +14,7 @@ import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'widgets/shell_status_region.dart';
 import 'package:mobile/features/configuration/presentation/screens/more_flow_screen.dart';
 import 'package:mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
 import 'package:mobile/features/catalogs/experiences/presentation/screens/experiences_module_screen.dart';
 import 'package:mobile/features/equines/presentation/screens/equines_module_screen.dart';
@@ -32,6 +33,7 @@ class AuthenticatedShell extends StatefulWidget {
     this.saddlesModule,
     this.assignmentsModule,
     required this.equineRepository,
+    required this.equineEventRepository,
     this.onCallRequested,
   });
 
@@ -42,6 +44,7 @@ class AuthenticatedShell extends StatefulWidget {
   final SaddlesModule? saddlesModule;
   final AssignmentsModule? assignmentsModule;
   final EquineRepository equineRepository;
+  final EquineEventRepository equineEventRepository;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -100,6 +103,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
       case AppNavItem.equinos:
         return EquinesModuleScreen(
           repository: widget.equineRepository,
+          eventRepository: widget.equineEventRepository,
           userRole: widget.authController.currentUser?.role,
         );
       case AppNavItem.experiencias:

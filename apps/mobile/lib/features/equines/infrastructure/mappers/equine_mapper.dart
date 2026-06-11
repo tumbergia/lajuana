@@ -4,6 +4,7 @@ import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/cards/app_logbook_timeline.dart';
 import 'package:mobile_domain/src/equines/equine.dart';
 import 'package:mobile_domain/src/equines/equine_operational_status.dart';
+import 'package:mobile_domain/src/equines/equine_event.dart';
 import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
 import 'package:mobile_domain/src/gen/equine.dart' as gen;
 import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
@@ -102,20 +103,40 @@ class EquineMapper {
       // La UI ocultará entradas con happenedAt en 1970.
       return EquineTimelineEntry(
         id: dto.id,
+        source: dto.source,
         eventType: dto.eventType,
         happenedAt: DateTime.utc(1970),
         title: dto.title,
         reservationId: dto.reservationId,
         notes: dto.notes,
+        severity: dto.severity,
+        affectsAvailability: dto.affectsAvailability,
       );
     }
     return EquineTimelineEntry(
       id: dto.id,
+      source: dto.source,
       eventType: dto.eventType,
       happenedAt: parsed,
       title: dto.title,
       reservationId: dto.reservationId,
       notes: dto.notes,
+      severity: dto.severity,
+      affectsAvailability: dto.affectsAvailability,
+    );
+  }
+
+  static EquineTimelineEntry eventToTimelineEntry(EquineEvent event) {
+    return EquineTimelineEntry(
+      id: event.id,
+      source: 'equine_event',
+      eventType: event.eventType,
+      happenedAt: event.happenedAt,
+      title: event.title,
+      notes: event.description,
+      severity: event.severity,
+      affectsAvailability: event.affectsAvailability,
+      syncPending: event.syncPending,
     );
   }
 
@@ -123,19 +144,33 @@ class EquineMapper {
     EquineTimelineEntry entry, {
     VoidCallback? onTap,
   }) {
+    final observations = <String>[
+      if (entry.syncPending) 'Pendiente de sincronización',
+      if (entry.notes != null && entry.notes!.isNotEmpty) entry.notes!,
+    ].join(' · ');
+
     return AppLogbookTimelineEntry(
       title: entry.title,
       dateLabel: _formatDateShort(entry.happenedAt),
       reservationLabel: entry.reservationId ?? '-',
-      guideLabel: '-',
+      guideLabel: entry.source == 'equine_event' ? 'Cuidado' : 'Servicio',
       durationLabel: '-',
-      state: _logbookStateFromEventType(entry.eventType),
-      observations: entry.notes,
+      state: _logbookStateFromEntry(entry),
+      observations: observations.isEmpty ? null : observations,
       onTap: onTap,
     );
   }
 
-  static AppLogbookEntryState _logbookStateFromEventType(String eventType) {
+  static AppLogbookEntryState _logbookStateFromEntry(EquineTimelineEntry entry) {
+    if (entry.syncPending) return AppLogbookEntryState.warning;
+    if (entry.affectsAvailability) return AppLogbookEntryState.warning;
+    return _logbookStateFromEventType(entry.eventType, entry.severity);
+  }
+
+  static AppLogbookEntryState _logbookStateFromEventType(
+    String eventType, [
+    String? severity,
+  ]) {
     switch (eventType) {
       case 'arrival':
       case 'departure':
@@ -144,7 +179,19 @@ class EquineMapper {
       case 'checkpoint':
         return AppLogbookEntryState.active;
       case 'incident':
+      case 'injury':
         return AppLogbookEntryState.warning;
+      case 'treatment':
+      case 'medication':
+      case 'rest':
+        return severity == 'high' || severity == 'critical'
+            ? AppLogbookEntryState.warning
+            : AppLogbookEntryState.neutral;
+      case 'vaccination':
+      case 'farrier':
+      case 'weight':
+      case 'health_check':
+        return AppLogbookEntryState.completed;
       case 'note':
         return AppLogbookEntryState.neutral;
       default:

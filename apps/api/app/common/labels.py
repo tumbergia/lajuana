@@ -87,6 +87,13 @@ class ErrorCode:
     EQUINE_UNAVAILABLE = "equine.unavailable"
     EQUINE_INVALID_WEIGHT = "equine.invalid_weight"
 
+    EQUINE_EVENT_NOT_FOUND = "equine_event.not_found"
+    EQUINE_EVENT_INVALID_HAPPENED_AT = "equine_event.invalid_happened_at"
+    EQUINE_EVENT_WEIGHT_REQUIRED = "equine_event.weight_required"
+    EQUINE_EVENT_HEIGHT_REQUIRED = "equine_event.height_required"
+    EQUINE_EVENT_AVAILABILITY_FIELDS_REQUIRED = "equine_event.availability_fields_required"
+    EQUINE_EVENT_ASSIGNMENT_EQUINE_MISMATCH = "equine_event.assignment_equine_mismatch"
+
     SADDLE_NOT_FOUND = "saddle.not_found"
     SADDLE_CODE_ALREADY_EXISTS = "saddle.code_already_exists"
     SADDLE_UNAVAILABLE = "saddle.unavailable"

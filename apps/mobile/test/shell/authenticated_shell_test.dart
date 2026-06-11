@@ -13,6 +13,8 @@ import 'package:mobile/features/auth/infrastructure/connectivity/network_status_
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile_domain/src/equines/equine.dart';
+import 'package:mobile_domain/src/equines/equine_event.dart';
+import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
 
@@ -54,6 +56,24 @@ class _FakeEquineRepository implements EquineRepository {
 
   @override
   Future<DateTime?> getLastSyncedAt() async => null;
+}
+
+class _FakeEquineEventRepository implements EquineEventRepository {
+  @override
+  Future<EquineEvent> createEvent(
+    String equineId,
+    EquineEventCreatePayload payload,
+  ) async =>
+      throw UnimplementedError('not used in shell test');
+
+  @override
+  Future<int> flushPendingEvents({String? equineId}) async => 0;
+
+  @override
+  Future<int> countPendingEvents(String equineId) async => 0;
+
+  @override
+  Future<List<EquineEvent>> listPendingEvents(String equineId) async => [];
 }
 
 void main() {
@@ -119,6 +139,7 @@ void main() {
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
+          equineEventRepository: _FakeEquineEventRepository(),
           onCallRequested: (_) async => true,
         ),
       ),
@@ -150,6 +171,7 @@ void main() {
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
+          equineEventRepository: _FakeEquineEventRepository(),
           onCallRequested: (phone) async {
             calledPhone = phone;
             return true;
@@ -212,6 +234,7 @@ void main() {
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
+          equineEventRepository: _FakeEquineEventRepository(),
           onCallRequested: (_) async => true,
         ),
       ),
@@ -268,6 +291,7 @@ void main() {
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
+          equineEventRepository: _FakeEquineEventRepository(),
           onCallRequested: (_) async => true,
         ),
       ),
@@ -297,6 +321,7 @@ void main() {
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
+          equineEventRepository: _FakeEquineEventRepository(),
           onCallRequested: (_) async => true,
         ),
       ),

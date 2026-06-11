@@ -6,6 +6,8 @@ from app.api.endpoints.assignments import router as assignments_router
 from app.api.endpoints.auth import router as auth_router
 from app.api.endpoints.config import router as config_router
 from app.api.endpoints.diagnostics import router as diagnostics_router
+from app.api.endpoints.equine_events import flat_router as equine_events_flat_router
+from app.api.endpoints.equine_events import nested_router as equine_events_nested_router
 from app.api.endpoints.equines import router as equines_router
 from app.api.endpoints.experiences import router as experiences_router
 from app.api.endpoints.files import router as files_router
@@ -43,6 +45,8 @@ api_router.include_router(notifications_router)
 api_router.include_router(sync_router)
 api_router.include_router(files_router)
 api_router.include_router(equines_router)
+api_router.include_router(equine_events_nested_router, prefix="/equines")
+api_router.include_router(equine_events_flat_router)
 api_router.include_router(saddles_router)
 api_router.include_router(assignments_router)
 api_router.include_router(logs_router)

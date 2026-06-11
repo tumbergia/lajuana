@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -214,42 +214,16 @@ class EquineListItemSchema(AuditMetadataSchema):
 
 
 class EquineTimelineEntrySchema(BaseModel):
-    """Una entrada del timeline del equino — originada de ServiceLog."""
+    """Entrada unificada del timeline: bitácora de servicio o evento de cuidado."""
 
     id: str
+    source: Literal["service_log", "equine_event"]
     event_type: str
     happened_at: datetime
     title: str
     reservation_id: str | None = None
+    assignment_id: str | None = None
+    participant_id: str | None = None
     notes: str | None = None
-
-
-class EquineEventType(str, Enum):
-    SHOEING = "shoeing"
-    VACCINATION = "vaccination"
-    ANEMIA_TEST = "anemia_test"
-    WEIGHT_HEIGHT = "weight_height"
-    DEWORMING = "deworming"
-    DENTISTRY = "dentistry"
-    VETERINARY = "veterinary"
-    SUPPLEMENTATION = "supplementation"
-    TRAINING = "training"
-    SERVICE_RIDE = "service_ride"
-    AVAILABILITY_CHANGE = "availability_change"
-    OTHER = "other"
-
-
-class EquineEventCreateSchema(BaseModel):
-    equine_id: str
-    event_type: EquineEventType
-    event_date: date | None = None
-    performed_by: str | None = None
-    title: str
-    description: str | None = None
-    measurement_weight_kg: Decimal | None = Field(default=None, gt=0)
-    measurement_height_m: Decimal | None = Field(default=None, gt=0)
-    result: str | None = None
-    next_due_date: date | None = None
-    source_file: str | None = None
-    source_sheet: str | None = None
-    source_row_number: int | None = Field(default=None, ge=1)
+    severity: str | None = None
+    affects_availability: bool = False

@@ -213,28 +213,89 @@ class EquineDto {
 class EquineTimelineEntryDto {
   EquineTimelineEntryDto({
     required this.id,
+    required this.source,
     required this.eventType,
     required this.happenedAt,
     required this.title,
     this.reservationId,
     this.notes,
+    this.severity,
+    this.affectsAvailability = false,
   });
 
   final String id;
+  final String source;
   final String eventType;
   final String happenedAt;
   final String title;
   final String? reservationId;
   final String? notes;
+  final String? severity;
+  final bool affectsAvailability;
 
   factory EquineTimelineEntryDto.fromJson(Map<String, dynamic> json) {
     return EquineTimelineEntryDto(
       id: json['id'] as String? ?? '',
+      source: json['source'] as String? ?? 'service_log',
       eventType: json['event_type'] as String? ?? '',
       happenedAt: json['happened_at'] as String? ?? '',
       title: json['title'] as String? ?? '',
       reservationId: json['reservation_id'] as String?,
       notes: json['notes'] as String?,
+      severity: json['severity'] as String?,
+      affectsAvailability: json['affects_availability'] as bool? ?? false,
+    );
+  }
+}
+
+/// DTO de respuesta al crear/consultar un evento de equino.
+class EquineEventDto {
+  EquineEventDto({
+    required this.id,
+    required this.equineId,
+    required this.eventType,
+    required this.happenedAt,
+    required this.title,
+    this.description,
+    this.severity,
+    this.measuredWeightKg,
+    this.nextDueAt,
+    this.performedBy,
+    this.affectsAvailability = false,
+    this.resultingOperationalStatus,
+    this.restUntil,
+  });
+
+  final String id;
+  final String equineId;
+  final String eventType;
+  final String happenedAt;
+  final String title;
+  final String? description;
+  final String? severity;
+  final double? measuredWeightKg;
+  final String? nextDueAt;
+  final String? performedBy;
+  final bool affectsAvailability;
+  final String? resultingOperationalStatus;
+  final String? restUntil;
+
+  factory EquineEventDto.fromJson(Map<String, dynamic> json) {
+    return EquineEventDto(
+      id: json['id'] as String? ?? '',
+      equineId: json['equine_id'] as String? ?? '',
+      eventType: json['event_type'] as String? ?? '',
+      happenedAt: json['happened_at'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String?,
+      severity: json['severity'] as String?,
+      measuredWeightKg: EquineDto._parseDecimal(json['measured_weight_kg']),
+      nextDueAt: json['next_due_at'] as String?,
+      performedBy: json['performed_by'] as String?,
+      affectsAvailability: json['affects_availability'] as bool? ?? false,
+      resultingOperationalStatus:
+          json['resulting_operational_status'] as String?,
+      restUntil: json['rest_until'] as String?,
     );
   }
 }

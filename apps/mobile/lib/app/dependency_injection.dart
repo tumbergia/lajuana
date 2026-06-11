@@ -14,9 +14,11 @@ import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/features/catalogs/data/catalogs_database.dart';
 import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
 import 'package:mobile/features/catalogs/data/catalogs_sync_api.dart';
+import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
 import 'package:mobile/features/equines/infrastructure/local/equines_database.dart';
 import 'package:mobile/features/equines/infrastructure/remote/equines_api_client.dart';
+import 'package:mobile/features/equines/infrastructure/repositories/equine_event_repository_impl.dart';
 import 'package:mobile/features/equines/infrastructure/repositories/equine_repository_impl.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
@@ -31,6 +33,7 @@ class AppDependencies {
     required this.saddlesModule,
     required this.assignmentsModule,
     required this.equineRepository,
+    required this.equineEventRepository,
   });
 
   final AuthController authController;
@@ -40,6 +43,7 @@ class AppDependencies {
   final SaddlesModule saddlesModule;
   final AssignmentsModule assignmentsModule;
   final EquineRepository equineRepository;
+  final EquineEventRepository equineEventRepository;
 
   /// Dispose controllers that need explicit cleanup.
   void dispose() {
@@ -128,9 +132,14 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     readAccessToken: readAccessToken,
     refreshSession: refreshSession,
   );
+  final equinesDatabase = EquinesDatabase.instance;
   final equineRepository = EquineRepositoryImpl(
     apiClient: equinesApiClient,
-    database: EquinesDatabase.instance,
+    database: equinesDatabase,
+  );
+  final equineEventRepository = EquineEventRepositoryImpl(
+    apiClient: equinesApiClient,
+    database: equinesDatabase,
   );
 
   return AppDependencies(
@@ -141,5 +150,6 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     saddlesModule: saddlesModule,
     assignmentsModule: assignmentsModule,
     equineRepository: equineRepository,
+    equineEventRepository: equineEventRepository,
   );
 }

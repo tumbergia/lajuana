@@ -7,7 +7,7 @@ class EquinesDatabase {
   EquinesDatabase._();
 
   static const String _dbName = 'equines_cache.db';
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
 
   static final EquinesDatabase instance = EquinesDatabase._();
 
@@ -42,6 +42,18 @@ class EquinesDatabase {
           key TEXT PRIMARY KEY,
           value TEXT NOT NULL,
           updated_at TEXT NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS equine_event_sync_queue (
+          operation_id TEXT PRIMARY KEY,
+          equine_id TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'pending',
+          error_message TEXT,
+          created_at TEXT NOT NULL
         )
       ''');
     }
@@ -81,6 +93,89 @@ class EquinesDatabase {
         updated_at TEXT NOT NULL
       )
     ''');
+    await db.execute('''
+      CREATE TABLE equine_event_sync_queue (
+        operation_id TEXT PRIMARY KEY,
+        equine_id TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        error_message TEXT,
+        created_at TEXT NOT NULL
+      )
+    ''');
+  }
+
+  Future<void> enqueueEquineEvent({
+    required String operationId,
+    required String equineId,
+    required String payloadJson,
+  }) async {
+    final db = await database;
+    await db.insert(
+      'equine_event_sync_queue',
+      {
+        'operation_id': operationId,
+        'equine_id': equineId,
+        'payload_json': payloadJson,
+        'status': 'pending',
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, Object?>>> getPendingEquineEvents({
+    String? equineId,
+  }) async {
+    final db = await database;
+    if (equineId != null) {
+      return db.query(
+        'equine_event_sync_queue',
+        where: "status = 'pending' AND equine_id = ?",
+        whereArgs: [equineId],
+        orderBy: 'created_at ASC',
+      );
+    }
+    return db.query(
+      'equine_event_sync_queue',
+      where: "status = 'pending'",
+      orderBy: 'created_at ASC',
+    );
+  }
+
+  Future<int> countPendingEquineEvents(String equineId) async {
+    final db = await database;
+    final result = await db.rawQuery(
+      "SELECT COUNT(*) AS c FROM equine_event_sync_queue "
+      "WHERE status = 'pending' AND equine_id = ?",
+      [equineId],
+    );
+    return (result.first['c'] as int?) ?? 0;
+  }
+
+  Future<void> deleteQueuedEquineEvent(String operationId) async {
+    final db = await database;
+    await db.delete(
+      'equine_event_sync_queue',
+      where: 'operation_id = ?',
+      whereArgs: [operationId],
+    );
+  }
+
+  Future<void> markQueuedEquineEventError(
+    String operationId,
+    String errorMessage,
+  ) async {
+    final db = await database;
+    await db.update(
+      'equine_event_sync_queue',
+      {
+        'status': 'error',
+        'error_message': errorMessage,
+      },
+      where: 'operation_id = ?',
+      whereArgs: [operationId],
+    );
   }
 
   Future<void> upsertAll(List<Map<String, Object?>> records) async {

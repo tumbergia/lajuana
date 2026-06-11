@@ -136,7 +136,10 @@ async def get_equine(
     "/{equine_id}/timeline",
     response_model=list[EquineTimelineEntrySchema],
     summary="Timeline del equino",
-    description="Retorna el historial cronológico del equino basado en ServiceLogs.",
+    description=(
+        "Retorna el historial cronológico unificado: bitácora de servicio "
+        "(service_log) y eventos de cuidado (equine_event)."
+    ),
     operation_id="getEquineTimeline",
     responses={
         200: {"description": "Timeline obtenido correctamente."},
@@ -147,9 +150,10 @@ async def get_equine(
 async def get_equine_timeline(
     equine_id: str,
     _: Annotated[UserDocument, Depends(require_permissions(Permission.EQUINE_READ))],
+    limit: int = Query(default=50, ge=1, le=500),
     service: EquineService = Depends(get_equine_service),
 ) -> list[EquineTimelineEntrySchema]:
-    return await service.get_timeline(equine_id)
+    return await service.get_timeline(equine_id, limit=limit)
 
 
 @router.get(

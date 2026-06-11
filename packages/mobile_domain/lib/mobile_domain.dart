@@ -12,6 +12,8 @@ export 'src/assignments/assignment.dart';
 export 'src/assignments/assignment_board.dart';
 export 'src/assignments/assignments_repository.dart';
 export 'src/equines/equine.dart';
+export 'src/equines/equine_event.dart';
+export 'src/equines/equine_event_repository.dart';
 export 'src/equines/equine_experience_fit.dart';
 export 'src/equines/equine_operational_status.dart';
 export 'src/equines/equine_repository.dart';

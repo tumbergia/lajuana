@@ -26,6 +26,7 @@ from app.schemas.provider import ProviderResponseSchema
 from app.schemas.reservation import ReservationListItemSchema, ReservationResponseSchema
 from app.schemas.saddle import SaddleListItemSchema, SaddleResponseSchema
 from app.schemas.schedule import ScheduleResponseSchema
+from app.schemas.equine_event import EquineEventResponseSchema
 from app.schemas.service_log import ServiceLogResponseSchema
 
 logger = logging.getLogger(__name__)
@@ -153,6 +154,16 @@ def _map_assignment(
 async def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseSchema:
     """Delega a batch (1 assignment → misma lógica, sin N+1)."""
     return (await batch_assignments_to_response([doc]))[0]
+equine_event_to_response = lambda d: document_to_schema(
+    d,
+    EquineEventResponseSchema,
+    scalar_fields={"id": "id", "equine_id": "equine_id"},
+    optional_scalar_fields={
+        "reservation_id": "reservation_id",
+        "assignment_id": "assignment_id",
+        "participant_id": "participant_id",
+    },
+)
 service_log_to_response = lambda d: document_to_schema(
     d, ServiceLogResponseSchema,
     scalar_fields={"id": "id", "reservation_id": "reservation_id"},
