@@ -292,6 +292,8 @@ class CatalogsRepository {
     final db = await _database.database;
     final rows = await db.query(
       'experiences_local',
+      where: 'is_active = ?',
+      whereArgs: [1],
       orderBy: 'name COLLATE NOCASE ASC',
     );
     return rows.map(_experienceFromRow).toList(growable: false);
@@ -441,6 +443,7 @@ class CatalogsRepository {
         'subtitle': subtitle,
         'image_url': imageUrl,
         'image_base64': imageBase64,
+        'difficulty': difficulty,
         'category': category,
         'status': status,
         'duration_json': _encodeNullableJson(duration),
@@ -1052,6 +1055,23 @@ class CatalogsRepository {
     final nextStatus = preservedStatus == CatalogSyncStatus.synced
         ? CatalogSyncStatus.synced
         : preservedStatus;
+    final remoteImageUrl = payload['image_url'] as String?;
+    final hasRemoteImage =
+        remoteImageUrl != null && remoteImageUrl.isNotEmpty;
+    String? preservedImageBase64;
+    if (existingByTarget.isNotEmpty) {
+      final existing = existingByTarget.first;
+      final existingStatus = catalogSyncStatusFromDb(
+        existing['sync_status'] as String,
+      );
+      final existingBase64 = existing['image_base64'] as String?;
+      if (existingStatus == CatalogSyncStatus.pending &&
+          !hasRemoteImage &&
+          existingBase64 != null &&
+          existingBase64.isNotEmpty) {
+        preservedImageBase64 = existingBase64;
+      }
+    }
     await db.insert('experiences_local', {
       'id': targetId,
       'remote_id': remoteId,
@@ -1060,7 +1080,7 @@ class CatalogsRepository {
       'description': payload['description'] as String? ?? '',
       'subtitle': payload['subtitle'] as String?,
       'image_url': payload['image_url'] as String?,
-      'image_base64': null,
+      'image_base64': preservedImageBase64,
       'level': payload['level'] as String? ?? 'basic',
       'difficulty': payload['difficulty'] as String?,
       'category': payload['category'] as String?,

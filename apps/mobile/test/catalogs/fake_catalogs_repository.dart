@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:http/http.dart' as http;
 import 'package:mobile/features/catalogs/data/catalogs_database.dart';
 import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
@@ -53,6 +55,8 @@ class FakeCatalogsRepository extends CatalogsRepository {
   final bool throwOnSync;
   final bool throwOnUpdate;
 
+  Completer<void>? refreshCompleter;
+
   int refreshExperiencesCallCount = 0;
   int refreshSchedulesCallCount = 0;
   int refreshContactsCallCount = 0;
@@ -84,6 +88,9 @@ class FakeCatalogsRepository extends CatalogsRepository {
   Future<void> refreshExperiencesFromServer() async {
     refreshExperiencesCallCount++;
     if (throwOnRefresh) throw Exception('Refresh error');
+    if (refreshCompleter != null) {
+      await refreshCompleter!.future;
+    }
   }
 
   // ── Schedules ────────────────────────────────────────────────

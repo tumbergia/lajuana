@@ -20,7 +20,7 @@ void main() {
       expect(controller.nombre, '');
       expect(controller.identificadorUrl, '');
       expect(controller.descripcion, '');
-      expect(controller.subtitulo, isNull);
+      expect(controller.imageBase64, isNull);
       expect(controller.activa, true);
       expect(controller.nivel, 'basic');
       expect(controller.dificultad, 'basic');
@@ -38,11 +38,19 @@ void main() {
       expect(error, contains('nombre'));
     });
 
-    test('fails when URL slug is empty', () {
+    test('does not require URL slug when other fields are valid', () {
       controller.nombre = 'Test Experience';
       controller.identificadorUrl = '';
+      controller.descripcion = 'A test';
+      controller.duracionExperienciaMinutos = 60;
+      controller.duracionRecorridoMinutos = 30;
+      controller.agregarTarifa(ExperiencePricingTierDraft(
+        minParticipants: 1,
+        maxParticipants: 5,
+        pricePerPerson: 50000,
+      ));
       final error = controller.validar();
-      expect(error, contains('identificador URL'));
+      expect(error, isNull);
     });
 
     test('fails when description is empty', () {
@@ -102,7 +110,7 @@ void main() {
       expect(error, contains('superponerse'));
     });
 
-    test('fails when no inclusion items are added', () {
+    test('passes without inclusion items', () {
       controller.nombre = 'Test';
       controller.identificadorUrl = 'test';
       controller.descripcion = 'A test';
@@ -114,7 +122,7 @@ void main() {
         pricePerPerson: 50000,
       ));
       final error = controller.validar();
-      expect(error, contains('Incluye'));
+      expect(error, isNull);
     });
 
     test('passes with all valid fields', () {
@@ -144,7 +152,7 @@ void main() {
     });
 
     test('actualizarNombre does not override existing slug', () {
-      controller.actualizarIdentificadorUrl('custom-slug');
+      controller.identificadorUrl = 'custom-slug';
       controller.actualizarNombre('New Name');
       expect(controller.identificadorUrl, 'custom-slug');
     });

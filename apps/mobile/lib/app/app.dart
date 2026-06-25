@@ -16,6 +16,13 @@ class LaJuanaApp extends StatefulWidget {
 
 class _LaJuanaAppState extends State<LaJuanaApp> {
   ThemeMode _themeMode = ThemeMode.dark;
+  Color _themeVeilColor = const Color(0xFF131313);
+  bool _isThemeTransitioning = false;
+  static const Duration _themeTransitionDuration = Duration(milliseconds: 320);
+  static const Duration _themeVeilVisibleDuration = Duration(milliseconds: 500);
+  static const Duration _themeVeilFadeDuration = Duration(milliseconds: 180);
+  static const double _themeVeilOpacity = 1.0;
+
   AppDependencies? _deps;
   AppRouter? _router;
 
@@ -34,10 +41,32 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
     });
   }
 
-  void _toggleTheme() {
+  Future<void> _toggleTheme() async {
+    if (_isThemeTransitioning) return;
+
+    final nextMode = _themeMode == ThemeMode.dark
+        ? ThemeMode.light
+        : ThemeMode.dark;
+
     setState(() {
-      _themeMode =
-          _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      _isThemeTransitioning = true;
+      _themeVeilColor = nextMode == ThemeMode.light
+          ? Colors.white
+          : const Color(0xFF131313);
+    });
+
+    await Future<void>.delayed(_themeVeilFadeDuration);
+    if (!mounted) return;
+
+    setState(() {
+      _themeMode = nextMode;
+    });
+
+    await Future<void>.delayed(_themeVeilVisibleDuration);
+    if (!mounted) return;
+
+    setState(() {
+      _isThemeTransitioning = false;
     });
   }
 
@@ -65,7 +94,26 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
         themeMode: _themeMode,
         initialRoute: AuthRoutes.sessionGate,
         onGenerateRoute: _router!.onGenerateRoute,
-        themeAnimationDuration: const Duration(milliseconds: 200),
+        themeAnimationDuration: _themeTransitionDuration,
+        themeAnimationCurve: Curves.easeInOutCubicEmphasized,
+        builder: (context, child) {
+          final content = child ?? const SizedBox.shrink();
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              content,
+              IgnorePointer(
+                ignoring: true,
+                child: AnimatedOpacity(
+                  opacity: _isThemeTransitioning ? _themeVeilOpacity : 0,
+                  duration: _themeVeilFadeDuration,
+                  curve: Curves.easeOutCubic,
+                  child: ColoredBox(color: _themeVeilColor),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

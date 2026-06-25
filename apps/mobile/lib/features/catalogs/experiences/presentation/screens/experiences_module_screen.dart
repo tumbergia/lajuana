@@ -113,13 +113,44 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
       case ExperiencesTabLoadState.idle:
       case ExperiencesTabLoadState.loading:
         return const AppCenteredLoader();
+      case ExperiencesTabLoadState.syncing:
+        return _buildSyncing();
       case ExperiencesTabLoadState.error:
         return _buildError();
       case ExperiencesTabLoadState.empty:
         return _buildEmpty();
       case ExperiencesTabLoadState.success:
+      case ExperiencesTabLoadState.offlineFromCache:
         return _buildSuccessContent();
     }
+  }
+
+  Widget _buildSyncing() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 80),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppCenteredLoader(),
+            const SizedBox(height: 16),
+            Text(
+              'Sincronizando experiencias…',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Conectando con el servidor',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildError() {
@@ -264,9 +295,14 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
     final filteredEmpty = items.isEmpty;
 
     if (filteredEmpty && hasData) {
+      final offlineBanner = _buildOfflineBanner();
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (offlineBanner != null) ...[
+            offlineBanner,
+            const SizedBox(height: 16),
+          ],
           _buildSearchRow(),
           const SizedBox(height: 12),
           _buildCreateButton(),
@@ -281,6 +317,11 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (_controller.loadState ==
+              ExperiencesTabLoadState.offlineFromCache) ...[
+            _buildOfflineBanner()!,
+            const SizedBox(height: 16),
+          ],
           _buildSearchRow(),
           const SizedBox(height: 12),
           _buildCreateButton(),
@@ -288,6 +329,21 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
           if (!filteredEmpty) _buildListView(),
         ],
       ),
+    );
+  }
+
+  Widget? _buildOfflineBanner() {
+    if (_controller.loadState != ExperiencesTabLoadState.offlineFromCache) {
+      return null;
+    }
+    return AppStatusBanner(
+      title: 'Sin conexion',
+      message: _controller.errorMessage.isNotEmpty
+          ? _controller.errorMessage
+          : 'Mostrando datos almacenados localmente.',
+      tone: AppStatusBannerTone.warning,
+      icon: Icons.wifi_off_rounded,
+      badgeLabel: 'Offline',
     );
   }
 

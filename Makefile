@@ -1,4 +1,25 @@
+# Detección de plataforma (GNU Make). Windows: Git Bash / MSYS2. Unix: Linux, macOS, etc.
+ifeq ($(OS),Windows_NT)
+DETECTED_OS := windows
+API_PY := .venv/Scripts/python.exe
 MOBILE_JAVA_HOME ?= /c/Program Files/Java/jdk-17
+MOBILE_JAVA_PATH := JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH"
+MOBILE_FLUTTER_DEVICE :=
+else
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+DETECTED_OS := linux
+MOBILE_FLUTTER_DEVICE := -d linux
+else ifeq ($(UNAME_S),Darwin)
+DETECTED_OS := macos
+MOBILE_FLUTTER_DEVICE :=
+else
+DETECTED_OS := unix
+MOBILE_FLUTTER_DEVICE :=
+endif
+API_PY := .venv/bin/python
+MOBILE_JAVA_PATH :=
+endif
 
 # Base URL del API (opcional). Debe ser URL completa con esquema, p. ej. http://192.168.1.10:8000/api/v1
 # Vacío = heurística: emulador → 10.0.2.2; Android físico → 127.0.0.1 (requiere adb reverse o ver abajo).
@@ -7,22 +28,22 @@ MOBILE_API_BASE_URL ?=
 MOBILE_DART_DEFINES := $(if $(strip $(MOBILE_API_BASE_URL)),--dart-define=API_BASE_URL=$(MOBILE_API_BASE_URL),)
 
 mobile-run:
-	cd apps/mobile && JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH" DART_VM_OPTIONS=--old_gen_heap_size=2048 flutter run $(MOBILE_DART_DEFINES)
+	cd apps/mobile && $(strip $(MOBILE_JAVA_PATH) DART_VM_OPTIONS=--old_gen_heap_size=2048) flutter run $(MOBILE_FLUTTER_DEVICE) $(MOBILE_DART_DEFINES)
 
 mobile-profile:
-	cd apps/mobile && JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH" DART_VM_OPTIONS=--old_gen_heap_size=2048 flutter run --profile $(MOBILE_DART_DEFINES)
+	cd apps/mobile && $(strip $(MOBILE_JAVA_PATH) DART_VM_OPTIONS=--old_gen_heap_size=2048) flutter run --profile $(MOBILE_FLUTTER_DEVICE) $(MOBILE_DART_DEFINES)
 
 mobile-test:
-	cd apps/mobile && JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH" DART_VM_OPTIONS=--old_gen_heap_size=2048 flutter test
+	cd apps/mobile && $(strip $(MOBILE_JAVA_PATH) DART_VM_OPTIONS=--old_gen_heap_size=2048) flutter test
 
 mobile-pub-get:
-	cd apps/mobile && JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH" DART_VM_OPTIONS=--old_gen_heap_size=2048 flutter pub get
+	cd apps/mobile && $(strip $(MOBILE_JAVA_PATH) DART_VM_OPTIONS=--old_gen_heap_size=2048) flutter pub get
 
 mobile-format-check:
 	dart format --output=none --set-exit-if-changed apps/mobile/lib apps/mobile/test packages
 
 mobile-analyze:
-	cd apps/mobile && JAVA_HOME="$(MOBILE_JAVA_HOME)" PATH="$$JAVA_HOME/bin:$$PATH" DART_VM_OPTIONS=--old_gen_heap_size=2048 flutter analyze
+	cd apps/mobile && $(strip $(MOBILE_JAVA_PATH) DART_VM_OPTIONS=--old_gen_heap_size=2048) flutter analyze
 
 mobile-packages-analyze:
 	cd packages/mobile_core && flutter analyze
@@ -35,12 +56,6 @@ mobile-quality:
 	$(MAKE) mobile-analyze
 	$(MAKE) mobile-packages-analyze
 	$(MAKE) mobile-test
-
-ifeq ($(OS),Windows_NT)
-API_PY := .venv/Scripts/python.exe
-else
-API_PY := .venv/bin/python
-endif
 
 api-dev:
 	cd apps/api && $(API_PY) -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -84,3 +99,9 @@ api-uninstall:
 
 bootstrap:
 	bash tooling/scripts/bootstrap.sh
+
+.PHONY: mobile-run mobile-profile mobile-test mobile-pub-get mobile-format-check \
+	mobile-analyze mobile-packages-analyze mobile-quality \
+	api-dev api-test api-lint api-format api-format-check api-typecheck \
+	api-mcp api-ask-example api-agentic-reset api-quality api-install \
+	api-uninstall bootstrap

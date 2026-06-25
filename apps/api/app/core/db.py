@@ -93,17 +93,6 @@ async def init_db() -> None:
             "[db] Index uq_wa_message_id may already exist — continuing"
         )
 
-    # Ensure indexes declared in Beanie document Settings.indexes exist.
-    # init_beanie does NOT guarantee indexes are created if they already
-    # exist in a different state or were created before the Setting was added.
-    for model in document_models:
-        try:
-            indexes = getattr(model.Settings, "indexes", None)
-            if indexes:
-                await model.get_motor_collection().create_indexes(indexes)
-        except Exception:
-            logger.exception("[db] Failed to ensure indexes for %s", model.__name__)
-
 
 async def close_db() -> None:
     if db.client is not None:

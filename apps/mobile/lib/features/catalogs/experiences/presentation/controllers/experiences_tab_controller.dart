@@ -6,7 +6,15 @@ import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
 import 'package:mobile/features/catalogs/experiences/data/experience_repository.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 
-enum ExperiencesTabLoadState { idle, loading, success, empty, error }
+enum ExperiencesTabLoadState {
+  idle,
+  loading,
+  success,
+  empty,
+  syncing,
+  error,
+  offlineFromCache,
+}
 
 class ExperiencesTabController extends ChangeNotifier {
   ExperiencesTabController({
@@ -59,7 +67,9 @@ class ExperiencesTabController extends ChangeNotifier {
       if (experiences.isEmpty) {
         _allItems = const [];
         _items = const [];
-        _loadState = ExperiencesTabLoadState.empty;
+        _loadState = refreshServer
+            ? ExperiencesTabLoadState.syncing
+            : ExperiencesTabLoadState.empty;
       } else {
         _allItems = experiences;
         _applyFilter();
@@ -100,7 +110,7 @@ class ExperiencesTabController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Flushes pending local changes to backend, then pulls latest from server.
+  /// Pulls latest experiences from server (push handled post-mutation / autoSync).
   Future<void> refreshFromServer() async {
     if (_isRefreshing) return;
     _isRefreshing = true;
@@ -108,9 +118,6 @@ class ExperiencesTabController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Primero enviar cambios locales pendientes al backend
-      await _catalogsRepository.flushQueue();
-      // Luego traer cambios del backend
       await _catalogsRepository.refreshExperiencesFromServer();
       final experiences = await _repository.list();
       _allItems = experiences;
@@ -123,7 +130,12 @@ class ExperiencesTabController extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = e.toString();
-      _loadState = ExperiencesTabLoadState.error;
+      if (_allItems.isNotEmpty) {
+        _applyFilter();
+        _loadState = ExperiencesTabLoadState.offlineFromCache;
+      } else {
+        _loadState = ExperiencesTabLoadState.error;
+      }
     } finally {
       _isRefreshing = false;
       notifyListeners();
@@ -132,8 +144,5 @@ class ExperiencesTabController extends ChangeNotifier {
 
   void _applyFilter() {
     _items = _filteredItems;
-    if (_items.isEmpty && _allItems.isNotEmpty) {
-      // filtered empty but has data — keep loadState as success
-    }
   }
 }
