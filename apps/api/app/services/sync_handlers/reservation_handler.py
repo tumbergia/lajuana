@@ -65,7 +65,7 @@ class ReservationSyncHandler:
         if entity == "assignment":
             return await self._handle_assignment(operation, op_type, current_user)
         if entity == "service_log":
-            return await self._handle_service_log(operation, op_type)
+            return await self._handle_service_log(operation, op_type, current_user)
         return None
 
     async def _handle_reservation(self, operation, op_type, current_user):
@@ -122,13 +122,26 @@ class ReservationSyncHandler:
             )
         return None
 
-    async def _handle_service_log(self, operation, op_type):
+    async def _handle_service_log(self, operation, op_type, current_user):
         if op_type == "create":
             schema = ServiceLogCreateSchema(**operation.payload)
-            return await self.service_log_service.create(schema)
+            return await self.service_log_service.create(
+                schema,
+                actor_id=current_user.id,
+            )
         if op_type == "update":
             require_remote_id(operation)
             await ensure_base_version(ServiceLogDocument, operation.entity_remote_id, operation.base_version)
             schema = ServiceLogUpdateSchema(**operation.payload)
-            return await self.service_log_service.update(operation.entity_remote_id, schema)
+            return await self.service_log_service.update(
+                operation.entity_remote_id,
+                schema,
+                actor_role=current_user.role,
+            )
+        if op_type == "delete":
+            require_remote_id(operation)
+            return await self.service_log_service.soft_delete(
+                operation.entity_remote_id,
+                actor_role=current_user.role,
+            )
         return None

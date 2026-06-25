@@ -592,7 +592,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     // Elegir valor actual: _filterMode mapea directamente a los values string.
     return AppSegmentedFilter<String?>(
       value: _controller.filterMode,
-      onChanged: (v) => _controller.setFilterMode(v),
+      onChanged: _controller.setFilterMode,
       items: items,
     );
   }

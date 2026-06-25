@@ -15,6 +15,8 @@ import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_scaffold.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/widgets/app_timeline.dart';
 import 'package:mobile/features/reservations/presentation/dialogs/reservation_approve_dialog.dart';
 import 'package:mobile/features/reservations/presentation/dialogs/reservation_reject_dialog.dart';
@@ -31,12 +33,18 @@ import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservation_participant_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_photo.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile/features/reservations/infrastructure/mappers/reservation_mapper.dart';
+import 'package:mobile/features/reservations/presentation/widgets/reservation_log_note_sheet.dart';
+import 'package:mobile/features/reservations/presentation/widgets/reservation_log_photo_preview_row.dart';
+import 'package:mobile/features/reservations/presentation/widgets/reservation_log_photo_viewer.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/reservations/presentation/widgets/payment_status_card.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_detail_controller.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_participants_section_controller.dart';
+import 'package:mobile/features/reservations/presentation/controllers/reservation_logs_section_controller.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_payment_proofs_section_controller.dart';
 
 enum ReservationDetailSubroute {
@@ -77,9 +85,11 @@ class _ReservationDetailShellScreenState
   _participantsSectionController;
   late final ReservationPaymentProofsSectionController
   _paymentProofsSectionController;
+  late final ReservationLogsSectionController _logsSectionController;
   AssignmentBoardController? _assignmentBoardController;
   ReservationDetailSubroute _subroute = ReservationDetailSubroute.resumen;
   final Map<String, Uint8List> _proofPreviewCache = {};
+  final Map<String, Uint8List> _logPhotoCache = {};
   final ScrollController _participantsScrollCtrl = ScrollController();
   String? _highlightedParticipantId;
   final Map<String, GlobalKey> _participantKeys = {};
@@ -89,7 +99,13 @@ class _ReservationDetailShellScreenState
   ReservationsRepository? get _repo => widget.reservationsModule?.repository;
 
   @override
-  Future<void> onRefresh() => _controller.loadDetail(widget.reservationId);
+  Future<void> onRefresh() async {
+    if (_subroute == ReservationDetailSubroute.bitacora) {
+      await _logsSectionController.load(widget.reservationId);
+      return;
+    }
+    await _controller.loadDetail(widget.reservationId);
+  }
 
   @override
   void initState() {
@@ -103,6 +119,11 @@ class _ReservationDetailShellScreenState
     _participantsSectionController = ReservationParticipantsSectionController();
     _paymentProofsSectionController =
         ReservationPaymentProofsSectionController();
+    _logsSectionController = ReservationLogsSectionController(
+      repository:
+          widget.reservationsModule?.repository ?? (_throwNoModule()),
+    );
+    _logsSectionController.addListener(_onLogsStateChanged);
     _controller.addListener(_onStateChanged);
     _controller.loadDetail(widget.reservationId);
   }
@@ -117,8 +138,11 @@ class _ReservationDetailShellScreenState
     _controller.dispose();
     _participantsSectionController.dispose();
     _paymentProofsSectionController.dispose();
+    _logsSectionController.removeListener(_onLogsStateChanged);
+    _logsSectionController.dispose();
     _assignmentBoardController?.dispose();
     _proofPreviewCache.clear();
+    _logPhotoCache.clear();
     _participantsScrollCtrl.dispose();
     super.dispose();
   }
@@ -130,6 +154,20 @@ class _ReservationDetailShellScreenState
       _paymentProofsSectionController.updateFromDetail(detail);
     }
     if (mounted) setState(() {});
+  }
+
+  void _onLogsStateChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _onSubrouteChanged(int index) {
+    setState(() {
+      _subroute = ReservationDetailSubroute.values[index];
+    });
+    if (_subroute == ReservationDetailSubroute.bitacora &&
+        _logsSectionController.state == ReservationLogsLoadState.initial) {
+      _logsSectionController.load(widget.reservationId);
+    }
   }
 
   @override
@@ -180,10 +218,9 @@ class _ReservationDetailShellScreenState
               ),
             AppSegmentedFilter<int>(
               value: _subroute.index,
+              allowDeselect: false,
               onChanged: (index) {
-                setState(() {
-                  _subroute = ReservationDetailSubroute.values[index];
-                });
+                if (index != null) _onSubrouteChanged(index);
               },
               items: const [
                 AppSegmentedFilterItem(label: 'Resumen', value: 0),
@@ -212,7 +249,7 @@ class _ReservationDetailShellScreenState
       case ReservationDetailSubroute.asignaciones:
         return _buildAssignmentContent();
       case ReservationDetailSubroute.bitacora:
-        return _buildTimelineSection(detail);
+        return _buildTimelineSection();
     }
   }
 
@@ -1013,41 +1050,258 @@ class _ReservationDetailShellScreenState
     );
   }
 
-  Widget _buildTimelineSection(ReservationDetail detail) {
-    if (detail.timeline.isEmpty) {
+  Widget _buildTimelineSection() {
+    final logsState = _logsSectionController.state;
+    final entries = _logsSectionController.entries;
+
+    if (logsState == ReservationLogsLoadState.initial ||
+        logsState == ReservationLogsLoadState.loading) {
+      return const Center(child: AppCenteredLoader());
+    }
+
+    if (logsState == ReservationLogsLoadState.error && entries.isEmpty) {
       return _buildSectionPlaceholder(
-        'Historial',
-        'No hay eventos registrados para esta reserva.',
+        'Bitácora',
+        _logsSectionController.errorMessage ??
+            'No se pudo cargar la bitácora de esta reserva.',
         Icons.history_rounded,
+        action: AppButton(
+          label: 'Reintentar',
+          onPressed: () => _logsSectionController.load(widget.reservationId),
+        ),
       );
     }
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppTimeline(
-            children: detail.timeline.map((event) {
-              return AppTimelineItem(
-                state: _timelineNodeState(event.type),
-                child: AppTimelineEntryCard(
-                  date: formatDate(event.date, fallback: ''),
-                  title: event.title ?? '',
-                  description: event.description,
-                ),
-              );
-            }).toList(),
+          AppButton(
+            label: 'Agregar nota',
+            icon: Icons.add_rounded,
+            expanded: true,
+            onPressed: logsState == ReservationLogsLoadState.saving
+                ? null
+                : () => _showNoteSheet(),
           ),
           const SizedBox(height: 16),
-          AppButton(
-            label: 'Registrar bitacora — Proximamente',
-            icon: Icons.lock_outline_rounded,
-            variant: AppButtonVariant.secondary,
-            expanded: true,
-            onPressed: null,
-          ),
+          if (entries.isEmpty)
+            _buildSectionPlaceholder(
+              'Sin eventos',
+              'Aún no hay entradas en la bitácora de esta reserva.',
+              Icons.history_rounded,
+            )
+          else
+            AppTimeline(
+              children: entries.map((entry) {
+                final description = _timelineDescription(entry);
+                return AppTimelineItem(
+                  state: _timelineNodeState(timelineEntryNodeType(entry)),
+                  child: AppTimelineEntryCard(
+                    date: formatTimelineDate(entry.happenedAt),
+                    title: entry.title,
+                    description: description,
+                    badge: entry.kind == 'note'
+                        ? AppBadge(
+                            label: 'Manual',
+                            tone: AppBadgeTone.primary,
+                          )
+                        : null,
+                    highlightedContent: _buildTimelinePhotoPreview(entry),
+                    footer: _buildTimelineActions(entry),
+                  ),
+                );
+              }).toList(),
+            ),
         ],
       ),
+    );
+  }
+
+  String? _timelineDescription(ReservationTimelineEntry entry) {
+    final parts = <String>[];
+    if (entry.description != null && entry.description!.trim().isNotEmpty) {
+      parts.add(entry.description!.trim());
+    }
+    if (entry.actorName != null && entry.actorName!.trim().isNotEmpty) {
+      parts.add('Por ${entry.actorName!.trim()}');
+    }
+    if (parts.isEmpty) return null;
+    return parts.join('\n');
+  }
+
+  Widget? _buildTimelineActions(ReservationTimelineEntry entry) {
+    if (!entry.editable && !entry.deletable) return null;
+
+    final saving =
+        _logsSectionController.state == ReservationLogsLoadState.saving;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (entry.editable && entry.serviceLogId != null)
+          AppButton(
+            label: 'Editar',
+            icon: Icons.edit_outlined,
+            variant: AppButtonVariant.secondary,
+            height: 44,
+            onPressed: saving
+                ? null
+                : () => _showNoteSheet(
+                      logId: entry.serviceLogId,
+                      initialText: entry.description ?? '',
+                    ),
+          ),
+        if (entry.editable &&
+            entry.deletable &&
+            entry.serviceLogId != null)
+          const SizedBox(width: 12),
+        if (entry.deletable && entry.serviceLogId != null)
+          AppButton(
+            label: 'Eliminar',
+            icon: Icons.delete_outline_rounded,
+            variant: AppButtonVariant.danger,
+            height: 44,
+            onPressed: saving ? null : () => _confirmDeleteLog(entry),
+          ),
+      ],
+    );
+  }
+
+  Widget? _buildTimelinePhotoPreview(ReservationTimelineEntry entry) {
+    if (entry.photos.isEmpty || entry.serviceLogId == null) return null;
+
+    return ReservationLogPhotoPreviewRow(
+      entry: entry,
+      logId: entry.serviceLogId!,
+      controller: _logsSectionController,
+      cache: _logPhotoCache,
+      onPhotoTap: (photo) => _openLogPhoto(
+        entry: entry,
+        photo: photo,
+      ),
+    );
+  }
+
+  Future<void> _openLogPhoto({
+    required ReservationTimelineEntry entry,
+    required ReservationTimelinePhoto photo,
+  }) async {
+    final repo = _repo;
+    final logId = entry.serviceLogId;
+    if (repo == null || logId == null) return;
+
+    var photos = entry.photos;
+    if (entry.photosTotal > photos.length) {
+      final detail = await _logsSectionController.loadNoteForEdit(logId);
+      if (detail != null && detail.photos.isNotEmpty) {
+        photos = detail.photos;
+      }
+    }
+
+    if (!mounted || photos.isEmpty) return;
+
+    var initialIndex = photos.indexWhere((item) => item.index == photo.index);
+    if (initialIndex < 0) initialIndex = 0;
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ReservationLogPhotoViewer(
+          logId: logId,
+          photos: photos,
+          initialIndex: initialIndex,
+          repository: repo,
+          cache: _logPhotoCache,
+          onBytesCached: (key, bytes) => _logPhotoCache[key] = bytes,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showNoteSheet({
+    String? logId,
+    String initialText = '',
+  }) async {
+    final isEditing = logId != null;
+    var initialPhotos = const <ReservationTimelinePhoto>[];
+
+    if (isEditing) {
+      final detail = await _logsSectionController.loadNoteForEdit(logId);
+      if (!mounted) return;
+      if (detail == null) {
+        showAppToast(
+          context,
+          message:
+              _logsSectionController.errorMessage ?? 'No se pudo cargar la nota',
+          isError: true,
+        );
+        return;
+      }
+      initialText = detail.notes;
+      initialPhotos = detail.photos;
+    }
+
+    final result = await showModalBottomSheet<ReservationLogNoteSheetResult>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (context) {
+        return ReservationLogNoteSheet(
+          controller: _logsSectionController,
+          isEditing: isEditing,
+          initialText: initialText,
+          initialPhotos: initialPhotos,
+        );
+      },
+    );
+
+    if (result == null || !mounted) return;
+
+    final ok = isEditing
+        ? await _logsSectionController.updateNote(
+            logId: logId,
+            text: result.text,
+            photos: result.photos,
+          )
+        : await _logsSectionController.createNote(
+            result.text,
+            photos: result.photos,
+          );
+
+    if (!mounted) return;
+    showAppToast(
+      context,
+      message: ok
+          ? (isEditing ? 'Nota actualizada' : 'Nota registrada')
+          : (_logsSectionController.errorMessage ?? 'No se pudo guardar la nota'),
+      isError: !ok,
+    );
+  }
+
+  Future<void> _confirmDeleteLog(ReservationTimelineEntry entry) async {
+    final logId = entry.serviceLogId;
+    if (logId == null) return;
+
+    await AppConfirmDialog.show(
+      context: context,
+      icon: Icons.delete_outline_rounded,
+      title: 'Eliminar entrada',
+      message: 'Esta acción quitará la entrada de la bitácora.',
+      confirmLabel: 'Eliminar',
+      style: DialogStyle.danger,
+      onConfirm: () async {
+        final ok = await _logsSectionController.deleteEntry(logId);
+        if (!mounted) return;
+        showAppToast(
+          context,
+          message: ok
+              ? 'Entrada eliminada'
+              : (_logsSectionController.errorMessage ??
+                  'No se pudo eliminar la entrada'),
+          isError: !ok,
+        );
+      },
     );
   }
 

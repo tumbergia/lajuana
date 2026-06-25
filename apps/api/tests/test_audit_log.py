@@ -116,3 +116,14 @@ def test_audit_metadata_union_validates() -> None:
     ]
     assert len(variants) == 3
     assert all(isinstance(v, (AssignmentMetadata, ReplacementMetadata, NotificationMetadata)) for v in variants)
+
+
+def test_parse_audit_metadata_tolerates_empty_dict() -> None:
+    from app.documents.audit_metadata_models import ParticipantMetadata, parse_audit_metadata
+
+    assert parse_audit_metadata({}) is None
+    assert parse_audit_metadata(None) is None
+    parsed = parse_audit_metadata(
+        {"participant_id": "p1", "participant_name": "Ana López"},
+    )
+    assert isinstance(parsed, ParticipantMetadata)

@@ -96,6 +96,17 @@ class PaymentProofService:
         reservation.payment_proof_ids.append(doc.id)
         reservation.payment_status = PaymentStatus.RECEIVED
         await reservation.save()
+
+        from app.services.reservation_audit_helpers import write_reservation_audit_log
+
+        await write_reservation_audit_log(
+            reservation=reservation,
+            action="payment_proof.registered",
+            actor_user_id=actor_id,
+            actor_role=UserRole.ADMIN if actor_id else None,
+            payment_proof_id=doc.id,
+            reason=doc.filename,
+        )
         return doc
 
     async def get(self, payment_proof_id: str) -> PaymentProofDocument:

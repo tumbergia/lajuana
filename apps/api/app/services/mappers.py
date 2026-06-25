@@ -27,7 +27,7 @@ from app.schemas.reservation import ReservationListItemSchema, ReservationRespon
 from app.schemas.saddle import SaddleListItemSchema, SaddleResponseSchema
 from app.schemas.schedule import ScheduleResponseSchema
 from app.schemas.equine_event import EquineEventResponseSchema
-from app.schemas.service_log import ServiceLogResponseSchema
+from app.schemas.service_log import ServiceLogPhotoSchema, ServiceLogResponseSchema
 
 logger = logging.getLogger(__name__)
 
@@ -164,11 +164,29 @@ equine_event_to_response = lambda d: document_to_schema(
         "participant_id": "participant_id",
     },
 )
-service_log_to_response = lambda d: document_to_schema(
-    d, ServiceLogResponseSchema,
-    scalar_fields={"id": "id", "reservation_id": "reservation_id"},
-    optional_scalar_fields={"related_participant_id": "related_participant_id", "related_equine_id": "related_equine_id"},
-)
+def service_log_to_response(doc) -> ServiceLogResponseSchema:
+    base = document_to_schema(
+        doc,
+        ServiceLogResponseSchema,
+        scalar_fields={"id": "id", "reservation_id": "reservation_id"},
+        optional_scalar_fields={
+            "related_participant_id": "related_participant_id",
+            "related_equine_id": "related_equine_id",
+            "created_by": "created_by",
+        },
+        exclude_fields={"revision_id", "photos"},
+    )
+    photos = [
+        ServiceLogPhotoSchema(
+            index=index,
+            storage_key=photo.storage_key,
+            filename=photo.filename,
+            content_type=photo.content_type,
+            size_bytes=photo.size_bytes,
+        )
+        for index, photo in enumerate(getattr(doc, "photos", []) or [])
+    ]
+    return base.model_copy(update={"photos": photos})
 provider_to_response = lambda d: document_to_schema(d, ProviderResponseSchema, scalar_fields={"id": "id"})
 policy_to_response = lambda d: document_to_schema(
     d, PolicyResponseSchema,

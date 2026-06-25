@@ -7,6 +7,7 @@ from app.api.deps import (
     get_participant_service,
     get_payment_proof_service,
     get_reservation_service,
+    get_reservation_timeline_service,
     require_permissions,
 )
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
@@ -30,11 +31,13 @@ from app.schemas.reservation import (
     ReservationStatusTransitionSchema,
     ReservationUpdateSchema,
 )
+from app.schemas.reservation_timeline import ReservationTimelineEntrySchema
 from app.services import (
     ParticipantService,
     PaymentProofService,
     ReservationService,
 )
+from app.services.reservation_timeline_service import ReservationTimelineService
 from beanie import PydanticObjectId
 
 from app.documents import ExperienceDocument, ScheduleDocument
@@ -176,6 +179,30 @@ async def get_reservation(
 ) -> ReservationResponseSchema:
     doc = await reservation_service.get(reservation_id, actor_role=current_user.role)
     return await reservation_to_response(doc)
+
+
+@router.get(
+    "/{reservation_id}/timeline",
+    response_model=list[ReservationTimelineEntrySchema],
+    summary=ENDPOINT_DOCS["reservations_timeline"]["summary"],
+    description=endpoint_description("reservations_timeline"),
+    operation_id="getReservationTimeline",
+    responses=endpoint_responses("reservations_timeline"),
+)
+async def get_reservation_timeline(
+    reservation_id: str,
+    current_user: Annotated[
+        UserDocument,
+        Depends(require_permissions(Permission.RESERVATION_READ)),
+    ],
+    timeline_service: ReservationTimelineService = Depends(get_reservation_timeline_service),
+    limit: int = Query(default=100, ge=1, le=500),
+) -> list[ReservationTimelineEntrySchema]:
+    return await timeline_service.get_timeline(
+        reservation_id,
+        actor_role=current_user.role,
+        limit=limit,
+    )
 
 
 @router.patch(

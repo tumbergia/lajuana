@@ -4,6 +4,10 @@ import 'package:mobile_domain/src/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 
 /// Fake [ReservationsRepository] for testing controllers.
@@ -165,5 +169,59 @@ class FakeReservationsRepository implements ReservationsRepository {
     required String reservationId,
   }) async {
     throw UnimplementedError('restoreReservation not implemented in fake');
+  }
+
+  @override
+  Future<List<ReservationTimelineEntry>> getReservationTimeline(
+    String reservationId,
+  ) async {
+    return const [];
+  }
+
+  @override
+  Future<void> createReservationLogNote({
+    required String reservationId,
+    required String notes,
+    List<ReservationLogPhotoInput> photos = const [],
+  }) async {}
+
+  @override
+  Future<void> updateReservationLogNote({
+    required String logId,
+    required String notes,
+    List<ReservationLogPhotoInput>? photos,
+  }) async {}
+
+  @override
+  Future<void> deleteReservationLogEntry({
+    required String logId,
+  }) async {}
+
+  @override
+  Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
+    return ReservationLogNoteDetail(id: logId, notes: '');
+  }
+
+  @override
+  Future<ReservationLogPhotoUpload> uploadReservationLogPhoto({
+    required String reservationId,
+    required Uint8List bytes,
+    required String filename,
+    required String contentType,
+  }) async {
+    return ReservationLogPhotoUpload(
+      storageKey: 'service_logs/$reservationId/fake.jpg',
+      filename: filename,
+      contentType: contentType,
+      sizeBytes: bytes.length,
+    );
+  }
+
+  @override
+  Future<Uint8List> downloadReservationLogPhoto({
+    required String logId,
+    required int photoIndex,
+  }) async {
+    return Uint8List(0);
   }
 }

@@ -106,6 +106,17 @@ void main() {
       );
     });
 
+    test('setFilterGroup clears filter when same group is selected again', () async {
+      await controller.loadInitial();
+
+      controller.setFilterGroup('pendientes');
+      expect(controller.filterGroup, 'pendientes');
+
+      controller.setFilterGroup('pendientes');
+
+      expect(controller.filterGroup, isNull);
+    });
+
     test('filters deleted reservations locally', () async {
       await controller.loadInitial();
 

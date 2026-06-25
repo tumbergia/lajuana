@@ -166,6 +166,10 @@ def get_service_log_service() -> object:
     return Container.get_instance().service_log_service
 
 
+def get_reservation_timeline_service() -> object:
+    return Container.get_instance().reservation_timeline_service
+
+
 def get_participant_form_link_service() -> object:
     return Container.get_instance().participant_form_link_service
 

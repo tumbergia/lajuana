@@ -1,9 +1,13 @@
 import 'dart:typed_data';
 
+import 'package:mobile_domain/src/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
-import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 
 /// Fallback que devuelve valores vacíos/lanza error cuando
@@ -103,6 +107,61 @@ class FallbackRepository implements ReservationsRepository {
 
   @override
   Future<ReservationRules> getRules() async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<List<ReservationTimelineEntry>> getReservationTimeline(
+    String reservationId,
+  ) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<void> createReservationLogNote({
+    required String reservationId,
+    required String notes,
+    List<ReservationLogPhotoInput> photos = const [],
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<void> updateReservationLogNote({
+    required String logId,
+    required String notes,
+    List<ReservationLogPhotoInput>? photos,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<void> deleteReservationLogEntry({
+    required String logId,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationLogPhotoUpload> uploadReservationLogPhoto({
+    required String reservationId,
+    required Uint8List bytes,
+    required String filename,
+    required String contentType,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<Uint8List> downloadReservationLogPhoto({
+    required String logId,
+    required int photoIndex,
+  }) async {
     throw Exception('ReservationsModule no inyectado');
   }
 }

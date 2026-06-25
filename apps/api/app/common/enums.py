@@ -183,6 +183,7 @@ class Permission(StrEnum):
     LOG_READ = "log.read"
     LOG_CREATE = "log.create"
     LOG_UPDATE = "log.update"
+    LOG_DELETE = "log.delete"
 
     PROVIDER_READ = "provider.read"
     PROVIDER_CREATE = "provider.create"

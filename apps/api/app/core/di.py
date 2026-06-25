@@ -58,6 +58,9 @@ class Container:
         self._services["experience_service"] = ExperienceService()
         self._services["message_buffer_service"] = MessageBufferService()
         self._services["service_log_service"] = ServiceLogService()
+        from app.services.reservation_timeline_service import ReservationTimelineService
+
+        self._services["reservation_timeline_service"] = ReservationTimelineService()
         self._services["participant_form_link_service"] = ParticipantFormLinkService()
         self._services["policy_service"] = PolicyService()
         self._services["provider_service"] = ProviderService()
@@ -226,6 +229,10 @@ class Container:
     @property
     def service_log_service(self) -> Any:
         return self._services["service_log_service"]
+
+    @property
+    def reservation_timeline_service(self) -> Any:
+        return self._services["reservation_timeline_service"]
 
     @property
     def participant_form_link_service(self) -> Any:

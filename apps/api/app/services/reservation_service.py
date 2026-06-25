@@ -273,6 +273,18 @@ class ReservationService:
                     doc.id,
                 )
 
+        from app.services.reservation_audit_helpers import write_reservation_audit_log
+
+        actor_role = UserRole.ADMIN if actor_id is not None else None
+        await write_reservation_audit_log(
+            reservation=doc,
+            action="reservation.created",
+            actor_user_id=actor_id,
+            actor_role=actor_role,
+            previous_status="",
+            new_status=doc.status.value,
+        )
+
         return doc
 
     async def list(

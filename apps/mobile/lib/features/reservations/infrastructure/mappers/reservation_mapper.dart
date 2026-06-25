@@ -5,6 +5,8 @@ import 'package:mobile_domain/src/reservations/reservation_participant_detail.da
 import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_payment_summary.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_photo.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_event.dart';
 import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservation_dtos.dart';
@@ -304,4 +306,66 @@ ReservationRecord listItemToRecord(
     hasSyncError: false,
     isDeleted: item.isDeleted,
   );
+}
+
+ReservationTimelineEntry timelineEntryDtoToDomain(
+  ReservationTimelineEntryDto dto,
+) {
+  return ReservationTimelineEntry(
+    id: dto.id,
+    source: dto.source,
+    kind: dto.kind,
+    happenedAt: dto.happenedAt,
+    title: dto.title,
+    description: dto.description,
+    actorName: dto.actorName,
+    actorRole: dto.actorRole,
+    editable: dto.editable,
+    deletable: dto.deletable,
+    relatedParticipantId: dto.relatedParticipantId,
+    serviceLogId: dto.serviceLogId,
+    photos: dto.photos
+        .map(
+          (photo) => ReservationTimelinePhoto(
+            index: photo.index,
+            storageKey: photo.storageKey,
+            filename: photo.filename,
+            contentType: photo.contentType,
+            sizeBytes: photo.sizeBytes,
+          ),
+        )
+        .toList(growable: false),
+    photosTotal: dto.photosTotal > 0 ? dto.photosTotal : dto.photos.length,
+  );
+}
+
+String timelineEntryNodeType(ReservationTimelineEntry entry) {
+  if (entry.kind.contains('rejected') || entry.kind == 'incident') {
+    return 'error';
+  }
+  if (entry.kind == 'note') {
+    return 'active';
+  }
+  if (entry.kind == 'reservation.confirmed' ||
+      entry.kind == 'payment_proof.approved' ||
+      entry.kind == 'arrival' ||
+      entry.kind == 'closure' ||
+      entry.kind == 'participant.registered') {
+    return 'completed';
+  }
+  return 'neutral';
+}
+
+String formatTimelineDate(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  final day = local.day.toString().padLeft(2, '0');
+  const months = [
+    'ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN',
+    'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC',
+  ];
+  final month = months[local.month - 1];
+  final year = local.year;
+  final hour = local.hour.toString().padLeft(2, '0');
+  final minute = local.minute.toString().padLeft(2, '0');
+  return '$day $month $year · $hour:$minute';
 }

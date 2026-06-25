@@ -84,6 +84,7 @@ Prefix: `/reservations` — tag: Reservas
 | GET | `/api/v1/reservations` | List reservations (paginated, X-Total-Count) |
 | GET | `/api/v1/reservations/availability` | Check availability for a given date |
 | GET | `/api/v1/reservations/{reservation_id}` | Get reservation by ID |
+| GET | `/api/v1/reservations/{reservation_id}/timeline` | Unified reservation logbook timeline |
 | PATCH | `/api/v1/reservations/{reservation_id}` | Update reservation |
 | POST | `/api/v1/reservations/{reservation_id}/confirm` | Confirm reservation |
 | POST | `/api/v1/reservations/{reservation_id}/status` | Transition reservation status |
@@ -245,8 +246,10 @@ Prefix: `/logs` — tag: Bitacora
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/api/v1/logs` | Create a service log entry |
+| GET | `/api/v1/logs?reservation_id={id}` | List service logs for a reservation |
 | GET | `/api/v1/logs/{log_id}` | Get log entry by ID |
 | PATCH | `/api/v1/logs/{log_id}` | Update log entry |
+| DELETE | `/api/v1/logs/{log_id}` | Soft-delete log entry |
 
 ---
 

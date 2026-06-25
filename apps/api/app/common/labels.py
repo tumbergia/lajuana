@@ -114,6 +114,9 @@ class ErrorCode:
     LOG_NOT_FOUND = "log.not_found"
     LOG_CHECKPOINT_NAME_REQUIRED = "log.checkpoint_name_required"
     LOG_INVALID_EVENT_TYPE = "log.invalid_event_type"
+    LOG_PHOTO_LIMIT = "log.photo_limit"
+    LOG_PHOTO_INVALID_TYPE = "log.photo_invalid_type"
+    LOG_PHOTO_NOT_FOUND = "log.photo_not_found"
 
     PROVIDER_NOT_FOUND = "provider.not_found"
     POLICY_NOT_FOUND = "policy.not_found"

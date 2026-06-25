@@ -91,6 +91,58 @@ class _FakeApiClient implements ReservationsApiClient {
   Future<gen.ReservationRules> getReservationRules() async {
     return gen.ReservationRules(minDaysInAdvance: 0);
   }
+
+  @override
+  Future<List<ReservationTimelineEntryDto>> getReservationTimeline(
+    String reservationId,
+  ) async =>
+      const [];
+
+  @override
+  Future<void> createLogNote({
+    required String reservationId,
+    required String notes,
+    List<Map<String, dynamic>> photos = const [],
+  }) async {}
+
+  @override
+  Future<void> updateLogNote({
+    required String logId,
+    required String notes,
+    List<Map<String, dynamic>>? photos,
+  }) async {}
+
+  @override
+  Future<ReservationLogNoteDetailDto> getLogNote(String logId) async {
+    return ReservationLogNoteDetailDto(id: logId, notes: '');
+  }
+
+  @override
+  Future<ReservationLogPhotoUploadDto> uploadLogPhoto({
+    required String reservationId,
+    required Uint8List bytes,
+    required String filename,
+    required String contentType,
+    bool retryAuth = true,
+  }) async {
+    return ReservationLogPhotoUploadDto(
+      storageKey: 'service_logs/$reservationId/test.jpg',
+      filename: filename,
+      contentType: contentType,
+      sizeBytes: bytes.length,
+    );
+  }
+
+  @override
+  Future<Uint8List> downloadLogPhoto({
+    required String logId,
+    required int photoIndex,
+  }) async {
+    return Uint8List(0);
+  }
+
+  @override
+  Future<void> deleteLogEntry(String logId) async {}
 }
 
 class _FakeLocalDataSource implements ReservationsLocalDataSource {

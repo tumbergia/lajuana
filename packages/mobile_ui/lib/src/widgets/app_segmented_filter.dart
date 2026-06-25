@@ -23,15 +23,21 @@ abstract final class _AppSegmentedFilterMetrics {
 
 /// Control segmentado horizontal de ancho completo.
 ///
-/// - Si los labels caben → reparte items equitativamente con tipografía fija.
+/// - Si los labels caben repartidos → ocupa el ancho con columnas iguales.
+/// - Si caben pero no alcanzan → se centran con ancho intrínseco.
 /// - Si no caben → scroll horizontal breve (sin ellipsis).
 ///
-/// [expanded=false] fuerza scroll aunque quepan.
+/// [expanded=false] evita reparto equitativo y centra cuando hay espacio libre.
+///
+/// Pulsar el segmento ya seleccionado emite [initialValue] (por defecto `null`).
+/// Desactiva con [allowDeselect] en tabs de navegación donde siempre debe haber selección.
 class AppSegmentedFilter<T> extends StatefulWidget {
   final List<AppSegmentedFilterItem<T>> items;
-  final T value;
-  final ValueChanged<T> onChanged;
+  final T? value;
+  final ValueChanged<T?> onChanged;
   final bool expanded;
+  final bool allowDeselect;
+  final T? initialValue;
 
   const AppSegmentedFilter({
     super.key,
@@ -39,6 +45,8 @@ class AppSegmentedFilter<T> extends StatefulWidget {
     required this.value,
     required this.onChanged,
     this.expanded = true,
+    this.allowDeselect = true,
+    this.initialValue,
   });
 
   @override
@@ -118,20 +126,31 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
     return tp.width + (_AppSegmentedFilterMetrics.itemHorizontalPadding * 2);
   }
 
-  bool _needsScroll(ThemeData theme, double maxWidth) {
-    if (widget.items.isEmpty) return false;
+  double _itemsSpacing() {
+    return widget.items.length <= 1
+        ? 0
+        : _AppSegmentedFilterMetrics.itemSpacing * (widget.items.length - 1);
+  }
+
+  (List<double> widths, double totalWidth) _measureItems(ThemeData theme) {
+    if (widget.items.isEmpty) return (<double>[], 0);
 
     final style = _baseLabelStyle(theme);
+    final widths = widget.items
+        .map((item) => _measureItemWidth(item.label, style))
+        .toList(growable: false);
+
+    final totalWidth =
+        widths.fold(0.0, (sum, width) => sum + width) + _itemsSpacing();
+
+    return (widths, totalWidth);
+  }
+
+  bool _canDistributeEqually(List<double> itemWidths, double maxWidth) {
+    if (widget.items.isEmpty || !widget.expanded) return false;
+
     final perItemWidth = maxWidth / widget.items.length;
-    var totalWidth = 0.0;
-
-    for (final item in widget.items) {
-      final itemWidth = _measureItemWidth(item.label, style);
-      if (itemWidth > perItemWidth) return true;
-      totalWidth += itemWidth;
-    }
-
-    return totalWidth > maxWidth;
+    return itemWidths.every((width) => width <= perItemWidth);
   }
 
   @override
@@ -160,17 +179,20 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final innerWidth = constraints.maxWidth;
-                    final overflow = _needsScroll(theme, innerWidth);
-                    final scrollable = !widget.expanded || overflow;
+                    final (itemWidths, totalWidth) = _measureItems(theme);
+                    final overflows = totalWidth > innerWidth;
 
-                    if (scrollable) {
+                    if (overflows) {
                       return _buildScrollable(
                         theme,
                         scheme,
-                        showFade: overflow,
+                        showFade: true,
                       );
                     }
-                    return _buildDistributed(theme, scheme);
+                    if (_canDistributeEqually(itemWidths, innerWidth)) {
+                      return _buildDistributed(theme, scheme);
+                    }
+                    return _buildCompactCentered(theme, scheme);
                   },
                 ),
               ),
@@ -203,7 +225,13 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
           hoverColor: _AppSegmentedFilterMetrics.hoverColor(scheme),
           splashColor: _AppSegmentedFilterMetrics.splashColor(scheme),
           highlightColor: _AppSegmentedFilterMetrics.highlightColor(scheme),
-          onTap: () => widget.onChanged(item.value),
+          onTap: () {
+            if (widget.allowDeselect && selected) {
+              widget.onChanged(widget.initialValue);
+            } else {
+              widget.onChanged(item.value);
+            }
+          },
           child: SizedBox(
             height: _AppSegmentedFilterMetrics.itemHeight,
             child: Padding(
@@ -223,6 +251,26 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCompactCentered(ThemeData theme, ColorScheme scheme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (int i = 0; i < widget.items.length; i++)
+          Padding(
+            padding: EdgeInsets.only(
+              left: i == 0 ? 0 : _AppSegmentedFilterMetrics.itemSpacing,
+            ),
+            child: _buildTabItem(
+              theme: theme,
+              scheme: scheme,
+              item: widget.items[i],
+              selected: widget.items[i].value == widget.value,
+            ),
+          ),
+      ],
     );
   }
 

@@ -149,8 +149,11 @@ class ReservationsListController extends ChangeNotifier {
   }
 
   void setFilterGroup(String? group) {
-    if (_state.filterGroup == group) return;
-    _state = _state.copyWith(filterGroup: group);
+    final next = group != null && group == _state.filterGroup ? null : group;
+    if (_state.filterGroup == next) return;
+    _state = next == null
+        ? _state.copyWith(clearFilterGroup: true)
+        : _state.copyWith(filterGroup: next);
     _applyLocalFilters();
     notifyListeners();
   }

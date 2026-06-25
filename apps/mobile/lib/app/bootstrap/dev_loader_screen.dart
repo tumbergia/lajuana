@@ -33,7 +33,7 @@ class DevWidgetCatalogScreen extends StatefulWidget {
 }
 
 class _DevWidgetCatalogScreenState extends State<DevWidgetCatalogScreen> {
-  String reservationFilter = 'pendientes';
+  String? reservationFilter;
   bool useMicOffIcon = false;
 
   @override
@@ -173,7 +173,7 @@ class _DevWidgetCatalogScreenState extends State<DevWidgetCatalogScreen> {
             variant: AppSectionHeaderVariant.compact,
           ),
           const SizedBox(height: 16),
-          AppSegmentedFilter<String>(
+          AppSegmentedFilter<String?>(
             value: reservationFilter,
             onChanged: (value) {
               setState(() {

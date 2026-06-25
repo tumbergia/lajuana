@@ -378,8 +378,9 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         // Availability filter
         AppSegmentedFilter<String?>(
           value: _availabilityFilterValue,
+          initialValue: 'active',
           onChanged: (value) {
-            if (value == 'active') {
+            if (value == null || value == 'active') {
               _listController.setIncludeDeleted(false);
               _listController.setShowOnlyAvailable(null);
             } else if (value == 'available') {

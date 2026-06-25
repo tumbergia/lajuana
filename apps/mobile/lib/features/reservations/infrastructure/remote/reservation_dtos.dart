@@ -349,3 +349,139 @@ class ReservationDetailDto {
     );
   }
 }
+
+class ReservationTimelinePhotoDto {
+  ReservationTimelinePhotoDto({
+    required this.index,
+    required this.storageKey,
+    required this.filename,
+    required this.contentType,
+    this.sizeBytes = 0,
+  });
+
+  final int index;
+  final String storageKey;
+  final String filename;
+  final String contentType;
+  final int sizeBytes;
+
+  factory ReservationTimelinePhotoDto.fromJson(Map<String, dynamic> json) {
+    return ReservationTimelinePhotoDto(
+      index: json['index'] as int? ?? 0,
+      storageKey: json['storage_key'] as String? ?? '',
+      filename: json['filename'] as String? ?? 'foto.jpg',
+      contentType: json['content_type'] as String? ?? 'image/jpeg',
+      sizeBytes: json['size_bytes'] as int? ?? 0,
+    );
+  }
+}
+
+class ReservationLogPhotoUploadDto {
+  ReservationLogPhotoUploadDto({
+    required this.storageKey,
+    required this.filename,
+    required this.contentType,
+    this.sizeBytes = 0,
+  });
+
+  final String storageKey;
+  final String filename;
+  final String contentType;
+  final int sizeBytes;
+
+  factory ReservationLogPhotoUploadDto.fromJson(Map<String, dynamic> json) {
+    return ReservationLogPhotoUploadDto(
+      storageKey: json['storage_key'] as String? ?? '',
+      filename: json['filename'] as String? ?? 'foto.jpg',
+      contentType: json['content_type'] as String? ?? 'image/jpeg',
+      sizeBytes: json['size_bytes'] as int? ?? 0,
+    );
+  }
+}
+
+class ReservationLogNoteDetailDto {
+  ReservationLogNoteDetailDto({
+    required this.id,
+    required this.notes,
+    this.photos = const [],
+  });
+
+  final String id;
+  final String notes;
+  final List<ReservationTimelinePhotoDto> photos;
+
+  factory ReservationLogNoteDetailDto.fromJson(Map<String, dynamic> json) {
+    final rawPhotos = json['photos'] as List?;
+    return ReservationLogNoteDetailDto(
+      id: json['id'] as String? ?? '',
+      notes: json['notes'] as String? ?? '',
+      photos: rawPhotos != null
+          ? rawPhotos
+              .map((item) => ReservationTimelinePhotoDto.fromJson(
+                    Map<String, dynamic>.from(item as Map),
+                  ))
+              .toList(growable: false)
+          : const [],
+    );
+  }
+}
+
+class ReservationTimelineEntryDto {
+  ReservationTimelineEntryDto({
+    required this.id,
+    required this.source,
+    required this.kind,
+    required this.happenedAt,
+    required this.title,
+    this.description,
+    this.actorName,
+    this.actorRole,
+    this.editable = false,
+    this.deletable = false,
+    this.relatedParticipantId,
+    this.serviceLogId,
+    this.photos = const [],
+    this.photosTotal = 0,
+  });
+
+  final String id;
+  final String source;
+  final String kind;
+  final DateTime happenedAt;
+  final String title;
+  final String? description;
+  final String? actorName;
+  final String? actorRole;
+  final bool editable;
+  final bool deletable;
+  final String? relatedParticipantId;
+  final String? serviceLogId;
+  final List<ReservationTimelinePhotoDto> photos;
+  final int photosTotal;
+
+  factory ReservationTimelineEntryDto.fromJson(Map<String, dynamic> json) {
+    final rawPhotos = json['photos'] as List?;
+    return ReservationTimelineEntryDto(
+      id: json['id'] as String? ?? '',
+      source: json['source'] as String? ?? '',
+      kind: json['kind'] as String? ?? '',
+      happenedAt: DateTime.parse(json['happened_at'] as String).toLocal(),
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String?,
+      actorName: json['actor_name'] as String?,
+      actorRole: json['actor_role'] as String?,
+      editable: json['editable'] as bool? ?? false,
+      deletable: json['deletable'] as bool? ?? false,
+      relatedParticipantId: json['related_participant_id'] as String?,
+      serviceLogId: json['service_log_id'] as String?,
+      photos: rawPhotos != null
+          ? rawPhotos
+              .map((item) => ReservationTimelinePhotoDto.fromJson(
+                    Map<String, dynamic>.from(item as Map),
+                  ))
+              .toList(growable: false)
+          : const [],
+      photosTotal: json['photos_total'] as int? ?? 0,
+    );
+  }
+}

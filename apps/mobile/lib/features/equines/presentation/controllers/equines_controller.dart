@@ -66,8 +66,9 @@ class EquinesController extends ChangeNotifier {
   bool get includeDeleted => _filterMode == 'deleted';
 
   void setFilterMode(String? mode) {
-    if (_filterMode == mode) return;
-    _filterMode = mode;
+    final next = mode != null && mode == _filterMode ? null : mode;
+    if (_filterMode == next) return;
+    _filterMode = next;
     _applyFilter();
     notifyListeners();
   }

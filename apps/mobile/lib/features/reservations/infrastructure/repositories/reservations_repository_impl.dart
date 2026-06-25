@@ -3,6 +3,11 @@ import 'dart:typed_data';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_photo.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile/features/reservations/infrastructure/local/reservations_local_data_source.dart';
@@ -554,5 +559,104 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
   Future<ReservationRules> getRules() async {
     final dto = await _apiClient.getReservationRules();
     return ReservationRules.fromGen(dto);
+  }
+
+  @override
+  Future<List<ReservationTimelineEntry>> getReservationTimeline(
+    String reservationId,
+  ) async {
+    final dtos = await _apiClient.getReservationTimeline(reservationId);
+    return dtos.map(timelineEntryDtoToDomain).toList(growable: false);
+  }
+
+  @override
+  Future<void> createReservationLogNote({
+    required String reservationId,
+    required String notes,
+    List<ReservationLogPhotoInput> photos = const [],
+  }) async {
+    await _apiClient.createLogNote(
+      reservationId: reservationId,
+      notes: notes,
+      photos: photos.map(_photoInputToJson).toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> updateReservationLogNote({
+    required String logId,
+    required String notes,
+    List<ReservationLogPhotoInput>? photos,
+  }) async {
+    await _apiClient.updateLogNote(
+      logId: logId,
+      notes: notes,
+      photos: photos?.map(_photoInputToJson).toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> deleteReservationLogEntry({
+    required String logId,
+  }) async {
+    await _apiClient.deleteLogEntry(logId);
+  }
+
+  @override
+  Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
+    final dto = await _apiClient.getLogNote(logId);
+    return ReservationLogNoteDetail(
+      id: dto.id,
+      notes: dto.notes,
+      photos: dto.photos.map(_photoDtoToDomain).toList(growable: false),
+    );
+  }
+
+  @override
+  Future<ReservationLogPhotoUpload> uploadReservationLogPhoto({
+    required String reservationId,
+    required Uint8List bytes,
+    required String filename,
+    required String contentType,
+  }) async {
+    final dto = await _apiClient.uploadLogPhoto(
+      reservationId: reservationId,
+      bytes: bytes,
+      filename: filename,
+      contentType: contentType,
+    );
+    return ReservationLogPhotoUpload(
+      storageKey: dto.storageKey,
+      filename: dto.filename,
+      contentType: dto.contentType,
+      sizeBytes: dto.sizeBytes,
+    );
+  }
+
+  @override
+  Future<Uint8List> downloadReservationLogPhoto({
+    required String logId,
+    required int photoIndex,
+  }) async {
+    return _apiClient.downloadLogPhoto(logId: logId, photoIndex: photoIndex);
+  }
+
+  Map<String, dynamic> _photoInputToJson(ReservationLogPhotoInput photo) {
+    return {
+      'storage_key': photo.storageKey,
+      'filename': photo.filename,
+      'content_type': photo.contentType,
+      'size_bytes': photo.sizeBytes,
+    };
+  }
+
+  ReservationTimelinePhoto _photoDtoToDomain(ReservationTimelinePhotoDto dto) {
+    return ReservationTimelinePhoto(
+      index: dto.index,
+      storageKey: dto.storageKey,
+      filename: dto.filename,
+      contentType: dto.contentType,
+      sizeBytes: dto.sizeBytes,
+    );
   }
 }

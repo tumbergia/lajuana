@@ -87,6 +87,7 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("assignment", "update"): Permission.ASSIGNMENT_UPDATE,
     ("service_log", "create"): Permission.LOG_CREATE,
     ("service_log", "update"): Permission.LOG_UPDATE,
+    ("service_log", "delete"): Permission.LOG_UPDATE,
     ("provider", "create"): Permission.PROVIDER_CREATE,
     ("provider", "update"): Permission.PROVIDER_UPDATE,
     ("policy", "create"): Permission.POLICY_CREATE,

@@ -175,11 +175,9 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                 const SizedBox(height: 12),
 
                 // Status filter
-                AppSegmentedFilter<String>(
-                  value:
-                      _listController.filterGroup ?? 'pendientes',
-                  onChanged: (value) =>
-                      _listController.setFilterGroup(value),
+                AppSegmentedFilter<String?>(
+                  value: _listController.filterGroup,
+                  onChanged: _listController.setFilterGroup,
                   items: const [
                     AppSegmentedFilterItem(
                         label: 'Pendientes', value: 'pendientes'),
