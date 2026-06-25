@@ -187,9 +187,9 @@ class _ReservationDetailShellScreenState
               },
               items: const [
                 AppSegmentedFilterItem(label: 'Resumen', value: 0),
-                AppSegmentedFilterItem(label: 'Partic.', value: 1),
+                AppSegmentedFilterItem(label: 'Participantes', value: 1),
                 AppSegmentedFilterItem(label: 'Pagos', value: 2),
-                AppSegmentedFilterItem(label: 'Asignac.', value: 3),
+                AppSegmentedFilterItem(label: 'Asignaciones', value: 3),
                 AppSegmentedFilterItem(label: 'Bitacora', value: 4),
               ],
             ),

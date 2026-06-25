@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_ui/src/theme/theme_extensions.dart';
 
 /// Las dos variantes de campo del mockup.
@@ -37,6 +38,7 @@ class AppTextField extends StatelessWidget {
   final AppTextFieldVariant variant;
 
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
   final FocusNode? focusNode;
   final bool autofocus;
@@ -54,6 +56,7 @@ class AppTextField extends StatelessWidget {
     this.maxLines = 1,
     this.variant = AppTextFieldVariant.filled,
     this.keyboardType,
+    this.inputFormatters,
     this.onChanged,
     this.focusNode,
     this.autofocus = false,
@@ -135,6 +138,7 @@ class AppTextField extends StatelessWidget {
           enableSuggestions: !obscureText,
           maxLines: maxLines,
           keyboardType: effectiveKeyboardType,
+          inputFormatters: inputFormatters,
           onChanged: onChanged,
           style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
           decoration: InputDecoration(

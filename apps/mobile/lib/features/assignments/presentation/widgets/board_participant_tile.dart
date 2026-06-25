@@ -116,7 +116,13 @@ class BoardParticipantTile extends StatelessWidget {
               isAdmin && isOnline && !isBusy && assignment != null && assignment.status != AssignmentStatus.final_ && assignment.saddleId != null
                   ? () => _showRemoveSaddleConfirm(context)
                   : null,
-          onRevertFinalize: null,
+          onRevertFinalize: isAdmin &&
+                  isOnline &&
+                  !isBusy &&
+                  assignment?.status == AssignmentStatus.final_ &&
+                  assignment?.assignmentId != null
+              ? () => ctrl.unfinalizeAssignment(assignment!.assignmentId!)
+              : null,
           state: cardState,
           validationMessage: validationMessage,
           safetyFlags: assignment?.warnings ?? [],

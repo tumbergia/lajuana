@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:mobile_ui/mobile_ui.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
@@ -80,34 +81,5 @@ void showAuthToast(
   required String message,
   required bool isError,
 }) {
-  final scheme = Theme.of(context).colorScheme;
-  final bgColor = isError ? scheme.errorContainer : scheme.secondaryContainer;
-  final fgColor = isError
-      ? scheme.onErrorContainer
-      : scheme.onSecondaryContainer;
-  final icon = isError ? Icons.error_outline : Icons.check_circle_outline;
-
-  final messenger = ScaffoldMessenger.of(context);
-  messenger.hideCurrentSnackBar();
-  messenger.showSnackBar(
-    SnackBar(
-      behavior: SnackBarBehavior.floating,
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-      backgroundColor: bgColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      duration: Duration(milliseconds: isError ? 3600 : 2600),
-      content: Row(
-        children: [
-          Icon(icon, size: 18, color: fgColor),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(color: fgColor, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
+  showAppToast(context, message: message, isError: isError);
 }

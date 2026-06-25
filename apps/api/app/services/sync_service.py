@@ -22,6 +22,7 @@ Architecture
 from datetime import UTC, datetime
 
 from beanie import PydanticObjectId
+from pydantic import ValidationError
 
 from app.common.enums import ROLE_PERMISSIONS, Permission
 from app.common.labels import ErrorCode
@@ -215,6 +216,22 @@ class SyncOperationExecutor:
                     "code": exc.code,
                     "message": exc.message,
                     "details": exc.details,
+                },
+            )
+        except ValidationError as exc:
+            return SyncPushResultSchema(
+                operation_id=operation.operation_id,
+                status="rejected",
+                entity_type=operation.entity_type,
+                entity_local_id=operation.entity_local_id,
+                entity_remote_id=operation.entity_remote_id,
+                version=None,
+                updated_at=None,
+                payload=None,
+                error={
+                    "code": ErrorCode.VALIDATION_ERROR,
+                    "message": "La solicitud contiene datos inválidos.",
+                    "details": {"fields": exc.errors(include_url=False)},
                 },
             )
 

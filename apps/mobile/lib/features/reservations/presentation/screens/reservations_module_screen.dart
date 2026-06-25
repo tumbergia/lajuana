@@ -40,6 +40,7 @@ class ReservationsModuleScreen extends StatefulWidget {
 class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
     with RefreshableState {
   late final ReservationsListController _listController;
+  late final bool _ownsListController;
 
   @override
   Future<void> onRefresh() => _listController.refresh();
@@ -48,13 +49,19 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
   @override
   void initState() {
     super.initState();
-    _listController = widget.reservationsModule?.listController ??
-        ReservationsListController(
-          repository: widget.reservationsModule?.repository ??
-              _createFallbackRepository(),
-        );
+    if (widget.reservationsModule != null) {
+      _listController = widget.reservationsModule!.listController;
+      _ownsListController = false;
+    } else {
+      _listController = ReservationsListController(
+        repository: _createFallbackRepository(),
+      );
+      _ownsListController = true;
+    }
     _listController.addListener(_onListChanged);
-    _listController.loadInitial();
+    if (_listController.state == ReservationsLoadState.idle) {
+      _listController.loadInitial();
+    }
 
     _searchController.addListener(() {
       _listController.setSearchQuery(_searchController.text);
@@ -68,7 +75,9 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
   @override
   void dispose() {
     _listController.removeListener(_onListChanged);
-    _listController.dispose();
+    if (_ownsListController) {
+      _listController.dispose();
+    }
     _searchController.dispose();
     super.dispose();
   }

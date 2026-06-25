@@ -146,11 +146,16 @@ class AssignmentsRepositoryImpl implements AssignmentsRepository {
   }
 
   @override
-  Future<void> unfinalizeAll({
+  Future<AssignmentBoard> unfinalizeAll({
     required String reservationId,
     String? notes,
   }) async {
-    await _api.unfinalizeAll(reservationId, notes: notes);
+    final json = await _api.unfinalizeAll(reservationId, notes: notes);
+    final board = AssignmentBoard.fromJson(json);
+    try {
+      await _local.cacheBoard(reservationId, json);
+    } catch (_) {}
+    return board;
   }
 
   @override

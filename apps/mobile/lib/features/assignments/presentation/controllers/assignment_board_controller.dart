@@ -325,14 +325,45 @@ class AssignmentBoardController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _repository.unfinalizeAll(reservationId: rid, notes: notes);
+      _board = await _repository.unfinalizeAll(reservationId: rid, notes: notes);
+      _clearPendingState();
       _isRevertingFinalize = false;
+      _state = BoardLoadState.loaded;
       notifyListeners();
-      await refresh();
     } catch (e) {
       _isRevertingFinalize = false;
       _actionError = e.toString();
       _actionErrorCode = 'unfinalizeAll.failed';
+      notifyListeners();
+    }
+  }
+
+  /// Revert a single finalized assignment back to CONFIRMED.
+  Future<void> unfinalizeAssignment(String assignmentId) async {
+    if (!canMutate) {
+      _actionError = 'Sin permisos o sin conexión para revertir.';
+      _actionErrorCode = 'permission.denied';
+      notifyListeners();
+      return;
+    }
+
+    _isRevertingFinalize = true;
+    _actionError = null;
+    _actionErrorCode = null;
+    notifyListeners();
+
+    try {
+      await _repository.unfinalize(assignmentId);
+      _patchAssignmentStatus(
+        assignmentId: assignmentId,
+        status: AssignmentStatus.confirmed,
+      );
+      _isRevertingFinalize = false;
+      notifyListeners();
+    } catch (e) {
+      _isRevertingFinalize = false;
+      _actionError = e.toString();
+      _actionErrorCode = 'unfinalize.failed';
       notifyListeners();
     }
   }
@@ -456,6 +487,46 @@ class AssignmentBoardController extends ChangeNotifier {
     );
 
     notifyListeners();
+  }
+
+  void _patchAssignmentStatus({
+    required String assignmentId,
+    required AssignmentStatus status,
+  }) {
+    if (_board == null) return;
+
+    final updatedParticipants = _board!.participants.map((p) {
+      if (p.assignment?.assignmentId != assignmentId) return p;
+      final assignment = p.assignment!;
+      return BoardParticipant(
+        participantId: p.participantId,
+        fullName: p.fullName,
+        ageYears: p.ageYears,
+        weightKg: p.weightKg,
+        heightCm: p.heightCm,
+        experienceLevel: p.experienceLevel,
+        assignment: BoardAssignment(
+          assignmentId: assignment.assignmentId,
+          equineId: assignment.equineId,
+          equineName: assignment.equineName,
+          saddleId: assignment.saddleId,
+          saddleLabel: assignment.saddleLabel,
+          status: status,
+          warnings: assignment.warnings,
+        ),
+        blockingReasons: p.blockingReasons,
+      );
+    }).toList();
+
+    _board = AssignmentBoard(
+      reservationId: _board!.reservationId,
+      reservationStatus: _board!.reservationStatus,
+      scheduledDate: _board!.scheduledDate,
+      participants: updatedParticipants,
+      availableEquines: _board!.availableEquines,
+      availableSaddles: _board!.availableSaddles,
+      summary: _recalculateSummary(updatedParticipants),
+    );
   }
 
   void _patchLocalBoardAfterRemove({

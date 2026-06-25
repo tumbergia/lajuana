@@ -61,6 +61,15 @@ def require_remote_id(operation) -> None:
         )
 
 
+def strip_null_values(payload: dict) -> dict:
+    """Remove keys whose value is ``None``.
+
+    Sync clients often include optional fields as explicit JSON ``null`` values.
+    Pydantic treats those as provided values and will not apply field defaults.
+    """
+    return {key: value for key, value in payload.items() if value is not None}
+
+
 def require_field(payload: dict, key: str) -> str:
     """Raise ``400`` if *key* is missing or falsy in *payload*."""
     value = payload.get(key)

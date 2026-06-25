@@ -68,7 +68,8 @@ class EquinesController extends ChangeNotifier {
   void setFilterMode(String? mode) {
     if (_filterMode == mode) return;
     _filterMode = mode;
-    loadEquines();
+    _applyFilter();
+    notifyListeners();
   }
 
   /// Siempre success porque el detail se deriva de memoria (no hay request).
@@ -128,15 +129,8 @@ class EquinesController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Derive operationalStatus e includeDeleted desde _filterMode.
-      String? operationalStatus;
-      final includeDeleted = _filterMode == 'deleted';
-      if (_filterMode != null && _filterMode != 'deleted') {
-        operationalStatus = _filterMode;
-      }
       final equines = await _repository.listEquines(
-        operationalStatus: operationalStatus,
-        includeDeleted: includeDeleted,
+        includeDeleted: true,
       );
       if (equines.isEmpty) {
         _allEquines = const [];
@@ -253,15 +247,18 @@ class EquinesController extends ChangeNotifier {
             .toList(growable: false);
     }
     // Luego aplica filtro según _filterMode.
-    if (_filterMode != null) {
-      if (_filterMode == 'deleted') {
-        // Mostrar solo equinos borrados (isActive == false).
-        _records = _records.where((r) {
-          final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
-          return equine?.isActive == false;
-        }).toList(growable: false);
-      } else {
-        // Filtro por estado operativo (available, unavailable, etc.).
+    if (_filterMode == 'deleted') {
+      _records = _records.where((r) {
+        final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
+        return equine?.isActive == false;
+      }).toList(growable: false);
+    } else {
+      _records = _records.where((r) {
+        final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
+        return equine?.isActive != false;
+      }).toList(growable: false);
+
+      if (_filterMode != null) {
         final targetStatus = EquineOperationalStatus.values.where(
           (e) => e.name == _filterMode,
         ).firstOrNull;

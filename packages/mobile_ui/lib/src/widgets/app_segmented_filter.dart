@@ -1,15 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 
-/// Control segmentado horizontal.
+/// Métricas e interacción compartidas por [AppSegmentedFilter].
+abstract final class _AppSegmentedFilterMetrics {
+  static const double height = 44;
+  static const double padding = 4;
+  static const double itemHeight = 36;
+  static const double itemHorizontalPadding = 12;
+  static const double itemSpacing = 2;
+  static const double fadeWidth = 28;
+  static const BorderRadius borderRadius = BorderRadius.all(Radius.circular(4));
+  static const Duration animationDuration = Duration(milliseconds: 160);
+
+  static Color hoverColor(ColorScheme scheme) =>
+      scheme.onSurface.withValues(alpha: 0.06);
+
+  static Color splashColor(ColorScheme scheme) =>
+      scheme.onSurface.withValues(alpha: 0.10);
+
+  static Color highlightColor(ColorScheme scheme) =>
+      scheme.onSurface.withValues(alpha: 0.04);
+}
+
+/// Control segmentado horizontal de ancho completo.
 ///
-/// Se adapta al contenido automáticamente:
-/// - Si los items caben sin desbordar → distribuye equitativamente (Row + Expanded).
-/// - Si desbordan o [expanded=false] → modo scroll horizontal con ancho intrínseco,
-///   fade de desbordamiento y auto-scroll al item seleccionado.
+/// - Si los labels caben → reparte items equitativamente con tipografía fija.
+/// - Si no caben → scroll horizontal breve (sin ellipsis).
 ///
-/// Usar [expanded=true] (default) para 2–4 items con etiquetas cortas.
-/// [expanded=false] fuerza el modo scroll, útil para 5+ items o etiquetas largas.
+/// [expanded=false] fuerza scroll aunque quepan.
 class AppSegmentedFilter<T> extends StatefulWidget {
   final List<AppSegmentedFilterItem<T>> items;
   final T value;
@@ -29,20 +46,20 @@ class AppSegmentedFilter<T> extends StatefulWidget {
 }
 
 class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
-  late final AutoSizeGroup _group;
   final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _group = AutoSizeGroup();
     _scrollToSelected();
   }
 
   @override
   void didUpdateWidget(AppSegmentedFilter<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value) {
+    if (oldWidget.value != widget.value ||
+        oldWidget.items != widget.items ||
+        oldWidget.expanded != widget.expanded) {
       _scrollToSelected();
     }
   }
@@ -61,20 +78,60 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
       );
       if (index < 0) return;
 
-      // Calculate approximate offset to center the selected item.
-      final totalExtent = _scrollController.position.maxScrollExtent;
-      if (totalExtent <= 0) return;
-      final target = (index / widget.items.length) * totalExtent -
-          _scrollController.position.viewportDimension / 2 +
-          (_scrollController.position.viewportDimension / widget.items.length /
-              2);
+      final position = _scrollController.position;
+      if (position.maxScrollExtent <= 0) return;
+
+      final target = (index / widget.items.length) * position.maxScrollExtent -
+          position.viewportDimension / 2 +
+          (position.viewportDimension / widget.items.length / 2);
 
       _scrollController.animateTo(
-        target.clamp(0.0, totalExtent),
+        target.clamp(0.0, position.maxScrollExtent),
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
       );
     });
+  }
+
+  TextStyle _labelStyle(ThemeData theme, ColorScheme scheme, bool selected) {
+    return theme.textTheme.labelLarge!.copyWith(
+      color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.35,
+    );
+  }
+
+  TextStyle _baseLabelStyle(ThemeData theme) {
+    return theme.textTheme.labelLarge!.copyWith(
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.35,
+    );
+  }
+
+  double _measureItemWidth(String label, TextStyle style) {
+    final tp = TextPainter(
+      text: TextSpan(text: label.toUpperCase(), style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+
+    return tp.width + (_AppSegmentedFilterMetrics.itemHorizontalPadding * 2);
+  }
+
+  bool _needsScroll(ThemeData theme, double maxWidth) {
+    if (widget.items.isEmpty) return false;
+
+    final style = _baseLabelStyle(theme);
+    final perItemWidth = maxWidth / widget.items.length;
+    var totalWidth = 0.0;
+
+    for (final item in widget.items) {
+      final itemWidth = _measureItemWidth(item.label, style);
+      if (itemWidth > perItemWidth) return true;
+      totalWidth += itemWidth;
+    }
+
+    return totalWidth > maxWidth;
   }
 
   @override
@@ -82,189 +139,169 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.all(4),
-      clipBehavior: Clip.hardEdge,
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: const BorderRadius.all(Radius.circular(4)),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // 8 = container padding (4 each side)
-          final overflow = _measureOverflow(theme, constraints.maxWidth - 8);
-          final useScroll = overflow || !widget.expanded;
-
-          if (useScroll) {
-            return _buildScrollable(theme, scheme, overflow);
-          }
-          return _buildExpanded(theme, scheme);
-        },
-      ),
-    );
-  }
-
-  bool _measureOverflow(ThemeData theme, double maxWidth) {
-    // maxWidth = constraints.maxWidth - 8 (container padding already descontado)
-    if (widget.items.isEmpty) return false;
-
-    final textStyle = theme.textTheme.labelLarge?.copyWith(
-      letterSpacing: 0.35,
-      fontWeight: FontWeight.w700,
-    );
-
-    final int itemCount = widget.items.length;
-    // Row reparte maxWidth equitativamente entre los Expanded.
-    final double perItemWidth = maxWidth / itemCount;
-
-    double totalWidth = 0;
-
-    for (final item in widget.items) {
-      final tp = TextPainter(
-        text: TextSpan(
-          text: item.label.toUpperCase(),
-          style: textStyle,
+    return SizedBox(
+      width: double.infinity,
+      height: _AppSegmentedFilterMetrics.height,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerLow,
+          borderRadius: _AppSegmentedFilterMetrics.borderRadius,
         ),
-        textDirection: TextDirection.ltr,
-      )..layout();
+        child: ClipRRect(
+          borderRadius: _AppSegmentedFilterMetrics.borderRadius,
+          child: Material(
+            type: MaterialType.transparency,
+            color: scheme.surfaceContainerLow,
+            clipBehavior: Clip.hardEdge,
+            child: Padding(
+              padding: const EdgeInsets.all(_AppSegmentedFilterMetrics.padding),
+              child: SizedBox(
+                height: _AppSegmentedFilterMetrics.itemHeight,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final innerWidth = constraints.maxWidth;
+                    final overflow = _needsScroll(theme, innerWidth);
+                    final scrollable = !widget.expanded || overflow;
 
-      final double textWidth = tp.width;
-      // ancho intrínseco del item completo (texto + padding lateral)
-      final double itemWidth = textWidth + 24;
-
-      // Si un solo item es más ancho que su porción equitativa en expanded
-      // mode, el label se comprime/desborda → modo scroll.
-      if (itemWidth > perItemWidth) return true;
-
-      totalWidth += itemWidth;
-    }
-
-    // Si el ancho total intrínseco supera el disponible → modo scroll.
-    return totalWidth > maxWidth;
-  }
-
-  Widget _buildExpanded(ThemeData theme, ColorScheme scheme) {
-    final children = widget.items.map((item) {
-      final selected = item.value == widget.value;
-
-      return Expanded(
-        child: InkWell(
-          borderRadius: const BorderRadius.all(Radius.circular(4)),
-          onTap: () => widget.onChanged(item.value),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            curve: Curves.easeOut,
-            height: 36,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: selected
-                  ? scheme.surfaceContainerHighest
-                  : Colors.transparent,
-              borderRadius: const BorderRadius.all(Radius.circular(4)),
-            ),
-            alignment: Alignment.center,
-            child: AutoSizeText(
-              item.label.toUpperCase(),
-              group: _group,
-              maxLines: 1,
-              minFontSize: 8,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.35,
+                    if (scrollable) {
+                      return _buildScrollable(
+                        theme,
+                        scheme,
+                        showFade: overflow,
+                      );
+                    }
+                    return _buildDistributed(theme, scheme);
+                  },
+                ),
               ),
-              textAlign: TextAlign.center,
             ),
           ),
         ),
-      );
-    }).toList();
+      ),
+    );
+  }
 
-    return Row(children: children);
+  Widget _buildTabItem({
+    required ThemeData theme,
+    required ColorScheme scheme,
+    required AppSegmentedFilterItem<T> item,
+    required bool selected,
+  }) {
+    return AnimatedContainer(
+      duration: _AppSegmentedFilterMetrics.animationDuration,
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: selected ? scheme.surfaceContainerHighest : Colors.transparent,
+        borderRadius: _AppSegmentedFilterMetrics.borderRadius,
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        clipBehavior: Clip.antiAlias,
+        borderRadius: _AppSegmentedFilterMetrics.borderRadius,
+        child: InkWell(
+          borderRadius: _AppSegmentedFilterMetrics.borderRadius,
+          hoverColor: _AppSegmentedFilterMetrics.hoverColor(scheme),
+          splashColor: _AppSegmentedFilterMetrics.splashColor(scheme),
+          highlightColor: _AppSegmentedFilterMetrics.highlightColor(scheme),
+          onTap: () => widget.onChanged(item.value),
+          child: SizedBox(
+            height: _AppSegmentedFilterMetrics.itemHeight,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _AppSegmentedFilterMetrics.itemHorizontalPadding,
+              ),
+              child: Center(
+                child: Text(
+                  item.label.toUpperCase(),
+                  maxLines: 1,
+                  softWrap: false,
+                  textAlign: TextAlign.center,
+                  style: _labelStyle(theme, scheme, selected),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDistributed(ThemeData theme, ColorScheme scheme) {
+    return Row(
+      children: [
+        for (final item in widget.items)
+          Expanded(
+            child: _buildTabItem(
+              theme: theme,
+              scheme: scheme,
+              item: item,
+              selected: item.value == widget.value,
+            ),
+          ),
+      ],
+    );
   }
 
   Widget _buildScrollable(
     ThemeData theme,
-    ColorScheme scheme,
-    bool overflow,
-  ) {
+    ColorScheme scheme, {
+    required bool showFade,
+  }) {
     final children = <Widget>[];
     for (int i = 0; i < widget.items.length; i++) {
-      final item = widget.items[i];
-      final selected = item.value == widget.value;
-
       children.add(
-        Container(
-          margin: EdgeInsets.only(
-            left: i == 0 ? 0 : 2,
-            right: i == widget.items.length - 1 ? 0 : 2,
+        Padding(
+          padding: EdgeInsets.only(
+            left: i == 0 ? 0 : _AppSegmentedFilterMetrics.itemSpacing,
           ),
-          child: InkWell(
-            borderRadius: const BorderRadius.all(Radius.circular(4)),
-            onTap: () => widget.onChanged(item.value),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              curve: Curves.easeOut,
-              height: 36,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: selected
-                    ? scheme.surfaceContainerHighest
-                    : Colors.transparent,
-                borderRadius: const BorderRadius.all(Radius.circular(4)),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                item.label.toUpperCase(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.35,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
+          child: _buildTabItem(
+            theme: theme,
+            scheme: scheme,
+            item: widget.items[i],
+            selected: widget.items[i].value == widget.value,
           ),
         ),
       );
     }
 
     return Stack(
+      clipBehavior: Clip.hardEdge,
       children: [
-        SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: children,
+        ClipRect(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.hardEdge,
+            physics: const BouncingScrollPhysics(
+              decelerationRate: ScrollDecelerationRate.fast,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: children,
+            ),
           ),
         ),
-        // Fade de desbordamiento derecho — solo visible si hay overflow
-        if (overflow)
+        if (showFade)
           Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: 28,
-            child: IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerRight,
-                    end: Alignment.centerLeft,
-                    colors: [
-                      scheme.surfaceContainerLow,
-                      scheme.surfaceContainerLow.withValues(alpha: 0.0),
-                    ],
-                  ),
+          right: 0,
+          top: 0,
+          bottom: 0,
+          width: _AppSegmentedFilterMetrics.fadeWidth,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerRight,
+                  end: Alignment.centerLeft,
+                  colors: [
+                    scheme.surfaceContainerLow,
+                    scheme.surfaceContainerLow.withValues(alpha: 0.0),
+                  ],
                 ),
               ),
             ),
           ),
+        ),
       ],
     );
   }

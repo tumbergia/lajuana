@@ -4,12 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import 'package:mobile_ui/src/widgets/app_button.dart';
-import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
-import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
-import 'package:mobile_ui/src/widgets/app_section_header.dart';
-import 'package:mobile_ui/src/widgets/app_status_banner.dart';
-import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_ui/mobile_ui.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
@@ -432,6 +427,37 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
     );
   }
 
+  void _confirmDeleteExperience(CatalogExperience experience) {
+    AppConfirmDialog.show(
+      context: context,
+      icon: Icons.delete_outline_rounded,
+      title: 'Eliminar experiencia',
+      message:
+          'La experiencia "${experience.name}" se desactivara del catalogo. '
+          'Esta accion es reversible editando su estado.',
+      confirmLabel: 'Eliminar',
+      style: DialogStyle.danger,
+      height: 280,
+      onConfirm: () => _deleteExperience(experience),
+    );
+  }
+
+  Future<void> _deleteExperience(CatalogExperience experience) async {
+    try {
+      await widget.catalogsModule!.experiences.deactivate(experience.id);
+      if (!mounted) return;
+      showAppToast(context, message: 'Experiencia eliminada correctamente');
+      await _controller.loadLocalThenRefresh(refreshServer: true);
+    } catch (_) {
+      if (!mounted) return;
+      showAppToast(
+        context,
+        message: 'No se pudo eliminar la experiencia. Intenta de nuevo.',
+        isError: true,
+      );
+    }
+  }
+
   void _showExperienceActions(BuildContext context, CatalogExperience experience) {
     final scheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
@@ -520,6 +546,21 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
                     },
                   ),
                 ),
+                if (experience.isActive) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Eliminar',
+                      icon: Icons.delete_outline_rounded,
+                      variant: AppButtonVariant.danger,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _confirmDeleteExperience(experience);
+                      },
+                    ),
+                  ),
+                ],
               ],
               const SizedBox(height: 10),
               SizedBox(

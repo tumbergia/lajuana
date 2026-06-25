@@ -65,7 +65,22 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
   Future<Assignment> finalize(String id) => throw UnimplementedError();
 
   @override
-  Future<Assignment> unfinalize(String id) => throw UnimplementedError();
+  Future<Assignment> unfinalize(String id) async {
+    if (_failUnfinalizeAll) {
+      _failUnfinalizeAll = false;
+      throw Exception('Unfinalize failed');
+    }
+    return Assignment(
+      id: id,
+      reservationId: _board.reservationId,
+      participantId: 'p1',
+      equineId: 'e1',
+      status: AssignmentStatus.confirmed,
+      source: AssignmentSource.manualAdmin,
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
+  }
 
   @override
   Future<Assignment> remove(String id) => throw UnimplementedError();
@@ -122,7 +137,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
       throw UnimplementedError();
 
   @override
-  Future<void> unfinalizeAll({
+  Future<AssignmentBoard> unfinalizeAll({
     required String reservationId,
     String? notes,
   }) async {
@@ -131,6 +146,13 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
       _failUnfinalizeAll = false;
       throw Exception('Unfinalize failed');
     }
+    return _boardAfterUnfinalize ?? _board;
+  }
+
+  AssignmentBoard? _boardAfterUnfinalize;
+
+  void setBoardAfterUnfinalize(AssignmentBoard board) {
+    _boardAfterUnfinalize = board;
   }
 
   @override
@@ -592,7 +614,31 @@ void main() {
   });
 
   group('unfinalizeAll', () {
-    test('success calls repository and reloads board', () async {
+    test('success calls repository and updates board from response', () async {
+      final revertedBoard = AssignmentBoard(
+        reservationId: 'r1',
+        reservationStatus: 'confirmed',
+        participants: [
+          BoardParticipant(
+            participantId: 'p1',
+            fullName: 'Carlos Mejia',
+            assignment: BoardAssignment(
+              assignmentId: 'a1',
+              equineId: 'e1',
+              equineName: 'Caballo 1',
+              status: AssignmentStatus.confirmed,
+            ),
+          ),
+        ],
+        summary: const BoardSummary(
+          participantsTotal: 1,
+          assignedTotal: 1,
+          pendingTotal: 0,
+          blockingTotal: 0,
+        ),
+      );
+      repo.setBoardAfterUnfinalize(revertedBoard);
+
       final controller = AssignmentBoardController(
         repository: repo,
         isAdmin: true,
@@ -609,6 +655,11 @@ void main() {
       expect(controller.state, BoardLoadState.loaded);
       expect(controller.isRevertingFinalize, isFalse);
       expect(controller.actionError, isNull);
+      expect(
+        controller.board?.participants.first.assignment?.status,
+        AssignmentStatus.confirmed,
+      );
+      expect(repo.getBoardCallCount, 1);
     });
 
     test('error sets actionError and actionErrorCode', () async {
@@ -630,6 +681,53 @@ void main() {
       expect(controller.actionErrorCode, 'unfinalizeAll.failed');
       expect(controller.isRevertingFinalize, isFalse);
       expect(repo.unfinalizeAllCallCount, 1);
+    });
+  });
+
+  group('unfinalizeAssignment', () {
+    test('success updates assignment status locally', () async {
+      final finalizedBoard = AssignmentBoard(
+        reservationId: 'r1',
+        reservationStatus: 'confirmed',
+        participants: [
+          BoardParticipant(
+            participantId: 'p1',
+            fullName: 'Carlos Mejia',
+            assignment: BoardAssignment(
+              assignmentId: 'a1',
+              equineId: 'e1',
+              equineName: 'Caballo 1',
+              status: AssignmentStatus.final_,
+            ),
+          ),
+        ],
+        summary: const BoardSummary(
+          participantsTotal: 1,
+          assignedTotal: 1,
+          pendingTotal: 0,
+          blockingTotal: 0,
+        ),
+      );
+      final finalizedRepo = _FakeAssignmentsRepository(finalizedBoard);
+
+      final controller = AssignmentBoardController(
+        repository: finalizedRepo,
+        isAdmin: true,
+        networkStatus: const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
+      await controller.load(reservationId: 'r1');
+
+      await controller.unfinalizeAssignment('a1');
+
+      expect(
+        controller.board?.participants.first.assignment?.status,
+        AssignmentStatus.confirmed,
+      );
+      expect(controller.isRevertingFinalize, isFalse);
+      expect(controller.actionError, isNull);
     });
   });
 

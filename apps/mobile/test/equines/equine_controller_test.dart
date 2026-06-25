@@ -14,19 +14,24 @@ class FakeEquineRepository implements EquineRepository {
   DateTime? lastSyncedAt;
   bool throwOnList = false;
   bool throwOnTimeline = false;
+  int listEquinesCallCount = 0;
+  bool? lastIncludeDeleted;
 
   @override
   Future<List<Equine>> listEquines({
     String? operationalStatus,
     bool includeDeleted = false,
   }) async {
+    listEquinesCallCount++;
+    lastIncludeDeleted = includeDeleted;
     if (throwOnList) throw Exception('Network error');
     if (operationalStatus != null) {
       return equines
           .where((e) => e.operationalStatus.name == operationalStatus)
           .toList();
     }
-    return equines;
+    if (includeDeleted) return equines;
+    return equines.where((e) => e.isActive).toList(growable: false);
   }
 
   @override
@@ -76,12 +81,14 @@ Equine _equine({
   required String name,
   EquineOperationalStatus status = EquineOperationalStatus.available,
   bool isAvailable = true,
+  bool isActive = true,
 }) {
   return Equine(
     id: id,
     name: name,
     operationalStatus: status,
     isAvailable: isAvailable,
+    isActive: isActive,
   );
 }
 
@@ -233,6 +240,59 @@ void main() {
       expect(controller.records.length, 1);
       controller.setStatusFilter(null);
       expect(controller.records.length, 2);
+    });
+  });
+
+  group('filter mode', () {
+    test('loads deleted equines on initial fetch', () async {
+      repo.equines = [
+        _equine(id: '1', name: 'A'),
+        _equine(id: '2', name: 'B', isActive: false),
+      ];
+      await controller.loadEquines();
+
+      expect(repo.lastIncludeDeleted, true);
+    });
+
+    test('filters deleted equines locally without refetching', () async {
+      repo.equines = [
+        _equine(id: '1', name: 'A'),
+        _equine(id: '2', name: 'B', isActive: false),
+      ];
+      await controller.loadEquines();
+      final initialCallCount = repo.listEquinesCallCount;
+
+      controller.setFilterMode('deleted');
+
+      expect(repo.listEquinesCallCount, initialCallCount);
+      expect(controller.records.length, 1);
+      expect(controller.records.first.name, 'B');
+    });
+
+    test('filters by operational status locally without refetching', () async {
+      repo.equines = [
+        _equine(id: '1', name: 'A', status: EquineOperationalStatus.available),
+        _equine(id: '2', name: 'B', status: EquineOperationalStatus.resting),
+      ];
+      await controller.loadEquines();
+      final initialCallCount = repo.listEquinesCallCount;
+
+      controller.setFilterMode('resting');
+
+      expect(repo.listEquinesCallCount, initialCallCount);
+      expect(controller.records.length, 1);
+      expect(controller.records.first.name, 'B');
+    });
+
+    test('excludes deleted equines from non-deleted filters', () async {
+      repo.equines = [
+        _equine(id: '1', name: 'A'),
+        _equine(id: '2', name: 'B', isActive: false),
+      ];
+      await controller.loadEquines();
+
+      expect(controller.records.length, 1);
+      expect(controller.records.first.name, 'A');
     });
   });
 

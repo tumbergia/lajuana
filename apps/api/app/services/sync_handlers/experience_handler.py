@@ -12,7 +12,11 @@ from app.schemas.schedule import ScheduleCreateSchema, ScheduleUpdateSchema
 from app.schemas.sync import SyncPushOperationSchema
 from app.services.experience_service import ExperienceService
 from app.services.schedule_service import ScheduleService
-from app.services.sync_handlers._shared import ensure_base_version, require_remote_id
+from app.services.sync_handlers._shared import (
+    ensure_base_version,
+    require_remote_id,
+    strip_null_values,
+)
 
 
 class ExperienceSyncHandler:
@@ -42,7 +46,7 @@ class ExperienceSyncHandler:
 
     async def _handle_experience(self, operation, op_type):
         if op_type == "create":
-            schema = ExperienceCreateSchema(**operation.payload)
+            schema = ExperienceCreateSchema(**strip_null_values(operation.payload))
             return await self.experience_service.create(schema)
         if op_type == "update":
             require_remote_id(operation)
@@ -57,7 +61,7 @@ class ExperienceSyncHandler:
 
     async def _handle_schedule(self, operation, op_type):
         if op_type == "create":
-            schema = ScheduleCreateSchema(**operation.payload)
+            schema = ScheduleCreateSchema(**strip_null_values(operation.payload))
             return await self.schedule_service.create(schema)
         if op_type == "update":
             require_remote_id(operation)

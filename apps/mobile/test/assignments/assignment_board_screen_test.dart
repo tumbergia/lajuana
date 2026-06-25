@@ -397,6 +397,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(fakeRepo.unfinalizeAllCalls, 1);
+    expect(find.text('REVERTIR FINALIZACIONES'), findsNothing);
+    expect(find.text('FINALIZAR ASIGNACIONES'), findsOneWidget);
 
     controller.dispose();
   });
@@ -450,9 +452,9 @@ class _UpdateCall {
 }
 
 class _FakeAssignmentsRepository implements AssignmentsRepository {
-  _FakeAssignmentsRepository({required this.board});
+  _FakeAssignmentsRepository({required AssignmentBoard board}) : _board = board;
 
-  final AssignmentBoard board;
+  AssignmentBoard _board;
   int boardCalls = 0;
   final List<_CreateCall> createCalls = [];
   final List<_UpdateCall> updateCalls = [];
@@ -527,7 +529,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
     finalizeCalls.add(id);
     return _assignment(
       id: id,
-      reservationId: board.reservationId,
+      reservationId: _board.reservationId,
       participantId: 'p-2',
       equineId: 'e-1',
       status: AssignmentStatus.final_,
@@ -539,7 +541,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
     unfinalizeCalls.add(id);
     return _assignment(
       id: id,
-      reservationId: board.reservationId,
+      reservationId: _board.reservationId,
       participantId: 'p-2',
       equineId: 'e-1',
       status: AssignmentStatus.confirmed,
@@ -551,7 +553,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
     removeCalls.add(id);
     return _assignment(
       id: id,
-      reservationId: board.reservationId,
+      reservationId: _board.reservationId,
       participantId: 'p-2',
       equineId: 'e-1',
       status: AssignmentStatus.cancelled,
@@ -561,7 +563,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
   @override
   Future<AssignmentBoard> getBoard(String reservationId) async {
     boardCalls += 1;
-    return board;
+    return _board;
   }
 
   @override
@@ -581,7 +583,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
     );
     return _assignment(
       id: id,
-      reservationId: board.reservationId,
+      reservationId: _board.reservationId,
       participantId: 'p-2',
       equineId: equineId ?? 'e-1',
       saddleId: saddleId,
@@ -599,7 +601,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
   }
 
   @override
-  Future<AssignmentBoard?> getCachedBoard(String reservationId) async => board;
+  Future<AssignmentBoard?> getCachedBoard(String reservationId) async => _board;
 
   @override
   Future<BatchUpdateResult> batchUpdate({
@@ -612,7 +614,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
     lastBatchAssignments = assignments;
     lastBatchRemovals = removals;
     lastBatchNotes = notes;
-    return BatchUpdateResult(board: board);
+    return BatchUpdateResult(board: _board);
   }
 
   @override
@@ -622,11 +624,50 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
   }) async {}
 
   @override
-  Future<void> unfinalizeAll({
+  Future<AssignmentBoard> unfinalizeAll({
     required String reservationId,
     String? notes,
   }) async {
     unfinalizeAllCalls++;
+    _board = _boardWithRevertedFinalizations(_board);
+    return _board;
+  }
+
+  AssignmentBoard _boardWithRevertedFinalizations(AssignmentBoard source) {
+    final participants = source.participants.map((p) {
+      final assignment = p.assignment;
+      if (assignment == null || assignment.status != AssignmentStatus.final_) {
+        return p;
+      }
+      return BoardParticipant(
+        participantId: p.participantId,
+        fullName: p.fullName,
+        ageYears: p.ageYears,
+        weightKg: p.weightKg,
+        heightCm: p.heightCm,
+        experienceLevel: p.experienceLevel,
+        assignment: BoardAssignment(
+          assignmentId: assignment.assignmentId,
+          equineId: assignment.equineId,
+          equineName: assignment.equineName,
+          saddleId: assignment.saddleId,
+          saddleLabel: assignment.saddleLabel,
+          status: AssignmentStatus.confirmed,
+          warnings: assignment.warnings,
+        ),
+        blockingReasons: p.blockingReasons,
+      );
+    }).toList();
+
+    return AssignmentBoard(
+      reservationId: source.reservationId,
+      reservationStatus: source.reservationStatus,
+      scheduledDate: source.scheduledDate,
+      participants: participants,
+      availableEquines: source.availableEquines,
+      availableSaddles: source.availableSaddles,
+      summary: source.summary,
+    );
   }
 
   @override

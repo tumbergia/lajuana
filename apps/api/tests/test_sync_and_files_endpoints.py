@@ -8,10 +8,12 @@ from fastapi.testclient import TestClient
 os.environ["APP_SKIP_DB_INIT"] = "true"
 
 from app.api.deps import get_current_user
-from app.common.enums import UserRole
+from app.common.enums import ExperienceCategory, ExperienceStatus, UserRole
 from app.core.di import Container
 from app.main import app
+from app.schemas.experience import ExperienceCreateSchema
 from app.schemas.sync import SyncPushOperationSchema
+from app.services.sync_handlers._shared import strip_null_values
 from app.services.sync_service import SyncOperationExecutor
 
 client = TestClient(app)
@@ -133,3 +135,22 @@ def test_sync_executor_rejects_catalog_write_for_guide() -> None:
     assert result.status == "rejected"
     assert result.error is not None
     assert result.error.code == "auth.forbidden"
+
+
+def test_experience_create_payload_applies_defaults_when_optional_fields_are_null() -> None:
+    payload = strip_null_values(
+        {
+            "name": "Ruta de prueba",
+            "slug": "ruta-prueba",
+            "description": "Descripcion",
+            "level": "basic",
+            "category": None,
+            "status": None,
+            "tags": None,
+            "duration_hours": 2,
+        }
+    )
+    schema = ExperienceCreateSchema(**payload)
+    assert schema.category == ExperienceCategory.EXPERIENCE
+    assert schema.status == ExperienceStatus.PUBLISHED
+    assert schema.tags == []

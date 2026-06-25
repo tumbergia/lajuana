@@ -19,6 +19,7 @@ class SaddlesListController extends ChangeNotifier {
       : _repository = repository;
 
   final SaddlesRepository _repository;
+  bool _disposed = false;
 
   SaddlesLoadState state = SaddlesLoadState.idle;
   List<SaddleRecord> items = const <SaddleRecord>[];
@@ -35,7 +36,7 @@ class SaddlesListController extends ChangeNotifier {
     state = SaddlesLoadState.loading;
     errorCode = null;
     errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
 
     try {
       await _fetchFromRemote(isRefresh: false);
@@ -43,7 +44,7 @@ class SaddlesListController extends ChangeNotifier {
       state = SaddlesLoadState.error;
       errorCode = 'network.unavailable';
       errorMessage = 'No se pudieron cargar las sillas.';
-      notifyListeners();
+      _notifyListeners();
     }
   }
 
@@ -52,7 +53,7 @@ class SaddlesListController extends ChangeNotifier {
     state = SaddlesLoadState.refreshing;
     errorCode = null;
     errorMessage = null;
-    notifyListeners();
+    _notifyListeners();
 
     try {
       await _fetchFromRemote(isRefresh: true);
@@ -64,13 +65,13 @@ class SaddlesListController extends ChangeNotifier {
       } else {
         state = SaddlesLoadState.offlineFromCache;
       }
-      notifyListeners();
+      _notifyListeners();
     }
   }
 
   Future<void> _fetchFromRemote({required bool isRefresh}) async {
     final domainItems = await _repository.listSaddles(
-      includeDeleted: includeDeleted,
+      includeDeleted: true,
     );
     lastSyncAt = DateTime.now();
 
@@ -78,42 +79,46 @@ class SaddlesListController extends ChangeNotifier {
       _allItems = const <SaddleRecord>[];
       items = const <SaddleRecord>[];
       state = SaddlesLoadState.empty;
-      notifyListeners();
+      _notifyListeners();
       return;
     }
 
     _allItems = domainItems.map((item) => listItemToRecord(item)).toList();
     _applyLocalFilters();
     state = SaddlesLoadState.success;
-    notifyListeners();
+    _notifyListeners();
   }
 
   void setIncludeDeleted(bool value) {
     if (includeDeleted == value) return;
     includeDeleted = value;
-    refresh();
+    _applyLocalFilters();
+    _notifyListeners();
   }
 
   void setShowOnlyAvailable(bool? value) {
     if (showOnlyAvailable == value) return;
     showOnlyAvailable = value;
     _applyLocalFilters();
-    notifyListeners();
+    _notifyListeners();
   }
 
   void setSearchQuery(String query) {
     searchQuery = query;
     _applyLocalFilters();
-    notifyListeners();
+    _notifyListeners();
   }
 
   void _applyLocalFilters() {
     var result = _allItems;
 
-    // When showing deleted, filter locally to only deleted items
     if (includeDeleted) {
       result = result
           .where((item) => item.isDeleted)
+          .toList(growable: false);
+    } else {
+      result = result
+          .where((item) => !item.isDeleted)
           .toList(growable: false);
     }
 
@@ -140,6 +145,16 @@ class SaddlesListController extends ChangeNotifier {
   /// Whether we have ever loaded any items (even if filtered empty).
   bool get hasAnyRecords => _allItems.isNotEmpty;
 
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void _notifyListeners() {
+    if (!_disposed) notifyListeners();
+  }
+
   void reset() {
     showOnlyAvailable = null;
     includeDeleted = false;
@@ -147,6 +162,6 @@ class SaddlesListController extends ChangeNotifier {
     errorCode = null;
     errorMessage = null;
     state = SaddlesLoadState.idle;
-    notifyListeners();
+    _notifyListeners();
   }
 }
