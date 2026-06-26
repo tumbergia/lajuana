@@ -43,6 +43,56 @@ class ListExperiencesOutput(BaseModel):
     total: int
 
 
+class OutboundDocumentAttachment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    storage_key: str
+    filename: str
+    mime_type: str = "application/pdf"
+    caption: str | None = None
+
+
+class SendExperiencesCatalogInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class SendExperiencesCatalogOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["send_experiences_catalog"] = "send_experiences_catalog"
+    catalog_available: bool
+    attachment: OutboundDocumentAttachment | None = None
+    response: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class KnowledgeSnippet(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    text: str
+    title: str = ""
+    score: float = 0.0
+
+
+class SearchKnowledgeInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str
+
+
+class SearchKnowledgeOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["search_knowledge"] = "search_knowledge"
+    query: str
+    found: bool
+    snippets: list[KnowledgeSnippet] = Field(default_factory=list)
+    total: int = 0
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
 class GetExperienceDetailInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

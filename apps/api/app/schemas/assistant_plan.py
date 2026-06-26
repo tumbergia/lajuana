@@ -34,6 +34,7 @@ class ToolArgs(BaseModel):
     new_participant_count: int | None = None
     conversation_id: str | None = None
     quote_snapshot: dict | None = None
+    query: str | None = None
     exclude_dates: list[str] | None = None
     search_days_before: int | None = None
     search_days_after: int | None = None

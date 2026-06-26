@@ -2,8 +2,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.ai.mcp.tool_contracts import ExperienceSummaryItem, ListExperiencesOutput
+from app.ai.mcp.tool_contracts import (
+    ExperienceSummaryItem,
+    ListExperiencesOutput,
+    OutboundDocumentAttachment,
+    SendExperiencesCatalogOutput,
+    ToolBlockingReason,
+)
+from app.core.config import settings
 from app.documents.experience_document import ExperienceDocument
+from app.services.storage import get_storage_adapter
 
 
 def _safe_str(value: Any) -> str | None:
@@ -75,4 +83,57 @@ async def list_experiences(
         trace_id=trace_id or "",
         experiences=[ExperienceSummaryItem(**e) for e in result],
         total=len(result),
+    ).model_dump()
+
+
+async def send_experiences_catalog(
+    trace_id: str | None = None,
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """Resuelve el documento PDF del catálogo de experiencias para enviarlo por chat.
+
+    La tool no envía el archivo directamente (es agnóstica del canal): solo verifica
+    que el PDF configurado exista en el storage y devuelve una referencia
+    (``attachment``). El canal (p. ej. el worker de WhatsApp) se encarga del envío
+    real del binario. Si el catálogo no está disponible, devuelve
+    ``catalog_available=False`` para que el asistente ofrezca una alternativa.
+    """
+    if not settings.whatsapp_experiences_catalog_enabled:
+        return SendExperiencesCatalogOutput(
+            trace_id=trace_id or "",
+            catalog_available=False,
+            blocking_reasons=[
+                ToolBlockingReason(
+                    code="catalog_disabled",
+                    message="El envío del catálogo en PDF está deshabilitado.",
+                )
+            ],
+        ).model_dump()
+
+    storage_key = settings.whatsapp_experiences_catalog_storage_key
+    adapter = get_storage_adapter()
+    if not await adapter.exists(storage_key):
+        return SendExperiencesCatalogOutput(
+            trace_id=trace_id or "",
+            catalog_available=False,
+            blocking_reasons=[
+                ToolBlockingReason(
+                    code="catalog_not_found",
+                    message="El documento del catálogo no está disponible en el storage.",
+                    details={"storage_key": storage_key},
+                )
+            ],
+        ).model_dump()
+
+    attachment = OutboundDocumentAttachment(
+        storage_key=storage_key,
+        filename=settings.whatsapp_experiences_catalog_filename,
+        mime_type=settings.whatsapp_experiences_catalog_mime_type,
+        caption=settings.whatsapp_experiences_catalog_caption,
+    )
+    return SendExperiencesCatalogOutput(
+        trace_id=trace_id or "",
+        catalog_available=True,
+        attachment=attachment,
+        response="Te comparto el catálogo de experiencias en PDF.",
     ).model_dump()

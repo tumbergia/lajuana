@@ -15,6 +15,8 @@ class ToolPolicyDecision:
 class ToolPolicyEngine:
     CLIENT_TOOLS: set[str] = {
         "list_experiences",
+        "send_experiences_catalog",
+        "search_knowledge",
         "get_experience_detail",
         "get_public_business_rules",
         "check_experience_availability",
@@ -85,6 +87,8 @@ class ToolPolicyEngine:
     }
     READ_TOOLS = {
         "list_experiences",
+        "send_experiences_catalog",
+        "search_knowledge",
         "get_experience_detail",
         "get_public_business_rules",
         "check_experience_availability",

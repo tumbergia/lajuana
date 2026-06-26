@@ -19,6 +19,8 @@ from app.documents import (
     EquineEventDocument,
     ExperienceDocument,
     HumanReviewRequestDocument,
+    KnowledgeChunkDocument,
+    KnowledgeDocument,
     ParticipantDocument,
     ParticipantFormLinkDocument,
     PaymentProofDocument,
@@ -80,6 +82,8 @@ async def init_db() -> None:
         MessageBufferDocument,
         OutboundMessageDocument,
         HumanReviewRequestDocument,
+        KnowledgeDocument,
+        KnowledgeChunkDocument,
     ]
 
     await init_beanie(database=database, document_models=document_models)

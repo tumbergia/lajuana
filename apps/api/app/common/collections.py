@@ -23,3 +23,5 @@ class Collections:
     RESERVATION_AUDIT_LOGS = "reservation_audit_logs"
     HUMAN_REVIEW_REQUESTS = "human_review_requests"
     MIGRATION_TRACKER = "migration_tracker"
+    KNOWLEDGE_DOCUMENTS = "knowledge_documents"
+    KNOWLEDGE_CHUNKS = "knowledge_chunks"

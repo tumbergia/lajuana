@@ -1,6 +1,8 @@
 # AI Assistant Architecture
 
-Gemini planificador + ToolPolicyEngine + MCP tools (64 tools).
+Gemini planificador + ToolPolicyEngine + MCP tools (66 tools).
+
+Búsqueda en base de conocimiento (RAG): ver [RAG.md](RAG.md).
 
 ## Pipeline
 
@@ -21,7 +23,7 @@ flowchart TD
         CR["Compose Response<br/>(tool output or LLM)"]
     end
 
-    subgraph Tools["MCP Tools (64)"]
+    subgraph Tools["MCP Tools (66)"]
         CA["Catalog / Availability"]
         RS["Reservations / Drafts"]
         AD["Admin CRUD"]
@@ -84,7 +86,8 @@ Tools destructivas requieren confirmación explícita del usuario antes de ejecu
 
 | Categoría | Count |
 |-----------|-------|
-| Catalog / Discovery | 3 |
+| Catalog / Discovery | 4 |
+| Knowledge / RAG | 1 |
 | Availability & Schedules | 4 |
 | Quote / Pricing | 1 |
 | Client — Reservation Draft | 3 |

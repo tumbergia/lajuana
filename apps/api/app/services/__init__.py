@@ -7,6 +7,7 @@ from app.services.equine_event_service import EquineEventService
 from app.services.equine_service import EquineService
 from app.services.experience_service import ExperienceService
 from app.services.file_upload_service import FileUploadService
+from app.services.knowledge_service import KnowledgeService
 from app.services.participant_form_link_service import ParticipantFormLinkService
 from app.services.participant_service import ParticipantService
 from app.services.payment_proof_service import PaymentProofService
@@ -29,6 +30,7 @@ __all__ = [
     "EquineService",
     "ExperienceService",
     "FileUploadService",
+    "KnowledgeService",
     "ParticipantFormLinkService",
     "ParticipantService",
     "PaymentProofService",

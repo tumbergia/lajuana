@@ -40,6 +40,7 @@ class Container:
         )
         from app.services.config_service import ConfigService
         from app.services.equine_event_service import EquineEventService
+        from app.services.knowledge_service import KnowledgeService
         from app.services.equine_service import EquineService
         from app.services.experience_service import ExperienceService
         from app.services.participant_form_link_service import ParticipantFormLinkService
@@ -59,6 +60,7 @@ class Container:
         self._services["message_buffer_service"] = MessageBufferService()
         self._services["service_log_service"] = ServiceLogService()
         self._services["participant_form_link_service"] = ParticipantFormLinkService()
+        self._services["knowledge_service"] = KnowledgeService()
         self._services["policy_service"] = PolicyService()
         self._services["provider_service"] = ProviderService()
         self._services["saddle_service"] = SaddleService()
@@ -206,6 +208,10 @@ class Container:
     @property
     def sync_service(self) -> Any:
         return self._services["sync_service"]
+
+    @property
+    def knowledge_service(self) -> Any:
+        return self._services["knowledge_service"]
 
     @property
     def policy_service(self) -> Any:

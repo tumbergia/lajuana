@@ -24,7 +24,7 @@ from app.core.logging import logger
 from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
-from app.schemas.ask import AskRequest, AskResponse
+from app.schemas.ask import AskRequest, AskResponse, OutboundDocumentRef
 from app.schemas.assistant_plan import AssistantAction, ToolArgs
 from app.schemas.conversation_session import merge_slots
 
@@ -473,7 +473,27 @@ class AssistantOrchestrator:
             planner_output=plan.model_dump(mode="json"),
             tool_output=tool_output,
             response=response,
+            document=self._extract_outbound_document(tool_output),
             token_usage=token_usage,
+        )
+
+    @staticmethod
+    def _extract_outbound_document(tool_output: dict) -> OutboundDocumentRef | None:
+        """Extrae la referencia a un documento adjunto desde el output de una tool.
+
+        Las tools que generan un adjunto (p. ej. send_experiences_catalog) devuelven
+        un objeto ``attachment`` con la clave del storage y sus metadatos.
+        """
+        if not isinstance(tool_output, dict):
+            return None
+        attachment = tool_output.get("attachment")
+        if not isinstance(attachment, dict) or not attachment.get("storage_key"):
+            return None
+        return OutboundDocumentRef(
+            storage_key=attachment["storage_key"],
+            filename=attachment.get("filename") or "documento.pdf",
+            mime_type=attachment.get("mime_type") or "application/pdf",
+            caption=attachment.get("caption"),
         )
 
     @staticmethod

@@ -18,6 +18,8 @@ from app.documents.experience_document import ExperienceDocument
 from app.documents.human_review_request_document import HumanReviewRequestDocument
 from app.documents.file_upload_document import FileUploadDocument
 from app.documents.in_app_notification_document import InAppNotificationDocument
+from app.documents.knowledge_chunk_document import KnowledgeChunkDocument
+from app.documents.knowledge_document import KnowledgeDocument
 from app.documents.notification_outbox_document import NotificationOutboxDocument
 from app.documents.notification_template_document import NotificationTemplateDocument
 from app.documents.participant_document import EmergencyContact, ParticipantDocument
@@ -50,6 +52,8 @@ __all__ = [
     "EquineEventType",
     "ExperienceDocument",
     "HumanReviewRequestDocument",
+    "KnowledgeChunkDocument",
+    "KnowledgeDocument",
     "ParticipantDocument",
     "ParticipantFormLinkDocument",
     "PaymentProofDocument",

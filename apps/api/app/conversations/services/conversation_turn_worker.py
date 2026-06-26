@@ -19,7 +19,8 @@ from app.conversations.services.message_buffer_service import MessageBufferServi
 from app.core.logging import logger
 from app.documents import ReservationDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
-from app.schemas.ask import AskRequest
+from app.schemas.ask import AskRequest, OutboundDocumentRef
+from app.services.storage import get_storage_adapter
 
 
 class _EventLike(Protocol):
@@ -139,6 +140,33 @@ class ConversationTurnWorker:
         )
         return True
 
+    async def _send_outbound_document(
+        self,
+        *,
+        turn: ConversationTurnDocument,
+        to_phone: str,
+        document: OutboundDocumentRef,
+        conversation_id: str,
+    ) -> None:
+        """Lee el binario del storage y lo envía por WhatsApp como documento."""
+        content = await get_storage_adapter().read_bytes(document.storage_key)
+        if content is None:
+            logger.error(
+                "[conversation_id=%s] Outbound document missing in storage | key=%s",
+                conversation_id,
+                document.storage_key,
+            )
+            return
+
+        await self._outbound_service.send_document(
+            turn=turn,
+            to_phone=to_phone,
+            content=content,
+            filename=document.filename,
+            mime_type=document.mime_type,
+            caption=document.caption,
+        )
+
     async def process_due_buffers(self, *, limit: int = 25) -> int:
         buffers = await self._buffer_service.find_due_buffers(limit=limit)
         processed = 0
@@ -225,6 +253,14 @@ class ConversationTurnWorker:
                 to_phone=buffer_doc.normalized_phone,
                 text=response.response,
             )
+
+            if response.document is not None:
+                await self._send_outbound_document(
+                    turn=turn,
+                    to_phone=buffer_doc.normalized_phone,
+                    document=response.document,
+                    conversation_id=conversation_id,
+                )
 
             await self._buffer_service.mark_processed(buffer=reloaded)
             logger.info(

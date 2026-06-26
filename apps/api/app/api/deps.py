@@ -150,6 +150,10 @@ def get_policy_service() -> object:
     return Container.get_instance().policy_service
 
 
+def get_knowledge_service() -> object:
+    return Container.get_instance().knowledge_service
+
+
 def get_provider_service() -> object:
     return Container.get_instance().provider_service
 

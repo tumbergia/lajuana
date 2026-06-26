@@ -49,11 +49,31 @@ class Settings(BaseSettings):
 
     assistant_min_plan_confidence: float = 0.55
 
+    # RAG / base de conocimiento (embeddings Gemini + similitud coseno en Mongo).
+    # Funciona sobre cualquier MongoDB (no requiere Atlas $vectorSearch).
+    rag_enabled: bool = True
+    rag_embedding_model: str = "text-embedding-004"
+    rag_chunk_size: int = 1000
+    rag_chunk_overlap: int = 150
+    rag_search_top_k: int = 4
+    rag_min_similarity: float = 0.55
+    rag_max_document_bytes: int = 10_485_760  # 10 MB
+
     whatsapp_verify_token: str = "change-me"
     whatsapp_access_token: str = ""
     whatsapp_phone_number_id: str = ""
     whatsapp_api_version: str = "v23.0"
     whatsapp_send_enabled: bool = False
+
+    # Catálogo de experiencias enviable por WhatsApp (documento PDF).
+    # El archivo debe existir en el storage configurado bajo `storage_key`.
+    whatsapp_experiences_catalog_enabled: bool = True
+    whatsapp_experiences_catalog_storage_key: str = "catalogs/experiencias-muleras.pdf"
+    whatsapp_experiences_catalog_filename: str = "Experiencias-La-Juana.pdf"
+    whatsapp_experiences_catalog_caption: str = (
+        "Catálogo de experiencias muleras de La Juana 🐴"
+    )
+    whatsapp_experiences_catalog_mime_type: str = "application/pdf"
 
     participant_form_base_url: str = "https://formulario-la-juana.vercel.app"
     participant_form_token_expiry_days: int = 14

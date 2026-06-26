@@ -127,6 +127,12 @@ class ErrorCode:
     FILE_UPLOAD_EXPIRED = "file_upload.expired"
     FILE_UPLOAD_NOT_READY = "file_upload.not_ready"
 
+    KNOWLEDGE_NOT_FOUND = "knowledge.not_found"
+    KNOWLEDGE_UNSUPPORTED_TYPE = "knowledge.unsupported_type"
+    KNOWLEDGE_EMPTY_CONTENT = "knowledge.empty_content"
+    KNOWLEDGE_FILE_TOO_LARGE = "knowledge.file_too_large"
+    KNOWLEDGE_EMBEDDING_FAILED = "knowledge.embedding_failed"
+
     NOTIFICATION_TEMPLATE_NOT_FOUND = "notification_template.not_found"
     NOTIFICATION_TEMPLATE_KEY_EXISTS = "notification_template.key_exists"
     NOTIFICATION_TEMPLATE_INACTIVE = "notification_template.inactive"

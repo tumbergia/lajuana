@@ -12,6 +12,7 @@ from app.api.endpoints.equines import router as equines_router
 from app.api.endpoints.experiences import router as experiences_router
 from app.api.endpoints.files import router as files_router
 from app.api.endpoints.health import router as health_router
+from app.api.endpoints.knowledge import router as knowledge_router
 from app.api.endpoints.logs import router as logs_router
 from app.api.endpoints.notifications import router as notifications_router
 from app.api.endpoints.participant_forms import router as participant_forms_router
@@ -52,4 +53,5 @@ api_router.include_router(assignments_router)
 api_router.include_router(logs_router)
 api_router.include_router(providers_router)
 api_router.include_router(policies_router)
+api_router.include_router(knowledge_router)
 api_router.include_router(whatsapp_router)

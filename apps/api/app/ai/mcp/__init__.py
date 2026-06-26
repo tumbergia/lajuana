@@ -47,6 +47,8 @@ _TOOLS: dict[str, object] = {
     "get_public_business_rules": tools.get_public_business_rules,
     "list_available_schedules": tools.list_available_schedules,
     "list_experiences": tools.list_experiences,
+    "send_experiences_catalog": tools.send_experiences_catalog,
+    "search_knowledge": tools.search_knowledge,
     "quote_experience": tools.quote_experience,
     "suggest_alternative_dates": tools.suggest_alternative_dates,
     # ── Client: reservations ──

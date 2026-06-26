@@ -63,7 +63,8 @@ from app.ai.mcp.tools.automations import (
     send_post_service_message,
 )
 from app.ai.mcp.tools.availability import check_experience_availability
-from app.ai.mcp.tools.catalog import list_experiences
+from app.ai.mcp.tools.catalog import list_experiences, send_experiences_catalog
+from app.ai.mcp.tools.knowledge import search_knowledge
 from app.ai.mcp.tools.operations import (
     admin_add_equine_health_event,
     admin_close_service_execution,
@@ -378,9 +379,11 @@ __all__ = [
     "guide_report_incident",
     "list_available_schedules",
     "list_experiences",
+    "search_knowledge",
     "quote_experience",
     "schedule_birthday_automation",
     "schedule_visit_anniversary_automation",
+    "send_experiences_catalog",
     "send_post_service_message",
     "suggest_alternative_dates",
     "create_reservation_draft",

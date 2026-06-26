@@ -205,6 +205,10 @@ class Permission(StrEnum):
     PARTICIPANT_FORM_LINK_READ = "participant_form_link.read"
     PARTICIPANT_FORM_LINK_REVOKE = "participant_form_link.revoke"
 
+    KNOWLEDGE_READ = "knowledge.read"
+    KNOWLEDGE_CREATE = "knowledge.create"
+    KNOWLEDGE_DELETE = "knowledge.delete"
+
 
 class NotificationEventType(StrEnum):
     RESERVATION_CREATED = "reservation_created"

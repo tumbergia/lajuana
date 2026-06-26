@@ -27,6 +27,9 @@ class LocalStorageAdapter:
             return None
         return file_path.read_bytes()
 
+    async def exists(self, storage_key: str) -> bool:
+        return (self.root / storage_key).is_file()
+
     async def write_bytes(self, storage_key: str, data: bytes) -> str:
         file_path = self.root / storage_key
         file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -74,6 +77,15 @@ class S3StorageAdapter:
             return buf.getvalue()
         except Exception:
             return None
+
+    async def exists(self, storage_key: str) -> bool:
+        try:
+            await asyncio.to_thread(
+                self._client.head_object, Bucket=self.bucket, Key=storage_key,
+            )
+            return True
+        except Exception:
+            return False
 
     async def write_bytes(self, storage_key: str, data: bytes) -> str:
         await asyncio.to_thread(

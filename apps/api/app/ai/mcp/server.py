@@ -29,6 +29,8 @@ from app.ai.mcp.tools import (
     request_human_review,
     schedule_birthday_automation,
     schedule_visit_anniversary_automation,
+    search_knowledge,
+    send_experiences_catalog,
     send_post_service_message,
     suggest_alternative_dates,
     update_reservation_date,
@@ -99,6 +101,24 @@ mcp.tool(
         "No crea reservas, no confirma disponibilidad y no modifica cupos."
     ),
 )(quote_experience)
+
+mcp.tool(
+    name="send_experiences_catalog",
+    description=(
+        "Resuelve el documento PDF del catalogo de experiencias para enviarlo por el canal. "
+        "Verifica que el archivo exista en el storage y devuelve una referencia al adjunto. "
+        "No modifica datos ni envia el binario directamente."
+    ),
+)(send_experiences_catalog)
+
+mcp.tool(
+    name="search_knowledge",
+    description=(
+        "Busca informacion en la base de conocimiento (RAG) para responder preguntas "
+        "abiertas sobre La Juana, el campo, los equinos o las experiencias. "
+        "Solo lectura; recupera fragmentos publicos relevantes."
+    ),
+)(search_knowledge)
 
 mcp.tool(
     name="suggest_alternative_dates",
