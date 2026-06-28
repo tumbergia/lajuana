@@ -41,6 +41,7 @@ class SyncPushOperationSchema(BaseModel):
         "create",
         "update",
         "delete",
+        "restore",
         "upload_file",
         "transition_status",
         "confirm_reservation",

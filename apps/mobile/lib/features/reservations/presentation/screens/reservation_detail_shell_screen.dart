@@ -1000,6 +1000,7 @@ class _ReservationDetailShellScreenState
       repository: repo,
       isAdmin: _isAdmin,
       networkStatus: widget.authController?.networkStatus,
+      outbox: widget.assignmentsModule?.outbox,
     );
     if (_assignmentBoardController!.state == BoardLoadState.initial) {
       _assignmentBoardController!.load(reservationId: widget.reservationId);

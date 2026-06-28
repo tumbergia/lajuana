@@ -231,7 +231,7 @@ void main() {
       expect(controller.hasPendingChanges, isFalse);
     });
 
-    test('canMutate depends on isAdmin and networkStatus', () {
+    test('canMutate depends only on isAdmin (offline editing allowed)', () {
       // Admin + online → true
       final ctrl1 = AssignmentBoardController(
         repository: repo,
@@ -254,7 +254,8 @@ void main() {
       );
       expect(ctrl2.canMutate, isFalse);
 
-      // Admin + offline → false
+      // Admin + offline → true: la edicion local del board no requiere red;
+      // la conectividad se resuelve al guardar (envio directo o encolado).
       final ctrl3 = AssignmentBoardController(
         repository: repo,
         isAdmin: true,
@@ -263,7 +264,7 @@ void main() {
           backendReachability: BackendReachability.unreachable,
         ),
       );
-      expect(ctrl3.canMutate, isFalse);
+      expect(ctrl3.canMutate, isTrue);
     });
   });
 

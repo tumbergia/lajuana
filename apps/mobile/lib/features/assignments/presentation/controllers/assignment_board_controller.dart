@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile_domain/src/assignments/assignment_board.dart';
 import 'package:mobile_domain/mobile_domain.dart';
@@ -29,10 +30,16 @@ class AssignmentBoardController extends ChangeNotifier {
     required AssignmentsRepository repository,
     this.isAdmin = false,
     this.networkStatus,
-  }) : _repository = repository;
+    OutboxRepository? outbox,
+  })  : _repository = repository,
+        _outbox = outbox;
 
   final bool isAdmin;
   final NetworkStatus? networkStatus;
+  final OutboxRepository? _outbox;
+
+  static const String _assignmentEntity = 'assignment';
+  static const String _serviceLogEntity = 'service_log';
 
   BoardLoadState _state = BoardLoadState.initial;
   AssignmentBoard? _board;
@@ -48,6 +55,7 @@ class AssignmentBoardController extends ChangeNotifier {
   bool _isRevertingFinalize = false;
   String? _actionError;
   String? _actionErrorCode;
+  bool _queuedOffline = false;
 
   // ── Local-first pending state ──
   final Map<String, _PendingAssignment> _pendingAssignments = {};
@@ -72,7 +80,18 @@ class AssignmentBoardController extends ChangeNotifier {
   String? get actionError => _actionError;
   String? get actionErrorCode => _actionErrorCode;
 
-  bool get canMutate => isAdmin && (networkStatus?.hasSomeLink ?? true);
+  /// True cuando los ultimos cambios se encolaron localmente para enviarse al
+  /// reconectar (operacion offline aceptada, no fallida).
+  bool get queuedOffline => _queuedOffline;
+
+  /// Edicion local del board: solo requiere permisos. La conectividad se
+  /// resuelve al guardar (envio directo o encolado offline).
+  bool get canMutate => isAdmin;
+
+  /// El backend no es alcanzable ahora mismo (sin red o servidor caido). Solo
+  /// concluyente cuando hay un `networkStatus`; si es null, no asumimos offline.
+  bool get _backendUnreachable =>
+      networkStatus != null && !networkStatus!.canReachBackend;
 
   /// Load the board for a given reservation.
   Future<void> load({required String reservationId}) async {
@@ -267,19 +286,32 @@ class AssignmentBoardController extends ChangeNotifier {
     _isFinalizing = true;
     _actionError = null;
     _actionErrorCode = null;
+    _queuedOffline = false;
     notifyListeners();
 
+    final assignmentList = _pendingAssignments.entries.map((e) {
+      return <String, dynamic>{
+        'participant_id': e.key,
+        'equine_id': e.value.equineId,
+        if (e.value.saddleId != null) 'saddle_id': e.value.saddleId,
+      };
+    }).toList();
+
+    final removalList = _pendingRemovals.toList();
+
+    // Offline conocido + outbox: encolar directo, sin intentar la red (evita
+    // un timeout largo). La vista local optimista se conserva.
+    if (_backendUnreachable && _outbox != null) {
+      await _enqueuePendingAssignments(_outbox!, notes: notes);
+      _clearPendingState();
+      _isFinalizing = false;
+      _queuedOffline = true;
+      _state = BoardLoadState.loaded;
+      notifyListeners();
+      return;
+    }
+
     try {
-      final assignmentList = _pendingAssignments.entries.map((e) {
-        return <String, dynamic>{
-          'participant_id': e.key,
-          'equine_id': e.value.equineId,
-          if (e.value.saddleId != null) 'saddle_id': e.value.saddleId,
-        };
-      }).toList();
-
-      final removalList = _pendingRemovals.toList();
-
       final batchResult = await _repository.batchUpdate(
         reservationId: _reservationId!,
         assignments: assignmentList,
@@ -301,11 +333,83 @@ class AssignmentBoardController extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      _isFinalizing = false;
-      _actionError = e.toString();
-      _actionErrorCode = 'batchUpdate.failed';
-      notifyListeners();
+      await _handleFinalizeFailure(e, notes: notes);
     }
+  }
+
+  /// Cuando el guardado online falla y el backend no es alcanzable y hay un
+  /// outbox, se encolan las operaciones individuales (asignaciones +
+  /// remociones) para enviarse al reconectar; la vista local optimista se
+  /// conserva. Para errores que no son de red, se reporta el fallo.
+  Future<void> _handleFinalizeFailure(
+    Object error, {
+    String? notes,
+  }) async {
+    final outbox = _outbox;
+    if (_backendUnreachable && outbox != null && _reservationId != null) {
+      await _enqueuePendingAssignments(outbox, notes: notes);
+      _clearPendingState();
+      _isFinalizing = false;
+      _queuedOffline = true;
+      _state = BoardLoadState.loaded;
+      _actionError = null;
+      _actionErrorCode = null;
+      notifyListeners();
+      return;
+    }
+    _isFinalizing = false;
+    _actionError = error.toString();
+    _actionErrorCode = 'batchUpdate.failed';
+    notifyListeners();
+  }
+
+  Future<void> _enqueuePendingAssignments(
+    OutboxRepository outbox, {
+    String? notes,
+  }) async {
+    for (final entry in _pendingAssignments.entries) {
+      final pending = entry.value;
+      if (pending.assignmentId == null) {
+        await outbox.enqueue(
+          entityType: _assignmentEntity,
+          operationType: 'create',
+          entityLocalId: _nextLocalId('assignment'),
+          payload: {
+            'reservation_id': _reservationId,
+            'participant_id': entry.key,
+            'equine_id': pending.equineId,
+            if (pending.saddleId != null) 'saddle_id': pending.saddleId,
+            if (notes != null) 'notes': notes,
+          },
+        );
+      } else {
+        await outbox.enqueue(
+          entityType: _assignmentEntity,
+          operationType: 'update',
+          entityLocalId: pending.assignmentId!,
+          entityRemoteId: pending.assignmentId,
+          payload: {
+            'equine_id': pending.equineId,
+            if (pending.saddleId != null) 'saddle_id': pending.saddleId,
+            if (notes != null) 'notes': notes,
+          },
+        );
+      }
+    }
+    for (final assignmentId in _pendingRemovals) {
+      await outbox.enqueue(
+        entityType: _assignmentEntity,
+        operationType: 'delete',
+        entityLocalId: assignmentId,
+        entityRemoteId: assignmentId,
+        payload: const {},
+      );
+    }
+  }
+
+  String _nextLocalId(String entity) {
+    final stamp = DateTime.now().toUtc().microsecondsSinceEpoch;
+    return 'local-$entity-$stamp';
   }
 
   /// Revert all finalized assignments back to CONFIRMED.
@@ -337,25 +441,42 @@ class AssignmentBoardController extends ChangeNotifier {
     }
   }
 
-  /// Create an observation log entry (both roles, online required).
+  /// Registrar una observacion (bitacora). Si el backend no es alcanzable y hay
+  /// outbox, se encola para enviarse al reconectar (sin intentar la red). Sin
+  /// outbox y offline, se reporta que se necesita conexion.
   Future<void> createObservation({
     required String notes,
     String? relatedParticipantId,
     String? relatedEquineId,
   }) async {
-    if (!(networkStatus?.hasSomeLink ?? true)) {
-      _actionError = 'Se necesita conexión para registrar observaciones.';
-      _actionErrorCode = 'network.required';
-      notifyListeners();
-      return;
-    }
     final rid = _board?.reservationId;
     if (rid == null) return;
 
     _isCreating = true;
     _actionError = null;
     _actionErrorCode = null;
+    _queuedOffline = false;
     notifyListeners();
+
+    if (_backendUnreachable) {
+      if (_outbox != null) {
+        await _enqueueObservation(
+          reservationId: rid,
+          notes: notes,
+          relatedParticipantId: relatedParticipantId,
+          relatedEquineId: relatedEquineId,
+        );
+        _isCreating = false;
+        _queuedOffline = true;
+        notifyListeners();
+      } else {
+        _isCreating = false;
+        _actionError = 'Se necesita conexión para registrar observaciones.';
+        _actionErrorCode = 'network.required';
+        notifyListeners();
+      }
+      return;
+    }
 
     try {
       await _repository.createObservation(
@@ -367,11 +488,63 @@ class AssignmentBoardController extends ChangeNotifier {
       _isCreating = false;
       notifyListeners();
     } catch (e) {
-      _isCreating = false;
-      _actionError = e.toString();
-      _actionErrorCode = 'observation.failed';
-      notifyListeners();
+      await _handleObservationFailure(
+        e,
+        reservationId: rid,
+        notes: notes,
+        relatedParticipantId: relatedParticipantId,
+        relatedEquineId: relatedEquineId,
+      );
     }
+  }
+
+  Future<void> _handleObservationFailure(
+    Object error, {
+    required String reservationId,
+    required String notes,
+    String? relatedParticipantId,
+    String? relatedEquineId,
+  }) async {
+    final outbox = _outbox;
+    if (_backendUnreachable && outbox != null) {
+      await _enqueueObservation(
+        reservationId: reservationId,
+        notes: notes,
+        relatedParticipantId: relatedParticipantId,
+        relatedEquineId: relatedEquineId,
+      );
+      _isCreating = false;
+      _queuedOffline = true;
+      notifyListeners();
+      return;
+    }
+    _isCreating = false;
+    _actionError = error.toString();
+    _actionErrorCode = 'observation.failed';
+    notifyListeners();
+  }
+
+  Future<void> _enqueueObservation({
+    required String reservationId,
+    required String notes,
+    String? relatedParticipantId,
+    String? relatedEquineId,
+  }) async {
+    final outbox = _outbox;
+    if (outbox == null) return;
+    await outbox.enqueue(
+      entityType: _serviceLogEntity,
+      operationType: 'create',
+      entityLocalId: _nextLocalId('log'),
+      payload: {
+        'reservation_id': reservationId,
+        'event_type': 'note',
+        'notes': notes,
+        if (relatedParticipantId != null)
+          'related_participant_id': relatedParticipantId,
+        if (relatedEquineId != null) 'related_equine_id': relatedEquineId,
+      },
+    );
   }
 
   /// Remove a pending (draft) assignment that has no server id.

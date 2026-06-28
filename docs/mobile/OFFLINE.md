@@ -105,6 +105,32 @@ class EquineRepositoryImpl implements EquineRepository {
 }
 ```
 
+## Shared Outbox (Assignments, Saddles)
+
+Beyond Catalogs, offline **writes** for Assignments, the operation logbook (`service_log`) and Saddles go through a **shared outbox** under `lib/app/sync/`:
+
+| Component | File | Role |
+|-----------|------|------|
+| `SyncDatabase` | `app/sync/sync_database.dart` | `la_juana_sync_v1.db` — `sync_queue`, `id_map`, `sync_cursors` |
+| `SyncOutboxClient` | `app/sync/sync_outbox_client.dart` | Generic `/sync/push` (+pull/bootstrap) HTTP client |
+| `OutboxRepository` | `app/sync/outbox_repository.dart` | Entity-agnostic enqueue + flush, with per-entity `OutboxEntityHandler` (`onApplied`/`onFailed`/`preparePayload`) |
+
+It is built once in `dependency_injection.dart` and shared across modules. The flush runs on reconnect in `AuthenticatedShell` next to the Catalogs auto-sync:
+
+```dart
+if (canReachBackend && !_wasBackendReachable) {
+  unawaited(widget.catalogsModule?.repository.autoSync() ?? Future.value());
+  unawaited(widget.outbox?.autoSync() ?? Future.value());
+}
+```
+
+- **Saddles** (`SaddlesRepositoryImpl`): remote→cache→fallback reads against `saddles_local`; writes apply locally as `pending` and enqueue `saddle` create/update/delete/restore.
+- **Assignments** (`AssignmentBoardController`): the board is local-first; on save (`finalizeAll`) or observation, if the backend is unreachable and an outbox is present, the pending changes are enqueued as individual `assignment` create/update/delete + `service_log` create ops (no 12 s network wait), and `queuedOffline` surfaces a "Cambios encolados" banner.
+
+Backend support lives in `ReservationSyncHandler` (assignment create/update/**delete**) and `ResourceSyncHandler` (saddle create/update/delete/restore); `saddle` is included in `/sync/bootstrap`.
+
+> **Downstream caveat:** `/sync/pull` is currently a no-op server-side — no service emits `SyncChangeDocument` and it isn't registered in Beanie (`apps/api/app/core/db.py`). Today the mobile app sees its **own** pushed writes (via the `/sync/push` response payload) and refreshes others only via `bootstrap`. Wiring change emission is a separate workstream.
+
 ## Sync Protocol Integration
 
 The **Catalogs** feature has the most sophisticated offline sync, using a cursor-based sync protocol via `CatalogsRepository`.

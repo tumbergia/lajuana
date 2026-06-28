@@ -9,6 +9,9 @@ import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart'
 import 'package:mobile/features/auth/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:mobile/features/auth/infrastructure/token_storage.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/app/sync/outbox_repository.dart';
+import 'package:mobile/app/sync/sync_database.dart';
+import 'package:mobile/app/sync/sync_outbox_client.dart';
 import 'package:mobile/features/assignments/assignments_module.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/features/catalogs/data/catalogs_database.dart';
@@ -34,6 +37,7 @@ class AppDependencies {
     required this.assignmentsModule,
     required this.equineRepository,
     required this.equineEventRepository,
+    required this.outbox,
   });
 
   final AuthController authController;
@@ -44,6 +48,9 @@ class AppDependencies {
   final AssignmentsModule assignmentsModule;
   final EquineRepository equineRepository;
   final EquineEventRepository equineEventRepository;
+
+  /// Cola de salida compartida para escrituras offline (asignaciones, saddles).
+  final OutboxRepository outbox;
 
   /// Dispose controllers that need explicit cleanup.
   void dispose() {
@@ -105,6 +112,16 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
   );
   final catalogsModule = CatalogsModule(catalogsRepository);
 
+  // ── Shared offline outbox ──
+  final outbox = OutboxRepository(
+    database: SyncDatabase.instance,
+    api: SyncOutboxClient(
+      baseUrl: apiBaseUrl,
+      readAccessToken: readAccessToken,
+      refreshSession: refreshSession,
+    ),
+  );
+
   // ── Core modules (reservations, saddles, assignments) ──
   final tokenStorage = SqliteTokenStorage(sessionDs);
 
@@ -118,12 +135,14 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     baseUrl: apiBaseUrl,
     tokenStorage: tokenStorage,
     refreshSession: refreshSession,
+    outbox: outbox,
   );
 
   final assignmentsModule = AssignmentsModule.create(
     baseUrl: apiBaseUrl,
     tokenStorage: tokenStorage,
     refreshSession: refreshSession,
+    outbox: outbox,
   );
 
   // ── Equine module ──
@@ -151,5 +170,6 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     assignmentsModule: assignmentsModule,
     equineRepository: equineRepository,
     equineEventRepository: equineEventRepository,
+    outbox: outbox,
   );
 }

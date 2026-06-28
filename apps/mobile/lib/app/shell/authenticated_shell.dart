@@ -7,6 +7,7 @@ import 'package:mobile/features/auth/infrastructure/connectivity/network_models.
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/app/navigation/shell_navigation_controller.dart';
 import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
 import 'package:mobile_ui/src/widgets/app_top_bar.dart';
@@ -34,6 +35,7 @@ class AuthenticatedShell extends StatefulWidget {
     this.assignmentsModule,
     required this.equineRepository,
     required this.equineEventRepository,
+    this.outbox,
     this.onCallRequested,
   });
 
@@ -43,6 +45,7 @@ class AuthenticatedShell extends StatefulWidget {
   final ReservationsModule? reservationsModule;
   final SaddlesModule? saddlesModule;
   final AssignmentsModule? assignmentsModule;
+  final OutboxRepository? outbox;
   final EquineRepository equineRepository;
   final EquineEventRepository equineEventRepository;
   final Future<bool> Function(String phone)? onCallRequested;
@@ -131,10 +134,12 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
       builder: (context, _) {
         final canReachBackend =
             widget.authController.networkStatus.canReachBackend;
-        if (canReachBackend &&
-            !_wasBackendReachable &&
-            widget.catalogsModule != null) {
-          unawaited(widget.catalogsModule!.repository.autoSync());
+        if (canReachBackend && !_wasBackendReachable) {
+          if (widget.catalogsModule != null) {
+            unawaited(widget.catalogsModule!.repository.autoSync());
+          }
+          // Vaciar la cola de salida compartida (asignaciones, saddles).
+          unawaited(widget.outbox?.autoSync() ?? Future<void>.value());
         }
         _wasBackendReachable = canReachBackend;
 

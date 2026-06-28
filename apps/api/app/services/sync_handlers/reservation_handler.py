@@ -120,6 +120,12 @@ class ReservationSyncHandler:
             return await self.assignment_service.update(
                 operation.entity_remote_id, schema, actor_id=current_user.id,
             )
+        if op_type == "delete":
+            require_remote_id(operation)
+            await ensure_base_version(AssignmentDocument, operation.entity_remote_id, operation.base_version)
+            return await self.assignment_service.remove(
+                operation.entity_remote_id, actor_id=current_user.id,
+            )
         return None
 
     async def _handle_service_log(self, operation, op_type):

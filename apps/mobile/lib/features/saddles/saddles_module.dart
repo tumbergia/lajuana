@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 
+import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/features/auth/infrastructure/token_storage.dart';
 import 'domain/repositories/saddles_repository.dart';
 import 'infrastructure/remote/saddles_api_client.dart';
@@ -19,6 +20,7 @@ class SaddlesModule {
     required String baseUrl,
     required TokenStorage tokenStorage,
     required Future<bool> Function() refreshSession,
+    required OutboxRepository outbox,
     http.Client? httpClient,
   }) {
     final apiClient = SaddlesApiClient(
@@ -33,6 +35,7 @@ class SaddlesModule {
 
     final repository = SaddlesRepositoryImpl(
       apiClient: apiClient,
+      outbox: outbox,
     );
 
     final listController = SaddlesListController(

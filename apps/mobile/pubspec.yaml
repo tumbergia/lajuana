@@ -59,6 +59,9 @@ dev_dependencies:
   integration_test:
     sdk: flutter
 
+  # Permite abrir bases SQLite en la VM de tests (outbox offline).
+  sqflite_common_ffi: ^2.3.0
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your

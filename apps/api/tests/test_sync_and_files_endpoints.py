@@ -133,3 +133,130 @@ def test_sync_executor_rejects_catalog_write_for_guide() -> None:
     assert result.status == "rejected"
     assert result.error is not None
     assert result.error.code == "auth.forbidden"
+
+
+def test_sync_executor_rejects_saddle_write_for_guide() -> None:
+    """Un guía no puede crear sillas vía sync (solo admin)."""
+    operation = SyncPushOperationSchema(
+        operation_id="op-s",
+        entity_type="saddle",
+        entity_local_id="local-saddle-1",
+        operation_type="create",
+        idempotency_key="idem-saddle-1",
+        payload={"code": "M-99"},
+    )
+    from app.services.sync_handlers import (
+        ConfigSyncHandler, ExperienceSyncHandler, ReservationSyncHandler, ResourceSyncHandler,
+    )
+    _c = Container.get_instance()
+    executor = SyncOperationExecutor(
+        experience_handler=ExperienceSyncHandler(
+            experience_service=_c.experience_service,
+            schedule_service=_c.schedule_service,
+        ),
+        reservation_handler=ReservationSyncHandler(
+            reservation_service=_c.reservation_service,
+            participant_service=_c.participant_service,
+            payment_proof_service=_c.payment_proof_service,
+            assignment_service=_c.assignment_service,
+            service_log_service=_c.service_log_service,
+        ),
+        resource_handler=ResourceSyncHandler(
+            provider_service=_c.provider_service,
+            policy_service=_c.policy_service,
+            saddle_service=_c.saddle_service,
+        ),
+        config_handler=ConfigSyncHandler(config_service=_c.config_service),
+    )
+    result = asyncio.run(
+        executor.execute(current_user=_guide_user(), operation=operation)
+    )
+    assert result.status == "rejected"
+    assert result.error is not None
+    assert result.error.code == "auth.forbidden"
+
+
+def test_resource_handler_routes_saddle_operations() -> None:
+    """ResourceSyncHandler enruta create/delete/restore de saddle al servicio."""
+    from app.services.sync_handlers import ResourceSyncHandler
+
+    created = SimpleNamespace(id="s1")
+    calls: dict = {}
+
+    async def _create(schema):
+        calls["create"] = schema
+        return created
+
+    async def _soft_delete(saddle_id):
+        calls["delete"] = saddle_id
+        return SimpleNamespace(id=saddle_id)
+
+    async def _restore(saddle_id):
+        calls["restore"] = saddle_id
+        return SimpleNamespace(id=saddle_id)
+
+    fake_saddle = SimpleNamespace(
+        create=_create, soft_delete=_soft_delete, restore=_restore,
+    )
+    handler = ResourceSyncHandler(
+        provider_service=None, policy_service=None, saddle_service=fake_saddle,
+    )
+
+    create_op = SyncPushOperationSchema(
+        operation_id="op-c", entity_type="saddle", entity_local_id="l1",
+        operation_type="create", idempotency_key="i-c", payload={"code": "M-1"},
+    )
+    doc = asyncio.run(
+        handler.handle(entity="saddle", op_type="create", operation=create_op, current_user=_admin_user())
+    )
+    assert doc is created
+    assert calls["create"].code == "M-1"
+
+    delete_op = SyncPushOperationSchema(
+        operation_id="op-d", entity_type="saddle", entity_local_id="l1",
+        entity_remote_id="s1", operation_type="delete", idempotency_key="i-d", payload={},
+    )
+    asyncio.run(
+        handler.handle(entity="saddle", op_type="delete", operation=delete_op, current_user=_admin_user())
+    )
+    assert calls["delete"] == "s1"
+
+    restore_op = SyncPushOperationSchema(
+        operation_id="op-r", entity_type="saddle", entity_local_id="l1",
+        entity_remote_id="s1", operation_type="restore", idempotency_key="i-r", payload={},
+    )
+    asyncio.run(
+        handler.handle(entity="saddle", op_type="restore", operation=restore_op, current_user=_admin_user())
+    )
+    assert calls["restore"] == "s1"
+
+
+def test_reservation_handler_routes_assignment_delete() -> None:
+    """ReservationSyncHandler enruta delete de assignment a remove()."""
+    from app.services.sync_handlers import ReservationSyncHandler
+
+    removed = SimpleNamespace(id="a1")
+    calls: dict = {}
+
+    async def _remove(assignment_id, actor_id=None):
+        calls["remove"] = (assignment_id, actor_id)
+        return removed
+
+    fake_assignment = SimpleNamespace(remove=_remove)
+    handler = ReservationSyncHandler(
+        reservation_service=None,
+        participant_service=None,
+        payment_proof_service=None,
+        assignment_service=fake_assignment,
+        service_log_service=None,
+    )
+
+    delete_op = SyncPushOperationSchema(
+        operation_id="op-ad", entity_type="assignment", entity_local_id="l1",
+        entity_remote_id="a1", operation_type="delete", idempotency_key="i-ad", payload={},
+    )
+    doc = asyncio.run(
+        handler.handle(entity="assignment", op_type="delete", operation=delete_op, current_user=_admin_user())
+    )
+    assert doc is removed
+    assert calls["remove"][0] == "a1"

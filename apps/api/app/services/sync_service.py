@@ -51,6 +51,7 @@ from app.services.mappers import (
     policy_to_response,
     provider_to_response,
     reservation_to_response,
+    saddle_to_response,
     schedule_to_response,
     service_log_to_response,
     user_to_response,
@@ -84,12 +85,17 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("payment_proof", "update"): Permission.PAYMENT_VERIFY,
     ("assignment", "create"): Permission.ASSIGNMENT_CREATE,
     ("assignment", "update"): Permission.ASSIGNMENT_UPDATE,
+    ("assignment", "delete"): Permission.ASSIGNMENT_UPDATE,
     ("service_log", "create"): Permission.LOG_CREATE,
     ("service_log", "update"): Permission.LOG_UPDATE,
     ("provider", "create"): Permission.PROVIDER_CREATE,
     ("provider", "update"): Permission.PROVIDER_UPDATE,
     ("policy", "create"): Permission.POLICY_CREATE,
     ("policy", "update"): Permission.POLICY_UPDATE,
+    ("saddle", "create"): Permission.SADDLE_CREATE,
+    ("saddle", "update"): Permission.SADDLE_UPDATE,
+    ("saddle", "delete"): Permission.SADDLE_DELETE,
+    ("saddle", "restore"): Permission.SADDLE_DELETE,
 }
 
 
@@ -137,6 +143,8 @@ async def _entity_to_response_dict(entity_type: str, doc) -> dict:
         return provider_to_response(doc).model_dump(mode="json")
     if entity_type == "policy":
         return policy_to_response(doc).model_dump(mode="json")
+    if entity_type == "saddle":
+        return saddle_to_response(doc).model_dump(mode="json")
     return doc.model_dump(mode="json")
 
 
@@ -145,7 +153,7 @@ async def _latest_stream_cursors() -> dict[str, str]:
     streams = (
         "reservations", "participants", "payment_proofs", "assignments",
         "logs", "experiences", "schedules", "config", "equines",
-        "providers", "policies",
+        "providers", "policies", "saddles",
     )
     cursors: dict[str, str] = {}
     for stream in streams:
@@ -266,6 +274,7 @@ class SyncService:
         service_log_service=None,
         provider_service=None,
         policy_service=None,
+        saddle_service=None,
     ) -> None:
         self.config_service = config_service
 
@@ -284,6 +293,7 @@ class SyncService:
         self._resource_handler = ResourceSyncHandler(
             provider_service=provider_service,
             policy_service=policy_service,
+            saddle_service=saddle_service,
         )
         self._config_handler = ConfigSyncHandler(config_service=config_service)
 
@@ -291,6 +301,7 @@ class SyncService:
         self._experience_service = experience_service
         self._schedule_service = schedule_service
         self._equine_service = equine_service
+        self._saddle_service = saddle_service
 
         self.executor = SyncOperationExecutor(
             experience_handler=self._experience_handler,
@@ -305,6 +316,7 @@ class SyncService:
         experiences = await self._experience_service.list()
         schedules = await self._schedule_service.list()
         equines = await self._equine_service.list()
+        saddles = await self._saddle_service.list() if self._saddle_service else []
         cursors = await _latest_stream_cursors()
         if not can_read_config:
             cursors.pop("config", None)
@@ -324,6 +336,7 @@ class SyncService:
             ],
             "schedules": [schedule_to_response(item).model_dump(mode="json") for item in schedules],
             "equines": [equine_to_response(item).model_dump(mode="json") for item in equines],
+            "saddles": [saddle_to_response(item).model_dump(mode="json") for item in saddles],
             "cursors": cursors,
         }
 

@@ -94,6 +94,15 @@ class _AssignmentBoardScreenState extends State<AssignmentBoardScreen> {
                   icon: Icons.wifi_off_rounded,
                   badgeLabel: 'Offline',
                 ),
+              if (ctrl.queuedOffline)
+                AppStatusBanner(
+                  title: 'Cambios encolados',
+                  message:
+                      'Se guardaron localmente y se enviarán al recuperar conexión.',
+                  tone: AppStatusBannerTone.info,
+                  icon: Icons.cloud_upload_outlined,
+                  badgeLabel: 'Pendiente',
+                ),
               _BoardContent(
                 board: board,
                 ctrl: ctrl,

@@ -133,6 +133,7 @@ class Container:
             service_log_service=self._services["service_log_service"],
             provider_service=self._services["provider_service"],
             policy_service=self._services["policy_service"],
+            saddle_service=self._services["saddle_service"],
         )
 
         # ── WhatsApp ingestion (depends on resolver + buffer) ──
