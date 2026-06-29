@@ -40,6 +40,20 @@ class BaseService(Generic[DocT, CreateSchemaT, UpdateSchemaT]):
     not_found_code: str = ErrorCode.RESOURCE_NOT_FOUND
     not_found_message: str = "Recurso no encontrado."
 
+    # Si se define, las mutaciones CRUD emiten un SyncChangeDocument para que
+    # ``/sync/pull`` propague el cambio a otros dispositivos. None → no emite.
+    sync_entity_type: str | None = None
+
+    async def _record_sync_change(self, doc, change_type: str = "upsert") -> None:
+        if self.sync_entity_type is None:
+            return
+        # Import diferido para evitar ciclos en el arranque.
+        from app.services.sync_change_recorder import record_change
+
+        await record_change(
+            entity_type=self.sync_entity_type, doc=doc, change_type=change_type
+        )
+
     # ── READ ──
 
     async def get(self, doc_id: str) -> DocT:
@@ -81,6 +95,7 @@ class BaseService(Generic[DocT, CreateSchemaT, UpdateSchemaT]):
         """Crea un documento a partir del schema de creación."""
         doc = self.document_class(**payload.model_dump())
         await doc.insert()
+        await self._record_sync_change(doc)
         return doc
 
     # ── UPDATE ──
@@ -91,6 +106,7 @@ class BaseService(Generic[DocT, CreateSchemaT, UpdateSchemaT]):
         for field, value in payload.model_dump(exclude_none=True).items():
             setattr(doc, field, value)
         await doc.save()
+        await self._record_sync_change(doc)
         return doc
 
     # ── SOFT DELETE ──
@@ -100,6 +116,7 @@ class BaseService(Generic[DocT, CreateSchemaT, UpdateSchemaT]):
         doc = await self.get(doc_id)
         doc.deleted_at = datetime.now(UTC)
         await doc.save()
+        await self._record_sync_change(doc, change_type="delete")
         return doc
 
     async def restore(self, doc_id: str) -> DocT:
@@ -107,4 +124,5 @@ class BaseService(Generic[DocT, CreateSchemaT, UpdateSchemaT]):
         doc = await self.get(doc_id)
         doc.deleted_at = None
         await doc.save()
+        await self._record_sync_change(doc)
         return doc

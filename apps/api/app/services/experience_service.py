@@ -14,6 +14,7 @@ from app.schemas.experience import (
     ExperienceQuoteResponseSchema,
     ExperienceUpdateSchema,
 )
+from app.services.sync_change_recorder import record_change
 
 
 class ExperienceService:
@@ -212,6 +213,7 @@ class ExperienceService:
             await doc.insert()
         except DuplicateKeyError as exc:
             self._raise_conflict_from_duplicate(exc)
+        await record_change(entity_type="experience", doc=doc)
         return doc
 
     async def list(
@@ -264,12 +266,14 @@ class ExperienceService:
             await doc.save()
         except DuplicateKeyError as exc:
             self._raise_conflict_from_duplicate(exc)
+        await record_change(entity_type="experience", doc=doc)
         return doc
 
     async def deactivate(self, experience_id: str) -> ExperienceDocument:
         doc = await self.get(experience_id)
         doc.is_active = False
         await doc.save()
+        await record_change(entity_type="experience", doc=doc, change_type="delete")
         return doc
 
     async def quote(

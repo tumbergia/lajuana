@@ -9,6 +9,7 @@ class ServiceLogService(BaseService[ServiceLogDocument, ServiceLogCreateSchema, 
     document_class = ServiceLogDocument
     not_found_code = ErrorCode.LOG_NOT_FOUND
     not_found_message = "Log no encontrado."
+    sync_entity_type = "service_log"
 
     async def create(self, payload: ServiceLogCreateSchema) -> ServiceLogDocument:
         reservation = await ReservationDocument.get(payload.reservation_id)
@@ -34,6 +35,7 @@ class ServiceLogService(BaseService[ServiceLogDocument, ServiceLogCreateSchema, 
             related_equine_id=payload.related_equine_id,
         )
         await doc.insert()
+        await self._record_sync_change(doc)
         return doc
 
     async def update(self, log_id: str, payload: ServiceLogUpdateSchema) -> ServiceLogDocument:

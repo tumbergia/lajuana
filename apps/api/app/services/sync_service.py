@@ -27,7 +27,6 @@ from app.common.enums import ROLE_PERMISSIONS, Permission
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import (
-    AppConfigDocument,
     SyncChangeDocument,
     SyncOperationReceiptDocument,
     UserDocument,
@@ -43,27 +42,19 @@ from app.schemas.sync import (
 )
 from app.services.config_service import ConfigService
 from app.services.mappers import (
-    assignment_to_response,
     equine_to_response,
     experience_to_response,
-    participant_to_response,
-    payment_proof_to_response,
-    policy_to_response,
-    provider_to_response,
-    reservation_to_response,
     saddle_to_response,
     schedule_to_response,
-    service_log_to_response,
     user_to_response,
 )
+from app.services.sync_change_recorder import entity_to_response_dict
 from app.services.sync_handlers import (
     ConfigSyncHandler,
     ExperienceSyncHandler,
     ReservationSyncHandler,
     ResourceSyncHandler,
 )
-from app.services.sync_handlers._shared import ensure_base_version
-
 
 # ──────────────────────────────────────────────────────────────────────
 # Permission map — (entity_type, operation_type) → required Permission
@@ -118,34 +109,12 @@ def _ensure_operation_permission(
 
 
 async def _entity_to_response_dict(entity_type: str, doc) -> dict:
-    """Convert a domain document to a JSON-safe response dict."""
-    if entity_type == "experience":
-        return experience_to_response(doc).model_dump(mode="json")
-    if entity_type == "schedule":
-        return schedule_to_response(doc).model_dump(mode="json")
-    if entity_type == "reservation_rules":
-        if isinstance(doc, AppConfigDocument) and doc.reservation_rules is not None:
-            return doc.reservation_rules.model_dump(mode="json")
-        return {}
-    if entity_type == "reservation":
-        result = await reservation_to_response(doc)
-        return result.model_dump(mode="json")
-    if entity_type == "participant":
-        return participant_to_response(doc).model_dump(mode="json")
-    if entity_type == "payment_proof":
-        return payment_proof_to_response(doc).model_dump(mode="json")
-    if entity_type == "assignment":
-        result = await assignment_to_response(doc)
-        return result.model_dump(mode="json")
-    if entity_type == "service_log":
-        return service_log_to_response(doc).model_dump(mode="json")
-    if entity_type == "provider":
-        return provider_to_response(doc).model_dump(mode="json")
-    if entity_type == "policy":
-        return policy_to_response(doc).model_dump(mode="json")
-    if entity_type == "saddle":
-        return saddle_to_response(doc).model_dump(mode="json")
-    return doc.model_dump(mode="json")
+    """Convert a domain document to a JSON-safe response dict.
+
+    Delegado al recorder para mantener un único punto de verdad del mapeo
+    entidad → payload (compartido con el change feed).
+    """
+    return await entity_to_response_dict(entity_type, doc)
 
 
 async def _latest_stream_cursors() -> dict[str, str]:

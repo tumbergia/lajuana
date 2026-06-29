@@ -3,7 +3,6 @@ import logging
 from pymongo import AsyncMongoClient
 from pymongo.errors import PyMongoError
 
-from app.common.collections import Collections
 from app.conversations.documents import (
     MessageBufferDocument,
     OutboundMessageDocument,
@@ -30,6 +29,7 @@ from app.documents import (
     SaddleDocument,
     ScheduleDocument,
     ServiceLogDocument,
+    SyncChangeDocument,
     ToolCallLogDocument,
     UserDocument,
 )
@@ -72,6 +72,7 @@ async def init_db() -> None:
         EquineEventDocument,
         ProviderDocument,
         PolicyDocument,
+        SyncChangeDocument,
         ConversationSessionDocument,
         ConversationTurnDocument,
         ReservationAuditLogDocument,

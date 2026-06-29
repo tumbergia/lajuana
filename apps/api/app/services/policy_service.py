@@ -9,6 +9,7 @@ class PolicyService(BaseService[PolicyDocument, PolicyCreateSchema, PolicyUpdate
     document_class = PolicyDocument
     not_found_code = ErrorCode.POLICY_NOT_FOUND
     not_found_message = "Póliza no encontrada."
+    sync_entity_type = "policy"
 
     async def create(self, payload: PolicyCreateSchema) -> PolicyDocument:
         reservation = await ReservationDocument.get(payload.reservation_id)
@@ -37,6 +38,7 @@ class PolicyService(BaseService[PolicyDocument, PolicyCreateSchema, PolicyUpdate
             notes=payload.notes,
         )
         await doc.insert()
+        await self._record_sync_change(doc)
         return doc
 
     async def update(self, policy_id: str, payload: PolicyUpdateSchema) -> PolicyDocument:

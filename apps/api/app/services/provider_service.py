@@ -8,6 +8,7 @@ class ProviderService(BaseService[ProviderDocument, ProviderCreateSchema, Provid
     document_class = ProviderDocument
     not_found_code = ErrorCode.PROVIDER_NOT_FOUND
     not_found_message = "Proveedor no encontrado."
+    sync_entity_type = "provider"
 
     async def delete(self, provider_id: str) -> None:
         """Desactiva un proveedor sin borrarlo lógicamente."""

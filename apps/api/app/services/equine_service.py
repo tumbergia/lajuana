@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
-from typing import Any
 
 from beanie import PydanticObjectId
 
 from app.common.enums import EquineOperationalStatus, ReservationStatus
 from app.common.labels import ErrorCode
-from app.core.errors import ApiError
 from app.documents import (
     AssignmentDocument,
     EquineDocument,
@@ -25,6 +23,7 @@ class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdate
     document_class = EquineDocument
     not_found_code = ErrorCode.EQUINE_NOT_FOUND
     not_found_message = "Equino no encontrado."
+    sync_entity_type = "equine"
 
     # ── List/Count con filtros de dominio ──
 

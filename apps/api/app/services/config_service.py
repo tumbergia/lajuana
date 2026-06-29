@@ -1,4 +1,3 @@
-from app.common.constants import DEFAULT_RESERVATION_MIN_DAYS
 from app.common.labels import ErrorCode
 from app.config.emergency_contacts import EMERGENCY_CONTACTS
 from app.core.errors import ApiError
@@ -10,6 +9,7 @@ from app.schemas.config import (
     ReservationRulesSchema,
     ReservationRulesUpdateSchema,
 )
+from app.services.sync_change_recorder import record_change
 
 RESERVATION_RULES_KEY = "reservation_rules"
 PAYMENT_INSTRUCTIONS_KEY = "payment_instructions"
@@ -80,8 +80,10 @@ class ConfigService:
                 reservation_rules=ReservationRules(**updated.model_dump()),
             )
             await config.insert()
+            await record_change(entity_type="reservation_rules", doc=config)
             return config
 
         config.reservation_rules = ReservationRules(**updated.model_dump())
         await config.save()
+        await record_change(entity_type="reservation_rules", doc=config)
         return config

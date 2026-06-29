@@ -7,6 +7,7 @@ from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument, ScheduleDocument
 from app.schemas.schedule import ScheduleCreateSchema, ScheduleUpdateSchema
+from app.services.sync_change_recorder import record_change
 
 
 def compute_available_slots(
@@ -55,6 +56,7 @@ class ScheduleService:
             status=status,
         )
         await doc.insert()
+        await record_change(entity_type="schedule", doc=doc)
         return doc
 
     async def list(
@@ -144,6 +146,7 @@ class ScheduleService:
             doc.status = ScheduleStatus.OPEN
 
         await doc.save()
+        await record_change(entity_type="schedule", doc=doc)
         return doc
 
     async def hold_slots(self, schedule_id: str, participant_count: int) -> dict | None:
@@ -207,4 +210,5 @@ class ScheduleService:
         doc.is_active = False
         doc.status = ScheduleStatus.CLOSED
         await doc.save()
+        await record_change(entity_type="schedule", doc=doc, change_type="delete")
         return doc

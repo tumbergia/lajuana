@@ -129,7 +129,13 @@ if (canReachBackend && !_wasBackendReachable) {
 
 Backend support lives in `ReservationSyncHandler` (assignment create/update/**delete**) and `ResourceSyncHandler` (saddle create/update/delete/restore); `saddle` is included in `/sync/bootstrap`.
 
-> **Downstream caveat:** `/sync/pull` is currently a no-op server-side — no service emits `SyncChangeDocument` and it isn't registered in Beanie (`apps/api/app/core/db.py`). Today the mobile app sees its **own** pushed writes (via the `/sync/push` response payload) and refreshes others only via `bootstrap`. Wiring change emission is a separate workstream.
+### Downstream (`/sync/pull`) change feed
+
+`/sync/pull` is now functional: `SyncChangeDocument` is registered in Beanie (`apps/api/app/core/db.py`) and emitted on every mutation through a central recorder (`apps/api/app/services/sync_change_recorder.py`).
+
+- **Emission:** `BaseService.create/update/soft_delete/restore` emit for any service that sets `sync_entity_type` (saddle, equine, provider, policy, service_log). The custom catalog services (experience, schedule, config/reservation_rules) call `record_change(...)` explicitly. Emission is best-effort — a feed failure never breaks the business mutation.
+- **Consumed today:** the mobile applies pulled changes for `experiences`, `schedules` and `config` (`CatalogsRepository.pullChanges`), so catalog edits now propagate **across devices** without a re-bootstrap.
+- **Pending follow-up:** the operational streams (`reservations`, `participants`, `payment_proofs`, `assignments`) need (a) emission on their many lifecycle transitions and (b) mobile pull-apply handlers — the outbox already declares their cursors but doesn't apply incoming changes yet.
 
 ## Sync Protocol Integration
 

@@ -13,6 +13,7 @@ class SaddleService(BaseService[SaddleDocument, SaddleCreateSchema, SaddleUpdate
     document_class = SaddleDocument
     not_found_code = ErrorCode.SADDLE_NOT_FOUND
     not_found_message = "Silla no encontrada."
+    sync_entity_type = "saddle"
 
     async def create(self, payload: SaddleCreateSchema) -> SaddleDocument:
         existing = await SaddleDocument.find_one({"code": payload.code})
