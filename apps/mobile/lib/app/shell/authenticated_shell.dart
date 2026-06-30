@@ -148,8 +148,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           children: [
             Scaffold(
               appBar: const AppTopBar(
-                logoAssetPath: 'assets/branding/lajuana.svg',
-                title: 'LA JUANA',
+                logoAssetPath: 'assets/branding/lajuana-banner.svg',
               ),
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

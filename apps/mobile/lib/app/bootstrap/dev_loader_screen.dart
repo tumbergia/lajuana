@@ -40,8 +40,7 @@ class _DevWidgetCatalogScreenState extends State<DevWidgetCatalogScreen> {
   Widget build(BuildContext context) {
     return AppScaffold(
       appBar: const AppTopBar(
-        logoAssetPath: 'assets/branding/lajuana.svg',
-        title: 'LA JUANA',
+        logoAssetPath: 'assets/branding/lajuana-banner.svg',
       ),
       bottomNavigationBar: AppBottomNav(
         current: AppNavItem.inicio,

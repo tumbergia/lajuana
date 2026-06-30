@@ -60,146 +60,112 @@ class _LoginScreenState extends State<LoginScreen> {
         return AppScaffold(
           scrollable: false,
           resizeToAvoidBottomInset: false,
+          padding: const EdgeInsets.fromLTRB(48, 16, 48, 32),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final slots = _LoginLayoutSlots.forHeight(constraints.maxHeight);
-              final contentHeight = slots.contentHeight(
-                includeLocalSessionButton: showLocalSessionButton,
-              );
-              final needsScroll = constraints.maxHeight < contentHeight;
+              final logoSize = constraints.maxHeight >= 700 ? 116.0 : 96.0;
 
-              final content = SizedBox(
-                height: needsScroll ? contentHeight : constraints.maxHeight,
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 480),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          top: slots.logoY,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: SizedBox(
-                              key: _logoKey,
-                              width: slots.logoSize,
-                              height: slots.logoSize,
-                              child: SvgPicture.asset(
-                                'assets/branding/lajuana.svg',
-                                fit: BoxFit.contain,
-                                colorFilter: ColorFilter.mode(
-                                  Theme.of(context).colorScheme.onSurface,
-                                  BlendMode.srcIn,
-                                ),
-                              ),
-                            ),
+              final form = ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: SizedBox(
+                        key: _logoKey,
+                        width: logoSize,
+                        height: logoSize,
+                        child: SvgPicture.asset(
+                          'assets/branding/lajuana.svg',
+                          fit: BoxFit.contain,
+                          colorFilter: ColorFilter.mode(
+                            Theme.of(context).colorScheme.onSurface,
+                            BlendMode.srcIn,
                           ),
                         ),
-                        Positioned(
-                          top: slots.titleY,
-                          left: 0,
-                          right: 0,
-                          child: Text(
-                            'Iniciar sesion',
-                            key: _titleKey,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                        Positioned(
-                          top: slots.emailY,
-                          left: 0,
-                          right: 0,
-                          child: AppTextField(
-                            controller: _emailCtrl,
-                            label: 'Correo',
-                            hintText: 'usuario@lajuana.co',
-                            keyboardType: TextInputType.emailAddress,
-                            onChanged: (_) => setState(() {}),
-                          ),
-                        ),
-                        Positioned(
-                          top: slots.passwordY,
-                          left: 0,
-                          right: 0,
-                          child: AppTextField(
-                            controller: _passwordCtrl,
-                            label: 'Contrasena',
-                            hintText: '********',
-                            obscureText: _obscurePassword,
-                            suffix: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                              ),
-                            ),
-                            onChanged: (_) => setState(() {}),
-                          ),
-                        ),
-                        Positioned(
-                          top: slots.submitY,
-                          left: 0,
-                          right: 0,
-                          child: AppButton(
-                            label: widget.controller.isLoading
-                                ? 'Ingresando...'
-                                : 'Iniciar sesion',
-                            onPressed: canSubmit
-                                ? () {
-                                    widget.controller.loginSubmitted(
-                                      email: _emailCtrl.text.trim(),
-                                      password: _passwordCtrl.text,
-                                    );
-                                  }
-                                : null,
-                            expanded: true,
-                          ),
-                        ),
-                        Positioned(
-                          top: slots.registerLinkY,
-                          left: 0,
-                          right: 0,
-                          child: _RegisterInlineLink(
-                            key: _registerLinkKey,
-                            isEnabled: !widget.controller.isLoading,
-                            onTap: () {
-                              Navigator.of(
-                                context,
-                              ).pushNamed(AuthRoutes.register);
-                            },
-                          ),
-                        ),
-                        if (showLocalSessionButton)
-                          Positioned(
-                            top: slots.localSessionY,
-                            left: 0,
-                            right: 0,
-                            child: AppButton(
-                              label: 'Continuar con sesion local',
-                              variant: AppButtonVariant.ghost,
-                              onPressed: widget.controller.isLoading
-                                  ? null
-                                  : widget
-                                        .controller
-                                        .enterLocalSessionRequested,
-                              expanded: true,
-                            ),
-                          ),
-                      ],
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Iniciar sesion',
+                      key: _titleKey,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 24),
+                    AppTextField(
+                      controller: _emailCtrl,
+                      label: 'Correo',
+                      hintText: 'usuario@lajuana.co',
+                      keyboardType: TextInputType.emailAddress,
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      controller: _passwordCtrl,
+                      label: 'Contrasena',
+                      hintText: '********',
+                      obscureText: _obscurePassword,
+                      suffix: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 24),
+                    AppButton(
+                      label: widget.controller.isLoading
+                          ? 'Ingresando...'
+                          : 'Iniciar sesion',
+                      onPressed: canSubmit
+                          ? () {
+                              widget.controller.loginSubmitted(
+                                email: _emailCtrl.text.trim(),
+                                password: _passwordCtrl.text,
+                              );
+                            }
+                          : null,
+                      expanded: true,
+                    ),
+                    const SizedBox(height: 16),
+                    _RegisterInlineLink(
+                      key: _registerLinkKey,
+                      isEnabled: !widget.controller.isLoading,
+                      onTap: () {
+                        Navigator.of(context).pushNamed(AuthRoutes.register);
+                      },
+                    ),
+                    if (showLocalSessionButton) ...[
+                      const SizedBox(height: 16),
+                      AppButton(
+                        label: 'Continuar con sesion local',
+                        variant: AppButtonVariant.ghost,
+                        onPressed: widget.controller.isLoading
+                            ? null
+                            : widget.controller.enterLocalSessionRequested,
+                        expanded: true,
+                      ),
+                    ],
+                  ],
                 ),
               );
 
-              if (!needsScroll) return content;
-              return SingleChildScrollView(child: content);
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Center(child: form),
+                ),
+              );
             },
           ),
         );
@@ -234,69 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
       showAuthToast(context, message: noticeMessage, isError: false);
       widget.controller.clearNotice();
     });
-  }
-}
-
-class _LoginLayoutSlots {
-  static const double _buttonHeight = 52;
-  static const double _registerLinkHeight = 24;
-
-  final double logoY;
-  final double titleY;
-  final double emailY;
-  final double passwordY;
-  final double submitY;
-  final double registerLinkY;
-  final double localSessionY;
-  final double logoSize;
-  final double bottomPadding;
-
-  const _LoginLayoutSlots({
-    required this.logoY,
-    required this.titleY,
-    required this.emailY,
-    required this.passwordY,
-    required this.submitY,
-    required this.registerLinkY,
-    required this.localSessionY,
-    required this.logoSize,
-    required this.bottomPadding,
-  });
-
-  factory _LoginLayoutSlots.forHeight(double height) {
-    if (height >= 700) {
-      return const _LoginLayoutSlots(
-        logoY: 24,
-        titleY: 154,
-        emailY: 228,
-        passwordY: 322,
-        submitY: 420,
-        registerLinkY: 486,
-        localSessionY: 532,
-        logoSize: 116,
-        bottomPadding: 32,
-      );
-    }
-
-    return const _LoginLayoutSlots(
-      logoY: 8,
-      titleY: 118,
-      emailY: 186,
-      passwordY: 278,
-      submitY: 372,
-      registerLinkY: 436,
-      localSessionY: 478,
-      logoSize: 96,
-      bottomPadding: 24,
-    );
-  }
-
-  double contentHeight({required bool includeLocalSessionButton}) {
-    double bottom = registerLinkY + _registerLinkHeight;
-    if (includeLocalSessionButton) {
-      bottom = localSessionY + _buttonHeight;
-    }
-    return bottom + bottomPadding;
   }
 }
 

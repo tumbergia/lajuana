@@ -56,7 +56,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         return AppScaffold(
           resizeToAvoidBottomInset: false,
           appBar: const AppTopBar(
-            logoAssetPath: 'assets/branding/lajuana.svg',
+            logoAssetPath: 'assets/branding/lajuana-banner.svg',
             title: 'Seguridad',
           ),
           child: AppCard(

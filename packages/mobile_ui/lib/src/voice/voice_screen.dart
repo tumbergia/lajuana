@@ -59,8 +59,7 @@ class _VoiceScreenState extends State<VoiceScreen> {
 
     return AppScaffold(
       appBar: const AppTopBar(
-        logoAssetPath: 'assets/branding/lajuana.svg',
-        title: 'LA JUANA',
+        logoAssetPath: 'assets/branding/lajuana-banner.svg',
       ),
       bottomNavigationBar: const AppBottomNav(current: AppNavItem.none),
       padding: EdgeInsets.zero,

@@ -89,10 +89,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: Center(
                             child: SizedBox(
                               key: _logoKey,
-                              width: slots.logoSize,
-                              height: slots.logoSize,
+                              width: slots.logoWidth,
+                              height: slots.logoHeight,
                               child: SvgPicture.asset(
-                                'assets/branding/lajuana.svg',
+                                'assets/branding/lajuana-banner.svg',
                                 fit: BoxFit.contain,
                                 colorFilter: ColorFilter.mode(
                                   Theme.of(context).colorScheme.onSurface,
@@ -265,6 +265,8 @@ class _RegisterLayoutSlots {
   static const double _linkHeight = 24;
   static const double _passwordMismatchHeight = 20;
 
+  static const _bannerAspectRatio = 1600 / 567;
+
   final double logoY;
   final double titleY;
   final double fullNameY;
@@ -274,7 +276,7 @@ class _RegisterLayoutSlots {
   final double passwordMismatchY;
   final double submitY;
   final double loginLinkY;
-  final double logoSize;
+  final double logoWidth;
   final double bottomPadding;
 
   const _RegisterLayoutSlots({
@@ -287,15 +289,17 @@ class _RegisterLayoutSlots {
     required this.passwordMismatchY,
     required this.submitY,
     required this.loginLinkY,
-    required this.logoSize,
+    required this.logoWidth,
     required this.bottomPadding,
   });
+
+  double get logoHeight => logoWidth / _bannerAspectRatio;
 
   factory _RegisterLayoutSlots.forHeight(double height) {
     if (height >= 780) {
       return const _RegisterLayoutSlots(
         logoY: 16,
-        titleY: 148,
+        titleY: 132,
         fullNameY: 218,
         emailY: 306,
         passwordY: 394,
@@ -303,14 +307,14 @@ class _RegisterLayoutSlots {
         passwordMismatchY: 568,
         submitY: 600,
         loginLinkY: 668,
-        logoSize: 112,
+        logoWidth: 260,
         bottomPadding: 28,
       );
     }
 
     return const _RegisterLayoutSlots(
       logoY: 4,
-      titleY: 112,
+      titleY: 100,
       fullNameY: 170,
       emailY: 258,
       passwordY: 346,
@@ -318,7 +322,7 @@ class _RegisterLayoutSlots {
       passwordMismatchY: 520,
       submitY: 548,
       loginLinkY: 616,
-      logoSize: 92,
+      logoWidth: 220,
       bottomPadding: 24,
     );
   }

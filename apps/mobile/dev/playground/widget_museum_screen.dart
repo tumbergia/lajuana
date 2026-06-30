@@ -865,11 +865,11 @@ final List<_WidgetEntry> _navEntries = [
   _WidgetEntry(
     name: 'AppTopBar',
     filePath: 'app/widgets/app_top_bar.dart',
-    description: 'Barra superior con logo SVG, título, theme toggle, '
+    description: 'Barra superior con banner SVG, theme toggle, '
         'notificaciones con dot. 64px de altura.',
     constructorParams: [
       'required String logoAssetPath',
-      'String title = LA JUANA',
+      'String? title',
       'VoidCallback? onNotificationsTap',
       'VoidCallback? onThemeToggleTap',
       'bool showNotificationDot = false',
@@ -1493,8 +1493,7 @@ Widget _demoBreadcrumb(BuildContext context) {
 
 Widget _demoTopBar(BuildContext context) {
   return const AppTopBar(
-    logoAssetPath: 'assets/branding/lajuana.svg',
-    title: 'LA JUANA',
+    logoAssetPath: 'assets/branding/lajuana-banner.svg',
   );
 }
 
