@@ -6,6 +6,7 @@ import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_scaffold.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_domain/src/assignments/assignment_board.dart';
 import 'package:mobile_domain/mobile_domain.dart';
 import 'package:mobile/features/assignments/presentation/controllers/assignment_board_controller.dart';
@@ -24,6 +25,7 @@ class AssignmentBoardScreen extends StatefulWidget {
   final String reservationId;
   final bool isAdmin;
   final bool isOnline;
+  final bool embedded;
 
   const AssignmentBoardScreen({
     super.key,
@@ -31,6 +33,7 @@ class AssignmentBoardScreen extends StatefulWidget {
     required this.reservationId,
     this.isAdmin = false,
     this.isOnline = true,
+    this.embedded = false,
   });
 
   @override
@@ -60,10 +63,18 @@ class _AssignmentBoardScreenState extends State<AssignmentBoardScreen> {
   @override
   Widget build(BuildContext context) {
     final ctrl = widget.controller;
-    final isLoading = ctrl.state == BoardLoadState.initial || ctrl.state == BoardLoadState.loading;
+    final body = _buildBody(ctrl);
+
+    if (widget.embedded) {
+      return body;
+    }
+
+    final isLoading =
+        ctrl.state == BoardLoadState.initial ||
+        ctrl.state == BoardLoadState.loading;
     return AppScaffold(
       scrollable: !isLoading,
-      child: _buildBody(ctrl),
+      child: body,
     );
   }
 
@@ -71,19 +82,24 @@ class _AssignmentBoardScreenState extends State<AssignmentBoardScreen> {
     switch (ctrl.state) {
       case BoardLoadState.initial:
       case BoardLoadState.loading:
-        return const AppCenteredLoader();
+        return const RefreshableViewport(child: AppCenteredLoader());
       case BoardLoadState.error:
-        return _ErrorState(
-          message: ctrl.error ?? 'Error al cargar el tablero',
-          onRetry: ctrl.refresh,
+        return RefreshableViewport(
+          child: _ErrorState(
+            message: ctrl.error ?? 'Error al cargar el tablero',
+            onRetry: ctrl.refresh,
+          ),
         );
       case BoardLoadState.offlineFromCache:
       case BoardLoadState.loaded:
         final board = ctrl.board;
         if (board == null) {
-          return const _ErrorState(message: 'No hay datos disponibles');
+          return const RefreshableViewport(
+            child: _ErrorState(message: 'No hay datos disponibles'),
+          );
         }
         return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
               if (ctrl.isOffline)

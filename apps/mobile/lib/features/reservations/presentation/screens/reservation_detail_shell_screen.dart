@@ -104,15 +104,32 @@ class _ReservationDetailShellScreenState
 
   @override
   Future<void> onRefresh() async {
-    if (_subroute == ReservationDetailSubroute.bitacora) {
-      await _logsSectionController.load(widget.reservationId);
-      return;
+    switch (_subroute) {
+      case ReservationDetailSubroute.bitacora:
+        await _logsSectionController.load(widget.reservationId);
+      case ReservationDetailSubroute.proveedores:
+        await _providersSectionController.load(widget.reservationId);
+      case ReservationDetailSubroute.asignaciones:
+        if (widget.assignmentsModule?.repository != null) {
+          _assignmentBoardController ??= _createAssignmentBoardController();
+          await _assignmentBoardController!.refresh();
+        } else {
+          await _controller.loadDetail(widget.reservationId);
+        }
+      case ReservationDetailSubroute.resumen:
+      case ReservationDetailSubroute.participantes:
+      case ReservationDetailSubroute.pagos:
+        await _controller.loadDetail(widget.reservationId);
     }
-    if (_subroute == ReservationDetailSubroute.proveedores) {
-      await _providersSectionController.load(widget.reservationId);
-      return;
-    }
-    await _controller.loadDetail(widget.reservationId);
+  }
+
+  AssignmentBoardController _createAssignmentBoardController() {
+    final repo = widget.assignmentsModule!.repository;
+    return AssignmentBoardController(
+      repository: repo,
+      isAdmin: _isAdmin,
+      networkStatus: widget.authController?.networkStatus,
+    );
   }
 
   @override
@@ -192,6 +209,13 @@ class _ReservationDetailShellScreenState
             ReservationProvidersLoadState.initial) {
       _providersSectionController.load(widget.reservationId);
     }
+    if (_subroute == ReservationDetailSubroute.asignaciones &&
+        widget.assignmentsModule?.repository != null) {
+      _assignmentBoardController ??= _createAssignmentBoardController();
+      if (_assignmentBoardController!.state == BoardLoadState.initial) {
+        _assignmentBoardController!.load(reservationId: widget.reservationId);
+      }
+    }
   }
 
   @override
@@ -214,17 +238,22 @@ class _ReservationDetailShellScreenState
           const SizedBox(height: 16),
 
           if (state == ReservationDetailLoadState.loading)
-            const Expanded(child: AppCenteredLoader())
+            const Expanded(
+              child: RefreshableViewport(child: AppCenteredLoader()),
+            )
           else if (state == ReservationDetailLoadState.error)
             Expanded(
-              child: _buildSectionPlaceholder(
-                'Sin reserva',
-                _controller.errorMessage ??
-                    'No se pudo cargar el detalle de la reserva.',
-                Icons.error_outline_rounded,
-                action: AppButton(
-                  label: 'Reintentar',
-                  onPressed: () => _controller.loadDetail(widget.reservationId),
+              child: RefreshableViewport(
+                child: _buildSectionPlaceholder(
+                  'Sin reserva',
+                  _controller.errorMessage ??
+                      'No se pudo cargar el detalle de la reserva.',
+                  Icons.error_outline_rounded,
+                  action: AppButton(
+                    label: 'Reintentar',
+                    onPressed: () =>
+                        _controller.loadDetail(widget.reservationId),
+                  ),
                 ),
               ),
             )
@@ -288,6 +317,7 @@ class _ReservationDetailShellScreenState
     final statusTone = reservationStatusToBadgeTone(detail.status);
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -459,6 +489,7 @@ class _ReservationDetailShellScreenState
 
     return SingleChildScrollView(
       controller: _participantsScrollCtrl,
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1051,7 +1082,13 @@ class _ReservationDetailShellScreenState
   void _showClientDetail(ReservationDetail detail) {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => ClientDetailView(detail: detail)));
+    ).push(MaterialPageRoute(
+      builder: (_) => ClientDetailView(
+        detail: detail,
+        repository: _repo,
+        reservationId: widget.reservationId,
+      ),
+    ));
   }
 
   Widget _buildAssignmentContent() {
@@ -1063,11 +1100,7 @@ class _ReservationDetailShellScreenState
         Icons.shield_moon_outlined,
       );
     }
-    _assignmentBoardController ??= AssignmentBoardController(
-      repository: repo,
-      isAdmin: _isAdmin,
-      networkStatus: widget.authController?.networkStatus,
-    );
+    _assignmentBoardController ??= _createAssignmentBoardController();
     if (_assignmentBoardController!.state == BoardLoadState.initial) {
       _assignmentBoardController!.load(reservationId: widget.reservationId);
     }
@@ -1076,6 +1109,7 @@ class _ReservationDetailShellScreenState
       reservationId: widget.reservationId,
       isAdmin: _isAdmin,
       isOnline: widget.authController?.networkStatus.hasSomeLink ?? true,
+      embedded: true,
       key: ValueKey('assignments_${widget.reservationId}'),
     );
   }
@@ -1086,18 +1120,20 @@ class _ReservationDetailShellScreenState
 
     if (logsState == ReservationLogsLoadState.initial ||
         logsState == ReservationLogsLoadState.loading) {
-      return const Center(child: AppCenteredLoader());
+      return const RefreshableViewport(child: AppCenteredLoader());
     }
 
     if (logsState == ReservationLogsLoadState.error && entries.isEmpty) {
-      return _buildSectionPlaceholder(
-        'Bitácora',
-        _logsSectionController.errorMessage ??
-            'No se pudo cargar la bitácora de esta reserva.',
-        Icons.history_rounded,
-        action: AppButton(
-          label: 'Reintentar',
-          onPressed: () => _logsSectionController.load(widget.reservationId),
+      return RefreshableViewport(
+        child: _buildSectionPlaceholder(
+          'Bitácora',
+          _logsSectionController.errorMessage ??
+              'No se pudo cargar la bitácora de esta reserva.',
+          Icons.history_rounded,
+          action: AppButton(
+            label: 'Reintentar',
+            onPressed: () => _logsSectionController.load(widget.reservationId),
+          ),
         ),
       );
     }

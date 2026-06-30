@@ -95,6 +95,8 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
         return DashboardScreen(
           authController: widget.authController,
           onNavigateToTab: _onBottomNavTap,
+          reservationsModule: widget.reservationsModule,
+          catalogsModule: widget.catalogsModule,
         );
       case AppNavItem.reservas:
         return ReservationsModuleScreen(
@@ -172,16 +174,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                                   key: _navigatorKeys[tab],
                                     onGenerateRoute: (settings) {
                                       return MaterialPageRoute<void>(
-                                        builder: (ctx) {
-                                        // El scroll se maneja globalmente via RefreshScope.
-                                        if (tab == AppNavItem.reservas || tab == AppNavItem.equinos || tab == AppNavItem.experiencias) {
-                                          return _tabRoot(tab);
-                                        }
-                                          return SingleChildScrollView(
-                                            physics: const AlwaysScrollableScrollPhysics(),
-                                            child: _tabRoot(tab),
-                                          );
-                                        },
+                                        builder: (ctx) => _tabRoot(tab),
                                         settings: settings,
                                       );
                                     },

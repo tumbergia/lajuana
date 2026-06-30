@@ -8,6 +8,7 @@ import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/cards/app_pricing_tiers_table.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
@@ -29,12 +30,19 @@ class ExperienceDetailPage extends StatefulWidget {
   State<ExperienceDetailPage> createState() => _ExperienceDetailPageState();
 }
 
-class _ExperienceDetailPageState extends State<ExperienceDetailPage> {
+class _ExperienceDetailPageState extends State<ExperienceDetailPage>
+    with RefreshableState {
   CatalogExperience? _experience;
   bool _isLoading = true;
   String? _error;
 
   bool get _isAdmin => widget.authController.currentUser?.role == 'admin';
+
+  @override
+  Future<void> onRefresh() async {
+    await widget.module.repository.refreshExperiencesFromServer();
+    await _load();
+  }
 
   @override
   void initState() {
@@ -92,8 +100,9 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage> {
           const SizedBox(height: 14),
           Expanded(
             child: _isLoading
-                ? const AppCenteredLoader()
+                ? const RefreshableViewport(child: AppCenteredLoader())
                 : ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     children: [
                       if (_error != null)
                         AppEntityRowCard(

@@ -11,6 +11,7 @@ import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/dashed_border_painter.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
 import 'package:mobile/features/equines/infrastructure/mappers/equine_mapper.dart';
 import 'package:mobile/features/equines/presentation/equine_labels.dart';
@@ -39,11 +40,15 @@ class EquineDetailScreen extends StatefulWidget {
   State<EquineDetailScreen> createState() => _EquineDetailScreenState();
 }
 
-class _EquineDetailScreenState extends State<EquineDetailScreen> {
+class _EquineDetailScreenState extends State<EquineDetailScreen>
+    with RefreshableState {
   EquineDetailRecord? _detail;
   bool _isLoading = true;
   bool _isDeleting = false;
   String? _error;
+
+  @override
+  Future<void> onRefresh() => _load();
 
   @override
   void initState() {
@@ -163,14 +168,16 @@ class _EquineDetailScreenState extends State<EquineDetailScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const AppCenteredLoader();
+      return const RefreshableViewport(child: AppCenteredLoader());
     }
     if (_error != null) {
-      return AppStatusBanner(
-        title: 'Error al cargar',
-        message: _error!,
-        tone: AppStatusBannerTone.danger,
-        onTap: _load,
+      return RefreshableViewport(
+        child: AppStatusBanner(
+          title: 'Error al cargar',
+          message: _error!,
+          tone: AppStatusBannerTone.danger,
+          onTap: _load,
+        ),
       );
     }
     final d = _detail!;

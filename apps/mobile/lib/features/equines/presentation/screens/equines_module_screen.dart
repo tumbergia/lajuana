@@ -112,11 +112,11 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     switch (_controller.loadState) {
       case EquinesLoadState.idle:
       case EquinesLoadState.loading:
-        return const AppCenteredLoader();
+        return const RefreshableViewport(child: AppCenteredLoader());
       case EquinesLoadState.error:
-        return _buildError();
+        return RefreshableViewport(child: _buildError());
       case EquinesLoadState.empty:
-        return _buildEmpty();
+        return RefreshableViewport(child: _buildEmpty());
       case EquinesLoadState.success:
         return _buildSuccessContent();
     }
@@ -297,6 +297,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
 
     // ── Con contenido (grid o lista) ────────────────────────────────
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

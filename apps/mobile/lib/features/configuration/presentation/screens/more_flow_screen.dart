@@ -9,6 +9,7 @@ import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
@@ -47,7 +48,7 @@ class MoreFlowScreen extends StatefulWidget {
   State<MoreFlowScreen> createState() => _MoreFlowScreenState();
 }
 
-class _MoreFlowScreenState extends State<MoreFlowScreen> {
+class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
   static const List<String> _monthShortLabels = <String>[
     'ENE',
     'FEB',
@@ -118,13 +119,56 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
   }
 
   @override
+  Future<void> onRefresh() async {
+    switch (_destination) {
+      case _MoreDestination.menu:
+        await widget.catalogsModule?.repository.autoSync();
+      case _MoreDestination.profile:
+        _didProfileRemoteSync = false;
+        await _maybeSyncProfileFromRemote();
+      case _MoreDestination.contacts:
+        setState(() {
+          _contactsFuture = _loadEmergencyContacts();
+        });
+        await _contactsFuture;
+      case _MoreDestination.changePassword:
+        return;
+      case _MoreDestination.providers:
+      case _MoreDestination.sillas:
+        return;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, _) {
         return Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-          child: _buildBody(),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final body = KeyedSubtree(
+                key: ValueKey(_destination),
+                child: _buildBody(),
+              );
+
+              // Sub-vistas con lista propia (Expanded) necesitan altura acotada.
+              if (_destination == _MoreDestination.providers ||
+                  _destination == _MoreDestination.sillas) {
+                final height = constraints.hasBoundedHeight
+                    ? constraints.maxHeight
+                    : MediaQuery.sizeOf(context).height;
+                return SizedBox(
+                  height: height > 0 ? height : null,
+                  width: double.infinity,
+                  child: body,
+                );
+              }
+
+              return body;
+            },
+          ),
         );
       },
     );
@@ -133,13 +177,13 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
   Widget _buildBody() {
     switch (_destination) {
       case _MoreDestination.menu:
-        return _buildMenu();
+        return RefreshableViewport(child: _buildMenu());
       case _MoreDestination.profile:
-        return _buildProfile();
+        return RefreshableViewport(child: _buildProfile());
       case _MoreDestination.contacts:
-        return _buildContacts();
+        return RefreshableViewport(child: _buildContacts());
       case _MoreDestination.changePassword:
-        return _buildChangePassword();
+        return RefreshableViewport(child: _buildChangePassword());
       case _MoreDestination.providers:
         return _buildProvidersEmbedded();
       case _MoreDestination.sillas:
@@ -204,7 +248,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
 
   Widget _buildProvidersEmbedded() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSectionHeader(
           eyebrow: 'Mas',
@@ -217,9 +261,11 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        ProvidersModuleScreen(
-          providersModule: widget.providersModule,
-          showHeader: false,
+        Expanded(
+          child: ProvidersModuleScreen(
+            providersModule: widget.providersModule,
+            showHeader: false,
+          ),
         ),
       ],
     );
@@ -227,7 +273,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
 
   Widget _buildSillasEmbedded() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSectionHeader(
           eyebrow: 'Gestion',
@@ -240,9 +286,11 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        SaddlesModuleScreen(
-          saddlesModule: widget.saddlesModule,
-          showHeader: false,
+        Expanded(
+          child: SaddlesModuleScreen(
+            saddlesModule: widget.saddlesModule,
+            showHeader: false,
+          ),
         ),
       ],
     );

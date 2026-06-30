@@ -5,6 +5,7 @@ import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_scaffold.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/cards/app_logbook_timeline.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
@@ -35,11 +36,15 @@ class EquineTimelineScreen extends StatefulWidget {
   State<EquineTimelineScreen> createState() => _EquineTimelineScreenState();
 }
 
-class _EquineTimelineScreenState extends State<EquineTimelineScreen> {
+class _EquineTimelineScreenState extends State<EquineTimelineScreen>
+    with RefreshableState {
   bool _isLoading = false;
   List<AppLogbookTimelineEntry> _entries = [];
   bool _hasError = false;
   String _errorMessage = '';
+
+  @override
+  Future<void> onRefresh() => _loadTimeline();
 
   @override
   void initState() {
@@ -118,40 +123,44 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     if (_isLoading) {
-      return const AppCenteredLoader();
+      return const RefreshableViewport(child: AppCenteredLoader());
     }
 
     if (_hasError) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Symbols.error_rounded,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Error al cargar el historial',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 16),
-            AppButton(
-              label: 'Reintentar',
-              variant: AppButtonVariant.secondary,
-              onPressed: _loadTimeline,
-            ),
-          ],
+      return RefreshableViewport(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Symbols.error_rounded,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Error al cargar el historial',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 16),
+              AppButton(
+                label: 'Reintentar',
+                variant: AppButtonVariant.secondary,
+                onPressed: _loadTimeline,
+              ),
+            ],
+          ),
         ),
       );
     }
 
     if (_entries.isEmpty) {
-      return _buildEmptyState();
+      return RefreshableViewport(child: _buildEmptyState());
     }
 
-    return Column(
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Timeline header
@@ -198,6 +207,7 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen> {
 
         const SizedBox(height: 80), // Space for FAB
       ],
+    ),
     );
   }
 
