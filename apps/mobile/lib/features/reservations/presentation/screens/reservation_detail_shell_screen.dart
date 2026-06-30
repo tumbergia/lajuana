@@ -45,7 +45,9 @@ import 'package:mobile/features/reservations/presentation/widgets/payment_status
 import 'package:mobile/features/reservations/presentation/controllers/reservation_detail_controller.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_participants_section_controller.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_logs_section_controller.dart';
+import 'package:mobile/features/reservations/presentation/controllers/reservation_providers_section_controller.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_payment_proofs_section_controller.dart';
+import 'package:mobile/features/reservations/presentation/widgets/reservation_providers_tab.dart';
 
 enum ReservationDetailSubroute {
   resumen,
@@ -53,6 +55,7 @@ enum ReservationDetailSubroute {
   pagos,
   asignaciones,
   bitacora,
+  proveedores,
 }
 
 /// Detalle de reserva: carga por [reservationId] y renderiza datos reales.
@@ -86,6 +89,7 @@ class _ReservationDetailShellScreenState
   late final ReservationPaymentProofsSectionController
   _paymentProofsSectionController;
   late final ReservationLogsSectionController _logsSectionController;
+  late final ReservationProvidersSectionController _providersSectionController;
   AssignmentBoardController? _assignmentBoardController;
   ReservationDetailSubroute _subroute = ReservationDetailSubroute.resumen;
   final Map<String, Uint8List> _proofPreviewCache = {};
@@ -102,6 +106,10 @@ class _ReservationDetailShellScreenState
   Future<void> onRefresh() async {
     if (_subroute == ReservationDetailSubroute.bitacora) {
       await _logsSectionController.load(widget.reservationId);
+      return;
+    }
+    if (_subroute == ReservationDetailSubroute.proveedores) {
+      await _providersSectionController.load(widget.reservationId);
       return;
     }
     await _controller.loadDetail(widget.reservationId);
@@ -124,6 +132,11 @@ class _ReservationDetailShellScreenState
           widget.reservationsModule?.repository ?? (_throwNoModule()),
     );
     _logsSectionController.addListener(_onLogsStateChanged);
+    _providersSectionController = ReservationProvidersSectionController(
+      repository:
+          widget.reservationsModule?.repository ?? (_throwNoModule()),
+    );
+    _providersSectionController.addListener(_onProvidersStateChanged);
     _controller.addListener(_onStateChanged);
     _controller.loadDetail(widget.reservationId);
   }
@@ -140,6 +153,8 @@ class _ReservationDetailShellScreenState
     _paymentProofsSectionController.dispose();
     _logsSectionController.removeListener(_onLogsStateChanged);
     _logsSectionController.dispose();
+    _providersSectionController.removeListener(_onProvidersStateChanged);
+    _providersSectionController.dispose();
     _assignmentBoardController?.dispose();
     _proofPreviewCache.clear();
     _logPhotoCache.clear();
@@ -160,6 +175,10 @@ class _ReservationDetailShellScreenState
     if (mounted) setState(() {});
   }
 
+  void _onProvidersStateChanged() {
+    if (mounted) setState(() {});
+  }
+
   void _onSubrouteChanged(int index) {
     setState(() {
       _subroute = ReservationDetailSubroute.values[index];
@@ -167,6 +186,11 @@ class _ReservationDetailShellScreenState
     if (_subroute == ReservationDetailSubroute.bitacora &&
         _logsSectionController.state == ReservationLogsLoadState.initial) {
       _logsSectionController.load(widget.reservationId);
+    }
+    if (_subroute == ReservationDetailSubroute.proveedores &&
+        _providersSectionController.state ==
+            ReservationProvidersLoadState.initial) {
+      _providersSectionController.load(widget.reservationId);
     }
   }
 
@@ -228,6 +252,7 @@ class _ReservationDetailShellScreenState
                 AppSegmentedFilterItem(label: 'Pagos', value: 2),
                 AppSegmentedFilterItem(label: 'Asignaciones', value: 3),
                 AppSegmentedFilterItem(label: 'Bitacora', value: 4),
+                AppSegmentedFilterItem(label: 'Proveedores', value: 5),
               ],
             ),
             const SizedBox(height: 12),
@@ -250,6 +275,11 @@ class _ReservationDetailShellScreenState
         return _buildAssignmentContent();
       case ReservationDetailSubroute.bitacora:
         return _buildTimelineSection();
+      case ReservationDetailSubroute.proveedores:
+        return ReservationProvidersTab(
+          controller: _providersSectionController,
+          isAdmin: _isAdmin,
+        );
     }
   }
 

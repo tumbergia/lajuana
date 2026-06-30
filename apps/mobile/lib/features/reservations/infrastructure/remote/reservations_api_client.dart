@@ -260,6 +260,107 @@ class ReservationsApiClient {
         .toList(growable: false);
   }
 
+  Future<List<ReservationProviderItemDto>> getReservationProviders(
+    String reservationId,
+  ) async {
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/reservations/$reservationId/providers',
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) {
+      throw ReservationsApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido en proveedores de reserva.',
+      );
+    }
+    return decoded
+        .map((item) => ReservationProviderItemDto.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ))
+        .toList(growable: false);
+  }
+
+  Future<List<ProviderCatalogItemDto>> listProviders({
+    String? query,
+    bool isActive = true,
+  }) async {
+    final queryParams = <String, String>{
+      if (isActive) 'is_active': 'true',
+      if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
+    };
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/providers',
+      queryParameters: queryParams.isEmpty ? null : queryParams,
+    );
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) {
+      throw ReservationsApiFailure(
+        code: 'network.invalid_payload',
+        message: 'Payload inválido en catálogo de proveedores.',
+      );
+    }
+    return decoded
+        .map((item) => ProviderCatalogItemDto.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ))
+        .toList(growable: false);
+  }
+
+  Future<ReservationProviderItemDto> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/reservations/$reservationId/providers',
+      body: {
+        'provider_id': providerId,
+        if (serviceLabel != null) 'service_label': serviceLabel,
+        if (notes != null) 'notes': notes,
+        'status': status,
+      },
+    );
+    return ReservationProviderItemDto.fromJson(
+      Map<String, dynamic>.from(_decodeBody(response.body) as Map),
+    );
+  }
+
+  Future<ReservationProviderItemDto> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'PATCH',
+      path: '/reservations/$reservationId/providers/$reservationProviderId',
+      body: {
+        if (serviceLabel != null) 'service_label': serviceLabel,
+        if (notes != null) 'notes': notes,
+        if (status != null) 'status': status,
+      },
+    );
+    return ReservationProviderItemDto.fromJson(
+      Map<String, dynamic>.from(_decodeBody(response.body) as Map),
+    );
+  }
+
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+  }) async {
+    await _authorizedRequest(
+      method: 'DELETE',
+      path: '/reservations/$reservationId/providers/$reservationProviderId',
+    );
+  }
+
   Future<void> createLogNote({
     required String reservationId,
     required String notes,
@@ -386,6 +487,7 @@ class ReservationsApiClient {
     required String method,
     required String path,
     Map<String, dynamic>? body,
+    Map<String, String>? queryParameters,
     bool retryAuth = true,
   }) async {
     final accessToken = await _readAccessToken();
@@ -395,7 +497,10 @@ class ReservationsApiClient {
         message: 'No hay sesión válida para consultar reservas.',
       );
     }
-    final uri = Uri.parse('$_baseUrl$path');
+    var uri = Uri.parse('$_baseUrl$path');
+    if (queryParameters != null && queryParameters.isNotEmpty) {
+      uri = uri.replace(queryParameters: queryParameters);
+    }
     final response = await _execute(() {
       switch (method) {
         case 'GET':
@@ -425,6 +530,7 @@ class ReservationsApiClient {
           method: method,
           path: path,
           body: body,
+          queryParameters: queryParameters,
           retryAuth: false,
         );
       }

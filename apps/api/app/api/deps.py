@@ -151,6 +151,10 @@ def get_provider_service() -> object:
     return Container.get_instance().provider_service
 
 
+def get_reservation_provider_service() -> object:
+    return Container.get_instance().reservation_provider_service
+
+
 def get_reservation_draft_service() -> object:
     return Container.get_instance().reservation_draft_service
 

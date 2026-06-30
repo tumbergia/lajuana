@@ -35,6 +35,7 @@ from app.documents import (
     PaymentProofDocument,
     PolicyDocument,
     ProviderDocument,
+    ProviderStatus,
     ProviderType,
     ReservationDocument,
     ReservationRules,
@@ -58,6 +59,7 @@ COLLECTIONS_TO_DROP = [
     "equines",
     "saddles",
     "providers",
+    "reservation_providers",
     "policies",
     "users",
     "config",
@@ -321,47 +323,209 @@ async def seed_saddles() -> dict[str, SaddleDocument]:
     return inserted
 
 
-def _provider_type_for(category: str) -> ProviderType:
-    mapping = {
-        "lodging": ProviderType.LODGING,
-        "food": ProviderType.FOOD,
-        "logistics": ProviderType.MULE_TRANSPORT,
-        "transport": ProviderType.MULE_TRANSPORT,
-        "insurance": ProviderType.OTHER,
-        "partner": ProviderType.OTHER,
+PROVIDERS_SEED: list[dict[str, object]] = [
+    {
+        "slug": "tominejo-ecolodge",
+        "name": "Tominejo Ecolodge",
+        "type": ProviderType.LODGING,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Neira",
+        "service_categories": ["alojamiento", "alimentacion"],
+        "source_notes": "Aparece en 10D 9N como alojamiento en Neira y cenas incluidas.",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "castillo-de-cascadas",
+        "name": "Castillo de Cascadas",
+        "type": ProviderType.LODGING,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Salamina",
+        "service_categories": ["alojamiento", "alimentacion", "potrero_mulas"],
+        "source_notes": (
+            "Aparece en 10D 9N y Los Chorros como alojamiento, cena y potrero de mulas."
+        ),
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "casa-tucan",
+        "name": "Casa Tucán",
+        "type": ProviderType.LODGING,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "San Félix",
+        "service_categories": ["alojamiento"],
+        "source_notes": "Aparece en 10D 9N como alojamiento en San Félix.",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "hotel-termales-del-ruiz",
+        "name": "Hotel Termales del Ruiz",
+        "type": ProviderType.LODGING,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Villamaría / Termales del Ruiz",
+        "service_categories": ["alojamiento", "alimentacion", "termalismo"],
+        "source_notes": (
+            "Aparece en 10D 9N como alojamiento y alimentación en Termales del Ruiz."
+        ),
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "hacienda-guayabal",
+        "name": "Hacienda Guayabal",
+        "type": ProviderType.EXPERIENCE_ALLY,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Chinchiná",
+        "service_categories": ["cafe", "alimentacion", "alojamiento"],
+        "source_notes": (
+            "Aparece en 10D 9N como Hda. Guayabal - Chinchiná y asociado a Tour Café."
+        ),
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "mery-san-felix",
+        "name": "Mery",
+        "type": ProviderType.FOOD,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "San Félix",
+        "service_categories": ["alimentacion"],
+        "source_notes": "Aparece en 10D 9N como Almuerzo / San Félix (Mery).",
+        "contact_name": "Mery",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "la-truchera-marulanda",
+        "name": "La Truchera",
+        "type": ProviderType.FOOD,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Marulanda",
+        "service_categories": ["alimentacion", "punto_logistico"],
+        "source_notes": (
+            "Aparece en 10D 9N y Salamina-San Félix-Marulanda como almuerzo y punto de regreso."
+        ),
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "la-pica",
+        "name": "La Pica",
+        "type": ProviderType.EXPERIENCE_ALLY,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Pendiente por confirmar",
+        "service_categories": ["experiencia_lechera", "potrero_mulas"],
+        "source_notes": (
+            "Aparece en 10D 9N como Experiencia Lechera - La Pica y en "
+            "Salamina-San Félix-Marulanda como potreros de mulas."
+        ),
+        "capacity_notes": "Se menciona uso de potreros para mulas por noches.",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "valle-de-la-samaria",
+        "name": "Valle de La Samaria",
+        "type": ProviderType.EXPERIENCE_ALLY,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Pendiente por confirmar",
+        "service_categories": ["actividad", "transporte"],
+        "source_notes": "Aparece en 10D 9N como Visita Valle de La Samaria + Transporte.",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "pnn-los-nevados",
+        "name": "PNN Los Nevados",
+        "type": ProviderType.PARK_OR_ACCESS,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Los Nevados",
+        "service_categories": ["entrada", "parque_natural"],
+        "source_notes": "Aparece en Nevado como Entrada pax PNN Los Nevados.",
+        "tariff_notes": "Tarifa unitaria de entrada tomada del Excel cuando aplique.",
+    },
+    {
+        "slug": "safe-trips",
+        "name": "Safe Trips",
+        "type": ProviderType.INSURANCE,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "N/A",
+        "service_categories": ["poliza", "seguro"],
+        "source_notes": "Aparece en 10D 9N como Póliza Safe Trips.",
+        "tariff_notes": "Tarifa según póliza/cotización vigente.",
+    },
+    {
+        "slug": "transporte-jeep-willys-pendiente",
+        "name": "Transporte Jeep Willys — proveedor por definir",
+        "type": ProviderType.TRANSPORT_PEOPLE,
+        "status": ProviderStatus.NEEDS_REVIEW,
+        "location_label": "Eje Cafetero",
+        "service_categories": ["transporte_pasajeros", "jeep_willys"],
+        "source_notes": (
+            "El Excel menciona Jeep Willys #1, Jeep Willys #2, Jeep pasajeros y Jeep logística, "
+            "pero no identifica proveedor."
+        ),
+        "capacity_notes": (
+            "Capacidades vistas en Excel: 2, 4, 6, 8 y 8-12 pax según tramo."
+        ),
+        "tariff_notes": "Pendiente asociar proveedor real y tarifas por tramo.",
+    },
+    {
+        "slug": "transporte-mulas-camion-pendiente",
+        "name": "Transporte de mulas en camión — proveedor por definir",
+        "type": ProviderType.EQUINE_TRANSPORT,
+        "status": ProviderStatus.NEEDS_REVIEW,
+        "location_label": "Eje Cafetero",
+        "service_categories": ["transporte_mulas", "camion"],
+        "source_notes": (
+            "El Excel menciona Transporte MULAS ida y vuelta Camión #1 y #2, "
+            "pero no identifica proveedor."
+        ),
+        "tariff_notes": "Pendiente asociar proveedor real y tarifas por ruta.",
+    },
+    {
+        "slug": "guianza-paramo-pendiente",
+        "name": "Guianza Ecosistema de Páramo — proveedor por definir",
+        "type": ProviderType.GUIDE_ALLY,
+        "status": ProviderStatus.NEEDS_REVIEW,
+        "location_label": "Termales del Ruiz / Páramo",
+        "service_categories": ["guianza", "paramo"],
+        "source_notes": (
+            "El Excel menciona Guianza Ecosistema de Páramo y Guianza para Nevado, "
+            "pero no identifica proveedor."
+        ),
+        "tariff_notes": "Pendiente asociar guía/proveedor real.",
+    },
+]
+
+
+async def _upsert_provider(data: dict[str, object]) -> ProviderDocument:
+    slug = str(data["slug"])
+    existing = await ProviderDocument.find_one({"slug": slug})
+    payload = {
+        "name": data["name"],
+        "slug": slug,
+        "type": data["type"],
+        "status": data.get("status", ProviderStatus.ACTIVE),
+        "service_categories": data.get("service_categories", []),
+        "contact_name": data.get("contact_name"),
+        "email": data.get("email"),
+        "whatsapp_phone": data.get("whatsapp_phone"),
+        "location_label": data.get("location_label"),
+        "capacity_notes": data.get("capacity_notes"),
+        "operational_notes": data.get("operational_notes"),
+        "tariff_notes": data.get("tariff_notes"),
+        "source_notes": data.get("source_notes"),
+        "is_active": data.get("is_active", True),
     }
-    return mapping[category]
+    if existing is None:
+        doc = ProviderDocument(**payload)
+        await doc.insert()
+        return doc
+
+    for field, value in payload.items():
+        setattr(existing, field, value)
+    await existing.save()
+    return existing
 
 
 async def seed_providers() -> list[ProviderDocument]:
-    payloads = [
-        ("Safe Trips", "insurance"),
-        ("Tominejo Ecolodge", "lodging"),
-        ("Castillo de Cascadas", "lodging"),
-        ("Casa Tucan", "lodging"),
-        ("Hotel Termales del Ruiz", "lodging"),
-        ("Hacienda Guayabal", "lodging"),
-        ("Neira York Coffee", "food"),
-        ("Los Turpiales", "food"),
-        ("Melva Pineda", "food"),
-        ("Nohra Pueblo Hondo", "food"),
-        ("Juan Jose Hidalgo", "logistics"),
-        ("Andres Mejia", "logistics"),
-        ("Guillermo Alvarez", "logistics"),
-        ("Jeep Willys", "transport"),
-        ("DE UNA COLOMBIA", "partner"),
-        ("KIUBO COLOMBIA", "partner"),
-    ]
     docs: list[ProviderDocument] = []
-    for name, category in payloads:
-        doc = ProviderDocument(
-            name=name,
-            provider_type=_provider_type_for(category),
-            contact_name=name,
-            is_active=True,
-        )
-        await doc.insert()
-        docs.append(doc)
+    for item in PROVIDERS_SEED:
+        docs.append(await _upsert_provider(item))
     return docs
 
 

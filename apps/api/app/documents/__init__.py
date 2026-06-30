@@ -26,7 +26,11 @@ from app.documents.payment_proof_document import PaymentProofDocument
 from app.documents.ping_document import PingDocument
 from app.documents.reservation_audit_log_document import ReservationAuditLogDocument
 from app.documents.policy_document import PolicyDocument
-from app.documents.provider_document import ProviderDocument, ProviderType
+from app.documents.provider_document import ProviderDocument, ProviderStatus, ProviderType
+from app.documents.reservation_provider_document import (
+    ReservationProviderDocument,
+    ReservationProviderStatus,
+)
 from app.documents.reservation_document import ReservationDocument
 from app.documents.saddle_document import SaddleDocument
 from app.documents.service_log_document import ServiceLogDocument, ServiceLogEventType
@@ -57,8 +61,11 @@ __all__ = [
     "PingDocument",
     "PolicyDocument",
     "ProviderDocument",
+    "ProviderStatus",
     "ProviderType",
     "ReservationDocument",
+    "ReservationProviderDocument",
+    "ReservationProviderStatus",
     "ReservationRules",
     "SaddleDocument",
     "ServiceLogDocument",

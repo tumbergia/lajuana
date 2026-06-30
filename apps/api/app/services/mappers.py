@@ -22,7 +22,7 @@ from app.schemas.participant import ParticipantResponseSchema
 from app.schemas.participant_form_link import ParticipantFormLinkStatusResponse
 from app.schemas.payment_proof import PaymentProofResponseSchema
 from app.schemas.policy import PolicyResponseSchema
-from app.schemas.provider import ProviderResponseSchema
+from app.schemas.provider import ProviderListItemSchema, ProviderResponseSchema
 from app.schemas.reservation import ReservationListItemSchema, ReservationResponseSchema
 from app.schemas.saddle import SaddleListItemSchema, SaddleResponseSchema
 from app.schemas.equine_event import EquineEventResponseSchema
@@ -186,6 +186,7 @@ def service_log_to_response(doc) -> ServiceLogResponseSchema:
     ]
     return base.model_copy(update={"photos": photos})
 provider_to_response = lambda d: document_to_schema(d, ProviderResponseSchema, scalar_fields={"id": "id"})
+provider_to_list_item = lambda d: document_to_schema(d, ProviderListItemSchema, scalar_fields={"id": "id"})
 policy_to_response = lambda d: document_to_schema(
     d, PolicyResponseSchema,
     scalar_fields={"id": "id", "reservation_id": "reservation_id"},

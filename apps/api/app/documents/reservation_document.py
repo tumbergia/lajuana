@@ -34,7 +34,6 @@ class ReservationDocument(AuditDocument):
     payment_status: PaymentStatus = PaymentStatus.PENDING
     payment_proof_ids: list[PydanticObjectId] = []
     participant_ids: list[PydanticObjectId] = []
-    provider_ids: list[PydanticObjectId] = []
     policy_ids: list[PydanticObjectId] = []
     confirmed_at: datetime | None = None
     cancelled_at: datetime | None = None

@@ -119,6 +119,9 @@ class ErrorCode:
     LOG_PHOTO_NOT_FOUND = "log.photo_not_found"
 
     PROVIDER_NOT_FOUND = "provider.not_found"
+    PROVIDER_NOT_ASSOCIABLE = "provider.not_associable"
+    RESERVATION_PROVIDER_NOT_FOUND = "reservation_provider.not_found"
+    RESERVATION_PROVIDER_DUPLICATE = "reservation_provider.duplicate"
     POLICY_NOT_FOUND = "policy.not_found"
     POLICY_RESERVATION_MISMATCH = "policy.reservation_mismatch"
     CONFIG_NOT_FOUND = "config.not_found"

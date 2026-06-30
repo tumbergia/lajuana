@@ -1,0 +1,83 @@
+// ignore_for_file: public_member_api_docs, constant_identifier_names
+// GENERATED CODE -- DO NOT EDIT MANUALLY
+// Generated from OpenAPI spec
+
+/// AUTO-GENERATED from OpenAPI schema `ProviderCreateSchema`.
+
+import 'provider_status.dart';
+import 'provider_type.dart';
+
+class ProviderCreate {
+
+  final String name;
+  final String slug;
+  final ProviderType type;
+  final ProviderStatus? status;
+  final List<String>? serviceCategories;
+  final String? contactName;
+  final String? email;
+  final String? whatsappPhone;
+  final String? locationLabel;
+  final String? capacityNotes;
+  final String? operationalNotes;
+  final String? tariffNotes;
+  final String? sourceNotes;
+  final bool? isActive;
+
+  const ProviderCreate(
+    {
+    required this.name,
+    required this.slug,
+    required this.type,
+    this.status,
+    this.serviceCategories,
+    this.contactName,
+    this.email,
+    this.whatsappPhone,
+    this.locationLabel,
+    this.capacityNotes,
+    this.operationalNotes,
+    this.tariffNotes,
+    this.sourceNotes,
+    this.isActive,
+    }
+  );
+
+  factory ProviderCreate.fromJson(Map<String, dynamic> json) {
+    return ProviderCreate(
+      name: json['name'] as String,
+      slug: json['slug'] as String,
+      type: (json['type'] as String).toProviderType(),
+      status: json['status'] != null ? (json['status'] as String).toProviderStatus() : null,
+      serviceCategories: (json['service_categories'] as List<dynamic>?)
+        ?.cast<String>(),
+      contactName: json['contact_name'] as String?,
+      email: json['email'] as String?,
+      whatsappPhone: json['whatsapp_phone'] as String?,
+      locationLabel: json['location_label'] as String?,
+      capacityNotes: json['capacity_notes'] as String?,
+      operationalNotes: json['operational_notes'] as String?,
+      tariffNotes: json['tariff_notes'] as String?,
+      sourceNotes: json['source_notes'] as String?,
+      isActive: json['is_active'] as bool?,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'slug': slug,
+    'type': type.toJson(),
+    'status': status?.toJson(),
+    'service_categories': serviceCategories,
+    'contact_name': contactName,
+    'email': email,
+    'whatsapp_phone': whatsappPhone,
+    'location_label': locationLabel,
+    'capacity_notes': capacityNotes,
+    'operational_notes': operationalNotes,
+    'tariff_notes': tariffNotes,
+    'source_notes': sourceNotes,
+    'is_active': isActive,
+  };
+
+}

@@ -5,6 +5,7 @@ import 'package:mobile_domain/src/reservations/reservation_participant_detail.da
 import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_payment_summary.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
+import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_photo.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_event.dart';
@@ -360,4 +361,46 @@ String formatTimelineDate(DateTime dateTime) {
   final hour = local.hour.toString().padLeft(2, '0');
   final minute = local.minute.toString().padLeft(2, '0');
   return '$day $month $year · $hour:$minute';
+}
+
+ReservationProviderItem reservationProviderDtoToDomain(
+  ReservationProviderItemDto dto,
+) {
+  DateTime? scheduledDate;
+  if (dto.scheduledDate != null && dto.scheduledDate!.isNotEmpty) {
+    scheduledDate = DateTime.tryParse(dto.scheduledDate!);
+  }
+  return ReservationProviderItem(
+    reservationProviderId: dto.reservationProviderId,
+    reservationId: dto.reservationId,
+    providerId: dto.providerId,
+    providerName: dto.providerName,
+    providerType: dto.providerType,
+    status: dto.status,
+    serviceLabel: dto.serviceLabel,
+    contactName: dto.contactName,
+    email: dto.email,
+    whatsappPhone: dto.whatsappPhone,
+    locationLabel: dto.locationLabel,
+    capacityNotes: dto.capacityNotes,
+    operationalNotes: dto.operationalNotes,
+    tariffNotes: dto.tariffNotes,
+    notes: dto.notes,
+    reservationCode: dto.reservationCode,
+    experienceName: dto.experienceName,
+    scheduledDate: scheduledDate,
+    participantsCount: dto.participantsCount,
+  );
+}
+
+ProviderCatalogItem providerCatalogDtoToDomain(ProviderCatalogItemDto dto) {
+  return ProviderCatalogItem(
+    id: dto.id,
+    name: dto.name,
+    slug: dto.slug,
+    type: dto.type,
+    status: dto.status,
+    isActive: dto.isActive,
+    locationLabel: dto.locationLabel,
+  );
 }

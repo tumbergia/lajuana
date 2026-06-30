@@ -25,6 +25,7 @@ class ReservationListItem {
   final String experienceId;
   final String? experienceName;
   final String? requestedDate;
+  final String? scheduledDate;
   final String? expectedParticipantsCount;
   final int? participantsCompletedCount;
   final ParticipantFormStatus? participantFormStatus;
@@ -51,6 +52,7 @@ class ReservationListItem {
     required this.experienceId,
     this.experienceName,
     this.requestedDate,
+    this.scheduledDate,
     this.expectedParticipantsCount,
     this.participantsCompletedCount,
     this.participantFormStatus,
@@ -79,6 +81,7 @@ class ReservationListItem {
       experienceId: json['experience_id'] as String,
       experienceName: json['experience_name'] as String?,
       requestedDate: json['requested_date'] as String?,
+      scheduledDate: json['scheduled_date'] as String?,
       expectedParticipantsCount: json['expected_participants_count'] as String?,
       participantsCompletedCount: json['participants_completed_count'] as int?,
       participantFormStatus: json['participant_form_status'] != null ? (json['participant_form_status'] as String).toParticipantFormStatus() : null,
@@ -107,6 +110,7 @@ class ReservationListItem {
     'experience_id': experienceId,
     'experience_name': experienceName,
     'requested_date': requestedDate,
+    'scheduled_date': scheduledDate,
     'expected_participants_count': expectedParticipantsCount,
     'participants_completed_count': participantsCompletedCount,
     'participant_form_status': participantFormStatus?.toJson(),

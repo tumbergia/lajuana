@@ -35,6 +35,9 @@ class AppButton extends StatefulWidget {
   /// Altura del botón. Por defecto 52.
   final double height;
 
+  /// Escala tipográfica e iconográfica del contenido (1.0 = diseño base).
+  final double contentScale;
+
   const AppButton({
     super.key,
     required this.label,
@@ -43,6 +46,7 @@ class AppButton extends StatefulWidget {
     this.variant = AppButtonVariant.primary,
     this.expanded = false,
     this.height = 52,
+    this.contentScale = 1.0,
   });
 
   @override
@@ -70,6 +74,7 @@ class _AppButtonState extends State<AppButton> {
     final scheme = theme.colorScheme;
     final tokens = theme.appTokens;
     final isDisabled = widget.onPressed == null;
+    final scale = widget.contentScale.clamp(0.5, 1.0);
 
     // ── Colores por variante ───────────────────────────────────────────────
     // Usando if/else en lugar de switch-expression para máxima compat con
@@ -113,25 +118,35 @@ class _AppButtonState extends State<AppButton> {
       side = null;
     }
 
+    final iconSize = 18.0 * scale;
+    final horizontalPadding = tokens.spaceLg * scale;
+    final iconGap = tokens.spaceSm * scale;
+    final borderRadius = BorderRadius.circular(tokens.radiusMd.topLeft.x * scale);
+    final labelStyle = theme.textTheme.labelLarge?.copyWith(
+      color: fg,
+      fontWeight: FontWeight.w800,
+      letterSpacing: 1.4 * scale,
+      fontSize: (theme.textTheme.labelLarge?.fontSize ?? 14) * scale,
+    );
+
+    final label = Text(
+      widget.label.toUpperCase(),
+      overflow: TextOverflow.ellipsis,
+      softWrap: false,
+      maxLines: 1,
+      style: labelStyle,
+    );
+
     // ── Contenido ─────────────────────────────────────────────────────────
     final rowContent = Row(
       mainAxisSize: widget.expanded ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (widget.icon != null) ...[
-          Icon(widget.icon, size: 18, color: fg),
-          SizedBox(width: tokens.spaceSm),
+          Icon(widget.icon, size: iconSize, color: fg),
+          SizedBox(width: iconGap),
         ],
-        Text(
-          widget.label.toUpperCase(),
-          overflow: TextOverflow.ellipsis,
-          softWrap: false,
-          style: theme.textTheme.labelLarge?.copyWith(
-            color: fg,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.4,
-          ),
-        ),
+        if (widget.expanded) Flexible(child: label) else label,
       ],
     );
 
@@ -145,9 +160,9 @@ class _AppButtonState extends State<AppButton> {
       width: widget.expanded ? double.infinity : null,
       child: Material(
         color: bg,
-        borderRadius: tokens.radiusMd,
+        borderRadius: borderRadius,
         child: InkWell(
-          borderRadius: tokens.radiusMd,
+          borderRadius: borderRadius,
           onTap: isDisabled ? null : widget.onPressed,
           onTapDown: isDisabled ? null : _onTapDown,
           onTapUp: isDisabled ? null : _onTapUp,
@@ -155,7 +170,7 @@ class _AppButtonState extends State<AppButton> {
           splashColor: fg.withValues(alpha: 0.12),
           highlightColor: fg.withValues(alpha: 0.06),
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: tokens.spaceLg),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: rowContent,
           ),
         ),
@@ -166,7 +181,7 @@ class _AppButtonState extends State<AppButton> {
     if (side != null) {
       button = DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: tokens.radiusMd,
+          borderRadius: borderRadius,
           border: Border.fromBorderSide(side),
         ),
         child: button,

@@ -24,7 +24,7 @@ KNOWN_EXCLUSIONS: dict[type, set[str]] = {
         "revision_id", "id",
         # Internal/audit fields not exposed in response
         "created_by", "updated_by",
-        "participant_ids", "payment_proof_ids", "provider_ids", "policy_ids",
+        "participant_ids", "payment_proof_ids", "policy_ids",
         "quote_snapshot", "quote_trace_id",
         "pre_reserved_at", "confirmed_at", "cancelled_at", "completed_at", "expire_at",
         "participant_form_sent_at", "participant_form_sent_by",
@@ -36,7 +36,7 @@ KNOWN_EXCLUSIONS: dict[type, set[str]] = {
         "revision_id", "id",
         # Same as above for list items
         "created_by", "updated_by",
-        "participant_ids", "payment_proof_ids", "provider_ids", "policy_ids",
+        "participant_ids", "payment_proof_ids", "policy_ids",
         "quote_snapshot", "quote_trace_id",
         "pre_reserved_at", "confirmed_at", "cancelled_at", "completed_at", "expire_at",
         "participant_form_sent_at", "participant_form_sent_by",

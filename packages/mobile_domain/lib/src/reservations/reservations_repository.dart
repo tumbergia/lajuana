@@ -7,6 +7,7 @@ import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart'
 import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
+import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 
 abstract class ReservationsRepository {
@@ -125,5 +126,37 @@ abstract class ReservationsRepository {
   Future<Uint8List> downloadReservationLogPhoto({
     required String logId,
     required int photoIndex,
+  });
+
+  /// Proveedores asociados a una reserva (pestaña operativa).
+  Future<List<ReservationProviderItem>> getReservationProviders(
+    String reservationId,
+  );
+
+  /// Catálogo de proveedores activos (picker admin).
+  Future<List<ProviderCatalogItem>> listProviders({
+    String? query,
+    bool isActive = true,
+  });
+
+  Future<ReservationProviderItem> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  });
+
+  Future<ReservationProviderItem> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  });
+
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
   });
 }

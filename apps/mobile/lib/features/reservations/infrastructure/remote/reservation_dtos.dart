@@ -473,3 +473,103 @@ class ReservationTimelineEntryDto {
     );
   }
 }
+
+class ReservationProviderItemDto {
+  ReservationProviderItemDto({
+    required this.reservationProviderId,
+    required this.reservationId,
+    required this.providerId,
+    required this.providerName,
+    required this.providerType,
+    required this.status,
+    this.serviceLabel,
+    this.contactName,
+    this.email,
+    this.whatsappPhone,
+    this.locationLabel,
+    this.capacityNotes,
+    this.operationalNotes,
+    this.tariffNotes,
+    this.notes,
+    required this.reservationCode,
+    this.experienceName,
+    this.scheduledDate,
+    required this.participantsCount,
+  });
+
+  final String reservationProviderId;
+  final String reservationId;
+  final String providerId;
+  final String providerName;
+  final String providerType;
+  final String status;
+  final String? serviceLabel;
+  final String? contactName;
+  final String? email;
+  final String? whatsappPhone;
+  final String? locationLabel;
+  final String? capacityNotes;
+  final String? operationalNotes;
+  final String? tariffNotes;
+  final String? notes;
+  final String reservationCode;
+  final String? experienceName;
+  final String? scheduledDate;
+  final int participantsCount;
+
+  factory ReservationProviderItemDto.fromJson(Map<String, dynamic> json) {
+    return ReservationProviderItemDto(
+      reservationProviderId: json['reservation_provider_id'] as String? ?? '',
+      reservationId: json['reservation_id'] as String? ?? '',
+      providerId: json['provider_id'] as String? ?? '',
+      providerName: json['provider_name'] as String? ?? '',
+      providerType: json['provider_type'] as String? ?? '',
+      status: json['status'] as String? ?? 'pending',
+      serviceLabel: json['service_label'] as String?,
+      contactName: json['contact_name'] as String?,
+      email: json['email'] as String?,
+      whatsappPhone: json['whatsapp_phone'] as String?,
+      locationLabel: json['location_label'] as String?,
+      capacityNotes: json['capacity_notes'] as String?,
+      operationalNotes: json['operational_notes'] as String?,
+      tariffNotes: json['tariff_notes'] as String?,
+      notes: json['notes'] as String?,
+      reservationCode: json['reservation_code'] as String? ?? '',
+      experienceName: json['experience_name'] as String?,
+      scheduledDate: json['scheduled_date'] as String?,
+      participantsCount: json['participants_count'] as int? ?? 0,
+    );
+  }
+}
+
+class ProviderCatalogItemDto {
+  ProviderCatalogItemDto({
+    required this.id,
+    required this.name,
+    required this.slug,
+    required this.type,
+    required this.status,
+    required this.isActive,
+    this.locationLabel,
+  });
+
+  final String id;
+  final String name;
+  final String slug;
+  final String type;
+  final String status;
+  final bool isActive;
+  final String? locationLabel;
+
+  factory ProviderCatalogItemDto.fromJson(Map<String, dynamic> json) {
+    return ProviderCatalogItemDto(
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      slug: json['slug'] as String? ?? '',
+      type: json['type'] as String? ?? '',
+      status: json['status'] as String? ?? 'active',
+      isActive: json['is_active'] as bool? ?? true,
+      locationLabel: json['location_label'] as String?,
+    );
+  }
+}

@@ -22,6 +22,7 @@ import 'package:mobile/features/equines/infrastructure/repositories/equine_event
 import 'package:mobile/features/equines/infrastructure/repositories/equine_repository_impl.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
+import 'package:mobile/features/providers/providers_module.dart';
 
 /// Value object holding all initialized application dependencies.
 class AppDependencies {
@@ -31,6 +32,7 @@ class AppDependencies {
     required this.catalogsModule,
     required this.reservationsModule,
     required this.saddlesModule,
+    required this.providersModule,
     required this.assignmentsModule,
     required this.equineRepository,
     required this.equineEventRepository,
@@ -41,6 +43,7 @@ class AppDependencies {
   final CatalogsModule catalogsModule;
   final ReservationsModule reservationsModule;
   final SaddlesModule saddlesModule;
+  final ProvidersModule providersModule;
   final AssignmentsModule assignmentsModule;
   final EquineRepository equineRepository;
   final EquineEventRepository equineEventRepository;
@@ -50,6 +53,7 @@ class AppDependencies {
     authController.dispose();
     reservationsModule.listController.dispose();
     saddlesModule.listController.dispose();
+    providersModule.listController.dispose();
   }
 }
 
@@ -120,6 +124,12 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     refreshSession: refreshSession,
   );
 
+  final providersModule = ProvidersModule.create(
+    baseUrl: apiBaseUrl,
+    tokenStorage: tokenStorage,
+    refreshSession: refreshSession,
+  );
+
   final assignmentsModule = AssignmentsModule.create(
     baseUrl: apiBaseUrl,
     tokenStorage: tokenStorage,
@@ -148,6 +158,7 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     catalogsModule: catalogsModule,
     reservationsModule: reservationsModule,
     saddlesModule: saddlesModule,
+    providersModule: providersModule,
     assignmentsModule: assignmentsModule,
     equineRepository: equineRepository,
     equineEventRepository: equineEventRepository,

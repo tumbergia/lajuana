@@ -11,6 +11,9 @@ from app.migrations.versions.backfill_schedule_is_active import (
 from app.migrations.versions.backfill_sync_metadata import (
     BackfillSyncMetadataMigration,
 )
+from app.migrations.versions.migrate_provider_fields import (
+    MigrateProviderFieldsMigration,
+)
 
 # Order matters — run in sequence, oldest first.
 # Never remove entries from this list once deployed.
@@ -18,4 +21,5 @@ MIGRATIONS: list[Migration] = [
     StaffToGuideMigration(),
     BackfillScheduleIsActiveMigration(),
     BackfillSyncMetadataMigration(),
+    MigrateProviderFieldsMigration(),
 ]

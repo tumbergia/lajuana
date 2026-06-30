@@ -2,15 +2,20 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.api.deps import get_provider_service, require_permissions
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import Permission
-from app.documents import UserDocument
-from app.schemas.provider import ProviderCreateSchema, ProviderResponseSchema, ProviderUpdateSchema
+from app.documents import ProviderStatus, ProviderType, UserDocument
+from app.schemas.provider import (
+    ProviderCreateSchema,
+    ProviderListItemSchema,
+    ProviderResponseSchema,
+    ProviderUpdateSchema,
+)
 from app.services import ProviderService
-from app.services.mappers import provider_to_response
+from app.services.mappers import provider_to_list_item, provider_to_response
 
 router = APIRouter(prefix="/providers", tags=["Proveedores"])
 
@@ -30,6 +35,51 @@ async def create_provider(
     service: ProviderService = Depends(get_provider_service),
 ) -> ProviderResponseSchema:
     return provider_to_response(await service.create(payload))
+
+
+@router.get(
+    "",
+    response_model=list[ProviderListItemSchema],
+    summary=ENDPOINT_DOCS["providers_list"]["summary"],
+    description=endpoint_description("providers_list"),
+    operation_id="listProviders",
+    responses=endpoint_responses("providers_list"),
+)
+async def list_providers(
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.PROVIDER_READ))],
+    response: Response,
+    provider_type: ProviderType | None = Query(default=None, alias="type"),
+    status_filter: ProviderStatus | None = Query(default=None, alias="status"),
+    q: str | None = None,
+    service_category: str | None = None,
+    is_active: bool | None = None,
+    include_deleted: bool = Query(default=False, description="Incluir proveedores borrados logicamente"),
+    limit: int = Query(default=200, ge=1, le=1000),
+    skip: int = Query(default=0, ge=0),
+    service: ProviderService = Depends(get_provider_service),
+) -> list[ProviderListItemSchema]:
+    total = await service.count(
+        provider_type=provider_type,
+        status=status_filter,
+        q=q,
+        service_category=service_category,
+        is_active=is_active,
+        include_deleted=include_deleted,
+    )
+    response.headers["X-Total-Count"] = str(total)
+    return [
+        provider_to_list_item(item)
+        for item in await service.list(
+            provider_type=provider_type,
+            status=status_filter,
+            q=q,
+            service_category=service_category,
+            is_active=is_active,
+            include_deleted=include_deleted,
+            limit=limit,
+            skip=skip,
+        )
+    ]
 
 
 @router.get(

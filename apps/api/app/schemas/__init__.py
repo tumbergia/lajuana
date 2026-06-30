@@ -44,7 +44,12 @@ from app.schemas.payment_proof import (
     PaymentProofUpdateSchema,
 )
 from app.schemas.policy import PolicyCreateSchema, PolicyResponseSchema, PolicyUpdateSchema
-from app.schemas.provider import ProviderCreateSchema, ProviderResponseSchema, ProviderUpdateSchema
+from app.schemas.provider import (
+    ProviderCreateSchema,
+    ProviderListItemSchema,
+    ProviderResponseSchema,
+    ProviderUpdateSchema,
+)
 from app.schemas.reservation import (
     ReservationAvailabilityResponseSchema,
     ReservationCancelSchema,

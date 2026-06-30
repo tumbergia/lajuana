@@ -30,6 +30,7 @@ from app.documents import (
     ProviderDocument,
     ReservationAuditLogDocument,
     ReservationDocument,
+    ReservationProviderDocument,
     SaddleDocument,
     ServiceLogDocument,
     ToolCallLogDocument,
@@ -109,6 +110,16 @@ async def init_db() -> None:
     db.client = AsyncMongoClient(mongo_uri)
     database = db.client[settings.mongodb_db_name]
 
+    # Backfill provider slugs before Beanie creates the unique index.
+    try:
+        from app.migrations.versions.migrate_provider_fields import backfill_provider_slugs
+
+        slug_count = await backfill_provider_slugs(database[Collections.PROVIDERS])
+        if slug_count:
+            logger.info("[db] Backfilled slug on %d legacy providers", slug_count)
+    except PyMongoError:
+        logger.warning("[db] Provider slug backfill failed — continuing", exc_info=True)
+
     # Staff→guide migration handled by 001_staff_to_guide in app.migrations
 
     from beanie import init_beanie
@@ -128,6 +139,7 @@ async def init_db() -> None:
         ServiceLogDocument,
         EquineEventDocument,
         ProviderDocument,
+        ReservationProviderDocument,
         PolicyDocument,
         ConversationSessionDocument,
         ConversationTurnDocument,

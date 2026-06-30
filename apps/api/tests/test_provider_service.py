@@ -26,6 +26,7 @@ class TestProviderService:
             id="prov_001",
             name="Test Provider",
             is_active=True,
+            status="active",
             is_deleted=False,
         )
 

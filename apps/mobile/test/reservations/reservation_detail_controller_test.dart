@@ -7,6 +7,7 @@ import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
+import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
@@ -167,6 +168,45 @@ class _FakeSuccessRepository implements ReservationsRepository {
   }) async {
     return Uint8List(0);
   }
+
+  @override
+  Future<List<ReservationProviderItem>> getReservationProviders(
+    String reservationId,
+  ) async =>
+      const [];
+
+  @override
+  Future<List<ProviderCatalogItem>> listProviders({
+    String? query,
+    bool isActive = true,
+  }) async =>
+      const [];
+
+  @override
+  Future<ReservationProviderItem> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<ReservationProviderItem> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+  }) async {}
 }
 
 /// A fake repository that always throws.
@@ -318,6 +358,45 @@ class _FakeErrorRepository implements ReservationsRepository {
   }) async {
     return Uint8List(0);
   }
+
+  @override
+  Future<List<ReservationProviderItem>> getReservationProviders(
+    String reservationId,
+  ) async =>
+      const [];
+
+  @override
+  Future<List<ProviderCatalogItem>> listProviders({
+    String? query,
+    bool isActive = true,
+  }) async =>
+      const [];
+
+  @override
+  Future<ReservationProviderItem> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<ReservationProviderItem> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+  }) async {}
 }
 
 /// A fake repository that fails but has cache fallback.
@@ -473,6 +552,45 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   }) async {
     return Uint8List(0);
   }
+
+  @override
+  Future<List<ReservationProviderItem>> getReservationProviders(
+    String reservationId,
+  ) async =>
+      const [];
+
+  @override
+  Future<List<ProviderCatalogItem>> listProviders({
+    String? query,
+    bool isActive = true,
+  }) async =>
+      const [];
+
+  @override
+  Future<ReservationProviderItem> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<ReservationProviderItem> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  }) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+  }) async {}
 }
 
 ReservationDetail _makeDetail({

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from app.api.deps import (
     get_participant_service,
     get_payment_proof_service,
+    get_reservation_provider_service,
     get_reservation_service,
     get_reservation_timeline_service,
     require_permissions,
@@ -32,10 +33,16 @@ from app.schemas.reservation import (
     ReservationStatusTransitionSchema,
     ReservationUpdateSchema,
 )
+from app.schemas.reservation_provider import (
+    ReservationProviderCreateSchema,
+    ReservationProviderTabItemSchema,
+    ReservationProviderUpdateSchema,
+)
 from app.schemas.reservation_timeline import ReservationTimelineEntrySchema
 from app.services import (
     ParticipantService,
     PaymentProofService,
+    ReservationProviderService,
     ReservationService,
 )
 from app.services.reservation_timeline_service import ReservationTimelineService
@@ -187,6 +194,79 @@ async def get_reservation_timeline(
         actor_role=current_user.role,
         limit=limit,
     )
+
+
+@router.get(
+    "/{reservation_id}/providers",
+    response_model=list[ReservationProviderTabItemSchema],
+    summary=ENDPOINT_DOCS["reservations_providers_list"]["summary"],
+    description=endpoint_description("reservations_providers_list"),
+    operation_id="listReservationProviders",
+    responses=endpoint_responses("reservations_providers_list"),
+)
+async def list_reservation_providers(
+    reservation_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_READ))],
+    service: ReservationProviderService = Depends(get_reservation_provider_service),
+) -> list[ReservationProviderTabItemSchema]:
+    return await service.list_for_reservation(reservation_id)
+
+
+@router.post(
+    "/{reservation_id}/providers",
+    response_model=ReservationProviderTabItemSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary=ENDPOINT_DOCS["reservations_providers_create"]["summary"],
+    description=endpoint_description("reservations_providers_create"),
+    operation_id="createReservationProvider",
+    responses=endpoint_responses("reservations_providers_create"),
+)
+async def create_reservation_provider(
+    reservation_id: str,
+    payload: ReservationProviderCreateSchema,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_UPDATE))],
+    service: ReservationProviderService = Depends(get_reservation_provider_service),
+) -> ReservationProviderTabItemSchema:
+    return await service.create_for_reservation(reservation_id, payload)
+
+
+@router.patch(
+    "/{reservation_id}/providers/{reservation_provider_id}",
+    response_model=ReservationProviderTabItemSchema,
+    summary=ENDPOINT_DOCS["reservations_providers_update"]["summary"],
+    description=endpoint_description("reservations_providers_update"),
+    operation_id="updateReservationProvider",
+    responses=endpoint_responses("reservations_providers_update"),
+)
+async def update_reservation_provider(
+    reservation_id: str,
+    reservation_provider_id: str,
+    payload: ReservationProviderUpdateSchema,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_UPDATE))],
+    service: ReservationProviderService = Depends(get_reservation_provider_service),
+) -> ReservationProviderTabItemSchema:
+    return await service.update_for_reservation(
+        reservation_id,
+        reservation_provider_id,
+        payload,
+    )
+
+
+@router.delete(
+    "/{reservation_id}/providers/{reservation_provider_id}",
+    status_code=status.HTTP_200_OK,
+    summary=ENDPOINT_DOCS["reservations_providers_delete"]["summary"],
+    description=endpoint_description("reservations_providers_delete"),
+    operation_id="deleteReservationProvider",
+    responses=endpoint_responses("reservations_providers_delete"),
+)
+async def delete_reservation_provider(
+    reservation_id: str,
+    reservation_provider_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_UPDATE))],
+    service: ReservationProviderService = Depends(get_reservation_provider_service),
+) -> None:
+    await service.delete_for_reservation(reservation_id, reservation_provider_id)
 
 
 @router.patch(

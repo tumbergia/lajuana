@@ -80,6 +80,7 @@ flutter:
   assets:
     - assets/branding/
     - assets/fonts/
+    - assets/icons/
 
   # Manrope e Inter como variable fonts (un solo TTF por familia, rango completo
   # de pesos 100–900 incluido). No necesitas archivos estáticos adicionales.

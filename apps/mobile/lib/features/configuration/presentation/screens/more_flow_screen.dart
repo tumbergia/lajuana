@@ -21,6 +21,7 @@ import 'package:mobile/features/catalogs/presentation/pages/catalogs_home_page.d
 import 'package:mobile/features/providers/presentation/screens/providers_module_screen.dart';
 import 'package:mobile/features/saddles/presentation/screens/saddles_module_screen.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
+import 'package:mobile/features/providers/providers_module.dart';
 
 enum _MoreDestination { menu, profile, contacts, changePassword, providers, sillas }
 
@@ -31,6 +32,7 @@ class MoreFlowScreen extends StatefulWidget {
     required this.contactsApiClient,
     this.catalogsModule,
     this.saddlesModule,
+    this.providersModule,
     this.onCallRequested,
   });
 
@@ -38,6 +40,7 @@ class MoreFlowScreen extends StatefulWidget {
   final AuthApiClient contactsApiClient;
   final CatalogsModule? catalogsModule;
   final SaddlesModule? saddlesModule;
+  final ProvidersModule? providersModule;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -213,7 +216,11 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> {
             onPressed: () => _open(_MoreDestination.menu),
           ),
         ),
-        const ProvidersModuleScreen(showHeader: false),
+        const SizedBox(height: 4),
+        ProvidersModuleScreen(
+          providersModule: widget.providersModule,
+          showHeader: false,
+        ),
       ],
     );
   }

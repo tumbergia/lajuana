@@ -6,6 +6,7 @@ import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
+import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_photo.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
@@ -645,6 +646,73 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
     required int photoIndex,
   }) async {
     return _apiClient.downloadLogPhoto(logId: logId, photoIndex: photoIndex);
+  }
+
+  @override
+  Future<List<ReservationProviderItem>> getReservationProviders(
+    String reservationId,
+  ) async {
+    final dtos = await _apiClient.getReservationProviders(reservationId);
+    return dtos.map(reservationProviderDtoToDomain).toList(growable: false);
+  }
+
+  @override
+  Future<List<ProviderCatalogItem>> listProviders({
+    String? query,
+    bool isActive = true,
+  }) async {
+    final dtos = await _apiClient.listProviders(
+      query: query,
+      isActive: isActive,
+    );
+    return dtos.map(providerCatalogDtoToDomain).toList(growable: false);
+  }
+
+  @override
+  Future<ReservationProviderItem> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  }) async {
+    final dto = await _apiClient.createReservationProvider(
+      reservationId: reservationId,
+      providerId: providerId,
+      serviceLabel: serviceLabel,
+      notes: notes,
+      status: status,
+    );
+    return reservationProviderDtoToDomain(dto);
+  }
+
+  @override
+  Future<ReservationProviderItem> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  }) async {
+    final dto = await _apiClient.updateReservationProvider(
+      reservationId: reservationId,
+      reservationProviderId: reservationProviderId,
+      serviceLabel: serviceLabel,
+      notes: notes,
+      status: status,
+    );
+    return reservationProviderDtoToDomain(dto);
+  }
+
+  @override
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+  }) async {
+    await _apiClient.deleteReservationProvider(
+      reservationId: reservationId,
+      reservationProviderId: reservationProviderId,
+    );
   }
 
   Map<String, dynamic> _photoInputToJson(ReservationLogPhotoInput photo) {

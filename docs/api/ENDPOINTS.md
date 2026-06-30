@@ -207,9 +207,23 @@ Prefix: `/providers` — tag: Proveedores
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/api/v1/providers` | Create a provider |
+| GET | `/api/v1/providers` | List providers (filters: `type`, `status`, `q`, `service_category`, `is_active`) |
 | GET | `/api/v1/providers/{provider_id}` | Get provider by ID |
 | PATCH | `/api/v1/providers/{provider_id}` | Update provider |
 | DELETE | `/api/v1/providers/{provider_id}` | Deactivate provider |
+
+---
+
+## Reservation Providers
+
+Nested under reservations — tag: Reservas
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/reservations/{reservation_id}/providers` | List providers linked to a reservation (flat tab payload) |
+| POST | `/api/v1/reservations/{reservation_id}/providers` | Associate a provider to a reservation |
+| PATCH | `/api/v1/reservations/{reservation_id}/providers/{reservation_provider_id}` | Update association (service, notes, status) |
+| DELETE | `/api/v1/reservations/{reservation_id}/providers/{reservation_provider_id}` | Remove association |
 
 ---
 

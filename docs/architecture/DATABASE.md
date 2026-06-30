@@ -27,6 +27,7 @@ flowchart LR
   subgraph Config["Config"]
     AC["app_config"]
     PR["providers"]
+    RP["reservation_providers"]
     PO["policies"]
   end
 
@@ -59,6 +60,7 @@ flowchart LR
 
   R --> P
   R --> PP
+  R --> RP
   R --> SL
   R --> A
   R --> RAL
@@ -71,6 +73,8 @@ flowchart LR
 | Collection | Index | Type | Name |
 |-----------|-------|------|------|
 | experiences | `slug` | unique | — |
+| providers | `slug` | unique | — |
+| reservation_providers | `(reservation_id, provider_id, service_label)` | unique | prevents duplicate association |
 | saddles | `code` | unique | — |
 | reservations | `availability_lock_key` (partial) | unique | day-lock when `blocks_day=true` |
 | whatsapp_inbound_events | `wa_message_id` | unique | via app-level upsert |
