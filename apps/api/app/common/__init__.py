@@ -12,7 +12,6 @@ from app.common.enums import (
     PaymentStatus,
     Permission,
     ReservationStatus,
-    ScheduleStatus,
     UserRole,
 )
 from app.common.labels import ErrorCode
@@ -30,6 +29,5 @@ __all__ = [
     "PaymentStatus",
     "ReservationStatus",
     "ROLE_PERMISSIONS",
-    "ScheduleStatus",
     "UserRole",
 ]

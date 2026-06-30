@@ -81,16 +81,55 @@ void main() {
   });
 
   group('filter', () {
-    test('setFilterGroup triggers refresh', () async {
+    test('loads deleted reservations on initial fetch', () async {
+      await controller.loadInitial();
+
+      expect(
+        (repository as FakeReservationsRepository).lastIncludeDeleted,
+        true,
+      );
+    });
+
+    test('setFilterGroup filters locally without refetching', () async {
       await controller.loadInitial();
       expect(controller.state, ReservationsLoadState.success);
+      final initialCallCount =
+          (repository as FakeReservationsRepository).listReservationsCallCount;
 
       controller.setFilterGroup('pendientes');
-      // After setFilterGroup, the controller calls refresh()
-      // Since FakeReservationsRepository returns items regardless
-      await Future<void>.delayed(const Duration(milliseconds: 10));
 
+      expect(controller.state, ReservationsLoadState.success);
       expect(controller.filterGroup, 'pendientes');
+      expect(
+        (repository as FakeReservationsRepository).listReservationsCallCount,
+        initialCallCount,
+      );
+    });
+
+    test('setFilterGroup clears filter when same group is selected again', () async {
+      await controller.loadInitial();
+
+      controller.setFilterGroup('pendientes');
+      expect(controller.filterGroup, 'pendientes');
+
+      controller.setFilterGroup('pendientes');
+
+      expect(controller.filterGroup, isNull);
+    });
+
+    test('filters deleted reservations locally', () async {
+      await controller.loadInitial();
+
+      controller.setFilterGroup('eliminadas');
+
+      expect(controller.items.length, 1);
+      expect(controller.items.first.isDeleted, true);
+    });
+
+    test('excludes deleted reservations from status filters', () async {
+      await controller.loadInitial();
+
+      expect(controller.items.every((item) => !item.isDeleted), true);
     });
 
     test('setSearchQuery filters items', () async {

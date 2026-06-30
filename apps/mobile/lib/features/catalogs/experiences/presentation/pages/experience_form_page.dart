@@ -1,17 +1,22 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:mobile_ui/src/widgets/app_badge.dart';
-import 'package:mobile_ui/src/widgets/app_button.dart';
-import 'package:mobile_ui/src/widgets/app_section_header.dart';
-import 'package:mobile_ui/src/widgets/app_term_help.dart';
-import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/mobile_ui.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 import 'package:mobile/features/catalogs/experiences/presentation/controllers/experience_form_controller.dart';
+
+final _integerInputFormatters = <TextInputFormatter>[
+  FilteringTextInputFormatter.digitsOnly,
+];
+
+final _decimalInputFormatters = <TextInputFormatter>[
+  FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d*')),
+];
 
 class ExperienceFormPage extends StatefulWidget {
   const ExperienceFormPage({
@@ -52,7 +57,6 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   final TextEditingController _incluyeInputCtrl = TextEditingController();
   late final TextEditingController _incluyeTextoCtrl;
 
-  String? _error;
   bool _guardando = false;
 
   bool get _esEdicion => widget.editing != null;
@@ -138,10 +142,12 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     final valor = int.tryParse(_tarifaValorCtrl.text.trim());
 
     if (min == null || max == null || valor == null) {
-      setState(() {
-        _error =
-            'Completa personas desde, personas hasta y valor por persona para agregar la tarifa.';
-      });
+      showAppToast(
+        context,
+        message:
+            'Completa personas desde, personas hasta y valor por persona para agregar la tarifa.',
+        isError: true,
+      );
       return;
     }
 
@@ -155,9 +161,6 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     _tarifaMinCtrl.clear();
     _tarifaMaxCtrl.clear();
     _tarifaValorCtrl.clear();
-    setState(() {
-      _error = null;
-    });
   }
 
   Future<void> _editarTarifa(int index) async {
@@ -197,10 +200,11 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
       _agregarIncluye();
     }
 
-    setState(() {
-      _error = _controller.validar();
-    });
-    if (_error != null) return;
+    final validationError = _controller.validar();
+    if (validationError != null) {
+      showAppToast(context, message: validationError, isError: true);
+      return;
+    }
 
     setState(() {
       _guardando = true;
@@ -238,11 +242,20 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
       }
 
       if (!mounted) return;
+      showAppToast(
+        context,
+        message: _esEdicion
+            ? 'Experiencia actualizada correctamente'
+            : 'Experiencia creada correctamente',
+      );
       Navigator.of(context).pop();
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      if (!mounted) return;
+      showAppToast(
+        context,
+        message: 'No se pudo guardar la experiencia. Intenta de nuevo.',
+        isError: true,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -314,6 +327,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionExperienciaCtrl,
                                     label: 'Duracion experiencia (minutos)',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.schedule_rounded, size: 20),
                                     onChanged: (value) => _controller
                                         .actualizarDuracionExperiencia(
@@ -325,6 +339,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionRecorridoCtrl,
                                     label: 'Duracion recorrido (minutos)',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.timer_rounded, size: 20),
                                     onChanged: (value) =>
                                         _controller.actualizarDuracionRecorrido(
@@ -341,6 +356,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionExperienciaCtrl,
                                     label: 'Duracion experiencia (minutos)',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.schedule_rounded, size: 20),
                                     onChanged: (value) => _controller
                                         .actualizarDuracionExperiencia(
@@ -354,6 +370,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionRecorridoCtrl,
                                     label: 'Duracion recorrido (minutos)',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.timer_rounded, size: 20),
                                     onChanged: (value) =>
                                         _controller.actualizarDuracionRecorrido(
@@ -394,6 +411,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
+                          inputFormatters: _decimalInputFormatters,
                           prefixIcon: const Icon(Icons.straighten_rounded, size: 20),
                           onChanged: (value) =>
                               _controller.actualizarDistanciaKm(
@@ -458,6 +476,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMinCtrl,
                                     label: 'Personas desde',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.person_rounded, size: 20),
                                   ),
                                   const SizedBox(height: 10),
@@ -465,6 +484,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMaxCtrl,
                                     label: 'Personas hasta',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.group_add_rounded, size: 20),
                                   ),
                                   const SizedBox(height: 10),
@@ -472,6 +492,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaValorCtrl,
                                     label: 'Valor por persona',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.payments_rounded, size: 20),
                                   ),
                                 ],
@@ -484,6 +505,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMinCtrl,
                                     label: 'Personas desde',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.person_rounded, size: 20),
                                   ),
                                 ),
@@ -493,6 +515,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMaxCtrl,
                                     label: 'Personas hasta',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.group_add_rounded, size: 20),
                                   ),
                                 ),
@@ -502,6 +525,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaValorCtrl,
                                     label: 'Valor por persona',
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: _integerInputFormatters,
                                     prefixIcon: const Icon(Icons.payments_rounded, size: 20),
                                   ),
                                 ),
@@ -637,14 +661,6 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                         ),
                       ],
                     ),
-                    if (_error != null) ...[
-                      AppBadge(
-                        label: _error!,
-                        tone: AppBadgeTone.danger,
-                        uppercase: false,
-                      ),
-                      const SizedBox(height: 12),
-                    ],
                     _ActionButtons(
                       guardando: _guardando,
                       onGuardar: _guardando ? null : _guardar,
@@ -792,7 +808,13 @@ class _TarifaEditSheetState extends State<_TarifaEditSheet> {
     final val = int.tryParse(_valCtrl.text.trim());
     if (min != null && max != null && val != null) {
       Navigator.of(context).pop(<String, int>{'min': min, 'max': max, 'val': val});
+      return;
     }
+    showAppToast(
+      context,
+      message: 'Completa todos los campos numericos de la tarifa.',
+      isError: true,
+    );
   }
 
   @override
@@ -817,22 +839,25 @@ class _TarifaEditSheetState extends State<_TarifaEditSheet> {
           const SizedBox(height: 16),
           Text('Editar tarifa', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 16),
-          TextField(
+          AppTextField(
             controller: _minCtrl,
-            decoration: const InputDecoration(labelText: 'Personas desde', isDense: true, filled: true),
+            label: 'Personas desde',
             keyboardType: TextInputType.number,
+            inputFormatters: _integerInputFormatters,
           ),
           const SizedBox(height: 10),
-          TextField(
+          AppTextField(
             controller: _maxCtrl,
-            decoration: const InputDecoration(labelText: 'Personas hasta', isDense: true, filled: true),
+            label: 'Personas hasta',
             keyboardType: TextInputType.number,
+            inputFormatters: _integerInputFormatters,
           ),
           const SizedBox(height: 10),
-          TextField(
+          AppTextField(
             controller: _valCtrl,
-            decoration: const InputDecoration(labelText: 'Valor por persona', isDense: true, filled: true),
+            label: 'Valor por persona',
             keyboardType: TextInputType.number,
+            inputFormatters: _integerInputFormatters,
           ),
           const SizedBox(height: 16),
           Row(children: [
@@ -1036,11 +1061,13 @@ class _ActionButtons extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth >= 520;
+        final saveLabel = guardando ? 'Guardando...' : 'Guardar experiencia';
+
         if (!isWide) {
           return Column(
             children: [
               AppButton(
-                label: guardando ? 'Guardando...' : 'Guardar experiencia',
+                label: saveLabel,
                 expanded: true,
                 onPressed: onGuardar,
               ),
@@ -1067,7 +1094,7 @@ class _ActionButtons extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: AppButton(
-                label: guardando ? 'Guardando...' : 'Guardar experiencia',
+                label: saveLabel,
                 expanded: true,
                 onPressed: onGuardar,
               ),

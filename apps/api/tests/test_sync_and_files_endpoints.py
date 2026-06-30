@@ -8,10 +8,12 @@ from fastapi.testclient import TestClient
 os.environ["APP_SKIP_DB_INIT"] = "true"
 
 from app.api.deps import get_current_user
-from app.common.enums import UserRole
+from app.common.enums import ExperienceCategory, ExperienceStatus, UserRole
 from app.core.di import Container
 from app.main import app
+from app.schemas.experience import ExperienceCreateSchema
 from app.schemas.sync import SyncPushOperationSchema
+from app.services.sync_handlers._shared import strip_null_values
 from app.services.sync_service import SyncOperationExecutor
 
 client = TestClient(app)
@@ -41,7 +43,6 @@ def test_sync_bootstrap_contract(monkeypatch) -> None:
             "reservation_rules": {"min_days_in_advance": 7},
             "emergency_contacts": {"items": []},
             "experiences": [],
-            "schedules": [],
             "equines": [],
             "cursors": {"reservations": ""},
         }
@@ -109,7 +110,6 @@ def test_sync_executor_rejects_catalog_write_for_guide() -> None:
     executor = SyncOperationExecutor(
         experience_handler=ExperienceSyncHandler(
             experience_service=_c.experience_service,
-            schedule_service=_c.schedule_service,
         ),
         reservation_handler=ReservationSyncHandler(
             reservation_service=_c.reservation_service,
@@ -152,7 +152,6 @@ def test_sync_executor_rejects_saddle_write_for_guide() -> None:
     executor = SyncOperationExecutor(
         experience_handler=ExperienceSyncHandler(
             experience_service=_c.experience_service,
-            schedule_service=_c.schedule_service,
         ),
         reservation_handler=ReservationSyncHandler(
             reservation_service=_c.reservation_service,
@@ -229,6 +228,25 @@ def test_resource_handler_routes_saddle_operations() -> None:
         handler.handle(entity="saddle", op_type="restore", operation=restore_op, current_user=_admin_user())
     )
     assert calls["restore"] == "s1"
+
+
+def test_experience_create_payload_applies_defaults_when_optional_fields_are_null() -> None:
+    payload = strip_null_values(
+        {
+            "name": "Ruta de prueba",
+            "slug": "ruta-prueba",
+            "description": "Descripcion",
+            "level": "basic",
+            "category": None,
+            "status": None,
+            "tags": None,
+            "duration_hours": 2,
+        }
+    )
+    schema = ExperienceCreateSchema(**payload)
+    assert schema.category == ExperienceCategory.EXPERIENCE
+    assert schema.status == ExperienceStatus.PUBLISHED
+    assert schema.tags == []
 
 
 def test_reservation_handler_routes_assignment_delete() -> None:

@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from app.api.deps import (
     get_participant_service,
     get_payment_proof_service,
+    get_reservation_provider_service,
     get_reservation_service,
+    get_reservation_timeline_service,
     require_permissions,
 )
 from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
@@ -20,6 +22,7 @@ from app.schemas.participant import (
 )
 from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofResponseSchema
 from app.schemas.reservation import (
+    ReservationApprovePaymentSchema,
     ReservationAvailabilityResponseSchema,
     ReservationCancelSchema,
     ReservationConfirmSchema,
@@ -30,14 +33,22 @@ from app.schemas.reservation import (
     ReservationStatusTransitionSchema,
     ReservationUpdateSchema,
 )
+from app.schemas.reservation_provider import (
+    ReservationProviderCreateSchema,
+    ReservationProviderTabItemSchema,
+    ReservationProviderUpdateSchema,
+)
+from app.schemas.reservation_timeline import ReservationTimelineEntrySchema
 from app.services import (
     ParticipantService,
     PaymentProofService,
+    ReservationProviderService,
     ReservationService,
 )
+from app.services.reservation_timeline_service import ReservationTimelineService
 from beanie import PydanticObjectId
 
-from app.documents import ExperienceDocument, ScheduleDocument
+from app.documents import ExperienceDocument
 from app.services.mappers import (
     participant_to_response,
     payment_proof_to_response,
@@ -128,32 +139,15 @@ async def list_reservations(
         for e in await ExperienceDocument.find(exp_criteria).to_list()
     }
 
-    # Batch-resolve schedule dates / times.
-    sched_ids = list(
-        {str(d.schedule_id) for d in docs if d.schedule_id}
-    )
-    schedule_map: dict[str, tuple[str, str]] = {}
-    if sched_ids:
-        sched_criteria = {"_id": {"$in": [PydanticObjectId(sid) for sid in sched_ids]}}
-        for s in await ScheduleDocument.find(sched_criteria).to_list():
-            schedule_map[str(s.id)] = (
-                s.date.isoformat() if s.date else "",
-                s.start_time if s.start_time else "",  # str ISO "HH:MM:SS" (ya no es datetime.time)
-            )
-
     items: list[ReservationListItemSchema] = []
     for doc in docs:
         eid = str(doc.experience_id)
-        sid = str(doc.schedule_id) if doc.schedule_id else None
-        sched_date, start_time = schedule_map.get(sid, ("", "")) if sid else ("", "")
         enriched: dict[str, object] = {}
         name = experiences.get(eid)
         if name:
             enriched["experience_name"] = name
-        if sched_date:
-            enriched["scheduled_date"] = sched_date
-        if start_time:
-            enriched["start_time"] = start_time
+        if doc.requested_date:
+            enriched["scheduled_date"] = doc.requested_date.isoformat()
         items.append(reservation_to_list_item(doc, enriched=enriched))
     return items
 
@@ -176,6 +170,103 @@ async def get_reservation(
 ) -> ReservationResponseSchema:
     doc = await reservation_service.get(reservation_id, actor_role=current_user.role)
     return await reservation_to_response(doc)
+
+
+@router.get(
+    "/{reservation_id}/timeline",
+    response_model=list[ReservationTimelineEntrySchema],
+    summary=ENDPOINT_DOCS["reservations_timeline"]["summary"],
+    description=endpoint_description("reservations_timeline"),
+    operation_id="getReservationTimeline",
+    responses=endpoint_responses("reservations_timeline"),
+)
+async def get_reservation_timeline(
+    reservation_id: str,
+    current_user: Annotated[
+        UserDocument,
+        Depends(require_permissions(Permission.RESERVATION_READ)),
+    ],
+    timeline_service: ReservationTimelineService = Depends(get_reservation_timeline_service),
+    limit: int = Query(default=100, ge=1, le=500),
+) -> list[ReservationTimelineEntrySchema]:
+    return await timeline_service.get_timeline(
+        reservation_id,
+        actor_role=current_user.role,
+        limit=limit,
+    )
+
+
+@router.get(
+    "/{reservation_id}/providers",
+    response_model=list[ReservationProviderTabItemSchema],
+    summary=ENDPOINT_DOCS["reservations_providers_list"]["summary"],
+    description=endpoint_description("reservations_providers_list"),
+    operation_id="listReservationProviders",
+    responses=endpoint_responses("reservations_providers_list"),
+)
+async def list_reservation_providers(
+    reservation_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_READ))],
+    service: ReservationProviderService = Depends(get_reservation_provider_service),
+) -> list[ReservationProviderTabItemSchema]:
+    return await service.list_for_reservation(reservation_id)
+
+
+@router.post(
+    "/{reservation_id}/providers",
+    response_model=ReservationProviderTabItemSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary=ENDPOINT_DOCS["reservations_providers_create"]["summary"],
+    description=endpoint_description("reservations_providers_create"),
+    operation_id="createReservationProvider",
+    responses=endpoint_responses("reservations_providers_create"),
+)
+async def create_reservation_provider(
+    reservation_id: str,
+    payload: ReservationProviderCreateSchema,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_UPDATE))],
+    service: ReservationProviderService = Depends(get_reservation_provider_service),
+) -> ReservationProviderTabItemSchema:
+    return await service.create_for_reservation(reservation_id, payload)
+
+
+@router.patch(
+    "/{reservation_id}/providers/{reservation_provider_id}",
+    response_model=ReservationProviderTabItemSchema,
+    summary=ENDPOINT_DOCS["reservations_providers_update"]["summary"],
+    description=endpoint_description("reservations_providers_update"),
+    operation_id="updateReservationProvider",
+    responses=endpoint_responses("reservations_providers_update"),
+)
+async def update_reservation_provider(
+    reservation_id: str,
+    reservation_provider_id: str,
+    payload: ReservationProviderUpdateSchema,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_UPDATE))],
+    service: ReservationProviderService = Depends(get_reservation_provider_service),
+) -> ReservationProviderTabItemSchema:
+    return await service.update_for_reservation(
+        reservation_id,
+        reservation_provider_id,
+        payload,
+    )
+
+
+@router.delete(
+    "/{reservation_id}/providers/{reservation_provider_id}",
+    status_code=status.HTTP_200_OK,
+    summary=ENDPOINT_DOCS["reservations_providers_delete"]["summary"],
+    description=endpoint_description("reservations_providers_delete"),
+    operation_id="deleteReservationProvider",
+    responses=endpoint_responses("reservations_providers_delete"),
+)
+async def delete_reservation_provider(
+    reservation_id: str,
+    reservation_provider_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.RESERVATION_UPDATE))],
+    service: ReservationProviderService = Depends(get_reservation_provider_service),
+) -> None:
+    await service.delete_for_reservation(reservation_id, reservation_provider_id)
 
 
 @router.patch(
@@ -222,6 +313,36 @@ async def confirm_reservation(
 ) -> ReservationResponseSchema:
     doc = await reservation_service.confirm_reservation(reservation_id, actor_id=current_user.id)
     return await reservation_to_response(doc)
+
+
+@router.post(
+    "/{reservation_id}/approve-payment",
+    response_model=ReservationResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Aprobar pago sin comprobante (pago físico/externo)",
+    description=(
+        "Marca el pago de una reserva como verificado SIN requerir un comprobante "
+        "subido. Útil para pagos físicos, transferencias externas o casos donde el "
+        "cliente paga en sitio. Genera el form link y notifica al cliente por WhatsApp."
+    ),
+    operation_id="approvePaymentWithoutProofByReservationId",
+)
+async def approve_payment_without_proof(
+    reservation_id: str,
+    payload: ReservationApprovePaymentSchema,
+    current_user: Annotated[
+        UserDocument,
+        Depends(require_permissions(Permission.PAYMENT_VERIFY)),
+    ],
+    payment_proof_service: PaymentProofService = Depends(get_payment_proof_service),
+) -> ReservationResponseSchema:
+    reservation = await payment_proof_service.approve_payment_without_proof(
+        reservation_id,
+        actor_id=current_user.id,
+        actor_role=current_user.role,
+        note=payload.note,
+    )
+    return await reservation_to_response(reservation)
 
 
 @router.post(

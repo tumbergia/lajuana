@@ -1,5 +1,7 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
+import 'package:sqflite/sqflite.dart';
+
+import '../../../../shared/infrastructure/database/database_factory_initializer.dart';
 
 /// SQLite local para cache de equinos (network-first).
 /// Sigue el mismo patrón que [ReservationsDatabase].
@@ -20,6 +22,7 @@ class EquinesDatabase {
   }
 
   Future<Database> _initDatabase() async {
+    await ensureDatabaseFactoryInitialized();
     final dbPath = await getDatabasesPath();
     final path = p.join(dbPath, _dbName);
     return openDatabase(

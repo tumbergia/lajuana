@@ -44,7 +44,12 @@ from app.schemas.payment_proof import (
     PaymentProofUpdateSchema,
 )
 from app.schemas.policy import PolicyCreateSchema, PolicyResponseSchema, PolicyUpdateSchema
-from app.schemas.provider import ProviderCreateSchema, ProviderResponseSchema, ProviderUpdateSchema
+from app.schemas.provider import (
+    ProviderCreateSchema,
+    ProviderListItemSchema,
+    ProviderResponseSchema,
+    ProviderUpdateSchema,
+)
 from app.schemas.reservation import (
     ReservationAvailabilityResponseSchema,
     ReservationCancelSchema,
@@ -56,7 +61,6 @@ from app.schemas.reservation import (
     ReservationUpdateSchema,
 )
 from app.schemas.saddle import SaddleCreateSchema, SaddleResponseSchema, SaddleUpdateSchema
-from app.schemas.schedule import ScheduleCreateSchema, ScheduleResponseSchema, ScheduleUpdateSchema
 from app.schemas.service_log import (
     ServiceLogCreateSchema,
     ServiceLogResponseSchema,
@@ -119,9 +123,6 @@ __all__ = [
     "SaddleCreateSchema",
     "SaddleResponseSchema",
     "SaddleUpdateSchema",
-    "ScheduleCreateSchema",
-    "ScheduleResponseSchema",
-    "ScheduleUpdateSchema",
     "ServiceLogCreateSchema",
     "ServiceLogResponseSchema",
     "ServiceLogUpdateSchema",

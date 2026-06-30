@@ -16,9 +16,7 @@ _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
     "usuarios": ["admin_list_users", "admin_create_user", "admin_update_user", "admin_deactivate_user"],
     "experiencia": ["admin_list_experiences_admin", "admin_create_experience", "admin_update_experience", "admin_deactivate_experience"],
     "experiencias": ["admin_list_experiences_admin", "admin_create_experience", "admin_update_experience", "admin_deactivate_experience"],
-    "schedule": ["admin_list_schedules_admin", "admin_create_schedule", "admin_update_schedule", "admin_deactivate_schedule"],
-    "schedules": ["admin_list_schedules_admin", "admin_create_schedule", "admin_update_schedule", "admin_deactivate_schedule"],
-    "fecha": ["admin_list_schedules_admin", "admin_create_schedule", "admin_update_schedule", "admin_deactivate_schedule"],
+    "fecha": ["admin_list_reservations", "admin_get_reservation_detail", "check_experience_availability", "list_available_schedules"],
     "equino": ["admin_list_equines", "admin_get_equine", "admin_create_equine", "admin_update_equine", "admin_deactivate_equine", "admin_add_equine_health_event", "admin_update_equine_availability"],
     "equinos": ["admin_list_equines", "admin_get_equine", "admin_create_equine", "admin_update_equine", "admin_deactivate_equine", "admin_add_equine_health_event", "admin_update_equine_availability"],
     "mula": ["admin_list_equines", "admin_get_equine", "admin_create_equine", "admin_update_equine", "admin_deactivate_equine", "admin_add_equine_health_event", "admin_update_equine_availability"],
@@ -51,10 +49,6 @@ _ADMIN_TOOL_DESCRIPTIONS: dict[str, str] = {
     "admin_create_experience": "Crear experiencia",
     "admin_update_experience": "Actualizar experiencia",
     "admin_deactivate_experience": "Desactivar experiencia",
-    "admin_list_schedules_admin": "Listar schedules",
-    "admin_create_schedule": "Crear schedule",
-    "admin_update_schedule": "Actualizar schedule",
-    "admin_deactivate_schedule": "Desactivar schedule",
     "admin_get_sales_summary": "Reporte ventas",
     "admin_get_reservation_funnel": "Embudo conversión",
     "admin_get_channel_performance": "Rendimiento canal",
@@ -189,9 +183,12 @@ class GeminiPlanner:
 
         elapsed_ms = int((time.perf_counter() - started) * 1000)
         logger.info(
-            "[conversation_id=%s] LLM response | elapsed_ms=%d",
+            "[conversation_id=%s] LLM response | elapsed_ms=%d | action=%s | tool=%s | audit=%s",
             conversation_id,
             elapsed_ms,
+            result.action.value if result.action else "none",
+            result.tool_name or "none",
+            (result.audit_summary or "none")[:200],
         )
 
         return result

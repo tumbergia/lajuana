@@ -11,11 +11,10 @@ import asyncio
 import hashlib
 import random
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from beanie import init_beanie
-from bson import ObjectId
 from pymongo import AsyncMongoClient
 
 from app.common.enums import (
@@ -23,7 +22,6 @@ from app.common.enums import (
     ExperienceLevel,
     PaymentStatus,
     ReservationStatus,
-    ScheduleStatus,
     UserRole,
 )
 from app.core.config import settings
@@ -37,11 +35,11 @@ from app.documents import (
     PaymentProofDocument,
     PolicyDocument,
     ProviderDocument,
+    ProviderStatus,
     ProviderType,
     ReservationDocument,
     ReservationRules,
     SaddleDocument,
-    ScheduleDocument,
     ServiceLogDocument,
     ServiceLogEventType,
     UserDocument,
@@ -61,6 +59,7 @@ COLLECTIONS_TO_DROP = [
     "equines",
     "saddles",
     "providers",
+    "reservation_providers",
     "policies",
     "users",
     "config",
@@ -81,11 +80,50 @@ TOTAL_RESERVATIONS = sum(RESERVATION_STATUS_COUNTS.values())
 
 
 @dataclass(frozen=True)
-class ScheduleSeed:
+class ReservationDateSeed:
     experience_slug: str
     date_iso: str
-    capacity: int
-    status: str
+
+
+def _reservation_date_blueprint() -> list[ReservationDateSeed]:
+    return [
+        ReservationDateSeed("los-chorros", "2026-05-10"),
+        ReservationDateSeed("los-chorros", "2026-05-17"),
+        ReservationDateSeed("los-chorros", "2026-05-24"),
+        ReservationDateSeed("los-chorros", "2026-06-07"),
+        ReservationDateSeed("los-chorros", "2026-06-21"),
+        ReservationDateSeed("los-chorros", "2026-03-15"),
+        ReservationDateSeed("pueblo-dos-mentiras", "2026-05-11"),
+        ReservationDateSeed("pueblo-dos-mentiras", "2026-05-18"),
+        ReservationDateSeed("pueblo-dos-mentiras", "2026-06-01"),
+        ReservationDateSeed("pueblo-dos-mentiras", "2026-06-15"),
+        ReservationDateSeed("pueblo-dos-mentiras", "2026-03-22"),
+        ReservationDateSeed("montana-cristal", "2026-05-15"),
+        ReservationDateSeed("montana-cristal", "2026-05-29"),
+        ReservationDateSeed("montana-cristal", "2026-06-12"),
+        ReservationDateSeed("montana-cristal", "2026-03-08"),
+        ReservationDateSeed("alto-roble", "2026-05-12"),
+        ReservationDateSeed("alto-roble", "2026-05-26"),
+        ReservationDateSeed("alto-roble", "2026-06-09"),
+        ReservationDateSeed("salamina-san-felix-marulanda", "2026-05-20"),
+        ReservationDateSeed("salamina-san-felix-marulanda", "2026-06-17"),
+        ReservationDateSeed("recorrido-medio-dia", "2026-05-13"),
+        ReservationDateSeed("recorrido-medio-dia", "2026-05-27"),
+        ReservationDateSeed("recorrido-medio-dia", "2026-06-10"),
+        ReservationDateSeed("recorrido-medio-dia", "2026-06-24"),
+        ReservationDateSeed("recorrido-medio-dia", "2026-07-08"),
+        ReservationDateSeed("los-chorros", "2026-07-22"),
+        ReservationDateSeed("pueblo-dos-mentiras", "2026-07-29"),
+        ReservationDateSeed("montana-cristal", "2026-08-05"),
+        ReservationDateSeed("alto-roble", "2026-08-12"),
+        ReservationDateSeed("salamina-san-felix-marulanda", "2026-08-19"),
+        ReservationDateSeed("recorrido-medio-dia", "2026-08-26"),
+        ReservationDateSeed("los-chorros", "2026-09-02"),
+        ReservationDateSeed("pueblo-dos-mentiras", "2026-09-09"),
+        ReservationDateSeed("montana-cristal", "2026-09-16"),
+        ReservationDateSeed("alto-roble", "2026-09-23"),
+        ReservationDateSeed("salamina-san-felix-marulanda", "2026-09-30"),
+    ]
 
 
 async def reset_db(client: AsyncMongoClient) -> None:
@@ -285,125 +323,209 @@ async def seed_saddles() -> dict[str, SaddleDocument]:
     return inserted
 
 
-def _provider_type_for(category: str) -> ProviderType:
-    mapping = {
-        "lodging": ProviderType.LODGING,
-        "food": ProviderType.FOOD,
-        "logistics": ProviderType.MULE_TRANSPORT,
-        "transport": ProviderType.MULE_TRANSPORT,
-        "insurance": ProviderType.OTHER,
-        "partner": ProviderType.OTHER,
+PROVIDERS_SEED: list[dict[str, object]] = [
+    {
+        "slug": "tominejo-ecolodge",
+        "name": "Tominejo Ecolodge",
+        "type": ProviderType.LODGING,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Neira",
+        "service_categories": ["alojamiento", "alimentacion"],
+        "source_notes": "Aparece en 10D 9N como alojamiento en Neira y cenas incluidas.",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "castillo-de-cascadas",
+        "name": "Castillo de Cascadas",
+        "type": ProviderType.LODGING,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Salamina",
+        "service_categories": ["alojamiento", "alimentacion", "potrero_mulas"],
+        "source_notes": (
+            "Aparece en 10D 9N y Los Chorros como alojamiento, cena y potrero de mulas."
+        ),
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "casa-tucan",
+        "name": "Casa Tucán",
+        "type": ProviderType.LODGING,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "San Félix",
+        "service_categories": ["alojamiento"],
+        "source_notes": "Aparece en 10D 9N como alojamiento en San Félix.",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "hotel-termales-del-ruiz",
+        "name": "Hotel Termales del Ruiz",
+        "type": ProviderType.LODGING,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Villamaría / Termales del Ruiz",
+        "service_categories": ["alojamiento", "alimentacion", "termalismo"],
+        "source_notes": (
+            "Aparece en 10D 9N como alojamiento y alimentación en Termales del Ruiz."
+        ),
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "hacienda-guayabal",
+        "name": "Hacienda Guayabal",
+        "type": ProviderType.EXPERIENCE_ALLY,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Chinchiná",
+        "service_categories": ["cafe", "alimentacion", "alojamiento"],
+        "source_notes": (
+            "Aparece en 10D 9N como Hda. Guayabal - Chinchiná y asociado a Tour Café."
+        ),
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "mery-san-felix",
+        "name": "Mery",
+        "type": ProviderType.FOOD,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "San Félix",
+        "service_categories": ["alimentacion"],
+        "source_notes": "Aparece en 10D 9N como Almuerzo / San Félix (Mery).",
+        "contact_name": "Mery",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "la-truchera-marulanda",
+        "name": "La Truchera",
+        "type": ProviderType.FOOD,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Marulanda",
+        "service_categories": ["alimentacion", "punto_logistico"],
+        "source_notes": (
+            "Aparece en 10D 9N y Salamina-San Félix-Marulanda como almuerzo y punto de regreso."
+        ),
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "la-pica",
+        "name": "La Pica",
+        "type": ProviderType.EXPERIENCE_ALLY,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Pendiente por confirmar",
+        "service_categories": ["experiencia_lechera", "potrero_mulas"],
+        "source_notes": (
+            "Aparece en 10D 9N como Experiencia Lechera - La Pica y en "
+            "Salamina-San Félix-Marulanda como potreros de mulas."
+        ),
+        "capacity_notes": "Se menciona uso de potreros para mulas por noches.",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "valle-de-la-samaria",
+        "name": "Valle de La Samaria",
+        "type": ProviderType.EXPERIENCE_ALLY,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Pendiente por confirmar",
+        "service_categories": ["actividad", "transporte"],
+        "source_notes": "Aparece en 10D 9N como Visita Valle de La Samaria + Transporte.",
+        "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
+    },
+    {
+        "slug": "pnn-los-nevados",
+        "name": "PNN Los Nevados",
+        "type": ProviderType.PARK_OR_ACCESS,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "Los Nevados",
+        "service_categories": ["entrada", "parque_natural"],
+        "source_notes": "Aparece en Nevado como Entrada pax PNN Los Nevados.",
+        "tariff_notes": "Tarifa unitaria de entrada tomada del Excel cuando aplique.",
+    },
+    {
+        "slug": "safe-trips",
+        "name": "Safe Trips",
+        "type": ProviderType.INSURANCE,
+        "status": ProviderStatus.ACTIVE,
+        "location_label": "N/A",
+        "service_categories": ["poliza", "seguro"],
+        "source_notes": "Aparece en 10D 9N como Póliza Safe Trips.",
+        "tariff_notes": "Tarifa según póliza/cotización vigente.",
+    },
+    {
+        "slug": "transporte-jeep-willys-pendiente",
+        "name": "Transporte Jeep Willys — proveedor por definir",
+        "type": ProviderType.TRANSPORT_PEOPLE,
+        "status": ProviderStatus.NEEDS_REVIEW,
+        "location_label": "Eje Cafetero",
+        "service_categories": ["transporte_pasajeros", "jeep_willys"],
+        "source_notes": (
+            "El Excel menciona Jeep Willys #1, Jeep Willys #2, Jeep pasajeros y Jeep logística, "
+            "pero no identifica proveedor."
+        ),
+        "capacity_notes": (
+            "Capacidades vistas en Excel: 2, 4, 6, 8 y 8-12 pax según tramo."
+        ),
+        "tariff_notes": "Pendiente asociar proveedor real y tarifas por tramo.",
+    },
+    {
+        "slug": "transporte-mulas-camion-pendiente",
+        "name": "Transporte de mulas en camión — proveedor por definir",
+        "type": ProviderType.EQUINE_TRANSPORT,
+        "status": ProviderStatus.NEEDS_REVIEW,
+        "location_label": "Eje Cafetero",
+        "service_categories": ["transporte_mulas", "camion"],
+        "source_notes": (
+            "El Excel menciona Transporte MULAS ida y vuelta Camión #1 y #2, "
+            "pero no identifica proveedor."
+        ),
+        "tariff_notes": "Pendiente asociar proveedor real y tarifas por ruta.",
+    },
+    {
+        "slug": "guianza-paramo-pendiente",
+        "name": "Guianza Ecosistema de Páramo — proveedor por definir",
+        "type": ProviderType.GUIDE_ALLY,
+        "status": ProviderStatus.NEEDS_REVIEW,
+        "location_label": "Termales del Ruiz / Páramo",
+        "service_categories": ["guianza", "paramo"],
+        "source_notes": (
+            "El Excel menciona Guianza Ecosistema de Páramo y Guianza para Nevado, "
+            "pero no identifica proveedor."
+        ),
+        "tariff_notes": "Pendiente asociar guía/proveedor real.",
+    },
+]
+
+
+async def _upsert_provider(data: dict[str, object]) -> ProviderDocument:
+    slug = str(data["slug"])
+    existing = await ProviderDocument.find_one({"slug": slug})
+    payload = {
+        "name": data["name"],
+        "slug": slug,
+        "type": data["type"],
+        "status": data.get("status", ProviderStatus.ACTIVE),
+        "service_categories": data.get("service_categories", []),
+        "contact_name": data.get("contact_name"),
+        "email": data.get("email"),
+        "whatsapp_phone": data.get("whatsapp_phone"),
+        "location_label": data.get("location_label"),
+        "capacity_notes": data.get("capacity_notes"),
+        "operational_notes": data.get("operational_notes"),
+        "tariff_notes": data.get("tariff_notes"),
+        "source_notes": data.get("source_notes"),
+        "is_active": data.get("is_active", True),
     }
-    return mapping[category]
+    if existing is None:
+        doc = ProviderDocument(**payload)
+        await doc.insert()
+        return doc
+
+    for field, value in payload.items():
+        setattr(existing, field, value)
+    await existing.save()
+    return existing
 
 
 async def seed_providers() -> list[ProviderDocument]:
-    payloads = [
-        ("Safe Trips", "insurance"),
-        ("Tominejo Ecolodge", "lodging"),
-        ("Castillo de Cascadas", "lodging"),
-        ("Casa Tucan", "lodging"),
-        ("Hotel Termales del Ruiz", "lodging"),
-        ("Hacienda Guayabal", "lodging"),
-        ("Neira York Coffee", "food"),
-        ("Los Turpiales", "food"),
-        ("Melva Pineda", "food"),
-        ("Nohra Pueblo Hondo", "food"),
-        ("Juan Jose Hidalgo", "logistics"),
-        ("Andres Mejia", "logistics"),
-        ("Guillermo Alvarez", "logistics"),
-        ("Jeep Willys", "transport"),
-        ("DE UNA COLOMBIA", "partner"),
-        ("KIUBO COLOMBIA", "partner"),
-    ]
     docs: list[ProviderDocument] = []
-    for name, category in payloads:
-        doc = ProviderDocument(
-            name=name,
-            provider_type=_provider_type_for(category),
-            contact_name=name,
-            is_active=True,
-        )
-        await doc.insert()
-        docs.append(doc)
-    return docs
-
-
-def _schedule_blueprint() -> list[ScheduleSeed]:
-    return [
-        ScheduleSeed("los-chorros", "2026-05-10", 8, "open"),
-        ScheduleSeed("los-chorros", "2026-05-17", 8, "full"),
-        ScheduleSeed("los-chorros", "2026-05-24", 8, "open"),
-        ScheduleSeed("los-chorros", "2026-06-07", 8, "closed"),
-        ScheduleSeed("los-chorros", "2026-06-21", 8, "open"),
-        ScheduleSeed("los-chorros", "2026-03-15", 8, "past"),
-        ScheduleSeed("pueblo-dos-mentiras", "2026-05-11", 8, "open"),
-        ScheduleSeed("pueblo-dos-mentiras", "2026-05-18", 8, "full"),
-        ScheduleSeed("pueblo-dos-mentiras", "2026-06-01", 8, "open"),
-        ScheduleSeed("pueblo-dos-mentiras", "2026-06-15", 8, "open"),
-        ScheduleSeed("pueblo-dos-mentiras", "2026-03-22", 8, "past"),
-        ScheduleSeed("montana-cristal", "2026-05-15", 6, "open"),
-        ScheduleSeed("montana-cristal", "2026-05-29", 6, "full"),
-        ScheduleSeed("montana-cristal", "2026-06-12", 6, "closed"),
-        ScheduleSeed("montana-cristal", "2026-03-08", 6, "past"),
-        ScheduleSeed("alto-roble", "2026-05-12", 10, "open"),
-        ScheduleSeed("alto-roble", "2026-05-26", 10, "full"),
-        ScheduleSeed("alto-roble", "2026-06-09", 10, "open"),
-        ScheduleSeed("salamina-san-felix-marulanda", "2026-05-20", 6, "open"),
-        ScheduleSeed("salamina-san-felix-marulanda", "2026-06-17", 6, "closed"),
-    ]
-
-
-async def seed_schedules(
-    experiences_by_slug: dict[str, ExperienceDocument],
-) -> list[ScheduleDocument]:
-    collection = ScheduleDocument.get_motor_collection()
-    docs: list[ScheduleDocument] = []
-    for item in _schedule_blueprint():
-        day = date.fromisoformat(item.date_iso)
-        status = (
-            ScheduleStatus.CLOSED
-            if item.status in {"closed", "past"}
-            else ScheduleStatus(item.status)
-        )
-        available = 0 if item.status == "full" else item.capacity
-        reserved = item.capacity if item.status == "full" else 0
-        note = "past" if item.status == "past" else None
-        schedule_id = ObjectId()
-        raw = {
-            "_id": schedule_id,
-            "experience_id": experiences_by_slug[item.experience_slug].id,
-            "date": datetime.combine(day, time.min, tzinfo=UTC),
-            "start_time": "08:00:00",
-            "is_active": True,
-            "capacity_total": item.capacity,
-            "reserved_slots": reserved,
-            "internal_slots": 0,
-            "blocked_slots": 0,
-            "available_slots": available,
-            "status": status.value,
-            "notes": note,
-            "custom_request_only": False,
-            "created_at": datetime.now(UTC),
-            "updated_at": datetime.now(UTC),
-        }
-        await collection.insert_one(raw)
-        doc = ScheduleDocument(
-            id=schedule_id,
-            experience_id=experiences_by_slug[item.experience_slug].id,
-            date=day,
-            start_time="08:00:00",
-            is_active=True,
-            capacity_total=item.capacity,
-            reserved_slots=reserved,
-            internal_slots=0,
-            blocked_slots=0,
-            available_slots=available,
-            status=status,
-            notes=note,
-            custom_request_only=False,
-        )
-        docs.append(doc)
+    for item in PROVIDERS_SEED:
+        docs.append(await _upsert_provider(item))
     return docs
 
 
@@ -428,18 +550,11 @@ def _build_channels() -> list[Channel]:
 
 async def seed_reservations(
     experiences_by_slug: dict[str, ExperienceDocument],
-    schedules: list[ScheduleDocument],
 ) -> list[ReservationDocument]:
-    experience_cycle = [
-        experiences_by_slug["los-chorros"],
-        experiences_by_slug["pueblo-dos-mentiras"],
-        experiences_by_slug["montana-cristal"],
-        experiences_by_slug["alto-roble"],
-        experiences_by_slug["salamina-san-felix-marulanda"],
-    ]
-    schedule_cycle = [s for s in schedules if s.date >= date(2026, 5, 1)]
+    date_cycle = _reservation_date_blueprint()
     channels = _build_channels()
     people_map = _reservation_people_by_status()
+    confirmed_dates: set[str] = set()
 
     holder_first_names = [
         "Carlos",
@@ -484,25 +599,35 @@ async def seed_reservations(
         for idx in range(count):
             first = holder_first_names[(sequence - 1) % len(holder_first_names)]
             last = holder_last_names[(sequence - 1) % len(holder_last_names)]
-            exp = experience_cycle[(sequence - 1) % len(experience_cycle)]
-            schedule = schedule_cycle[(sequence - 1) % len(schedule_cycle)]
+            date_seed = date_cycle[(sequence - 1) % len(date_cycle)]
+            exp = experiences_by_slug[date_seed.experience_slug]
+            requested = date.fromisoformat(date_seed.date_iso)
+            if status == ReservationStatus.CONFIRMED:
+                if requested.isoformat() in confirmed_dates:
+                    raise ValueError(
+                        f"Fecha duplicada para reserva confirmada: {requested.isoformat()}"
+                    )
+                confirmed_dates.add(requested.isoformat())
             payment_status = PaymentStatus.PENDING
             if status in {ReservationStatus.PAYMENT_RECEIVED, ReservationStatus.CONFIRMED}:
                 payment_status = PaymentStatus.RECEIVED
             doc = ReservationDocument(
                 code=f"RES-SEED-{sequence:03d}",
                 experience_id=exp.id,
-                schedule_id=schedule.id,
                 channel=channels[channel_idx],
                 status=status,
                 holder_name=f"{first} {last}",
                 holder_email=f"{first.lower()}.{last.lower()}{sequence}@mail.com",
                 holder_phone=f"300000{sequence:04d}",
-                requested_date=schedule.date,
+                requested_date=requested,
                 participant_count=people_values[idx],
                 quoted_total_amount=None,
                 currency="COP",
                 payment_status=payment_status,
+                blocks_day=status == ReservationStatus.CONFIRMED,
+                availability_lock_key=requested.isoformat()
+                if status == ReservationStatus.CONFIRMED
+                else None,
             )
             await doc.insert()
             reservations.append(doc)
@@ -754,41 +879,6 @@ async def seed_logs(
     return logs
 
 
-async def _refresh_schedule_occupancy_from_confirmed(
-    reservations: list[ReservationDocument],
-) -> None:
-    confirmed = [r for r in reservations if r.status == ReservationStatus.CONFIRMED]
-    load_by_schedule: dict[str, int] = {}
-    for reservation in confirmed:
-        if reservation.schedule_id is None:
-            continue
-        sid = str(reservation.schedule_id)
-        load_by_schedule[sid] = load_by_schedule.get(sid, 0) + reservation.participant_count
-
-    collection = ScheduleDocument.get_motor_collection()
-    all_schedules = await ScheduleDocument.find_all().to_list()
-    for schedule in all_schedules:
-        reserved = load_by_schedule.get(str(schedule.id), schedule.reserved_slots)
-        available_slots = max(
-            0,
-            schedule.capacity_total - reserved - schedule.internal_slots - schedule.blocked_slots,
-        )
-        status = schedule.status
-        if schedule.status != ScheduleStatus.CLOSED:
-            status = ScheduleStatus.FULL if available_slots == 0 else ScheduleStatus.OPEN
-        await collection.update_one(
-            {"_id": ObjectId(str(schedule.id))},
-            {
-                "$set": {
-                    "reserved_slots": reserved,
-                    "available_slots": available_slots,
-                    "status": status.value,
-                    "updated_at": datetime.now(UTC),
-                }
-            },
-        )
-
-
 async def validate_seed(
     reservations: list[ReservationDocument],
     participants: list[ParticipantDocument],
@@ -831,27 +921,23 @@ async def validate_seed(
     if napoleon_assignments > 1:
         raise ValueError("Napoleon fue usado en exceso.")
 
-    schedules = await ScheduleDocument.find_all().to_list()
-    load_by_schedule: dict[str, int] = {}
+    confirmed_dates: set[str] = set()
     for reservation in confirmed:
-        if reservation.schedule_id is None:
-            raise ValueError("Reserva confirmada sin schedule.")
-        sid = str(reservation.schedule_id)
-        load_by_schedule[sid] = load_by_schedule.get(sid, 0) + reservation.participant_count
-    for schedule in schedules:
-        load = load_by_schedule.get(str(schedule.id), 0)
-        if load > schedule.capacity_total:
-            raise ValueError("Overbooking detectado.")
+        if reservation.requested_date is None:
+            raise ValueError(f"Reserva confirmada sin fecha: {reservation.code}")
+        date_key = reservation.requested_date.isoformat()
+        if date_key in confirmed_dates:
+            raise ValueError(f"Fecha duplicada entre reservas confirmadas: {date_key}")
+        confirmed_dates.add(date_key)
+        if not reservation.blocks_day or reservation.availability_lock_key != date_key:
+            raise ValueError(f"Day-lock invalido para reserva confirmada: {reservation.code}")
 
     experiences_count = await ExperienceDocument.find({"is_active": True}).count()
-    if experiences_count != 5:
+    if experiences_count != 6:
         raise ValueError("Cobertura invalida de experiencias activas.")
     equines_count = await EquineDocument.find_all().count()
     if equines_count != 17:
         raise ValueError("Cobertura invalida de equinos.")
-    schedules_count = await ScheduleDocument.find_all().count()
-    if schedules_count != 20:
-        raise ValueError("Cobertura invalida de schedules.")
     active_assignable = await EquineDocument.find({"is_available": True}).count()
     if active_assignable != 13:
         raise ValueError("Cantidad de equinos asignables invalida.")
@@ -861,9 +947,11 @@ async def validate_seed(
         if count != expected:
             raise ValueError(f"Cobertura invalida para estado {status}.")
 
-    past_count = sum(1 for s in schedules if s.date < date(2026, 4, 22))
-    if past_count != 3:
-        raise ValueError("Cobertura invalida de schedules pasados.")
+    past_reservation_dates = sum(
+        1 for r in reservations if r.requested_date and r.requested_date < date(2026, 4, 22)
+    )
+    if past_reservation_dates != 3:
+        raise ValueError("Cobertura invalida de reservas con fechas pasadas.")
 
 
 async def run_seed() -> None:
@@ -874,7 +962,6 @@ async def run_seed() -> None:
         document_models=[
             UserDocument,
             ExperienceDocument,
-            ScheduleDocument,
             ReservationDocument,
             ParticipantDocument,
             PaymentProofDocument,
@@ -901,8 +988,7 @@ async def run_seed() -> None:
         equines_by_name = await seed_equines()
         saddles_by_code = await seed_saddles()
         await seed_providers()
-        schedules = await seed_schedules(experiences_by_slug)
-        reservations = await seed_reservations(experiences_by_slug, schedules)
+        reservations = await seed_reservations(experiences_by_slug)
         await seed_payment_proofs(reservations)
         participants = await seed_participants(reservations)
         assignments = await seed_assignments(
@@ -912,7 +998,6 @@ async def run_seed() -> None:
             saddles_by_code,
         )
         logs = await seed_logs(reservations, participants, assignments)
-        await _refresh_schedule_occupancy_from_confirmed(reservations)
         await validate_seed(
             reservations=reservations,
             participants=participants,

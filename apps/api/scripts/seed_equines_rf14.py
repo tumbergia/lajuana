@@ -32,7 +32,6 @@ from app.documents import (
     ProviderDocument,
     ReservationDocument,
     SaddleDocument,
-    ScheduleDocument,
     ServiceLogDocument,
     UserDocument,
 )
@@ -262,7 +261,6 @@ async def run_seed():
         document_models=[
             UserDocument,
             ExperienceDocument,
-            ScheduleDocument,
             ReservationDocument,
             ParticipantDocument,
             PaymentProofDocument,

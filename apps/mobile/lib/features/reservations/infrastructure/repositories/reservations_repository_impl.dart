@@ -3,6 +3,12 @@ import 'dart:typed_data';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
+import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_photo.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile/features/reservations/infrastructure/local/reservations_local_data_source.dart';
@@ -51,10 +57,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
                 'holder_phone': item.holderPhone,
                 'experience_id': item.experienceId,
                 'experience_name': item.experienceName,
-                'schedule_id': item.scheduleId,
                 'requested_date': item.requestedDate,
-                'scheduled_date': item.scheduledDate,
-                'start_time': item.startTime,
                 'expected_participants_count': item.registeredParticipantsCount,
                 'participants_completed_count': item.registeredParticipantsCount,
                 'participant_form_status': item.participantFormStatus,
@@ -97,7 +100,6 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
           'id': dto.id,
           'code': dto.code,
           'experience_id': dto.experienceId,
-          'schedule_id': dto.scheduleId,
           'channel': dto.channel,
           'status': dto.status,
           'participant_count': dto.participantCount,
@@ -267,7 +269,22 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
     );
     final detail = dtoToDetail(dto);
 
-    // Update reservation detail cache
+    await _cacheDetailPayload(dto);
+
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
+    String? note,
+  }) async {
+    final dto = await _apiClient.approvePaymentWithoutProof(
+      reservationId: reservationId,
+      note: note,
+    );
+    final detail = dtoToDetail(dto);
+
     await _cacheDetailPayload(dto);
 
     return detail;
@@ -330,7 +347,6 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
         'id': dto.id,
         'code': dto.code,
         'experience_id': dto.experienceId,
-        'schedule_id': dto.scheduleId,
         'channel': dto.channel,
         'status': dto.status,
         'participant_count': dto.participantCount,
@@ -474,10 +490,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
       holderPhone: payload['holder_phone'] as String?,
       experienceId: payload['experience_id'] as String?,
       experienceName: payload['experience_name'] as String?,
-      scheduleId: payload['schedule_id'] as String?,
       requestedDate: payload['requested_date'] as String?,
-      scheduledDate: payload['scheduled_date'] as String?,
-      startTime: payload['start_time'] as String?,
       expectedParticipantsCount: payload['expected_participants_count'] as int?,
       participantsCompletedCount: payload['participants_completed_count'] as int?,
       participantFormStatus: payload['participant_form_status'] as String?,
@@ -502,7 +515,6 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
       id: payload['id'] as String?,
       code: payload['code'] as String?,
       experienceId: payload['experience_id'] as String?,
-      scheduleId: payload['schedule_id'] as String?,
       channel: payload['channel'] as String?,
       status: payload['status'] as String?,
       participantCount: payload['participant_count'] as int?,
@@ -554,5 +566,171 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
   Future<ReservationRules> getRules() async {
     final dto = await _apiClient.getReservationRules();
     return ReservationRules.fromGen(dto);
+  }
+
+  @override
+  Future<List<ReservationTimelineEntry>> getReservationTimeline(
+    String reservationId,
+  ) async {
+    final dtos = await _apiClient.getReservationTimeline(reservationId);
+    return dtos.map(timelineEntryDtoToDomain).toList(growable: false);
+  }
+
+  @override
+  Future<void> createReservationLogNote({
+    required String reservationId,
+    required String notes,
+    List<ReservationLogPhotoInput> photos = const [],
+  }) async {
+    await _apiClient.createLogNote(
+      reservationId: reservationId,
+      notes: notes,
+      photos: photos.map(_photoInputToJson).toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> updateReservationLogNote({
+    required String logId,
+    required String notes,
+    List<ReservationLogPhotoInput>? photos,
+  }) async {
+    await _apiClient.updateLogNote(
+      logId: logId,
+      notes: notes,
+      photos: photos?.map(_photoInputToJson).toList(growable: false),
+    );
+  }
+
+  @override
+  Future<void> deleteReservationLogEntry({
+    required String logId,
+  }) async {
+    await _apiClient.deleteLogEntry(logId);
+  }
+
+  @override
+  Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
+    final dto = await _apiClient.getLogNote(logId);
+    return ReservationLogNoteDetail(
+      id: dto.id,
+      notes: dto.notes,
+      photos: dto.photos.map(_photoDtoToDomain).toList(growable: false),
+    );
+  }
+
+  @override
+  Future<ReservationLogPhotoUpload> uploadReservationLogPhoto({
+    required String reservationId,
+    required Uint8List bytes,
+    required String filename,
+    required String contentType,
+  }) async {
+    final dto = await _apiClient.uploadLogPhoto(
+      reservationId: reservationId,
+      bytes: bytes,
+      filename: filename,
+      contentType: contentType,
+    );
+    return ReservationLogPhotoUpload(
+      storageKey: dto.storageKey,
+      filename: dto.filename,
+      contentType: dto.contentType,
+      sizeBytes: dto.sizeBytes,
+    );
+  }
+
+  @override
+  Future<Uint8List> downloadReservationLogPhoto({
+    required String logId,
+    required int photoIndex,
+  }) async {
+    return _apiClient.downloadLogPhoto(logId: logId, photoIndex: photoIndex);
+  }
+
+  @override
+  Future<List<ReservationProviderItem>> getReservationProviders(
+    String reservationId,
+  ) async {
+    final dtos = await _apiClient.getReservationProviders(reservationId);
+    return dtos.map(reservationProviderDtoToDomain).toList(growable: false);
+  }
+
+  @override
+  Future<List<ProviderCatalogItem>> listProviders({
+    String? query,
+    bool isActive = true,
+  }) async {
+    final dtos = await _apiClient.listProviders(
+      query: query,
+      isActive: isActive,
+    );
+    return dtos.map(providerCatalogDtoToDomain).toList(growable: false);
+  }
+
+  @override
+  Future<ReservationProviderItem> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  }) async {
+    final dto = await _apiClient.createReservationProvider(
+      reservationId: reservationId,
+      providerId: providerId,
+      serviceLabel: serviceLabel,
+      notes: notes,
+      status: status,
+    );
+    return reservationProviderDtoToDomain(dto);
+  }
+
+  @override
+  Future<ReservationProviderItem> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  }) async {
+    final dto = await _apiClient.updateReservationProvider(
+      reservationId: reservationId,
+      reservationProviderId: reservationProviderId,
+      serviceLabel: serviceLabel,
+      notes: notes,
+      status: status,
+    );
+    return reservationProviderDtoToDomain(dto);
+  }
+
+  @override
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+  }) async {
+    await _apiClient.deleteReservationProvider(
+      reservationId: reservationId,
+      reservationProviderId: reservationProviderId,
+    );
+  }
+
+  Map<String, dynamic> _photoInputToJson(ReservationLogPhotoInput photo) {
+    return {
+      'storage_key': photo.storageKey,
+      'filename': photo.filename,
+      'content_type': photo.contentType,
+      'size_bytes': photo.sizeBytes,
+    };
+  }
+
+  ReservationTimelinePhoto _photoDtoToDomain(ReservationTimelinePhotoDto dto) {
+    return ReservationTimelinePhoto(
+      index: dto.index,
+      storageKey: dto.storageKey,
+      filename: dto.filename,
+      contentType: dto.contentType,
+      sizeBytes: dto.sizeBytes,
+    );
   }
 }

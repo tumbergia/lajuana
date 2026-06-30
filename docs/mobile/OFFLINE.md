@@ -9,7 +9,7 @@ Each feature maintains its own SQLite database via `sqflite`. Databases are init
 | Database | File | Tables |
 |----------|------|--------|
 | `AuthDatabase` | `features/auth/infrastructure/local/auth_database.dart` | `session_local`, `user_local` |
-| `CatalogsDatabase` | `features/catalogs/data/catalogs_database.dart` | `experiences_local`, `schedules_local`, `reservation_rules_local`, `emergency_contacts_local`, `sync_queue`, `id_map`, `sync_cursors` |
+| `CatalogsDatabase` | `features/catalogs/data/catalogs_database.dart` | `experiences_local`, `reservation_rules_local`, `emergency_contacts_local`, `sync_queue`, `id_map`, `sync_cursors` |
 | `EquinesDatabase` | `features/equines/infrastructure/local/equines_database.dart` | `equines_cache`, `equine_sync_meta` |
 
 | `ReservationsDatabase` | `features/reservations/infrastructure/local/reservations_database.dart` | `reservations_list_cache`, `reservation_detail_cache` |
@@ -151,7 +151,7 @@ CREATE TABLE sync_cursors (
 );
 ```
 
-Known streams: `experiences`, `schedules`, `config`, `reservations`, `participants`, `payment_proofs`, `assignments`, `logs`, `equines`, `providers`, `policies`.
+Known streams: `experiences`, `config`, `reservations`, `participants`, `payment_proofs`, `assignments`, `logs`, `equines`, `providers`, `policies`.
 
 ### Bootstrap
 

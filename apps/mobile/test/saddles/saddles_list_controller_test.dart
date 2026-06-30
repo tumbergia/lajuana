@@ -168,12 +168,28 @@ void main() {
   });
 
   group('include deleted', () {
-    test('includes deleted items when set', () async {
+    test('loads deleted items on initial fetch', () async {
       await controller.loadInitial();
+
+      expect(repository.lastIncludeDeleted, true);
+    });
+
+    test('filters deleted items locally without refetching', () async {
+      await controller.loadInitial();
+      final initialCallCount = repository.listSaddlesCallCount;
 
       controller.setIncludeDeleted(true);
 
-      expect(repository.lastIncludeDeleted, true);
+      expect(repository.listSaddlesCallCount, initialCallCount);
+      expect(controller.includeDeleted, true);
+      expect(controller.items, isNotEmpty);
+      expect(controller.items.every((s) => s.isDeleted), true);
+    });
+
+    test('excludes deleted items from active filters', () async {
+      await controller.loadInitial();
+
+      expect(controller.items.every((s) => !s.isDeleted), true);
     });
   });
 
@@ -203,6 +219,19 @@ void main() {
       expect(controller.includeDeleted, false);
       expect(controller.errorCode, isNull);
       expect(controller.errorMessage, isNull);
+    });
+  });
+
+  group('dispose', () {
+    test('does not notify listeners after dispose', () {
+      final localController = SaddlesListController(repository: repository);
+      var notifyCount = 0;
+      localController.addListener(() => notifyCount++);
+      localController.dispose();
+
+      localController.setSearchQuery('test');
+
+      expect(notifyCount, 0);
     });
   });
 }

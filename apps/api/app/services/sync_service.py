@@ -22,6 +22,7 @@ Architecture
 from datetime import UTC, datetime
 
 from beanie import PydanticObjectId
+from pydantic import ValidationError
 
 from app.common.enums import ROLE_PERMISSIONS, Permission
 from app.common.labels import ErrorCode
@@ -45,7 +46,6 @@ from app.services.mappers import (
     equine_to_response,
     experience_to_response,
     saddle_to_response,
-    schedule_to_response,
     user_to_response,
 )
 from app.services.sync_change_recorder import entity_to_response_dict
@@ -64,9 +64,6 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("experience", "create"): Permission.EXPERIENCE_CREATE,
     ("experience", "update"): Permission.EXPERIENCE_UPDATE,
     ("experience", "delete"): Permission.EXPERIENCE_DELETE,
-    ("schedule", "create"): Permission.SCHEDULE_CREATE,
-    ("schedule", "update"): Permission.SCHEDULE_UPDATE,
-    ("schedule", "delete"): Permission.SCHEDULE_DELETE,
     ("reservation_rules", "update"): Permission.CONFIG_UPDATE,
     ("reservation", "create"): Permission.RESERVATION_CREATE,
     ("reservation", "update"): Permission.RESERVATION_UPDATE,
@@ -79,6 +76,7 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("assignment", "delete"): Permission.ASSIGNMENT_UPDATE,
     ("service_log", "create"): Permission.LOG_CREATE,
     ("service_log", "update"): Permission.LOG_UPDATE,
+    ("service_log", "delete"): Permission.LOG_UPDATE,
     ("provider", "create"): Permission.PROVIDER_CREATE,
     ("provider", "update"): Permission.PROVIDER_UPDATE,
     ("policy", "create"): Permission.POLICY_CREATE,
@@ -121,7 +119,7 @@ async def _latest_stream_cursors() -> dict[str, str]:
     """Return the latest cursor for every tracked change stream."""
     streams = (
         "reservations", "participants", "payment_proofs", "assignments",
-        "logs", "experiences", "schedules", "config", "equines",
+        "logs", "experiences", "config", "equines",
         "providers", "policies", "saddles",
     )
     cursors: dict[str, str] = {}
@@ -194,6 +192,22 @@ class SyncOperationExecutor:
                     "details": exc.details,
                 },
             )
+        except ValidationError as exc:
+            return SyncPushResultSchema(
+                operation_id=operation.operation_id,
+                status="rejected",
+                entity_type=operation.entity_type,
+                entity_local_id=operation.entity_local_id,
+                entity_remote_id=operation.entity_remote_id,
+                version=None,
+                updated_at=None,
+                payload=None,
+                error={
+                    "code": ErrorCode.VALIDATION_ERROR,
+                    "message": "La solicitud contiene datos inválidos.",
+                    "details": {"fields": exc.errors(include_url=False)},
+                },
+            )
 
     async def _execute_doc(
         self, *, current_user: UserDocument, operation: SyncPushOperationSchema
@@ -234,7 +248,6 @@ class SyncService:
         self,
         config_service: ConfigService,
         experience_service=None,
-        schedule_service=None,
         equine_service=None,
         reservation_service=None,
         participant_service=None,
@@ -250,7 +263,6 @@ class SyncService:
         # Build handlers (services are passed from DI container)
         self._experience_handler = ExperienceSyncHandler(
             experience_service=experience_service,
-            schedule_service=schedule_service,
         )
         self._reservation_handler = ReservationSyncHandler(
             reservation_service=reservation_service,
@@ -268,7 +280,6 @@ class SyncService:
 
         # Keep references needed by build_bootstrap (read operations)
         self._experience_service = experience_service
-        self._schedule_service = schedule_service
         self._equine_service = equine_service
         self._saddle_service = saddle_service
 
@@ -280,10 +291,9 @@ class SyncService:
         )
 
     async def build_bootstrap(self, *, current_user: UserDocument) -> dict:
-        """Full initial sync snapshot — experiences, schedules, equines, etc."""
+        """Full initial sync snapshot — experiences, equines, etc."""
         can_read_config = Permission.CONFIG_READ in ROLE_PERMISSIONS[current_user.role]
         experiences = await self._experience_service.list()
-        schedules = await self._schedule_service.list()
         equines = await self._equine_service.list()
         saddles = await self._saddle_service.list() if self._saddle_service else []
         cursors = await _latest_stream_cursors()
@@ -303,7 +313,6 @@ class SyncService:
             "experiences": [
                 experience_to_response(item).model_dump(mode="json") for item in experiences
             ],
-            "schedules": [schedule_to_response(item).model_dump(mode="json") for item in schedules],
             "equines": [equine_to_response(item).model_dump(mode="json") for item in equines],
             "saddles": [saddle_to_response(item).model_dump(mode="json") for item in saddles],
             "cursors": cursors,

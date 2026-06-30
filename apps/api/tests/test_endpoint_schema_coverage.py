@@ -9,14 +9,12 @@ from app.documents import (
     ParticipantDocument,
     ReservationDocument,
     SaddleDocument,
-    ScheduleDocument,
     UserDocument,
 )
 from app.schemas.equine import EquineListItemSchema, EquineResponseSchema
 from app.schemas.participant import ParticipantResponseSchema
 from app.schemas.reservation import ReservationListItemSchema, ReservationResponseSchema
 from app.schemas.saddle import SaddleResponseSchema
-from app.schemas.schedule import ScheduleResponseSchema
 from app.schemas.auth import UserResponseSchema
 
 # Fields that exist on the Document but are intentionally excluded
@@ -26,7 +24,7 @@ KNOWN_EXCLUSIONS: dict[type, set[str]] = {
         "revision_id", "id",
         # Internal/audit fields not exposed in response
         "created_by", "updated_by",
-        "participant_ids", "payment_proof_ids", "provider_ids", "policy_ids",
+        "participant_ids", "payment_proof_ids", "policy_ids",
         "quote_snapshot", "quote_trace_id",
         "pre_reserved_at", "confirmed_at", "cancelled_at", "completed_at", "expire_at",
         "participant_form_sent_at", "participant_form_sent_by",
@@ -38,7 +36,7 @@ KNOWN_EXCLUSIONS: dict[type, set[str]] = {
         "revision_id", "id",
         # Same as above for list items
         "created_by", "updated_by",
-        "participant_ids", "payment_proof_ids", "provider_ids", "policy_ids",
+        "participant_ids", "payment_proof_ids", "policy_ids",
         "quote_snapshot", "quote_trace_id",
         "pre_reserved_at", "confirmed_at", "cancelled_at", "completed_at", "expire_at",
         "participant_form_sent_at", "participant_form_sent_by",
@@ -62,7 +60,6 @@ KNOWN_EXCLUSIONS: dict[type, set[str]] = {
         "location_status", "availability_reasons",
     },
     SaddleDocument: {"revision_id", "id"},
-    ScheduleDocument: {"revision_id", "id"},
     ParticipantDocument: {
         "revision_id", "id",
         # Internal fields
@@ -108,10 +105,6 @@ def test_equine_list_item_coverage() -> None:
 
 def test_saddle_doc_coverage() -> None:
     _check_coverage(SaddleDocument, SaddleResponseSchema, "Saddle")
-
-
-def test_schedule_doc_coverage() -> None:
-    _check_coverage(ScheduleDocument, ScheduleResponseSchema, "Schedule")
 
 
 def test_participant_doc_coverage() -> None:

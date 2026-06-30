@@ -37,6 +37,7 @@ dependencies:
   auto_size_text: ^3.0.0
   http: ^1.2.2
   sqflite: ^2.3.3+1
+  sqflite_common_ffi: ^2.3.3
   sqflite_common_ffi_web: ^1.0.0
   path: ^1.9.0
   connectivity_plus: ^6.0.5
@@ -82,6 +83,7 @@ flutter:
   assets:
     - assets/branding/
     - assets/fonts/
+    - assets/icons/
 
   # Manrope e Inter como variable fonts (un solo TTF por familia, rango completo
   # de pesos 100–900 incluido). No necesitas archivos estáticos adicionales.

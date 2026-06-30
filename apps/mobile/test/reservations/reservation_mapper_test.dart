@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_participant_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile/features/reservations/infrastructure/mappers/reservation_mapper.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservation_dtos.dart';
@@ -16,7 +17,6 @@ void main() {
         'id': 'r1',
         'code': 'RES-001',
         'experience_id': 'e1',
-        'schedule_id': 's1',
         'channel': 'whatsapp',
         'status': 'confirmed',
         'participant_count': 2,
@@ -214,6 +214,26 @@ void main() {
           isTrue);
       expect(
           detail.timeline.any((e) => e.title == 'Reserva confirmada'), isTrue);
+    });
+
+    test('timelineEntryNodeType maps kinds', () {
+      final note = ReservationTimelineEntry(
+        id: '1',
+        source: 'service_log',
+        kind: 'note',
+        happenedAt: DateTime(2026, 1, 1),
+        title: 'Nota',
+      );
+      final rejected = ReservationTimelineEntry(
+        id: '2',
+        source: 'audit_log',
+        kind: 'payment_proof.rejected',
+        happenedAt: DateTime(2026, 1, 1),
+        title: 'Rechazado',
+      );
+
+      expect(timelineEntryNodeType(note), 'active');
+      expect(timelineEntryNodeType(rejected), 'error');
     });
 
     test('payment summary gets proof count', () {

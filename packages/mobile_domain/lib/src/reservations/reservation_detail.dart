@@ -15,10 +15,7 @@ class ReservationDetail {
     this.holderEmail,
     this.holderPhone,
     this.experienceId,
-    this.scheduleId,
     this.experienceName,
-    this.scheduledDate,
-    this.startTime,
     required this.participantCount,
     this.expectedParticipantsCount,
     required this.participantsCompletedCount,
@@ -54,10 +51,8 @@ class ReservationDetail {
       holderEmail: source.holderEmail.isNotEmpty ? source.holderEmail : null,
       holderPhone: source.holderPhone.isNotEmpty ? source.holderPhone : null,
       experienceId: source.experienceId,
-      scheduleId: source.scheduleId,
       experienceName: null,
-      scheduledDate: null,
-      startTime: null,
+      requestedDate: source.requestedDate.isNotEmpty ? source.requestedDate : null,
       participantCount: source.participantCount,
       expectedParticipantsCount: int.tryParse(source.expectedParticipantsCount),
       participantsCompletedCount: source.participantsCompletedCount,
@@ -68,7 +63,6 @@ class ReservationDetail {
       quotedTotalAmount:
           source.quotedTotalAmount.isNotEmpty ? source.quotedTotalAmount : null,
       currency: source.currency.isNotEmpty ? source.currency : null,
-      requestedDate: source.requestedDate.isNotEmpty ? source.requestedDate : null,
       confirmedAt: source.confirmedAt.isNotEmpty ? source.confirmedAt : null,
       cancelledAt: source.cancelledAt.isNotEmpty ? source.cancelledAt : null,
       completedAt: source.completedAt.isNotEmpty ? source.completedAt : null,
@@ -96,10 +90,7 @@ class ReservationDetail {
   final String? holderEmail;
   final String? holderPhone;
   final String? experienceId;
-  final String? scheduleId;
   final String? experienceName;
-  final String? scheduledDate;
-  final String? startTime;
   final int participantCount;
   final int? expectedParticipantsCount;
   final int participantsCompletedCount;

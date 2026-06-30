@@ -25,6 +25,14 @@ class HttpBackendReachabilityService implements BackendReachabilityService {
 
   @override
   Future<BackendReachability> check() async {
+    final first = await _checkOnce();
+    if (first != BackendReachability.unreachable) return first;
+
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    return _checkOnce();
+  }
+
+  Future<BackendReachability> _checkOnce() async {
     try {
       final response = await _http.get(_healthUri).timeout(timeout);
       if (response.statusCode >= 200 && response.statusCode < 500) {

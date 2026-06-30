@@ -71,9 +71,9 @@ async def _run_create_reservation_draft_includes_payment_and_disclaimer(
     assert "2026-05-20" in response
     assert "3" in response
     assert "PR-20260515-ABC123" in response
-    assert "Instrucciones de pago:" in response
-    assert "Banco Demo" in response
-    assert "no esta confirmada" in response
+    assert "Para confirmar la reserva sigue estos pasos:" in response
+    assert "BANCOLOMBIA" in response
+    assert "no está confirmada" in response
     assert "verifica el pago" in response
     assert "revalida la disponibilidad" in response
 

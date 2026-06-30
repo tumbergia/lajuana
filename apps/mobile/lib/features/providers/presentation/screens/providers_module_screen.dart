@@ -1,39 +1,518 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
-import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
+import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_domain/src/providers/providers_repository.dart';
+import 'package:mobile/features/providers/infrastructure/mappers/provider_mapper.dart';
+import 'package:mobile/features/providers/infrastructure/repositories/fallback_providers_repository.dart';
+import 'package:mobile/features/providers/providers_module.dart';
+import 'package:mobile/features/providers/presentation/controllers/providers_list_controller.dart';
+import 'package:mobile/features/providers/presentation/models/provider_view_models.dart';
+import 'package:mobile/features/providers/presentation/widgets/provider_detail_sheet.dart';
+import 'package:mobile/features/providers/presentation/widgets/provider_form_sheet.dart';
+import 'package:mobile/features/providers/presentation/widgets/provider_row_card.dart';
 
-/// Placeholder hasta conectar catálogo real de proveedores.
-class ProvidersModuleScreen extends StatelessWidget {
-  const ProvidersModuleScreen({super.key, this.showHeader = true});
+class ProvidersModuleScreen extends StatefulWidget {
+  const ProvidersModuleScreen({
+    super.key,
+    this.showHeader = true,
+    this.providersModule,
+  });
 
-  /// Si es false, la cabecera la aporta la pantalla contenedora (evita duplicar ruta).
   final bool showHeader;
+  final ProvidersModule? providersModule;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: showHeader
-          ? const EdgeInsets.fromLTRB(24, 24, 24, 24)
-          : EdgeInsets.zero,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (showHeader) ...const [
-            AppSectionHeader(
-              eyebrow: 'Proveedores',
-              title: 'Catalogo operativo',
-              subtitle: 'Se cargara por demanda desde almacen local y sync',
-            ),
-            SizedBox(height: 20),
-          ],
-          const AppEntityRowCard(
-            title: 'Sin datos aun',
-            subtitle: 'Este modulo se habilitara en una iteracion posterior',
-            selected: true,
+  State<ProvidersModuleScreen> createState() => _ProvidersModuleScreenState();
+}
+
+class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
+    with RefreshableState {
+  late final ProvidersListController _listController;
+  late final bool _ownsListController;
+  late final ProvidersRepository _repository;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  Future<void> onRefresh() => _listController.refresh();
+
+  @override
+  void initState() {
+    super.initState();
+    _repository =
+        widget.providersModule?.repository ?? FallbackProvidersRepository();
+    if (widget.providersModule != null) {
+      _listController = widget.providersModule!.listController;
+      _ownsListController = false;
+    } else {
+      _listController = ProvidersListController(repository: _repository);
+      _ownsListController = true;
+    }
+    _listController.addListener(_onListChanged);
+    if (_listController.state == ProvidersLoadState.idle) {
+      _listController.loadInitial();
+    }
+
+    _searchController.addListener(() {
+      _listController.setSearchQuery(_searchController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    _listController.removeListener(_onListChanged);
+    if (_ownsListController) {
+      _listController.dispose();
+    }
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onListChanged() {
+    if (mounted) setState(() {});
+  }
+
+  double get _embeddedMinHeight {
+    final height = MediaQuery.sizeOf(context).height;
+    const chrome = 320.0;
+    return (height - chrome).clamp(220.0, height);
+  }
+
+  Widget _centerInEmbeddedViewport({
+    required bool embedded,
+    required Widget child,
+  }) {
+    if (!embedded) return child;
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: _embeddedMinHeight),
+      child: Center(child: child),
+    );
+  }
+
+  Future<void> _openCreateSheet() async {
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (_) => const ProviderFormSheet(),
+    );
+    if (result != null && mounted) {
+      try {
+        await _repository.createProvider(
+          name: result['name'] as String,
+          type: result['type'] as String,
+          status: result['status'] as String? ?? 'active',
+          serviceCategories:
+              result['service_categories'] as List<String>? ?? const [],
+          contactName: result['contact_name'] as String?,
+          email: result['email'] as String?,
+          whatsappPhone: result['whatsapp_phone'] as String?,
+          locationLabel: result['location_label'] as String?,
+          capacityNotes: result['capacity_notes'] as String?,
+          operationalNotes: result['operational_notes'] as String?,
+          tariffNotes: result['tariff_notes'] as String?,
+          sourceNotes: result['source_notes'] as String?,
+        );
+        await _listController.refresh();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Proveedor registrado correctamente')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al registrar el proveedor')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _openEditSheet(ProviderRecord provider) async {
+    ProviderRecord editable = provider;
+    try {
+      final full = await _repository.getProviderById(provider.id);
+      editable = listItemToRecord(full);
+    } catch (_) {
+      // Usa datos del listado si falla la carga detallada.
+    }
+
+    if (!mounted) return;
+
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (_) => ProviderFormSheet(existing: editable),
+    );
+    if (result != null && mounted) {
+      try {
+        await _repository.updateProvider(
+          providerId: provider.id,
+          name: result['name'] as String?,
+          type: result['type'] as String?,
+          status: result['status'] as String?,
+          serviceCategories: result['service_categories'] as List<String>?,
+          contactName: result['contact_name'] as String?,
+          email: result['email'] as String?,
+          whatsappPhone: result['whatsapp_phone'] as String?,
+          locationLabel: result['location_label'] as String?,
+          capacityNotes: result['capacity_notes'] as String?,
+          operationalNotes: result['operational_notes'] as String?,
+          tariffNotes: result['tariff_notes'] as String?,
+          sourceNotes: result['source_notes'] as String?,
+        );
+        await _listController.refresh();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Proveedor actualizado correctamente')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al actualizar el proveedor')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmDeactivateProvider(ProviderRecord provider) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Desactivar proveedor'),
+        content: Text(
+          '¿Desactivar "${provider.name}"? '
+          'Quedara oculto de los listados activos.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Desactivar'),
           ),
         ],
       ),
     );
+    if (confirmed == true && mounted) {
+      try {
+        await _repository.deactivateProvider(provider.id);
+        await _listController.refresh();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Proveedor desactivado')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al desactivar el proveedor')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmReactivateProvider(ProviderRecord provider) async {
+    try {
+      await _repository.reactivateProvider(provider.id);
+      await _listController.refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Proveedor reactivado')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al reactivar el proveedor')),
+        );
+      }
+    }
+  }
+
+  void _showProviderDetail(ProviderRecord provider) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      builder: (_) => ProviderDetailSheet(
+        provider: provider,
+        loadDetails: () async {
+          final full = await _repository.getProviderById(provider.id);
+          return listItemToRecord(full);
+        },
+        onEdit: () => _openEditSheet(provider),
+        onDeactivate: () => _confirmDeactivateProvider(provider),
+        onReactivate: () => _confirmReactivateProvider(provider),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = _listController.state;
+
+    if (widget.showHeader) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const AppSectionHeader(
+            eyebrow: 'Gestion',
+            title: 'Proveedores',
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: _buildContent(state, shrinkList: false),
+          ),
+        ],
+      );
+    }
+
+    return _buildContent(state, shrinkList: true);
+  }
+
+  Widget _buildContent(ProvidersLoadState state, {bool shrinkList = false}) {
+    switch (state) {
+      case ProvidersLoadState.idle:
+      case ProvidersLoadState.loading:
+        return _centerInEmbeddedViewport(
+          embedded: shrinkList,
+          child: const AppCenteredLoader(),
+        );
+
+      case ProvidersLoadState.refreshing:
+        if (_listController.items.isEmpty) {
+          return _centerInEmbeddedViewport(
+            embedded: shrinkList,
+            child: const AppCenteredLoader(),
+          );
+        }
+        return _buildListContent(shrinkList: shrinkList);
+
+      case ProvidersLoadState.success:
+      case ProvidersLoadState.offlineFromCache:
+        return _buildListContent(shrinkList: shrinkList);
+
+      case ProvidersLoadState.empty:
+        return _buildEmptyState(shrinkList: shrinkList);
+
+      case ProvidersLoadState.error:
+        return _buildErrorState(shrinkList: shrinkList);
+    }
+  }
+
+  Widget _buildListContent({bool shrinkList = false}) {
+    final items = _listController.items;
+    final hasItems = _listController.hasAnyRecords;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppTextField(
+          controller: _searchController,
+          hintText: 'Buscar por nombre o ubicacion...',
+          variant: AppTextFieldVariant.filled,
+          suffix: const Icon(Icons.search_rounded, size: 20),
+        ),
+        const SizedBox(height: 12),
+        AppSegmentedFilter<String>(
+          value: _listController.includeInactive ? 'inactive' : 'active',
+          initialValue: 'active',
+          onChanged: (value) {
+            _listController.setIncludeInactive(value == 'inactive');
+          },
+          items: const [
+            AppSegmentedFilterItem(label: 'Activos', value: 'active'),
+            AppSegmentedFilterItem(label: 'Inactivos', value: 'inactive'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        AppButton(
+          label: 'Registrar proveedor',
+          icon: Icons.add,
+          expanded: true,
+          onPressed: _openCreateSheet,
+        ),
+        const SizedBox(height: 16),
+        if (_listController.state == ProvidersLoadState.offlineFromCache) ...[
+          AppStatusBanner(
+            title: 'Sin conexion',
+            message: 'Mostrando datos almacenados localmente.',
+            tone: AppStatusBannerTone.warning,
+            icon: Icons.wifi_off_rounded,
+            badgeLabel: 'Offline',
+          ),
+          const SizedBox(height: 12),
+        ],
+        if (items.isEmpty && hasItems)
+          _buildEmptyFilterMessage(shrinkList: shrinkList)
+        else if (items.isEmpty)
+          _buildEmptyInventory(shrinkList: shrinkList)
+        else
+          _buildProviderListView(items, shrinkList: shrinkList),
+      ],
+    );
+  }
+
+  Widget _buildEmptyFilterMessage({bool shrinkList = false}) {
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.search_off_rounded,
+          size: 40,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'No hay proveedores con ese filtro',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+      ],
+    );
+
+    if (shrinkList) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: content),
+      );
+    }
+    return Expanded(child: Center(child: content));
+  }
+
+  Widget _buildEmptyInventory({bool shrinkList = false}) {
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Symbols.handshake,
+          size: 48,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'No hay proveedores registrados',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Registra el primer proveedor usando el boton de arriba',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+
+    if (shrinkList) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Center(child: content),
+      );
+    }
+    return Expanded(child: Center(child: content));
+  }
+
+  Widget _buildProviderListView(
+    List<ProviderRecord> items, {
+    bool shrinkList = false,
+  }) {
+    if (shrinkList) {
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, i) {
+          return ProviderRowCard(
+            provider: items[i],
+            onTap: () => _showProviderDetail(items[i]),
+          );
+        },
+      );
+    }
+    return Expanded(
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, i) {
+          return ProviderRowCard(
+            provider: items[i],
+            onTap: () => _showProviderDetail(items[i]),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState({bool shrinkList = false}) {
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Symbols.handshake,
+          size: 56,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'No hay proveedores',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Registra un nuevo proveedor usando el boton de abajo',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 24),
+        AppButton(
+          label: 'Registrar proveedor',
+          icon: Icons.add,
+          onPressed: _openCreateSheet,
+        ),
+      ],
+    );
+
+    if (shrinkList) {
+      return _centerInEmbeddedViewport(embedded: true, child: content);
+    }
+
+    return Center(child: content);
+  }
+
+  Widget _buildErrorState({bool shrinkList = false}) {
+    final banner = AppStatusBanner(
+      title: 'Error al cargar proveedores',
+      message: _listController.errorMessage ?? 'Error desconocido',
+      tone: AppStatusBannerTone.danger,
+      onTap: _listController.loadInitial,
+    );
+
+    if (shrinkList) {
+      return _centerInEmbeddedViewport(embedded: true, child: banner);
+    }
+
+    return Center(child: banner);
   }
 }

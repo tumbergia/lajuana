@@ -27,7 +27,6 @@ from app.services.mappers import (
     provider_to_response,
     reservation_to_response,
     saddle_to_response,
-    schedule_to_response,
     service_log_to_response,
 )
 
@@ -37,7 +36,6 @@ logger = logging.getLogger(__name__)
 # entity_type → nombre de stream usado por el cursor de pull
 STREAM_BY_ENTITY: dict[str, str] = {
     "experience": "experiences",
-    "schedule": "schedules",
     "reservation": "reservations",
     "participant": "participants",
     "payment_proof": "payment_proofs",
@@ -58,8 +56,6 @@ async def entity_to_response_dict(entity_type: str, doc) -> dict:
     """
     if entity_type == "experience":
         return experience_to_response(doc).model_dump(mode="json")
-    if entity_type == "schedule":
-        return schedule_to_response(doc).model_dump(mode="json")
     if entity_type == "reservation_rules":
         if isinstance(doc, AppConfigDocument) and doc.reservation_rules is not None:
             return doc.reservation_rules.model_dump(mode="json")

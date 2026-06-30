@@ -62,25 +62,23 @@ PROTECTED_ENDPOINTS = [
     ("delete", f"/api/v1/experiences/{FAKE_ID}", None),
     (
         "post",
-        "/api/v1/schedules",
-        {
-            "experience_id": FAKE_ID,
-            "date": "2026-05-20",
-            "start_time": "08:00:00",
-            "capacity_total": 8,
-        },
-    ),
-    ("get", "/api/v1/schedules", None),
-    ("get", f"/api/v1/schedules/{FAKE_ID}", None),
-    ("patch", f"/api/v1/schedules/{FAKE_ID}", {"capacity_total": 10}),
-    ("delete", f"/api/v1/schedules/{FAKE_ID}", None),
-    (
-        "post",
         "/api/v1/reservations",
         {"experience_id": FAKE_ID, "participant_count": 2, "channel": "whatsapp"},
     ),
     ("get", "/api/v1/reservations", None),
     ("get", f"/api/v1/reservations/{FAKE_ID}", None),
+    ("get", f"/api/v1/reservations/{FAKE_ID}/providers", None),
+    (
+        "post",
+        f"/api/v1/reservations/{FAKE_ID}/providers",
+        {"provider_id": FAKE_ID, "service_label": "Alojamiento"},
+    ),
+    (
+        "patch",
+        f"/api/v1/reservations/{FAKE_ID}/providers/{FAKE_ID}",
+        {"status": "confirmed"},
+    ),
+    ("delete", f"/api/v1/reservations/{FAKE_ID}/providers/{FAKE_ID}", None),
     ("patch", f"/api/v1/reservations/{FAKE_ID}", {"participant_count": 3}),
     ("post", f"/api/v1/reservations/{FAKE_ID}/confirm", {}),
     ("post", f"/api/v1/reservations/{FAKE_ID}/cancel", {}),
@@ -141,7 +139,12 @@ PROTECTED_ENDPOINTS = [
     ),
     ("get", f"/api/v1/logs/{FAKE_ID}", None),
     ("patch", f"/api/v1/logs/{FAKE_ID}", {"notes": "Actualizacion de bitacora"}),
-    ("post", "/api/v1/providers", {"name": "Hospedaje Sierra", "provider_type": "lodging"}),
+    ("post", "/api/v1/providers", {
+        "name": "Hospedaje Sierra",
+        "slug": "hospedaje-sierra",
+        "type": "lodging",
+    }),
+    ("get", "/api/v1/providers", None),
     ("get", f"/api/v1/providers/{FAKE_ID}", None),
     ("patch", f"/api/v1/providers/{FAKE_ID}", {"contact_name": "Carlos"}),
     ("delete", f"/api/v1/providers/{FAKE_ID}", None),
@@ -194,7 +197,6 @@ VALIDATION_ENDPOINTS = [
     ("post", "/api/v1/auth/login", {}),
     ("post", "/api/v1/auth/register", {}),
     ("post", "/api/v1/experiences", {}),
-    ("post", "/api/v1/schedules", {}),
     ("post", "/api/v1/reservations", {}),
     ("post", f"/api/v1/reservations/{FAKE_ID}/payment-proofs", {}),
     ("post", f"/api/v1/reservations/{FAKE_ID}/participants", {}),
@@ -241,8 +243,12 @@ def _path_template(path: str) -> str:
     path = re.sub(r"/[0-9a-f]{24}(?=/|$)", "/{id}", path)
     path = re.sub(r"/users/\{id\}", "/users/{user_id}", path)
     path = re.sub(r"/experiences/\{id\}", "/experiences/{experience_id}", path)
-    path = re.sub(r"/schedules/\{id\}", "/schedules/{schedule_id}", path)
     path = re.sub(r"/reservations/\{id\}", "/reservations/{reservation_id}", path)
+    path = re.sub(
+        r"/reservations/\{reservation_id\}/providers/\{id\}",
+        "/reservations/{reservation_id}/providers/{reservation_provider_id}",
+        path,
+    )
     path = re.sub(r"/payment-proofs/\{id\}", "/payment-proofs/{payment_proof_id}", path)
     path = re.sub(r"/participants/\{id\}", "/participants/{participant_id}", path)
     path = re.sub(r"/equines/\{id\}", "/equines/{equine_id}", path)

@@ -20,7 +20,6 @@ ACTIVE_RESERVATION_STATUSES = [
 class ReservationDocument(AuditDocument):
     code: Indexed(str, unique=True)  # type: ignore[valid-type]
     experience_id: PydanticObjectId
-    schedule_id: PydanticObjectId | None = None
     channel: Channel
     status: ReservationStatus = ReservationStatus.CONTACT
     holder_name: str | None = None
@@ -35,7 +34,6 @@ class ReservationDocument(AuditDocument):
     payment_status: PaymentStatus = PaymentStatus.PENDING
     payment_proof_ids: list[PydanticObjectId] = []
     participant_ids: list[PydanticObjectId] = []
-    provider_ids: list[PydanticObjectId] = []
     policy_ids: list[PydanticObjectId] = []
     confirmed_at: datetime | None = None
     cancelled_at: datetime | None = None

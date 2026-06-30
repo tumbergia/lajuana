@@ -31,11 +31,6 @@ _TOOLS: dict[str, object] = {
     "admin_create_user": tools.admin_create_user,
     "admin_update_user": tools.admin_update_user,
     "admin_deactivate_user": tools.admin_deactivate_user,
-    # ── Admin: schedules ──
-    "admin_create_schedule": tools.admin_create_schedule,
-    "admin_update_schedule": tools.admin_update_schedule,
-    "admin_list_schedules_admin": tools.admin_list_schedules_admin,
-    "admin_deactivate_schedule": tools.admin_deactivate_schedule,
     # ── Admin: system ──
     "admin_get_system_config": tools.admin_get_system_config,
     "admin_update_reservation_rules": tools.admin_update_reservation_rules,
@@ -52,6 +47,7 @@ _TOOLS: dict[str, object] = {
     # ── Client: reservations ──
     "create_reservation_draft": tools.create_reservation_draft,
     "attach_payment_proof_to_reservation": tools.attach_payment_proof_to_reservation,
+    "get_payment_instructions": tools.get_payment_instructions,
     "get_reservation_public_summary": tools.get_reservation_public_summary,
     "get_reservation_status_by_phone": tools.get_reservation_status_by_phone,
     "cancel_reservation": tools.cancel_reservation,

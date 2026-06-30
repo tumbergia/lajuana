@@ -130,9 +130,6 @@ def get_saddle_service() -> object:
     return Container.get_instance().saddle_service
 
 
-def get_schedule_service() -> object:
-    return Container.get_instance().schedule_service
-
 
 def get_participant_service() -> object:
     return Container.get_instance().participant_service
@@ -154,6 +151,10 @@ def get_provider_service() -> object:
     return Container.get_instance().provider_service
 
 
+def get_reservation_provider_service() -> object:
+    return Container.get_instance().reservation_provider_service
+
+
 def get_reservation_draft_service() -> object:
     return Container.get_instance().reservation_draft_service
 
@@ -164,6 +165,10 @@ def get_assignment_service() -> object:
 
 def get_service_log_service() -> object:
     return Container.get_instance().service_log_service
+
+
+def get_reservation_timeline_service() -> object:
+    return Container.get_instance().reservation_timeline_service
 
 
 def get_participant_form_link_service() -> object:

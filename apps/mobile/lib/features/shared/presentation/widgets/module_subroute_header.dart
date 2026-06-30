@@ -38,7 +38,10 @@ class ModuleSubrouteHeader extends StatelessWidget {
         const SizedBox(height: 12),
         AppSegmentedFilter<int>(
           value: currentSubrouteIndex,
-          onChanged: onSubrouteTap,
+          allowDeselect: false,
+          onChanged: (index) {
+            if (index != null) onSubrouteTap(index);
+          },
           items: [
             for (int i = 0; i < subrouteLabels.length; i++)
               AppSegmentedFilterItem<int>(label: subrouteLabels[i], value: i),

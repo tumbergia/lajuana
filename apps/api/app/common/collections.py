@@ -11,6 +11,7 @@ class Collections:
     SERVICE_LOGS = "service_logs"
     EQUINE_EVENTS = "equine_events"
     PROVIDERS = "providers"
+    RESERVATION_PROVIDERS = "reservation_providers"
     POLICIES = "policies"
     APP_CONFIG = "app_config"
     FILE_UPLOADS = "file_uploads"

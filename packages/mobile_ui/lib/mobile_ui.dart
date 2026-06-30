@@ -28,6 +28,7 @@ export 'src/widgets/app_segmented_filter.dart';
 export 'src/widgets/app_status_banner.dart';
 export 'src/widgets/app_term_help.dart';
 export 'src/widgets/app_text_field.dart';
+export 'src/widgets/app_toast.dart';
 export 'src/widgets/app_timeline.dart';
 export 'src/widgets/app_top_bar.dart';
 export 'src/widgets/app_voice_fab.dart';

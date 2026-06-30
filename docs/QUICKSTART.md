@@ -50,7 +50,6 @@ cd apps/api
 python -m app.cli seed -t reproducible   # datos base
 python -m app.cli seed -t equines        # equinos
 python -m app.cli seed -t experiences    # experiencias
-python -m app.cli seed -t schedules      # schedules
 ```
 
 ## 4. Tests

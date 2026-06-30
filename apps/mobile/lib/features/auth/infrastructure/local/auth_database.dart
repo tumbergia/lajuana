@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+
+import '../../../../shared/infrastructure/database/database_factory_initializer.dart';
 
 class AuthDatabase {
   AuthDatabase._();
@@ -9,11 +9,10 @@ class AuthDatabase {
   static final AuthDatabase instance = AuthDatabase._();
 
   Database? _database;
-  bool _factoryInitialized = false;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    await _ensureDatabaseFactoryInitialized();
+    await ensureDatabaseFactoryInitialized();
     final databasesPath = await getDatabasesPath();
     final path = p.join(databasesPath, 'la_juana_auth_v1.db');
     _database = await openDatabase(
@@ -61,14 +60,5 @@ class AuthDatabase {
       },
     );
     return _database!;
-  }
-
-  Future<void> _ensureDatabaseFactoryInitialized() async {
-    if (_factoryInitialized) return;
-    if (kIsWeb) {
-      // Evita dependencia de SharedWorker en dev web.
-      databaseFactory = databaseFactoryFfiWebNoWebWorker;
-    }
-    _factoryInitialized = true;
   }
 }

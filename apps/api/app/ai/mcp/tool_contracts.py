@@ -276,7 +276,6 @@ class CreateReservationDraftInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     experience_id: str
-    schedule_id: str | None = None
     participant_count: int = Field(ge=1, le=8)
     holder_phone: str
     holder_name: str | None = None
@@ -365,6 +364,26 @@ class AttachPaymentProofToReservationOutput(BaseModel):
     reservation_status: Literal["pending_payment", "payment_received", "unknown"] = "unknown"
     proof_status: Literal["received", "under_review", "duplicate", "rejected"] = "received"
     message: str
+    response: str
+
+
+# ── Cliente: consultar medios de pago por WhatsApp ────────────────
+
+
+class GetPaymentInstructionsInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_code: str | None = None
+    bold_requested: bool = False
+
+
+class GetPaymentInstructionsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["get_payment_instructions"] = "get_payment_instructions"
+    reservation_code: str | None = None
+    bold_requested: bool = False
     response: str
 
 

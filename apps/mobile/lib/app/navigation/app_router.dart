@@ -78,6 +78,7 @@ class AppRouter {
                 catalogsModule: deps.catalogsModule,
                 reservationsModule: deps.reservationsModule,
                 saddlesModule: deps.saddlesModule,
+                providersModule: deps.providersModule,
                 assignmentsModule: deps.assignmentsModule,
                 equineRepository: deps.equineRepository,
                 equineEventRepository: deps.equineEventRepository,

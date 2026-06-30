@@ -23,6 +23,7 @@ import 'package:mobile/features/assignments/assignments_module.dart';
 import 'package:mobile/features/reservations/presentation/screens/reservations_module_screen.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
+import 'package:mobile/features/providers/providers_module.dart';
 
 class AuthenticatedShell extends StatefulWidget {
   const AuthenticatedShell({
@@ -32,6 +33,7 @@ class AuthenticatedShell extends StatefulWidget {
     this.catalogsModule,
     this.reservationsModule,
     this.saddlesModule,
+    this.providersModule,
     this.assignmentsModule,
     required this.equineRepository,
     required this.equineEventRepository,
@@ -44,6 +46,7 @@ class AuthenticatedShell extends StatefulWidget {
   final CatalogsModule? catalogsModule;
   final ReservationsModule? reservationsModule;
   final SaddlesModule? saddlesModule;
+  final ProvidersModule? providersModule;
   final AssignmentsModule? assignmentsModule;
   final OutboxRepository? outbox;
   final EquineRepository equineRepository;
@@ -120,6 +123,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           contactsApiClient: widget.contactsApiClient,
           catalogsModule: widget.catalogsModule,
           saddlesModule: widget.saddlesModule,
+          providersModule: widget.providersModule,
           onCallRequested: widget.onCallRequested,
         );
       case AppNavItem.none:
@@ -153,8 +157,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           children: [
             Scaffold(
               appBar: const AppTopBar(
-                logoAssetPath: 'assets/branding/lajuana.svg',
-                title: 'LA JUANA',
+                logoAssetPath: 'assets/branding/lajuana-banner.svg',
               ),
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

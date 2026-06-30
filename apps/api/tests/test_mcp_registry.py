@@ -7,3 +7,4 @@ def test_reservation_draft_tools_are_registered() -> None:
     assert "attach_payment_proof_to_reservation" in names
     assert "get_reservation_public_summary" in names
     assert "get_reservation_status_by_phone" in names
+    assert "get_payment_instructions" in names

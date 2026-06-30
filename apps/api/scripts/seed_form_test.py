@@ -18,7 +18,6 @@ from app.common.enums import (
     ExperienceStatus,
     PaymentStatus,
     ReservationStatus,
-    ScheduleStatus,
 )
 from app.core.config import settings
 from app.documents import (
@@ -27,8 +26,6 @@ from app.documents import (
     ParticipantFormLinkDocument,
     PaymentProofDocument,
     ReservationDocument,
-    ReservationRules,
-    ScheduleDocument,
 )
 from app.services.participant_form_link_service import ParticipantFormLinkService
 
@@ -37,7 +34,7 @@ async def main():
     client = AsyncMongoClient(settings.mongodb_uri)
     db = client[settings.mongodb_db_name]
 
-    for col in ["app_config", "experiences", "schedules", "reservations",
+    for col in ["app_config", "experiences", "reservations",
                 "participant_form_links", "participants", "payment_proofs"]:
         await db[col].delete_many({})
 
@@ -48,7 +45,6 @@ async def main():
             ExperienceDocument,
             ParticipantFormLinkDocument,
             PaymentProofDocument,
-            ScheduleDocument,
             ReservationDocument,
         ],
     )
@@ -94,32 +90,12 @@ async def main():
     })
     print(f"Experiencia OK: {exp_id}")
 
-    sched_id = ObjectId()
     future_date = date.today() + timedelta(days=7)
-    await db["schedules"].insert_one({
-        "_id": sched_id,
-        "experience_id": exp_id,
-        "date": datetime.combine(future_date, datetime.min.time()),
-        "start_time": "08:00:00",
-        "is_active": True,
-        "capacity_total": 10,
-        "reserved_slots": 0,
-        "internal_slots": 0,
-        "blocked_slots": 0,
-        "available_slots": 10,
-        "status": ScheduleStatus.OPEN.value,
-        "custom_request_only": False,
-        "created_at": datetime.now(UTC),
-        "updated_at": datetime.now(UTC),
-    })
-    print(f"Schedule OK: {sched_id}")
-
     resv_id = ObjectId()
     await db["reservations"].insert_one({
         "_id": resv_id,
         "code": f"RES-{datetime.now(UTC).strftime('%Y%m%d')}-TEST",
         "experience_id": exp_id,
-        "schedule_id": sched_id,
         "requested_date": datetime.combine(future_date, datetime.min.time()),
         "channel": Channel.WHATSAPP.value,
         "status": ReservationStatus.PAYMENT_RECEIVED.value,
@@ -141,11 +117,6 @@ async def main():
             "blocks_day": True,
             "availability_lock_key": future_date.isoformat(),
         }}
-    )
-
-    await db["schedules"].update_one(
-        {"_id": sched_id},
-        {"$set": {"status": ScheduleStatus.FULL.value}}
     )
 
     form_svc = ParticipantFormLinkService()

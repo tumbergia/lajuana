@@ -13,11 +13,13 @@ class FakeExperienceRepository extends ExperienceRepository {
     this.returnEmpty = false,
     this.throwOnList = false,
     this.throwOnDeactivate = false,
+    this.emptyListCallsBeforeData = 0,
   }) : super(FakeCatalogsRepository());
 
   final bool returnEmpty;
   final bool throwOnList;
   final bool throwOnDeactivate;
+  final int emptyListCallsBeforeData;
 
   int listCallCount = 0;
 
@@ -36,6 +38,10 @@ class FakeExperienceRepository extends ExperienceRepository {
   Future<List<CatalogExperience>> list() async {
     listCallCount++;
     if (throwOnList) throw Exception('List error');
+    if (emptyListCallsBeforeData > 0 &&
+        listCallCount <= emptyListCallsBeforeData) {
+      return [];
+    }
     if (returnEmpty) return [];
     return [_sampleExperience];
   }

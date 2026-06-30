@@ -5,6 +5,9 @@ import 'package:mobile_domain/src/reservations/reservation_participant_detail.da
 import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_payment_summary.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
+import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_photo.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_event.dart';
 import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservation_dtos.dart';
@@ -186,9 +189,6 @@ ReservationListItem dtoToListItem(ReservationListItemDto dto) {
     status: parseReservationStatus(dto.status),
     experienceId: dto.experienceId,
     experienceName: dto.experienceName,
-    scheduleId: dto.scheduleId,
-    scheduledDate: dto.scheduledDate,
-    startTime: dto.startTime,
     holderName: dto.holderName,
     holderEmail: dto.holderEmail,
     holderPhone: dto.holderPhone,
@@ -216,7 +216,6 @@ ReservationDetail dtoToDetail(ReservationDetailDto dto) {
     holderEmail: dto.holderEmail,
     holderPhone: dto.holderPhone,
     experienceId: dto.experienceId,
-    scheduleId: dto.scheduleId,
     participantCount: dto.participantCount ?? 0,
     expectedParticipantsCount: dto.expectedParticipantsCount,
     participantsCompletedCount: dto.participantsCompletedCount ?? 0,
@@ -247,7 +246,6 @@ ReservationDetail dtoToDetail(ReservationDetailDto dto) {
     holderEmail: baseDetail.holderEmail,
     holderPhone: baseDetail.holderPhone,
     experienceId: baseDetail.experienceId,
-    scheduleId: baseDetail.scheduleId,
     participantCount: baseDetail.participantCount,
     expectedParticipantsCount: baseDetail.expectedParticipantsCount,
     participantsCompletedCount: baseDetail.participantsCompletedCount,
@@ -280,12 +278,9 @@ ReservationRecord listItemToRecord(
   String slotLabel = '',
 }) {
   final filterGroup = reservationStatusToFilterGroup(item.status);
-  // Build slot label from scheduledDate + startTime if not provided
   final effectiveSlotLabel = slotLabel.isNotEmpty
       ? slotLabel
-      : (item.scheduledDate != null && item.scheduledDate!.isNotEmpty
-          ? '${item.scheduledDate}${item.startTime != null && item.startTime!.isNotEmpty ? ' ${item.startTime!.length >= 5 ? item.startTime!.substring(0, 5) : item.startTime!}' : ''}'
-          : '');
+      : (item.requestedDate ?? '');
   return ReservationRecord(
     id: item.id,
     code: item.code,
@@ -299,9 +294,113 @@ ReservationRecord listItemToRecord(
     registeredCount: item.registeredParticipantsCount,
     paymentStatus: item.paymentStatus,
     formStatus: item.participantFormStatus,
-    scheduledDate: item.scheduledDate,
+    requestedDate: item.requestedDate,
     hasPendingSync: false,
     hasSyncError: false,
     isDeleted: item.isDeleted,
+  );
+}
+
+ReservationTimelineEntry timelineEntryDtoToDomain(
+  ReservationTimelineEntryDto dto,
+) {
+  return ReservationTimelineEntry(
+    id: dto.id,
+    source: dto.source,
+    kind: dto.kind,
+    happenedAt: dto.happenedAt,
+    title: dto.title,
+    description: dto.description,
+    actorName: dto.actorName,
+    actorRole: dto.actorRole,
+    editable: dto.editable,
+    deletable: dto.deletable,
+    relatedParticipantId: dto.relatedParticipantId,
+    serviceLogId: dto.serviceLogId,
+    photos: dto.photos
+        .map(
+          (photo) => ReservationTimelinePhoto(
+            index: photo.index,
+            storageKey: photo.storageKey,
+            filename: photo.filename,
+            contentType: photo.contentType,
+            sizeBytes: photo.sizeBytes,
+          ),
+        )
+        .toList(growable: false),
+    photosTotal: dto.photosTotal > 0 ? dto.photosTotal : dto.photos.length,
+  );
+}
+
+String timelineEntryNodeType(ReservationTimelineEntry entry) {
+  if (entry.kind.contains('rejected') || entry.kind == 'incident') {
+    return 'error';
+  }
+  if (entry.kind == 'note') {
+    return 'active';
+  }
+  if (entry.kind == 'reservation.confirmed' ||
+      entry.kind == 'payment_proof.approved' ||
+      entry.kind == 'arrival' ||
+      entry.kind == 'closure' ||
+      entry.kind == 'participant.registered') {
+    return 'completed';
+  }
+  return 'neutral';
+}
+
+String formatTimelineDate(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  final day = local.day.toString().padLeft(2, '0');
+  const months = [
+    'ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN',
+    'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC',
+  ];
+  final month = months[local.month - 1];
+  final year = local.year;
+  final hour = local.hour.toString().padLeft(2, '0');
+  final minute = local.minute.toString().padLeft(2, '0');
+  return '$day $month $year · $hour:$minute';
+}
+
+ReservationProviderItem reservationProviderDtoToDomain(
+  ReservationProviderItemDto dto,
+) {
+  DateTime? scheduledDate;
+  if (dto.scheduledDate != null && dto.scheduledDate!.isNotEmpty) {
+    scheduledDate = DateTime.tryParse(dto.scheduledDate!);
+  }
+  return ReservationProviderItem(
+    reservationProviderId: dto.reservationProviderId,
+    reservationId: dto.reservationId,
+    providerId: dto.providerId,
+    providerName: dto.providerName,
+    providerType: dto.providerType,
+    status: dto.status,
+    serviceLabel: dto.serviceLabel,
+    contactName: dto.contactName,
+    email: dto.email,
+    whatsappPhone: dto.whatsappPhone,
+    locationLabel: dto.locationLabel,
+    capacityNotes: dto.capacityNotes,
+    operationalNotes: dto.operationalNotes,
+    tariffNotes: dto.tariffNotes,
+    notes: dto.notes,
+    reservationCode: dto.reservationCode,
+    experienceName: dto.experienceName,
+    scheduledDate: scheduledDate,
+    participantsCount: dto.participantsCount,
+  );
+}
+
+ProviderCatalogItem providerCatalogDtoToDomain(ProviderCatalogItemDto dto) {
+  return ProviderCatalogItem(
+    id: dto.id,
+    name: dto.name,
+    slug: dto.slug,
+    type: dto.type,
+    status: dto.status,
+    isActive: dto.isActive,
+    locationLabel: dto.locationLabel,
   );
 }

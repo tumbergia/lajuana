@@ -733,6 +733,26 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_404": ("B404-004",),
         "cases_409": (),
     },
+    ("GET", "/api/v1/reservations/{reservation_id}/providers"): {
+        "cases_400": (),
+        "cases_404": ("B404-004",),
+        "cases_409": (),
+    },
+    ("POST", "/api/v1/reservations/{reservation_id}/providers"): {
+        "cases_400": (),
+        "cases_404": ("B404-004", "B404-011"),
+        "cases_409": ("B409-019", "B409-020"),
+    },
+    ("PATCH", "/api/v1/reservations/{reservation_id}/providers/{reservation_provider_id}"): {
+        "cases_400": (),
+        "cases_404": ("B404-004", "B404-012"),
+        "cases_409": ("B409-020",),
+    },
+    ("DELETE", "/api/v1/reservations/{reservation_id}/providers/{reservation_provider_id}"): {
+        "cases_400": (),
+        "cases_404": ("B404-004", "B404-012"),
+        "cases_409": (),
+    },
     ("GET", "/api/v1/payment-proofs/{payment_proof_id}"): {
         "cases_400": (),
         "cases_404": ("B404-005",),
@@ -941,6 +961,7 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_409": (),
     },
     ("POST", "/api/v1/providers"): {"cases_400": (), "cases_404": (), "cases_409": ()},
+    ("GET", "/api/v1/providers"): {"cases_400": (), "cases_404": (), "cases_409": ()},
     ("GET", "/api/v1/providers/{provider_id}"): {
         "cases_400": (),
         "cases_404": ("B404-011",),

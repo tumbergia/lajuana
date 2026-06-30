@@ -38,12 +38,6 @@ class ReservationStatus(StrEnum):
     EXPIRED = "expired"
 
 
-class ScheduleStatus(StrEnum):
-    OPEN = "open"
-    CLOSED = "closed"
-    FULL = "full"
-
-
 class ExperienceLevel(StrEnum):
     BASIC = "basic"
     INTERMEDIATE = "intermediate"
@@ -144,12 +138,6 @@ class Permission(StrEnum):
     EXPERIENCE_UPDATE = "experience.update"
     EXPERIENCE_DELETE = "experience.delete"
 
-    SCHEDULE_READ = "schedule.read"
-    SCHEDULE_CREATE = "schedule.create"
-    SCHEDULE_UPDATE = "schedule.update"
-    SCHEDULE_DELETE = "schedule.delete"
-    SCHEDULE_CONFIRM_EFFECT = "schedule.confirm.effect"
-
     RESERVATION_READ = "reservation.read"
     RESERVATION_CREATE = "reservation.create"
     RESERVATION_UPDATE = "reservation.update"
@@ -183,6 +171,7 @@ class Permission(StrEnum):
     LOG_READ = "log.read"
     LOG_CREATE = "log.create"
     LOG_UPDATE = "log.update"
+    LOG_DELETE = "log.delete"
 
     PROVIDER_READ = "provider.read"
     PROVIDER_CREATE = "provider.create"
@@ -213,6 +202,7 @@ class NotificationEventType(StrEnum):
     PRE_SERVICE_REMINDER = "pre_service_reminder"
     POST_SERVICE_COMPLETED = "post_service_completed"
     PAYMENT_APPROVED_FORM_SENT = "payment_approved_form_sent"
+    PAYMENT_APPROVED_LOCATION_SENT = "payment_approved_location_sent"
     PAYMENT_REJECTED_SENT = "payment_rejected_sent"
     RESERVATION_CONFIRMED_LOGISTICS_SENT = "reservation_confirmed_logistics_sent"
     PARTICIPANT_FORM_RESENT = "participant_form_resent"
@@ -241,7 +231,6 @@ ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
         Permission.AUTH_SELF_READ,
         Permission.AUTH_SELF_UPDATE_PASSWORD,
         Permission.EXPERIENCE_READ,
-        Permission.SCHEDULE_READ,
         Permission.RESERVATION_READ,
         Permission.PARTICIPANT_READ,
         Permission.EQUINE_READ,

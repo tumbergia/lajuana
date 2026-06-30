@@ -219,6 +219,9 @@ Each domain groups related errors. The first segment of `code` identifies the do
 | Code | HTTP | Description |
 |------|------|-------------|
 | `provider.not_found` | 404 | Provider not found |
+| `provider.not_associable` | 409 | Provider cannot be linked (inactive/blocked) |
+| `reservation_provider.not_found` | 404 | Reservation-provider link not found |
+| `reservation_provider.duplicate` | 409 | Duplicate provider association for reservation |
 | `policy.not_found` | 404 | Policy not found |
 | `policy.reservation_mismatch` | 400 | Policy doesn't match reservation |
 | `config.not_found` | 404 | Config not found |

@@ -12,7 +12,6 @@ from app.common.enums import (
     ParticipantFormStatus,
     PaymentStatus,
     ReservationStatus,
-    ScheduleStatus,
     UserRole,
 )
 from app.common.constants import build_code
@@ -25,7 +24,6 @@ from app.documents import (
     ParticipantDocument,
     ReservationAuditLogDocument,
     ReservationDocument,
-    ScheduleDocument,
 )
 from app.services.config_service import ConfigService
 from app.services.notification_service import NotificationService
@@ -83,22 +81,6 @@ class ReservationService:
     @staticmethod
     def _is_blocking_status(status: ReservationStatus) -> bool:
         return status in ACTIVE_RESERVATION_STATUSES
-
-    @staticmethod
-    def _compute_schedule_status(*, is_active: bool, available_slots: int) -> ScheduleStatus:
-        if not is_active:
-            return ScheduleStatus.CLOSED
-        if available_slots == 0:
-            return ScheduleStatus.FULL
-        return ScheduleStatus.OPEN
-
-    @staticmethod
-    async def _save_schedule_status(schedule: ScheduleDocument) -> None:
-        """Save schedule status using standard Beanie save()."""
-        try:
-            await schedule.save()
-        except Exception:
-            logger.exception("[_save_schedule_status] Failed to save schedule status")
 
     async def _sync_day_lock_fields(self, reservation: ReservationDocument) -> None:
         requested_date = reservation.requested_date
@@ -205,12 +187,7 @@ class ReservationService:
                     message="Experiencia no encontrada.",
                 )
         requested_date = data.get("requested_date")
-        schedule_id = data.get("schedule_id")
-        if requested_date is None and schedule_id is not None:
-            schedule = await ScheduleDocument.get(schedule_id)
-            if schedule is not None:
-                requested_date = schedule.date
-                data["requested_date"] = requested_date
+        data.pop("schedule_id", None)
 
         if initial_status is not None:
             status = initial_status
@@ -273,6 +250,18 @@ class ReservationService:
                     doc.id,
                 )
 
+        from app.services.reservation_audit_helpers import write_reservation_audit_log
+
+        actor_role = UserRole.ADMIN if actor_id is not None else None
+        await write_reservation_audit_log(
+            reservation=doc,
+            action="reservation.created",
+            actor_user_id=actor_id,
+            actor_role=actor_role,
+            previous_status="",
+            new_status=doc.status.value,
+        )
+
         return doc
 
     async def list(
@@ -323,19 +312,6 @@ class ReservationService:
                 message="Reserva no encontrada.",
             )
         return doc
-
-    async def has_active_reservation_for_schedule(
-        self,
-        schedule_id: str,
-        exclude_reservation_id: str | None = None,
-    ) -> bool:
-        schedule = await ScheduleDocument.get(schedule_id)
-        if schedule is None:
-            return False
-        return await self.has_active_reservation_for_date(
-            schedule.date,
-            exclude_reservation_id=exclude_reservation_id,
-        )
 
     async def has_active_reservation_for_date(
         self,
@@ -390,33 +366,18 @@ class ReservationService:
         reservation_id: str,
         actor_id: PydanticObjectId | None = None,
     ) -> ReservationDocument:
-        """Confirma una reserva validando estado, anticipación, pago y cupos."""
+        """Confirma una reserva validando estado, anticipación, pago y disponibilidad por fecha."""
         reservation = await self.get(reservation_id)
         rules = await self.config_service.get_reservation_rules()
 
-        if reservation.schedule_id is None:
+        if reservation.requested_date is None:
             raise ApiError(
                 status_code=409,
                 code=ErrorCode.RESERVATION_CONFIRMATION_NOT_ALLOWED,
-                message="La confirmación requiere una agenda operativa.",
+                message="La confirmación requiere una fecha solicitada.",
             )
 
-        schedule = await ScheduleDocument.get(reservation.schedule_id)
-        if schedule is None:
-            raise ApiError(
-                status_code=404,
-                code=ErrorCode.SCHEDULE_NOT_FOUND,
-                message="Agenda no encontrada.",
-            )
-        if not schedule.is_active:
-            raise ApiError(
-                status_code=409,
-                code=ErrorCode.SCHEDULE_NOT_OPEN,
-                message="La agenda esta desactivada para confirmar.",
-                details={"schedule_id": str(schedule.id), "status": "inactive"},
-            )
-
-        service_date = reservation.requested_date or schedule.date
+        service_date = reservation.requested_date
         delta_days = (service_date - _today()).days
         if delta_days < rules.min_days_in_advance:
             raise ApiError(
@@ -450,206 +411,66 @@ class ReservationService:
                 details={"from": reservation.status, "to": ReservationStatus.CONFIRMED},
             )
 
-        capacity_source = await self._commit_schedule_capacity(
-            schedule_id=str(schedule.id),
-            participant_count=reservation.participant_count,
+        previous_status = reservation.status.value
+        await self.transition_status(reservation, ReservationStatus.CONFIRMED)
+        await self._sync_day_lock_fields(reservation)
+        reservation.confirmed_at = datetime.now(UTC)
+        reservation.updated_by = actor_id
+        await reservation.save()
+
+        try:
+            await self.notification_service.enqueue_reservation_confirmed(reservation)
+        except Exception:
+            logger.exception(
+                "[reservation=%s] Failed to enqueue reservation confirmed",
+                reservation.id,
+            )
+
+        _, raw_token = await self.form_link_service.generate(
+            reservation_id=reservation_id,
+            expected_participants_count=reservation.participant_count,
+            created_by=actor_id,
         )
-        if capacity_source is None:
-            raise ApiError(
-                status_code=409,
-                code=ErrorCode.RESERVATION_NO_AVAILABILITY,
-                message="No fue posible comprometer cupos para confirmar la reserva.",
-                details={"schedule_id": str(schedule.id)},
+        from app.core.config import settings
+
+        reservation.form_url = (
+            f"{settings.participant_form_base_url}/?token={raw_token}"
+        )
+        await reservation.save()
+
+        try:
+            experience = await ExperienceDocument.get(reservation.experience_id)
+            experience_name = experience.name if experience else ""
+            scheduled_date = service_date.isoformat()
+            await self.notification_service.enqueue_reservation_confirmed_logistics(
+                reservation=reservation,
+                experience_name=experience_name,
+                scheduled_date=scheduled_date,
+            )
+        except Exception:
+            logger.exception(
+                "[reservation=%s] Failed to enqueue logistics WhatsApp",
+                reservation.id,
             )
 
         try:
-            previous_status = reservation.status.value
-            await self.transition_status(reservation, ReservationStatus.CONFIRMED)
-            await self._sync_day_lock_fields(reservation)
-            schedule = await ScheduleDocument.get(schedule.id)
-            if schedule is None:
-                raise ApiError(
-                    status_code=404,
-                    code=ErrorCode.SCHEDULE_NOT_FOUND,
-                    message="Agenda no encontrada.",
-                )
-            schedule.status = self._compute_schedule_status(
-                is_active=schedule.is_active,
-                available_slots=schedule.available_slots,
+            log = ReservationAuditLogDocument(
+                reservation_id=reservation.id,
+                actor_user_id=actor_id,
+                actor_role=UserRole.ADMIN,
+                action="reservation.confirmed",
+                previous_status=previous_status,
+                new_status=ReservationStatus.CONFIRMED.value,
+                source="mobile_app",
             )
-
-            reservation.confirmed_at = datetime.now(UTC)
-            reservation.updated_by = actor_id
-            await self._save_schedule_status(schedule)
-            await reservation.save()
-
-            try:
-                await self.notification_service.enqueue_reservation_confirmed(reservation)
-            except Exception:
-                logger.exception(
-                    "[reservation=%s] Failed to enqueue reservation confirmed",
-                    reservation.id,
-                )
-
-            _, raw_token = await self.form_link_service.generate(
-                reservation_id=reservation_id,
-                expected_participants_count=reservation.participant_count,
-                created_by=actor_id,
-            )
-            from app.core.config import settings
-
-            reservation.form_url = (
-                f"{settings.participant_form_base_url}/?token={raw_token}"
-            )
-            await reservation.save()
-
-            # Enqueue WhatsApp logistics message (via outbox)
-            try:
-                experience = await ExperienceDocument.get(reservation.experience_id)
-                experience_name = experience.name if experience else ""
-                schedule = await ScheduleDocument.get(reservation.schedule_id) if reservation.schedule_id else None
-                scheduled_date = reservation.requested_date.isoformat() if reservation.requested_date else ""
-                if not scheduled_date and schedule:
-                    scheduled_date = schedule.date.isoformat()
-                start_time = schedule.start_time if schedule else ""
-                await self.notification_service.enqueue_reservation_confirmed_logistics(
-                    reservation=reservation,
-                    experience_name=experience_name,
-                    scheduled_date=scheduled_date,
-                    start_time=start_time,
-                )
-            except Exception:
-                logger.exception(
-                    "[reservation=%s] Failed to enqueue logistics WhatsApp",
-                    reservation.id,
-                )
-
-            # Audit log — best-effort, non-critical
-            try:
-                log = ReservationAuditLogDocument(
-                    reservation_id=reservation.id,
-                    actor_user_id=actor_id,
-                    actor_role=UserRole.ADMIN,
-                    action="reservation.confirmed",
-                    previous_status=previous_status,
-                    new_status=ReservationStatus.CONFIRMED.value,
-                    source="mobile_app",
-                )
-                await log.insert()
-            except Exception:
-                logger.exception(
-                    "[reservation=%s] Failed to insert audit log",
-                    reservation.id,
-                )
-
-            return reservation
+            await log.insert()
         except Exception:
-            logger.warning(
-                "[reservation=%s] Confirm failed — rolling back capacity | schedule=%s",
+            logger.exception(
+                "[reservation=%s] Failed to insert audit log",
                 reservation.id,
-                schedule.id,
-                exc_info=True,
-            )
-            await self._rollback_schedule_capacity(
-                schedule_id=str(schedule.id),
-                participant_count=reservation.participant_count,
-                capacity_source=capacity_source,
-            )
-            schedule_after_rollback = await ScheduleDocument.get(schedule.id)
-            if schedule_after_rollback is not None:
-                schedule_after_rollback.status = self._compute_schedule_status(
-                    is_active=schedule_after_rollback.is_active,
-                    available_slots=schedule_after_rollback.available_slots,
-                )
-                await self._save_schedule_status(schedule_after_rollback)
-            raise
-
-    async def _commit_schedule_capacity(
-        self,
-        schedule_id: str,
-        participant_count: int,
-    ) -> str | None:
-        collection = ScheduleDocument.get_motor_collection()
-        schedule_object_id = PydanticObjectId(schedule_id)
-
-        convert_result = await collection.update_one(
-            {
-                "_id": schedule_object_id,
-                "held_slots": {"$gte": participant_count},
-            },
-            {
-                "$inc": {
-                    "held_slots": -participant_count,
-                    "reserved_slots": participant_count,
-                }
-            },
-        )
-        if convert_result.modified_count > 0:
-            return "held"
-
-        reserve_result = await collection.update_one(
-            {
-                "_id": schedule_object_id,
-                "available_slots": {"$gte": participant_count},
-            },
-            {
-                "$inc": {
-                    "available_slots": -participant_count,
-                    "reserved_slots": participant_count,
-                }
-            },
-        )
-        if reserve_result.modified_count > 0:
-            return "available"
-        return None
-
-    async def _rollback_schedule_capacity(
-        self,
-        *,
-        schedule_id: str,
-        participant_count: int,
-        capacity_source: str,
-    ) -> None:
-        collection = ScheduleDocument.get_motor_collection()
-        schedule_object_id = PydanticObjectId(schedule_id)
-        if capacity_source == "held":
-            rollback_result = await collection.update_one(
-                {
-                    "_id": schedule_object_id,
-                    "reserved_slots": {"$gte": participant_count},
-                },
-                {
-                    "$inc": {
-                        "held_slots": participant_count,
-                        "reserved_slots": -participant_count,
-                    }
-                },
-            )
-        else:
-            rollback_result = await collection.update_one(
-                {
-                    "_id": schedule_object_id,
-                    "reserved_slots": {"$gte": participant_count},
-                },
-                {
-                    "$inc": {
-                        "available_slots": participant_count,
-                        "reserved_slots": -participant_count,
-                    }
-                },
             )
 
-        if rollback_result.modified_count == 0:
-            raise ApiError(
-                status_code=500,
-                code=ErrorCode.INTERNAL_ERROR,
-                message="No fue posible revertir cupos tras fallo de confirmación.",
-                details={
-                    "schedule_id": schedule_id,
-                    "participant_count": participant_count,
-                    "capacity_source": capacity_source,
-                },
-            )
+        return reservation
 
     async def set_status(
         self,
@@ -695,13 +516,6 @@ class ReservationService:
         previous_status = reservation.status
         await self.transition_status(reservation, ReservationStatus.CANCELLED)
         await self._sync_day_lock_fields(reservation)
-
-        if previous_status == ReservationStatus.CONFIRMED and reservation.schedule_id:
-            schedule = await ScheduleDocument.get(reservation.schedule_id)
-            if schedule is not None:
-                if not await self.has_active_reservation_for_schedule(str(schedule.id)):
-                    schedule.status = ScheduleStatus.OPEN
-                await schedule.save()
 
         reservation.cancelled_at = datetime.now(UTC)
         reservation.updated_by = actor_id

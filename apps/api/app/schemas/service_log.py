@@ -1,9 +1,31 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.documents import ServiceLogEventType
 from app.schemas.common import AuditMetadataSchema
+
+
+class ServiceLogPhotoSchema(BaseModel):
+    index: int
+    storage_key: str
+    filename: str
+    content_type: str
+    size_bytes: int = 0
+
+
+class ServiceLogPhotoInputSchema(BaseModel):
+    storage_key: str
+    filename: str
+    content_type: str
+    size_bytes: int = 0
+
+
+class ServiceLogPhotoUploadResponseSchema(BaseModel):
+    storage_key: str
+    filename: str
+    content_type: str
+    size_bytes: int
 
 
 class ServiceLogCreateSchema(BaseModel):
@@ -14,6 +36,7 @@ class ServiceLogCreateSchema(BaseModel):
     notes: str | None = None
     related_participant_id: str | None = None
     related_equine_id: str | None = None
+    photos: list[ServiceLogPhotoInputSchema] = Field(default_factory=list)
 
 
 class ServiceLogUpdateSchema(BaseModel):
@@ -23,6 +46,7 @@ class ServiceLogUpdateSchema(BaseModel):
     notes: str | None = None
     related_participant_id: str | None = None
     related_equine_id: str | None = None
+    photos: list[ServiceLogPhotoInputSchema] | None = None
 
 
 class ServiceLogResponseSchema(AuditMetadataSchema):
@@ -34,3 +58,5 @@ class ServiceLogResponseSchema(AuditMetadataSchema):
     notes: str | None
     related_participant_id: str | None
     related_equine_id: str | None
+    created_by: str | None = None
+    photos: list[ServiceLogPhotoSchema] = Field(default_factory=list)

@@ -60,20 +60,6 @@ Prefix: `/experiences` — tag: Experiencias
 
 ---
 
-## Schedules
-
-Prefix: `/schedules` — tag: Fechas operativas
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/v1/schedules` | Create a new schedule |
-| GET | `/api/v1/schedules` | List schedules (filterable by experience, date range, status) |
-| GET | `/api/v1/schedules/{schedule_id}` | Get schedule by ID |
-| PATCH | `/api/v1/schedules/{schedule_id}` | Update schedule |
-| DELETE | `/api/v1/schedules/{schedule_id}` | Deactivate schedule |
-
----
-
 ## Reservations
 
 Prefix: `/reservations` — tag: Reservas
@@ -84,6 +70,7 @@ Prefix: `/reservations` — tag: Reservas
 | GET | `/api/v1/reservations` | List reservations (paginated, X-Total-Count) |
 | GET | `/api/v1/reservations/availability` | Check availability for a given date |
 | GET | `/api/v1/reservations/{reservation_id}` | Get reservation by ID |
+| GET | `/api/v1/reservations/{reservation_id}/timeline` | Unified reservation logbook timeline |
 | PATCH | `/api/v1/reservations/{reservation_id}` | Update reservation |
 | POST | `/api/v1/reservations/{reservation_id}/confirm` | Confirm reservation |
 | POST | `/api/v1/reservations/{reservation_id}/status` | Transition reservation status |
@@ -220,9 +207,23 @@ Prefix: `/providers` — tag: Proveedores
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/api/v1/providers` | Create a provider |
+| GET | `/api/v1/providers` | List providers (filters: `type`, `status`, `q`, `service_category`, `is_active`) |
 | GET | `/api/v1/providers/{provider_id}` | Get provider by ID |
 | PATCH | `/api/v1/providers/{provider_id}` | Update provider |
 | DELETE | `/api/v1/providers/{provider_id}` | Deactivate provider |
+
+---
+
+## Reservation Providers
+
+Nested under reservations — tag: Reservas
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/reservations/{reservation_id}/providers` | List providers linked to a reservation (flat tab payload) |
+| POST | `/api/v1/reservations/{reservation_id}/providers` | Associate a provider to a reservation |
+| PATCH | `/api/v1/reservations/{reservation_id}/providers/{reservation_provider_id}` | Update association (service, notes, status) |
+| DELETE | `/api/v1/reservations/{reservation_id}/providers/{reservation_provider_id}` | Remove association |
 
 ---
 
@@ -245,8 +246,10 @@ Prefix: `/logs` — tag: Bitacora
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/api/v1/logs` | Create a service log entry |
+| GET | `/api/v1/logs?reservation_id={id}` | List service logs for a reservation |
 | GET | `/api/v1/logs/{log_id}` | Get log entry by ID |
 | PATCH | `/api/v1/logs/{log_id}` | Update log entry |
+| DELETE | `/api/v1/logs/{log_id}` | Soft-delete log entry |
 
 ---
 

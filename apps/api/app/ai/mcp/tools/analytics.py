@@ -5,6 +5,8 @@ from datetime import date, datetime
 from typing import Any
 from uuid import uuid4
 
+from beanie import PydanticObjectId
+
 from app.ai.mcp.tool_contracts import (
     ChannelPerformanceInput,
     ChannelPerformanceItem,
@@ -29,7 +31,6 @@ from app.documents import (
     EquineDocument,
     ExperienceDocument,
     ReservationDocument,
-    ScheduleDocument,
 )
 from app.documents.tool_call_log_document import ToolCallLogDocument
 
@@ -351,53 +352,61 @@ async def admin_get_occupancy_report(
             experience_id=experience_id,
         )
 
-        query: dict[str, Any] = {}
+        query: dict[str, Any] = {
+            "status": {
+                "$in": [
+                    ReservationStatus.CONFIRMED.value,
+                    ReservationStatus.PAYMENT_RECEIVED.value,
+                    ReservationStatus.PRE_RESERVED.value,
+                ]
+            },
+            "requested_date": {"$ne": None},
+        }
         if payload.date_from:
-            query["date"] = query.get("date", {})
-            query["date"]["$gte"] = date.fromisoformat(payload.date_from)
+            query["requested_date"] = query.get("requested_date", {})
+            if not isinstance(query["requested_date"], dict):
+                query["requested_date"] = {}
+            query["requested_date"]["$gte"] = date.fromisoformat(payload.date_from)
         if payload.date_to:
-            query["date"] = query.get("date", {})
-            query["date"]["$lte"] = date.fromisoformat(payload.date_to)
+            if not isinstance(query.get("requested_date"), dict):
+                query["requested_date"] = {}
+            query["requested_date"]["$lte"] = date.fromisoformat(payload.date_to)
         if payload.experience_id:
-            query["experience_id"] = payload.experience_id
+            query["experience_id"] = PydanticObjectId(payload.experience_id)
 
-        schedules = await ScheduleDocument.find(**query).to_list()
+        reservations = await ReservationDocument.find(query).to_list()
 
         occupancy: list[OccupancyItem] = []
         total_pct = 0.0
 
-        for s in schedules:
-            total_cap = getattr(s, "capacity_total", 0) or 0
-            reserved = getattr(s, "reserved_slots", 0) or 0
-            available = getattr(s, "available_slots", 0) or 0
-            pct = (reserved / total_cap * 100) if total_cap > 0 else 0.0
-
+        for reservation in reservations:
             experience_name = ""
-            exp_id = getattr(s, "experience_id", None)
-            if exp_id:
-                exp_doc = await ExperienceDocument.get(exp_id)
+            if reservation.experience_id:
+                exp_doc = await ExperienceDocument.get(reservation.experience_id)
                 if exp_doc:
                     experience_name = getattr(exp_doc, "name", "") or ""
 
-            s_date = getattr(s, "date", None)
+            r_date = reservation.requested_date
+            participant_count = reservation.participant_count or 0
+            pct = 100.0 if reservation.status == ReservationStatus.CONFIRMED else 50.0
             occupancy.append(
                 OccupancyItem(
-                    date=s_date.isoformat() if s_date else "",
+                    date=r_date.isoformat() if r_date else "",
                     experience_name=experience_name,
-                    capacity_total=total_cap,
-                    reserved=reserved,
-                    available=available,
+                    capacity_total=participant_count,
+                    reserved=participant_count if reservation.status == ReservationStatus.CONFIRMED else 0,
+                    available=0 if reservation.status == ReservationStatus.CONFIRMED else participant_count,
                     occupancy_pct=round(pct, 1),
                 )
             )
             total_pct += pct
 
-        avg_pct = round(total_pct / len(schedules), 1) if schedules else 0.0
+        avg_pct = round(total_pct / len(reservations), 1) if reservations else 0.0
 
         output = OccupancyReportOutput(
             trace_id=trace_id,
             occupancy=occupancy,
-            total_schedules=len(schedules),
+            total_schedules=len(reservations),
             avg_occupancy_pct=avg_pct,
             date_from=payload.date_from,
             date_to=payload.date_to,

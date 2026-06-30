@@ -51,12 +51,7 @@ def _bootstrap():
     register_seed(
         "experiences",
         "scripts.seed_experiences_and_schedules_qa",
-        "Upsert QA experiences + schedules",
-    )
-    register_seed(
-        "schedules",
-        "scripts.seed_schedules_2026_q2",
-        "Schedule availability for Q2 2026",
+        "Upsert QA experiences",
     )
     register_seed(
         "form-test",

@@ -3,7 +3,12 @@ import 'dart:typed_data';
 import 'package:mobile_domain/src/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
+import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
+import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
+import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 
 abstract class ReservationsRepository {
   Future<List<ReservationListItem>> listReservations({
@@ -28,6 +33,13 @@ abstract class ReservationsRepository {
   /// Approves a payment proof. Returns the full updated reservation detail.
   Future<ReservationDetail> approvePaymentProof({
     required String paymentProofId,
+    String? note,
+  });
+
+  /// Approves payment WITHOUT a proof document (cash, external transfer, etc.).
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
     String? note,
   });
 
@@ -73,5 +85,78 @@ abstract class ReservationsRepository {
   /// Restores a soft-deleted reservation.
   Future<ReservationDetail> restoreReservation({
     required String reservationId,
+  });
+
+  /// Bitácora unificada de la reserva (más reciente primero).
+  Future<List<ReservationTimelineEntry>> getReservationTimeline(
+    String reservationId,
+  );
+
+  /// Crea una nota manual en la bitácora.
+  Future<void> createReservationLogNote({
+    required String reservationId,
+    required String notes,
+    List<ReservationLogPhotoInput> photos = const [],
+  });
+
+  /// Actualiza una nota manual existente.
+  Future<void> updateReservationLogNote({
+    required String logId,
+    required String notes,
+    List<ReservationLogPhotoInput>? photos,
+  });
+
+  /// Elimina una entrada de bitácora (soft delete).
+  Future<void> deleteReservationLogEntry({
+    required String logId,
+  });
+
+  /// Obtiene una nota manual con todas sus fotos (para edición).
+  Future<ReservationLogNoteDetail> getReservationLogNote(String logId);
+
+  /// Sube una foto temporal asociada a una reserva.
+  Future<ReservationLogPhotoUpload> uploadReservationLogPhoto({
+    required String reservationId,
+    required Uint8List bytes,
+    required String filename,
+    required String contentType,
+  });
+
+  /// Descarga una foto adjunta a una entrada de bitácora.
+  Future<Uint8List> downloadReservationLogPhoto({
+    required String logId,
+    required int photoIndex,
+  });
+
+  /// Proveedores asociados a una reserva (pestaña operativa).
+  Future<List<ReservationProviderItem>> getReservationProviders(
+    String reservationId,
+  );
+
+  /// Catálogo de proveedores activos (picker admin).
+  Future<List<ProviderCatalogItem>> listProviders({
+    String? query,
+    bool isActive = true,
+  });
+
+  Future<ReservationProviderItem> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  });
+
+  Future<ReservationProviderItem> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  });
+
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
   });
 }

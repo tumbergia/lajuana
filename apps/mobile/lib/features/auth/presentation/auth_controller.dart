@@ -257,6 +257,21 @@ class AuthController extends ChangeNotifier {
     hasLocalSession = snapshot.hasLocalSession;
     hasPendingSync = snapshot.hasPendingSync;
     isOfflineRestricted = snapshot.isOfflineRestricted;
+
+    if (snapshot.authState == LocalAuthState.signedInVerified) {
+      _markBackendReachableFromAuthSuccess();
+    }
+  }
+
+  void _markBackendReachableFromAuthSuccess() {
+    if (networkStatus.backendReachability == BackendReachability.reachable) {
+      return;
+    }
+    networkStatus = NetworkStatus(
+      linkType: networkStatus.linkType,
+      backendReachability: BackendReachability.reachable,
+    );
+    notifyListeners();
   }
 
   void _applyFailure(AuthFailure failure) {

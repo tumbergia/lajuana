@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents import ParticipantDocument, ReservationDocument
+from app.documents.audit_metadata_models import ParticipantMetadata
 from app.documents.participant_document import EmergencyContact
 from app.schemas.participant import (
     ParticipantCreateSchema,
@@ -36,6 +37,31 @@ RISK_RELEASE_TEXT = (
 class ParticipantService:
     def __init__(self, form_link_service: ParticipantFormLinkService) -> None:
         self.form_link_service = form_link_service
+
+    async def _maybe_audit_participant_registered(
+        self,
+        doc: ParticipantDocument,
+        *,
+        was_completed: bool,
+    ) -> None:
+        if was_completed or not doc.is_completed:
+            return
+        reservation = await ReservationDocument.get(doc.reservation_id)
+        if reservation is None:
+            return
+        from app.services.reservation_audit_helpers import write_reservation_audit_log
+
+        participant_name = f"{doc.first_name} {doc.last_name}".strip()
+        await write_reservation_audit_log(
+            reservation=reservation,
+            action="participant.registered",
+            previous_status=reservation.status.value,
+            new_status=reservation.status.value,
+            metadata=ParticipantMetadata(
+                participant_id=str(doc.id),
+                participant_name=participant_name,
+            ),
+        )
 
     async def get(self, participant_id: str) -> ParticipantDocument:
         doc = await ParticipantDocument.get(participant_id)
@@ -71,6 +97,7 @@ class ParticipantService:
         await doc.insert()
         reservation.participant_ids.append(doc.id)
         await reservation.save()
+        await self._maybe_audit_participant_registered(doc, was_completed=False)
         return doc
 
     async def create_from_form(
@@ -144,6 +171,7 @@ class ParticipantService:
         await self.form_link_service.increment_used_count(form_link)
         await self.form_link_service.update_reservation_completion(form_link.reservation_id)
 
+        await self._maybe_audit_participant_registered(doc, was_completed=False)
         return doc
 
     async def update(
@@ -159,10 +187,12 @@ class ParticipantService:
                 code=ErrorCode.PARTICIPANT_INVALID_BIRTH_DATE,
                 message="La fecha de nacimiento debe ser anterior a hoy.",
             )
+        was_completed = doc.is_completed
         for field, value in updates.items():
             setattr(doc, field, value)
         doc.is_completed = self._is_completed(doc)
         await doc.save()
+        await self._maybe_audit_participant_registered(doc, was_completed=was_completed)
         return doc
 
     def _is_completed(self, participant: ParticipantDocument) -> bool:

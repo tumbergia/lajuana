@@ -113,6 +113,9 @@ class AppTimelineEntryCard extends StatelessWidget {
   final Widget? highlightedContent;
   final Widget? footer;
 
+  /// Si true, [highlightedContent] ocupa todo el ancho sin padding interno.
+  final bool highlightedContentFullBleed;
+
   const AppTimelineEntryCard({
     super.key,
     required this.date,
@@ -121,6 +124,7 @@ class AppTimelineEntryCard extends StatelessWidget {
     this.badge,
     this.highlightedContent,
     this.footer,
+    this.highlightedContentFullBleed = false,
   });
 
   @override
@@ -173,15 +177,24 @@ class AppTimelineEntryCard extends StatelessWidget {
           ],
           if (highlightedContent != null) ...[
             const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerLow,
+            if (highlightedContentFullBleed)
+              ClipRRect(
                 borderRadius: BorderRadius.circular(2),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: highlightedContent,
+                ),
+              )
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: highlightedContent,
               ),
-              child: highlightedContent,
-            ),
           ],
           if (footer != null) ...[const SizedBox(height: 16), footer!],
         ],

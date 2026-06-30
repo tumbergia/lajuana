@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 import httpx
 
+from app.channels.whatsapp.normalizer import strip_whatsapp_markup
 from app.conversations.documents import OutboundMessageDocument
 from app.core.config import settings
 from app.core.logging import logger
@@ -16,11 +17,14 @@ class WhatsAppOutboundService:
         to_phone: str,
         text: str,
     ) -> OutboundMessageDocument:
+        # WhatsApp renderiza * _ ~ y `, que el LLM puede emitir y rompe la lectura
+        # con saltos de línea raros. Saneamos antes de enviar para garantizar texto plano.
+        clean_text = strip_whatsapp_markup(text)
         outbound = OutboundMessageDocument(
             conversation_id=turn.conversation_id or "",
             turn_id=str(turn.id),
             to_phone=to_phone,
-            body=text,
+            body=clean_text,
             status="queued",
         )
         await outbound.insert()
@@ -44,7 +48,7 @@ class WhatsAppOutboundService:
             "messaging_product": "whatsapp",
             "to": clean_phone,
             "type": "text",
-            "text": {"body": text},
+            "text": {"body": clean_text},
         }
 
         headers = {

@@ -23,6 +23,10 @@ class ConversationSessionDocument(Document):
     last_turn_id: str | None = None
     last_inbound_at: datetime | None = None
     language: str = "es"
+    language_override: str | None = None
+    language_streak: int = 0
+    language_streak_lang: str | None = None
+    pending_media_proof: dict[str, Any] | None = None
     version: int = 0
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

@@ -3,16 +3,19 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_ui/src/theme/app_theme_notifier.dart';
 
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
+  static const _bannerAspectRatio = 1600 / 567;
+  static const _logoHeight = 40.0;
+
   final VoidCallback? onNotificationsTap;
   final VoidCallback? onThemeToggleTap;
-  final String title;
+  final String? title;
   final String logoAssetPath;
   final bool showNotificationDot;
 
   const AppTopBar({
     super.key,
     required this.logoAssetPath,
-    this.title = 'LA JUANA',
+    this.title,
     this.onNotificationsTap,
     this.onThemeToggleTap,
     this.showNotificationDot = false,
@@ -47,33 +50,36 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 50,
-                        height: 50,
+                        width: _logoHeight * _bannerAspectRatio,
+                        height: _logoHeight,
                         child: SvgPicture.asset(
                           logoAssetPath,
                           fit: BoxFit.contain,
+                          alignment: Alignment.centerLeft,
                           colorFilter: ColorFilter.mode(
                             foregroundColor,
                             BlendMode.srcIn,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontFamily: 'Manrope',
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            height: 1.4,
-                            letterSpacing: 2,
-                            color: foregroundColor,
+                      if (title != null) ...[
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            title!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontFamily: 'Manrope',
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                              height: 1.4,
+                              letterSpacing: 2,
+                              color: foregroundColor,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

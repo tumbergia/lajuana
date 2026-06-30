@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 from pydantic import ValidationError
 
-from app.common.enums import PaymentStatus, ReservationStatus, ScheduleStatus, UserRole
+from app.common.enums import PaymentStatus, ReservationStatus, UserRole
 from app.core.di import Container
 from app.core.errors import ApiError
 from app.documents import ReservationDocument
@@ -246,23 +246,11 @@ def test_reject_rolls_back_proof_when_reservation_save_fails(
     assert proof.saved_statuses == [PaymentStatus.REJECTED, PaymentStatus.RECEIVED]
 
 
-class _FakeSchedule:
-    def __init__(self) -> None:
-        self.id = "660000000000000000000100"
-        self.date = date.today()
-        self.is_active = True
-        self.available_slots = 0
-        self.status = ScheduleStatus.OPEN
-
-    async def save(self) -> None:
-        return None
-
-
 class _FakeReservationConfirm:
     def __init__(self, payment_status: PaymentStatus = PaymentStatus.VERIFIED) -> None:
         self.id = "660000000000000000000001"
         self.status = ReservationStatus.PAYMENT_RECEIVED
-        self.schedule_id = "660000000000000000000100"
+        self.experience_id = "660000000000000000000020"
         self.requested_date = date.today()
         self.payment_status = payment_status
         self.payment_proof_ids = ["proof-1"]
@@ -270,6 +258,9 @@ class _FakeReservationConfirm:
         self.confirmed_at = None
         self.updated_by = None
         self.holder_phone = None
+        self.blocks_day = False
+        self.availability_lock_key = None
+        self.form_url = None
 
     async def save(self) -> None:
         return None
@@ -280,10 +271,10 @@ class _FakeReservationConfirmSaveFailure(_FakeReservationConfirm):
         raise RuntimeError("forced reservation save error")
 
 
-def test_confirm_success_with_capacity_updates_schedule(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_confirm_success_syncs_day_lock(monkeypatch: pytest.MonkeyPatch) -> None:
     service = Container.get_instance().reservation_service
     reservation = _FakeReservationConfirm()
-    schedule = _FakeSchedule()
+    sync_calls: list[object] = []
 
     async def _fake_get(_: str):
         return reservation
@@ -291,39 +282,36 @@ def test_confirm_success_with_capacity_updates_schedule(monkeypatch: pytest.Monk
     async def _fake_rules(self):
         return SimpleNamespace(min_days_in_advance=0, require_payment_proof_for_confirmation=True)
 
-    async def _fake_schedule_get(_: str):
-        return schedule
-
-    async def _fake_commit(*, schedule_id: str, participant_count: int) -> str | None:
-        assert schedule_id == schedule.id
-        assert participant_count == reservation.participant_count
-        return "available"
-
     async def _noop(*args, **kwargs):
         return None
+
+    async def _fake_sync(res):
+        sync_calls.append(res)
 
     async def _fake_generate(*args, **kwargs):
         return "token", "raw_token"
 
+    async def _fake_get_exp(_):
+        return SimpleNamespace(name="Test Experience")
+
     monkeypatch.setattr(service, "get", _fake_get)
     monkeypatch.setattr(ConfigService, "get_reservation_rules", _fake_rules)
-    monkeypatch.setattr("app.services.reservation_service.ScheduleDocument.get", _fake_schedule_get)
-    monkeypatch.setattr(service, "_commit_schedule_capacity", _fake_commit)
     monkeypatch.setattr(service, "ensure_date_available", _noop)
-    monkeypatch.setattr(service, "_sync_day_lock_fields", _noop)
+    monkeypatch.setattr(service, "_sync_day_lock_fields", _fake_sync)
     monkeypatch.setattr(ParticipantFormLinkService, "generate", _fake_generate)
+    monkeypatch.setattr("app.services.reservation_service.ExperienceDocument.get", _fake_get_exp)
+    monkeypatch.setattr(service.notification_service, "enqueue_reservation_confirmed", _noop)
 
     result = asyncio.run(service.confirm_reservation(str(reservation.id)))
 
     assert result.status == ReservationStatus.CONFIRMED
-    assert schedule.status == ScheduleStatus.FULL
+    assert sync_calls == [reservation]
 
 
-def test_confirm_failure_without_capacity_keeps_status(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_confirm_failure_when_date_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
     service = Container.get_instance().reservation_service
     reservation = _FakeReservationConfirm()
     original_status = reservation.status
-    schedule = _FakeSchedule()
 
     async def _fake_get(_: str):
         return reservation
@@ -331,22 +319,16 @@ def test_confirm_failure_without_capacity_keeps_status(monkeypatch: pytest.Monke
     async def _fake_rules(self):
         return SimpleNamespace(min_days_in_advance=0, require_payment_proof_for_confirmation=True)
 
-    async def _fake_schedule_get(_: str):
-        return schedule
-
-    async def _fake_commit(*, schedule_id: str, participant_count: int) -> str | None:
-        assert schedule_id == schedule.id
-        assert participant_count == reservation.participant_count
-        return None
-
-    async def _noop(*args, **kwargs):
-        return None
+    async def _fake_ensure(*args, **kwargs):
+        raise ApiError(
+            status_code=409,
+            code="reservation.no_availability",
+            message="La fecha ya tiene una reserva activa.",
+        )
 
     monkeypatch.setattr(service, "get", _fake_get)
     monkeypatch.setattr(ConfigService, "get_reservation_rules", _fake_rules)
-    monkeypatch.setattr("app.services.reservation_service.ScheduleDocument.get", _fake_schedule_get)
-    monkeypatch.setattr(service, "_commit_schedule_capacity", _fake_commit)
-    monkeypatch.setattr(service, "ensure_date_available", _noop)
+    monkeypatch.setattr(service, "ensure_date_available", _fake_ensure)
 
     with pytest.raises(ApiError):
         asyncio.run(service.confirm_reservation(str(reservation.id)))
@@ -354,11 +336,9 @@ def test_confirm_failure_without_capacity_keeps_status(monkeypatch: pytest.Monke
     assert reservation.status == original_status
 
 
-def test_confirm_failure_after_capacity_commit_rolls_back(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_confirm_failure_after_transition_keeps_status(monkeypatch: pytest.MonkeyPatch) -> None:
     service = Container.get_instance().reservation_service
     reservation = _FakeReservationConfirm()
-    schedule = _FakeSchedule()
-    rollback_calls: list[tuple[str, int, str]] = []
 
     async def _fake_get(_: str):
         return reservation
@@ -366,52 +346,28 @@ def test_confirm_failure_after_capacity_commit_rolls_back(monkeypatch: pytest.Mo
     async def _fake_rules(self):
         return SimpleNamespace(min_days_in_advance=0, require_payment_proof_for_confirmation=True)
 
-    async def _fake_schedule_get(_: str):
-        return schedule
-
-    async def _fake_commit(*, schedule_id: str, participant_count: int) -> str | None:
-        assert schedule_id == schedule.id
-        assert participant_count == reservation.participant_count
-        return "available"
-
     async def _fake_transition(*args, **kwargs):
         raise RuntimeError("forced transition error")
-
-    async def _fake_rollback(
-        *,
-        schedule_id: str,
-        participant_count: int,
-        capacity_source: str,
-    ) -> None:
-        rollback_calls.append((schedule_id, participant_count, capacity_source))
 
     async def _noop(*args, **kwargs):
         return None
 
     monkeypatch.setattr(service, "get", _fake_get)
     monkeypatch.setattr(ConfigService, "get_reservation_rules", _fake_rules)
-    monkeypatch.setattr("app.services.reservation_service.ScheduleDocument.get", _fake_schedule_get)
-    monkeypatch.setattr(service, "_commit_schedule_capacity", _fake_commit)
-    monkeypatch.setattr(service, "transition_status", _fake_transition)
-    monkeypatch.setattr(service, "_rollback_schedule_capacity", _fake_rollback)
     monkeypatch.setattr(service, "ensure_date_available", _noop)
+    monkeypatch.setattr(service, "transition_status", _fake_transition)
 
     with pytest.raises(RuntimeError):
         asyncio.run(service.confirm_reservation(str(reservation.id)))
 
     assert reservation.status == ReservationStatus.PAYMENT_RECEIVED
-    assert rollback_calls == [(schedule.id, reservation.participant_count, "available")]
 
 
-def test_confirm_failure_after_schedule_save_recomputes_status_after_rollback(
+def test_confirm_failure_after_save_propagates_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     service = Container.get_instance().reservation_service
     reservation = _FakeReservationConfirmSaveFailure()
-    schedule = _FakeSchedule()
-    schedule.available_slots = 0
-    schedule.status = ScheduleStatus.FULL
-    save_calls = 0
 
     async def _fake_get(_: str):
         return reservation
@@ -419,47 +375,16 @@ def test_confirm_failure_after_schedule_save_recomputes_status_after_rollback(
     async def _fake_rules(self):
         return SimpleNamespace(min_days_in_advance=0, require_payment_proof_for_confirmation=True)
 
-    async def _fake_schedule_get(_: str):
-        return schedule
-
-    async def _fake_commit(*, schedule_id: str, participant_count: int) -> str | None:
-        assert schedule_id == schedule.id
-        assert participant_count == reservation.participant_count
-        return "available"
-
-    async def _fake_rollback(
-        *,
-        schedule_id: str,
-        participant_count: int,
-        capacity_source: str,
-    ) -> None:
-        assert schedule_id == schedule.id
-        assert participant_count == reservation.participant_count
-        assert capacity_source == "available"
-        schedule.available_slots += participant_count
-
-    async def _fake_schedule_save() -> None:
-        nonlocal save_calls
-        save_calls += 1
-
     async def _noop(*args, **kwargs):
         return None
 
-    schedule.save = _fake_schedule_save
     monkeypatch.setattr(service, "get", _fake_get)
     monkeypatch.setattr(ConfigService, "get_reservation_rules", _fake_rules)
-    monkeypatch.setattr("app.services.reservation_service.ScheduleDocument.get", _fake_schedule_get)
-    monkeypatch.setattr(service, "_commit_schedule_capacity", _fake_commit)
-    monkeypatch.setattr(service, "_rollback_schedule_capacity", _fake_rollback)
     monkeypatch.setattr(service, "ensure_date_available", _noop)
     monkeypatch.setattr(service, "_sync_day_lock_fields", _noop)
 
     with pytest.raises(RuntimeError, match="forced reservation save error"):
         asyncio.run(service.confirm_reservation(str(reservation.id)))
-
-    assert schedule.available_slots == reservation.participant_count
-    assert schedule.status == ScheduleStatus.OPEN
-    assert save_calls == 2
 
 
 # ---------------------------------------------------------------------------

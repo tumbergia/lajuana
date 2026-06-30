@@ -1,9 +1,10 @@
+import re
 from datetime import UTC, datetime
-from typing import Protocol
+from typing import Any, Protocol
 from uuid import uuid4
 
 from app.ai.assistant.orchestrator import AssistantOrchestrator
-from app.ai.language.detector import detect_language
+from app.ai.language.detector import detect_explicit_language_request, detect_language
 from app.ai.language.messages import t
 from app.ai.mcp.registry import registry
 from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
@@ -18,6 +19,7 @@ from app.conversations.services.conversation_lock_service import (
 from app.conversations.services.message_buffer_service import MessageBufferService
 from app.core.logging import logger
 from app.documents import ReservationDocument
+from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.schemas.ask import AskRequest
 
@@ -66,6 +68,40 @@ class ConversationTurnWorker:
             }
         ).to_list()
 
+    async def _resolve_session_language(
+        self,
+        *,
+        conversation_id: str,
+        combined_text: str,
+        normalized_phone: str,
+    ) -> str:
+        """Devuelve el idioma efectivo a usar en el flujo de comprobantes.
+
+        Prioridad:
+          1. Petición explícita en el texto del comprobante (raro pero posible).
+          2. Idioma de la sesión activa asociada a la conversación.
+          3. Detección por texto (fallback), con español por defecto.
+
+        La carga de la sesión es defensiva: si no hay sesión activa o el
+        almacenamiento no está disponible (ej. tests), se cae al fallback
+        sin propagar errores.
+        """
+        explicit = detect_explicit_language_request(combined_text)
+        if explicit:
+            return explicit
+
+        try:
+            session = await ConversationSessionDocument.find_one(
+                {"conversation_key": conversation_id, "status": "active"},
+            )
+        except Exception:
+            session = None
+
+        if session and getattr(session, "language", None):
+            return session.language
+
+        return detect_language(combined_text)
+
     async def _try_process_media_proof(
         self,
         *,
@@ -76,7 +112,11 @@ class ConversationTurnWorker:
         turn: ConversationTurnDocument,
     ) -> bool:
         combined_text = combine_messages(events)
-        lang = detect_language(combined_text)
+        lang = await self._resolve_session_language(
+            conversation_id=conversation_id,
+            combined_text=combined_text,
+            normalized_phone=normalized_phone,
+        )
 
         media_events = [e for e in events if e.media_id and e.message_type in {"image", "document"}]
         if not media_events:
@@ -96,6 +136,33 @@ class ConversationTurnWorker:
             return True
 
         if len(candidates) > 1:
+            event = media_events[0]
+            try:
+                session = await ConversationSessionDocument.find_one(
+                    {"conversation_key": conversation_id, "status": "active"},
+                )
+                if session and hasattr(session, "pending_media_proof"):
+                    session.pending_media_proof = {
+                        "wa_message_id": event.wa_message_id,
+                        "media_id": event.media_id,
+                        "message_type": event.message_type,
+                        "mime_type": (
+                            (event.raw_payload or {}).get(event.message_type) or {}
+                        ).get("mime_type", "application/pdf"),
+                        "filename": (
+                            (event.raw_payload or {}).get(event.message_type) or {}
+                        ).get("filename"),
+                        "caption": event.caption,
+                        "from_phone": normalized_phone,
+                    }
+                    session.updated_at = datetime.now(UTC)
+                    await session.save()
+            except Exception:
+                logger.exception(
+                    "[conversation_id=%s] Failed to save pending media",
+                    conversation_id,
+                )
+
             turn.status = "responded"
             turn.response_text = t("media_multiple_reservations", lang)
             turn.responded_at = datetime.now(UTC)
@@ -125,6 +192,74 @@ class ConversationTurnWorker:
             filename=filename,
             caption=event.caption,
         )
+        turn.status = "responded"
+        turn.response_text = result.get(
+            "response",
+            t("media_proof_received", lang),
+        )
+        turn.responded_at = datetime.now(UTC)
+        await turn.save()
+        await self._outbound_service.send(
+            turn=turn,
+            to_phone=normalized_phone,
+            text=turn.response_text,
+        )
+        return True
+
+    async def _try_process_pending_media_with_code(
+        self,
+        *,
+        combined_text: str,
+        trace_id: str,
+        conversation_id: str,
+        normalized_phone: str,
+        turn: ConversationTurnDocument,
+    ) -> bool:
+        if not combined_text or not combined_text.strip():
+            return False
+        code_match = re.search(r"PR-\w{6,}", combined_text.upper())
+        if not code_match:
+            return False
+        reservation_code = code_match.group(0)
+
+        try:
+            session = await ConversationSessionDocument.find_one(
+                {"conversation_key": conversation_id, "status": "active"},
+            )
+        except Exception:
+            session = None
+        if not session:
+            return False
+        pending: dict[str, Any] | None = getattr(session, "pending_media_proof", None)
+        if not pending:
+            return False
+
+        lang = getattr(session, "language", "es") or "es"
+
+        reservation = await ReservationDocument.find_one(
+            {"code": reservation_code, "holder_phone": normalized_phone},
+        )
+        if reservation is None:
+            return False
+
+        result = await registry.call(
+            "attach_payment_proof_to_reservation",
+            conversation_id_for_log=conversation_id,
+            trace_id=trace_id,
+            conversation_turn_id=str(turn.id),
+            reservation_id=str(reservation.id),
+            from_phone=normalized_phone,
+            whatsapp_message_id=pending.get("wa_message_id", ""),
+            media_id=pending.get("media_id", ""),
+            media_mime_type=pending.get("mime_type", "application/pdf"),
+            filename=pending.get("filename"),
+            caption=pending.get("caption"),
+            public_reservation_code=reservation_code,
+        )
+        session.pending_media_proof = None
+        session.updated_at = datetime.now(UTC)
+        await session.save()
+
         turn.status = "responded"
         turn.response_text = result.get(
             "response",
@@ -188,6 +323,21 @@ class ConversationTurnWorker:
                 input_message_ids=reloaded.message_ids,
             )
             await turn.insert()
+
+            if await self._try_process_pending_media_with_code(
+                combined_text=combined_input,
+                trace_id=trace_id,
+                conversation_id=conversation_id,
+                normalized_phone=buffer_doc.normalized_phone,
+                turn=turn,
+            ):
+                await self._buffer_service.mark_processed(buffer=reloaded)
+                logger.info(
+                    "[conversation_id=%s] Pending media proof associated with code | messages=%d",
+                    conversation_id,
+                    len(events),
+                )
+                return True
 
             if await self._try_process_media_proof(
                 events=events,

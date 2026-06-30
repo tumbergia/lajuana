@@ -33,15 +33,14 @@ class DevWidgetCatalogScreen extends StatefulWidget {
 }
 
 class _DevWidgetCatalogScreenState extends State<DevWidgetCatalogScreen> {
-  String reservationFilter = 'pendientes';
+  String? reservationFilter;
   bool useMicOffIcon = false;
 
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
       appBar: const AppTopBar(
-        logoAssetPath: 'assets/branding/lajuana.svg',
-        title: 'LA JUANA',
+        logoAssetPath: 'assets/branding/lajuana-banner.svg',
       ),
       bottomNavigationBar: AppBottomNav(
         current: AppNavItem.inicio,
@@ -173,7 +172,7 @@ class _DevWidgetCatalogScreenState extends State<DevWidgetCatalogScreen> {
             variant: AppSectionHeaderVariant.compact,
           ),
           const SizedBox(height: 16),
-          AppSegmentedFilter<String>(
+          AppSegmentedFilter<String?>(
             value: reservationFilter,
             onChanged: (value) {
               setState(() {

@@ -33,7 +33,7 @@ class SessionViewScreen extends StatelessWidget {
 
         return AppScaffold(
           appBar: const AppTopBar(
-            logoAssetPath: 'assets/branding/lajuana.svg',
+            logoAssetPath: 'assets/branding/lajuana-banner.svg',
             title: 'Sesión',
           ),
           child: Column(

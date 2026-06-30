@@ -44,10 +44,14 @@ class ReservationsListController extends ChangeNotifier {
       if (fg == 'eliminadas') {
         result = result.where((item) => item.isDeleted).toList(growable: false);
       } else {
-        result = result.where((item) {
-          return item.status == fg;
-        }).toList(growable: false);
+        result = result
+            .where((item) => !item.isDeleted && item.status == fg)
+            .toList(growable: false);
       }
+    } else {
+      result = result
+          .where((item) => !item.isDeleted)
+          .toList(growable: false);
     }
 
     // Apply search query
@@ -123,9 +127,8 @@ class ReservationsListController extends ChangeNotifier {
   }
 
   Future<void> _fetchFromRemote({required bool isRefresh}) async {
-    final includeDeleted = _state.filterGroup == 'eliminadas';
     final domainItems = await _repository.listReservations(
-      includeDeleted: includeDeleted,
+      includeDeleted: true,
     );
     final now = DateTime.now();
 
@@ -146,10 +149,13 @@ class ReservationsListController extends ChangeNotifier {
   }
 
   void setFilterGroup(String? group) {
-    if (_state.filterGroup == group) return;
-    _state = _state.copyWith(filterGroup: group);
-    // Cada cambio de filtro requiere re-fetch porque includeDeleted cambia.
-    refresh();
+    final next = group != null && group == _state.filterGroup ? null : group;
+    if (_state.filterGroup == next) return;
+    _state = next == null
+        ? _state.copyWith(clearFilterGroup: true)
+        : _state.copyWith(filterGroup: next);
+    _applyLocalFilters();
+    notifyListeners();
   }
 
   void setSearchQuery(String query) {

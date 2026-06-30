@@ -18,7 +18,7 @@ All tools log their execution to `ToolCallLogDocument` (trace_id, latency, statu
 | `get_experience_detail` | Get full detail for a single experience by ID or query (name, alias, tag) |
 | `get_public_business_rules` | Return business rules, restrictions, alcohol policy, disclaimer |
 | `check_experience_availability` | Check if a date has available slots for an experience; returns blocking reasons |
-| `list_available_schedules` | List available schedule slots for an experience on a given date range |
+| `list_available_schedules` | List available dates for an experience on a given date range (day-lock model) |
 | `suggest_alternative_dates` | Suggest nearby available dates when the requested date is full |
 | `quote_experience` | Calculate official pricing for a participant count, returns tier breakdown |
 
@@ -58,7 +58,7 @@ All tools log their execution to `ToolCallLogDocument` (trace_id, latency, statu
 | `admin_get_sales_summary` | Sales summary grouped by reservation status for a date range |
 | `admin_get_reservation_funnel` | Reservation funnel counts by stage (contact → completed) |
 | `admin_get_channel_performance` | Performance metrics by acquisition channel |
-| `admin_get_occupancy_report` | Occupancy report by schedule/date range |
+| `admin_get_occupancy_report` | Occupancy report by reservation date range |
 | `admin_get_equine_workload_report` | Detailed workload report across all equines |
 
 ### Admin CRUD — Experiences
@@ -78,15 +78,6 @@ All tools log their execution to `ToolCallLogDocument` (trace_id, latency, statu
 | `admin_create_user` | Create a new internal user |
 | `admin_update_user` | Update user fields |
 | `admin_deactivate_user` | Deactivate a user |
-
-### Admin CRUD — Schedules
-
-| Tool | Description |
-|------|-------------|
-| `admin_create_schedule` | Create a new schedule for an experience |
-| `admin_update_schedule` | Update schedule slots, capacity, status |
-| `admin_list_schedules_admin` | List all schedules (including inactive) |
-| `admin_deactivate_schedule` | Deactivate a schedule |
 
 ### Admin CRUD — Equines
 

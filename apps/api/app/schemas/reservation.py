@@ -11,7 +11,6 @@ from app.schemas.payment_proof import PaymentProofResponseSchema
 
 class ReservationCreateSchema(BaseModel):
     experience_id: str
-    schedule_id: str | None = None
     requested_date: date | None = None
     participant_count: int = Field(gt=0)
     channel: Channel
@@ -30,6 +29,10 @@ class ReservationUpdateSchema(BaseModel):
 
 class ReservationConfirmSchema(BaseModel):
     notes: str | None = None
+
+
+class ReservationApprovePaymentSchema(BaseModel):
+    note: str | None = None
 
 
 class ReservationCancelSchema(BaseModel):
@@ -56,7 +59,6 @@ class ReservationResponseSchema(AuditMetadataSchema):
     id: str
     code: str
     experience_id: str
-    schedule_id: str | None
     channel: Channel
     status: ReservationStatus
     participant_count: int
@@ -98,10 +100,8 @@ class ReservationListItemSchema(AuditMetadataSchema):
     holder_phone: str | None = None
     experience_id: str
     experience_name: str | None = None
-    schedule_id: str | None = None
     requested_date: date | None = None
     scheduled_date: str | None = None
-    start_time: str | None = None
     expected_participants_count: int | None = None
     participants_completed_count: int = 0
     participant_form_status: ParticipantFormStatus = ParticipantFormStatus.NOT_SENT

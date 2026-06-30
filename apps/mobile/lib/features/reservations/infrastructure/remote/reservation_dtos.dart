@@ -10,10 +10,7 @@ class ReservationListItemDto {
     this.holderPhone,
     this.experienceId,
     this.experienceName,
-    this.scheduleId,
     this.requestedDate,
-    this.scheduledDate,
-    this.startTime,
     this.expectedParticipantsCount,
     this.participantsCompletedCount,
     this.participantFormStatus,
@@ -34,10 +31,7 @@ class ReservationListItemDto {
   final String? holderPhone;
   final String? experienceId;
   final String? experienceName;
-  final String? scheduleId;
   final String? requestedDate;
-  final String? scheduledDate;
-  final String? startTime;
   final int? expectedParticipantsCount;
   final int? participantsCompletedCount;
   final String? participantFormStatus;
@@ -59,10 +53,7 @@ class ReservationListItemDto {
       holderPhone: json['holder_phone'] as String?,
       experienceId: json['experience_id'] as String?,
       experienceName: json['experience_name'] as String?,
-      scheduleId: json['schedule_id'] as String?,
       requestedDate: json['requested_date'] as String?,
-      scheduledDate: json['scheduled_date'] as String?,
-      startTime: json['start_time'] as String?,
       expectedParticipantsCount: json['expected_participants_count'] as int?,
       participantsCompletedCount: json['participants_completed_count'] as int?,
       participantFormStatus: json['participant_form_status'] as String?,
@@ -238,7 +229,6 @@ class ReservationDetailDto {
     this.id,
     this.code,
     this.experienceId,
-    this.scheduleId,
     this.channel,
     this.status,
     this.participantCount,
@@ -267,7 +257,6 @@ class ReservationDetailDto {
   final String? id;
   final String? code;
   final String? experienceId;
-  final String? scheduleId;
   final String? channel;
   final String? status;
   final int? participantCount;
@@ -300,7 +289,6 @@ class ReservationDetailDto {
       id: json['id'] as String?,
       code: json['code'] as String?,
       experienceId: json['experience_id'] as String?,
-      scheduleId: json['schedule_id'] as String?,
       channel: json['channel'] as String?,
       status: json['status'] as String?,
       participantCount: json['participant_count'] as int?,
@@ -346,6 +334,242 @@ class ReservationDetailDto {
                   e as Map<String, dynamic>))
               .toList(growable: false)
           : const [],
+    );
+  }
+}
+
+class ReservationTimelinePhotoDto {
+  ReservationTimelinePhotoDto({
+    required this.index,
+    required this.storageKey,
+    required this.filename,
+    required this.contentType,
+    this.sizeBytes = 0,
+  });
+
+  final int index;
+  final String storageKey;
+  final String filename;
+  final String contentType;
+  final int sizeBytes;
+
+  factory ReservationTimelinePhotoDto.fromJson(Map<String, dynamic> json) {
+    return ReservationTimelinePhotoDto(
+      index: json['index'] as int? ?? 0,
+      storageKey: json['storage_key'] as String? ?? '',
+      filename: json['filename'] as String? ?? 'foto.jpg',
+      contentType: json['content_type'] as String? ?? 'image/jpeg',
+      sizeBytes: json['size_bytes'] as int? ?? 0,
+    );
+  }
+}
+
+class ReservationLogPhotoUploadDto {
+  ReservationLogPhotoUploadDto({
+    required this.storageKey,
+    required this.filename,
+    required this.contentType,
+    this.sizeBytes = 0,
+  });
+
+  final String storageKey;
+  final String filename;
+  final String contentType;
+  final int sizeBytes;
+
+  factory ReservationLogPhotoUploadDto.fromJson(Map<String, dynamic> json) {
+    return ReservationLogPhotoUploadDto(
+      storageKey: json['storage_key'] as String? ?? '',
+      filename: json['filename'] as String? ?? 'foto.jpg',
+      contentType: json['content_type'] as String? ?? 'image/jpeg',
+      sizeBytes: json['size_bytes'] as int? ?? 0,
+    );
+  }
+}
+
+class ReservationLogNoteDetailDto {
+  ReservationLogNoteDetailDto({
+    required this.id,
+    required this.notes,
+    this.photos = const [],
+  });
+
+  final String id;
+  final String notes;
+  final List<ReservationTimelinePhotoDto> photos;
+
+  factory ReservationLogNoteDetailDto.fromJson(Map<String, dynamic> json) {
+    final rawPhotos = json['photos'] as List?;
+    return ReservationLogNoteDetailDto(
+      id: json['id'] as String? ?? '',
+      notes: json['notes'] as String? ?? '',
+      photos: rawPhotos != null
+          ? rawPhotos
+              .map((item) => ReservationTimelinePhotoDto.fromJson(
+                    Map<String, dynamic>.from(item as Map),
+                  ))
+              .toList(growable: false)
+          : const [],
+    );
+  }
+}
+
+class ReservationTimelineEntryDto {
+  ReservationTimelineEntryDto({
+    required this.id,
+    required this.source,
+    required this.kind,
+    required this.happenedAt,
+    required this.title,
+    this.description,
+    this.actorName,
+    this.actorRole,
+    this.editable = false,
+    this.deletable = false,
+    this.relatedParticipantId,
+    this.serviceLogId,
+    this.photos = const [],
+    this.photosTotal = 0,
+  });
+
+  final String id;
+  final String source;
+  final String kind;
+  final DateTime happenedAt;
+  final String title;
+  final String? description;
+  final String? actorName;
+  final String? actorRole;
+  final bool editable;
+  final bool deletable;
+  final String? relatedParticipantId;
+  final String? serviceLogId;
+  final List<ReservationTimelinePhotoDto> photos;
+  final int photosTotal;
+
+  factory ReservationTimelineEntryDto.fromJson(Map<String, dynamic> json) {
+    final rawPhotos = json['photos'] as List?;
+    return ReservationTimelineEntryDto(
+      id: json['id'] as String? ?? '',
+      source: json['source'] as String? ?? '',
+      kind: json['kind'] as String? ?? '',
+      happenedAt: DateTime.parse(json['happened_at'] as String).toLocal(),
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String?,
+      actorName: json['actor_name'] as String?,
+      actorRole: json['actor_role'] as String?,
+      editable: json['editable'] as bool? ?? false,
+      deletable: json['deletable'] as bool? ?? false,
+      relatedParticipantId: json['related_participant_id'] as String?,
+      serviceLogId: json['service_log_id'] as String?,
+      photos: rawPhotos != null
+          ? rawPhotos
+              .map((item) => ReservationTimelinePhotoDto.fromJson(
+                    Map<String, dynamic>.from(item as Map),
+                  ))
+              .toList(growable: false)
+          : const [],
+      photosTotal: json['photos_total'] as int? ?? 0,
+    );
+  }
+}
+
+class ReservationProviderItemDto {
+  ReservationProviderItemDto({
+    required this.reservationProviderId,
+    required this.reservationId,
+    required this.providerId,
+    required this.providerName,
+    required this.providerType,
+    required this.status,
+    this.serviceLabel,
+    this.contactName,
+    this.email,
+    this.whatsappPhone,
+    this.locationLabel,
+    this.capacityNotes,
+    this.operationalNotes,
+    this.tariffNotes,
+    this.notes,
+    required this.reservationCode,
+    this.experienceName,
+    this.scheduledDate,
+    required this.participantsCount,
+  });
+
+  final String reservationProviderId;
+  final String reservationId;
+  final String providerId;
+  final String providerName;
+  final String providerType;
+  final String status;
+  final String? serviceLabel;
+  final String? contactName;
+  final String? email;
+  final String? whatsappPhone;
+  final String? locationLabel;
+  final String? capacityNotes;
+  final String? operationalNotes;
+  final String? tariffNotes;
+  final String? notes;
+  final String reservationCode;
+  final String? experienceName;
+  final String? scheduledDate;
+  final int participantsCount;
+
+  factory ReservationProviderItemDto.fromJson(Map<String, dynamic> json) {
+    return ReservationProviderItemDto(
+      reservationProviderId: json['reservation_provider_id'] as String? ?? '',
+      reservationId: json['reservation_id'] as String? ?? '',
+      providerId: json['provider_id'] as String? ?? '',
+      providerName: json['provider_name'] as String? ?? '',
+      providerType: json['provider_type'] as String? ?? '',
+      status: json['status'] as String? ?? 'pending',
+      serviceLabel: json['service_label'] as String?,
+      contactName: json['contact_name'] as String?,
+      email: json['email'] as String?,
+      whatsappPhone: json['whatsapp_phone'] as String?,
+      locationLabel: json['location_label'] as String?,
+      capacityNotes: json['capacity_notes'] as String?,
+      operationalNotes: json['operational_notes'] as String?,
+      tariffNotes: json['tariff_notes'] as String?,
+      notes: json['notes'] as String?,
+      reservationCode: json['reservation_code'] as String? ?? '',
+      experienceName: json['experience_name'] as String?,
+      scheduledDate: json['scheduled_date'] as String?,
+      participantsCount: json['participants_count'] as int? ?? 0,
+    );
+  }
+}
+
+class ProviderCatalogItemDto {
+  ProviderCatalogItemDto({
+    required this.id,
+    required this.name,
+    required this.slug,
+    required this.type,
+    required this.status,
+    required this.isActive,
+    this.locationLabel,
+  });
+
+  final String id;
+  final String name;
+  final String slug;
+  final String type;
+  final String status;
+  final bool isActive;
+  final String? locationLabel;
+
+  factory ProviderCatalogItemDto.fromJson(Map<String, dynamic> json) {
+    return ProviderCatalogItemDto(
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      slug: json['slug'] as String? ?? '',
+      type: json['type'] as String? ?? '',
+      status: json['status'] as String? ?? 'active',
+      isActive: json['is_active'] as bool? ?? true,
+      locationLabel: json['location_label'] as String?,
     );
   }
 }

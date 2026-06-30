@@ -34,6 +34,7 @@ class SaddlesModuleScreen extends StatefulWidget {
 class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
     with RefreshableState {
   late final SaddlesListController _listController;
+  late final bool _ownsListController;
   late final SaddlesRepository _repository;
   final TextEditingController _searchController = TextEditingController();
 
@@ -44,10 +45,17 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
   void initState() {
     super.initState();
     _repository = widget.saddlesModule?.repository ?? FallbackSaddlesRepository();
-    _listController = widget.saddlesModule?.listController ??
-        SaddlesListController(repository: _repository);
+    if (widget.saddlesModule != null) {
+      _listController = widget.saddlesModule!.listController;
+      _ownsListController = false;
+    } else {
+      _listController = SaddlesListController(repository: _repository);
+      _ownsListController = true;
+    }
     _listController.addListener(_onListChanged);
-    _listController.loadInitial();
+    if (_listController.state == SaddlesLoadState.idle) {
+      _listController.loadInitial();
+    }
 
     _searchController.addListener(() {
       _listController.setSearchQuery(_searchController.text);
@@ -57,7 +65,9 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
   @override
   void dispose() {
     _listController.removeListener(_onListChanged);
-    _listController.dispose();
+    if (_ownsListController) {
+      _listController.dispose();
+    }
     _searchController.dispose();
     super.dispose();
   }
@@ -368,8 +378,9 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         // Availability filter
         AppSegmentedFilter<String?>(
           value: _availabilityFilterValue,
+          initialValue: 'active',
           onChanged: (value) {
-            if (value == 'active') {
+            if (value == null || value == 'active') {
               _listController.setIncludeDeleted(false);
               _listController.setShowOnlyAvailable(null);
             } else if (value == 'available') {

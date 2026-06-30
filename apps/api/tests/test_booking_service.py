@@ -41,7 +41,6 @@ class FakeReservationService:
             id="660000000000000000000001",
             code="RES-001",
             status=initial_status or ReservationStatus.QUOTED,
-            schedule_id=payload.get("schedule_id"),
             experience_id=payload.get("experience_id"),
             requested_date=payload.get("requested_date"),
             participant_count=payload.get("participant_count"),
@@ -85,7 +84,6 @@ class TestBookingService:
 
             result = await svc.create_pending_reservation(
                 experience_id="660000000000000000000020",
-                schedule_id="660000000000000000000010",
                 participant_count=2,
                 requested_date=date(2026, 7, 15),
                 holder_name="Test User",
@@ -157,7 +155,6 @@ class TestBookingService:
         async def run() -> None:
             result = await svc.create_pending_reservation(
                 experience_id="660000000000000000000020",
-                schedule_id="660000000000000000000010",
                 participant_count=1,
                 requested_date=None,
             )
@@ -205,7 +202,6 @@ class TestBookingService:
             with pytest.raises(ValidationError):
                 ReservationCreateSchema(
                     experience_id="660000000000000000000020",
-                    schedule_id="660000000000000000000010",
                     participant_count=0,
                     channel="whatsapp",
                 )
