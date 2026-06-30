@@ -70,7 +70,11 @@ ParsedPhoneNumber parsePhoneNumber(
 }
 
 String? buildE164Phone(PhoneCountry country, String localNumber) {
-  final localDigits = localNumber.replaceAll(RegExp(r'\D'), '');
+  var localDigits = localNumber.replaceAll(RegExp(r'\D'), '');
+  if (localDigits.isEmpty) return null;
+  if (localDigits.startsWith(country.dialCode)) {
+    localDigits = localDigits.substring(country.dialCode.length);
+  }
   if (localDigits.isEmpty) return null;
   return '+${country.dialCode}$localDigits';
 }

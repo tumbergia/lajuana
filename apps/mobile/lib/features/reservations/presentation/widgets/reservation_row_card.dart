@@ -6,6 +6,7 @@ import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile/features/reservations/infrastructure/mappers/reservation_mapper.dart';
 import 'package:mobile/features/reservations/presentation/models/reservation_view_models.dart';
+import 'package:mobile/features/reservations/presentation/widgets/reservation_date_leading.dart';
 
 class ReservationRowCard extends StatelessWidget {
   const ReservationRowCard({
@@ -14,6 +15,7 @@ class ReservationRowCard extends StatelessWidget {
     required this.subtitle,
     required this.highlightIfPending,
     required this.openDetailsOnTap,
+    this.showRequestedDate = false,
     this.onOpenDetail,
   });
 
@@ -21,6 +23,7 @@ class ReservationRowCard extends StatelessWidget {
   final String subtitle;
   final bool highlightIfPending;
   final bool openDetailsOnTap;
+  final bool showRequestedDate;
   final VoidCallback? onOpenDetail;
 
   @override
@@ -52,6 +55,9 @@ class ReservationRowCard extends StatelessWidget {
       subtitle: displaySubtitle,
       selected: highlightIfPending && reservation.status == 'pendientes',
       badge: statusBadgeFor(reservation),
+      leading: showRequestedDate
+          ? ReservationDateLeading(requestedDate: reservation.requestedDate)
+          : null,
       trailing: syncBadge,
       onTap: openDetailsOnTap ? onOpenDetail : null,
     );

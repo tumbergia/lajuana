@@ -298,15 +298,14 @@ class ReservationProvidersTab extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 24),
           children: [
             if (isAdmin)
-              Center(
-                child: AppButton(
-                  label: 'Agregar proveedor',
-                  icon: Icons.add_rounded,
-                  onPressed:
-                      controller.state == ReservationProvidersLoadState.saving
-                          ? null
-                          : () => _showAddDialog(context),
-                ),
+              AppButton(
+                label: 'Agregar proveedor',
+                icon: Icons.add_rounded,
+                expanded: true,
+                onPressed:
+                    controller.state == ReservationProvidersLoadState.saving
+                        ? null
+                        : () => _showAddDialog(context),
               ),
             if (isAdmin) const SizedBox(height: 16),
             if (controller.items.isEmpty)

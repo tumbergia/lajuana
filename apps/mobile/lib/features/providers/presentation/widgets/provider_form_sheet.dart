@@ -4,6 +4,7 @@ import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile/features/providers/presentation/models/provider_view_models.dart';
+import 'package:mobile/features/providers/presentation/utils/phone_country.dart';
 import 'package:mobile/features/providers/presentation/widgets/provider_phone_field.dart';
 
 class ProviderFormSheet extends StatefulWidget {
@@ -18,8 +19,6 @@ class ProviderFormSheet extends StatefulWidget {
 }
 
 class _ProviderFormSheetState extends State<ProviderFormSheet> {
-  final GlobalKey<ProviderPhoneFieldState> _phoneKey =
-      GlobalKey<ProviderPhoneFieldState>();
   late final TextEditingController _nameCtrl;
   late final TextEditingController _locationCtrl;
   late final TextEditingController _contactCtrl;
@@ -31,6 +30,7 @@ class _ProviderFormSheetState extends State<ProviderFormSheet> {
   late final TextEditingController _operationalCtrl;
   late String _type;
   late String _status;
+  String? _whatsappPhone;
 
   @override
   void initState() {
@@ -50,6 +50,11 @@ class _ProviderFormSheetState extends State<ProviderFormSheet> {
         TextEditingController(text: existing?.operationalNotes ?? '');
     _type = existing?.type ?? 'other';
     _status = existing?.status ?? 'active';
+    final existingPhone = existing?.whatsappPhone;
+    if (existingPhone != null) {
+      final parsed = parsePhoneNumber(existingPhone);
+      _whatsappPhone = buildE164Phone(parsed.country, parsed.localNumber);
+    }
   }
 
   @override
@@ -86,7 +91,7 @@ class _ProviderFormSheetState extends State<ProviderFormSheet> {
       'location_label': _nullableText(_locationCtrl.text),
       'contact_name': _nullableText(_contactCtrl.text),
       'email': _nullableText(_emailCtrl.text),
-      'whatsapp_phone': _phoneKey.currentState?.e164Phone,
+      'whatsapp_phone': _whatsappPhone,
       'service_categories': _parseCategories(_categoriesCtrl.text),
       'tariff_notes': _nullableText(_tariffCtrl.text),
       'source_notes': _nullableText(_sourceCtrl.text),
@@ -200,8 +205,8 @@ class _ProviderFormSheetState extends State<ProviderFormSheet> {
             ),
             const SizedBox(height: 12),
             ProviderPhoneField(
-              key: _phoneKey,
               initialPhone: widget.existing?.whatsappPhone,
+              onChanged: (value) => _whatsappPhone = value,
             ),
             const SizedBox(height: 12),
             AppTextField(

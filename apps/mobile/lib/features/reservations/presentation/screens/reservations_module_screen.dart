@@ -318,6 +318,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                   items[i].experienceName ?? items[i].equineName,
               highlightIfPending: items[i].status == 'pendientes',
               openDetailsOnTap: true,
+              showRequestedDate: true,
               onOpenDetail: () =>
                   _openReservationDetail(items[i].id ?? items[i].code),
             ),

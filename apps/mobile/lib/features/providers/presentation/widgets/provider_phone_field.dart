@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile/features/providers/presentation/utils/phone_country.dart';
 
@@ -44,6 +45,20 @@ class ProviderPhoneFieldState extends State<ProviderPhoneField> {
     widget.onChanged?.call(e164Phone);
   }
 
+  void _applyCountry(PhoneCountry picked) {
+    final normalized = parsePhoneNumber(
+      buildE164Phone(_selectedCountry, _localCtrl.text) ?? _localCtrl.text,
+      defaultCountry: picked,
+    );
+    setState(() {
+      _selectedCountry = picked;
+    });
+    if (_localCtrl.text != normalized.localNumber) {
+      _localCtrl.text = normalized.localNumber;
+    }
+    _notifyChanged();
+  }
+
   Future<void> _pickCountry() async {
     final picked = await showModalBottomSheet<PhoneCountry>(
       context: context,
@@ -52,15 +67,19 @@ class ProviderPhoneFieldState extends State<ProviderPhoneField> {
       builder: (_) => _CountryPickerSheet(selected: _selectedCountry),
     );
     if (picked == null || !mounted) return;
-    setState(() {
-      _selectedCountry = picked;
-    });
-    _notifyChanged();
+    _applyCountry(picked);
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = theme.appTokens;
+
+    final outlineBorder = OutlineInputBorder(
+      borderRadius: tokens.radiusMd,
+      borderSide: BorderSide(color: scheme.outlineVariant),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,63 +89,90 @@ class ProviderPhoneFieldState extends State<ProviderPhoneField> {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               widget.label.toUpperCase(),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    letterSpacing: 1.2,
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: theme.textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.2,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
+        TextField(
+          controller: _localCtrl,
+          keyboardType: TextInputType.phone,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: (_) => _notifyChanged(),
+          style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
+          decoration: InputDecoration(
+            hintText: '300 123 4567',
+            isDense: true,
+            filled: true,
+            fillColor: scheme.surfaceContainerLow,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: tokens.spaceLg,
+              vertical: 14,
+            ),
+            enabledBorder: outlineBorder,
+            focusedBorder: outlineBorder.copyWith(
+              borderSide: BorderSide(color: scheme.primary, width: 1.2),
+            ),
+            border: outlineBorder,
+            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+            prefixIcon: _CountryPrefix(
+              country: _selectedCountry,
               onTap: _pickCountry,
-              borderRadius: BorderRadius.circular(4),
-              child: Container(
-                height: 56,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: scheme.outlineVariant),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _selectedCountry.flagEmoji,
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _selectedCountry.displayCode,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.expand_more_rounded,
-                      size: 18,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ],
-                ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CountryPrefix extends StatelessWidget {
+  const _CountryPrefix({
+    required this.country,
+    required this.onTap,
+  });
+
+  final PhoneCountry country;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 12, right: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              country.flagEmoji,
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              country.displayCode,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: AppTextField(
-                controller: _localCtrl,
-                hintText: '300 123 4567',
-                keyboardType: TextInputType.phone,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                onChanged: (_) => _notifyChanged(),
-              ),
+            Icon(
+              Icons.expand_more_rounded,
+              size: 18,
+              color: scheme.onSurfaceVariant,
+            ),
+            Container(
+              width: 1,
+              height: 24,
+              margin: const EdgeInsets.only(left: 8),
+              color: scheme.outlineVariant,
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
