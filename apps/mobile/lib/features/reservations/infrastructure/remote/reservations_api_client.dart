@@ -96,6 +96,23 @@ class ReservationsApiClient {
     return ReservationDetailDto.fromJson(data);
   }
 
+  /// Approves payment without a proof document (cash, external, etc.).
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetailDto> approvePaymentWithoutProof({
+    required String reservationId,
+    String? note,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/reservations/$reservationId/approve-payment',
+      body: {
+        if (note != null) 'note': note,
+      },
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
   /// Un-verifies (undoes) a previously verified payment proof.
   /// Returns the full updated reservation detail.
   Future<ReservationDetailDto> unverifyPaymentProof({

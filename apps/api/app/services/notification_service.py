@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 
 from beanie import PydanticObjectId
 
+from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
 from app.common.enums import (
     NotificationChannel,
     NotificationEventType,
@@ -18,15 +19,14 @@ from app.documents import (
     ReservationDocument,
     UserDocument,
 )
+from app.documents.audit_metadata_models import NotificationMetadata
 from app.documents.notification_outbox_document import NotificationOutboxDocument
 from app.documents.notification_template_document import NotificationTemplateDocument
-from app.documents.audit_metadata_models import NotificationMetadata
 from app.documents.reservation_audit_log_document import ReservationAuditLogDocument
 from app.notifications.email_provider import EmailProvider
 from app.notifications.in_app_provider import InAppNotificationProvider
 from app.notifications.provider import NotificationProvider
 from app.notifications.renderer import render_subject, render_template
-from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
 from app.notifications.whatsapp_provider import WhatsAppNotificationProvider
 
 
@@ -346,6 +346,24 @@ class NotificationService:
             variables=vars,
         )
 
+    async def enqueue_payment_approved_location(
+        self,
+        reservation: ReservationDocument,
+    ) -> NotificationOutboxDocument | None:
+        if not reservation.holder_phone:
+            return None
+        vars = {
+            "customer_name": reservation.holder_name or "Cliente",
+        }
+        return await self.enqueue(
+            event_type=NotificationEventType.PAYMENT_APPROVED_LOCATION_SENT,
+            reservation_id=str(reservation.id),
+            channel=NotificationChannel.WHATSAPP,
+            recipient_type="customer",
+            recipient_identifier=reservation.holder_phone,
+            variables=vars,
+        )
+
     async def enqueue_payment_rejected(
         self,
         reservation: ReservationDocument,
@@ -433,6 +451,10 @@ class NotificationService:
                 },
                 "audit_action": "notification.payment_approved_form_sent",
             },
+            NotificationEventType.PAYMENT_APPROVED_LOCATION_SENT.value: {
+                "fields": {},
+                "audit_action": "notification.payment_approved_location_sent",
+            },
             NotificationEventType.PARTICIPANT_FORM_RESENT.value: {
                 "fields": {
                     "participant_form_sent_at": datetime.now(UTC),
@@ -462,10 +484,11 @@ class NotificationService:
             updates["$inc"] = inc_fields
 
         try:
-            await collection.update_one(
-                {"_id": entry.reservation_id},
-                updates,
-            )
+            if set_fields or inc_fields:
+                await collection.update_one(
+                    {"_id": entry.reservation_id},
+                    updates,
+                )
         except Exception as exc:
             logger.warning(
                 "[outbox=%s] Failed to update reservation audit fields | error=%s",
@@ -473,14 +496,22 @@ class NotificationService:
                 exc,
             )
 
-        # Audit log (best-effort)
         try:
+            current_reservation = await ReservationDocument.get(entry.reservation_id)
+            if current_reservation is not None:
+                current_status = str(current_reservation.status.value) if hasattr(
+                    current_reservation.status, "value"
+                ) else str(current_reservation.status)
+            else:
+                current_status = "unknown"
             log = ReservationAuditLogDocument(
                 reservation_id=entry.reservation_id,
                 payment_proof_id=None,
                 actor_user_id=None,
                 actor_role=None,
                 action=cfg["audit_action"],
+                previous_status=current_status,
+                new_status=current_status,
                 source="backend_event",
                 metadata=NotificationMetadata(
                     recipient_phone=entry.recipient_identifier,

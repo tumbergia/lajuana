@@ -52,6 +52,7 @@ _TOOLS: dict[str, object] = {
     # ── Client: reservations ──
     "create_reservation_draft": tools.create_reservation_draft,
     "attach_payment_proof_to_reservation": tools.attach_payment_proof_to_reservation,
+    "get_payment_instructions": tools.get_payment_instructions,
     "get_reservation_public_summary": tools.get_reservation_public_summary,
     "get_reservation_status_by_phone": tools.get_reservation_status_by_phone,
     "cancel_reservation": tools.cancel_reservation,
