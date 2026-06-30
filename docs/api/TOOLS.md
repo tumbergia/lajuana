@@ -33,6 +33,7 @@ All tools log their execution to `ToolCallLogDocument` (trace_id, latency, statu
 | `update_reservation_date` | Change reservation date by code + phone + new date |
 | `update_reservation_participants` | Change participant count by code + phone |
 | `attach_payment_proof_to_reservation` | Attach a payment proof to a reservation by code + phone |
+| `get_payment_instructions` | Get payment methods and bank transfer details |
 | `request_human_review` | Create a human review request (escalation from AI chat) |
 | `generate_participant_form_link` | Generate a temporary form link for participants of a confirmed reservation |
 | `get_participant_form_status` | Check participant form status (registered count, limit, remaining) |
@@ -115,6 +116,46 @@ All tools log their execution to `ToolCallLogDocument` (trace_id, latency, statu
 | `admin_unverify_payment_proof` | Unverify (reverse verification) |
 | `admin_unreject_payment_proof` | Unreject (reverse rejection) |
 
+### Admin CRUD — Providers
+
+| Tool | Description |
+|------|-------------|
+| `admin_list_providers` | List providers with optional filters (type, query, active) |
+| `admin_get_provider` | Get full provider detail |
+| `admin_create_provider` | Create a new provider |
+| `admin_update_provider` | Update provider fields |
+| `admin_deactivate_provider` | Deactivate a provider |
+
+### Admin CRUD — Saddles
+
+| Tool | Description |
+|------|-------------|
+| `admin_list_saddles` | List all saddles |
+| `admin_get_saddle` | Get saddle detail |
+| `admin_create_saddle` | Create a new saddle |
+| `admin_update_saddle` | Update saddle fields |
+| `admin_deactivate_saddle` | Soft-delete a saddle |
+| `admin_list_available_saddles_for_reservation` | List saddles with block reasons for a reservation |
+
+### Admin CRUD — Assignments
+
+| Tool | Description |
+|------|-------------|
+| `admin_get_assignment_board` | Get full assignment board for a reservation |
+| `admin_create_assignment` | Create participant-equine-saddle assignment |
+| `admin_update_assignment` | Update assignment fields |
+| `admin_delete_assignment` | Remove assignment from board |
+| `admin_finalize_assignment` | Finalize a single confirmed assignment |
+| `admin_finalize_all_assignments` | Finalize all confirmed assignments for a reservation |
+
+### Admin CRUD — Equine Events
+
+| Tool | Description |
+|------|-------------|
+| `admin_list_equine_events` | List timeline events for an equine |
+| `admin_create_equine_event` | Create a care/tracking event for an equine |
+| `admin_update_equine_event` | Update an equine event |
+
 ### Admin — System
 
 | Tool | Description |
@@ -122,6 +163,7 @@ All tools log their execution to `ToolCallLogDocument` (trace_id, latency, statu
 | `admin_get_system_config` | Get reservation rules and payment instructions |
 | `admin_update_reservation_rules` | Update min_days_in_advance, require_payment_proof, draft TTL |
 | `admin_get_payment_instructions` | Get bank account details for transfers |
+| `admin_get_emergency_contacts` | Get emergency contact catalog |
 | `admin_list_human_review_requests` | List open human review requests with filters |
 
 ---

@@ -82,6 +82,7 @@ class AppRouter {
                 assignmentsModule: deps.assignmentsModule,
                 equineRepository: deps.equineRepository,
                 equineEventRepository: deps.equineEventRepository,
+                voiceAssistantModule: deps.voiceAssistantModule,
               )
             : LoginScreen(controller: deps.authController);
         break;

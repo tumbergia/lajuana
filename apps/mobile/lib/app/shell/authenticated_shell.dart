@@ -11,6 +11,7 @@ import 'package:mobile/app/navigation/shell_navigation_controller.dart';
 import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
 import 'package:mobile_ui/src/widgets/app_top_bar.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_ui/src/widgets/voice_pull_scope.dart';
 import 'widgets/shell_status_region.dart';
 import 'package:mobile/features/configuration/presentation/screens/more_flow_screen.dart';
 import 'package:mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
@@ -23,6 +24,9 @@ import 'package:mobile/features/reservations/presentation/screens/reservations_m
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
 import 'package:mobile/features/providers/providers_module.dart';
+import 'package:mobile/features/voice_assistant/presentation/voice_sheet_launcher.dart';
+import 'package:mobile/features/voice_assistant/presentation/navigation/voice_assistant_navigation.dart';
+import 'package:mobile/features/voice_assistant/voice_assistant_module.dart';
 
 class AuthenticatedShell extends StatefulWidget {
   const AuthenticatedShell({
@@ -36,6 +40,7 @@ class AuthenticatedShell extends StatefulWidget {
     this.assignmentsModule,
     required this.equineRepository,
     required this.equineEventRepository,
+    required this.voiceAssistantModule,
     this.onCallRequested,
   });
 
@@ -48,6 +53,7 @@ class AuthenticatedShell extends StatefulWidget {
   final AssignmentsModule? assignmentsModule;
   final EquineRepository equineRepository;
   final EquineEventRepository equineEventRepository;
+  final VoiceAssistantModule voiceAssistantModule;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -87,6 +93,30 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
     _ensureTab(item);
     _shellNav.selectTab(item);
     setState(() {});
+  }
+
+  bool get _isAdminVoiceEnabled {
+    final user = widget.authController.currentUser;
+    return widget.authController.authState == LocalAuthState.signedInVerified &&
+        user?.role == 'admin';
+  }
+
+  Future<void> _openAdminVoiceSheet() async {
+    if (!_isAdminVoiceEnabled) return;
+    await openAdminVoiceSheet(
+      context,
+      controller: widget.voiceAssistantModule.controller,
+      navigation: VoiceAssistantNavigation(
+        authController: widget.authController,
+        equineRepository: widget.equineRepository,
+        equineEventRepository: widget.equineEventRepository,
+        reservationsModule: widget.reservationsModule,
+        catalogsModule: widget.catalogsModule,
+        saddlesModule: widget.saddlesModule,
+        providersModule: widget.providersModule,
+        assignmentsModule: widget.assignmentsModule,
+      ),
+    );
   }
 
   Widget _tabRoot(AppNavItem tab) {
@@ -161,27 +191,32 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                 children: [
                   ShellStatusRegion(controller: widget.authController),
                   Expanded(
-                    child: RefreshScope(
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          for (final tab in _visitedTabs)
-                            Offstage(
-                              offstage: _shellNav.currentTab != tab,
-                              child: TickerMode(
-                                enabled: _shellNav.currentTab == tab,
-                                child: Navigator(
-                                  key: _navigatorKeys[tab],
+                    child: VoicePullScope(
+                      enabled: _isAdminVoiceEnabled,
+                      displacement: MediaQuery.of(context).padding.bottom + 72,
+                      onTriggered: _openAdminVoiceSheet,
+                      child: RefreshScope(
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            for (final tab in _visitedTabs)
+                              Offstage(
+                                offstage: _shellNav.currentTab != tab,
+                                child: TickerMode(
+                                  enabled: _shellNav.currentTab == tab,
+                                  child: Navigator(
+                                    key: _navigatorKeys[tab],
                                     onGenerateRoute: (settings) {
                                       return MaterialPageRoute<void>(
                                         builder: (ctx) => _tabRoot(tab),
                                         settings: settings,
                                       );
                                     },
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -190,6 +225,9 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
               bottomNavigationBar: AppBottomNav(
                 current: _shellNav.currentTab,
                 onTap: _onBottomNavTap,
+                onVoiceLongPress: _isAdminVoiceEnabled
+                    ? (_, _) => _openAdminVoiceSheet()
+                    : null,
               ),
             ),
             if (showReconnectOverlay) ...[

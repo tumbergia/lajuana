@@ -34,6 +34,7 @@ export 'src/widgets/app_top_bar.dart';
 export 'src/widgets/app_voice_fab.dart';
 export 'src/widgets/dashed_border_painter.dart';
 export 'src/widgets/refresh_scope.dart';
+export 'src/widgets/voice_pull_scope.dart';
 
 // Cards
 export 'src/widgets/cards/app_assignment_card.dart';

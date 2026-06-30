@@ -71,6 +71,10 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>La Juana necesita acceso al micrófono para transcribir comandos de voz de gestión.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>La Juana usa reconocimiento de voz para convertir tus instrucciones en texto.</string>
 		<key>UIStatusBarHidden</key>
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>

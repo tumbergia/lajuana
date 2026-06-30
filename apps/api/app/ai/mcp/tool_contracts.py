@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -1385,4 +1385,325 @@ class AdminUpdateParticipantOutput(BaseModel):
     participant_id: str | None = None
     message: str = ""
     is_completed: bool | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin: Providers ──────────────────────────────────────────
+
+
+class AdminListProvidersItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    provider_id: str
+    name: str
+    slug: str
+    type: str
+    status: str
+    is_active: bool
+    contact_name: str | None = None
+    whatsapp_phone: str | None = None
+
+
+class AdminListProvidersOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_providers"] = "admin_list_providers"
+    total: int
+    providers: list[AdminListProvidersItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminGetProviderOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_provider"] = "admin_get_provider"
+    found: bool
+    provider_id: str | None = None
+    name: str | None = None
+    slug: str | None = None
+    type: str | None = None
+    status: str | None = None
+    is_active: bool | None = None
+    contact_name: str | None = None
+    email: str | None = None
+    whatsapp_phone: str | None = None
+    location_label: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminCreateProviderOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_create_provider"] = "admin_create_provider"
+    created: bool
+    provider_id: str | None = None
+    name: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateProviderOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_update_provider"] = "admin_update_provider"
+    updated: bool
+    provider_id: str | None = None
+    name: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminDeactivateProviderOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_deactivate_provider"] = "admin_deactivate_provider"
+    deactivated: bool
+    provider_id: str | None = None
+    name: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin: Saddles ────────────────────────────────────────────
+
+
+class AdminListSaddlesItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    saddle_id: str
+    code: str
+    name: str | None = None
+    is_available: bool
+
+
+class AdminListSaddlesOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_saddles"] = "admin_list_saddles"
+    total: int
+    saddles: list[AdminListSaddlesItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminGetSaddleOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_saddle"] = "admin_get_saddle"
+    found: bool
+    saddle_id: str | None = None
+    code: str | None = None
+    name: str | None = None
+    is_available: bool | None = None
+    notes: str | None = None
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminCreateSaddleOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_create_saddle"] = "admin_create_saddle"
+    created: bool
+    saddle_id: str | None = None
+    code: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateSaddleOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_update_saddle"] = "admin_update_saddle"
+    updated: bool
+    saddle_id: str | None = None
+    code: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminDeactivateSaddleOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_deactivate_saddle"] = "admin_deactivate_saddle"
+    deactivated: bool
+    saddle_id: str | None = None
+    code: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminListAvailableSaddlesItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    saddle_id: str
+    code: str
+    name: str | None = None
+    is_available: bool
+    block_reason: str | None = None
+
+
+class AdminListAvailableSaddlesForReservationOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_available_saddles_for_reservation"] = (
+        "admin_list_available_saddles_for_reservation"
+    )
+    reservation_id: str | None = None
+    total: int
+    saddles: list[AdminListAvailableSaddlesItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin: Assignments ────────────────────────────────────────
+
+
+class AdminGetAssignmentBoardOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_assignment_board"] = "admin_get_assignment_board"
+    found: bool
+    reservation_id: str | None = None
+    board: dict[str, Any] = Field(default_factory=dict)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminCreateAssignmentOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_create_assignment"] = "admin_create_assignment"
+    created: bool
+    assignment_id: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateAssignmentOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_update_assignment"] = "admin_update_assignment"
+    updated: bool
+    assignment_id: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminDeleteAssignmentOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_delete_assignment"] = "admin_delete_assignment"
+    deleted: bool
+    assignment_id: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminFinalizeAssignmentOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_finalize_assignment"] = "admin_finalize_assignment"
+    finalized: bool
+    assignment_id: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminFinalizeAllAssignmentsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_finalize_all_assignments"] = "admin_finalize_all_assignments"
+    finalized: bool
+    reservation_id: str | None = None
+    board: dict[str, Any] = Field(default_factory=dict)
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin: Equine events ──────────────────────────────────────
+
+
+class AdminListEquineEventsItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    event_id: str
+    event_type: str
+    title: str
+    happened_at: str
+    severity: str | None = None
+    affects_availability: bool = False
+
+
+class AdminListEquineEventsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_list_equine_events"] = "admin_list_equine_events"
+    equine_id: str | None = None
+    total: int
+    events: list[AdminListEquineEventsItem] = Field(default_factory=list)
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminCreateEquineEventOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_create_equine_event"] = "admin_create_equine_event"
+    created: bool
+    event_id: str | None = None
+    equine_id: str | None = None
+    title: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+class AdminUpdateEquineEventOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_update_equine_event"] = "admin_update_equine_event"
+    updated: bool
+    event_id: str | None = None
+    title: str | None = None
+    message: str = ""
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
+# ── Admin: Emergency contacts ─────────────────────────────────
+
+
+class AdminEmergencyContactItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    code: str
+    name: str
+    description: str
+    phone_number: str
+    category: str
+    is_primary: bool
+    is_national: bool
+
+
+class AdminGetEmergencyContactsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["admin_get_emergency_contacts"] = "admin_get_emergency_contacts"
+    total: int
+    contacts: list[AdminEmergencyContactItem] = Field(default_factory=list)
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)

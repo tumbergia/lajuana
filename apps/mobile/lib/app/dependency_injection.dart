@@ -23,6 +23,7 @@ import 'package:mobile/features/equines/infrastructure/repositories/equine_repos
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
 import 'package:mobile/features/providers/providers_module.dart';
+import 'package:mobile/features/voice_assistant/voice_assistant_module.dart';
 
 /// Value object holding all initialized application dependencies.
 class AppDependencies {
@@ -36,6 +37,7 @@ class AppDependencies {
     required this.assignmentsModule,
     required this.equineRepository,
     required this.equineEventRepository,
+    required this.voiceAssistantModule,
   });
 
   final AuthController authController;
@@ -47,6 +49,7 @@ class AppDependencies {
   final AssignmentsModule assignmentsModule;
   final EquineRepository equineRepository;
   final EquineEventRepository equineEventRepository;
+  final VoiceAssistantModule voiceAssistantModule;
 
   /// Dispose controllers that need explicit cleanup.
   void dispose() {
@@ -54,6 +57,7 @@ class AppDependencies {
     reservationsModule.listController.dispose();
     saddlesModule.listController.dispose();
     providersModule.listController.dispose();
+    voiceAssistantModule.controller.dispose();
   }
 }
 
@@ -152,6 +156,12 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     database: equinesDatabase,
   );
 
+  final voiceAssistantModule = VoiceAssistantModule.create(
+    baseUrl: apiBaseUrl,
+    tokenStorage: tokenStorage,
+    refreshSession: refreshSession,
+  );
+
   return AppDependencies(
     authController: authController,
     apiClient: apiClient,
@@ -162,5 +172,6 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     assignmentsModule: assignmentsModule,
     equineRepository: equineRepository,
     equineEventRepository: equineEventRepository,
+    voiceAssistantModule: voiceAssistantModule,
   );
 }

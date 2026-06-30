@@ -67,6 +67,7 @@ class ReservationDetailShellScreen extends StatefulWidget {
     this.catalogsModule,
     this.authController,
     this.assignmentsModule,
+    this.initialSubroute,
   });
 
   final String reservationId;
@@ -74,6 +75,7 @@ class ReservationDetailShellScreen extends StatefulWidget {
   final CatalogsModule? catalogsModule;
   final AuthController? authController;
   final AssignmentsModule? assignmentsModule;
+  final ReservationDetailSubroute? initialSubroute;
 
   @override
   State<ReservationDetailShellScreen> createState() =>
@@ -104,6 +106,7 @@ class _ReservationDetailShellScreenState
 
   @override
   Future<void> onRefresh() async {
+    if (!mounted) return;
     switch (_subroute) {
       case ReservationDetailSubroute.bitacora:
         await _logsSectionController.load(widget.reservationId);
@@ -135,6 +138,7 @@ class _ReservationDetailShellScreenState
   @override
   void initState() {
     super.initState();
+    _subroute = widget.initialSubroute ?? ReservationDetailSubroute.resumen;
     _controller =
         widget.reservationsModule?.createDetailController() ??
         ReservationDetailController(
@@ -156,6 +160,16 @@ class _ReservationDetailShellScreenState
     _providersSectionController.addListener(_onProvidersStateChanged);
     _controller.addListener(_onStateChanged);
     _controller.loadDetail(widget.reservationId);
+    if (_subroute == ReservationDetailSubroute.asignaciones &&
+        widget.assignmentsModule?.repository != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _assignmentBoardController ??= _createAssignmentBoardController();
+        if (_assignmentBoardController!.state == BoardLoadState.initial) {
+          _assignmentBoardController!.load(reservationId: widget.reservationId);
+        }
+      });
+    }
   }
 
   ReservationsRepository _throwNoModule() {
@@ -164,6 +178,7 @@ class _ReservationDetailShellScreenState
 
   @override
   void dispose() {
+    super.dispose();
     _controller.removeListener(_onStateChanged);
     _controller.dispose();
     _participantsSectionController.dispose();
@@ -176,7 +191,6 @@ class _ReservationDetailShellScreenState
     _proofPreviewCache.clear();
     _logPhotoCache.clear();
     _participantsScrollCtrl.dispose();
-    super.dispose();
   }
 
   void _onStateChanged() {
@@ -1294,7 +1308,7 @@ class _ReservationDetailShellScreenState
 
     if (isEditing) {
       final detail = await _logsSectionController.loadNoteForEdit(logId);
-      if (!mounted) return;
+      if (!context.mounted) return;
       if (detail == null) {
         showAppToast(
           context,
@@ -1322,7 +1336,7 @@ class _ReservationDetailShellScreenState
       },
     );
 
-    if (result == null || !mounted) return;
+    if (result == null || !context.mounted) return;
 
     final ok = isEditing
         ? await _logsSectionController.updateNote(
@@ -1335,7 +1349,7 @@ class _ReservationDetailShellScreenState
             photos: result.photos,
           );
 
-    if (!mounted) return;
+    if (!context.mounted) return;
     showAppToast(
       context,
       message: ok

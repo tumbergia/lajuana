@@ -94,14 +94,18 @@ class ReservationDetailController extends ChangeNotifier {
   String? get deleteErrorMessage =>
       deleteState.isError ? deleteState.errorMessage : null;
 
+  bool _disposed = false;
+
   @override
   void dispose() {
+    _disposed = true;
     super.dispose();
   }
 
   // ── Load detail ──
 
   Future<void> loadDetail(String reservationId) async {
+    if (_disposed) return;
     state = ReservationDetailLoadState.loading;
     errorCode = null;
     errorMessage = null;
@@ -109,11 +113,13 @@ class ReservationDetailController extends ChangeNotifier {
 
     try {
       detail = await _repository.getReservationById(reservationId);
+      if (_disposed) return;
       state = ReservationDetailLoadState.success;
     } catch (_) {
       try {
         detail =
             await _repository.getCachedReservationDetail(reservationId);
+        if (_disposed) return;
         if (detail != null) {
           state = ReservationDetailLoadState.offlineFromCache;
           notifyListeners();
@@ -123,10 +129,12 @@ class ReservationDetailController extends ChangeNotifier {
         // Ignore cache errors
       }
 
+      if (_disposed) return;
       state = ReservationDetailLoadState.error;
       errorCode = 'reservation.not_found';
       errorMessage = 'No se pudo cargar el detalle de la reserva.';
     }
+    if (_disposed) return;
     notifyListeners();
   }
 

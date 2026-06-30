@@ -41,8 +41,17 @@ class RefreshScopeState extends State<RefreshScope> {
     _entries.remove(caller);
   }
 
-  Future<void> Function()? get _activeCallback =>
-      _entries.isEmpty ? null : _entries.values.last;
+  Future<void> Function()? get _activeCallback {
+    while (_entries.isNotEmpty) {
+      final entry = _entries.entries.last;
+      if (!entry.key.mounted) {
+        _entries.remove(entry.key);
+        continue;
+      }
+      return entry.value;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,26 +90,31 @@ mixin RefreshableState<T extends StatefulWidget> on State<T> {
   /// Implementar con la logica de refresco de la pantalla.
   Future<void> onRefresh();
 
+  RefreshScopeState? _refreshScope;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _register();
+    final scope = RefreshScope.of(context);
+    if (scope == _refreshScope) {
+      _refreshScope?.register(this, _guardedOnRefresh);
+      return;
+    }
+    _refreshScope?.unregister(this);
+    _refreshScope = scope;
+    _refreshScope?.register(this, _guardedOnRefresh);
   }
 
   @override
   void dispose() {
-    _unregister();
+    _refreshScope?.unregister(this);
+    _refreshScope = null;
     super.dispose();
   }
 
-  void _register() {
-    RefreshScope.of(context)?.register(this, onRefresh);
-  }
-
-  void _unregister() {
-    // context sigue disponible en dispose para findAncestorStateOfType
-    final scope = context.findAncestorStateOfType<RefreshScopeState>();
-    scope?.unregister(this);
+  Future<void> _guardedOnRefresh() async {
+    if (!mounted) return;
+    await onRefresh();
   }
 }
 

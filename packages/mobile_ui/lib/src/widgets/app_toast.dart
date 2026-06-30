@@ -6,6 +6,7 @@ void showAppToast(
   required String message,
   bool isError = false,
 }) {
+  if (!context.mounted) return;
   final scheme = Theme.of(context).colorScheme;
   final bgColor = isError ? scheme.errorContainer : scheme.secondaryContainer;
   final fgColor = isError

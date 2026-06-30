@@ -53,6 +53,7 @@ dependencies:
     path: ../../packages/mobile_mocks
   material_symbols_icons: ^4.2928.1
   image_picker: ^1.2.2
+  speech_to_text: ^7.0.0
 
 dev_dependencies:
   flutter_test:

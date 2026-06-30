@@ -66,12 +66,12 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   void dispose() {
+    super.dispose();
     _listController?.removeListener(_onListChanged);
     if (_ownsListController) {
       _listController?.dispose();
     }
     _controller.dispose();
-    super.dispose();
   }
 
   @override
