@@ -83,6 +83,11 @@ def _apply_mocks(monkeypatch: pytest.MonkeyPatch) -> None:
             last_intent=None,
             last_trace_id=None,
             updated_at=None,
+            language="es",
+            language_override=None,
+            language_streak=0,
+            language_streak_lang=None,
+            pending_media_proof=None,
             save=noop_save,
         )
 

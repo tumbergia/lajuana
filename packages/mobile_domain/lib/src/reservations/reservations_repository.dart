@@ -31,6 +31,13 @@ abstract class ReservationsRepository {
     String? note,
   });
 
+  /// Approves payment WITHOUT a proof document (cash, external transfer, etc.).
+  /// Returns the full updated reservation detail.
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
+    String? note,
+  });
+
   /// Rejects a payment proof with a mandatory reason.
   /// Returns the full updated reservation detail.
   Future<ReservationDetail> rejectPaymentProof({

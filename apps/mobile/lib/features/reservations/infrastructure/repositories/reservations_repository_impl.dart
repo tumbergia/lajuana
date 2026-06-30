@@ -267,7 +267,22 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
     );
     final detail = dtoToDetail(dto);
 
-    // Update reservation detail cache
+    await _cacheDetailPayload(dto);
+
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
+    String? note,
+  }) async {
+    final dto = await _apiClient.approvePaymentWithoutProof(
+      reservationId: reservationId,
+      note: note,
+    );
+    final detail = dtoToDetail(dto);
+
     await _cacheDetailPayload(dto);
 
     return detail;

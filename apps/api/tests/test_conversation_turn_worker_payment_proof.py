@@ -51,6 +51,7 @@ async def test_media_proof_attaches_when_single_candidate(monkeypatch: pytest.Mo
     monkeypatch.setattr(worker._outbound_service, "send", fake_send)
 
     event = SimpleNamespace(
+        body=None,
         wa_message_id="wamid.1",
         media_id="media-1",
         message_type="image",
@@ -98,6 +99,7 @@ async def test_media_proof_asks_code_when_multiple_candidates(
     monkeypatch.setattr(worker._outbound_service, "send", fake_send)
 
     event = SimpleNamespace(
+        body=None,
         wa_message_id="wamid.1",
         media_id="media-1",
         message_type="document",
@@ -116,4 +118,4 @@ async def test_media_proof_asks_code_when_multiple_candidates(
     )
 
     assert processed is True
-    assert "enviame el codigo de la reserva" in sent[-1].lower()
+    assert "varias reservas activas" in sent[-1].lower()

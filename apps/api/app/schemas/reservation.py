@@ -32,6 +32,10 @@ class ReservationConfirmSchema(BaseModel):
     notes: str | None = None
 
 
+class ReservationApprovePaymentSchema(BaseModel):
+    note: str | None = None
+
+
 class ReservationCancelSchema(BaseModel):
     reason: str | None = None
 

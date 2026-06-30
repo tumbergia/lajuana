@@ -7,11 +7,22 @@ from app.ai.mcp.tools.admin_config import (
     admin_get_system_config,
     admin_update_reservation_rules,
 )
+from app.ai.mcp.tools.admin_equines import (
+    admin_create_equine,
+    admin_deactivate_equine,
+    admin_get_equine,
+    admin_list_equines,
+    admin_update_equine,
+)
 from app.ai.mcp.tools.admin_experiences import (
     admin_create_experience,
     admin_deactivate_experience,
     admin_list_experiences_admin,
     admin_update_experience,
+)
+from app.ai.mcp.tools.admin_participants import (
+    admin_get_participant,
+    admin_update_participant,
 )
 from app.ai.mcp.tools.admin_payment_proofs import (
     admin_approve_payment,
@@ -25,17 +36,6 @@ from app.ai.mcp.tools.admin_reservations import (
     admin_confirm_reservation,
     admin_get_reservation_detail,
     admin_list_reservations,
-)
-from app.ai.mcp.tools.admin_equines import (
-    admin_create_equine,
-    admin_deactivate_equine,
-    admin_get_equine,
-    admin_list_equines,
-    admin_update_equine,
-)
-from app.ai.mcp.tools.admin_participants import (
-    admin_get_participant,
-    admin_update_participant,
 )
 from app.ai.mcp.tools.admin_reviews import admin_list_human_review_requests
 from app.ai.mcp.tools.admin_schedules import (
@@ -64,6 +64,11 @@ from app.ai.mcp.tools.automations import (
 )
 from app.ai.mcp.tools.availability import check_experience_availability
 from app.ai.mcp.tools.catalog import list_experiences
+from app.ai.mcp.tools.client_reservations import (
+    cancel_reservation,
+    update_reservation_date,
+    update_reservation_participants,
+)
 from app.ai.mcp.tools.operations import (
     admin_add_equine_health_event,
     admin_close_service_execution,
@@ -77,12 +82,8 @@ from app.ai.mcp.tools.participant_forms import (
     generate_participant_form_link,
     get_participant_form_status,
 )
+from app.ai.mcp.tools.payment_instructions import get_payment_instructions
 from app.ai.mcp.tools.quote import quote_experience
-from app.ai.mcp.tools.client_reservations import (
-    cancel_reservation,
-    update_reservation_date,
-    update_reservation_participants,
-)
 from app.ai.mcp.tools.reservation_draft import (
     attach_payment_proof_to_reservation,
     create_reservation_draft,
@@ -94,7 +95,9 @@ from app.ai.mcp.tools.schedules import list_available_schedules, suggest_alterna
 
 # ── Real implementations for previously stubbed tools ────────
 async def get_experience_detail(**kwargs: Any) -> dict[str, Any]:
+    import re
     import time
+    import unicodedata
 
     from app.ai.mcp.tool_contracts import ExperienceDetailOutput, ToolBlockingReason
     from app.documents import ExperienceDocument
@@ -106,23 +109,46 @@ async def get_experience_detail(**kwargs: Any) -> dict[str, Any]:
     experience_id = kwargs.get("experience_id")
     experience_query = kwargs.get("experience_query")
 
+    def _normalize(s: str) -> str:
+        nfkd = unicodedata.normalize("NFKD", s)
+        return nfkd.encode("ascii", "ignore").decode("ascii").lower().strip()
+
+    _STOPWORDS = {"el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "en", "para", "por", "a", "y", "e", "o", "que", "con", "su", "al"}
+
+    def _match_query(exp_name: str, query: str) -> bool:
+        exp_normalized = _normalize(exp_name)
+        query_normalized = _normalize(query)
+        if query_normalized in exp_normalized:
+            return True
+        query_words = [w for w in query_normalized.split() if w not in _STOPWORDS]
+        exp_words = exp_normalized.split()
+        if not query_words:
+            return False
+        for qw in query_words:
+            if not any(qw in ew for ew in exp_words):
+                return False
+        return True
+
     experience = None
     if experience_id:
         experience = await ExperienceDocument.get(experience_id)
 
     if experience is None and experience_query:
-        query_lower = experience_query.lower()
-        all_experiences = await ExperienceDocument.find_all().to_list()  # known-small: < 100 experiences
+        all_experiences = await ExperienceDocument.find_all().to_list()
         for exp in all_experiences:
-            if query_lower in exp.name.lower():
+            if _match_query(exp.name, experience_query):
                 experience = exp
                 break
-            if exp.aliases and any(query_lower in alias.lower() for alias in exp.aliases):
-                experience = exp
-                break
-            if exp.tags and any(query_lower in tag.lower() for tag in exp.tags):
-                experience = exp
-                break
+        if experience is None:
+            for exp in all_experiences:
+                if exp.aliases and any(_match_query(a, experience_query) for a in exp.aliases):
+                    experience = exp
+                    break
+        if experience is None:
+            for exp in all_experiences:
+                if exp.tags and any(_match_query(t, experience_query) for t in exp.tags):
+                    experience = exp
+                    break
 
     if experience is None:
         output = ExperienceDetailOutput(
@@ -393,4 +419,5 @@ __all__ = [
     "request_human_review",
     "generate_participant_form_link",
     "get_participant_form_status",
+    "get_payment_instructions",
 ]

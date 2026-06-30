@@ -20,6 +20,7 @@ from app.schemas.participant import (
 )
 from app.schemas.payment_proof import PaymentProofCreateSchema, PaymentProofResponseSchema
 from app.schemas.reservation import (
+    ReservationApprovePaymentSchema,
     ReservationAvailabilityResponseSchema,
     ReservationCancelSchema,
     ReservationConfirmSchema,
@@ -222,6 +223,36 @@ async def confirm_reservation(
 ) -> ReservationResponseSchema:
     doc = await reservation_service.confirm_reservation(reservation_id, actor_id=current_user.id)
     return await reservation_to_response(doc)
+
+
+@router.post(
+    "/{reservation_id}/approve-payment",
+    response_model=ReservationResponseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Aprobar pago sin comprobante (pago físico/externo)",
+    description=(
+        "Marca el pago de una reserva como verificado SIN requerir un comprobante "
+        "subido. Útil para pagos físicos, transferencias externas o casos donde el "
+        "cliente paga en sitio. Genera el form link y notifica al cliente por WhatsApp."
+    ),
+    operation_id="approvePaymentWithoutProofByReservationId",
+)
+async def approve_payment_without_proof(
+    reservation_id: str,
+    payload: ReservationApprovePaymentSchema,
+    current_user: Annotated[
+        UserDocument,
+        Depends(require_permissions(Permission.PAYMENT_VERIFY)),
+    ],
+    payment_proof_service: PaymentProofService = Depends(get_payment_proof_service),
+) -> ReservationResponseSchema:
+    reservation = await payment_proof_service.approve_payment_without_proof(
+        reservation_id,
+        actor_id=current_user.id,
+        actor_role=current_user.role,
+        note=payload.note,
+    )
+    return await reservation_to_response(reservation)
 
 
 @router.post(

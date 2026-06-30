@@ -368,6 +368,26 @@ class AttachPaymentProofToReservationOutput(BaseModel):
     response: str
 
 
+# ── Cliente: consultar medios de pago por WhatsApp ────────────────
+
+
+class GetPaymentInstructionsInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reservation_code: str | None = None
+    bold_requested: bool = False
+
+
+class GetPaymentInstructionsOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["get_payment_instructions"] = "get_payment_instructions"
+    reservation_code: str | None = None
+    bold_requested: bool = False
+    response: str
+
+
 # ── Cliente: cancelar / modificar reserva ──────────────────────────
 
 

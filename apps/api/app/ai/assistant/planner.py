@@ -189,9 +189,12 @@ class GeminiPlanner:
 
         elapsed_ms = int((time.perf_counter() - started) * 1000)
         logger.info(
-            "[conversation_id=%s] LLM response | elapsed_ms=%d",
+            "[conversation_id=%s] LLM response | elapsed_ms=%d | action=%s | tool=%s | audit=%s",
             conversation_id,
             elapsed_ms,
+            result.action.value if result.action else "none",
+            result.tool_name or "none",
+            (result.audit_summary or "none")[:200],
         )
 
         return result

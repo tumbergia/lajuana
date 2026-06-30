@@ -237,13 +237,26 @@ class PaymentProofService:
 
         # Enqueue WhatsApp with participant form link (via outbox)
         try:
+            from app.core.config import settings
             from app.core.di import Container
             experience = await ExperienceDocument.get(reservation.experience_id)
             notif = Container.get_instance().notification_service
+            if not reservation.form_url:
+                form_link_service = Container.get_instance().participant_form_link_service
+                _, raw_token = await form_link_service.generate(
+                    reservation_id=str(reservation.id),
+                    expected_participants_count=reservation.participant_count,
+                    created_by=actor_id,
+                )
+                reservation.form_url = (
+                    f"{settings.participant_form_base_url}/?token={raw_token}"
+                )
+                await reservation.save()
             await notif.enqueue_payment_approved_form(
                 reservation=reservation,
                 experience_name=experience.name if experience else "",
             )
+            await notif.enqueue_payment_approved_location(reservation=reservation)
         except Exception:
             logger.exception(
                 "[reservation=%s] Failed to enqueue payment approved WhatsApp",
@@ -251,6 +264,89 @@ class PaymentProofService:
             )
 
         return doc
+
+    async def approve_payment_without_proof(
+        self,
+        reservation_id: str,
+        *,
+        actor_id: PydanticObjectId | None,
+        actor_role: UserRole,
+        note: str | None = None,
+    ) -> ReservationDocument:
+        if actor_role != UserRole.ADMIN:
+            raise ApiError(
+                status_code=403,
+                code=ErrorCode.AUTH_FORBIDDEN,
+                message="No tienes permisos para aprobar pagos.",
+            )
+
+        reservation = await ReservationDocument.get(reservation_id)
+        if reservation is None:
+            raise ApiError(
+                status_code=404,
+                code=ErrorCode.RESERVATION_NOT_FOUND,
+                message="Reserva no encontrada.",
+            )
+
+        if reservation.status not in (
+            ReservationStatus.PRE_RESERVED,
+            ReservationStatus.PENDING_PAYMENT,
+            ReservationStatus.PAYMENT_RECEIVED,
+        ):
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.VALIDATION_ERROR,
+                message="La reserva no está en un estado que permite aprobar pago.",
+            )
+
+        previous_status = str(reservation.status.value)
+        reservation.payment_status = PaymentStatus.VERIFIED
+        reservation.status = ReservationStatus.PAYMENT_RECEIVED
+        reservation.updated_by = actor_id
+        await reservation.save()
+
+        await self._create_audit_log(
+            reservation_id=reservation.id,
+            payment_proof_id=None,
+            actor_user_id=actor_id,
+            actor_role=actor_role,
+            action="payment_proof.approved_without_proof",
+            previous_status=previous_status,
+            new_status=str(reservation.status.value),
+            reason=note or "Aprobación manual sin comprobante (pago físico/externo).",
+        )
+
+        try:
+            from app.core.config import settings
+            from app.core.di import Container
+            experience = await ExperienceDocument.get(reservation.experience_id)
+            experience_name = experience.name if experience else ""
+            notif = Container.get_instance().notification_service
+
+            if not reservation.form_url:
+                form_link_service = Container.get_instance().participant_form_link_service
+                _, raw_token = await form_link_service.generate(
+                    reservation_id=str(reservation.id),
+                    expected_participants_count=reservation.participant_count,
+                    created_by=actor_id,
+                )
+                reservation.form_url = (
+                    f"{settings.participant_form_base_url}/?token={raw_token}"
+                )
+                await reservation.save()
+
+            await notif.enqueue_payment_approved_form(
+                reservation=reservation,
+                experience_name=experience_name,
+            )
+            await notif.enqueue_payment_approved_location(reservation=reservation)
+        except Exception:
+            logger.exception(
+                "[reservation=%s] Failed to enqueue payment approved WhatsApp",
+                reservation.id,
+            )
+
+        return reservation
 
     @staticmethod
     def _format_date_es(d: datetime.date) -> str:

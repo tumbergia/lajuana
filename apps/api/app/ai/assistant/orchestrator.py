@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime, timezone
 from uuid import uuid4
 
 from app.ai.assistant.date_extractor import extract_date_from_message
@@ -9,10 +9,11 @@ from app.ai.assistant.date_guard import (
     InvalidRequestedDateError,
     validate_requested_date_for_business,
 )
+from app.ai.assistant.intent_router import detect_and_build_plan
 from app.ai.assistant.planner import GeminiPlanner
 from app.ai.assistant.policy import ToolPolicyEngine
 from app.ai.assistant.response_composer import compose_tool_response
-from app.ai.language.detector import detect_language
+from app.ai.language.detector import detect_explicit_language_request
 from app.ai.language.messages import t
 from app.ai.mcp import registry
 from app.ai.providers.gemini_provider import (
@@ -140,11 +141,37 @@ class AssistantOrchestrator:
             trace_id=trace_id,
         )
 
-        detected_lang = detect_language(request.message)
-        if session.language != detected_lang:
-            session.language = detected_lang
-            session.updated_at = datetime.now(timezone.utc)
+        history_turns = (
+            await ConversationTurnDocument.find(
+                {"conversation_id": conversation_key, "status": "responded"},
+            )
+            .sort("-created_at")
+            .limit(8)
+            .to_list()
+        )
+        # ── Política de idioma del bot ────────────────────────────────────
+        # El idioma NUNCA se auto-detecta. El bot nace en español y sólo
+        # cambia cuando el usuario lo pide explícitamente (override persistente)
+        # o revierte a otro idioma con otra petición explícita. Ver ADR-0010.
+        explicit_request = detect_explicit_language_request(request.message)
+        if explicit_request:
+            session.language_override = explicit_request
+            session.language = explicit_request
+            session.language_streak = 0
+            session.language_streak_lang = None
+            session.updated_at = datetime.now(UTC)
             await session.save()
+        elif session.language_override:
+            override = session.language_override
+            if override not in ("es", "en"):
+                override = "en"
+            if session.language != override:
+                session.language = override
+                session.updated_at = datetime.now(UTC)
+                await session.save()
+        # Sin override → se conserva session.language (por defecto "es").
+        # No hay auto-detección: si el usuario no pide explícitamente otro
+        # idioma, el bot sigue respondiendo en el idioma efectivo actual.
 
         # Propagate from_phone as holder_phone in slot_values
         phone = request.from_phone or getattr(session, "from_phone", None)
@@ -173,15 +200,6 @@ class AssistantOrchestrator:
                 action=AssistantAction.FINAL_RESPONSE,
                 response=t("operation_cancelled", session.language),
             )
-
-        history_turns = (
-            await ConversationTurnDocument.find(
-                {"conversation_id": conversation_key, "status": "responded"},
-            )
-            .sort("-created_at")
-            .limit(8)
-            .to_list()
-        )
 
         turn = ConversationTurnDocument(
             trace_id=trace_id,
@@ -216,40 +234,62 @@ class AssistantOrchestrator:
                 parts.append(f"Historial de la conversación:\n{conversation_history}")
             enriched_context = "\n\n".join(parts)
 
-        token_usage: dict[str, int] | None = None
-        try:
-            plan = await self._planner.plan(
-                user_message=request.message,
-                channel=request.channel,
-                conversation_context=enriched_context,
-                conversation_id=conversation_id,
-                language=session.language,
+        # ── Intent router: pre-procesa mensajes comunes para forzar tool calls ──
+        #     Sin pasar por el LLM que a veces ignora las instrucciones.
+        forced_plan = detect_and_build_plan(
+            user_message=request.message,
+            conversation_context=enriched_context,
+            session_slots=session.slot_values,
+        )
+        if forced_plan:
+            logger.info(
+                "[conversation_id=%s] Intent router matched | tool=%s | action=%s | audit=%s",
+                conversation_id,
+                forced_plan.tool_name,
+                forced_plan.action.value,
+                forced_plan.audit_summary,
             )
-            token_usage = getattr(self._planner, "last_token_usage", None)
-        except GeminiResourceExhausted:
-            return AskResponse(
-                trace_id=trace_id,
-                action=AssistantAction.FINAL_RESPONSE,
-                planner_output={},
-                tool_output={},
-                response=t("resource_exhausted", session.language),
+            plan = forced_plan
+            token_usage = None
+        else:
+            logger.info(
+                "[conversation_id=%s] Intent router no match, falling back to LLM",
+                conversation_id,
             )
-        except GeminiModelUnavailable:
-            return AskResponse(
-                trace_id=trace_id,
-                action=AssistantAction.HUMAN_HANDOFF,
-                planner_output={},
-                tool_output={},
-                response=t("model_unavailable", session.language),
-            )
-        except GeminiProviderError:
-            return AskResponse(
-                trace_id=trace_id,
-                action=AssistantAction.HUMAN_HANDOFF,
-                planner_output={},
-                tool_output={},
-                response=t("provider_error", session.language),
-            )
+            try:
+                token_usage: dict[str, int] | None = None
+                plan = await self._planner.plan(
+                    user_message=request.message,
+                    channel=request.channel,
+                    conversation_context=enriched_context,
+                    conversation_id=conversation_id,
+                    language=session.language,
+                )
+                token_usage = getattr(self._planner, "last_token_usage", None)
+            except GeminiResourceExhausted:
+                return AskResponse(
+                    trace_id=trace_id,
+                    action=AssistantAction.FINAL_RESPONSE,
+                    planner_output={},
+                    tool_output={},
+                    response=t("resource_exhausted", session.language),
+                )
+            except GeminiModelUnavailable:
+                return AskResponse(
+                    trace_id=trace_id,
+                    action=AssistantAction.HUMAN_HANDOFF,
+                    planner_output={},
+                    tool_output={},
+                    response=t("model_unavailable", session.language),
+                )
+            except GeminiProviderError:
+                return AskResponse(
+                    trace_id=trace_id,
+                    action=AssistantAction.HUMAN_HANDOFF,
+                    planner_output={},
+                    tool_output={},
+                    response=t("provider_error", session.language),
+                )
 
         # Fallback: if planner didn't extract date but user message has one
         if (
@@ -321,6 +361,12 @@ class AssistantOrchestrator:
             AssistantAction.ASK_CLARIFYING_QUESTION,
             AssistantAction.HUMAN_HANDOFF,
         }:
+            logger.info(
+                "[conversation_id=%s] Plan decision: no tool call | action=%s | missing=%s",
+                conversation_id,
+                plan.action.value,
+                plan.missing_fields,
+            )
             response = (
                 plan.response
                 or _build_missing_fields_response(plan.missing_fields, session.language)
@@ -387,6 +433,14 @@ class AssistantOrchestrator:
                 response=confirm_msg,
             )
 
+        logger.info(
+            "[conversation_id=%s] Executing tool | tool=%s | args=%s",
+            conversation_id,
+            plan.tool_name,
+            {k: v for k, v in (plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}).items()
+             if k not in ("quote_snapshot",)},
+        )
+
         started = time.perf_counter()
         error_code: str | None = None
         tool_output: dict = {}
@@ -408,6 +462,15 @@ class AssistantOrchestrator:
 
         latency_ms = int((time.perf_counter() - started) * 1000)
 
+        logger.info(
+            "[conversation_id=%s] Tool result | tool=%s | status=%s | latency_ms=%d | output_keys=%s",
+            conversation_id,
+            plan.tool_name,
+            status,
+            latency_ms,
+            list(tool_output.keys())[:10],
+        )
+
         await ToolCallLogDocument(
             trace_id=trace_id,
             conversation_turn_id=request.conversation_turn_id or str(uuid4()),
@@ -419,14 +482,28 @@ class AssistantOrchestrator:
             latency_ms=latency_ms,
         ).insert()
 
-        response = await compose_tool_response(
-            user_message=request.message,
-            plan=plan,
-            tool_output=tool_output,
-            conversation_id=conversation_id,
-            channel=request.channel,
-            language=session.language,
-        )
+        # Tools que entregan un `response` literal en su output y NO deben pasar
+        # por compose_tool_response (evita que el LLM mienta, p.ej. "te envié
+        # los detalles al correo" cuando no hay sistema de email). Incluye
+        # create_reservation_draft (pasos + banco + ubicación) y
+        # get_payment_instructions (medios de pago por WhatsApp) y
+        # attach_payment_proof_to_reservation (confirmación de comprobante).
+        LITERAL_RESPONSE_TOOLS: set[str] = {
+            "create_reservation_draft",
+            "get_payment_instructions",
+            "attach_payment_proof_to_reservation",
+        }
+        if plan.tool_name in LITERAL_RESPONSE_TOOLS and tool_output.get("response"):
+            response = tool_output["response"]
+        else:
+            response = await compose_tool_response(
+                user_message=request.message,
+                plan=plan,
+                tool_output=tool_output,
+                conversation_id=conversation_id,
+                channel=request.channel,
+                language=session.language,
+            )
 
         if (
             plan.tool_name == "suggest_alternative_dates"
@@ -515,7 +592,14 @@ class AssistantOrchestrator:
         try:
             tool_output = await registry.call(pending_tool_name, **pending_args)
             status = "success"
-            response = tool_output.get("response", _t("tool_success", lang, tool_name=pending_tool_name or ""))
+            if (
+                pending_tool_name
+                in {"create_reservation_draft", "get_payment_instructions", "attach_payment_proof_to_reservation"}
+                and tool_output.get("response")
+            ):
+                response = tool_output["response"]
+            else:
+                response = tool_output.get("response", _t("tool_success", lang, tool_name=pending_tool_name or ""))
         except Exception as exc:
             error_code = "tool.execution_failed"
             status = "error"
