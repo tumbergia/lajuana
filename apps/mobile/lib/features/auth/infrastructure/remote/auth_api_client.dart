@@ -27,11 +27,14 @@ class AuthApiClient {
     return TokenDto.fromJson(data);
   }
 
-  Future<TokenDto> refresh({required String refreshToken}) async {
+  Future<TokenDto> refresh({
+    required String refreshToken,
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
     final uri = Uri.parse(
       '$_baseUrl/auth/refresh?refresh_token=${Uri.encodeQueryComponent(refreshToken)}',
     );
-    final response = await _execute(() => _http.post(uri));
+    final response = await _execute(() => _http.post(uri), timeout: timeout);
     _throwIfError(response);
     final data = _decodeBody(response.body);
     return TokenDto.fromJson(data);
@@ -130,9 +133,12 @@ class AuthApiClient {
     };
   }
 
-  Future<http.Response> _execute(Future<http.Response> Function() block) async {
+  Future<http.Response> _execute(
+    Future<http.Response> Function() block, {
+    Duration timeout = const Duration(seconds: 12),
+  }) async {
     try {
-      return await block().timeout(const Duration(seconds: 12));
+      return await block().timeout(timeout);
     } on TimeoutException {
       throw AuthFailure(
         code: 'network.timeout',
@@ -146,6 +152,12 @@ class AuthApiClient {
       throw AuthFailure(
         code: 'network.invalid_response',
         message: 'Respuesta inválida del servidor',
+      );
+    } catch (e) {
+      // Captura ClientException y cualquier otro error de red no previsto.
+      throw AuthFailure(
+        code: 'network.unavailable',
+        message: 'Sin conexión ($e)',
       );
     }
   }

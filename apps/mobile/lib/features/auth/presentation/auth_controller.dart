@@ -56,6 +56,13 @@ class AuthController extends ChangeNotifier {
       _clearError();
     } on AuthFailure catch (failure) {
       _applyFailure(failure);
+    } catch (_) {
+      // Excepción de red no mapeada (p.ej. ClientException): si hay sesión
+      // local, entramos en modo offline en lugar de expulsar al login.
+      final localSnapshot = await _authRepository.enterLocalMode();
+      if (localSnapshot.hasLocalSession) {
+        _applySnapshot(localSnapshot);
+      }
     } finally {
       isBootstrapping = false;
       notifyListeners();

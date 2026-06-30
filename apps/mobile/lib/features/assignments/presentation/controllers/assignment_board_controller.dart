@@ -302,7 +302,7 @@ class AssignmentBoardController extends ChangeNotifier {
     // Offline conocido + outbox: encolar directo, sin intentar la red (evita
     // un timeout largo). La vista local optimista se conserva.
     if (_backendUnreachable && _outbox != null) {
-      await _enqueuePendingAssignments(_outbox!, notes: notes);
+      await _enqueuePendingAssignments(_outbox, notes: notes);
       _clearPendingState();
       _isFinalizing = false;
       _queuedOffline = true;
