@@ -31,11 +31,6 @@ _TOOLS: dict[str, object] = {
     "admin_create_user": tools.admin_create_user,
     "admin_update_user": tools.admin_update_user,
     "admin_deactivate_user": tools.admin_deactivate_user,
-    # ── Admin: schedules ──
-    "admin_create_schedule": tools.admin_create_schedule,
-    "admin_update_schedule": tools.admin_update_schedule,
-    "admin_list_schedules_admin": tools.admin_list_schedules_admin,
-    "admin_deactivate_schedule": tools.admin_deactivate_schedule,
     # ── Admin: system ──
     "admin_get_system_config": tools.admin_get_system_config,
     "admin_update_reservation_rules": tools.admin_update_reservation_rules,

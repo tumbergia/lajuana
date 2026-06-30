@@ -26,7 +26,6 @@ from app.documents import (
     EquineDocument,
     ExperienceDocument,
     ReservationDocument,
-    ScheduleDocument,
 )
 
 
@@ -240,27 +239,27 @@ def test_returns_channel_performance(monkeypatch: pytest.MonkeyPatch) -> None:
 
 async def _run_returns_occupancy(monkeypatch: pytest.MonkeyPatch) -> None:
     exp_id = PydanticObjectId()
-    schedule_date = date(2026, 7, 1)
-    schedules = [
+    reservation_date = date(2026, 7, 1)
+    reservations = [
         SimpleNamespace(
             id=PydanticObjectId(),
             experience_id=exp_id,
-            date=schedule_date,
-            capacity_total=20,
-            reserved_slots=15,
-            available_slots=5,
+            requested_date=reservation_date,
+            participant_count=4,
+            status=ReservationStatus.CONFIRMED,
         ),
     ]
 
-    async def fake_schedule_list():
-        return schedules
-
-    class FakeScheduleQuery:
+    class FakeReservationQuery:
         @staticmethod
         async def to_list():
-            return schedules
+            return reservations
 
-    monkeypatch.setattr(ScheduleDocument, "find", lambda **kw: FakeScheduleQuery())
+    monkeypatch.setattr(
+        ReservationDocument,
+        "find",
+        lambda *args, **kw: FakeReservationQuery(),
+    )
 
     async def fake_exp_get(_):
         return SimpleNamespace(name="Media Jornada")
@@ -272,7 +271,7 @@ async def _run_returns_occupancy(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert result["blocking_reasons"] == []
     assert result["total_schedules"] == 1
-    assert result["avg_occupancy_pct"] == 75.0
+    assert result["avg_occupancy_pct"] == 100.0
     assert result["occupancy"][0]["experience_name"] == "Media Jornada"
 
 

@@ -56,7 +56,6 @@ from app.schemas.reservation import (
     ReservationUpdateSchema,
 )
 from app.schemas.saddle import SaddleCreateSchema, SaddleResponseSchema, SaddleUpdateSchema
-from app.schemas.schedule import ScheduleCreateSchema, ScheduleResponseSchema, ScheduleUpdateSchema
 from app.schemas.service_log import (
     ServiceLogCreateSchema,
     ServiceLogResponseSchema,
@@ -119,9 +118,6 @@ __all__ = [
     "SaddleCreateSchema",
     "SaddleResponseSchema",
     "SaddleUpdateSchema",
-    "ScheduleCreateSchema",
-    "ScheduleResponseSchema",
-    "ScheduleUpdateSchema",
     "ServiceLogCreateSchema",
     "ServiceLogResponseSchema",
     "ServiceLogUpdateSchema",

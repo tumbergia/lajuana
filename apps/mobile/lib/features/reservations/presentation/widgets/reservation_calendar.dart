@@ -32,7 +32,7 @@ Map<String, List<ReservationRecord>> _groupByDate(
 ) {
   final map = <String, List<ReservationRecord>>{};
   for (final item in items) {
-    final raw = item.scheduledDate;
+    final raw = item.requestedDate;
     if (raw == null || raw.isEmpty) continue;
     final normalized = _normalizeDate(raw);
     map.putIfAbsent(normalized, () => []);

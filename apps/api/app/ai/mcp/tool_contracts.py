@@ -276,7 +276,6 @@ class CreateReservationDraftInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     experience_id: str
-    schedule_id: str | None = None
     participant_count: int = Field(ge=1, le=8)
     holder_phone: str
     holder_name: str | None = None

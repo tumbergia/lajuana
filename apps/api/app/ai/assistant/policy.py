@@ -56,10 +56,6 @@ class ToolPolicyEngine:
         "admin_create_user",
         "admin_update_user",
         "admin_deactivate_user",
-        "admin_create_schedule",
-        "admin_update_schedule",
-        "admin_list_schedules_admin",
-        "admin_deactivate_schedule",
         "admin_get_system_config",
         "admin_update_reservation_rules",
         "admin_get_payment_instructions",
@@ -102,7 +98,6 @@ class ToolPolicyEngine:
         "admin_get_equine_workload_report",
         "admin_list_experiences_admin",
         "admin_list_users",
-        "admin_list_schedules_admin",
         "admin_get_system_config",
         "admin_get_payment_instructions",
         "admin_list_human_review_requests",
@@ -140,9 +135,6 @@ class ToolPolicyEngine:
         "admin_update_experience",
         "admin_deactivate_experience",
         "admin_deactivate_user",
-        "admin_create_schedule",
-        "admin_update_schedule",
-        "admin_deactivate_schedule",
         "admin_update_reservation_rules",
         "admin_approve_payment",
         "admin_reject_payment_proof",
@@ -156,8 +148,6 @@ class ToolPolicyEngine:
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
         "mark_payment_verified",
-        "change_schedule_capacity",
-        "block_slots",
     }
 
     CHANNEL_ROLE_MAP: dict[str, str] = {
@@ -207,8 +197,6 @@ class ToolPolicyEngine:
         id_required_tools = {
             "admin_update_experience": "experience_id",
             "admin_deactivate_experience": "experience_id",
-            "admin_update_schedule": "schedule_id",
-            "admin_deactivate_schedule": "schedule_id",
             "admin_update_user": "user_id",
             "admin_deactivate_user": "user_id",
             "admin_update_equine": "equine_id",
@@ -250,13 +238,6 @@ class ToolPolicyEngine:
                 return ToolPolicyDecision(
                     allowed=False,
                     reason="missing_required_arguments:email,password",
-                )
-
-        if plan.tool_name == "admin_create_schedule":
-            if not args.get("experience_id") or not args.get("date"):
-                return ToolPolicyDecision(
-                    allowed=False,
-                    reason="missing_required_arguments:experience_id,date",
                 )
 
         if plan.tool_name == "admin_create_equine":

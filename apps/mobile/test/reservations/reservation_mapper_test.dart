@@ -17,7 +17,6 @@ void main() {
         'id': 'r1',
         'code': 'RES-001',
         'experience_id': 'e1',
-        'schedule_id': 's1',
         'channel': 'whatsapp',
         'status': 'confirmed',
         'participant_count': 2,

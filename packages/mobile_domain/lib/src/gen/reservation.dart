@@ -20,7 +20,6 @@ class Reservation {
   final String id;
   final String code;
   final String experienceId;
-  final String scheduleId;
   final Channel channel;
   final ReservationStatus status;
   final int participantCount;
@@ -59,7 +58,6 @@ class Reservation {
     required this.id,
     required this.code,
     required this.experienceId,
-    required this.scheduleId,
     required this.channel,
     required this.status,
     required this.participantCount,
@@ -100,7 +98,6 @@ class Reservation {
       id: json['id'] as String,
       code: json['code'] as String,
       experienceId: json['experience_id'] as String,
-      scheduleId: json['schedule_id'] as String,
       channel: (json['channel'] as String).toChannel(),
       status: (json['status'] as String).toReservationStatus(),
       participantCount: json['participant_count'] as int,
@@ -143,7 +140,6 @@ class Reservation {
     'id': id,
     'code': code,
     'experience_id': experienceId,
-    'schedule_id': scheduleId,
     'channel': channel.toJson(),
     'status': status.toJson(),
     'participant_count': participantCount,

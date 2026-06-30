@@ -60,29 +60,6 @@ class CatalogsDatabase {
         ''');
 
         await db.execute('''
-          CREATE TABLE schedules_local (
-            id TEXT PRIMARY KEY,
-            remote_id TEXT NULL,
-            experience_id TEXT NOT NULL,
-            date TEXT NOT NULL,
-            start_time TEXT NOT NULL,
-            is_active INTEGER NOT NULL,
-            capacity_total INTEGER NOT NULL,
-            reserved_slots INTEGER NOT NULL,
-            internal_slots INTEGER NOT NULL,
-            blocked_slots INTEGER NOT NULL,
-            available_slots INTEGER NOT NULL,
-            status TEXT NOT NULL,
-            custom_request_only INTEGER NOT NULL,
-            notes TEXT NULL,
-            sync_status TEXT NOT NULL,
-            sync_error TEXT NULL,
-            version_remote INTEGER NULL,
-            updated_at_remote TEXT NULL
-          );
-        ''');
-
-        await db.execute('''
           CREATE TABLE reservation_rules_local (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             min_days_in_advance INTEGER NOT NULL,

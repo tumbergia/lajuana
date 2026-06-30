@@ -37,7 +37,7 @@ Modules are factory classes that wire up feature dependencies at the app level. 
 
 | Module | File | Exposes |
 |--------|------|---------|
-| `CatalogsModule` | `features/catalogs/catalogs_module.dart` | `repository`, `experiences`, `schedules`, `reservationRules`, `emergencyContacts` |
+| `CatalogsModule` | `features/catalogs/catalogs_module.dart` | `repository`, `experiences`, `reservationRules`, `emergencyContacts` |
 | `ReservationsModule` | `features/reservations/reservations_module.dart` | `repository`, `listController` |
 | `SaddlesModule` | `features/saddles/saddles_module.dart` | `repository`, `listController` |
 | `AssignmentsModule` | `features/assignments/assignments_module.dart` | `repository` |

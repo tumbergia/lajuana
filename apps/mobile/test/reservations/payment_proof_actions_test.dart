@@ -727,7 +727,6 @@ ReservationDetail _makeDetail({
     'id': 'r1',
     'code': 'RES-001',
     'experience_id': 'e1',
-    'schedule_id': 's1',
     'channel': 'whatsapp',
     'status': 'pending_payment',
     'participant_count': 2,

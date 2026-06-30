@@ -52,7 +52,6 @@ from app.services.mappers import (
     policy_to_response,
     provider_to_response,
     reservation_to_response,
-    schedule_to_response,
     service_log_to_response,
     user_to_response,
 )
@@ -73,9 +72,6 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("experience", "create"): Permission.EXPERIENCE_CREATE,
     ("experience", "update"): Permission.EXPERIENCE_UPDATE,
     ("experience", "delete"): Permission.EXPERIENCE_DELETE,
-    ("schedule", "create"): Permission.SCHEDULE_CREATE,
-    ("schedule", "update"): Permission.SCHEDULE_UPDATE,
-    ("schedule", "delete"): Permission.SCHEDULE_DELETE,
     ("reservation_rules", "update"): Permission.CONFIG_UPDATE,
     ("reservation", "create"): Permission.RESERVATION_CREATE,
     ("reservation", "update"): Permission.RESERVATION_UPDATE,
@@ -117,8 +113,6 @@ async def _entity_to_response_dict(entity_type: str, doc) -> dict:
     """Convert a domain document to a JSON-safe response dict."""
     if entity_type == "experience":
         return experience_to_response(doc).model_dump(mode="json")
-    if entity_type == "schedule":
-        return schedule_to_response(doc).model_dump(mode="json")
     if entity_type == "reservation_rules":
         if isinstance(doc, AppConfigDocument) and doc.reservation_rules is not None:
             return doc.reservation_rules.model_dump(mode="json")
@@ -146,7 +140,7 @@ async def _latest_stream_cursors() -> dict[str, str]:
     """Return the latest cursor for every tracked change stream."""
     streams = (
         "reservations", "participants", "payment_proofs", "assignments",
-        "logs", "experiences", "schedules", "config", "equines",
+        "logs", "experiences", "config", "equines",
         "providers", "policies",
     )
     cursors: dict[str, str] = {}
@@ -275,7 +269,6 @@ class SyncService:
         self,
         config_service: ConfigService,
         experience_service=None,
-        schedule_service=None,
         equine_service=None,
         reservation_service=None,
         participant_service=None,
@@ -290,7 +283,6 @@ class SyncService:
         # Build handlers (services are passed from DI container)
         self._experience_handler = ExperienceSyncHandler(
             experience_service=experience_service,
-            schedule_service=schedule_service,
         )
         self._reservation_handler = ReservationSyncHandler(
             reservation_service=reservation_service,
@@ -307,7 +299,6 @@ class SyncService:
 
         # Keep references needed by build_bootstrap (read operations)
         self._experience_service = experience_service
-        self._schedule_service = schedule_service
         self._equine_service = equine_service
 
         self.executor = SyncOperationExecutor(
@@ -318,10 +309,9 @@ class SyncService:
         )
 
     async def build_bootstrap(self, *, current_user: UserDocument) -> dict:
-        """Full initial sync snapshot — experiences, schedules, equines, etc."""
+        """Full initial sync snapshot — experiences, equines, etc."""
         can_read_config = Permission.CONFIG_READ in ROLE_PERMISSIONS[current_user.role]
         experiences = await self._experience_service.list()
-        schedules = await self._schedule_service.list()
         equines = await self._equine_service.list()
         cursors = await _latest_stream_cursors()
         if not can_read_config:
@@ -340,7 +330,6 @@ class SyncService:
             "experiences": [
                 experience_to_response(item).model_dump(mode="json") for item in experiences
             ],
-            "schedules": [schedule_to_response(item).model_dump(mode="json") for item in schedules],
             "equines": [equine_to_response(item).model_dump(mode="json") for item in equines],
             "cursors": cursors,
         }

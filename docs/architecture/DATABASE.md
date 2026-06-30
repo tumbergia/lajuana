@@ -15,7 +15,6 @@ flowchart LR
 
   subgraph Catalog["Catalog"]
     E["experiences"]
-    S["schedules"]
   end
 
   subgraph Resources["Operational Resources"]
@@ -63,7 +62,6 @@ flowchart LR
   R --> SL
   R --> A
   R --> RAL
-  E --> S
   EQ --> A
   SA --> A
 ```
@@ -74,7 +72,7 @@ flowchart LR
 |-----------|-------|------|------|
 | experiences | `slug` | unique | — |
 | saddles | `code` | unique | — |
-| schedules | `(experience_id, date, start_time)` | unique | `uq_schedule_experience_date_start_time` |
+| reservations | `availability_lock_key` (partial) | unique | day-lock when `blocks_day=true` |
 | whatsapp_inbound_events | `wa_message_id` | unique | via app-level upsert |
 | migration_tracker | `version` | unique | — |
 
@@ -86,7 +84,6 @@ Tres migraciones formales:
 |---------|--------|-------------|
 | 001 | `staff_to_guide` | Renombrar rol `staff` → `guide` |
 | 002 | `backfill_sync_metadata` | Backfill metadata de sync |
-| 003 | `backfill_schedule_is_active` | Backfill campo `is_active` en schedules |
 
 Ejecutadas en startup via `app/migrations/runner.run_migrations()`.  
 Tracked en collection `migration_tracker`.  
@@ -101,7 +98,6 @@ CLI: `python -m app.cli seed -t <name>`
 | `reproducible` | Datos base determinísticos |
 | `equines` | Equinos de prueba |
 | `experiences` | Experiencias del catálogo |
-| `schedules` | Fechas operativas Q2 2026 |
 | `form-test` | Datos para test de formularios |
 | `proof-file` | Datos para test de comprobantes de pago |
 

@@ -38,12 +38,6 @@ from app.ai.mcp.tools.admin_reservations import (
     admin_list_reservations,
 )
 from app.ai.mcp.tools.admin_reviews import admin_list_human_review_requests
-from app.ai.mcp.tools.admin_schedules import (
-    admin_create_schedule,
-    admin_deactivate_schedule,
-    admin_list_schedules_admin,
-    admin_update_schedule,
-)
 from app.ai.mcp.tools.admin_users import (
     admin_create_user,
     admin_deactivate_user,
@@ -373,10 +367,6 @@ __all__ = [
     "admin_create_user",
     "admin_update_user",
     "admin_deactivate_user",
-    "admin_create_schedule",
-    "admin_update_schedule",
-    "admin_list_schedules_admin",
-    "admin_deactivate_schedule",
     "admin_get_system_config",
     "admin_update_reservation_rules",
     "admin_get_payment_instructions",

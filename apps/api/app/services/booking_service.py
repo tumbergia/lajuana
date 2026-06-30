@@ -33,7 +33,6 @@ class BookingService:
         self,
         *,
         experience_id: str,
-        schedule_id: str,
         participant_count: int,
         requested_date: date | None,
         holder_name: str | None = None,
@@ -43,7 +42,6 @@ class BookingService:
     ) -> ReservationDocument:
         payload = ReservationCreateSchema(
             experience_id=experience_id,
-            schedule_id=schedule_id,
             requested_date=requested_date,
             participant_count=participant_count,
             channel=self._channel(),

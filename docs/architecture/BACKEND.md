@@ -11,7 +11,6 @@ flowchart LR
     auth["auth"]
     users["users"]
     experiences["experiences"]
-    schedules["schedules"]
     reservations["reservations"]
     payment_proofs["payment_proofs"]
     participants["participants"]
@@ -84,7 +83,6 @@ Base class: `AuditDocument` con campos `version`, `created_at`, `updated_at`, `d
 Colecciones clave:
 - `reservations` — ciclo de vida completo (estados, pagos, participantes)
 - `experiences` — catálogo con pricing tiers, aliases, capacity
-- `schedules` — fechas operativas con capacidad y slots
 - `equines` / `saddles` — recursos operativos
 - `assignments` — asignación equino+silla a reserva
 - `sync_changes` — tracking de cambios para offline-first
@@ -103,9 +101,9 @@ flowchart LR
 ## MCP Tools
 
 **64 tools** MCP registradas en `app/ai/mcp/__init__.py`. Organizadas por categoría:
-- Catalog/availability (experiences, schedules, pricing)
+- Catalog/availability (experiences, date availability, pricing)
 - Reservations (draft, payment proof, cancel, update)
-- Admin CRUD (users, experiences, schedules, equines, reservations)
+- Admin CRUD (users, experiences, equines, reservations)
 - Analytics (sales funnel, occupancy, workload)
 - Operations (service logs, health events, checklists)
 - Automations (birthday, anniversary)
@@ -124,4 +122,4 @@ Migration(version="001", name="staff_to_guide", description="...")
 ## Seeds
 
 CLI unificada: `python -m app.cli seed -t <name>`
-6 seeds registrados: reproducible, equines, experiences, schedules, form-test, proof-file
+5 seeds registrados: reproducible, equines, experiences, form-test, proof-file

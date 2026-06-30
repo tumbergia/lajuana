@@ -7,25 +7,21 @@ import 'package:mobile/features/catalogs/data/catalogs_sync_api.dart';
 import 'package:mobile/features/catalogs/emergency_contacts/domain/emergency_contact.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 import 'package:mobile/features/catalogs/reservation_rules/domain/reservation_rules.dart';
-import 'package:mobile/features/catalogs/schedules/domain/schedule.dart';
-import 'package:mobile/features/catalogs/schedules/domain/schedule_status.dart';
 
 import 'data/catalog_sync_status_helpers.dart';
 
 /// Fake [CatalogsRepository] for testing catalogs controllers.
 ///
 /// Configurable via named parameters:
-/// - [returnEmptyExperiences] / [returnEmptySchedules] / etc.
+/// - [returnEmptyExperiences] / [returnEmptyContacts] / etc.
 /// - [throwOnListExperiences] / [throwOnRefresh] / etc.
 ///
 /// Tracks call counts for all refresh/sync methods.
 class FakeCatalogsRepository extends CatalogsRepository {
   FakeCatalogsRepository({
     this.returnEmptyExperiences = false,
-    this.returnEmptySchedules = false,
     this.returnEmptyContacts = false,
     this.throwOnListExperiences = false,
-    this.throwOnListSchedules = false,
     this.throwOnListContacts = false,
     this.throwOnGetRules = false,
     this.throwOnRefresh = false,
@@ -45,10 +41,8 @@ class FakeCatalogsRepository extends CatalogsRepository {
   static Future<bool> _dummyRefresh() async => true;
 
   final bool returnEmptyExperiences;
-  final bool returnEmptySchedules;
   final bool returnEmptyContacts;
   final bool throwOnListExperiences;
-  final bool throwOnListSchedules;
   final bool throwOnListContacts;
   final bool throwOnGetRules;
   final bool throwOnRefresh;
@@ -58,7 +52,6 @@ class FakeCatalogsRepository extends CatalogsRepository {
   Completer<void>? refreshCompleter;
 
   int refreshExperiencesCallCount = 0;
-  int refreshSchedulesCallCount = 0;
   int refreshContactsCallCount = 0;
   int refreshRulesCallCount = 0;
   int syncNowCallCount = 0;
@@ -91,37 +84,6 @@ class FakeCatalogsRepository extends CatalogsRepository {
     if (refreshCompleter != null) {
       await refreshCompleter!.future;
     }
-  }
-
-  // ── Schedules ────────────────────────────────────────────────
-
-  static final _sampleSchedule = CatalogSchedule(
-    id: 'sched-1',
-    experienceId: 'exp-1',
-    date: '2026-06-15',
-    startTime: '08:00:00',
-    isActive: true,
-    capacityTotal: 10,
-    reservedSlots: 3,
-    internalSlots: 1,
-    blockedSlots: 0,
-    availableSlots: 6,
-    status: CatalogScheduleStatus.open,
-    customRequestOnly: false,
-    syncStatus: catalogSyncStatusSynced,
-  );
-
-  @override
-  Future<List<CatalogSchedule>> listSchedules() async {
-    if (throwOnListSchedules) throw Exception('List error');
-    if (returnEmptySchedules) return [];
-    return [_sampleSchedule];
-  }
-
-  @override
-  Future<void> refreshSchedulesFromServer() async {
-    refreshSchedulesCallCount++;
-    if (throwOnRefresh) throw Exception('Refresh error');
   }
 
   // ── Emergency Contacts ───────────────────────────────────────

@@ -43,7 +43,6 @@ def test_sync_bootstrap_contract(monkeypatch) -> None:
             "reservation_rules": {"min_days_in_advance": 7},
             "emergency_contacts": {"items": []},
             "experiences": [],
-            "schedules": [],
             "equines": [],
             "cursors": {"reservations": ""},
         }
@@ -111,7 +110,6 @@ def test_sync_executor_rejects_catalog_write_for_guide() -> None:
     executor = SyncOperationExecutor(
         experience_handler=ExperienceSyncHandler(
             experience_service=_c.experience_service,
-            schedule_service=_c.schedule_service,
         ),
         reservation_handler=ReservationSyncHandler(
             reservation_service=_c.reservation_service,

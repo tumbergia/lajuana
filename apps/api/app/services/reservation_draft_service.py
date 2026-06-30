@@ -26,7 +26,6 @@ class ReservationDraftService:
     async def create_reservation_draft(
         self,
         experience_id: str,
-        schedule_id: str | None,
         participant_count: int,
         holder_phone: str,
         holder_name: str | None,
@@ -106,8 +105,6 @@ class ReservationDraftService:
             "pre_reserved_at": datetime.now(UTC),
             "expire_at": expire_at,
         }
-        if schedule_id is not None:
-            payload["schedule_id"] = schedule_id
 
         await self.reservation_service.create(
             payload=payload,

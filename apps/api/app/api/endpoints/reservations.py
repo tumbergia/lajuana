@@ -41,7 +41,7 @@ from app.services import (
 from app.services.reservation_timeline_service import ReservationTimelineService
 from beanie import PydanticObjectId
 
-from app.documents import ExperienceDocument, ScheduleDocument
+from app.documents import ExperienceDocument
 from app.services.mappers import (
     participant_to_response,
     payment_proof_to_response,
@@ -132,32 +132,15 @@ async def list_reservations(
         for e in await ExperienceDocument.find(exp_criteria).to_list()
     }
 
-    # Batch-resolve schedule dates / times.
-    sched_ids = list(
-        {str(d.schedule_id) for d in docs if d.schedule_id}
-    )
-    schedule_map: dict[str, tuple[str, str]] = {}
-    if sched_ids:
-        sched_criteria = {"_id": {"$in": [PydanticObjectId(sid) for sid in sched_ids]}}
-        for s in await ScheduleDocument.find(sched_criteria).to_list():
-            schedule_map[str(s.id)] = (
-                s.date.isoformat() if s.date else "",
-                s.start_time if s.start_time else "",  # str ISO "HH:MM:SS" (ya no es datetime.time)
-            )
-
     items: list[ReservationListItemSchema] = []
     for doc in docs:
         eid = str(doc.experience_id)
-        sid = str(doc.schedule_id) if doc.schedule_id else None
-        sched_date, start_time = schedule_map.get(sid, ("", "")) if sid else ("", "")
         enriched: dict[str, object] = {}
         name = experiences.get(eid)
         if name:
             enriched["experience_name"] = name
-        if sched_date:
-            enriched["scheduled_date"] = sched_date
-        if start_time:
-            enriched["start_time"] = start_time
+        if doc.requested_date:
+            enriched["scheduled_date"] = doc.requested_date.isoformat()
         items.append(reservation_to_list_item(doc, enriched=enriched))
     return items
 

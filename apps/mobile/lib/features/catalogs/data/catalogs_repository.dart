@@ -7,8 +7,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:mobile/features/catalogs/emergency_contacts/domain/emergency_contact.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 import 'package:mobile/features/catalogs/reservation_rules/domain/reservation_rules.dart';
-import 'package:mobile/features/catalogs/schedules/domain/schedule.dart';
-import 'package:mobile/features/catalogs/schedules/domain/schedule_status.dart';
 import 'catalog_queue_operation.dart';
 import 'catalog_sync_status.dart';
 import 'catalogs_database.dart';
@@ -26,7 +24,6 @@ class CatalogsRepository {
   final Random _random = Random();
   static const Set<String> _knownStreams = <String>{
     'experiences',
-    'schedules',
     'config',
     'reservations',
     'participants',
@@ -39,7 +36,6 @@ class CatalogsRepository {
   };
   static const Set<String> _catalogCoreStreams = <String>{
     'experiences',
-    'schedules',
     'config',
   };
 
@@ -60,17 +56,6 @@ class CatalogsRepository {
       return;
     }
     await pullChanges(streams: const {'experiences'});
-  }
-
-  Future<void> refreshSchedulesFromServer() async {
-    if (await _shouldBootstrapForScope(
-      stream: 'schedules',
-      table: 'schedules_local',
-    )) {
-      await _bootstrap();
-      return;
-    }
-    await pullChanges(streams: const {'schedules'});
   }
 
   Future<void> refreshReservationRulesFromServer() async {
@@ -147,12 +132,6 @@ class CatalogsRepository {
               Map<String, dynamic>.from(payload),
             );
           }
-          if (stream == 'schedules' && payload is Map) {
-            await _upsertScheduleFromServer(
-              txn,
-              Map<String, dynamic>.from(payload),
-            );
-          }
           if (stream == 'config' && payload is Map) {
             await _applyConfigChange(txn, Map<String, dynamic>.from(payload));
           }
@@ -164,19 +143,6 @@ class CatalogsRepository {
               await txn.update(
                 'experiences_local',
                 {'is_active': 0},
-                where: 'remote_id = ? OR id = ?',
-                whereArgs: [id, id],
-              );
-            }
-          }
-          if (changeType == 'delete' &&
-              stream == 'schedules' &&
-              payload is Map) {
-            final id = payload['id'] as String?;
-            if (id != null) {
-              await txn.update(
-                'schedules_local',
-                {'is_active': 0, 'status': 'closed'},
                 where: 'remote_id = ? OR id = ?',
                 whereArgs: [id, id],
               );
@@ -525,192 +491,6 @@ class CatalogsRepository {
     await _tryFlushQueue();
   }
 
-  Future<List<CatalogSchedule>> listSchedules() async {
-    final db = await _database.database;
-    final rows = await db.query(
-      'schedules_local',
-      orderBy: 'date ASC, start_time ASC',
-    );
-    return rows.map(_scheduleFromRow).toList(growable: false);
-  }
-
-  Future<CatalogSchedule?> getScheduleById(String id) async {
-    final db = await _database.database;
-    final rows = await db.query(
-      'schedules_local',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (rows.isEmpty) return null;
-    return _scheduleFromRow(rows.first);
-  }
-
-  Future<void> createSchedule({
-    required String experienceId,
-    required String dateIso,
-    required String startTime,
-    required bool isActive,
-    required int capacityTotal,
-    required int reservedSlots,
-    required int internalSlots,
-    required int blockedSlots,
-    required bool customRequestOnly,
-    String? notes,
-  }) async {
-    final db = await _database.database;
-    final localId = _nextLocalId('schedule');
-    final available = _availableSlots(
-      capacityTotal: capacityTotal,
-      reservedSlots: reservedSlots,
-      blockedSlots: blockedSlots,
-      internalSlots: internalSlots,
-    );
-    final status = !isActive
-        ? CatalogScheduleStatus.closed
-        : available == 0
-        ? CatalogScheduleStatus.full
-        : CatalogScheduleStatus.open;
-    await db.insert('schedules_local', {
-      'id': localId,
-      'remote_id': null,
-      'experience_id': experienceId,
-      'date': dateIso,
-      'start_time': startTime,
-      'is_active': isActive ? 1 : 0,
-      'capacity_total': capacityTotal,
-      'reserved_slots': reservedSlots,
-      'internal_slots': internalSlots,
-      'blocked_slots': blockedSlots,
-      'available_slots': available,
-      'status': catalogScheduleStatusToApi(status),
-      'custom_request_only': customRequestOnly ? 1 : 0,
-      'notes': notes,
-      'sync_status': catalogSyncStatusToDb(CatalogSyncStatus.pending),
-      'sync_error': null,
-      'version_remote': null,
-      'updated_at_remote': null,
-    });
-    await _enqueue(
-      entityType: 'schedule',
-      operationType: 'create',
-      entityLocalId: localId,
-      payload: {
-        'experience_id': experienceId,
-        'date': dateIso,
-        'start_time': startTime,
-        'is_active': isActive,
-        'capacity_total': capacityTotal,
-        'reserved_slots': reservedSlots,
-        'internal_slots': internalSlots,
-        'blocked_slots': blockedSlots,
-        'custom_request_only': customRequestOnly,
-        'notes': notes,
-      },
-    );
-    await _tryFlushQueue();
-  }
-
-  Future<void> updateSchedule({
-    required String id,
-    required bool isActive,
-    required int capacityTotal,
-    required int reservedSlots,
-    required int internalSlots,
-    required int blockedSlots,
-    required CatalogScheduleStatus status,
-    required bool customRequestOnly,
-    String? notes,
-  }) async {
-    final db = await _database.database;
-    final row = await db.query(
-      'schedules_local',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (row.isEmpty) return;
-    final current = row.first;
-    final remoteId = current['remote_id'] as String?;
-    final version = parseInt(current['version_remote']);
-    final available = _availableSlots(
-      capacityTotal: capacityTotal,
-      reservedSlots: reservedSlots,
-      blockedSlots: blockedSlots,
-      internalSlots: internalSlots,
-    );
-    await db.update(
-      'schedules_local',
-      {
-        'is_active': isActive ? 1 : 0,
-        'capacity_total': capacityTotal,
-        'reserved_slots': reservedSlots,
-        'internal_slots': internalSlots,
-        'blocked_slots': blockedSlots,
-        'available_slots': available,
-        'status': catalogScheduleStatusToApi(status),
-        'custom_request_only': customRequestOnly ? 1 : 0,
-        'notes': notes,
-        'sync_status': catalogSyncStatusToDb(CatalogSyncStatus.pending),
-        'sync_error': null,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    await _enqueue(
-      entityType: 'schedule',
-      operationType: 'update',
-      entityLocalId: id,
-      entityRemoteId: remoteId,
-      baseVersion: version,
-      payload: {
-        'is_active': isActive,
-        'capacity_total': capacityTotal,
-        'reserved_slots': reservedSlots,
-        'internal_slots': internalSlots,
-        'blocked_slots': blockedSlots,
-        'status': catalogScheduleStatusToApi(status),
-        'custom_request_only': customRequestOnly,
-        'notes': notes,
-      },
-    );
-    await _tryFlushQueue();
-  }
-
-  Future<void> deactivateSchedule(String id) async {
-    final db = await _database.database;
-    final row = await db.query(
-      'schedules_local',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (row.isEmpty) return;
-    final current = row.first;
-    final remoteId = current['remote_id'] as String?;
-    final version = parseInt(current['version_remote']);
-    await db.update(
-      'schedules_local',
-      {
-        'is_active': 0,
-        'status': 'closed',
-        'sync_status': catalogSyncStatusToDb(CatalogSyncStatus.pending),
-        'sync_error': null,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    await _enqueue(
-      entityType: 'schedule',
-      operationType: 'delete',
-      entityLocalId: id,
-      entityRemoteId: remoteId,
-      baseVersion: version,
-      payload: const {},
-    );
-    await _tryFlushQueue();
-  }
-
   Future<CatalogReservationRules> getReservationRules() async {
     final db = await _database.database;
     final rows = await db.query(
@@ -789,7 +569,6 @@ class CatalogsRepository {
     final body = await _api.getSyncBootstrap();
     final db = await _database.database;
     final experiences = (body['experiences'] as List?) ?? const <dynamic>[];
-    final schedules = (body['schedules'] as List?) ?? const <dynamic>[];
     final reservationRules = body['reservation_rules'];
     final emergencyContacts = body['emergency_contacts'];
     final cursors = body['cursors'];
@@ -797,10 +576,6 @@ class CatalogsRepository {
       for (final item in experiences) {
         if (item is! Map) continue;
         await _upsertExperienceFromServer(txn, Map<String, dynamic>.from(item));
-      }
-      for (final item in schedules) {
-        if (item is! Map) continue;
-        await _upsertScheduleFromServer(txn, Map<String, dynamic>.from(item));
       }
       if (reservationRules is Map<String, dynamic>) {
         await _upsertReservationRulesFromServer(txn, reservationRules);
@@ -934,15 +709,6 @@ class CatalogsRepository {
       );
       return entity.isEmpty ? null : entity.first['remote_id'] as String?;
     }
-    if (op.entityType == 'schedule') {
-      final entity = await db.query(
-        'schedules_local',
-        where: 'id = ?',
-        whereArgs: [op.entityLocalId],
-        limit: 1,
-      );
-      return entity.isEmpty ? null : entity.first['remote_id'] as String?;
-    }
     return null;
   }
 
@@ -950,31 +716,7 @@ class CatalogsRepository {
     CatalogQueueOperation op,
     Map<String, dynamic> payload,
   ) async {
-    if (op.entityType != 'schedule') return payload;
-    final rawExperienceId = payload['experience_id'];
-    if (rawExperienceId is! String || rawExperienceId.isEmpty) {
-      return payload;
-    }
-    if (!rawExperienceId.startsWith('local-')) {
-      return payload;
-    }
-    final db = await _database.database;
-    final rows = await db.query(
-      'id_map',
-      where: 'local_id = ? AND entity_type = ?',
-      whereArgs: [rawExperienceId, 'experience'],
-      limit: 1,
-    );
-    if (rows.isEmpty) {
-      return null;
-    }
-    final remoteId = rows.first['remote_id'] as String?;
-    if (remoteId == null || remoteId.isEmpty) {
-      return null;
-    }
-    final clone = Map<String, dynamic>.from(payload);
-    clone['experience_id'] = remoteId;
-    return clone;
+    return payload;
   }
 
   Future<void> _applyAppliedResult(
@@ -998,18 +740,6 @@ class CatalogsRepository {
       map['sync_error'] = null;
       if (version != null) map['version'] = version;
       await _upsertExperienceFromServer(
-        db,
-        map,
-        localIdOverride: op.entityLocalId,
-      );
-      return;
-    }
-    if (op.entityType == 'schedule' && payload is Map) {
-      final map = Map<String, dynamic>.from(payload);
-      map['sync_status'] = 'synced';
-      map['sync_error'] = null;
-      if (version != null) map['version'] = version;
-      await _upsertScheduleFromServer(
         db,
         map,
         localIdOverride: op.entityLocalId,
@@ -1105,63 +835,6 @@ class CatalogsRepository {
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<void> _upsertScheduleFromServer(
-    DatabaseExecutor db,
-    Map<String, dynamic> payload, {
-    String? localIdOverride,
-  }) async {
-    final remoteId = payload['id'] as String?;
-    if (remoteId == null || remoteId.isEmpty) return;
-    String targetId = localIdOverride ?? remoteId;
-    final existingByRemote = await db.query(
-      'schedules_local',
-      where: 'remote_id = ? OR id = ?',
-      whereArgs: [remoteId, remoteId],
-      limit: 1,
-    );
-    if (existingByRemote.isNotEmpty && localIdOverride == null) {
-      targetId = existingByRemote.first['id'] as String;
-    }
-    final existingByTarget = await db.query(
-      'schedules_local',
-      where: 'id = ?',
-      whereArgs: [targetId],
-      limit: 1,
-    );
-    final preservedStatus = existingByTarget.isNotEmpty
-        ? catalogSyncStatusFromDb(
-            existingByTarget.first['sync_status'] as String,
-          )
-        : CatalogSyncStatus.synced;
-    final nextStatus = preservedStatus == CatalogSyncStatus.synced
-        ? CatalogSyncStatus.synced
-        : preservedStatus;
-    await db.insert('schedules_local', {
-      'id': targetId,
-      'remote_id': remoteId,
-      'experience_id': payload['experience_id'] as String? ?? '',
-      'date': payload['date'] as String? ?? '',
-      'start_time': payload['start_time'] as String? ?? '00:00:00',
-      'is_active': (payload['is_active'] as bool? ?? true) ? 1 : 0,
-      'capacity_total': parseInt(payload['capacity_total']) ?? 0,
-      'reserved_slots': parseInt(payload['reserved_slots']) ?? 0,
-      'internal_slots': parseInt(payload['internal_slots']) ?? 0,
-      'blocked_slots': parseInt(payload['blocked_slots']) ?? 0,
-      'available_slots': parseInt(payload['available_slots']) ?? 0,
-      'status': payload['status'] as String? ?? 'open',
-      'custom_request_only': (payload['custom_request_only'] as bool? ?? false)
-          ? 1
-          : 0,
-      'notes': payload['notes'] as String?,
-      'sync_status': catalogSyncStatusToDb(nextStatus),
-      'sync_error': nextStatus == CatalogSyncStatus.synced
-          ? null
-          : existingByTarget.first['sync_error'],
-      'version_remote': parseInt(payload['version']),
-      'updated_at_remote': payload['updated_at'] as String?,
-    }, conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
   Future<void> _upsertReservationRulesFromServer(
     DatabaseExecutor db,
     Map<String, dynamic> payload,
@@ -1238,15 +911,6 @@ class CatalogsRepository {
     if (entityType == 'experience') {
       await db.update(
         'experiences_local',
-        {'sync_status': catalogSyncStatusToDb(status), 'sync_error': syncError},
-        where: 'id = ?',
-        whereArgs: [localId],
-      );
-      return;
-    }
-    if (entityType == 'schedule') {
-      await db.update(
-        'schedules_local',
         {'sync_status': catalogSyncStatusToDb(status), 'sync_error': syncError},
         where: 'id = ?',
         whereArgs: [localId],
@@ -1349,18 +1013,6 @@ class CatalogsRepository {
     );
   }
 
-  int _availableSlots({
-    required int capacityTotal,
-    required int reservedSlots,
-    required int blockedSlots,
-    required int internalSlots,
-  }) {
-    final available =
-        capacityTotal - reservedSlots - blockedSlots - internalSlots;
-    if (available < 0) return 0;
-    return available;
-  }
-
   String _nextLocalId(String entity) {
     final stamp = DateTime.now().toUtc().microsecondsSinceEpoch;
     final suffix = _random.nextInt(999999).toString().padLeft(6, '0');
@@ -1408,29 +1060,6 @@ class CatalogsRepository {
       durationDays: parseInt(row['duration_days']),
       baseCapacity: parseInt(row['base_capacity']),
       isActive: (parseInt(row['is_active']) ?? 1) == 1,
-      syncStatus: catalogSyncStatusFromDb(row['sync_status'] as String),
-      versionRemote: parseInt(row['version_remote']),
-      syncError: row['sync_error'] as String?,
-      updatedAtRemote: _parseDate(row['updated_at_remote'] as String?),
-    );
-  }
-
-  CatalogSchedule _scheduleFromRow(Map<String, Object?> row) {
-    return CatalogSchedule(
-      id: row['id'] as String,
-      remoteId: row['remote_id'] as String?,
-      experienceId: row['experience_id'] as String,
-      date: row['date'] as String,
-      startTime: row['start_time'] as String,
-      isActive: (parseInt(row['is_active']) ?? 1) == 1,
-      capacityTotal: parseInt(row['capacity_total']) ?? 0,
-      reservedSlots: parseInt(row['reserved_slots']) ?? 0,
-      internalSlots: parseInt(row['internal_slots']) ?? 0,
-      blockedSlots: parseInt(row['blocked_slots']) ?? 0,
-      availableSlots: parseInt(row['available_slots']) ?? 0,
-      status: parseCatalogScheduleStatus((row['status'] as String?) ?? 'open'),
-      customRequestOnly: (parseInt(row['custom_request_only']) ?? 0) == 1,
-      notes: row['notes'] as String?,
       syncStatus: catalogSyncStatusFromDb(row['sync_status'] as String),
       versionRemote: parseInt(row['version_remote']),
       syncError: row['sync_error'] as String?,

@@ -188,9 +188,6 @@ ReservationListItem dtoToListItem(ReservationListItemDto dto) {
     status: parseReservationStatus(dto.status),
     experienceId: dto.experienceId,
     experienceName: dto.experienceName,
-    scheduleId: dto.scheduleId,
-    scheduledDate: dto.scheduledDate,
-    startTime: dto.startTime,
     holderName: dto.holderName,
     holderEmail: dto.holderEmail,
     holderPhone: dto.holderPhone,
@@ -218,7 +215,6 @@ ReservationDetail dtoToDetail(ReservationDetailDto dto) {
     holderEmail: dto.holderEmail,
     holderPhone: dto.holderPhone,
     experienceId: dto.experienceId,
-    scheduleId: dto.scheduleId,
     participantCount: dto.participantCount ?? 0,
     expectedParticipantsCount: dto.expectedParticipantsCount,
     participantsCompletedCount: dto.participantsCompletedCount ?? 0,
@@ -249,7 +245,6 @@ ReservationDetail dtoToDetail(ReservationDetailDto dto) {
     holderEmail: baseDetail.holderEmail,
     holderPhone: baseDetail.holderPhone,
     experienceId: baseDetail.experienceId,
-    scheduleId: baseDetail.scheduleId,
     participantCount: baseDetail.participantCount,
     expectedParticipantsCount: baseDetail.expectedParticipantsCount,
     participantsCompletedCount: baseDetail.participantsCompletedCount,
@@ -282,12 +277,9 @@ ReservationRecord listItemToRecord(
   String slotLabel = '',
 }) {
   final filterGroup = reservationStatusToFilterGroup(item.status);
-  // Build slot label from scheduledDate + startTime if not provided
   final effectiveSlotLabel = slotLabel.isNotEmpty
       ? slotLabel
-      : (item.scheduledDate != null && item.scheduledDate!.isNotEmpty
-          ? '${item.scheduledDate}${item.startTime != null && item.startTime!.isNotEmpty ? ' ${item.startTime!.length >= 5 ? item.startTime!.substring(0, 5) : item.startTime!}' : ''}'
-          : '');
+      : (item.requestedDate ?? '');
   return ReservationRecord(
     id: item.id,
     code: item.code,
@@ -301,7 +293,7 @@ ReservationRecord listItemToRecord(
     registeredCount: item.registeredParticipantsCount,
     paymentStatus: item.paymentStatus,
     formStatus: item.participantFormStatus,
-    scheduledDate: item.scheduledDate,
+    requestedDate: item.requestedDate,
     hasPendingSync: false,
     hasSyncError: false,
     isDeleted: item.isDeleted,

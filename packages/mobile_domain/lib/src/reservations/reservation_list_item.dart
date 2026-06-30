@@ -8,8 +8,6 @@ class ReservationListItem {
     required this.status,
     this.experienceName,
     this.experienceId,
-    this.scheduledDate,
-    this.startTime,
     this.holderName,
     this.holderEmail,
     this.holderPhone,
@@ -18,7 +16,6 @@ class ReservationListItem {
     this.paymentStatus,
     this.participantFormStatus,
     this.originChannel,
-    this.scheduleId,
     required this.hasOperationalAlerts,
     this.requestedDate,
     this.createdAt,
@@ -31,8 +28,6 @@ class ReservationListItem {
   final ReservationStatus status;
   final String? experienceName;
   final String? experienceId;
-  final String? scheduledDate;
-  final String? startTime;
   final String? holderName;
   final String? holderEmail;
   final String? holderPhone;
@@ -41,7 +36,6 @@ class ReservationListItem {
   final String? paymentStatus;
   final String? participantFormStatus;
   final String? originChannel;
-  final String? scheduleId;
   final bool hasOperationalAlerts;
   final String? requestedDate;
   final String? createdAt;
@@ -58,8 +52,6 @@ class ReservationListItem {
       status: parseReservationStatus(source.status.value),
       experienceName: source.experienceName,
       experienceId: source.experienceId,
-      scheduledDate: source.scheduledDate,
-      startTime: source.startTime,
       holderName: source.holderName,
       holderEmail: source.holderEmail,
       holderPhone: source.holderPhone,
@@ -68,7 +60,6 @@ class ReservationListItem {
       paymentStatus: source.paymentStatus.value,
       participantFormStatus: source.participantFormStatus?.value,
       originChannel: source.channel,
-      scheduleId: source.scheduleId,
       hasOperationalAlerts: false,
       requestedDate: source.requestedDate,
       createdAt: null,

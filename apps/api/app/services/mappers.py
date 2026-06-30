@@ -25,7 +25,6 @@ from app.schemas.policy import PolicyResponseSchema
 from app.schemas.provider import ProviderResponseSchema
 from app.schemas.reservation import ReservationListItemSchema, ReservationResponseSchema
 from app.schemas.saddle import SaddleListItemSchema, SaddleResponseSchema
-from app.schemas.schedule import ScheduleResponseSchema
 from app.schemas.equine_event import EquineEventResponseSchema
 from app.schemas.service_log import ServiceLogPhotoSchema, ServiceLogResponseSchema
 
@@ -75,7 +74,6 @@ def document_to_schema(
 
 user_to_response = lambda u: document_to_schema(u, UserResponseSchema, scalar_fields={"id": "id"})
 experience_to_response = lambda d: document_to_schema(d, ExperienceResponseSchema, scalar_fields={"id": "id"})
-schedule_to_response = lambda d: document_to_schema(d, ScheduleResponseSchema, scalar_fields={"id": "id", "experience_id": "experience_id"})
 payment_proof_to_response = lambda d: document_to_schema(d, PaymentProofResponseSchema, scalar_fields={"id": "id", "reservation_id": "reservation_id"})
 equine_to_response = lambda d: document_to_schema(d, EquineResponseSchema, scalar_fields={"id": "id"})
 equine_to_list_item = lambda d: document_to_schema(d, EquineListItemSchema, scalar_fields={"id": "id"})
@@ -225,7 +223,6 @@ async def reservation_to_response(doc: ReservationDocument) -> ReservationRespon
     data = doc.model_dump(exclude={"revision_id", "id", "participant_ids", "payment_proof_ids"})
     data["id"] = str(doc.id)
     data["experience_id"] = str(doc.experience_id) if doc.experience_id else None
-    data["schedule_id"] = str(doc.schedule_id) if doc.schedule_id else None
     data["participants"] = participants
     data["payment_proofs"] = payment_proofs
     data["form_sent"] = doc.participant_form_sent_at is not None
@@ -240,9 +237,10 @@ def reservation_to_list_item(
     data = doc.model_dump(exclude={"revision_id", "id"})
     data["id"] = str(doc.id)
     data["experience_id"] = str(doc.experience_id)
-    data["schedule_id"] = str(doc.schedule_id) if doc.schedule_id else None
+    if doc.requested_date and "scheduled_date" not in (enriched or {}):
+        data["scheduled_date"] = doc.requested_date.isoformat()
     if enriched:
-        for key in ("experience_name", "scheduled_date", "start_time"):
+        for key in ("experience_name", "scheduled_date"):
             if key in enriched:
                 data[key] = enriched[key]
     return ReservationListItemSchema(**data)

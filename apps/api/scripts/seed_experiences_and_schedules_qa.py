@@ -1,4 +1,4 @@
-"""Seed QA de experiences y schedules para pruebas de disponibilidad, cotizacin y alternativas de fecha.
+"""Seed QA de experiences para pruebas de disponibilidad, cotización y alternativas de fecha.
 
 Uso:
     cd apps/api
@@ -18,12 +18,10 @@ from pymongo.errors import DuplicateKeyError
 from app.common.enums import (
     ExperienceDifficulty,
     ExperienceLevel,
-    ScheduleStatus,
 )
 from app.core.config import settings
 from app.documents import (
     ExperienceDocument,
-    ScheduleDocument,
 )
 from app.documents.experience_document import (
     ExperiencePricingData,
@@ -684,16 +682,12 @@ async def run() -> None:
     db = client[settings.mongodb_db_name]
     await init_beanie(
         database=db,
-        document_models=[ExperienceDocument, ScheduleDocument],
+        document_models=[ExperienceDocument],
     )
 
     exp_created = 0
     exp_updated = 0
-    sched_inserted = 0
-    sched_failed = 0
-    slug_errors: list[str] = []
 
-    # -- 1. Upsert experiences --
     for exp_data in EXPERIENCE_DEFS:
         action, _ = await _upsert_experience(exp_data)
         if action == "created":
@@ -701,72 +695,10 @@ async def run() -> None:
         else:
             exp_updated += 1
 
-    # -- 2. Fetch experience ids by slug --
-    required_slugs = {s.slug for s in SCHEDULE_DEFS}
-    exp_by_slug: dict[str, ExperienceDocument] = {}
-    for slug in required_slugs:
-        doc = await ExperienceDocument.find_one({"slug": slug})
-        if doc is None:
-            slug_errors.append(slug)
-        else:
-            exp_by_slug[slug] = doc
-
-    # -- 3. Insert schedules (via motor collection, same pattern as seed_reproducible) --
-    collection = ScheduleDocument.get_motor_collection()
-    for s in SCHEDULE_DEFS:
-        if s.slug in slug_errors:
-            sched_failed += 1
-            continue
-
-        exp_id = exp_by_slug[s.slug].id
-        day_dt = datetime.combine(
-            date.fromisoformat(s.date_iso),
-            time.min,
-            tzinfo=UTC,
-        )
-        avail, status = _compute_avail_and_status(
-            s.capacity,
-            s.reserved,
-            s.internal,
-            s.blocked,
-            s.is_active,
-        )
-
-        raw = {
-            "experience_id": exp_id,
-            "date": day_dt,
-            "start_time": s.time_iso,
-            "is_active": s.is_active,
-            "capacity_total": s.capacity,
-            "reserved_slots": s.reserved,
-            "internal_slots": s.internal,
-            "blocked_slots": s.blocked,
-            "available_slots": avail,
-            "status": status.value,
-            "custom_request_only": s.custom,
-            "notes": s.notes,
-            "created_at": datetime.now(UTC),
-            "updated_at": datetime.now(UTC),
-        }
-        try:
-            await collection.insert_one(raw)
-            sched_inserted += 1
-        except DuplicateKeyError:
-            sched_failed += 1
-        except Exception as exc:
-            print(f"  ERROR insertando schedule {s.slug} {s.date_iso}: {exc!r}")
-            sched_failed += 1
-
     await client.close()
 
-    # -- 4. Summary --
     print(f"experiencias creadas: {exp_created}")
     print(f"experiencias actualizadas: {exp_updated}")
-    print(f"schedules insertados: {sched_inserted}")
-    print(f"schedules fallidos: {sched_failed}")
-    if slug_errors:
-        print(f"errores por slug no encontrado: {slug_errors}")
-    print(f"total final de schedules insertados por este script: {sched_inserted}")
 
 
 def main() -> None:

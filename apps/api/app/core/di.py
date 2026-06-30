@@ -46,7 +46,6 @@ class Container:
         from app.services.policy_service import PolicyService
         from app.services.provider_service import ProviderService
         from app.services.saddle_service import SaddleService
-        from app.services.schedule_service import ScheduleService
         from app.services.service_log_service import ServiceLogService
         from app.services.storage import get_storage_adapter
         from app.services.user_service import UserService
@@ -73,7 +72,6 @@ class Container:
             saddle_service=self._services["saddle_service"],
             config_service=self._services["config_service"],
         )
-        self._services["schedule_service"] = ScheduleService()
         self._services["storage_adapter"] = get_storage_adapter()
         self._services["user_service"] = UserService()
         self._services["whatsapp_outbound_service"] = WhatsAppOutboundService()
@@ -127,7 +125,6 @@ class Container:
         self._services["sync_service"] = SyncService(
             config_service=config_svc,
             experience_service=self._services["experience_service"],
-            schedule_service=self._services["schedule_service"],
             equine_service=self._services["equine_service"],
             reservation_service=self._services["reservation_service"],
             participant_service=self._services["participant_service"],
@@ -193,10 +190,6 @@ class Container:
     @property
     def saddle_service(self) -> Any:
         return self._services["saddle_service"]
-
-    @property
-    def schedule_service(self) -> Any:
-        return self._services["schedule_service"]
 
     @property
     def participant_service(self) -> Any:

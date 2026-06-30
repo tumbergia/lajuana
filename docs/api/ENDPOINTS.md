@@ -60,20 +60,6 @@ Prefix: `/experiences` — tag: Experiencias
 
 ---
 
-## Schedules
-
-Prefix: `/schedules` — tag: Fechas operativas
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/v1/schedules` | Create a new schedule |
-| GET | `/api/v1/schedules` | List schedules (filterable by experience, date range, status) |
-| GET | `/api/v1/schedules/{schedule_id}` | Get schedule by ID |
-| PATCH | `/api/v1/schedules/{schedule_id}` | Update schedule |
-| DELETE | `/api/v1/schedules/{schedule_id}` | Deactivate schedule |
-
----
-
 ## Reservations
 
 Prefix: `/reservations` — tag: Reservas

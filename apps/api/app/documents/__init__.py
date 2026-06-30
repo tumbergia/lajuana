@@ -29,7 +29,6 @@ from app.documents.policy_document import PolicyDocument
 from app.documents.provider_document import ProviderDocument, ProviderType
 from app.documents.reservation_document import ReservationDocument
 from app.documents.saddle_document import SaddleDocument
-from app.documents.schedule_document import ScheduleDocument
 from app.documents.service_log_document import ServiceLogDocument, ServiceLogEventType
 from app.documents.sync_change_document import SyncChangeDocument
 from app.documents.sync_operation_receipt_document import SyncOperationReceiptDocument
@@ -62,7 +61,6 @@ __all__ = [
     "ReservationDocument",
     "ReservationRules",
     "SaddleDocument",
-    "ScheduleDocument",
     "ServiceLogDocument",
     "ServiceLogEventType",
     "SyncChangeDocument",

@@ -20,7 +20,6 @@ ACTIVE_RESERVATION_STATUSES = [
 class ReservationDocument(AuditDocument):
     code: Indexed(str, unique=True)  # type: ignore[valid-type]
     experience_id: PydanticObjectId
-    schedule_id: PydanticObjectId | None = None
     channel: Channel
     status: ReservationStatus = ReservationStatus.CONTACT
     holder_name: str | None = None

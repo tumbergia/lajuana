@@ -62,20 +62,6 @@ PROTECTED_ENDPOINTS = [
     ("delete", f"/api/v1/experiences/{FAKE_ID}", None),
     (
         "post",
-        "/api/v1/schedules",
-        {
-            "experience_id": FAKE_ID,
-            "date": "2026-05-20",
-            "start_time": "08:00:00",
-            "capacity_total": 8,
-        },
-    ),
-    ("get", "/api/v1/schedules", None),
-    ("get", f"/api/v1/schedules/{FAKE_ID}", None),
-    ("patch", f"/api/v1/schedules/{FAKE_ID}", {"capacity_total": 10}),
-    ("delete", f"/api/v1/schedules/{FAKE_ID}", None),
-    (
-        "post",
         "/api/v1/reservations",
         {"experience_id": FAKE_ID, "participant_count": 2, "channel": "whatsapp"},
     ),
@@ -194,7 +180,6 @@ VALIDATION_ENDPOINTS = [
     ("post", "/api/v1/auth/login", {}),
     ("post", "/api/v1/auth/register", {}),
     ("post", "/api/v1/experiences", {}),
-    ("post", "/api/v1/schedules", {}),
     ("post", "/api/v1/reservations", {}),
     ("post", f"/api/v1/reservations/{FAKE_ID}/payment-proofs", {}),
     ("post", f"/api/v1/reservations/{FAKE_ID}/participants", {}),
@@ -241,7 +226,6 @@ def _path_template(path: str) -> str:
     path = re.sub(r"/[0-9a-f]{24}(?=/|$)", "/{id}", path)
     path = re.sub(r"/users/\{id\}", "/users/{user_id}", path)
     path = re.sub(r"/experiences/\{id\}", "/experiences/{experience_id}", path)
-    path = re.sub(r"/schedules/\{id\}", "/schedules/{schedule_id}", path)
     path = re.sub(r"/reservations/\{id\}", "/reservations/{reservation_id}", path)
     path = re.sub(r"/payment-proofs/\{id\}", "/payment-proofs/{payment_proof_id}", path)
     path = re.sub(r"/participants/\{id\}", "/participants/{participant_id}", path)

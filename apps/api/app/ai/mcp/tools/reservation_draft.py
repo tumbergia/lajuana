@@ -109,7 +109,6 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
         service = container.reservation_draft_service
         result = await service.create_reservation_draft(
             experience_id=payload.experience_id,
-            schedule_id=payload.schedule_id,
             participant_count=payload.participant_count,
             holder_phone=payload.holder_phone,
             holder_name=payload.holder_name,

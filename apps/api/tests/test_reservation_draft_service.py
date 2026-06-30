@@ -106,7 +106,6 @@ async def _run_create_sets_status_pre_reserved(
 
     result = await service.create_reservation_draft(
         experience_id=str(exp_id),
-        schedule_id=str(PydanticObjectId()),
         participant_count=2,
         holder_phone="+573001234567",
         holder_name="Test User",
@@ -164,7 +163,6 @@ async def _run_create_experience_not_found(
     with pytest.raises(ApiError) as exc:
         await service.create_reservation_draft(
             experience_id=str(exp_id),
-            schedule_id=str(PydanticObjectId()),
             participant_count=2,
             holder_phone="+573001234567",
             holder_name="Test User",
@@ -189,7 +187,6 @@ async def _run_create_min_notice_violation(
     with pytest.raises(ApiError) as exc:
         await service.create_reservation_draft(
             experience_id=str(exp_id),
-            schedule_id=str(PydanticObjectId()),
             participant_count=2,
             holder_phone="+573001234567",
             holder_name="Test User",
@@ -214,7 +211,6 @@ async def _run_create_rejects_more_than_8_participants(
     with pytest.raises(ApiError) as exc:
         await service.create_reservation_draft(
             experience_id=str(exp_id),
-            schedule_id=str(PydanticObjectId()),
             participant_count=9,
             holder_phone="+573001234567",
             holder_name="Test User",
@@ -248,7 +244,6 @@ async def _run_create_guards_duplicate_date(
     with pytest.raises(ApiError) as exc:
         await service.create_reservation_draft(
             experience_id=str(exp_id),
-            schedule_id=str(PydanticObjectId()),
             participant_count=2,
             holder_phone="+573001234567",
             holder_name="Test User",
@@ -273,7 +268,6 @@ async def _run_create_guards_quote_snapshot(
     with pytest.raises(ApiError) as exc:
         await service.create_reservation_draft(
             experience_id=str(exp_id),
-            schedule_id=str(PydanticObjectId()),
             participant_count=2,
             holder_phone="+573001234567",
             holder_name="Test User",
@@ -305,7 +299,6 @@ async def _run_create_does_not_confirm(
 
     await service.create_reservation_draft(
         experience_id=str(exp_id),
-        schedule_id=str(PydanticObjectId()),
         participant_count=2,
         holder_phone="+573001234567",
         holder_name="Test User",
@@ -322,38 +315,6 @@ def test_create_does_not_confirm(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     asyncio.run(_run_create_does_not_confirm(monkeypatch))
-
-
-async def _run_create_schedule_id_optional(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    service, exp_id = _patch_base_deps(monkeypatch)
-
-    captured_payload: dict = {}
-
-    async def capturing_create(self, payload, **kwargs):
-        captured_payload.update(payload)
-        return SimpleNamespace(id="fake-id")
-
-    monkeypatch.setattr(ReservationService, "create", capturing_create)
-
-    await service.create_reservation_draft(
-        experience_id=str(exp_id),
-        schedule_id=None,
-        participant_count=2,
-        holder_phone="+573001234567",
-        holder_name="Test User",
-        requested_date="2026-07-15",
-        quote_snapshot={"total": 100000},
-    )
-
-    assert "schedule_id" not in captured_payload
-
-
-def test_create_schedule_id_optional(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    asyncio.run(_run_create_schedule_id_optional(monkeypatch))
 
 
 # ---------------------------------------------------------------------------

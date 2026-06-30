@@ -267,7 +267,6 @@ class PaymentProofService:
                 reservation=reservation,
                 experience_name=experience.name if experience else "",
             )
-            await notif.enqueue_payment_approved_location(reservation=reservation)
         except Exception:
             logger.exception(
                 "[reservation=%s] Failed to enqueue payment approved WhatsApp",
@@ -350,7 +349,6 @@ class PaymentProofService:
                 reservation=reservation,
                 experience_name=experience_name,
             )
-            await notif.enqueue_payment_approved_location(reservation=reservation)
         except Exception:
             logger.exception(
                 "[reservation=%s] Failed to enqueue payment approved WhatsApp",

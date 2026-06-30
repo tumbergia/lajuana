@@ -9,14 +9,12 @@ from app.documents import (
     ParticipantDocument,
     ReservationDocument,
     SaddleDocument,
-    ScheduleDocument,
     UserDocument,
 )
 from app.schemas.equine import EquineListItemSchema, EquineResponseSchema
 from app.schemas.participant import ParticipantResponseSchema
 from app.schemas.reservation import ReservationListItemSchema, ReservationResponseSchema
 from app.schemas.saddle import SaddleResponseSchema
-from app.schemas.schedule import ScheduleResponseSchema
 from app.schemas.auth import UserResponseSchema
 
 # Fields that exist on the Document but are intentionally excluded
@@ -62,7 +60,6 @@ KNOWN_EXCLUSIONS: dict[type, set[str]] = {
         "location_status", "availability_reasons",
     },
     SaddleDocument: {"revision_id", "id"},
-    ScheduleDocument: {"revision_id", "id"},
     ParticipantDocument: {
         "revision_id", "id",
         # Internal fields
@@ -108,10 +105,6 @@ def test_equine_list_item_coverage() -> None:
 
 def test_saddle_doc_coverage() -> None:
     _check_coverage(SaddleDocument, SaddleResponseSchema, "Saddle")
-
-
-def test_schedule_doc_coverage() -> None:
-    _check_coverage(ScheduleDocument, ScheduleResponseSchema, "Schedule")
 
 
 def test_participant_doc_coverage() -> None:

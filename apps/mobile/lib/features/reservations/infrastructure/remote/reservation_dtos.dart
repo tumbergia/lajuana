@@ -10,10 +10,7 @@ class ReservationListItemDto {
     this.holderPhone,
     this.experienceId,
     this.experienceName,
-    this.scheduleId,
     this.requestedDate,
-    this.scheduledDate,
-    this.startTime,
     this.expectedParticipantsCount,
     this.participantsCompletedCount,
     this.participantFormStatus,
@@ -34,10 +31,7 @@ class ReservationListItemDto {
   final String? holderPhone;
   final String? experienceId;
   final String? experienceName;
-  final String? scheduleId;
   final String? requestedDate;
-  final String? scheduledDate;
-  final String? startTime;
   final int? expectedParticipantsCount;
   final int? participantsCompletedCount;
   final String? participantFormStatus;
@@ -59,10 +53,7 @@ class ReservationListItemDto {
       holderPhone: json['holder_phone'] as String?,
       experienceId: json['experience_id'] as String?,
       experienceName: json['experience_name'] as String?,
-      scheduleId: json['schedule_id'] as String?,
       requestedDate: json['requested_date'] as String?,
-      scheduledDate: json['scheduled_date'] as String?,
-      startTime: json['start_time'] as String?,
       expectedParticipantsCount: json['expected_participants_count'] as int?,
       participantsCompletedCount: json['participants_completed_count'] as int?,
       participantFormStatus: json['participant_form_status'] as String?,
@@ -238,7 +229,6 @@ class ReservationDetailDto {
     this.id,
     this.code,
     this.experienceId,
-    this.scheduleId,
     this.channel,
     this.status,
     this.participantCount,
@@ -267,7 +257,6 @@ class ReservationDetailDto {
   final String? id;
   final String? code;
   final String? experienceId;
-  final String? scheduleId;
   final String? channel;
   final String? status;
   final int? participantCount;
@@ -300,7 +289,6 @@ class ReservationDetailDto {
       id: json['id'] as String?,
       code: json['code'] as String?,
       experienceId: json['experience_id'] as String?,
-      scheduleId: json['schedule_id'] as String?,
       channel: json['channel'] as String?,
       status: json['status'] as String?,
       participantCount: json['participant_count'] as int?,

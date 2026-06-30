@@ -15,8 +15,6 @@ test/
 ├── catalogs/
 │   ├── experiences_controller_test.dart
 │   ├── experience_form_controller_test.dart
-│   ├── schedules_controller_test.dart
-│   ├── schedule_form_controller_test.dart
 │   ├── reservation_rules_controller_test.dart
 │   ├── emergency_contacts_controller_test.dart
 │   └── data/
