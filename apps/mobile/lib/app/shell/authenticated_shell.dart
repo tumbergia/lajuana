@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
@@ -188,7 +189,24 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                 LocalAuthState.signedInLocalUnverified &&
             widget.authController.networkStatus.linkType != LinkType.offline;
 
-        return Stack(
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, _) {
+            if (didPop) return;
+            final activeNav =
+                _navigatorKeys[_shellNav.currentTab]?.currentState;
+            if (activeNav != null && activeNav.canPop()) {
+              activeNav.pop();
+              return;
+            }
+            if (_shellNav.currentTab != AppNavItem.inicio) {
+              _shellNav.selectTab(AppNavItem.inicio);
+              setState(() {});
+              return;
+            }
+            SystemNavigator.pop();
+          },
+          child: Stack(
           children: [
             Scaffold(
               appBar: const AppTopBar(
@@ -248,6 +266,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
               const Positioned.fill(child: _ReconnectLoadingView()),
             ],
           ],
+          ),
         );
       },
     );
