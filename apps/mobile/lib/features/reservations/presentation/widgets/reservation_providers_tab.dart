@@ -5,6 +5,7 @@ import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_confirm_dialog.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/app_toast.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 
 import 'package:mobile/features/reservations/presentation/controllers/reservation_providers_section_controller.dart';
@@ -287,14 +288,19 @@ class ReservationProvidersTab extends StatelessWidget {
     switch (controller.state) {
       case ReservationProvidersLoadState.initial:
       case ReservationProvidersLoadState.loading:
-        return const AppCenteredLoader();
+        return const RefreshableViewport(child: AppCenteredLoader());
       case ReservationProvidersLoadState.error:
-        return Center(
-          child: Text(controller.errorMessage ?? 'Error al cargar proveedores'),
+        return RefreshableViewport(
+          child: Center(
+            child: Text(
+              controller.errorMessage ?? 'Error al cargar proveedores',
+            ),
+          ),
         );
       case ReservationProvidersLoadState.loaded:
       case ReservationProvidersLoadState.saving:
         return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 24),
           children: [
             if (isAdmin)

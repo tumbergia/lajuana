@@ -12,6 +12,9 @@ import 'package:mobile/features/auth/infrastructure/connectivity/network_models.
 import 'package:mobile/features/auth/infrastructure/connectivity/network_status_resolver.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/voice_assistant/infrastructure/remote/voice_assistant_api_client.dart';
+import 'package:mobile/features/voice_assistant/presentation/controllers/voice_assistant_controller.dart';
+import 'package:mobile/features/voice_assistant/voice_assistant_module.dart';
 import 'package:mobile_domain/src/equines/equine.dart';
 import 'package:mobile_domain/src/equines/equine_event.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
@@ -74,6 +77,19 @@ class _FakeEquineEventRepository implements EquineEventRepository {
 
   @override
   Future<List<EquineEvent>> listPendingEvents(String equineId) async => [];
+}
+
+VoiceAssistantModule _fakeVoiceAssistantModule() {
+  final apiClient = VoiceAssistantApiClient(
+    baseUrl: 'http://test.local/api/v1',
+    readAccessToken: () async => 'token',
+    refreshSession: () async => true,
+    httpClient: MockClient((_) async => http.Response('{}', 404)),
+  );
+  return VoiceAssistantModule(
+    apiClient: apiClient,
+    controller: VoiceAssistantController(apiClient: apiClient),
+  );
 }
 
 void main() {
@@ -140,7 +156,7 @@ void main() {
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
-          onCallRequested: (_) async => true,
+          voiceAssistantModule: _fakeVoiceAssistantModule(),
         ),
       ),
     );
@@ -172,6 +188,7 @@ void main() {
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
+          voiceAssistantModule: _fakeVoiceAssistantModule(),
           onCallRequested: (phone) async {
             calledPhone = phone;
             return true;
@@ -235,7 +252,7 @@ void main() {
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
-          onCallRequested: (_) async => true,
+          voiceAssistantModule: _fakeVoiceAssistantModule(),
         ),
       ),
     );
@@ -292,7 +309,7 @@ void main() {
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
-          onCallRequested: (_) async => true,
+          voiceAssistantModule: _fakeVoiceAssistantModule(),
         ),
       ),
     );
@@ -322,7 +339,7 @@ void main() {
           contactsApiClient: buildContactsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
-          onCallRequested: (_) async => true,
+          voiceAssistantModule: _fakeVoiceAssistantModule(),
         ),
       ),
     );

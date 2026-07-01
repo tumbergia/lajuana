@@ -9,8 +9,15 @@ enum AppNavItem { none, inicio, reservas, equinos, experiencias, mas }
 class AppBottomNav extends StatefulWidget {
   final AppNavItem current;
   final ValueChanged<AppNavItem>? onTap;
+  final Future<void> Function(BuildContext context, VoiceContext voiceContext)?
+      onVoiceLongPress;
 
-  const AppBottomNav({super.key, required this.current, this.onTap});
+  const AppBottomNav({
+    super.key,
+    required this.current,
+    this.onTap,
+    this.onVoiceLongPress,
+  });
 
   @override
   State<AppBottomNav> createState() => _AppBottomNavState();
@@ -46,7 +53,11 @@ class _AppBottomNavState extends State<AppBottomNav>
 
       final contextVoice = _mapNavToVoice(item);
 
-      await openVoiceScreen(context, voiceContext: contextVoice);
+      if (widget.onVoiceLongPress != null) {
+        await widget.onVoiceLongPress!(context, contextVoice);
+      } else {
+        await openVoiceScreen(context, voiceContext: contextVoice);
+      }
 
       if (!mounted) return;
       setState(() {

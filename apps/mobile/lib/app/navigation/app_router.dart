@@ -84,6 +84,7 @@ class AppRouter {
                 equineRepository: deps.equineRepository,
                 equineEventRepository: deps.equineEventRepository,
                 outbox: deps.outbox,
+                voiceAssistantModule: deps.voiceAssistantModule,
               )
             : LoginScreen(controller: deps.authController);
         break;

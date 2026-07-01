@@ -6,6 +6,7 @@ import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/features/catalogs/emergency_contacts/presentation/controllers/emergency_contacts_controller.dart';
@@ -24,8 +25,12 @@ class EmergencyContactsPage extends StatefulWidget {
   State<EmergencyContactsPage> createState() => _EmergencyContactsPageState();
 }
 
-class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
+class _EmergencyContactsPageState extends State<EmergencyContactsPage>
+    with RefreshableState {
   late final EmergencyContactsController _controller;
+
+  @override
+  Future<void> onRefresh() => _controller.refreshFromServer();
 
   @override
   void initState() {
@@ -64,33 +69,19 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
               AppSectionHeader(
                 eyebrow: 'Catalogos',
                 title: 'Contactos de emergencia',
-                trailing: Wrap(
-                  spacing: 8,
-                  children: [
-                    AppButton(
-                      label: _controller.isRefreshing
-                          ? 'Actualizando...'
-                          : 'Actualizar',
-                      icon: Icons.refresh_rounded,
-                      variant: AppButtonVariant.ghost,
-                      onPressed: _controller.isRefreshing
-                          ? null
-                          : () => _controller.refreshFromServer(),
-                    ),
-                    AppButton(
-                      label: 'Volver',
-                      icon: Icons.arrow_back_rounded,
-                      variant: AppButtonVariant.ghost,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
+                trailing: AppButton(
+                  label: 'Volver',
+                  icon: Icons.arrow_back_rounded,
+                  variant: AppButtonVariant.ghost,
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
               const SizedBox(height: 12),
               Expanded(
                 child: isLoadingAny
-                    ? const AppCenteredLoader()
+                    ? const RefreshableViewport(child: AppCenteredLoader())
                     : ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         children: [
                           if (_controller.error != null)
                             AppEntityRowCard(

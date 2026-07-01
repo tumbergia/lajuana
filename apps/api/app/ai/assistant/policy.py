@@ -32,6 +32,7 @@ class ToolPolicyEngine:
         "cancel_reservation",
         "update_reservation_date",
         "update_reservation_participants",
+        "get_payment_instructions",
     }
     GUIDE_TOOLS: set[str] = {
         "guide_create_service_log",
@@ -78,6 +79,27 @@ class ToolPolicyEngine:
         "admin_deactivate_equine",
         "admin_get_participant",
         "admin_update_participant",
+        "admin_list_providers",
+        "admin_get_provider",
+        "admin_create_provider",
+        "admin_update_provider",
+        "admin_deactivate_provider",
+        "admin_list_saddles",
+        "admin_get_saddle",
+        "admin_create_saddle",
+        "admin_update_saddle",
+        "admin_deactivate_saddle",
+        "admin_list_available_saddles_for_reservation",
+        "admin_get_assignment_board",
+        "admin_create_assignment",
+        "admin_update_assignment",
+        "admin_delete_assignment",
+        "admin_finalize_assignment",
+        "admin_finalize_all_assignments",
+        "admin_list_equine_events",
+        "admin_create_equine_event",
+        "admin_update_equine_event",
+        "admin_get_emergency_contacts",
     }
     READ_TOOLS = {
         "list_experiences",
@@ -107,6 +129,15 @@ class ToolPolicyEngine:
         "admin_list_equines",
         "admin_get_equine",
         "admin_get_participant",
+        "get_payment_instructions",
+        "admin_list_providers",
+        "admin_get_provider",
+        "admin_list_saddles",
+        "admin_get_saddle",
+        "admin_list_available_saddles_for_reservation",
+        "admin_get_assignment_board",
+        "admin_list_equine_events",
+        "admin_get_emergency_contacts",
     }
     LIMITED_WRITE_TOOLS = {
         "request_human_review",
@@ -121,6 +152,10 @@ class ToolPolicyEngine:
         "admin_update_user",
         "admin_update_equine",
         "admin_update_participant",
+        "admin_update_provider",
+        "admin_update_saddle",
+        "admin_update_assignment",
+        "admin_update_equine_event",
         "cancel_reservation",
         "update_reservation_date",
         "update_reservation_participants",
@@ -144,10 +179,28 @@ class ToolPolicyEngine:
         "admin_cancel_reservation",
         "admin_create_equine",
         "admin_deactivate_equine",
+        "admin_create_provider",
+        "admin_deactivate_provider",
+        "admin_create_saddle",
+        "admin_deactivate_saddle",
+        "admin_create_assignment",
+        "admin_delete_assignment",
+        "admin_finalize_assignment",
+        "admin_finalize_all_assignments",
+        "admin_create_equine_event",
     }
     CRITICAL_TOOLS: set[str] = {
         "confirm_reservation",
         "mark_payment_verified",
+    }
+    ADMIN_BLOCKED_CLIENT_TOOLS: set[str] = {
+        "get_reservation_status_by_phone",
+        "get_reservation_public_summary",
+        "cancel_reservation",
+        "update_reservation_date",
+        "update_reservation_participants",
+        "create_reservation_draft",
+        "attach_payment_proof_to_reservation",
     }
 
     CHANNEL_ROLE_MAP: dict[str, str] = {
@@ -285,6 +338,12 @@ class ToolPolicyEngine:
             return ToolPolicyDecision(
                 allowed=False,
                 reason="tool_not_allowed_for_channel",
+            )
+
+        if channel == "admin_api" and plan.tool_name in self.ADMIN_BLOCKED_CLIENT_TOOLS:
+            return ToolPolicyDecision(
+                allowed=False,
+                reason="admin_use_operational_tools",
             )
 
         if plan.tool_name in self.CRITICAL_TOOLS:

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:mobile_ui/src/widgets/app_badge.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 
 import 'package:mobile/features/reservations/presentation/widgets/provider_contact_actions.dart';
 
-class ReservationProviderDetailView extends StatelessWidget {
+class ReservationProviderDetailView extends StatefulWidget {
   const ReservationProviderDetailView({
     super.key,
     required this.item,
@@ -18,6 +19,16 @@ class ReservationProviderDetailView extends StatelessWidget {
   final bool isAdmin;
   final VoidCallback? onEdit;
   final VoidCallback? onRemove;
+
+  @override
+  State<ReservationProviderDetailView> createState() =>
+      _ReservationProviderDetailViewState();
+}
+
+class _ReservationProviderDetailViewState
+    extends State<ReservationProviderDetailView> with RefreshableState {
+  @override
+  Future<void> onRefresh() async {}
 
   AppBadgeTone _statusTone(String status) {
     return switch (status) {
@@ -38,6 +49,7 @@ class ReservationProviderDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final item = widget.item;
     return Scaffold(
       appBar: AppBar(
         title: Text(item.providerName),
@@ -54,7 +66,7 @@ class ReservationProviderDetailView extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: RefreshableViewport(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,9 +104,9 @@ class ReservationProviderDetailView extends StatelessWidget {
             const SizedBox(height: 8),
             ProviderDetailActionsBar(
               item: item,
-              isAdmin: isAdmin,
-              onEdit: onEdit,
-              onRemove: onRemove,
+              isAdmin: widget.isAdmin,
+              onEdit: widget.onEdit,
+              onRemove: widget.onRemove,
             ),
           ],
         ),

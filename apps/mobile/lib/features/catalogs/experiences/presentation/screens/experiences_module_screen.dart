@@ -92,14 +92,16 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
 
   Widget _buildBodyContent() {
     if (_missingModule) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 80),
-          child: AppStatusBanner(
-            title: 'Modulo no disponible',
-            message: 'El modulo de catalogos no esta inicializado.',
-            tone: AppStatusBannerTone.danger,
-            badgeLabel: 'ERROR',
+      return RefreshableViewport(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 80),
+            child: AppStatusBanner(
+              title: 'Modulo no disponible',
+              message: 'El modulo de catalogos no esta inicializado.',
+              tone: AppStatusBannerTone.danger,
+              badgeLabel: 'ERROR',
+            ),
           ),
         ),
       );
@@ -107,13 +109,13 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
     switch (_controller.loadState) {
       case ExperiencesTabLoadState.idle:
       case ExperiencesTabLoadState.loading:
-        return const AppCenteredLoader();
+        return const RefreshableViewport(child: AppCenteredLoader());
       case ExperiencesTabLoadState.syncing:
-        return _buildSyncing();
+        return RefreshableViewport(child: _buildSyncing());
       case ExperiencesTabLoadState.error:
-        return _buildError();
+        return RefreshableViewport(child: _buildError());
       case ExperiencesTabLoadState.empty:
-        return _buildEmpty();
+        return RefreshableViewport(child: _buildEmpty());
       case ExperiencesTabLoadState.success:
       case ExperiencesTabLoadState.offlineFromCache:
         return _buildSuccessContent();

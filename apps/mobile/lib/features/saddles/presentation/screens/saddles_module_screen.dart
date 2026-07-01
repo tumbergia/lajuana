@@ -314,6 +314,7 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
   @override
   Widget build(BuildContext context) {
     final state = _listController.state;
+    final body = _buildContent(state);
 
     if (widget.showHeader) {
       return Column(
@@ -324,42 +325,39 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
             title: 'Sillas',
           ),
           const SizedBox(height: 20),
-          Expanded(
-            child: _buildContent(state, shrinkList: false),
-          ),
+          Expanded(child: body),
         ],
       );
     }
 
-    // Embedded mode — no Expanded; let parent scroll manage height.
-    return _buildContent(state, shrinkList: true);
+    return body;
   }
 
-  Widget _buildContent(SaddlesLoadState state, {bool shrinkList = false}) {
+  Widget _buildContent(SaddlesLoadState state) {
     switch (state) {
       case SaddlesLoadState.idle:
       case SaddlesLoadState.loading:
-        return const AppCenteredLoader();
+        return const RefreshableViewport(child: AppCenteredLoader());
 
       case SaddlesLoadState.refreshing:
         if (_listController.items.isEmpty) {
-          return const AppCenteredLoader();
+          return const RefreshableViewport(child: AppCenteredLoader());
         }
-        return _buildListContent(shrinkList: shrinkList);
+        return _buildListContent();
 
       case SaddlesLoadState.success:
       case SaddlesLoadState.offlineFromCache:
-        return _buildListContent(shrinkList: shrinkList);
+        return _buildListContent();
 
       case SaddlesLoadState.empty:
-        return _buildEmptyState(shrinkList: shrinkList);
+        return RefreshableViewport(child: _buildEmptyState());
 
       case SaddlesLoadState.error:
-        return _buildErrorState();
+        return RefreshableViewport(child: _buildErrorState());
     }
   }
 
-  Widget _buildListContent({bool shrinkList = false}) {
+  Widget _buildListContent() {
     final items = _listController.items;
     final hasItems = _listController.hasAnyRecords;
 
@@ -429,38 +427,16 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
 
         // List or empty filter message
         if (items.isEmpty && hasItems)
-          _buildEmptyFilterMessage(shrinkList: shrinkList)
+          _buildEmptyFilterMessage()
         else if (items.isEmpty)
-          _buildEmptyInventory(shrinkList: shrinkList)
+          _buildEmptyInventory()
         else
-          _buildSaddleListView(items, shrinkList: shrinkList),
+          _buildSaddleListView(items),
       ],
     );
   }
 
-  Widget _buildEmptyFilterMessage({bool shrinkList = false}) {
-    if (shrinkList) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.search_off_rounded,
-                  size: 40,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
-              const SizedBox(height: 8),
-              Text(
-                'No hay sillas con ese filtro',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+  Widget _buildEmptyFilterMessage() {
     return Expanded(
       child: Center(
         child: Column(
@@ -482,33 +458,7 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
     );
   }
 
-  Widget _buildEmptyInventory({bool shrinkList = false}) {
-    if (shrinkList) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Symbols.airline_seat_legroom_extra,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
-              const SizedBox(height: 12),
-              Text('No hay sillas registradas',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
-              Text(
-                'Registra la primera silla usando el boton de arriba',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+  Widget _buildEmptyInventory() {
     return Expanded(
       child: Center(
         child: Column(
@@ -534,22 +484,7 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
     );
   }
 
-  Widget _buildSaddleListView(List<SaddleRecord> items,
-      {bool shrinkList = false}) {
-    if (shrinkList) {
-      return ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, i) {
-          return SaddleRowCard(
-            saddle: items[i],
-            onTap: () => _showSaddleActions(items[i]),
-          );
-        },
-      );
-    }
+  Widget _buildSaddleListView(List<SaddleRecord> items) {
     return Expanded(
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -573,58 +508,48 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
     return 'unavailable';
   }
 
-  Widget _buildEmptyState({bool shrinkList = false}) {
-    final content = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Symbols.airline_seat_legroom_extra,
-          size: 56,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'No hay sillas',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Registra una nueva silla usando el boton de abajo',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-        ),
-        const SizedBox(height: 24),
-        AppButton(
-          label: 'Registrar silla',
-          icon: Icons.add,
-          onPressed: _openCreateSheet,
-        ),
-      ],
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Symbols.airline_seat_legroom_extra,
+            size: 56,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No hay sillas',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Registra una nueva silla usando el boton de abajo',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 24),
+          AppButton(
+            label: 'Registrar silla',
+            icon: Icons.add,
+            onPressed: _openCreateSheet,
+          ),
+        ],
+      ),
     );
-
-    if (shrinkList) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 80),
-        child: Center(child: content),
-      );
-    }
-
-    return Center(child: content);
   }
 
   Widget _buildErrorState() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 80),
-        child: AppStatusBanner(
-          title: 'Error al cargar sillas',
-          message: _listController.errorMessage ?? 'Error desconocido',
-          tone: AppStatusBannerTone.danger,
-          onTap: _listController.loadInitial,
-        ),
+      child: AppStatusBanner(
+        title: 'Error al cargar sillas',
+        message: _listController.errorMessage ?? 'Error desconocido',
+        tone: AppStatusBannerTone.danger,
+        onTap: _listController.loadInitial,
       ),
     );
   }

@@ -45,6 +45,235 @@ _BOLD_KEYWORDS = [
     r"\bquiero.*link\b",
 ]
 
+_ADMIN_CONTEXT_KEYWORDS = [
+    r"\b(reservas?|equinos?|mulas?|proveedores?|sillas?|monturas?|asignaciones?|tablero)\b",
+    r"\b(comprobante|reporte|ventas|ocupacion|carga.equina)\b",
+    r"\b(contactos?.de.?emergencia|emergencias?)\b",
+]
+
+_ADMIN_LIST_RESERVATIONS = [
+    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver|dame)\b.*\b(reservas?)\b",
+    r"\b(reservas?)\b.*\b(pendientes?|confirmadas?|hoy|manana|mañana)\b",
+    r"\b(qu[eé]|que)\s+reservas?\s+hay\b",
+    r"\bdame\b.*\b(reservas?)\b",
+    r"\b(reservas?)\b.*\b(esta\s+semana|semana)\b",
+]
+
+_ADMIN_LIST_EQUINES = [
+    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(equinos?|mulas?)\b",
+]
+
+_ADMIN_APPROVE_PAYMENT = [
+    r"\b(aprobar|aprueba|confirma)\b.*\b(pago|comprobante)\b",
+]
+
+_ADMIN_REJECT_PAYMENT = [
+    r"\b(rechaza(r|me)?|rechazar)\b.*\b(pago|comprobante)\b",
+]
+
+_ADMIN_SALES_REPORT = [
+    r"\b(reporte|resumen)\b.*\b(ventas?)\b",
+    r"\b(ventas?)\b.*\b(reporte|resumen)\b",
+]
+
+_ADMIN_OCCUPANCY_REPORT = [
+    r"\b(reporte|ocupacion)\b",
+]
+
+_ADMIN_EQUINE_WORKLOAD = [
+    r"\b(carga|workload)\b.*\b(equina|equinos?|mulas?)\b",
+]
+
+_ADMIN_ASSIGNMENT_BOARD = [
+    r"\b(tablero|asignaciones?)\b",
+    r"\b(asignaciones?)\b.*\b(reserva)\b",
+]
+
+_ADMIN_LIST_PROVIDERS = [
+    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(proveedores?)\b",
+]
+
+_ADMIN_LIST_SADDLES = [
+    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(sillas?|monturas?)\b",
+]
+
+_ADMIN_EMERGENCY_CONTACTS = [
+    r"\b(contactos?.de.?emergencia|emergencias?|numeros?.de.?emergencia)\b",
+]
+
+
+def _extract_reservation_code(text: str) -> str | None:
+    m = re.search(r"\b([A-Z]{2,4}-?\d{4,})\b", text.upper())
+    if m:
+        return m.group(1)
+    m = re.search(r"\b(reserva|codigo)\s+([A-Z0-9-]{4,})\b", text, flags=re.IGNORECASE)
+    if m:
+        return m.group(2).upper()
+    return None
+
+
+def _is_admin_context(channel: str | None, msg_lower: str) -> bool:
+    if channel == "admin_api":
+        return True
+    return _matches_any(msg_lower, _ADMIN_CONTEXT_KEYWORDS)
+
+
+def _extract_date_range(text: str) -> tuple[str, str] | None:
+    from app.ai.assistant.date_extractor import extract_date_range_from_message
+    try:
+        return extract_date_range_from_message(text)
+    except Exception:
+        return None
+
+
+def _build_admin_reservation_args(msg_lower: str) -> ToolArgs:
+    args = ToolArgs(limit=50)
+    date_range = _extract_date_range(msg_lower)
+    if date_range:
+        date_from, date_to = date_range
+        args.date_from = date_from  # type: ignore[attr-defined]
+        args.date_to = date_to  # type: ignore[attr-defined]
+    elif (date_str := _extract_date(msg_lower)):
+        args.date_from = date_str  # type: ignore[attr-defined]
+        args.date_to = date_str  # type: ignore[attr-defined]
+    if re.search(r"\bpendientes?\b", msg_lower):
+        args.status = "pending"  # type: ignore[attr-defined]
+    elif re.search(r"\bconfirmadas?\b", msg_lower):
+        args.status = "confirmed"  # type: ignore[attr-defined]
+    return args
+
+
+def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
+    args = ToolArgs()
+    date_str = _extract_date(msg_lower)
+    if date_str:
+        args.requested_date = date_str
+
+    if _matches_any(msg_lower, _ADMIN_EMERGENCY_CONTACTS):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.92,
+            tool_name="admin_get_emergency_contacts",
+            arguments=ToolArgs(),
+            user_goal="El admin quiere ver contactos de emergencia.",
+            audit_summary="Intent admin: contactos de emergencia.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_ASSIGNMENT_BOARD):
+        code = _extract_reservation_code(msg_lower)
+        plan_args = ToolArgs(reservation_code=code) if code else ToolArgs()
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_assignment_board",
+            arguments=plan_args,
+            user_goal="El admin quiere ver el tablero de asignación.",
+            audit_summary="Intent admin: tablero de asignación.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_LIST_PROVIDERS):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_list_providers",
+            arguments=ToolArgs(limit=50),
+            user_goal="El admin quiere listar proveedores.",
+            audit_summary="Intent admin: listar proveedores.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_LIST_SADDLES):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_list_saddles",
+            arguments=ToolArgs(limit=200),
+            user_goal="El admin quiere listar sillas/monturas.",
+            audit_summary="Intent admin: listar sillas.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_APPROVE_PAYMENT):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_approve_payment",
+            arguments=ToolArgs(),
+            user_goal="El admin quiere aprobar un pago.",
+            audit_summary="Intent admin: aprobar pago.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_REJECT_PAYMENT):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_reject_payment_proof",
+            arguments=ToolArgs(),
+            user_goal="El admin quiere rechazar un comprobante.",
+            audit_summary="Intent admin: rechazar comprobante.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_SALES_REPORT):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_sales_summary",
+            arguments=args,
+            user_goal="El admin quiere un reporte de ventas.",
+            audit_summary="Intent admin: reporte de ventas.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_OCCUPANCY_REPORT):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_occupancy_report",
+            arguments=args,
+            user_goal="El admin quiere un reporte de ocupación.",
+            audit_summary="Intent admin: reporte de ocupación.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_EQUINE_WORKLOAD):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_equine_workload_report",
+            arguments=args,
+            user_goal="El admin quiere reporte de carga equina.",
+            audit_summary="Intent admin: carga equina.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_LIST_EQUINES):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.92,
+            tool_name="admin_list_equines",
+            arguments=ToolArgs(),
+            user_goal="El admin quiere listar equinos.",
+            audit_summary="Intent admin: listar equinos.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_LIST_RESERVATIONS):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.92,
+            tool_name="admin_list_reservations",
+            arguments=_build_admin_reservation_args(msg_lower),
+            user_goal="El admin quiere listar reservas.",
+            audit_summary="Intent admin: listar reservas.",
+        )
+
+    code = _extract_reservation_code(msg_lower)
+    if code and re.search(r"\b(detalle|detalles|info|informacion)\b.*\b(reserva)\b", msg_lower):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_reservation_detail",
+            arguments=ToolArgs(code=code),
+            user_goal=f"El admin quiere detalle de la reserva {code}.",
+            audit_summary="Intent admin: detalle de reserva.",
+        )
+
+    return None
+
 
 def _extract_experience_name(text: str) -> str | None:
     cleaned = text.strip()
@@ -93,10 +322,18 @@ def detect_and_build_plan(
     user_message: str,
     conversation_context: str | None = None,
     session_slots: dict[str, Any] | None = None,
+    channel: str | None = None,
 ) -> AssistantPlan | None:
     msg_lower = user_message.lower().strip()
 
     exp_name = _extract_experience_name(user_message)
+
+    if _is_admin_context(channel, msg_lower):
+        admin_plan = _detect_admin_plan(msg_lower)
+        if admin_plan:
+            return admin_plan
+        if channel == "admin_api":
+            return None
 
     # ── Bold payment request → human review (flag al admin) ──
     # Check primero: el usuario pide el link de pago Bold, se levanta flag para

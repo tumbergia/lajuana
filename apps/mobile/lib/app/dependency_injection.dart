@@ -26,6 +26,7 @@ import 'package:mobile/features/equines/infrastructure/repositories/equine_repos
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
 import 'package:mobile/features/providers/providers_module.dart';
+import 'package:mobile/features/voice_assistant/voice_assistant_module.dart';
 
 /// Value object holding all initialized application dependencies.
 class AppDependencies {
@@ -40,6 +41,7 @@ class AppDependencies {
     required this.equineRepository,
     required this.equineEventRepository,
     required this.outbox,
+    required this.voiceAssistantModule,
   });
 
   final AuthController authController;
@@ -51,6 +53,7 @@ class AppDependencies {
   final AssignmentsModule assignmentsModule;
   final EquineRepository equineRepository;
   final EquineEventRepository equineEventRepository;
+  final VoiceAssistantModule voiceAssistantModule;
 
   /// Cola de salida compartida para escrituras offline (asignaciones, saddles).
   final OutboxRepository outbox;
@@ -61,6 +64,7 @@ class AppDependencies {
     reservationsModule.listController.dispose();
     saddlesModule.listController.dispose();
     providersModule.listController.dispose();
+    voiceAssistantModule.controller.dispose();
   }
 }
 
@@ -171,6 +175,12 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     database: equinesDatabase,
   );
 
+  final voiceAssistantModule = VoiceAssistantModule.create(
+    baseUrl: apiBaseUrl,
+    tokenStorage: tokenStorage,
+    refreshSession: refreshSession,
+  );
+
   return AppDependencies(
     authController: authController,
     apiClient: apiClient,
@@ -182,5 +192,6 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     equineRepository: equineRepository,
     equineEventRepository: equineEventRepository,
     outbox: outbox,
+    voiceAssistantModule: voiceAssistantModule,
   );
 }

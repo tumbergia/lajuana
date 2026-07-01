@@ -137,7 +137,9 @@ Minimal `InheritedWidget` that exposes a `VoidCallback onToggle` for theme switc
 | `AppTimeline` | Vertical timeline with nodes |
 | `AppLogbookTimeline` | Logbook entry timeline with photos and highlights |
 | `AppCenteredLoader` | Centered loading spinner |
-| `RefreshScope` | Pull-to-refresh wrapper |
+| `RefreshScope` | Pull-to-refresh global wrapper (solo activo con [RefreshableState]) |
+| `RefreshableState` | Mixin para registrar `onRefresh()` en la pantalla activa del stack |
+| `RefreshableViewport` | Scroll con `AlwaysScrollableScrollPhysics` + altura mínima del viewport; usar en loading/error/empty o contenido corto |
 
 ## How to Add a Widget
 

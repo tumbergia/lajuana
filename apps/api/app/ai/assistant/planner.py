@@ -1,7 +1,10 @@
 import difflib
 import time
 
-from app.ai.assistant.prompts.planner import PLANNER_SYSTEM_PROMPT
+from app.ai.assistant.prompts.planner import (
+    ADMIN_PLANNER_SYSTEM_PROMPT,
+    PLANNER_SYSTEM_PROMPT,
+)
 from app.ai.language.messages import build_language_instruction
 from app.ai.providers.factory import get_llm_provider
 from app.core.logging import logger
@@ -37,6 +40,20 @@ _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
     "revisión": ["admin_list_human_review_requests", "request_human_review"],
     "cumpleaños": ["schedule_birthday_automation"],
     "aniversario": ["schedule_visit_anniversary_automation"],
+    "proveedor": ["admin_list_providers", "admin_get_provider", "admin_create_provider", "admin_update_provider", "admin_deactivate_provider"],
+    "proveedores": ["admin_list_providers", "admin_get_provider", "admin_create_provider", "admin_update_provider", "admin_deactivate_provider"],
+    "silla": ["admin_list_saddles", "admin_get_saddle", "admin_create_saddle", "admin_update_saddle", "admin_deactivate_saddle", "admin_list_available_saddles_for_reservation"],
+    "sillas": ["admin_list_saddles", "admin_get_saddle", "admin_create_saddle", "admin_update_saddle", "admin_deactivate_saddle", "admin_list_available_saddles_for_reservation"],
+    "montura": ["admin_list_saddles", "admin_get_saddle", "admin_create_saddle", "admin_update_saddle", "admin_deactivate_saddle", "admin_list_available_saddles_for_reservation"],
+    "monturas": ["admin_list_saddles", "admin_get_saddle", "admin_create_saddle", "admin_update_saddle", "admin_deactivate_saddle", "admin_list_available_saddles_for_reservation"],
+    "asignacion": ["admin_get_assignment_board", "admin_create_assignment", "admin_update_assignment", "admin_delete_assignment", "admin_finalize_assignment", "admin_finalize_all_assignments"],
+    "asignación": ["admin_get_assignment_board", "admin_create_assignment", "admin_update_assignment", "admin_delete_assignment", "admin_finalize_assignment", "admin_finalize_all_assignments"],
+    "asignaciones": ["admin_get_assignment_board", "admin_create_assignment", "admin_update_assignment", "admin_delete_assignment", "admin_finalize_assignment", "admin_finalize_all_assignments"],
+    "tablero": ["admin_get_assignment_board"],
+    "evento": ["admin_list_equine_events", "admin_create_equine_event", "admin_update_equine_event"],
+    "eventos": ["admin_list_equine_events", "admin_create_equine_event", "admin_update_equine_event"],
+    "emergencia": ["admin_get_emergency_contacts"],
+    "emergencias": ["admin_get_emergency_contacts"],
 }
 
 # Descripciones breves de cada tool (categorizadas)
@@ -80,6 +97,27 @@ _ADMIN_TOOL_DESCRIPTIONS: dict[str, str] = {
     "admin_update_participant": "Actualizar participante",
     "schedule_birthday_automation": "Cumpleaños",
     "schedule_visit_anniversary_automation": "Aniversario",
+    "admin_list_providers": "Listar proveedores",
+    "admin_get_provider": "Detalle proveedor",
+    "admin_create_provider": "Crear proveedor",
+    "admin_update_provider": "Actualizar proveedor",
+    "admin_deactivate_provider": "Desactivar proveedor",
+    "admin_list_saddles": "Listar sillas",
+    "admin_get_saddle": "Detalle silla",
+    "admin_create_saddle": "Crear silla",
+    "admin_update_saddle": "Actualizar silla",
+    "admin_deactivate_saddle": "Desactivar silla",
+    "admin_list_available_saddles_for_reservation": "Sillas disponibles reserva",
+    "admin_get_assignment_board": "Tablero asignación",
+    "admin_create_assignment": "Crear asignación",
+    "admin_update_assignment": "Actualizar asignación",
+    "admin_delete_assignment": "Eliminar asignación",
+    "admin_finalize_assignment": "Finalizar asignación",
+    "admin_finalize_all_assignments": "Finalizar todas asignaciones",
+    "admin_list_equine_events": "Listar eventos equino",
+    "admin_create_equine_event": "Crear evento equino",
+    "admin_update_equine_event": "Actualizar evento equino",
+    "admin_get_emergency_contacts": "Contactos emergencia",
 }
 
 
@@ -152,12 +190,20 @@ class GeminiPlanner:
 
         language_instruction = build_language_instruction(language)
 
-        system_prompt = PLANNER_SYSTEM_PROMPT.format(
-            today_formatted=today_formatted,
-            today_year=str(now.year),
-            admin_tools_section=admin_tools_section,
-            language_instruction=language_instruction,
-        )
+        if channel == "admin_api":
+            system_prompt = ADMIN_PLANNER_SYSTEM_PROMPT.format(
+                today_formatted=today_formatted,
+                today_year=str(now.year),
+                admin_tools_section=admin_tools_section,
+                language_instruction=language_instruction,
+            )
+        else:
+            system_prompt = PLANNER_SYSTEM_PROMPT.format(
+                today_formatted=today_formatted,
+                today_year=str(now.year),
+                admin_tools_section=admin_tools_section,
+                language_instruction=language_instruction,
+            )
 
         context = {
             "today": now.date().isoformat(),

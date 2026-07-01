@@ -2,22 +2,32 @@ import 'package:flutter/material.dart';
 
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_domain/src/reservations/reservation_participant_detail.dart';
 
 /// Full-screen participant detail view.
 ///
 /// Shows all fields grouped by category: personal info, physical, health,
 /// dietary restrictions, emergency contact, and consentements.
-class ParticipantDetailView extends StatelessWidget {
+class ParticipantDetailView extends StatefulWidget {
   const ParticipantDetailView({super.key, required this.participant});
 
   final ReservationParticipantDetail participant;
 
   @override
+  State<ParticipantDetailView> createState() => _ParticipantDetailViewState();
+}
+
+class _ParticipantDetailViewState extends State<ParticipantDetailView>
+    with RefreshableState {
+  @override
+  Future<void> onRefresh() async {}
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final p = participant;
+    final p = widget.participant;
 
     return Scaffold(
       appBar: AppBar(
@@ -35,7 +45,7 @@ class ParticipantDetailView extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: RefreshableViewport(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

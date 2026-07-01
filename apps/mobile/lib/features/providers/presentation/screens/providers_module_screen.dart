@@ -78,23 +78,6 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
     if (mounted) setState(() {});
   }
 
-  double get _embeddedMinHeight {
-    final height = MediaQuery.sizeOf(context).height;
-    const chrome = 320.0;
-    return (height - chrome).clamp(220.0, height);
-  }
-
-  Widget _centerInEmbeddedViewport({
-    required bool embedded,
-    required Widget child,
-  }) {
-    if (!embedded) return child;
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: _embeddedMinHeight),
-      child: Center(child: child),
-    );
-  }
-
   Future<void> _openCreateSheet() async {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
@@ -264,6 +247,7 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
   @override
   Widget build(BuildContext context) {
     final state = _listController.state;
+    final body = _buildContent(state);
 
     if (widget.showHeader) {
       return Column(
@@ -274,47 +258,39 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
             title: 'Proveedores',
           ),
           const SizedBox(height: 20),
-          Expanded(
-            child: _buildContent(state, shrinkList: false),
-          ),
+          Expanded(child: body),
         ],
       );
     }
 
-    return _buildContent(state, shrinkList: true);
+    return body;
   }
 
-  Widget _buildContent(ProvidersLoadState state, {bool shrinkList = false}) {
+  Widget _buildContent(ProvidersLoadState state) {
     switch (state) {
       case ProvidersLoadState.idle:
       case ProvidersLoadState.loading:
-        return _centerInEmbeddedViewport(
-          embedded: shrinkList,
-          child: const AppCenteredLoader(),
-        );
+        return const RefreshableViewport(child: AppCenteredLoader());
 
       case ProvidersLoadState.refreshing:
         if (_listController.items.isEmpty) {
-          return _centerInEmbeddedViewport(
-            embedded: shrinkList,
-            child: const AppCenteredLoader(),
-          );
+          return const RefreshableViewport(child: AppCenteredLoader());
         }
-        return _buildListContent(shrinkList: shrinkList);
+        return _buildListContent();
 
       case ProvidersLoadState.success:
       case ProvidersLoadState.offlineFromCache:
-        return _buildListContent(shrinkList: shrinkList);
+        return _buildListContent();
 
       case ProvidersLoadState.empty:
-        return _buildEmptyState(shrinkList: shrinkList);
+        return RefreshableViewport(child: _buildEmptyState());
 
       case ProvidersLoadState.error:
-        return _buildErrorState(shrinkList: shrinkList);
+        return RefreshableViewport(child: _buildErrorState());
     }
   }
 
-  Widget _buildListContent({bool shrinkList = false}) {
+  Widget _buildListContent() {
     final items = _listController.items;
     final hasItems = _listController.hasAnyRecords;
 
@@ -358,95 +334,70 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
           const SizedBox(height: 12),
         ],
         if (items.isEmpty && hasItems)
-          _buildEmptyFilterMessage(shrinkList: shrinkList)
+          _buildEmptyFilterMessage()
         else if (items.isEmpty)
-          _buildEmptyInventory(shrinkList: shrinkList)
+          _buildEmptyInventory()
         else
-          _buildProviderListView(items, shrinkList: shrinkList),
+          _buildProviderListView(items),
       ],
     );
   }
 
-  Widget _buildEmptyFilterMessage({bool shrinkList = false}) {
-    final content = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.search_off_rounded,
-          size: 40,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+  Widget _buildEmptyFilterMessage() {
+    return Expanded(
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: 40,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No hay proveedores con ese filtro',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          'No hay proveedores con ese filtro',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-        ),
-      ],
+      ),
     );
-
-    if (shrinkList) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Center(child: content),
-      );
-    }
-    return Expanded(child: Center(child: content));
   }
 
-  Widget _buildEmptyInventory({bool shrinkList = false}) {
-    final content = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Symbols.handshake,
-          size: 48,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+  Widget _buildEmptyInventory() {
+    return Expanded(
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Symbols.handshake,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No hay proveedores registrados',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Registra el primer proveedor usando el boton de arriba',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        Text(
-          'No hay proveedores registrados',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Registra el primer proveedor usando el boton de arriba',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-          textAlign: TextAlign.center,
-        ),
-      ],
+      ),
     );
-
-    if (shrinkList) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Center(child: content),
-      );
-    }
-    return Expanded(child: Center(child: content));
   }
 
-  Widget _buildProviderListView(
-    List<ProviderRecord> items, {
-    bool shrinkList = false,
-  }) {
-    if (shrinkList) {
-      return ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, i) {
-          return ProviderRowCard(
-            provider: items[i],
-            onTap: () => _showProviderDetail(items[i]),
-          );
-        },
-      );
-    }
+  Widget _buildProviderListView(List<ProviderRecord> items) {
     return Expanded(
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -462,7 +413,7 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
     );
   }
 
-  Widget _buildEmptyState({bool shrinkList = false}) {
+  Widget _buildEmptyState() {
     final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -494,25 +445,17 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
       ],
     );
 
-    if (shrinkList) {
-      return _centerInEmbeddedViewport(embedded: true, child: content);
-    }
-
     return Center(child: content);
   }
 
-  Widget _buildErrorState({bool shrinkList = false}) {
-    final banner = AppStatusBanner(
-      title: 'Error al cargar proveedores',
-      message: _listController.errorMessage ?? 'Error desconocido',
-      tone: AppStatusBannerTone.danger,
-      onTap: _listController.loadInitial,
+  Widget _buildErrorState() {
+    return Center(
+      child: AppStatusBanner(
+        title: 'Error al cargar proveedores',
+        message: _listController.errorMessage ?? 'Error desconocido',
+        tone: AppStatusBannerTone.danger,
+        onTap: _listController.loadInitial,
+      ),
     );
-
-    if (shrinkList) {
-      return _centerInEmbeddedViewport(embedded: true, child: banner);
-    }
-
-    return Center(child: banner);
   }
 }

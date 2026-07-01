@@ -28,49 +28,43 @@ class RefreshScope extends StatefulWidget {
 }
 
 class RefreshScopeState extends State<RefreshScope> {
-  /// Mapa state -> callback. El orden de insercion importa:
-  /// el ultimo en registrarse es el activo.
+  /// Mapa state -> callback. El ultimo en registrarse es el activo.
   final Map<State, Future<void> Function()> _entries = {};
-
-  /// Transition: empty ↔ non-empty cambia el build output.
-  /// No podemos llamar setState durante build (el child se registra
-  /// en didChangeDependencies dentro del mismo frame), asi que
-  /// diferimos con post-frame callback.
-  bool _rebuildScheduled = false;
-
-  void _scheduleRebuild() {
-    if (!mounted || _rebuildScheduled) return;
-    _rebuildScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _rebuildScheduled = false;
-      if (mounted) setState(() {});
-    });
-  }
 
   /// La pantalla [caller] se registra con su callback.
   void register(State caller, Future<void> Function() cb) {
-    final wasEmpty = _entries.isEmpty;
     _entries[caller] = cb;
-    if (wasEmpty) _scheduleRebuild();
   }
 
   /// La pantalla [caller] se desregistra (normalmente en dispose).
   void unregister(State caller) {
-    final hadOne = _entries.length == 1 && _entries.containsKey(caller);
     _entries.remove(caller);
-    if (hadOne) _scheduleRebuild();
   }
 
-  Future<void> Function()? get _activeCallback =>
-      _entries.isEmpty ? null : _entries.values.last;
+  Future<void> Function()? get _activeCallback {
+    while (_entries.isNotEmpty) {
+      final entry = _entries.entries.last;
+      if (!entry.key.mounted) {
+        _entries.remove(entry.key);
+        continue;
+      }
+      return entry.value;
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cb = _activeCallback;
-    if (cb == null) return widget.child;
-
+    // Arbol estable: siempre [RefreshIndicator]. El callback activo se resuelve
+    // en tiempo de ejecucion para evitar rebuilds al registrar/desregistrar pantallas.
     return RefreshIndicator(
-      onRefresh: cb,
+      onRefresh: () async {
+        final cb = _activeCallback;
+        if (cb != null) await cb();
+      },
+      notificationPredicate: (notification) =>
+          _activeCallback != null &&
+          defaultScrollNotificationPredicate(notification),
       displacement: 48,
       child: widget.child,
     );
@@ -96,25 +90,71 @@ mixin RefreshableState<T extends StatefulWidget> on State<T> {
   /// Implementar con la logica de refresco de la pantalla.
   Future<void> onRefresh();
 
+  RefreshScopeState? _refreshScope;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _register();
+    final scope = RefreshScope.of(context);
+    if (scope == _refreshScope) {
+      _refreshScope?.register(this, _guardedOnRefresh);
+      return;
+    }
+    _refreshScope?.unregister(this);
+    _refreshScope = scope;
+    _refreshScope?.register(this, _guardedOnRefresh);
   }
 
   @override
   void dispose() {
-    _unregister();
+    _refreshScope?.unregister(this);
+    _refreshScope = null;
     super.dispose();
   }
 
-  void _register() {
-    RefreshScope.of(context)?.register(this, onRefresh);
+  Future<void> _guardedOnRefresh() async {
+    if (!mounted) return;
+    await onRefresh();
   }
+}
 
-  void _unregister() {
-    // context sigue disponible en dispose para findAncestorStateOfType
-    final scope = context.findAncestorStateOfType<RefreshScopeState>();
-    scope?.unregister(this);
+/// Scroll wrapper que garantiza overscroll para [RefreshIndicator] global.
+///
+/// Usar en estados loading/error/empty o contenido corto que no llena
+/// la pantalla. Combina [AlwaysScrollableScrollPhysics] con altura minima
+/// igual al viewport disponible.
+class RefreshableViewport extends StatelessWidget {
+  const RefreshableViewport({
+    super.key,
+    required this.child,
+    this.padding,
+    this.controller,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final ScrollController? controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final minHeight = constraints.hasBoundedHeight
+            ? constraints.maxHeight
+            : MediaQuery.sizeOf(context).height;
+
+        return SingleChildScrollView(
+          controller: controller,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: padding,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: minHeight > 0 ? minHeight : 0,
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
   }
 }

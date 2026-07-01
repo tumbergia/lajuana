@@ -83,6 +83,32 @@ _TOOLS: dict[str, object] = {
     "admin_reject_payment_proof": tools.admin_reject_payment_proof,
     "admin_unreject_payment_proof": tools.admin_unreject_payment_proof,
     "admin_unverify_payment_proof": tools.admin_unverify_payment_proof,
+    # ── Admin CRUD: providers ──
+    "admin_list_providers": tools.admin_list_providers,
+    "admin_get_provider": tools.admin_get_provider,
+    "admin_create_provider": tools.admin_create_provider,
+    "admin_update_provider": tools.admin_update_provider,
+    "admin_deactivate_provider": tools.admin_deactivate_provider,
+    # ── Admin CRUD: saddles ──
+    "admin_list_saddles": tools.admin_list_saddles,
+    "admin_get_saddle": tools.admin_get_saddle,
+    "admin_create_saddle": tools.admin_create_saddle,
+    "admin_update_saddle": tools.admin_update_saddle,
+    "admin_deactivate_saddle": tools.admin_deactivate_saddle,
+    "admin_list_available_saddles_for_reservation": tools.admin_list_available_saddles_for_reservation,
+    # ── Admin CRUD: assignments ──
+    "admin_get_assignment_board": tools.admin_get_assignment_board,
+    "admin_create_assignment": tools.admin_create_assignment,
+    "admin_update_assignment": tools.admin_update_assignment,
+    "admin_delete_assignment": tools.admin_delete_assignment,
+    "admin_finalize_assignment": tools.admin_finalize_assignment,
+    "admin_finalize_all_assignments": tools.admin_finalize_all_assignments,
+    # ── Admin CRUD: equine events ──
+    "admin_list_equine_events": tools.admin_list_equine_events,
+    "admin_create_equine_event": tools.admin_create_equine_event,
+    "admin_update_equine_event": tools.admin_update_equine_event,
+    # ── Admin: emergency contacts ──
+    "admin_get_emergency_contacts": tools.admin_get_emergency_contacts,
 }
 
 for name, fn in _TOOLS.items():

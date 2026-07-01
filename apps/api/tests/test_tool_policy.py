@@ -168,6 +168,20 @@ def test_get_reservation_status_by_phone_allowed() -> None:
     assert decision.allowed
 
 
+def test_get_reservation_status_by_phone_blocked_on_admin_api() -> None:
+    plan = AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        tool_name="get_reservation_status_by_phone",
+        arguments=ToolArgs(),
+        confidence=0.9,
+        user_goal="check reservation status by phone",
+        audit_summary="test",
+    )
+    decision = ToolPolicyEngine().validate(plan, channel="admin_api")
+    assert decision.allowed is False
+    assert decision.reason == "admin_use_operational_tools"
+
+
 def test_attach_payment_proof_to_reservation_allowed() -> None:
     plan = AssistantPlan(
         action=AssistantAction.TOOL_CALL,

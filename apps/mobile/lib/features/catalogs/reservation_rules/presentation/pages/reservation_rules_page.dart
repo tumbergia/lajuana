@@ -6,6 +6,7 @@ import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/features/catalogs/reservation_rules/presentation/controllers/reservation_rules_controller.dart';
@@ -24,7 +25,8 @@ class ReservationRulesPage extends StatefulWidget {
   State<ReservationRulesPage> createState() => _ReservationRulesPageState();
 }
 
-class _ReservationRulesPageState extends State<ReservationRulesPage> {
+class _ReservationRulesPageState extends State<ReservationRulesPage>
+    with RefreshableState {
   late final ReservationRulesController _controller;
   final TextEditingController _minDaysCtrl = TextEditingController();
   bool _requirePaymentProof = true;
@@ -33,6 +35,9 @@ class _ReservationRulesPageState extends State<ReservationRulesPage> {
   String? _error;
 
   bool get _isAdmin => widget.authController.currentUser?.role == 'admin';
+
+  @override
+  Future<void> onRefresh() => _controller.refreshFromServer();
 
   @override
   void initState() {
@@ -120,16 +125,6 @@ class _ReservationRulesPageState extends State<ReservationRulesPage> {
                   spacing: 8,
                   children: [
                     AppButton(
-                      label: _controller.isRefreshing
-                          ? 'Actualizando...'
-                          : 'Actualizar',
-                      icon: Icons.refresh_rounded,
-                      variant: AppButtonVariant.ghost,
-                      onPressed: _controller.isRefreshing
-                          ? null
-                          : () => _controller.refreshFromServer(),
-                    ),
-                    AppButton(
                       label: _controller.isSyncing
                           ? 'Sincronizando...'
                           : 'Sync',
@@ -151,8 +146,9 @@ class _ReservationRulesPageState extends State<ReservationRulesPage> {
               const SizedBox(height: 12),
               Expanded(
                 child: isLoadingAny
-                    ? const AppCenteredLoader()
+                    ? const RefreshableViewport(child: AppCenteredLoader())
                     : ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         children: [
                           if (_controller.error != null)
                             AppEntityRowCard(

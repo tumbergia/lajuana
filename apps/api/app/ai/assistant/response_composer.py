@@ -3,7 +3,10 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from app.ai.assistant.prompts.planner import TOOL_RESULT_RESPONSE_SYSTEM_PROMPT
+from app.ai.assistant.prompts.planner import (
+    ADMIN_TOOL_RESULT_RESPONSE_SYSTEM_PROMPT,
+    TOOL_RESULT_RESPONSE_SYSTEM_PROMPT,
+)
 from app.ai.language.messages import build_language_instruction
 from app.ai.providers.factory import get_llm_provider
 from app.core.logging import logger
@@ -26,7 +29,12 @@ async def compose_tool_response(
     )
 
     language_instruction = build_language_instruction(language)
-    response_prompt = TOOL_RESULT_RESPONSE_SYSTEM_PROMPT.format(
+    prompt_template = (
+        ADMIN_TOOL_RESULT_RESPONSE_SYSTEM_PROMPT
+        if channel == "admin_api"
+        else TOOL_RESULT_RESPONSE_SYSTEM_PROMPT
+    )
+    response_prompt = prompt_template.format(
         language_instruction=language_instruction,
     )
 

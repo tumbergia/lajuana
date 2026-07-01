@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, timedelta
+
+from app.core.time import now_colombia
 
 MESES = {
     "enero": 1,
@@ -79,5 +81,31 @@ def extract_date_from_message(message: str) -> str | None:
                         return date(year, month, day).isoformat()
                     except ValueError:
                         continue
+
+    return None
+
+
+def extract_date_range_from_message(message: str) -> tuple[str, str] | None:
+    """Extrae un rango date_from/date_to (ISO) para frases relativas en Colombia."""
+    normalized = message.lower().strip()
+    today = now_colombia().date()
+
+    if re.search(r"\besta\s+semana\b|\b(semana\s+actual)\b", normalized):
+        start = today - timedelta(days=today.weekday())
+        end = start + timedelta(days=6)
+        return start.isoformat(), end.isoformat()
+
+    if re.search(r"\bhoy\b", normalized):
+        iso = today.isoformat()
+        return iso, iso
+
+    if re.search(r"\bmanana\b|\bmañana\b", normalized):
+        d = today + timedelta(days=1)
+        iso = d.isoformat()
+        return iso, iso
+
+    single = extract_date_from_message(message)
+    if single:
+        return single, single
 
     return None

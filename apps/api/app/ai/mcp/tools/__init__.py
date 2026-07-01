@@ -2,7 +2,36 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.ai.mcp.tools.admin_assignments import (
+    admin_create_assignment,
+    admin_delete_assignment,
+    admin_finalize_all_assignments,
+    admin_finalize_assignment,
+    admin_get_assignment_board,
+    admin_update_assignment,
+)
+from app.ai.mcp.tools.admin_equine_events import (
+    admin_create_equine_event,
+    admin_list_equine_events,
+    admin_update_equine_event,
+)
+from app.ai.mcp.tools.admin_providers import (
+    admin_create_provider,
+    admin_deactivate_provider,
+    admin_get_provider,
+    admin_list_providers,
+    admin_update_provider,
+)
+from app.ai.mcp.tools.admin_saddles import (
+    admin_create_saddle,
+    admin_deactivate_saddle,
+    admin_get_saddle,
+    admin_list_available_saddles_for_reservation,
+    admin_list_saddles,
+    admin_update_saddle,
+)
 from app.ai.mcp.tools.admin_config import (
+    admin_get_emergency_contacts,
     admin_get_payment_instructions,
     admin_get_system_config,
     admin_update_reservation_rules,
@@ -383,6 +412,27 @@ __all__ = [
     "admin_reject_payment_proof",
     "admin_unverify_payment_proof",
     "admin_unreject_payment_proof",
+    "admin_list_providers",
+    "admin_get_provider",
+    "admin_create_provider",
+    "admin_update_provider",
+    "admin_deactivate_provider",
+    "admin_list_saddles",
+    "admin_get_saddle",
+    "admin_create_saddle",
+    "admin_update_saddle",
+    "admin_deactivate_saddle",
+    "admin_list_available_saddles_for_reservation",
+    "admin_get_assignment_board",
+    "admin_create_assignment",
+    "admin_update_assignment",
+    "admin_delete_assignment",
+    "admin_finalize_assignment",
+    "admin_finalize_all_assignments",
+    "admin_list_equine_events",
+    "admin_create_equine_event",
+    "admin_update_equine_event",
+    "admin_get_emergency_contacts",
     "admin_list_reservations",
     "admin_get_reservation_detail",
     "admin_confirm_reservation",

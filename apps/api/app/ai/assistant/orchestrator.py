@@ -92,7 +92,30 @@ WRITE_TOOLS_REQUIRING_CONFIRMATION: set[str] = {
     "admin_unreject_payment_proof",
     "admin_update_equine_availability",
     "admin_update_reservation_rules",
+    "admin_deactivate_provider",
+    "admin_deactivate_saddle",
+    "admin_delete_assignment",
+    "admin_finalize_all_assignments",
 }
+
+
+def _fallback_tool_response(tool_output: dict) -> str:
+    """Respuesta determinista cuando el composer LLM falla."""
+    if tool_output.get("response"):
+        return str(tool_output["response"])
+    if tool_output.get("message"):
+        return str(tool_output["message"])
+    if tool_output.get("error"):
+        return f"Error: {tool_output['error']}"
+    parts: list[str] = []
+    if "total" in tool_output:
+        parts.append(f"Total: {tool_output['total']}")
+    blocking = tool_output.get("blocking_reasons") or []
+    if blocking and isinstance(blocking[0], dict):
+        msg = blocking[0].get("message")
+        if msg:
+            parts.append(str(msg))
+    return " ".join(parts) if parts else "Operación completada."
 
 
 def _build_missing_fields_response(missing: list[str], language: str = "es") -> str:
@@ -173,10 +196,11 @@ class AssistantOrchestrator:
         # No hay auto-detección: si el usuario no pide explícitamente otro
         # idioma, el bot sigue respondiendo en el idioma efectivo actual.
 
-        # Propagate from_phone as holder_phone in slot_values
+        # Propagate from_phone as holder_phone only on client/guide channels
         phone = request.from_phone or getattr(session, "from_phone", None)
-        if phone and "holder_phone" not in session.slot_values:
-            session.slot_values["holder_phone"] = phone
+        if request.channel in {"whatsapp", "test", "mobile_api"}:
+            if phone and "holder_phone" not in session.slot_values:
+                session.slot_values["holder_phone"] = phone
 
         # Handle pending tool confirmations
         pending_tool = session.slot_values.get("_pending_tool_name")
@@ -240,6 +264,7 @@ class AssistantOrchestrator:
             user_message=request.message,
             conversation_context=enriched_context,
             session_slots=session.slot_values,
+            channel=request.channel,
         )
         if forced_plan:
             logger.info(
@@ -496,14 +521,23 @@ class AssistantOrchestrator:
         if plan.tool_name in LITERAL_RESPONSE_TOOLS and tool_output.get("response"):
             response = tool_output["response"]
         else:
-            response = await compose_tool_response(
-                user_message=request.message,
-                plan=plan,
-                tool_output=tool_output,
-                conversation_id=conversation_id,
-                channel=request.channel,
-                language=session.language,
-            )
+            try:
+                response = await compose_tool_response(
+                    user_message=request.message,
+                    plan=plan,
+                    tool_output=tool_output,
+                    conversation_id=conversation_id,
+                    channel=request.channel,
+                    language=session.language,
+                )
+            except (GeminiProviderError, GeminiResourceExhausted, GeminiModelUnavailable) as exc:
+                logger.warning(
+                    "[conversation_id=%s] Compose fallback | tool=%s | error=%s",
+                    conversation_id,
+                    plan.tool_name,
+                    exc,
+                )
+                response = _fallback_tool_response(tool_output)
 
         if (
             plan.tool_name == "suggest_alternative_dates"
