@@ -315,7 +315,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Reconectando sesion...'), findsOneWidget);
+    expect(find.text('RECONECTANDO'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsWidgets);
 
     await connectivity.dispose();
