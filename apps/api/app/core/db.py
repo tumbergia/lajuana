@@ -11,6 +11,7 @@ from app.conversations.documents import (
     OutboundMessageDocument,
     WhatsAppInboundEventDocument,
 )
+from app.common.collections import Collections
 from app.core.config import settings
 from app.documents import (
     AppConfigDocument,

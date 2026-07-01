@@ -44,8 +44,11 @@ class AuthApiClient {
     await _post('/auth/logout', bearer: accessToken);
   }
 
-  Future<UserDto> me({required String accessToken}) async {
-    final response = await _get('/auth/me', bearer: accessToken);
+  Future<UserDto> me({
+    required String accessToken,
+    Duration timeout = const Duration(seconds: 12),
+  }) async {
+    final response = await _get('/auth/me', bearer: accessToken, timeout: timeout);
     final data = _decodeBody(response.body);
     return UserDto.fromJson(data);
   }
@@ -100,11 +103,16 @@ class AuthApiClient {
         .toList(growable: false);
   }
 
-  Future<http.Response> _get(String path, {String? bearer}) async {
+  Future<http.Response> _get(
+    String path, {
+    String? bearer,
+    Duration timeout = const Duration(seconds: 12),
+  }) async {
     final uri = Uri.parse('$_baseUrl$path');
-    final response = await _execute(() {
-      return _http.get(uri, headers: _headers(bearer: bearer));
-    });
+    final response = await _execute(
+      () => _http.get(uri, headers: _headers(bearer: bearer)),
+      timeout: timeout,
+    );
     _throwIfError(response);
     return response;
   }

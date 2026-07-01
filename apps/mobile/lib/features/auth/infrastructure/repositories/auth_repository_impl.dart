@@ -72,7 +72,10 @@ class AuthRepositoryImpl implements AuthRepository {
       final token = await _apiClient.refresh(
         refreshToken: session.refreshToken,
       );
-      final me = await _apiClient.me(accessToken: token.accessToken);
+      final me = await _apiClient.me(
+        accessToken: token.accessToken,
+        timeout: const Duration(seconds: 6),
+      );
 
       await _persistAuthSession(
         token: token,

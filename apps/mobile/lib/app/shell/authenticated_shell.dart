@@ -10,6 +10,7 @@ import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/app/navigation/shell_navigation_controller.dart';
 import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
+import 'package:mobile_ui/src/widgets/app_card.dart';
 import 'package:mobile_ui/src/widgets/app_top_bar.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'widgets/shell_status_region.dart';
@@ -68,6 +69,8 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
     super.initState();
     _shellNav = ShellNavigationController();
     _ensureTab(AppNavItem.inicio);
+    // Carga el conteo de ítems que quedaron en cola de sesiones previas.
+    unawaited(widget.outbox?.refreshCachedPendingCount() ?? Future<void>.value());
   }
 
   @override
@@ -162,7 +165,10 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  ShellStatusRegion(controller: widget.authController),
+                  ShellStatusRegion(
+                    controller: widget.authController,
+                    outbox: widget.outbox,
+                  ),
                   Expanded(
                     child: RefreshScope(
                       child: Stack(
@@ -223,26 +229,46 @@ class _ReconnectLoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     return Center(
-      child: Container(
+      child: SizedBox(
         width: 280,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: scheme.outlineVariant),
-        ),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2.4),
-            ),
-            SizedBox(height: 12),
-            Text('Reconectando sesion...', textAlign: TextAlign.center),
-          ],
+        child: AppCard(
+          tone: AppCardTone.surface,
+          outlined: true,
+          accentColor: scheme.primary,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  color: scheme.primary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'RECONECTANDO',
+                textAlign: TextAlign.center,
+                style: textTheme.labelLarge?.copyWith(
+                  color: scheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Verificando sesion con el servidor...',
+                textAlign: TextAlign.center,
+                style: textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

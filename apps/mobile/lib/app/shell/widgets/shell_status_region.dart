@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
@@ -7,16 +8,23 @@ import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 
 /// Banners globales de sesión, conectividad y sync (solo presentación).
 class ShellStatusRegion extends StatelessWidget {
-  const ShellStatusRegion({super.key, required this.controller});
+  const ShellStatusRegion({
+    super.key,
+    required this.controller,
+    this.outbox,
+  });
 
   final AuthController controller;
+  final OutboxRepository? outbox;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: controller,
+      animation: outbox != null
+          ? Listenable.merge([controller, outbox!])
+          : controller,
       builder: (context, _) {
-        final banners = _bannersFor(controller);
+        final banners = _bannersFor(controller, outbox);
         if (banners.isEmpty) return const SizedBox.shrink();
         return Padding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
@@ -34,7 +42,7 @@ class ShellStatusRegion extends StatelessWidget {
     );
   }
 
-  static List<Widget> _bannersFor(AuthController c) {
+  static List<Widget> _bannersFor(AuthController c, OutboxRepository? outbox) {
     final banners = <Widget>[];
     final authState = c.authState;
     final ns = c.networkStatus;
@@ -75,14 +83,15 @@ class ShellStatusRegion extends StatelessWidget {
       );
     }
 
-    if (c.hasPendingSync) {
+    final pendingCount = outbox?.pendingOutboxCount ?? 0;
+    if (pendingCount > 0) {
       banners.add(
-        const AppStatusBanner(
-          title: 'Cambios pendientes',
-          message: 'Hay actualizaciones locales esperando envio al backend.',
+        AppStatusBanner(
+          title: 'Cambios en cola',
+          message: '$pendingCount ${pendingCount == 1 ? 'operacion pendiente' : 'operaciones pendientes'} de envio al servidor.',
           tone: AppStatusBannerTone.warning,
-          icon: Icons.sync_problem_rounded,
-          badgeLabel: 'Pendiente',
+          icon: Icons.upload_rounded,
+          badgeLabel: '$pendingCount',
         ),
       );
     }

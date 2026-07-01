@@ -73,6 +73,19 @@ class OutboxRepository extends ChangeNotifier {
   final Random _random = Random();
   final Map<String, OutboxEntityHandler> _handlers = {};
 
+  int _pendingOutboxCount = 0;
+
+  /// Conteo sincrónico de operaciones pendientes. Se actualiza cada vez que el
+  /// outbox cambia; útil para la UI sin necesidad de async.
+  int get pendingOutboxCount => _pendingOutboxCount;
+
+  /// Sincroniza la caché del conteo con la base de datos.
+  /// Llamar al arrancar para cargar ítems de sesiones previas.
+  Future<void> refreshCachedPendingCount() async {
+    _pendingOutboxCount = await pendingCount();
+    notifyListeners();
+  }
+
   void registerHandler(String entityType, OutboxEntityHandler handler) {
     _handlers[entityType] = handler;
   }
@@ -103,6 +116,7 @@ class OutboxRepository extends ChangeNotifier {
       'error_message': null,
       'created_at': DateTime.now().toUtc().toIso8601String(),
     });
+    _pendingOutboxCount = await pendingCount();
     notifyListeners();
     await _flushQuietly();
   }
@@ -247,7 +261,10 @@ class OutboxRepository extends ChangeNotifier {
         changed = true;
       }
     }
-    if (changed) notifyListeners();
+    if (changed) {
+      _pendingOutboxCount = await pendingCount();
+      notifyListeners();
+    }
   }
 
   Future<String?> _resolveRemoteId(SyncQueueOperation op) async {

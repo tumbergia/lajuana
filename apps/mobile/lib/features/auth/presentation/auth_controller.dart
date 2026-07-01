@@ -72,7 +72,7 @@ class AuthController extends ChangeNotifier {
   void _onNetworkStatus(NetworkStatus next) {
     networkStatus = next;
     notifyListeners();
-    if (next.linkType != LinkType.offline &&
+    if (next.backendReachability == BackendReachability.reachable &&
         authState == LocalAuthState.signedInLocalUnverified) {
       unawaited(refreshRequested());
     }
@@ -114,6 +114,7 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> refreshRequested() async {
+    if (isLoading) return;
     _startLoading();
     try {
       final snapshot = await _authRepository.refreshSession();

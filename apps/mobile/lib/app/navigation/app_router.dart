@@ -61,6 +61,7 @@ class AppRouter {
         screen = _devScreen(routeName) ??
             StartupGate(controller: deps.authController);
         break;
+      case '/':
       case AuthRoutes.sessionGate:
         screen = StartupGate(controller: deps.authController);
         break;

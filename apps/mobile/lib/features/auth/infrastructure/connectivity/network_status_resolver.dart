@@ -29,8 +29,9 @@ class NetworkStatusResolver {
   }
 
   Stream<NetworkStatus> observe() async* {
-    yield await current();
-    NetworkStatus? previous;
+    final initial = await current();
+    yield initial;
+    NetworkStatus? previous = initial;
     await for (final status in _connectivityService.observeLinkType().asyncMap(
       (_) => current(),
     )) {
