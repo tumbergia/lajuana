@@ -6,8 +6,8 @@ class ExperienceRepository {
 
   final CatalogsRepository _catalogsRepository;
 
-  Future<List<CatalogExperience>> list() =>
-      _catalogsRepository.listExperiences();
+  Future<List<CatalogExperience>> list({bool includeInactive = false}) =>
+      _catalogsRepository.listExperiences(includeInactive: includeInactive);
 
   Future<CatalogExperience?> getById(String id) =>
       _catalogsRepository.getExperienceById(id);

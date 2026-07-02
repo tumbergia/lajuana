@@ -96,6 +96,20 @@ class ShellStatusRegion extends StatelessWidget {
       );
     }
 
+    final failedCount = outbox?.failedOutboxCount ?? 0;
+    if (outbox != null && failedCount > 0) {
+      banners.add(
+        AppStatusBanner(
+          title: 'Cambios sin enviar',
+          message: '$failedCount ${failedCount == 1 ? 'operacion fallo' : 'operaciones fallaron'} al sincronizar. Toca para reintentar.',
+          tone: AppStatusBannerTone.danger,
+          icon: Icons.sync_problem_rounded,
+          badgeLabel: 'Reintentar',
+          onTap: () => outbox.retryFailedQueue(),
+        ),
+      );
+    }
+
     if (c.isOfflineRestricted) {
       banners.add(
         const AppStatusBanner(

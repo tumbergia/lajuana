@@ -63,7 +63,7 @@ class ExperiencesTabController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final experiences = await _repository.list();
+      final experiences = await _repository.list(includeInactive: true);
       if (experiences.isEmpty) {
         _allItems = const [];
         _items = const [];
@@ -93,7 +93,7 @@ class ExperiencesTabController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final experiences = await _repository.list();
+      final experiences = await _repository.list(includeInactive: true);
       if (experiences.isEmpty) {
         _allItems = const [];
         _items = const [];
@@ -119,7 +119,7 @@ class ExperiencesTabController extends ChangeNotifier {
 
     try {
       await _catalogsRepository.refreshExperiencesFromServer();
-      final experiences = await _repository.list();
+      final experiences = await _repository.list(includeInactive: true);
       _allItems = experiences;
       if (experiences.isEmpty) {
         _items = const [];

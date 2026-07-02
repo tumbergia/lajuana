@@ -48,10 +48,19 @@ class CatalogsRepository {
   }
 
   Future<void> refreshExperiencesFromServer() async {
-    if (await _shouldBootstrapForScope(
-      stream: 'experiences',
-      table: 'experiences_local',
-    )) {
+    // Sube primero las mutaciones locales pendientes (creadas/editadas offline).
+    // Best-effort real: cualquier fallo al subir NO debe impedir bajar y
+    // mostrar los datos del servidor.
+    try {
+      await _tryFlushQueue();
+    } catch (_) {
+      // El envío fallido se conserva en cola; la lectura sigue.
+    }
+    final db = await _database.database;
+    // Fuerza el bootstrap del set completo mientras no se haya completado uno.
+    // El pull incremental (change-feed) puede ser incompleto para experiencias
+    // creadas antes del feed; el bootstrap usa find_all y las trae todas.
+    if (!await _hasCompletedBootstrap(db)) {
       await _bootstrap();
       return;
     }
@@ -81,7 +90,13 @@ class CatalogsRepository {
   }
 
   Future<void> syncNow({bool includeFailed = true}) async {
-    await flushQueue(includeFailed: includeFailed);
+    // El envío (push) y la bajada (pull) son independientes: un fallo al subir
+    // no debe impedir que bajemos los cambios del servidor.
+    try {
+      await flushQueue(includeFailed: includeFailed);
+    } on CatalogsApiFailure {
+      // Se reintenta luego; seguimos con el pull.
+    }
     await pullChanges();
   }
 
@@ -156,11 +171,7 @@ class CatalogsRepository {
   Future<void> flushQueue({bool includeFailed = false}) async {
     final db = await _database.database;
     if (includeFailed) {
-      await db.update('sync_queue', {
-        'status': 'pending',
-        'error_code': null,
-        'error_message': null,
-      }, where: "status IN ('conflict', 'rejected')");
+      await _requeueFailedOperations(db);
     }
     final rows = await db.query(
       'sync_queue',
@@ -254,12 +265,17 @@ class CatalogsRepository {
     }
   }
 
-  Future<List<CatalogExperience>> listExperiences() async {
+  /// Lista experiencias locales. Por defecto solo las activas (vista de
+  /// catálogo); la pantalla de gestión pasa [includeInactive] = true para
+  /// poder ver y reactivar las desactivadas (se marcan con badge "Inactiva").
+  Future<List<CatalogExperience>> listExperiences({
+    bool includeInactive = false,
+  }) async {
     final db = await _database.database;
     final rows = await db.query(
       'experiences_local',
-      where: 'is_active = ?',
-      whereArgs: [1],
+      where: includeInactive ? null : 'is_active = ?',
+      whereArgs: includeInactive ? null : [1],
       orderBy: 'name COLLATE NOCASE ASC',
     );
     return rows.map(_experienceFromRow).toList(growable: false);
@@ -610,7 +626,20 @@ class CatalogsRepository {
           }, conflictAlgorithm: ConflictAlgorithm.replace);
         }
       }
+      // Marca que el set completo (find_all) ya se descargó al menos una vez.
+      // Distingue "cursor seteado por bootstrap" de "cursor seteado por el pull
+      // global del dashboard", que puede ser incompleto (solo change-feed).
+      await txn.insert('sync_cursors', {
+        'stream': _bootstrapDoneMarker,
+        'cursor': '1',
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     });
+  }
+
+  static const String _bootstrapDoneMarker = '__bootstrap_done__';
+
+  Future<bool> _hasCompletedBootstrap(Database db) async {
+    return _hasCursor(db, _bootstrapDoneMarker);
   }
 
   Future<bool> _shouldBootstrapForScope({
@@ -649,6 +678,35 @@ class CatalogsRepository {
       await db.rawQuery('SELECT COUNT(*) FROM $table'),
     );
     return (count ?? 0) > 0;
+  }
+
+  /// Reencola las operaciones fallidas (conflicto/rechazadas) para un nuevo
+  /// intento, regenerando `operation_id` e `idempotency_key`. El backend
+  /// deduplica por clave; sin clave nueva devolvería el mismo error cacheado.
+  /// Seguro porque estas operaciones nunca llegaron a aplicarse.
+  Future<void> _requeueFailedOperations(Database db) async {
+    final failed = await db.query(
+      'sync_queue',
+      where: "status IN ('conflict', 'rejected')",
+    );
+    for (final row in failed) {
+      final previousId = row['operation_id'] as String;
+      final entityType = row['entity_type'] as String;
+      final operationType = row['operation_type'] as String;
+      final newOperationId = _nextOperationId();
+      await db.update(
+        'sync_queue',
+        {
+          'operation_id': newOperationId,
+          'idempotency_key': '$newOperationId:$entityType:$operationType',
+          'status': 'pending',
+          'error_code': null,
+          'error_message': null,
+        },
+        where: 'operation_id = ?',
+        whereArgs: [previousId],
+      );
+    }
   }
 
   Future<void> _enqueue({

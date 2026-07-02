@@ -70,6 +70,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
   final Map<AppNavItem, GlobalKey<NavigatorState>> _navigatorKeys = {};
   final Set<AppNavItem> _visitedTabs = {};
   bool _wasBackendReachable = false;
+  DateTime? _lastBackPress;
 
   @override
   void initState() {
@@ -176,9 +177,14 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
             widget.authController.networkStatus.canReachBackend;
         if (canReachBackend && !_wasBackendReachable) {
           if (widget.catalogsModule != null) {
-            unawaited(widget.catalogsModule!.repository.autoSync());
+            // includeFailed: reintenta también lo que había fallado antes
+            // (con clave nueva), no solo lo pendiente.
+            unawaited(
+              widget.catalogsModule!.repository.syncNow(includeFailed: true),
+            );
           }
-          // Vaciar la cola de salida compartida (asignaciones, saddles).
+          // Vaciar la cola de salida compartida (asignaciones, saddles);
+          // autoSync ya reintenta las fallidas.
           unawaited(widget.outbox?.autoSync() ?? Future<void>.value());
         }
         _wasBackendReachable = canReachBackend;
@@ -193,18 +199,37 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           canPop: false,
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
+            // 1. Si el tab activo tiene una sub-ruta abierta (detalle, formulario),
+            //    el back la cierra primero.
             final activeNav =
                 _navigatorKeys[_shellNav.currentTab]?.currentState;
             if (activeNav != null && activeNav.canPop()) {
               activeNav.pop();
               return;
             }
-            if (_shellNav.currentTab != AppNavItem.inicio) {
-              _shellNav.selectTab(AppNavItem.inicio);
+            // 2. Si no hay sub-ruta, regresa al tab visitado anteriormente.
+            if (_shellNav.goBack()) {
+              _ensureTab(_shellNav.currentTab);
               setState(() {});
               return;
             }
-            SystemNavigator.pop();
+            // 3. Sin historial de tabs: doble-tap para salir de la app.
+            final now = DateTime.now();
+            if (_lastBackPress != null &&
+                now.difference(_lastBackPress!) <
+                    const Duration(seconds: 2)) {
+              SystemNavigator.pop();
+              return;
+            }
+            _lastBackPress = now;
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(
+                  content: Text('Presiona atrás otra vez para salir'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
           },
           child: Stack(
           children: [

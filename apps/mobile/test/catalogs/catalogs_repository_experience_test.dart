@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:mobile/features/catalogs/data/catalog_sync_status.dart';
 import 'package:mobile/features/catalogs/data/catalogs_database.dart';
 import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
@@ -73,6 +76,12 @@ void main() {
               local_id TEXT PRIMARY KEY,
               remote_id TEXT NOT NULL,
               entity_type TEXT NOT NULL
+            );
+          ''');
+          await database.execute('''
+            CREATE TABLE sync_cursors (
+              stream TEXT PRIMARY KEY,
+              cursor TEXT NOT NULL
             );
           ''');
         },
@@ -152,6 +161,76 @@ void main() {
 
       expect(items, hasLength(1));
       expect(items.single.id, 'exp-active');
+    });
+
+    test('includeInactive returns active and inactive experiences', () async {
+      await insertExperience(
+        id: 'exp-active',
+        name: 'Activa',
+        slug: 'activa',
+      );
+      await insertExperience(
+        id: 'exp-inactive',
+        name: 'Inactiva',
+        slug: 'inactiva',
+        isActive: 0,
+      );
+
+      final items = await repository.listExperiences(includeInactive: true);
+
+      expect(items, hasLength(2));
+      expect(
+        items.where((e) => !e.isActive).map((e) => e.id),
+        contains('exp-inactive'),
+      );
+    });
+  });
+
+  group('refreshExperiencesFromServer completitud', () {
+    CatalogsRepository repoWithBootstrap(List<Map<String, dynamic>> exps) {
+      final mock = MockClient((req) async {
+        if (req.method == 'GET' && req.url.path == '/sync/bootstrap') {
+          return http.Response(
+            jsonEncode({
+              'experiences': exps,
+              'cursors': {'experiences': 'cur-1'},
+            }),
+            200,
+          );
+        }
+        return http.Response('{}', 200);
+      });
+      return CatalogsRepository(
+        database: CatalogsDatabase.forTesting(db),
+        api: CatalogsSyncApi(
+          baseUrl: 'http://test',
+          readAccessToken: () async => 'test-token',
+          refreshSession: () async => false,
+          httpClient: mock,
+        ),
+      );
+    }
+
+    test('bootstrapea el set completo aunque ya exista cursor + 1 fila',
+        () async {
+      // Estado "incompleto": cursor de experiences + 1 fila, SIN marcador de
+      // bootstrap (lo que dejaba el pull global del dashboard).
+      await db.insert('sync_cursors', {'stream': 'experiences', 'cursor': 'c0'});
+      await insertExperience(id: 'exp-solo', name: 'La unica', slug: 'la-unica');
+
+      final repo = repoWithBootstrap([
+        {'id': 'r1', 'name': 'Uno', 'slug': 'uno', 'description': 'd', 'level': 'basic', 'is_active': true},
+        {'id': 'r2', 'name': 'Dos', 'slug': 'dos', 'description': 'd', 'level': 'basic', 'is_active': true},
+        {'id': 'r3', 'name': 'Tres', 'slug': 'tres', 'description': 'd', 'level': 'basic', 'is_active': true},
+      ]);
+
+      await repo.refreshExperiencesFromServer();
+
+      final items = await repo.listExperiences(includeInactive: true);
+      expect(
+        items.map((e) => e.remoteId),
+        containsAll(<String>['r1', 'r2', 'r3']),
+      );
     });
   });
 

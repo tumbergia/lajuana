@@ -74,15 +74,25 @@ class OutboxRepository extends ChangeNotifier {
   final Map<String, OutboxEntityHandler> _handlers = {};
 
   int _pendingOutboxCount = 0;
+  int _failedOutboxCount = 0;
 
   /// Conteo sincrónico de operaciones pendientes. Se actualiza cada vez que el
   /// outbox cambia; útil para la UI sin necesidad de async.
   int get pendingOutboxCount => _pendingOutboxCount;
 
-  /// Sincroniza la caché del conteo con la base de datos.
+  /// Conteo sincrónico de operaciones fallidas (conflicto/rechazadas) que
+  /// requieren un reintento manual. Útil para mostrar un aviso en la UI.
+  int get failedOutboxCount => _failedOutboxCount;
+
+  /// Sincroniza la caché de conteos con la base de datos.
   /// Llamar al arrancar para cargar ítems de sesiones previas.
   Future<void> refreshCachedPendingCount() async {
+    await _refreshCounts();
+  }
+
+  Future<void> _refreshCounts() async {
     _pendingOutboxCount = await pendingCount();
+    _failedOutboxCount = await failedCount();
     notifyListeners();
   }
 
@@ -116,8 +126,7 @@ class OutboxRepository extends ChangeNotifier {
       'error_message': null,
       'created_at': DateTime.now().toUtc().toIso8601String(),
     });
-    _pendingOutboxCount = await pendingCount();
-    notifyListeners();
+    await _refreshCounts();
     await _flushQuietly();
   }
 
@@ -134,15 +143,26 @@ class OutboxRepository extends ChangeNotifier {
     return count ?? 0;
   }
 
+  Future<int> failedCount() async {
+    final db = await _database.database;
+    final count = Sqflite.firstIntValue(
+      await db.rawQuery(
+        "SELECT COUNT(*) FROM sync_queue WHERE status IN ('conflict', 'rejected')",
+      ),
+    );
+    return count ?? 0;
+  }
+
   Future<bool> hasPending() async => (await pendingCount()) > 0;
 
   Future<void> retryFailedQueue() async {
     await flushQueue(includeFailed: true);
   }
 
-  /// Flush invocado al recuperar conectividad; ignora errores de red.
+  /// Flush invocado al recuperar conectividad; ignora errores de red y
+  /// reintenta también las operaciones que habían fallado (con clave nueva).
   Future<void> autoSync() async {
-    await _flushQuietly(includeFailed: false);
+    await _flushQuietly(includeFailed: true);
   }
 
   Future<void> _flushQuietly({bool includeFailed = false}) async {
@@ -157,11 +177,7 @@ class OutboxRepository extends ChangeNotifier {
   Future<void> flushQueue({bool includeFailed = false}) async {
     final db = await _database.database;
     if (includeFailed) {
-      await db.update('sync_queue', {
-        'status': 'pending',
-        'error_code': null,
-        'error_message': null,
-      }, where: "status IN ('conflict', 'rejected')");
+      await _requeueFailedOperations(db);
     }
     final rows = await db.query(
       'sync_queue',
@@ -262,8 +278,37 @@ class OutboxRepository extends ChangeNotifier {
       }
     }
     if (changed) {
-      _pendingOutboxCount = await pendingCount();
-      notifyListeners();
+      await _refreshCounts();
+    }
+  }
+
+  /// Reencola las operaciones fallidas (conflicto/rechazadas) para un nuevo
+  /// intento. Regenera `operation_id` e `idempotency_key` porque el backend
+  /// deduplica por clave: reenviar la misma devolvería el receipt cacheado con
+  /// el mismo error. Como estas operaciones nunca se aplicaron, cambiar la
+  /// clave no arriesga doble-aplicación.
+  Future<void> _requeueFailedOperations(Database db) async {
+    final failed = await db.query(
+      'sync_queue',
+      where: "status IN ('conflict', 'rejected')",
+    );
+    for (final row in failed) {
+      final previousId = row['operation_id'] as String;
+      final entityType = row['entity_type'] as String;
+      final operationType = row['operation_type'] as String;
+      final newOperationId = _nextOperationId();
+      await db.update(
+        'sync_queue',
+        {
+          'operation_id': newOperationId,
+          'idempotency_key': '$newOperationId:$entityType:$operationType',
+          'status': 'pending',
+          'error_code': null,
+          'error_message': null,
+        },
+        where: 'operation_id = ?',
+        whereArgs: [previousId],
+      );
     }
   }
 

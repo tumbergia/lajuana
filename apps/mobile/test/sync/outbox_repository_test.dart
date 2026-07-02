@@ -180,4 +180,60 @@ void main() {
     await outbox.retryFailedQueue();
     expect(await outbox.listQueueItems(), isEmpty);
   });
+
+  test('retryFailedQueue regenera idempotency_key y expone failedCount',
+      () async {
+    var attempts = 0;
+    final sentKeys = <String>[];
+    final mock = MockClient((req) async {
+      attempts++;
+      final body = jsonDecode(req.body) as Map<String, dynamic>;
+      final op = (body['operations'] as List).first as Map<String, dynamic>;
+      sentKeys.add(op['idempotency_key'] as String);
+      // Rechazo permanente en el primer intento; aplicado en el reintento.
+      final status = attempts == 1 ? 'rejected' : 'applied';
+      return http.Response(
+        jsonEncode({
+          'results': [
+            {
+              'operation_id': op['operation_id'],
+              'status': status,
+              'entity_remote_id': 'remote-9',
+              'version': 1,
+              if (status == 'rejected')
+                'error': {'code': 'validation.error', 'message': 'invalido'},
+            },
+          ],
+        }),
+        200,
+      );
+    });
+    final outbox = buildOutbox(mock);
+
+    await outbox.enqueue(
+      entityType: 'saddle',
+      operationType: 'create',
+      entityLocalId: 'local-9',
+      payload: {'code': 'M-9'},
+    );
+
+    // Tras el rechazo: la op queda fallida y el conteo lo refleja.
+    await outbox.refreshCachedPendingCount();
+    expect(outbox.failedOutboxCount, 1);
+    final beforeRetry = (await outbox.listQueueItems()).single;
+    expect(beforeRetry['status'], 'rejected');
+    final oldKey = beforeRetry['idempotency_key'] as String;
+
+    await outbox.retryFailedQueue();
+
+    // La op se aplicó (cola vacía) y el conteo de fallidas volvió a 0.
+    expect(await outbox.listQueueItems(), isEmpty);
+    expect(outbox.failedOutboxCount, 0);
+    // La clave enviada en el reintento fue distinta a la original: sin esto,
+    // el backend devolvería el receipt cacheado (el mismo rechazo).
+    expect(attempts, 2);
+    expect(sentKeys, hasLength(2));
+    expect(sentKeys.first, oldKey);
+    expect(sentKeys[1], isNot(oldKey));
+  });
 }

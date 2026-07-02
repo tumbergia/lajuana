@@ -71,7 +71,9 @@ class FakeCatalogsRepository extends CatalogsRepository {
   );
 
   @override
-  Future<List<CatalogExperience>> listExperiences() async {
+  Future<List<CatalogExperience>> listExperiences({
+    bool includeInactive = false,
+  }) async {
     if (throwOnListExperiences) throw Exception('List error');
     if (returnEmptyExperiences) return [];
     return [_sampleExperience];

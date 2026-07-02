@@ -35,7 +35,7 @@ class FakeExperienceRepository extends ExperienceRepository {
   );
 
   @override
-  Future<List<CatalogExperience>> list() async {
+  Future<List<CatalogExperience>> list({bool includeInactive = false}) async {
     listCallCount++;
     if (throwOnList) throw Exception('List error');
     if (emptyListCallsBeforeData > 0 &&
