@@ -12,7 +12,7 @@ _EXPERIENCE_KEYWORDS = [
 
 _DETAIL_KEYWORDS = [
     r"\b(detalles?|descripcion|informacion|en.que.consiste|como.es|que.incluye|que.se.hace)\b",
-    r"\b(hablame|cuentame|dime.mas|cuentame|explicame|mas.sobre)\b",
+    r"\b(hablame|cuentame|dime.mas|cuentame|explicame|mas.sobre|quiero.saber)\b",
 ]
 
 _PRICE_KEYWORDS = [
@@ -46,8 +46,16 @@ _BOLD_KEYWORDS = [
 ]
 
 
+_GREETINGS = [
+    r"^(buen(?:os)?\s*d[ií][aá]s?|buenas\s*(tardes|noches)|hola|buenas|saludos|que\s*hay|que\s*mas)\b\s*[,.!?]?\s*",
+]
+
+
 def _extract_experience_name(text: str) -> str | None:
     cleaned = text.strip()
+    # Strip common greetings first
+    for greeting in _GREETINGS:
+        cleaned = re.sub(greeting, "", cleaned, flags=re.IGNORECASE).strip()
     # Remove leading intent phrases
     for prefix in [
         r"dame\s+(los\s+)?(detalles?\s+)?(de\s+)?(la\s+)?(para\s+)?(esta\s+)?(de\s+)?",
@@ -55,10 +63,13 @@ def _extract_experience_name(text: str) -> str | None:
         r"cuentame\s+de\s+",
         r"hablame\s+de\s+",
         r"dime\s+mas\s+(sobre|de)\s+",
+        r"quiero\s+saber\s+(de|sobre)\s+",
     ]:
         cleaned = re.sub(f"^{prefix}", "", cleaned, flags=re.IGNORECASE).strip()
     # Strip leading articles
     cleaned = re.sub(r"^(el|la|los|las|un|una)\s+", "", cleaned, flags=re.IGNORECASE).strip()
+    # Strip trailing punctuation
+    cleaned = cleaned.rstrip(",.!?;:.\n\r ")
     if len(cleaned) > 2 and not any(
         w in cleaned.lower() for w in ["experiencias", "actividades", "planes", "precio", "tienes", "ofrecen"]
     ):

@@ -303,6 +303,7 @@ class NotificationService:
         reservation: ReservationDocument,
         experience_name: str,
         scheduled_date: str,
+        start_time: str | None = None,
     ) -> NotificationOutboxDocument | None:
         if not reservation.holder_phone:
             return None
@@ -311,6 +312,8 @@ class NotificationService:
             "reservation_code": reservation.code,
             "experience_name": experience_name,
             "scheduled_date": scheduled_date,
+            "start_time": start_time or "Por definir",
+            "meeting_point": "https://maps.google.com/?q=5.152583,-75.501472",
         }
         return await self.enqueue(
             event_type=NotificationEventType.RESERVATION_CONFIRMED_LOGISTICS_SENT,

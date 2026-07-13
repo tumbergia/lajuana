@@ -105,7 +105,8 @@ async def get_experience_detail(**kwargs: Any) -> dict[str, Any]:
 
     def _normalize(s: str) -> str:
         nfkd = unicodedata.normalize("NFKD", s)
-        return nfkd.encode("ascii", "ignore").decode("ascii").lower().strip()
+        cleaned = nfkd.encode("ascii", "ignore").decode("ascii").lower().strip()
+        return cleaned.rstrip(",.!?;:.\n\r ")
 
     _STOPWORDS = {"el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "en", "para", "por", "a", "y", "e", "o", "que", "con", "su", "al"}
 

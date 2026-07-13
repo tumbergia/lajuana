@@ -365,6 +365,7 @@ class ReservationService:
         self,
         reservation_id: str,
         actor_id: PydanticObjectId | None = None,
+        start_time: str | None = None,
     ) -> ReservationDocument:
         """Confirma una reserva validando estado, anticipación, pago y disponibilidad por fecha."""
         reservation = await self.get(reservation_id)
@@ -446,6 +447,7 @@ class ReservationService:
                 reservation=reservation,
                 experience_name=experience_name,
                 scheduled_date=scheduled_date,
+                start_time=start_time,
             )
         except Exception:
             logger.exception(

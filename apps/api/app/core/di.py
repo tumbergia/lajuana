@@ -141,6 +141,7 @@ class Container:
         self._services["whatsapp_ingestion_service"] = WhatsAppIngestionService(
             resolver=self._services["conversation_resolver"],
             buffer_service=self._services["message_buffer_service"],
+            outbound_service=self._services["whatsapp_outbound_service"],
         )
 
     # ------------------------------------------------------------------
