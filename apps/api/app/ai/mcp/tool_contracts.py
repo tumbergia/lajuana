@@ -93,6 +93,15 @@ class PublicBusinessRulesOutput(BaseModel):
     alcohol_policy: str
     behavior_policy: str
     reservation_notice_days: int | None = None
+    reservation_draft_ttl_minutes: int
+    require_payment_proof_for_confirmation: bool
+    min_age: int
+    max_age: int
+    location_name: str
+    location_address: str
+    location_municipality: str
+    location_directions: str
+    google_maps_url: str
     general_restrictions: list[str] = Field(default_factory=list)
     disclaimer: str
 

@@ -21,7 +21,8 @@ router = APIRouter(tags=["Assistant"])
 async def ask(request: AskRequest) -> AskResponse:
     orchestrator = AssistantOrchestrator()
     try:
-        return await orchestrator.ask(request)
+        public_request = request.model_copy(update={"channel": "test"})
+        return await orchestrator.ask(public_request)
     except Exception:
         logger.error("Unhandled error in /ask:\n%s", traceback.format_exc())
         raise

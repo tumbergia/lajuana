@@ -1,21 +1,21 @@
 import logging
 import re
-import urllib.parse
 
 import dns.resolver
 from pymongo import AsyncMongoClient
 from pymongo.errors import PyMongoError
 
+from app.common.collections import Collections
 from app.conversations.documents import (
     MessageBufferDocument,
     OutboundMessageDocument,
     WhatsAppInboundEventDocument,
 )
-from app.common.collections import Collections
 from app.core.config import settings
 from app.documents import (
     AppConfigDocument,
     AssignmentDocument,
+    ConfigurationAuditDocument,
     ConversationSessionDocument,
     ConversationTurnDocument,
     EquineDocument,
@@ -65,9 +65,7 @@ def _resolve_srv_uri(uri: str) -> str:
 
     try:
         srv_answers = resolver.resolve(f"_mongodb._tcp.{hostname}", "SRV")
-        hosts = sorted(
-            (str(a.target).rstrip("."), a.port) for a in srv_answers
-        )
+        hosts = sorted((str(a.target).rstrip("."), a.port) for a in srv_answers)
         host_list = ",".join(f"{h}:{p}" for h, p in hosts)
     except Exception as e:
         logger.warning("[db] SRV resolution failed (%s), using hostname as-is", e)
@@ -145,6 +143,7 @@ async def init_db() -> None:
         SyncChangeDocument,
         ConversationSessionDocument,
         ConversationTurnDocument,
+        ConfigurationAuditDocument,
         ReservationAuditLogDocument,
         ToolCallLogDocument,
         WhatsAppInboundEventDocument,
@@ -160,9 +159,7 @@ async def init_db() -> None:
             "wa_message_id", unique=True, name="uq_wa_message_id"
         )
     except PyMongoError:
-        logger.warning(
-            "[db] Index uq_wa_message_id may already exist — continuing"
-        )
+        logger.warning("[db] Index uq_wa_message_id may already exist — continuing")
 
 
 async def close_db() -> None:

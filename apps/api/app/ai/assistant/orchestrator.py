@@ -16,6 +16,7 @@ from app.ai.assistant.response_composer import compose_tool_response
 from app.ai.language.detector import detect_explicit_language_request
 from app.ai.language.messages import t
 from app.ai.mcp import registry
+from app.ai.providers.contracts import LLMProviderError, LLMResourceExhausted, LLMUnavailable
 from app.ai.providers.gemini_provider import (
     GeminiModelUnavailable,
     GeminiProviderError,
@@ -291,7 +292,7 @@ class AssistantOrchestrator:
                     language=session.language,
                 )
                 token_usage = getattr(self._planner, "last_token_usage", None)
-            except GeminiResourceExhausted:
+            except (GeminiResourceExhausted, LLMResourceExhausted):
                 return AskResponse(
                     trace_id=trace_id,
                     action=AssistantAction.FINAL_RESPONSE,
@@ -299,7 +300,7 @@ class AssistantOrchestrator:
                     tool_output={},
                     response=t("resource_exhausted", session.language),
                 )
-            except GeminiModelUnavailable:
+            except (GeminiModelUnavailable, LLMUnavailable):
                 return AskResponse(
                     trace_id=trace_id,
                     action=AssistantAction.HUMAN_HANDOFF,
@@ -307,7 +308,7 @@ class AssistantOrchestrator:
                     tool_output={},
                     response=t("model_unavailable", session.language),
                 )
-            except GeminiProviderError:
+            except (GeminiProviderError, LLMProviderError):
                 return AskResponse(
                     trace_id=trace_id,
                     action=AssistantAction.HUMAN_HANDOFF,
@@ -530,7 +531,12 @@ class AssistantOrchestrator:
                     channel=request.channel,
                     language=session.language,
                 )
-            except (GeminiProviderError, GeminiResourceExhausted, GeminiModelUnavailable) as exc:
+            except (
+                GeminiProviderError,
+                GeminiResourceExhausted,
+                GeminiModelUnavailable,
+                LLMProviderError,
+            ) as exc:
                 logger.warning(
                     "[conversation_id=%s] Compose fallback | tool=%s | error=%s",
                     conversation_id,

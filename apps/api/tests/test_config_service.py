@@ -7,17 +7,16 @@ payment instructions (DB-backed), and update validation.
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import pytest
 from pydantic import BaseModel
 
-from app.common.labels import ErrorCode
-from app.core.errors import ApiError
-
 
 class _FakeRules(BaseModel):
     """Matches ReservationRules shape for mocking."""
+
     min_days_in_advance: int = 3
     require_payment_proof_for_confirmation: bool = True
     reservation_draft_ttl_minutes: int = 30
@@ -63,7 +62,6 @@ class TestConfigEmergencyContacts:
 
 
 class TestConfigReservationRules:
-
     def test_get_rules_returns_defaults_when_no_config(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -74,6 +72,7 @@ class TestConfigReservationRules:
 
             async def no_doc() -> None:
                 return None
+
             monkeypatch.setattr(svc, "get_reservation_rules_document", no_doc)
 
             result = await svc.get_reservation_rules()
@@ -83,9 +82,7 @@ class TestConfigReservationRules:
 
         asyncio.run(run())
 
-    def test_get_rules_returns_stored_values(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_get_rules_returns_stored_values(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.services.config_service import ConfigService
 
         stored = _fake_rules_doc()
@@ -95,6 +92,7 @@ class TestConfigReservationRules:
 
             async def return_stored() -> SimpleNamespace:
                 return stored
+
             monkeypatch.setattr(svc, "get_reservation_rules_document", return_stored)
 
             result = await svc.get_reservation_rules()
@@ -105,6 +103,7 @@ class TestConfigReservationRules:
     def test_update_rules_rejects_negative_days(self) -> None:
         """Pydantic catches negative days at schema level."""
         from pydantic import ValidationError
+
         from app.schemas.config import ReservationRulesUpdateSchema
 
         with pytest.raises(ValidationError):
@@ -124,6 +123,9 @@ class TestConfigReservationRules:
             reservation_rules: object = None
             payment_instructions: object = None
             automation: object = None
+            version: int = 1
+            updated_at: datetime = datetime.now(UTC)
+            id: str | None = None
 
             async def insert(self) -> None:
                 inserted_docs.append(self)
@@ -136,6 +138,7 @@ class TestConfigReservationRules:
 
             async def no_doc() -> None:
                 return None
+
             monkeypatch.setattr(svc, "get_reservation_rules_document", no_doc)
             monkeypatch.setattr(
                 "app.services.config_service.AppConfigDocument",
@@ -144,18 +147,14 @@ class TestConfigReservationRules:
 
             payload = ReservationRulesUpdateSchema(min_days_in_advance=5)
             result = await svc.update_reservation_rules(payload)
-            # Service returns AppConfigDocument; min_days lives in reservation_rules
-            assert result.reservation_rules.min_days_in_advance == 5
+            assert result.min_days_in_advance == 5
             assert len(inserted_docs) == 1
 
         asyncio.run(run())
 
 
 class TestConfigPaymentInstructions:
-
-    def test_returns_defaults_when_no_config(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_returns_defaults_when_no_config(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.services.config_service import ConfigService
 
         async def run() -> None:
@@ -163,9 +162,95 @@ class TestConfigPaymentInstructions:
 
             async def no_doc() -> None:
                 return None
+
             monkeypatch.setattr(svc, "get_payment_instructions_document", no_doc)
 
             result = await svc.get_payment_instructions()
             assert result.account_bank == "Bancolombia"
+
+        asyncio.run(run())
+
+    def test_partial_update_preserves_unset_fields(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.documents.app_config_document import PaymentInstructionsConfig
+        from app.schemas.config import PaymentInstructionsUpdateSchema
+        from app.services.config_service import ConfigService
+
+        async def run() -> None:
+            svc = ConfigService()
+            doc = SimpleNamespace(
+                id="config_id_001",
+                version=3,
+                payment_instructions=PaymentInstructionsConfig(
+                    account_bank="Banco existente",
+                    bold_enabled=True,
+                    bold_checkout_url="https://example.com/pay",
+                ),
+            )
+
+            async def return_doc() -> SimpleNamespace:
+                return doc
+
+            async def no_op(*_args: object, **_kwargs: object) -> None:
+                return None
+
+            monkeypatch.setattr(svc, "get_payment_instructions_document", return_doc)
+            monkeypatch.setattr(svc, "_persist", no_op)
+            monkeypatch.setattr(svc, "_audit", no_op)
+
+            result = await svc.update_payment_instructions(
+                PaymentInstructionsUpdateSchema(bold_surcharge_percent=9)
+            )
+
+            assert result.bold_surcharge_percent == 9
+            assert result.account_bank == "Banco existente"
+            assert result.bold_enabled is True
+            assert result.bold_checkout_url == "https://example.com/pay"
+
+        asyncio.run(run())
+
+
+class TestConfigBusinessLocation:
+    def test_partial_update_preserves_unset_fields(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.documents.app_config_document import BusinessLocationConfig
+        from app.schemas.config import BusinessLocationUpdateSchema
+        from app.services.config_service import ConfigService
+
+        async def run() -> None:
+            svc = ConfigService()
+            doc = SimpleNamespace(
+                id="config_id_002",
+                version=2,
+                business_location=BusinessLocationConfig(
+                    address="Dirección existente",
+                    municipality="Municipio existente",
+                    directions="Indicaciones existentes",
+                    latitude=4.5,
+                    longitude=-74.1,
+                ),
+            )
+
+            async def return_doc() -> SimpleNamespace:
+                return doc
+
+            async def no_op(*_args: object, **_kwargs: object) -> None:
+                return None
+
+            monkeypatch.setattr(svc, "get_business_location_document", return_doc)
+            monkeypatch.setattr(svc, "_persist", no_op)
+            monkeypatch.setattr(svc, "_audit", no_op)
+
+            result = await svc.update_business_location(
+                BusinessLocationUpdateSchema(name="Nombre nuevo")
+            )
+
+            assert result.name == "Nombre nuevo"
+            assert result.address == "Dirección existente"
+            assert result.directions == "Indicaciones existentes"
+            assert result.latitude == 4.5
+            assert result.longitude == -74.1
 
         asyncio.run(run())

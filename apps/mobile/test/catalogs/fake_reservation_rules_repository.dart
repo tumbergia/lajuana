@@ -22,6 +22,9 @@ class FakeReservationRulesRepository extends ReservationRulesRepository {
   static final _sampleRules = CatalogReservationRules(
     minDaysInAdvance: 1,
     requirePaymentProofForConfirmation: false,
+    reservationDraftTtlMinutes: 30,
+    minAge: 12,
+    maxAge: 65,
     syncStatus: catalogSyncStatusSynced,
   );
 
@@ -37,6 +40,9 @@ class FakeReservationRulesRepository extends ReservationRulesRepository {
   Future<void> update({
     required int minDaysInAdvance,
     required bool requirePaymentProofForConfirmation,
+    required int reservationDraftTtlMinutes,
+    required int minAge,
+    required int maxAge,
   }) async {
     updateCallCount++;
     if (throwOnUpdate) throw Exception('Update error');

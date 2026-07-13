@@ -58,7 +58,8 @@ class AppRouter {
     switch (routeName) {
       case AuthRoutes.devLoader:
       case AuthRoutes.widgetMuseum:
-        screen = _devScreen(routeName) ??
+        screen =
+            _devScreen(routeName) ??
             StartupGate(controller: deps.authController);
         break;
       case '/':
@@ -85,6 +86,7 @@ class AppRouter {
                 equineEventRepository: deps.equineEventRepository,
                 outbox: deps.outbox,
                 voiceAssistantModule: deps.voiceAssistantModule,
+                configurationModule: deps.configurationModule,
               )
             : LoginScreen(controller: deps.authController);
         break;

@@ -66,12 +66,11 @@ El `intent_router` enruta `detalles de pago`, `cómo pago`, `medios de pago`,
 pregunta se prioriza antes que `_DETAIL_KEYWORDS` para no confundirla con
 "detalles de una experiencia".
 
-### 3. Bold → handoff a admin (flag)
+### 3. Bold → enlace fijo configurable
 
-Cualquier mención explícita de pago Bold ("link bold", "pagar por bold",
-"quiero un link de pago") enruta a `request_human_review` con
-`bold_requested=True`. El administrador toma la conversación para generar el
-link con el valor correspondiente y continuar; el bot no lo hace solo.
+Cualquier mención explícita de pago Bold enruta a `get_payment_instructions`.
+La herramienta obtiene de `ConfigService` el enlace HTTPS fijo y la comisión
+configurados. Si Bold está inactivo, ofrece únicamente los métodos activos.
 
 ### 4. `includes` expuesto
 
@@ -87,15 +86,15 @@ de `includes` de forma breve.
   permitiendo saltos no pedidos ante mensajes en inglés aislados.
 - **Crear herramienta de email.** Descartado: no existe sistema de envío por
   correo y el usuario debía recibir todo en WhatsApp.
-- **Responder Bold dentro del bot.** Descartado: el link Bold debe generarse
-  con el valor exacto por backoffice; el bot no lo puede emitir solo.
+- **Integración transaccional Bold.** Descartada en esta fase: el enlace es fijo
+  y la verificación del pago continúa siendo administrativa.
 
 ## Consecuencias
 
 - El bot es determinista en español: cambia de idioma sólo a petición.
 - Los detalles de pago se entregan por WhatsApp, no se miente sobre correo.
 - `includes` aparece en respuestas de detalle/experiencia.
-- Bold escala a admin, no se orquesta solo.
+- Bold responde con el enlace fijo configurado, sin inventarlo ni escalarlo.
 
 ## Trazabilidad
 

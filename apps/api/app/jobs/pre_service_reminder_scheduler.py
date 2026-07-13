@@ -119,6 +119,7 @@ class PreServiceReminderScheduler:
             "customer_name": reservation.holder_name or "Cliente",
             "reservation_code": reservation.code,
             "participants_count": str(reservation.participant_count),
+            **await self._service.business_location_vars(),
         }
 
         entry = await self._service.enqueue(

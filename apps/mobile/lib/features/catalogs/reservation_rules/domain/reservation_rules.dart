@@ -4,6 +4,9 @@ class CatalogReservationRules {
   const CatalogReservationRules({
     required this.minDaysInAdvance,
     required this.requirePaymentProofForConfirmation,
+    required this.reservationDraftTtlMinutes,
+    required this.minAge,
+    required this.maxAge,
     required this.syncStatus,
     this.versionRemote,
     this.syncError,
@@ -12,6 +15,9 @@ class CatalogReservationRules {
 
   final int minDaysInAdvance;
   final bool requirePaymentProofForConfirmation;
+  final int reservationDraftTtlMinutes;
+  final int minAge;
+  final int maxAge;
   final CatalogSyncStatus syncStatus;
   final int? versionRemote;
   final String? syncError;

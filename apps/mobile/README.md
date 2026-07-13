@@ -38,6 +38,16 @@ Desde la raíz del repo también:
 make mobile-run MOBILE_API_BASE_URL=http://192.168.1.10:8000/api/v1
 ```
 
+El mapa de Configuración de La Juana acepta un proveedor de tiles HTTPS:
+
+```bash
+flutter run --dart-define=MAP_TILE_URL=https://tiles.example.com/{z}/{x}/{y}.png
+```
+
+Sin ese valor se usa OpenStreetMap solo como fallback de desarrollo. La app
+siempre comparte con clientes el enlace de Google Maps generado por el backend,
+no coordenadas crudas.
+
 **Servidor**: para que el móvil físico llegue al PC, el API debe escuchar en todas las interfaces, p. ej.:
 
 ```bash

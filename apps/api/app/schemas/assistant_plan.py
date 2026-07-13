@@ -38,6 +38,7 @@ class ToolArgs(BaseModel):
     search_days_before: int | None = None
     search_days_after: int | None = None
     limit: int | None = None
+    bold_requested: bool = False
 
 
 class AssistantPlan(BaseModel):

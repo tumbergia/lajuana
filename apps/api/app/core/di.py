@@ -49,6 +49,7 @@ class Container:
         from app.services.service_log_service import ServiceLogService
         from app.services.storage import get_storage_adapter
         from app.services.user_service import UserService
+
         self._services["config_service"] = ConfigService()
         self._services["conversation_lock_service"] = ConversationLockService()
         self._services["conversation_resolver"] = ConversationResolver()
@@ -90,6 +91,7 @@ class Container:
         )
         self._services["notification_service"] = NotificationService(
             outbound_service=self._services["whatsapp_outbound_service"],
+            config_service=config_svc,
         )
         self._services["auth_service"] = AuthService()
 

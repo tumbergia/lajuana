@@ -27,8 +27,8 @@ _SESSION_KEYWORDS = [
     r"\b(en.que.va|estado|como.va.mi|status.de.mi|situacion.de.mi)\b",
 ]
 
-# Consulta de medios/detalles de pago. NO incluye peticiones explicitas de
-# link Bold (esas van a handoff a admin via _BOLD_KEYWORDS).
+# Consulta de medios/detalles de pago. Las peticiones explícitas de Bold se
+# resuelven primero mediante _BOLD_KEYWORDS.
 _PAYMENT_INFO_KEYWORDS = [
     r"\b(detalles?.del.?pago|detalles?.para.?pagar|como.?pago|como.?realizo.?el.?pago)\b",
     r"\b(medios.?de.?pago|formas.?de.?pago|opciones.?de.?pago|numero.?de.?cuenta)\b",
@@ -38,11 +38,23 @@ _PAYMENT_INFO_KEYWORDS = [
 
 _BOLD_KEYWORDS = [
     r"\bbold\b",
+    r"\bbld\b",
     r"\blink.de.pago.bold\b",
     r"\bpago.bold\b",
     r"\blink.bold\b",
     r"\b(link|pagar|pago).*(bold)\b",
     r"\bquiero.*link\b",
+]
+
+_PUBLIC_CONFIGURATION_KEYWORDS = [
+    r"\b(donde|dnd).*(queda|qda|ubicacion|ubikcion)\b",
+    r"\b(ubicacion|ubikcion|como.llegar|google.maps|maps)\b",
+    r"\b(que|q|cuales).*(edad|edades)\b",
+    r"\b(edad|minima|maxima|rango.de.edad)\b",
+    r"\b(cuanto|cuanto|qto).*(tiempo|tmpo).*(pre.?reserva|preresrva|pagar)\b",
+    r"\b(vencimiento|vence|caduca).*(pre.?reserva|preresrva)\b",
+    r"\b(cuantos|cuántos).*(dias|días).*(anticipacion|anticipación|antes).*(reservar|rsrvar)\b",
+    r"\b(necesito|tengo.que|debo).*(comprobante|soporte).*(pago)\b",
 ]
 
 _ADMIN_CONTEXT_KEYWORDS = [
@@ -120,6 +132,7 @@ def _is_admin_context(channel: str | None, msg_lower: str) -> bool:
 
 def _extract_date_range(text: str) -> tuple[str, str] | None:
     from app.ai.assistant.date_extractor import extract_date_range_from_message
+
     try:
         return extract_date_range_from_message(text)
     except Exception:
@@ -133,7 +146,7 @@ def _build_admin_reservation_args(msg_lower: str) -> ToolArgs:
         date_from, date_to = date_range
         args.date_from = date_from  # type: ignore[attr-defined]
         args.date_to = date_to  # type: ignore[attr-defined]
-    elif (date_str := _extract_date(msg_lower)):
+    elif date_str := _extract_date(msg_lower):
         args.date_from = date_str  # type: ignore[attr-defined]
         args.date_to = date_str  # type: ignore[attr-defined]
     if re.search(r"\bpendientes?\b", msg_lower):
@@ -289,7 +302,8 @@ def _extract_experience_name(text: str) -> str | None:
     # Strip leading articles
     cleaned = re.sub(r"^(el|la|los|las|un|una)\s+", "", cleaned, flags=re.IGNORECASE).strip()
     if len(cleaned) > 2 and not any(
-        w in cleaned.lower() for w in ["experiencias", "actividades", "planes", "precio", "tienes", "ofrecen"]
+        w in cleaned.lower()
+        for w in ["experiencias", "actividades", "planes", "precio", "tienes", "ofrecen"]
     ):
         return cleaned
     return None
@@ -307,6 +321,7 @@ def _extract_participant_count(text: str) -> int | None:
 
 def _extract_date(text: str) -> str | None:
     from app.ai.assistant.date_extractor import extract_date_from_message
+
     try:
         return extract_date_from_message(text)
     except Exception:
@@ -335,21 +350,15 @@ def detect_and_build_plan(
         if channel == "admin_api":
             return None
 
-    # ── Bold payment request → human review (flag al admin) ──
-    # Check primero: el usuario pide el link de pago Bold, se levanta flag para
-    # que un admin tome la conversación, genere el link y continúe. El bot no
-    # lo hace solo. Prioridad alta para no mezclar con "detalles del pago".
+    # ── Bold payment request → configured payment instructions ──
     if _matches_any(msg_lower, _BOLD_KEYWORDS):
         return AssistantPlan(
-            action=AssistantAction.HUMAN_HANDOFF,
-            confidence=0.85,
-            tool_name="request_human_review",
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.95,
+            tool_name="get_payment_instructions",
             arguments=ToolArgs(bold_requested=True),
             user_goal="El usuario solicita link de pago Bold.",
-            audit_summary=(
-                "Intent detectado: solicitud de pago Bold, se requiere "
-                "intervención humana del admin para generar el link."
-            ),
+            audit_summary=("Intent detectado: solicitud de enlace Bold configurado."),
         )
 
     # ── Medios/detalles de pago → tool get_payment_instructions ──
@@ -364,6 +373,17 @@ def detect_and_build_plan(
             arguments=ToolArgs(bold_requested=bold),
             user_goal="El usuario quiere conocer los medios de pago por WhatsApp.",
             audit_summary="Intent detectado: consulta de medios de pago.",
+        )
+
+    # ── Public rules and location → live configuration ──
+    if _matches_any(msg_lower, _PUBLIC_CONFIGURATION_KEYWORDS):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.95,
+            tool_name="get_public_business_rules",
+            arguments=ToolArgs(),
+            user_goal="El usuario consulta reglas o ubicación configuradas de La Juana.",
+            audit_summary="Intent detectado: consulta de configuración pública vigente.",
         )
 
     # ── Experience details (check before list to avoid "dime" matching list) ──

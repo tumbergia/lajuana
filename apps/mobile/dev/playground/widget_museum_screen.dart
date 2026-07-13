@@ -18,7 +18,9 @@ import 'package:mobile_ui/src/widgets/app_metric_card.dart';
 import 'package:mobile_ui/src/widgets/app_scaffold.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
+import 'package:mobile_ui/src/widgets/app_select_field.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/app_switch_row.dart';
 import 'package:mobile_ui/src/widgets/app_term_help.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/app_timeline.dart';
@@ -808,6 +810,37 @@ final List<_WidgetEntry> _formEntries = [
     demo: _demoTextField,
   ),
   _WidgetEntry(
+    name: 'AppSelectField',
+    filePath: 'app/widgets/app_select_field.dart',
+    description: 'Select con label externo uppercase y bordes filled/underlined '
+        'alineados a AppTextField.',
+    enumValues: [
+      'AppTextFieldVariant.filled',
+      'AppTextFieldVariant.underlined',
+    ],
+    constructorParams: [
+      'required List<DropdownMenuItem<T>> items',
+      'T? value',
+      'String? label',
+      'String? hintText',
+      'ValueChanged<T?>? onChanged',
+      'AppTextFieldVariant variant = filled',
+    ],
+    demo: _demoSelectField,
+  ),
+  _WidgetEntry(
+    name: 'AppSwitchRow',
+    filePath: 'app/widgets/app_switch_row.dart',
+    description: 'Fila de switch compacta para formularios de configuración.',
+    constructorParams: [
+      'required String title',
+      'required bool value',
+      'required ValueChanged<bool>? onChanged',
+      'String? subtitle',
+    ],
+    demo: _demoSwitchRow,
+  ),
+  _WidgetEntry(
     name: 'AppSegmentedFilter',
     filePath: 'app/widgets/app_segmented_filter.dart',
     description: 'Control segmentado tipo filter bar. Genérico T. '
@@ -1461,6 +1494,28 @@ Widget _demoTextField(BuildContext context) {
         variant: AppTextFieldVariant.underlined,
       ),
     ],
+  );
+}
+
+Widget _demoSelectField(BuildContext context) {
+  return AppSelectField<String>(
+    label: 'Servicio de IA',
+    value: 'gemini',
+    items: const [
+      DropdownMenuItem(value: 'gemini', child: Text('Gemini')),
+      DropdownMenuItem(value: 'openai', child: Text('OpenAI')),
+      DropdownMenuItem(value: 'groq', child: Text('Groq')),
+    ],
+    onChanged: (_) {},
+  );
+}
+
+Widget _demoSwitchRow(BuildContext context) {
+  return AppSwitchRow(
+    title: 'Activar asistente',
+    subtitle: 'Usa las rutas configuradas',
+    value: true,
+    onChanged: (_) {},
   );
 }
 

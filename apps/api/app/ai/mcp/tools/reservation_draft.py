@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import time
+from datetime import datetime
+from decimal import Decimal
 from typing import Any
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 from app.ai.mcp.tool_contracts import (
     AttachPaymentProofToReservationInput,
@@ -20,33 +23,21 @@ from app.core.errors import ApiError
 from app.documents import ReservationDocument
 from app.documents.reservation_document import ACTIVE_RESERVATION_STATUSES
 from app.documents.tool_call_log_document import ToolCallLogDocument
+from app.services.payment_message_service import render_payment_steps
 from app.services.payment_proof_service import ALLOWED_CONTENT_TYPES
 
 
 def _format_currency(amount: Any, currency: str) -> str:
-    if isinstance(amount, int | float):
-        return f"${amount:,.0f} {currency}".replace(",", ".")
+    if isinstance(amount, int | float | Decimal):
+        return f"${float(amount):,.0f} {currency}".replace(",", ".")
     return f"No disponible ({currency})"
 
 
-_GOOGLE_MAPS_LINK = "https://maps.google.com/?q=5.152583,-75.501472"
-
-_PAYMENT_STEPS = """PASO 1. Realizar el pago del valor de la experiencia según número de participantes.
-
-Medios de pago disponibles:
-
-1. CUENTA AHORROS BANCOLOMBIA
-   No. 7165 1544 758
-   Jairo Ramírez Londoño
-   C.C. No. 10.288.647
-
-2. LINK DE PAGO BOLD
-   Debe ser solicitado a LA JUANA para que se genere con el valor correspondiente.
-   *Nota: con el uso de este medio de pago se cargará 7% adicional al valor del servicio, por comisión del intermediario.
-
-PASO 2. Enviar comprobante de pago por este mismo medio (WhatsApp).
-
-PASO 3. Registrar a cada participante en el formulario que te enviaremos."""
+def _format_expiry(value: Any) -> str:
+    if isinstance(value, datetime):
+        local = value.astimezone(ZoneInfo("America/Bogota"))
+        return local.strftime("%Y-%m-%d %H:%M")
+    return str(value)
 
 
 def _build_pre_reservation_response(
@@ -56,6 +47,7 @@ def _build_pre_reservation_response(
     requested_date: Any,
     participant_count: int,
     quote_snapshot: dict[str, Any],
+    payment_steps: str,
 ) -> str:
     experience = (
         quote_snapshot.get("experience_name")
@@ -73,9 +65,9 @@ def _build_pre_reservation_response(
         f"- Personas: {participant_count}\n"
         f"- Valor: {_format_currency(subtotal, currency)}\n"
         f"- Código: {code}\n"
-        f"- Vence: {expire_at}\n\n"
+        f"- Vence: {_format_expiry(expire_at)}\n\n"
         "Para confirmar la reserva sigue estos pasos:\n\n"
-        f"{_PAYMENT_STEPS}\n\n"
+        f"{payment_steps}\n\n"
         "Importante: esta pre-reserva no está confirmada. "
         "Solo queda confirmada cuando un administrador verifica el pago "
         "y revalida la disponibilidad."
@@ -118,6 +110,7 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
             conversation_id=payload.conversation_id,
             trace_id=trace_id,
         )
+        payment_config = await container.config_service.get_payment_instructions()
 
         output = CreateReservationDraftOutput(
             created=True,
@@ -131,6 +124,7 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
                 requested_date=payload.requested_date,
                 participant_count=payload.participant_count,
                 quote_snapshot=payload.quote_snapshot,
+                payment_steps=render_payment_steps(payment_config),
             ),
         )
         return output.model_dump(mode="json")

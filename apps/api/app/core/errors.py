@@ -34,10 +34,15 @@ async def api_error_handler(_: Request, exc: ApiError) -> JSONResponse:
 
 
 async def validation_error_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
+    fields = []
+    for error in exc.errors():
+        serializable_error = dict(error)
+        serializable_error.pop("ctx", None)
+        fields.append(serializable_error)
     payload = ApiErrorResponse(
         code=ErrorCode.VALIDATION_ERROR,
         message="La solicitud contiene datos inválidos.",
-        details={"fields": exc.errors()},
+        details={"fields": fields},
     )
     return JSONResponse(status_code=422, content=payload.model_dump())
 

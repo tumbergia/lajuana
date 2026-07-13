@@ -30,12 +30,17 @@ async def _run_create_reservation_draft_includes_payment_and_disclaimer(
 
     async def fake_payment_instructions(self):
         return SimpleNamespace(
+            manual_transfer_enabled=True,
             account_bank="Banco Demo",
             account_type="Ahorros",
             account_number="1234567890",
             account_holder_name="La Juana SAS",
             account_holder_id="NIT 900000000-1",
             transfer_note="Enviar soporte con codigo.",
+            bold_enabled=True,
+            bold_checkout_url="https://checkout.bold.co/demo",
+            bold_surcharge_percent=7,
+            bold_note="Comisión del intermediario.",
         )
 
     class FakeToolCallLogDocument:
@@ -72,7 +77,7 @@ async def _run_create_reservation_draft_includes_payment_and_disclaimer(
     assert "3" in response
     assert "PR-20260515-ABC123" in response
     assert "Para confirmar la reserva sigue estos pasos:" in response
-    assert "BANCOLOMBIA" in response
+    assert "BANCO DEMO" in response
     assert "no está confirmada" in response
     assert "verifica el pago" in response
     assert "revalida la disponibilidad" in response
@@ -99,8 +104,8 @@ async def _run_get_payment_instructions_returns_defaults(
     config = await ConfigService().get_payment_instructions()
     assert config.account_bank == "Bancolombia"
     assert config.account_type == "Ahorros"
-    assert config.account_number == "00000000000"
-    assert config.account_holder_name == "La Juana"
+    assert config.account_number == "7165 1544 758"
+    assert config.account_holder_name == "Jairo Ramírez Londoño"
     assert config.transfer_note
 
 

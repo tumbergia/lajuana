@@ -25,7 +25,7 @@ class CatalogsDatabase {
     final path = p.join(databasesPath, 'la_juana_catalogs_v1.db');
     _database = await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE experiences_local (
@@ -64,6 +64,9 @@ class CatalogsDatabase {
             id INTEGER PRIMARY KEY CHECK (id = 1),
             min_days_in_advance INTEGER NOT NULL,
             require_payment_proof_for_confirmation INTEGER NOT NULL,
+            reservation_draft_ttl_minutes INTEGER NOT NULL,
+            min_age INTEGER NOT NULL,
+            max_age INTEGER NOT NULL,
             sync_status TEXT NOT NULL,
             sync_error TEXT NULL,
             version_remote INTEGER NULL,
@@ -116,6 +119,17 @@ class CatalogsDatabase {
         ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 4) {
+          await db.execute(
+            'ALTER TABLE reservation_rules_local ADD COLUMN reservation_draft_ttl_minutes INTEGER NOT NULL DEFAULT 30',
+          );
+          await db.execute(
+            'ALTER TABLE reservation_rules_local ADD COLUMN min_age INTEGER NOT NULL DEFAULT 12',
+          );
+          await db.execute(
+            'ALTER TABLE reservation_rules_local ADD COLUMN max_age INTEGER NOT NULL DEFAULT 65',
+          );
+        }
         if (oldVersion < 3) {
           await db.execute(
             'ALTER TABLE experiences_local ADD COLUMN image_base64 TEXT NULL',

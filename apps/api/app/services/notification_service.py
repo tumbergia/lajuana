@@ -28,15 +28,31 @@ from app.notifications.in_app_provider import InAppNotificationProvider
 from app.notifications.provider import NotificationProvider
 from app.notifications.renderer import render_subject, render_template
 from app.notifications.whatsapp_provider import WhatsAppNotificationProvider
+from app.services.config_service import ConfigService
 
 
 class NotificationService:
-    def __init__(self, outbound_service: WhatsAppOutboundService | None = None) -> None:
+    def __init__(
+        self,
+        outbound_service: WhatsAppOutboundService | None = None,
+        config_service: ConfigService | None = None,
+    ) -> None:
         outbound = outbound_service or WhatsAppOutboundService()
         self._providers: dict[NotificationChannel, NotificationProvider] = {
             NotificationChannel.EMAIL: EmailProvider(),
             NotificationChannel.IN_APP: InAppNotificationProvider(),
             NotificationChannel.WHATSAPP: WhatsAppNotificationProvider(outbound_service=outbound),
+        }
+        self._config_service = config_service or ConfigService()
+
+    async def business_location_vars(self) -> dict[str, str]:
+        location = await self._config_service.get_business_location()
+        return {
+            "location_name": location.name,
+            "location_address": location.address,
+            "location_municipality": location.municipality,
+            "location_directions": location.directions,
+            "location_url": location.google_maps_url,
         }
 
     def get_provider(self, channel: NotificationChannel) -> NotificationProvider:
@@ -95,9 +111,7 @@ class NotificationService:
             template_key=template_key,
             subject=subject,
             rendered_body=rendered_body,
-            status=(
-                NotificationStatus.SCHEDULED if scheduled_for else NotificationStatus.PENDING
-            ),
+            status=(NotificationStatus.SCHEDULED if scheduled_for else NotificationStatus.PENDING),
             scheduled_for=(
                 scheduled_for.replace(tzinfo=UTC)
                 if scheduled_for and scheduled_for.tzinfo is None
@@ -311,6 +325,7 @@ class NotificationService:
             "reservation_code": reservation.code,
             "experience_name": experience_name,
             "scheduled_date": scheduled_date,
+            **await self.business_location_vars(),
         }
         return await self.enqueue(
             event_type=NotificationEventType.RESERVATION_CONFIRMED_LOGISTICS_SENT,
@@ -350,6 +365,7 @@ class NotificationService:
             return None
         vars = {
             "customer_name": reservation.holder_name or "Cliente",
+            **await self.business_location_vars(),
         }
         return await self.enqueue(
             event_type=NotificationEventType.PAYMENT_APPROVED_LOCATION_SENT,
@@ -495,9 +511,11 @@ class NotificationService:
         try:
             current_reservation = await ReservationDocument.get(entry.reservation_id)
             if current_reservation is not None:
-                current_status = str(current_reservation.status.value) if hasattr(
-                    current_reservation.status, "value"
-                ) else str(current_reservation.status)
+                current_status = (
+                    str(current_reservation.status.value)
+                    if hasattr(current_reservation.status, "value")
+                    else str(current_reservation.status)
+                )
             else:
                 current_status = "unknown"
             log = ReservationAuditLogDocument(
@@ -527,17 +545,22 @@ class NotificationService:
 
     async def process_pending_batch(self, batch_size: int = 10) -> int:
         now = datetime.now(UTC)
-        entries = await NotificationOutboxDocument.find(
-            {
-                "$or": [
-                    {"status": NotificationStatus.PENDING.value},
-                    {
-                        "status": NotificationStatus.SCHEDULED.value,
-                        "scheduled_for": {"$lte": now},
-                    },
-                ]
-            }
-        ).sort("created_at").limit(batch_size).to_list()
+        entries = (
+            await NotificationOutboxDocument.find(
+                {
+                    "$or": [
+                        {"status": NotificationStatus.PENDING.value},
+                        {
+                            "status": NotificationStatus.SCHEDULED.value,
+                            "scheduled_for": {"$lte": now},
+                        },
+                    ]
+                }
+            )
+            .sort("created_at")
+            .limit(batch_size)
+            .to_list()
+        )
 
         count = 0
         for entry in entries:

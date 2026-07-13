@@ -19,13 +19,21 @@ import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/auth/presentation/auth_routes.dart';
 import 'package:mobile/features/auth/presentation/user_role_display.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
-import 'package:mobile/features/catalogs/presentation/pages/catalogs_home_page.dart';
+import 'package:mobile/features/configuration/configuration_module.dart';
+import 'package:mobile/features/configuration/presentation/screens/la_juana_configuration_page.dart';
 import 'package:mobile/features/providers/presentation/screens/providers_module_screen.dart';
 import 'package:mobile/features/saddles/presentation/screens/saddles_module_screen.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
 import 'package:mobile/features/providers/providers_module.dart';
 
-enum _MoreDestination { menu, profile, contacts, changePassword, providers, sillas }
+enum _MoreDestination {
+  menu,
+  profile,
+  contacts,
+  changePassword,
+  providers,
+  sillas,
+}
 
 class MoreFlowScreen extends StatefulWidget {
   const MoreFlowScreen({
@@ -36,6 +44,7 @@ class MoreFlowScreen extends StatefulWidget {
     this.saddlesModule,
     this.providersModule,
     this.onCallRequested,
+    this.configurationModule,
   });
 
   final AuthController controller;
@@ -44,6 +53,7 @@ class MoreFlowScreen extends StatefulWidget {
   final SaddlesModule? saddlesModule;
   final ProvidersModule? providersModule;
   final Future<bool> Function(String phone)? onCallRequested;
+  final LaJuanaConfigurationModule? configurationModule;
 
   @override
   State<MoreFlowScreen> createState() => _MoreFlowScreenState();
@@ -245,18 +255,21 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.sillas),
         ),
-        if (widget.catalogsModule != null) ...[
+        if (widget.catalogsModule != null &&
+            widget.configurationModule != null &&
+            widget.controller.currentUser?.role == 'admin') ...[
           const SizedBox(height: 12),
           AppEntityRowCard(
-            title: 'Catálogos',
-            subtitle: 'Experiencias, fechas, reglas y emergencias',
-            leading: _menuLeadingIcon(Symbols.library_books),
+            title: 'Configuración de La Juana',
+            subtitle: 'Reservas, inteligencia artificial, pagos y ubicación',
+            leading: _menuLeadingIcon(Symbols.settings),
             trailing: const Icon(Icons.chevron_right_rounded, size: 18),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => CatalogsHomePage(
-                    module: widget.catalogsModule!,
+                  builder: (_) => LaJuanaConfigurationPage(
+                    module: widget.configurationModule!,
+                    catalogsModule: widget.catalogsModule!,
                     authController: widget.controller,
                   ),
                 ),
@@ -298,7 +311,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSectionHeader(
-          eyebrow: 'Gestion',
+          eyebrow: 'Gestión',
           title: 'Sillas',
           trailing: AppButton(
             label: 'Volver',
@@ -724,7 +737,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         );
       case LocalAuthState.invalid:
         return const AppBadge(
-          label: 'Sesion expirada',
+          label: 'Sesión expirada',
           tone: AppBadgeTone.danger,
           uppercase: false,
         );

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import time
 from typing import Any
 
@@ -46,7 +47,9 @@ async def compose_tool_response(
         "tool_output": tool_output,
     }
 
-    llm_result = await get_llm_provider().generate_structured(
+    provider_result = get_llm_provider()
+    provider = await provider_result if inspect.isawaitable(provider_result) else provider_result
+    llm_result = await provider.generate_structured(
         system=response_prompt,
         user=str(payload),
         response_model=ToolResultResponse,

@@ -105,6 +105,9 @@ void main() {
       await controller.update(
         minDaysInAdvance: 3,
         requirePaymentProofForConfirmation: true,
+        reservationDraftTtlMinutes: 45,
+        minAge: 10,
+        maxAge: 70,
       );
 
       expect(controller.rules, isNotNull);
@@ -123,6 +126,9 @@ void main() {
         () => controller.update(
           minDaysInAdvance: 3,
           requirePaymentProofForConfirmation: true,
+          reservationDraftTtlMinutes: 45,
+          minAge: 10,
+          maxAge: 70,
         ),
         throwsA(isA<Exception>()),
       );

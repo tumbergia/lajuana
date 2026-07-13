@@ -1,3 +1,6 @@
+import hashlib
+import hmac
+import json
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -26,7 +29,16 @@ async def _receive_webhook(
     request: Request,
     ingestion: WhatsAppIngestionService,
 ) -> dict[str, Any]:
-    payload = await request.json()
+    raw_body = await request.body()
+    if settings.whatsapp_app_secret:
+        supplied = request.headers.get("X-Hub-Signature-256", "")
+        expected = (
+            "sha256="
+            + hmac.new(settings.whatsapp_app_secret.encode(), raw_body, hashlib.sha256).hexdigest()
+        )
+        if not hmac.compare_digest(supplied, expected):
+            raise HTTPException(status_code=403, detail="Invalid WhatsApp webhook signature")
+    payload = json.loads(raw_body)
     ingested = await ingestion.ingest(payload)
     logger.info("[webhook] Ingested %d message(s)", ingested)
     return {"received": True, "ingested_messages": ingested}

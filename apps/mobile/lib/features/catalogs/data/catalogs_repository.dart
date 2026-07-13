@@ -518,6 +518,9 @@ class CatalogsRepository {
       return const CatalogReservationRules(
         minDaysInAdvance: 0,
         requirePaymentProofForConfirmation: true,
+        reservationDraftTtlMinutes: 30,
+        minAge: 12,
+        maxAge: 65,
         syncStatus: CatalogSyncStatus.synced,
       );
     }
@@ -527,6 +530,9 @@ class CatalogsRepository {
   Future<void> updateReservationRules({
     required int minDaysInAdvance,
     required bool requirePaymentProofForConfirmation,
+    required int reservationDraftTtlMinutes,
+    required int minAge,
+    required int maxAge,
   }) async {
     final db = await _database.database;
     final current = await db.query(
@@ -542,6 +548,9 @@ class CatalogsRepository {
       'min_days_in_advance': minDaysInAdvance,
       'require_payment_proof_for_confirmation':
           requirePaymentProofForConfirmation ? 1 : 0,
+      'reservation_draft_ttl_minutes': reservationDraftTtlMinutes,
+      'min_age': minAge,
+      'max_age': maxAge,
       'sync_status': catalogSyncStatusToDb(CatalogSyncStatus.pending),
       'sync_error': null,
       'version_remote': version,
@@ -558,6 +567,9 @@ class CatalogsRepository {
         'min_days_in_advance': minDaysInAdvance,
         'require_payment_proof_for_confirmation':
             requirePaymentProofForConfirmation,
+        'reservation_draft_ttl_minutes': reservationDraftTtlMinutes,
+        'min_age': minAge,
+        'max_age': maxAge,
       },
     );
     await _tryFlushQueue();
@@ -844,8 +856,7 @@ class CatalogsRepository {
         ? CatalogSyncStatus.synced
         : preservedStatus;
     final remoteImageUrl = payload['image_url'] as String?;
-    final hasRemoteImage =
-        remoteImageUrl != null && remoteImageUrl.isNotEmpty;
+    final hasRemoteImage = remoteImageUrl != null && remoteImageUrl.isNotEmpty;
     String? preservedImageBase64;
     if (existingByTarget.isNotEmpty) {
       final existing = existingByTarget.first;
@@ -877,7 +888,9 @@ class CatalogsRepository {
       'route_details_json': _encodeNullableJson(payload['route_details']),
       'pricing_json': _encodeNullableJson(payload['pricing']),
       'inclusions_json': _encodeNullableJson(payload['inclusions']),
-      'standard_max_participants': parseInt(payload['standard_max_participants']),
+      'standard_max_participants': parseInt(
+        payload['standard_max_participants'],
+      ),
       'min_participants': parseInt(payload['min_participants']),
       'tags_json': _encodeNullableJson(payload['tags']),
       'duration_hours': parseInt(payload['duration_hours']),
@@ -915,6 +928,10 @@ class CatalogsRepository {
           (payload['require_payment_proof_for_confirmation'] as bool? ?? true)
           ? 1
           : 0,
+      'reservation_draft_ttl_minutes':
+          parseInt(payload['reservation_draft_ttl_minutes']) ?? 30,
+      'min_age': parseInt(payload['min_age']) ?? 12,
+      'max_age': parseInt(payload['max_age']) ?? 65,
       'sync_status': catalogSyncStatusToDb(nextStatus),
       'sync_error': nextStatus == CatalogSyncStatus.synced
           ? null
@@ -1130,6 +1147,10 @@ class CatalogsRepository {
       minDaysInAdvance: parseInt(row['min_days_in_advance']) ?? 0,
       requirePaymentProofForConfirmation:
           (parseInt(row['require_payment_proof_for_confirmation']) ?? 1) == 1,
+      reservationDraftTtlMinutes:
+          parseInt(row['reservation_draft_ttl_minutes']) ?? 30,
+      minAge: parseInt(row['min_age']) ?? 12,
+      maxAge: parseInt(row['max_age']) ?? 65,
       syncStatus: catalogSyncStatusFromDb(row['sync_status'] as String),
       versionRemote: parseInt(row['version_remote']),
       syncError: row['sync_error'] as String?,

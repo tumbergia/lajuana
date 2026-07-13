@@ -14,6 +14,7 @@ class Collections:
     RESERVATION_PROVIDERS = "reservation_providers"
     POLICIES = "policies"
     APP_CONFIG = "app_config"
+    CONFIGURATION_AUDITS = "configuration_audits"
     FILE_UPLOADS = "file_uploads"
     SYNC_CHANGES = "sync_changes"
     SYNC_OPERATION_RECEIPTS = "sync_operation_receipts"

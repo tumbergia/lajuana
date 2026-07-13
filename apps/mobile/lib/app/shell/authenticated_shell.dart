@@ -17,6 +17,7 @@ import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/voice_pull_scope.dart';
 import 'widgets/shell_status_region.dart';
 import 'package:mobile/features/configuration/presentation/screens/more_flow_screen.dart';
+import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
@@ -45,6 +46,7 @@ class AuthenticatedShell extends StatefulWidget {
     required this.equineEventRepository,
     this.outbox,
     required this.voiceAssistantModule,
+    this.configurationModule,
     this.onCallRequested,
   });
 
@@ -59,6 +61,7 @@ class AuthenticatedShell extends StatefulWidget {
   final EquineRepository equineRepository;
   final EquineEventRepository equineEventRepository;
   final VoiceAssistantModule voiceAssistantModule;
+  final LaJuanaConfigurationModule? configurationModule;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -162,6 +165,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           saddlesModule: widget.saddlesModule,
           providersModule: widget.providersModule,
           onCallRequested: widget.onCallRequested,
+          configurationModule: widget.configurationModule,
         );
       case AppNavItem.none:
         return const SizedBox.shrink();

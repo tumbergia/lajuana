@@ -28,14 +28,14 @@ class FakeCatalogsRepository extends CatalogsRepository {
     this.throwOnSync = false,
     this.throwOnUpdate = false,
   }) : super(
-          database: CatalogsDatabase.instance,
-          api: CatalogsSyncApi(
-            baseUrl: 'http://test.local',
-            readAccessToken: _dummyToken,
-            refreshSession: _dummyRefresh,
-            httpClient: http.Client(),
-          ),
-        );
+         database: CatalogsDatabase.instance,
+         api: CatalogsSyncApi(
+           baseUrl: 'http://test.local',
+           readAccessToken: _dummyToken,
+           refreshSession: _dummyRefresh,
+           httpClient: http.Client(),
+         ),
+       );
 
   static Future<String?> _dummyToken() async => 'test-token';
   static Future<bool> _dummyRefresh() async => true;
@@ -118,6 +118,9 @@ class FakeCatalogsRepository extends CatalogsRepository {
   static final _sampleRules = CatalogReservationRules(
     minDaysInAdvance: 1,
     requirePaymentProofForConfirmation: false,
+    reservationDraftTtlMinutes: 30,
+    minAge: 12,
+    maxAge: 65,
     syncStatus: catalogSyncStatusSynced,
   );
 
@@ -137,6 +140,9 @@ class FakeCatalogsRepository extends CatalogsRepository {
   Future<void> updateReservationRules({
     required int minDaysInAdvance,
     required bool requirePaymentProofForConfirmation,
+    required int reservationDraftTtlMinutes,
+    required int minAge,
+    required int maxAge,
   }) async {
     updateRulesCallCount++;
     if (throwOnUpdate) throw Exception('Update error');

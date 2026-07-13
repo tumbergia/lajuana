@@ -21,7 +21,9 @@ class Settings(BaseSettings):
 
     app_base_url: str = "http://localhost:8080"
 
-    auth_jwt_secret: str = "change-me"  # TODO: rotar a 32+ chars (invalida tokens existentes); ver ADR-JWT
+    auth_jwt_secret: str = (
+        "change-me"  # TODO: rotar a 32+ chars (invalida tokens existentes); ver ADR-JWT
+    )
     auth_jwt_algorithm: str = "HS256"
     auth_access_token_minutes: int = 30
     auth_refresh_token_days: int = 30
@@ -46,10 +48,12 @@ class Settings(BaseSettings):
     gemini_fallback_models: str = "gemini-3-flash,gemini-3.1-flash-lite,gemini-2.5-flash-lite"
     gemini_temperature: float = 0.2
     gemini_timeout_seconds: int = 60
+    ai_config_encryption_key: str = ""
 
     assistant_min_plan_confidence: float = 0.55
 
     whatsapp_verify_token: str = "change-me"
+    whatsapp_app_secret: str = ""
     whatsapp_access_token: str = ""
     whatsapp_phone_number_id: str = ""
     whatsapp_api_version: str = "v23.0"
@@ -81,9 +85,7 @@ class Settings(BaseSettings):
     def _validate_production_secrets(self) -> "Settings":
         if self.app_env in ("production", "prod", "staging"):
             if self.auth_jwt_secret in ("change-me", ""):
-                raise ValueError(
-                    "AUTH_JWT_SECRET must be set in production/staging environment"
-                )
+                raise ValueError("AUTH_JWT_SECRET must be set in production/staging environment")
             if self.whatsapp_verify_token in ("change-me", ""):
                 raise ValueError(
                     "WHATSAPP_VERIFY_TOKEN must be set in production/staging environment"
@@ -92,6 +94,10 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "PARTICIPANT_FORM_TOKEN_SECRET must be set in production/staging environment"
                 )
+            if not self.ai_config_encryption_key:
+                raise ValueError("AI_CONFIG_ENCRYPTION_KEY must be set in production/staging")
+            if not self.whatsapp_app_secret:
+                raise ValueError("WHATSAPP_APP_SECRET must be set in production/staging")
         return self
 
     model_config = SettingsConfigDict(

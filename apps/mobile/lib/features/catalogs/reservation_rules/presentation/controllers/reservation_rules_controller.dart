@@ -60,10 +60,16 @@ class ReservationRulesController extends ChangeNotifier {
   Future<void> update({
     required int minDaysInAdvance,
     required bool requirePaymentProofForConfirmation,
+    required int reservationDraftTtlMinutes,
+    required int minAge,
+    required int maxAge,
   }) async {
     await _repository.update(
       minDaysInAdvance: minDaysInAdvance,
       requirePaymentProofForConfirmation: requirePaymentProofForConfirmation,
+      reservationDraftTtlMinutes: reservationDraftTtlMinutes,
+      minAge: minAge,
+      maxAge: maxAge,
     );
     await loadLocalThenRefresh(refreshServer: false);
   }

@@ -1,4 +1,4 @@
-import difflib
+import inspect
 import time
 
 from app.ai.assistant.prompts.planner import (
@@ -10,7 +10,6 @@ from app.ai.providers.factory import get_llm_provider
 from app.core.logging import logger
 from app.core.time import format_colombia_today_es, now_colombia
 from app.schemas.assistant_plan import AssistantPlan
-
 
 # Mapa de keywords → tools administrativas relevantes
 # Si el mensaje del usuario contiene alguna keyword, solo mostramos esa categoría
@@ -215,7 +214,10 @@ class GeminiPlanner:
             "user_message": user_message,
         }
 
-        provider = get_llm_provider()
+        provider_result = get_llm_provider()
+        provider = (
+            await provider_result if inspect.isawaitable(provider_result) else provider_result
+        )
         result = await provider.generate_structured(
             system=system_prompt,
             user=str(context),

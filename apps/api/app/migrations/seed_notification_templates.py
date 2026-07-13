@@ -97,11 +97,21 @@ SEED_TEMPLATES = [
 
 <h3>NUESTRA UBICACIÓN</h3>
 <p>Nos encontramos a 30 minutos al norte de Manizales (18 km), sobre la Ruta de la Arriería (vía a Salamina). A los 16 km en la vía principal, tomar el desvío a la derecha, por la vía destapada, que conduce a las ruinas de la antigua fábrica de Cementos Caldas, a 2 km de este desvío (5 min aprox), encontrará la portada al lado izquierdo de la vía (aviso LA JUANA).</p>
-<p><strong>Coordenadas:</strong> 5°09'09.3"N 75°30'05.3"W</p>
-<p><strong>Google Maps:</strong> <a href="https://maps.google.com/?q=5.152568,-75.501468">5.152568, -75.501468</a></p>
+<p><strong>{{location_name}}</strong> — {{location_address}}, {{location_municipality}}</p>
+<p>{{location_directions}}</p>
+<p><strong>Google Maps:</strong> <a href="{{location_url}}">Abrir ubicación de La Juana</a></p>
 
 <p><strong>Recuerda:</strong> llegar 15 minutos antes de la hora programada. ¡Te esperamos!</p>""",
-        "variables_allowed": ["customer_name", "reservation_code", "participants_count"],
+        "variables_allowed": [
+            "customer_name",
+            "reservation_code",
+            "participants_count",
+            "location_name",
+            "location_address",
+            "location_municipality",
+            "location_directions",
+            "location_url",
+        ],
     },
     {
         "template_key": "post_service_completed.customer",
@@ -125,7 +135,9 @@ SEED_TEMPLATES = [
             "obligatorio en este enlace: {{form_url}}"
         ),
         "variables_allowed": [
-            "customer_name", "experience_name", "form_url",
+            "customer_name",
+            "experience_name",
+            "form_url",
         ],
     },
     {
@@ -134,8 +146,9 @@ SEED_TEMPLATES = [
         "subject": None,
         "body": (
             "¡Pago confirmado! Aquí tienes la información para tu experiencia:\n\n"
-            "Ubicación de la finca:\n"
-            "https://maps.google.com/?q=5.152583,-75.501472\n\n"
+            "Ubicación de {{location_name}}:\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
             "RECOMENDACIONES PARA LA ACTIVIDAD\n\n"
             "- Usar ropa cómoda: pantalón largo, camisa o camiseta manga larga, "
             "zapatos cerrados, medias que cubran los tobillos, chaqueta rompevientos.\n"
@@ -152,7 +165,12 @@ SEED_TEMPLATES = [
             "Éste será proporcionado por LA JUANA.\n\n"
             "¡Te esperamos!"
         ),
-        "variables_allowed": ["customer_name"],
+        "variables_allowed": [
+            "customer_name",
+            "location_name",
+            "location_url",
+            "location_directions",
+        ],
     },
     {
         "template_key": "payment_rejected_sent.customer",
@@ -164,7 +182,9 @@ SEED_TEMPLATES = [
             "Por favor envía un nuevo comprobante válido para continuar."
         ),
         "variables_allowed": [
-            "customer_name", "experience_name", "rejection_reason",
+            "customer_name",
+            "experience_name",
+            "rejection_reason",
         ],
     },
     {
@@ -175,8 +195,9 @@ SEED_TEMPLATES = [
             "¡Tu reserva {{reservation_code}} ha sido confirmada! "
             "Aquí tienes la información para tu experiencia {{experience_name}} "
             "el {{scheduled_date}}:\n\n"
-            "Ubicación de la finca:\n"
-            "https://maps.google.com/?q=5.152583,-75.501472\n\n"
+            "Ubicación de {{location_name}}:\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
             "RECOMENDACIONES PARA LA ACTIVIDAD\n\n"
             "- Usar ropa cómoda: pantalón largo, camisa o camiseta manga larga, "
             "zapatos cerrados, medias que cubran los tobillos, chaqueta rompevientos.\n"
@@ -194,7 +215,13 @@ SEED_TEMPLATES = [
             "¡Te esperamos!"
         ),
         "variables_allowed": [
-            "customer_name", "reservation_code", "experience_name", "scheduled_date",
+            "customer_name",
+            "reservation_code",
+            "experience_name",
+            "scheduled_date",
+            "location_name",
+            "location_url",
+            "location_directions",
         ],
     },
     {
@@ -206,7 +233,9 @@ SEED_TEMPLATES = [
             "formulario de participantes para {{experience_name}}: {{form_url}}"
         ),
         "variables_allowed": [
-            "customer_name", "experience_name", "form_url",
+            "customer_name",
+            "experience_name",
+            "form_url",
         ],
     },
     {
@@ -219,7 +248,9 @@ SEED_TEMPLATES = [
             "Si tienes alguna duda o deseas reprogramar, escríbenos y con gusto te ayudaremos. "
         ),
         "variables_allowed": [
-            "customer_name", "reservation_code", "experience_name",
+            "customer_name",
+            "reservation_code",
+            "experience_name",
         ],
     },
 ]

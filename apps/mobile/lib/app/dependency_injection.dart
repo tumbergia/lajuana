@@ -27,6 +27,8 @@ import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
 import 'package:mobile/features/providers/providers_module.dart';
 import 'package:mobile/features/voice_assistant/voice_assistant_module.dart';
+import 'package:mobile/features/configuration/configuration_module.dart';
+import 'package:mobile/features/configuration/infrastructure/configuration_api_client.dart';
 
 /// Value object holding all initialized application dependencies.
 class AppDependencies {
@@ -42,6 +44,7 @@ class AppDependencies {
     required this.equineEventRepository,
     required this.outbox,
     required this.voiceAssistantModule,
+    required this.configurationModule,
   });
 
   final AuthController authController;
@@ -54,6 +57,7 @@ class AppDependencies {
   final EquineRepository equineRepository;
   final EquineEventRepository equineEventRepository;
   final VoiceAssistantModule voiceAssistantModule;
+  final LaJuanaConfigurationModule configurationModule;
 
   /// Cola de salida compartida para escrituras offline (asignaciones, saddles).
   final OutboxRepository outbox;
@@ -180,6 +184,13 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     tokenStorage: tokenStorage,
     refreshSession: refreshSession,
   );
+  final configurationModule = LaJuanaConfigurationModule(
+    ConfigurationApiClient(
+      baseUrl: apiBaseUrl,
+      readAccessToken: readAccessToken,
+      refreshSession: refreshSession,
+    ),
+  );
 
   return AppDependencies(
     authController: authController,
@@ -193,5 +204,6 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     equineEventRepository: equineEventRepository,
     outbox: outbox,
     voiceAssistantModule: voiceAssistantModule,
+    configurationModule: configurationModule,
   );
 }

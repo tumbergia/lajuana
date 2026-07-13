@@ -10,8 +10,9 @@ UPDATED_BODY = (
     "¡Tu reserva {{reservation_code}} ha sido confirmada! "
     "Aquí tienes la información para tu experiencia {{experience_name}} "
     "el {{scheduled_date}}:\n\n"
-    "Ubicación de la finca:\n"
-    "https://maps.google.com/?q=5.152583,-75.501472\n\n"
+    "Ubicación de {{location_name}}:\n"
+    "{{location_url}}\n"
+    "{{location_directions}}\n\n"
     "RECOMENDACIONES PARA LA ACTIVIDAD\n\n"
     "- Usar ropa cómoda: pantalón largo, camisa o camiseta manga larga, "
     "zapatos cerrados, medias que cubran los tobillos, chaqueta rompevientos.\n"
@@ -46,6 +47,9 @@ async def update_reservation_confirmed_logistics_template() -> bool:
         "reservation_code",
         "experience_name",
         "scheduled_date",
+        "location_name",
+        "location_url",
+        "location_directions",
     ]
     await doc.save()
     return True

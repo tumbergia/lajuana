@@ -4,6 +4,18 @@ Base path: `/api/v1`
 
 Documentation: auto-generated OpenAPI available at `/api/v1/docs` (Swagger UI).
 
+## Configuración de La Juana
+
+Prefix: `/config` — acceso administrativo
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET/PATCH | `/api/v1/config/reservation-rules` | Reglas, vencimiento y edades de reserva |
+| GET | `/api/v1/config/summary` | Estado resumido de la configuración |
+| GET/PATCH | `/api/v1/config/ai` | Tres rutas ordenadas de IA; claves write-only |
+| GET/PATCH | `/api/v1/config/payment-methods` | Consignación y enlace fijo Bold |
+| GET/PATCH | `/api/v1/config/business-location` | Dirección, indicaciones y punto del mapa |
+
 ---
 
 ## Health

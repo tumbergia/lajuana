@@ -240,11 +240,15 @@ async def get_public_business_rules(**kwargs: Any) -> dict[str, Any]:
     import time
 
     from app.ai.mcp.tool_contracts import PublicBusinessRulesOutput
+    from app.core.di import Container
     from app.documents.tool_call_log_document import ToolCallLogDocument
 
     trace_id = kwargs.get("trace_id", "")
     conversation_turn_id = kwargs.get("conversation_turn_id")
     started = time.perf_counter()
+    config_service = Container.get_instance().config_service
+    reservation_rules = await config_service.get_reservation_rules()
+    location = await config_service.get_business_location()
 
     output = PublicBusinessRulesOutput(
         trace_id=trace_id,
@@ -262,11 +266,26 @@ async def get_public_business_rules(**kwargs: Any) -> dict[str, Any]:
             "Instrucciones de seguridad obligatorias. "
             "Comportamiento agresivo o irresponsable causa cancelación inmediata sin reembolso."
         ),
-        reservation_notice_days=7,
+        reservation_notice_days=reservation_rules.min_days_in_advance,
+        reservation_draft_ttl_minutes=reservation_rules.reservation_draft_ttl_minutes,
+        require_payment_proof_for_confirmation=(
+            reservation_rules.require_payment_proof_for_confirmation
+        ),
+        min_age=reservation_rules.min_age,
+        max_age=reservation_rules.max_age,
+        location_name=location.name,
+        location_address=location.address,
+        location_municipality=location.municipality,
+        location_directions=location.directions,
+        google_maps_url=location.google_maps_url,
         general_restrictions=[
-            "Edad mínima: 5 años (bajo responsabilidad del acompañante).",
+            f"Edad permitida: {reservation_rules.min_age} a {reservation_rules.max_age} años.",
             "Máximo 8 participantes por reserva.",
-            "Reserva con mínimo 7 días de anticipación.",
+            (
+                f"Reserva con mínimo {reservation_rules.min_days_in_advance} días de anticipación."
+                if reservation_rules.min_days_in_advance > 0
+                else "Se permiten reservas para el mismo día, sujetas a disponibilidad."
+            ),
             "No apto para personas con problemas de movilidad severos.",
         ],
         disclaimer=(

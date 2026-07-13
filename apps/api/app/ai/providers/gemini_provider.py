@@ -7,6 +7,7 @@ from google import genai
 from google.genai import errors as genai_errors
 from pydantic import BaseModel
 
+from app.ai.providers.contracts import LLMProviderError, LLMResourceExhausted, LLMUnavailable
 from app.ai.providers.token_telemetry import log_token_usage
 from app.core.config import settings
 from app.core.logging import logger
@@ -14,15 +15,15 @@ from app.core.logging import logger
 TModel = TypeVar("TModel", bound=BaseModel)
 
 
-class GeminiProviderError(RuntimeError):
+class GeminiProviderError(LLMProviderError):
     pass
 
 
-class GeminiResourceExhausted(GeminiProviderError):
+class GeminiResourceExhausted(GeminiProviderError, LLMResourceExhausted):
     pass
 
 
-class GeminiModelUnavailable(GeminiProviderError):
+class GeminiModelUnavailable(GeminiProviderError, LLMUnavailable):
     pass
 
 
@@ -39,12 +40,16 @@ def _strip_additional_properties(schema: Any) -> Any:
 
 
 class GeminiProvider:
-    def __init__(self) -> None:
-        keys = [
-            settings.gemini_api_key,
-            settings.gemini_api_key_2,
-            settings.gemini_api_key_3,
-        ]
+    def __init__(self, *, api_key: str | None = None, model: str | None = None) -> None:
+        keys = (
+            [api_key]
+            if api_key is not None
+            else [
+                settings.gemini_api_key,
+                settings.gemini_api_key_2,
+                settings.gemini_api_key_3,
+            ]
+        )
         keys = [k for k in keys if k]
 
         if not keys:
@@ -55,9 +60,12 @@ class GeminiProvider:
 
         self._keys = keys
         self._clients = [genai.Client(api_key=k) for k in keys]
-        models = [settings.gemini_model] + [
-            m.strip() for m in settings.gemini_fallback_models.split(",") if m.strip()
-        ]
+        models = (
+            [model]
+            if model is not None
+            else [settings.gemini_model]
+            + [m.strip() for m in settings.gemini_fallback_models.split(",") if m.strip()]
+        )
         self._models = models
         self._current_key_index = 0
         self._current_model_index = 0
@@ -171,7 +179,9 @@ class GeminiProvider:
                         completion_tokens=completion_tokens,
                         total_tokens=total_tokens,
                         channel=telemetry_context.get("channel") if telemetry_context else None,
-                        conversation_id=telemetry_context.get("conversation_id") if telemetry_context else None,
+                        conversation_id=telemetry_context.get("conversation_id")
+                        if telemetry_context
+                        else None,
                     )
             except Exception:
                 logger.debug("Failed to log token telemetry; continuing.")
