@@ -87,6 +87,7 @@ class AppRouter {
                 outbox: deps.outbox,
                 voiceAssistantModule: deps.voiceAssistantModule,
                 configurationModule: deps.configurationModule,
+                notificationsModule: deps.notificationsModule,
               )
             : LoginScreen(controller: deps.authController);
         break;

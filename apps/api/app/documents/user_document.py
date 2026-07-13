@@ -16,6 +16,12 @@ class UserDocument(AuditDocument):
     is_active: bool = True
     last_login_at: datetime | None = None
     refresh_token_hash: str | None = None
+    # event_type -> enabled. Missing keys default to True (all on).
+    notification_preferences: dict[str, bool] = Field(default_factory=dict)
 
     class Settings:
         name = Collections.USERS
+
+    def prefers_notification(self, event_type: str) -> bool:
+        """Return whether this user wants in-app notifications for an event type."""
+        return self.notification_preferences.get(event_type, True)

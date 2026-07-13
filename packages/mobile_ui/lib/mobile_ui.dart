@@ -31,6 +31,7 @@ export 'src/widgets/app_section_header.dart';
 export 'src/widgets/app_segmented_filter.dart';
 export 'src/widgets/app_select_field.dart';
 export 'src/widgets/app_status_banner.dart';
+export 'src/widgets/app_switch.dart';
 export 'src/widgets/app_switch_row.dart';
 export 'src/widgets/app_term_help.dart';
 export 'src/widgets/app_text_field.dart';

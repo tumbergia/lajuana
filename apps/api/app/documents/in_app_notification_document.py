@@ -12,6 +12,7 @@ class InAppNotificationDocument(AuditDocument):
     read: bool = False
     read_at: str | None = None
     event_type: str
+    contact_phone: str | None = None
 
     class Settings:
         name = Collections.IN_APP_NOTIFICATIONS

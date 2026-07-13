@@ -7,6 +7,7 @@ import 'package:mobile/features/auth/domain/auth_models.dart';
 import 'package:mobile/features/auth/domain/auth_repository.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_status_resolver.dart';
+import 'package:mobile/features/notifications/infrastructure/notification_background_service.dart';
 
 class AuthController extends ChangeNotifier {
   AuthController({
@@ -106,6 +107,11 @@ class AuthController extends ChangeNotifier {
       hasPendingSync = false;
       isOfflineRestricted = false;
       _clearError();
+      try {
+        await NotificationBackgroundService.cancel();
+      } catch (_) {
+        // Best-effort cleanup of local background polling.
+      }
     } on AuthFailure catch (failure) {
       _applyFailure(failure);
     } finally {

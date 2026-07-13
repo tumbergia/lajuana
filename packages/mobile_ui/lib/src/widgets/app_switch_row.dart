@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_switch.dart';
 
-/// Compact switch row matching settings forms (zero padding, theme colors).
+/// Settings switch row: [AppEntityRowCard] chrome + square [AppSwitch].
 class AppSwitchRow extends StatelessWidget {
   const AppSwitchRow({
     super.key,
@@ -15,29 +17,36 @@ class AppSwitchRow extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
 
+  bool get _enabled => onChanged != null;
+
+  void _toggle() {
+    final callback = onChanged;
+    if (callback == null) return;
+    callback(!value);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(
-        title,
-        style: theme.textTheme.bodyLarge?.copyWith(color: scheme.onSurface),
-      ),
-      subtitle: subtitle == null
-          ? null
-          : Text(
-              subtitle!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+    return Semantics(
+      button: true,
+      toggled: value,
+      enabled: _enabled,
+      label: title,
+      child: AppEntityRowCard(
+        title: title,
+        subtitle: subtitle ?? '',
+        selected: value,
+        wrapTitle: true,
+        onTap: _enabled ? _toggle : null,
+        trailing: ExcludeSemantics(
+          child: IgnorePointer(
+            child: AppSwitch(
+              value: value,
+              onChanged: onChanged,
             ),
-      value: value,
-      onChanged: onChanged,
-      activeThumbColor: scheme.onPrimary,
-      activeTrackColor: scheme.primary,
+          ),
+        ),
+      ),
     );
   }
 }

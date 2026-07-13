@@ -331,6 +331,28 @@ class ConversationTurnWorker:
                 turn.responded_at = datetime.now(UTC)
                 await turn.save()
                 await self._buffer_service.mark_processed(buffer=reloaded)
+                try:
+                    from app.common.enums import NotificationEventType
+                    from app.core.di import Container
+
+                    preview = (combined_input or "").strip().replace("\n", " ")
+                    if len(preview) > 140:
+                        preview = preview[:137] + "..."
+                    await Container.get_instance().notification_service.enqueue_admin_in_app(
+                        event_type=NotificationEventType.WHATSAPP_MESSAGE_UNATTENDED,
+                        title="WhatsApp sin asistente",
+                        body=(
+                            f"{buffer_doc.normalized_phone}: "
+                            f"{preview or '(mensaje sin texto)'}"
+                        ),
+                        dedup_suffix=str(turn.id),
+                        contact_phone=buffer_doc.normalized_phone,
+                    )
+                except Exception:
+                    logger.exception(
+                        "[conversation_id=%s] Failed to enqueue unattended WhatsApp noti",
+                        conversation_id,
+                    )
                 logger.info(
                     "[conversation_id=%s] Assistant disabled; turn skipped | messages=%d",
                     conversation_id,

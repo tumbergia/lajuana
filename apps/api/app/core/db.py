@@ -21,7 +21,11 @@ from app.documents import (
     EquineDocument,
     EquineEventDocument,
     ExperienceDocument,
+    FileUploadDocument,
     HumanReviewRequestDocument,
+    InAppNotificationDocument,
+    NotificationOutboxDocument,
+    NotificationTemplateDocument,
     ParticipantDocument,
     ParticipantFormLinkDocument,
     PaymentProofDocument,
@@ -34,6 +38,7 @@ from app.documents import (
     SaddleDocument,
     ServiceLogDocument,
     SyncChangeDocument,
+    SyncOperationReceiptDocument,
     ToolCallLogDocument,
     UserDocument,
 )
@@ -141,6 +146,7 @@ async def init_db() -> None:
         ReservationProviderDocument,
         PolicyDocument,
         SyncChangeDocument,
+        SyncOperationReceiptDocument,
         ConversationSessionDocument,
         ConversationTurnDocument,
         ConfigurationAuditDocument,
@@ -150,6 +156,10 @@ async def init_db() -> None:
         MessageBufferDocument,
         OutboundMessageDocument,
         HumanReviewRequestDocument,
+        NotificationTemplateDocument,
+        NotificationOutboxDocument,
+        InAppNotificationDocument,
+        FileUploadDocument,
     ]
 
     await init_beanie(database=database, document_models=document_models)

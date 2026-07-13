@@ -19,6 +19,7 @@ class InAppNotificationProvider(NotificationProvider):
             title=entry.subject or "Notificación",
             body=entry.rendered_body or "",
             event_type=entry.event_type,
+            contact_phone=entry.contact_phone,
         )
         await doc.insert()
         return SendResult(success=True, provider_message_id=str(doc.id))

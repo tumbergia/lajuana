@@ -12,11 +12,12 @@ class InAppNotification {
   final String? deletedAt;
   final String id;
   final String userId;
-  final String reservationId;
+  final String? reservationId;
   final String title;
   final String body;
   final bool read;
   final String eventType;
+  final String? contactPhone;
 
   const InAppNotification(
     {
@@ -26,11 +27,12 @@ class InAppNotification {
     this.deletedAt,
     required this.id,
     required this.userId,
-    required this.reservationId,
+    this.reservationId,
     required this.title,
     required this.body,
     required this.read,
     required this.eventType,
+    this.contactPhone,
     }
   );
 
@@ -42,11 +44,12 @@ class InAppNotification {
       deletedAt: json['deleted_at'] as String?,
       id: json['id'] as String,
       userId: json['user_id'] as String,
-      reservationId: json['reservation_id'] as String,
+      reservationId: json['reservation_id'] as String?,
       title: json['title'] as String,
       body: json['body'] as String,
       read: json['read'] as bool,
       eventType: json['event_type'] as String,
+      contactPhone: json['contact_phone'] as String?,
     );
   }
 
@@ -62,6 +65,7 @@ class InAppNotification {
     'body': body,
     'read': read,
     'event_type': eventType,
+    'contact_phone': contactPhone,
   };
 
 }

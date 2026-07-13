@@ -28,6 +28,8 @@ import 'package:mobile/features/saddles/presentation/screens/saddles_module_scre
 import 'package:mobile/features/saddles/saddles_module.dart';
 import 'package:mobile/features/providers/providers_module.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
+import 'package:mobile/features/notifications/notifications_module.dart';
+import 'package:mobile/features/notifications/presentation/screens/notifications_settings_page.dart';
 
 enum _MoreDestination {
   menu,
@@ -50,6 +52,7 @@ class MoreFlowScreen extends StatefulWidget {
     this.onCallRequested,
     this.configurationModule,
     this.reservationsModule,
+    this.notificationsModule,
   });
 
   final AuthController controller;
@@ -60,6 +63,7 @@ class MoreFlowScreen extends StatefulWidget {
   final Future<bool> Function(String phone)? onCallRequested;
   final LaJuanaConfigurationModule? configurationModule;
   final ReservationsModule? reservationsModule;
+  final NotificationsModule? notificationsModule;
 
   @override
   State<MoreFlowScreen> createState() => _MoreFlowScreenState();
@@ -242,6 +246,24 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           onTap: () => _open(_MoreDestination.profile),
         ),
         const SizedBox(height: 12),
+        if (widget.notificationsModule != null) ...[
+          AppEntityRowCard(
+            title: 'Notificaciones',
+            subtitle: 'Preferencias y alertas en segundo plano',
+            leading: _menuLeadingIcon(Symbols.notifications),
+            trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => NotificationsSettingsPage(
+                    controller: widget.notificationsModule!.controller,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+        ],
         AppEntityRowCard(
           title: 'Números',
           subtitle: 'De emergencia',

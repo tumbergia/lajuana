@@ -82,6 +82,11 @@ class ConfigService:
             list(payload.model_dump(exclude_none=True)),
             config.version,
         )
+        await self._notify_config_changed(
+            section="Reglas de reserva",
+            actor_id=actor_id,
+            version=config.version,
+        )
         return config
 
     async def update_reservation_rules(
@@ -139,6 +144,11 @@ class ConfigService:
         config.payment_instructions = PaymentInstructionsConfig(**data)
         await self._persist(config)
         await self._audit(actor_id, "payment_instructions", list(updates), config.version)
+        await self._notify_config_changed(
+            section="Instrucciones de pago",
+            actor_id=actor_id,
+            version=config.version,
+        )
         return PaymentInstructionsSchema.model_validate(config.payment_instructions.model_dump())
 
     async def get_business_location_document(self) -> AppConfigDocument | None:
@@ -179,6 +189,11 @@ class ConfigService:
         config.business_location = BusinessLocationConfig(**data)
         await self._persist(config)
         await self._audit(actor_id, "business_location", list(updates), config.version)
+        await self._notify_config_changed(
+            section="Ubicación del negocio",
+            actor_id=actor_id,
+            version=config.version,
+        )
         return await self.get_business_location()
 
     async def get_ai_configuration_document(self) -> AppConfigDocument | None:
@@ -367,6 +382,11 @@ class ConfigService:
             ["enabled", "provider_mode", "muted_phones", "routes"],
             config.version,
         )
+        await self._notify_config_changed(
+            section="Configuración de IA",
+            actor_id=actor_id,
+            version=config.version,
+        )
         return await self.get_ai_configuration()
 
     async def get_summary(self) -> ConfigurationSummarySchema:
@@ -410,3 +430,34 @@ class ConfigService:
             changed_fields=changed_fields,
             config_version=version,
         ).insert()
+
+    async def _notify_config_changed(
+        self,
+        *,
+        section: str,
+        actor_id: PydanticObjectId | None,
+        version: int,
+    ) -> None:
+        try:
+            from app.common.enums import NotificationEventType
+            from app.core.di import Container
+            from app.core.logging import logger
+            from app.documents import UserDocument
+
+            actor_name = "Alguien"
+            if actor_id is not None:
+                actor = await UserDocument.get(actor_id)
+                if actor is not None:
+                    actor_name = actor.full_name or actor.email or actor_name
+
+            await Container.get_instance().notification_service.enqueue_admin_in_app(
+                event_type=NotificationEventType.CONFIGURATION_CHANGED,
+                title="Configuración actualizada",
+                body=f"{actor_name} actualizó: {section}",
+                actor_user_id=str(actor_id) if actor_id else None,
+                dedup_suffix=f"{section}:{version}",
+            )
+        except Exception:
+            from app.core.logging import logger
+
+            logger.exception("[config] Failed to enqueue configuration_changed")

@@ -207,6 +207,34 @@ class NotificationEventType(StrEnum):
     RESERVATION_CONFIRMED_LOGISTICS_SENT = "reservation_confirmed_logistics_sent"
     PARTICIPANT_FORM_RESENT = "participant_form_resent"
     RESERVATION_CANCELLED = "reservation_cancelled"
+    PAYMENT_PROOF_REGISTERED = "payment_proof_registered"
+    PARTICIPANT_FORM_COMPLETED = "participant_form_completed"
+    HUMAN_REVIEW_REQUESTED = "human_review_requested"
+    WHATSAPP_MESSAGE_UNATTENDED = "whatsapp_message_unattended"
+    RESERVATION_STATUS_CHANGED = "reservation_status_changed"
+    RESERVATION_UPDATED = "reservation_updated"
+    CONFIGURATION_CHANGED = "configuration_changed"
+    ASSIGNMENT_CHANGED = "assignment_changed"
+    TOMORROW_SERVICES_SUMMARY = "tomorrow_services_summary"
+    WHATSAPP_DELIVERY_FAILED = "whatsapp_delivery_failed"
+
+
+# Preference keys for in-app notification toggles (grouped for UI).
+NOTIFICATION_PREFERENCE_KEYS: tuple[str, ...] = (
+    NotificationEventType.RESERVATION_CREATED.value,
+    NotificationEventType.RESERVATION_CONFIRMED.value,
+    NotificationEventType.RESERVATION_STATUS_CHANGED.value,
+    NotificationEventType.RESERVATION_UPDATED.value,
+    NotificationEventType.RESERVATION_CANCELLED.value,
+    NotificationEventType.PAYMENT_PROOF_REGISTERED.value,
+    NotificationEventType.PARTICIPANT_FORM_COMPLETED.value,
+    NotificationEventType.HUMAN_REVIEW_REQUESTED.value,
+    NotificationEventType.WHATSAPP_MESSAGE_UNATTENDED.value,
+    NotificationEventType.CONFIGURATION_CHANGED.value,
+    NotificationEventType.ASSIGNMENT_CHANGED.value,
+    NotificationEventType.TOMORROW_SERVICES_SUMMARY.value,
+    NotificationEventType.WHATSAPP_DELIVERY_FAILED.value,
+)
 
 
 class NotificationChannel(StrEnum):

@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'app_badge.dart';
 
@@ -11,6 +12,10 @@ class AppEntityRowCard extends StatefulWidget {
   final Widget? leading;
   final Widget? trailing;
 
+  /// When true, the title shrinks and/or wraps (up to 2 lines) instead of
+  /// ellipsizing. Useful for switch rows and dense settings labels.
+  final bool wrapTitle;
+
   const AppEntityRowCard({
     super.key,
     required this.title,
@@ -21,6 +26,7 @@ class AppEntityRowCard extends StatefulWidget {
     this.accentColor,
     this.leading,
     this.trailing,
+    this.wrapTitle = false,
   });
 
   @override
@@ -36,6 +42,27 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
         : scheme.surfaceContainerLow;
 
     final showAccent = widget.accentColor != null;
+    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w800,
+          color: scheme.onSurface,
+          height: 1.2,
+        );
+
+    final Widget titleText = widget.wrapTitle
+        ? AutoSizeText(
+            widget.title.toUpperCase(),
+            maxLines: 2,
+            minFontSize: 12,
+            stepGranularity: 0.5,
+            overflow: TextOverflow.visible,
+            style: titleStyle,
+          )
+        : Text(
+            widget.title.toUpperCase(),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: titleStyle,
+          );
 
     final body = Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -57,17 +84,7 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Text(
-                        widget.title.toUpperCase(),
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: scheme.onSurface,
-                              height: 1.2,
-                            ),
-                      ),
-                    ),
+                    Expanded(child: titleText),
                     if (widget.badge != null) ...[
                       const SizedBox(width: 8),
                       widget.badge!,

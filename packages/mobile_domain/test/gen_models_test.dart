@@ -59,5 +59,41 @@ void main() {
       expect(item.id, 's1');
       expect(item.code, 'S-001');
     });
+
+    test('InAppNotification.fromJson nullable reservation', () {
+      final json = <String, dynamic>{
+        'id': 'n1',
+        'user_id': 'u1',
+        'reservation_id': null,
+        'title': 'Atención',
+        'body': 'Cliente pide ayuda',
+        'read': false,
+        'event_type': 'human_review_requested',
+        'version': 1,
+        'created_at': '2024-01-01T00:00:00Z',
+        'updated_at': '2024-06-01T00:00:00Z',
+      };
+      final item = InAppNotification.fromJson(json);
+      expect(item.id, 'n1');
+      expect(item.reservationId, isNull);
+      expect(item.read, isFalse);
+    });
+
+    test('NotificationPreferences.fromJson map', () {
+      final json = <String, dynamic>{
+        'preferences': {
+          'reservation_created': true,
+          'configuration_changed': false,
+        },
+      };
+      final prefs = NotificationPreferences.fromJson(json);
+      expect(prefs.preferences?['reservation_created'], isTrue);
+      expect(prefs.preferences?['configuration_changed'], isFalse);
+    });
+
+    test('InAppUnreadCount.fromJson', () {
+      final count = InAppUnreadCount.fromJson({'unread_count': 3});
+      expect(count.unreadCount, 3);
+    });
   });
 }
