@@ -75,6 +75,14 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "es": "Tool {tool_name} ejecutada correctamente.",
         "en": "Tool {tool_name} executed successfully.",
     },
+    "unsupported_file_type": {
+        "es": "¡Hola! Por ahora solo puedo recibir mensajes de texto, imágenes, audios y archivos PDF para comprobantes de pago. Los stickers, videos y otros documentos como Word o Excel no son compatibles. ¿Puedes enviarme la información de otra forma?",
+        "en": "Hello! For now I can only receive text messages, images, audio, and PDF files for payment proofs. Stickers, videos, and other documents like Word or Excel are not supported. Could you send me the information another way?",
+    },
+    "unsupported_document_type": {
+        "es": "Recibí tu archivo, pero solo aceptamos archivos PDF para comprobantes de pago. Los documentos de Word, Excel u otros formatos no son compatibles. ¿Puedes enviarme el comprobante en formato PDF o una foto?",
+        "en": "I received your file, but we only accept PDF files for payment proofs. Word, Excel, or other formats are not supported. Could you send the proof as a PDF or a photo instead?",
+    },
 }
 
 
