@@ -50,7 +50,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     with RefreshableState {
   late final EquinesController _controller;
 
-  _ViewMode _viewMode = _ViewMode.grid;
+  _ViewMode _viewMode = _ViewMode.list;
   late final TextEditingController _searchController;
   String _searchQuery = '';
 

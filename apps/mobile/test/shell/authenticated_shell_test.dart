@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:mobile/app/shell/authenticated_shell.dart';
+import 'package:mobile/features/auth/presentation/widgets/session_loading_view.dart';
 import 'package:mobile_ui/src/theme/app_theme.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
@@ -117,8 +118,8 @@ void main() {
             'items': [
               {
                 'code': 'national_emergency',
-                'name': 'Linea unica de emergencias',
-                'description': 'Atencion nacional 24/7',
+                'name': 'Línea única de emergencias',
+                'description': 'Atención nacional 24/7',
                 'phone_number': '123',
                 'category': 'security',
                 'is_primary': true,
@@ -202,30 +203,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('PERFIL'), findsOneWidget);
-    expect(find.text('CONTACTOS'), findsOneWidget);
+    expect(find.text('NÚMEROS'), findsOneWidget);
     expect(find.text('OPCIONES ADICIONALES'), findsOneWidget);
 
     await tester.tap(find.text('PERFIL'));
     await tester.pumpAndSettle();
 
-    expect(find.text('MAS'), findsWidgets);
+    expect(find.text('MÁS'), findsWidgets);
     expect(find.text('PERFIL'), findsWidgets);
-    expect(find.text('CAMBIAR CONTRASENA'), findsOneWidget);
+    expect(find.text('CAMBIAR CONTRASEÑA'), findsOneWidget);
 
     await tester.ensureVisible(find.text('VOLVER'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('VOLVER'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('CONTACTOS'));
+    await tester.tap(find.text('NÚMEROS'));
     await tester.pumpAndSettle();
 
-    expect(find.text('MAS'), findsWidgets);
-    expect(find.text('CONTACTOS'), findsWidgets);
-    expect(find.text('LINEA UNICA DE EMERGENCIAS'), findsOneWidget);
-    expect(find.text('ATENCION NACIONAL 24/7'), findsOneWidget);
+    expect(find.text('MÁS'), findsWidgets);
+    expect(find.text('NÚMEROS'), findsWidgets);
+    expect(find.text('LÍNEA ÚNICA DE EMERGENCIAS'), findsOneWidget);
+    expect(find.text('ATENCIÓN NACIONAL 24/7'), findsOneWidget);
     expect(find.textContaining('TEL:'), findsNothing);
 
-    await tester.tap(find.text('LINEA UNICA DE EMERGENCIAS'));
+    await tester.tap(find.text('LÍNEA ÚNICA DE EMERGENCIAS'));
     await tester.pumpAndSettle();
     expect(calledPhone, '123');
 
@@ -233,7 +234,7 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('Perfil abre formulario y permite cambiar contrasena', (
+  testWidgets('Perfil abre formulario y permite cambiar contraseña', (
     tester,
   ) async {
     final repo = FakeAuthRepository();
@@ -262,11 +263,11 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('PERFIL'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('CAMBIAR CONTRASENA'));
+    await tester.tap(find.text('CAMBIAR CONTRASEÑA'));
     await tester.pumpAndSettle();
 
-    expect(find.text('MAS > PERFIL'), findsOneWidget);
-    expect(find.text('CAMBIAR CONTRASENA'), findsOneWidget);
+    expect(find.text('MÁS > PERFIL'), findsOneWidget);
+    expect(find.text('CAMBIAR CONTRASEÑA'), findsOneWidget);
 
     final fields = find.byType(TextField);
     expect(fields, findsNWidgets(3));
@@ -290,7 +291,7 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('Muestra overlay de reconexion durante refresh', (tester) async {
+  testWidgets('Muestra overlay de reconexión durante refresh', (tester) async {
     final repo = FakeAuthRepository();
     final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity)
@@ -315,7 +316,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('RECONECTANDO'), findsOneWidget);
+    expect(find.byType(SessionLoadingView), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsWidgets);
 
     await connectivity.dispose();

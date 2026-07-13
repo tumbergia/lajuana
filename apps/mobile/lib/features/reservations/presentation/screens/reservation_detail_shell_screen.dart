@@ -10,6 +10,7 @@ import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile/features/reservations/infrastructure/repositories/fallback_repository.dart';
 import 'package:mobile/features/reservations/presentation/helpers/reservation_status_labels.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_metric_card.dart';
 import 'package:mobile_ui/src/widgets/app_confirm_dialog.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_scaffold.dart';
@@ -323,6 +324,11 @@ class _ReservationDetailShellScreenState
         return ReservationProvidersTab(
           controller: _providersSectionController,
           isAdmin: _isAdmin,
+          emptyState: _buildSectionPlaceholder(
+            'Sin proveedores',
+            'No hay proveedores asociados a esta reserva.',
+            Icons.handshake_outlined,
+          ),
         );
     }
   }
@@ -494,6 +500,17 @@ class _ReservationDetailShellScreenState
   Widget _buildParticipantsContent(
     ReservationParticipantsSectionController ctrl,
   ) {
+    if (ctrl.participants.isEmpty) {
+      return RefreshableViewport(
+        controller: _participantsScrollCtrl,
+        child: _buildSectionPlaceholder(
+          'Sin participantes',
+          'Aun no hay participantes registrados.',
+          Icons.person_outline,
+        ),
+      );
+    }
+
     final pending = ctrl.totalExpected - ctrl.totalCompleted;
 
     // Build keys for each participant for scroll targeting.
@@ -508,26 +525,7 @@ class _ReservationDetailShellScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Summary metrics row.
-          Row(
-            children: [
-              Expanded(
-                child: _metricSmall(
-                  'Registrados',
-                  '${ctrl.totalCompleted}',
-                  Icons.check_circle_outline,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _metricSmall(
-                  'Pendientes',
-                  '$pending',
-                  Icons.pending_outlined,
-                ),
-              ),
-            ],
-          ),
+          _buildParticipantsMetrics(ctrl.totalCompleted, pending),
           if (ctrl.hasMedicalAlert) ...[
             const SizedBox(height: 8),
             AppStatusBanner(
@@ -553,26 +551,53 @@ class _ReservationDetailShellScreenState
             ),
           ],
           const SizedBox(height: 12),
-          if (ctrl.participants.isEmpty)
-            _buildSectionPlaceholder(
-              'Sin participantes',
-              'Aun no hay participantes registrados.',
-              Icons.person_outline,
-            )
-          else
-            ...ctrl.participants.map(
-              (p) => Padding(
-                key: _participantKeys[p.id],
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _buildParticipantCard(
-                  p,
-                  hasAlertOverride: _highlightedParticipantId == p.id,
-                  selected: _highlightedParticipantId == p.id,
-                ),
+          ...ctrl.participants.map(
+            (p) => Padding(
+              key: _participantKeys[p.id],
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _buildParticipantCard(
+                p,
+                hasAlertOverride: _highlightedParticipantId == p.id,
+                selected: _highlightedParticipantId == p.id,
               ),
             ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildParticipantsMetrics(int totalCompleted, int pending) {
+    final registered = AppMetricCard(
+      title: 'Registrados',
+      value: '$totalCompleted',
+      icon: Icons.check_circle_outline,
+    );
+    final pendingCard = AppMetricCard(
+      title: 'Pendientes',
+      value: '$pending',
+      icon: Icons.pending_outlined,
+    );
+
+    // Evita LayoutBuilder dentro del scroll (altura no acotada).
+    final contentWidth = MediaQuery.sizeOf(context).width - 48;
+    final narrow = contentWidth < 400;
+    if (narrow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          registered,
+          const SizedBox(height: 8),
+          pendingCard,
+        ],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(child: registered),
+        const SizedBox(width: 8),
+        Expanded(child: pendingCard),
+      ],
     );
   }
 
@@ -647,50 +672,6 @@ class _ReservationDetailShellScreenState
           color: hasAlert ? alertRed : null,
         ),
         onTap: () => _previewParticipant(p),
-      ),
-    );
-  }
-
-  Widget _metricSmall(String label, String value, IconData icon) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Text(
-                  value,
-                  style: theme.textTheme.displayLarge?.copyWith(
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 64,
-                    height: 0.95,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(icon, color: scheme.onSurfaceVariant, size: 28),
-            ],
-          ),
-        ],
       ),
     );
   }

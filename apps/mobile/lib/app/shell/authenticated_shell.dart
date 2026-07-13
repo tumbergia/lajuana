@@ -7,11 +7,11 @@ import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/auth/presentation/widgets/session_loading_view.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/app/navigation/shell_navigation_controller.dart';
 import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
-import 'package:mobile_ui/src/widgets/app_card.dart';
 import 'package:mobile_ui/src/widgets/app_top_bar.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/voice_pull_scope.dart';
@@ -284,68 +284,12 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                     : null,
               ),
             ),
-            if (showReconnectOverlay) ...[
-              const Positioned.fill(
-                child: ModalBarrier(dismissible: false, color: Colors.black54),
-              ),
-              const Positioned.fill(child: _ReconnectLoadingView()),
-            ],
+            if (showReconnectOverlay)
+              const Positioned.fill(child: SessionLoadingView()),
           ],
           ),
         );
       },
-    );
-  }
-}
-
-class _ReconnectLoadingView extends StatelessWidget {
-  const _ReconnectLoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    return Center(
-      child: SizedBox(
-        width: 280,
-        child: AppCard(
-          tone: AppCardTone.surface,
-          outlined: true,
-          accentColor: scheme.primary,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.4,
-                  color: scheme.primary,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'RECONECTANDO',
-                textAlign: TextAlign.center,
-                style: textTheme.labelLarge?.copyWith(
-                  color: scheme.onSurface,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Verificando sesion con el servidor...',
-                textAlign: TextAlign.center,
-                style: textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

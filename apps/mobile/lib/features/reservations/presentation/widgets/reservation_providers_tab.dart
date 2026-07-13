@@ -17,10 +17,12 @@ class ReservationProvidersTab extends StatelessWidget {
     super.key,
     required this.controller,
     required this.isAdmin,
+    required this.emptyState,
   });
 
   final ReservationProvidersSectionController controller;
   final bool isAdmin;
+  final Widget emptyState;
 
   void _openProviderDetail(BuildContext context, ReservationProviderItem item) {
     Navigator.of(context).push(
@@ -299,6 +301,27 @@ class ReservationProvidersTab extends StatelessWidget {
         );
       case ReservationProvidersLoadState.loaded:
       case ReservationProvidersLoadState.saving:
+        if (controller.items.isEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (isAdmin)
+                AppButton(
+                  label: 'Agregar proveedor',
+                  icon: Icons.add_rounded,
+                  expanded: true,
+                  onPressed:
+                      controller.state == ReservationProvidersLoadState.saving
+                          ? null
+                          : () => _showAddDialog(context),
+                ),
+              if (isAdmin) const SizedBox(height: 16),
+              Expanded(
+                child: RefreshableViewport(child: emptyState),
+              ),
+            ],
+          );
+        }
         return ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 24),
@@ -314,21 +337,15 @@ class ReservationProvidersTab extends StatelessWidget {
                         : () => _showAddDialog(context),
               ),
             if (isAdmin) const SizedBox(height: 16),
-            if (controller.items.isEmpty)
-              const Text(
-                'No hay proveedores asociados a esta reserva.',
-                textAlign: TextAlign.center,
-              )
-            else
-              ...controller.items.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: ProviderReservationCard(
-                    item: item,
-                    onTap: () => _openProviderDetail(context, item),
-                  ),
+            ...controller.items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: ProviderReservationCard(
+                  item: item,
+                  onTap: () => _openProviderDetail(context, item),
                 ),
               ),
+            ),
           ],
         );
     }

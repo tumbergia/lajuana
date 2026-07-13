@@ -37,8 +37,8 @@ class _CatalogsHomePageState extends State<CatalogsHomePage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSectionHeader(
-            eyebrow: 'Mas',
-            title: 'Catalogos',
+            eyebrow: 'Más',
+            title: 'Catálogos',
             subtitle: 'Disponibilidad, reglas y referencias operativas',
             trailing: AppButton(
               label: 'Volver',
@@ -51,7 +51,7 @@ class _CatalogsHomePageState extends State<CatalogsHomePage>
           if (_isAdmin) ...[
             AppEntityRowCard(
               title: 'Reglas de reserva',
-              subtitle: 'Configuracion operativa y anticipacion minima',
+              subtitle: 'Configuración operativa y anticipación mínima',
               trailing: const Icon(Icons.chevron_right_rounded, size: 18),
               onTap: () {
                 Navigator.of(context).push(

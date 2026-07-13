@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:mobile_ui/src/widgets/app_badge.dart';
@@ -191,29 +192,48 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
     }
   }
 
+  Widget _menuLeadingIcon(IconData icon) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(
+        icon,
+        size: 22,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
   Widget _buildMenu() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppSectionHeader(eyebrow: 'Mas', title: 'Opciones adicionales'),
+        const AppSectionHeader(eyebrow: 'Más', title: 'Opciones adicionales'),
         const SizedBox(height: 20),
         AppEntityRowCard(
           title: 'Perfil',
           subtitle: 'Datos del usuario y estado de cuenta',
+          leading: _menuLeadingIcon(Symbols.person),
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.profile),
         ),
         const SizedBox(height: 12),
         AppEntityRowCard(
-          title: 'Contactos',
-          subtitle: 'Numeros de emergencia',
+          title: 'Números',
+          subtitle: 'De emergencia',
+          leading: _menuLeadingIcon(Symbols.phone),
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.contacts),
         ),
         const SizedBox(height: 12),
         AppEntityRowCard(
           title: 'Proveedores',
-          subtitle: 'Catalogo operativo',
+          subtitle: 'Catálogo operativo',
+          leading: _menuLeadingIcon(Symbols.handshake),
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.providers),
         ),
@@ -221,14 +241,16 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         AppEntityRowCard(
           title: 'Sillas',
           subtitle: 'Inventario de montura',
+          leading: _menuLeadingIcon(Symbols.airline_seat_legroom_extra),
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.sillas),
         ),
         if (widget.catalogsModule != null) ...[
           const SizedBox(height: 12),
           AppEntityRowCard(
-            title: 'Catalogos',
+            title: 'Catálogos',
             subtitle: 'Experiencias, fechas, reglas y emergencias',
+            leading: _menuLeadingIcon(Symbols.library_books),
             trailing: const Icon(Icons.chevron_right_rounded, size: 18),
             onTap: () {
               Navigator.of(context).push(
@@ -251,7 +273,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppSectionHeader(
-          eyebrow: 'Mas',
+          eyebrow: 'Más',
           title: 'Proveedores',
           trailing: AppButton(
             label: 'Volver',
@@ -310,7 +332,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppSectionHeader(
-          eyebrow: 'Mas',
+          eyebrow: 'Más',
           title: 'Perfil',
           trailing: AppButton(
             label: 'Volver',
@@ -323,7 +345,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         if (user == null)
           const AppEntityRowCard(
             title: 'Perfil no disponible',
-            subtitle: 'No hay datos de usuario en la sesion actual',
+            subtitle: 'No hay datos de usuario en la sesión actual',
             badge: AppBadge(label: 'Sin datos', tone: AppBadgeTone.danger),
             selected: true,
           )
@@ -367,20 +389,20 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         ),
         const SizedBox(height: 10),
         AppEntityRowCard(
-          title: 'Telefono',
+          title: 'Teléfono',
           subtitle: user?.phone ?? 'No registrado',
           leading: const Icon(Icons.phone_outlined, size: 18),
         ),
         const SizedBox(height: 16),
         AppButton(
-          label: 'Cambiar contrasena',
+          label: 'Cambiar contraseña',
           icon: Icons.lock_outline_rounded,
           expanded: true,
           onPressed: () => _open(_MoreDestination.changePassword),
         ),
         const SizedBox(height: 8),
         AppButton(
-          label: 'Cerrar sesion',
+          label: 'Cerrar sesión',
           variant: AppButtonVariant.secondary,
           expanded: true,
           onPressed: _onLogoutPressed,
@@ -410,8 +432,8 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppSectionHeader(
-          eyebrow: 'Mas > Perfil',
-          title: 'Cambiar contrasena',
+          eyebrow: 'Más > Perfil',
+          title: 'Cambiar contraseña',
           trailing: AppButton(
             label: 'Volver',
             icon: Icons.arrow_back_rounded,
@@ -438,7 +460,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         ],
         AppTextField(
           controller: _currentPasswordCtrl,
-          label: 'Contrasena actual',
+          label: 'Contraseña actual',
           obscureText: _obscureCurrentPassword,
           suffix: IconButton(
             onPressed: () {
@@ -457,7 +479,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         const SizedBox(height: 10),
         AppTextField(
           controller: _newPasswordCtrl,
-          label: 'Nueva contrasena',
+          label: 'Nueva contraseña',
           obscureText: _obscureNewPassword,
           suffix: IconButton(
             onPressed: () {
@@ -495,7 +517,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         if (!passwordsMatch && _confirmPasswordCtrl.text.isNotEmpty) ...[
           const SizedBox(height: 8),
           const AppBadge(
-            label: 'Las contrasenas no coinciden',
+            label: 'Las contraseñas no coinciden',
             tone: AppBadgeTone.danger,
             uppercase: false,
           ),
@@ -517,8 +539,8 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppSectionHeader(
-          eyebrow: 'Mas',
-          title: 'Contactos',
+          eyebrow: 'Más',
+          title: 'Números',
           trailing: AppButton(
             label: 'Volver',
             icon: Icons.arrow_back_rounded,
@@ -540,7 +562,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
                 children: [
                   const AppEntityRowCard(
                     title: 'No se pudieron cargar los contactos',
-                    subtitle: 'Revisa la conexion e intenta de nuevo',
+                    subtitle: 'Revisa la conexión e intenta de nuevo',
                     badge: AppBadge(
                       label: 'Error de red',
                       tone: AppBadgeTone.danger,
@@ -621,7 +643,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
       final message =
           widget.controller.errorMessage ??
           widget.controller.messageForCode(widget.controller.errorCode) ??
-          'No se pudo actualizar la contrasena';
+          'No se pudo actualizar la contraseña';
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
@@ -632,7 +654,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
       final message =
           widget.controller.noticeMessage ??
           widget.controller.messageForCode(widget.controller.noticeCode) ??
-          'Contrasena actualizada.';
+          'Contraseña actualizada.';
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));
@@ -684,7 +706,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
     switch (authState) {
       case LocalAuthState.signedInVerified:
         return const AppBadge(
-          label: 'En linea',
+          label: 'En línea',
           tone: AppBadgeTone.success,
           uppercase: false,
         );
@@ -708,7 +730,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         );
       case LocalAuthState.signedOut:
         return const AppBadge(
-          label: 'Sin sesion',
+          label: 'Sin sesión',
           tone: AppBadgeTone.neutral,
           uppercase: false,
         );
