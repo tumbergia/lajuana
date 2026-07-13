@@ -8,6 +8,7 @@ import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/auth/presentation/auth_routes.dart';
 import 'package:mobile/features/auth/presentation/auth_ui_helpers.dart';
+import 'package:mobile/shared/input_validation.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.controller});
@@ -52,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         final canSubmit =
-            _emailCtrl.text.trim().isNotEmpty &&
+            InputValidation.isValidEmail(_emailCtrl.text) &&
             _passwordCtrl.text.isNotEmpty &&
             !widget.controller.isLoading;
         final showLocalSessionButton = widget.controller.hasLocalSession;
@@ -99,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _emailCtrl,
                       label: 'Correo',
                       hintText: 'usuario@lajuana.co',
-                      keyboardType: TextInputType.emailAddress,
+                      inputKind: AppTextInputKind.email,
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: 16),
@@ -107,6 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordCtrl,
                       label: 'Contrasena',
                       hintText: '********',
+                      inputKind: AppTextInputKind.password,
                       obscureText: _obscurePassword,
                       suffix: IconButton(
                         onPressed: () {

@@ -11,6 +11,7 @@ import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
@@ -19,6 +20,7 @@ import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/auth/presentation/auth_routes.dart';
 import 'package:mobile/features/auth/presentation/user_role_display.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/experiences/presentation/screens/experiences_module_screen.dart';
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/configuration/presentation/screens/la_juana_configuration_page.dart';
 import 'package:mobile/features/providers/presentation/screens/providers_module_screen.dart';
@@ -33,6 +35,7 @@ enum _MoreDestination {
   changePassword,
   providers,
   sillas,
+  experiencias,
 }
 
 class MoreFlowScreen extends StatefulWidget {
@@ -146,6 +149,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         return;
       case _MoreDestination.providers:
       case _MoreDestination.sillas:
+      case _MoreDestination.experiencias:
         return;
     }
   }
@@ -166,7 +170,8 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
 
               // Sub-vistas con lista propia (Expanded) necesitan altura acotada.
               if (_destination == _MoreDestination.providers ||
-                  _destination == _MoreDestination.sillas) {
+                  _destination == _MoreDestination.sillas ||
+                  _destination == _MoreDestination.experiencias) {
                 final height = constraints.hasBoundedHeight
                     ? constraints.maxHeight
                     : MediaQuery.sizeOf(context).height;
@@ -199,6 +204,8 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         return _buildProvidersEmbedded();
       case _MoreDestination.sillas:
         return _buildSillasEmbedded();
+      case _MoreDestination.experiencias:
+        return _buildExperienciasEmbedded();
     }
   }
 
@@ -241,6 +248,14 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         ),
         const SizedBox(height: 12),
         AppEntityRowCard(
+          title: 'Experiencias',
+          subtitle: 'Catálogo de productos',
+          leading: _menuLeadingIcon(Symbols.explore),
+          trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+          onTap: () => _open(_MoreDestination.experiencias),
+        ),
+        const SizedBox(height: 12),
+        AppEntityRowCard(
           title: 'Proveedores',
           subtitle: 'Catálogo operativo',
           leading: _menuLeadingIcon(Symbols.handshake),
@@ -260,8 +275,8 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
             widget.controller.currentUser?.role == 'admin') ...[
           const SizedBox(height: 12),
           AppEntityRowCard(
-            title: 'Configuración de La Juana',
-            subtitle: 'Reservas, inteligencia artificial, pagos y ubicación',
+            title: 'Configuración',
+            subtitle: 'De la Juana',
             leading: _menuLeadingIcon(Symbols.settings),
             trailing: const Icon(Icons.chevron_right_rounded, size: 18),
             onTap: () {
@@ -324,6 +339,32 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         Expanded(
           child: SaddlesModuleScreen(
             saddlesModule: widget.saddlesModule,
+            showHeader: false,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExperienciasEmbedded() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSectionHeader(
+          eyebrow: 'Más',
+          title: 'Experiencias',
+          trailing: AppButton(
+            label: 'Volver',
+            icon: Icons.arrow_back_rounded,
+            variant: AppButtonVariant.ghost,
+            onPressed: () => _open(_MoreDestination.menu),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Expanded(
+          child: ExperiencesModuleScreen(
+            catalogsModule: widget.catalogsModule,
+            authController: widget.controller,
             showHeader: false,
           ),
         ),
@@ -474,6 +515,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         AppTextField(
           controller: _currentPasswordCtrl,
           label: 'Contraseña actual',
+          inputKind: AppTextInputKind.password,
           obscureText: _obscureCurrentPassword,
           suffix: IconButton(
             onPressed: () {
@@ -493,6 +535,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         AppTextField(
           controller: _newPasswordCtrl,
           label: 'Nueva contraseña',
+          inputKind: AppTextInputKind.password,
           obscureText: _obscureNewPassword,
           suffix: IconButton(
             onPressed: () {
@@ -512,6 +555,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         AppTextField(
           controller: _confirmPasswordCtrl,
           label: 'Confirmar nueva',
+          inputKind: AppTextInputKind.password,
           obscureText: _obscureConfirmPassword,
           suffix: IconButton(
             onPressed: () {
@@ -638,8 +682,10 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
   Future<void> _handleCallContact(_EmergencyContact contact) async {
     final launched = await _onCallRequested(contact.phone);
     if (!mounted || launched) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No se pudo abrir la app de llamadas')),
+    showAppToast(
+      context,
+      message: 'No se pudo abrir la app de llamadas',
+      isError: true,
     );
   }
 
@@ -657,9 +703,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           widget.controller.errorMessage ??
           widget.controller.messageForCode(widget.controller.errorCode) ??
           'No se pudo actualizar la contraseña';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      showAppToast(context, message: message, isError: true);
       return;
     }
 
@@ -668,9 +712,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           widget.controller.noticeMessage ??
           widget.controller.messageForCode(widget.controller.noticeCode) ??
           'Contraseña actualizada.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      showAppToast(context, message: message);
       widget.controller.clearNotice();
       _currentPasswordCtrl.clear();
       _newPasswordCtrl.clear();

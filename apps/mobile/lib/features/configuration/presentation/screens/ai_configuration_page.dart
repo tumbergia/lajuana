@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/configuration/domain/la_juana_configuration.dart';
@@ -185,6 +186,22 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
     );
   }
 
+  Widget _leadingIcon(IconData icon) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(
+        icon,
+        size: 22,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -228,6 +245,7 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
                         AppEntityRowCard(
                           title: 'Asistente',
                           subtitle: _enabled ? 'Activado' : 'Desactivado',
+                          leading: _leadingIcon(Symbols.smart_toy),
                           selected: true,
                         ),
                         const SizedBox(height: 10),
@@ -236,6 +254,9 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
                             title:
                                 'Ruta ${i + 1}${i == 0 ? ' · principal' : ' · respaldo'}',
                             subtitle: _routeSummary(i),
+                            leading: _leadingIcon(
+                              i == 0 ? Symbols.route : Symbols.alt_route,
+                            ),
                           ),
                           if (i < 2) const SizedBox(height: 10),
                         ],
@@ -285,6 +306,7 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
                             label: _configured[i]
                                 ? 'Clave guardada · escribe para reemplazar'
                                 : 'Clave de acceso',
+                            inputKind: AppTextInputKind.password,
                             obscureText: true,
                           ),
                         ],

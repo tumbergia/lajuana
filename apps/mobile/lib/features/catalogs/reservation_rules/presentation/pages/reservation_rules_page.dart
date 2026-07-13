@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
@@ -7,6 +8,7 @@ import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_switch_row.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
@@ -39,6 +41,22 @@ class _ReservationRulesPageState extends State<ReservationRulesPage>
   String? _error;
 
   bool get _isAdmin => widget.authController.currentUser?.role == 'admin';
+
+  Widget _leadingIcon(IconData icon) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(
+        icon,
+        size: 22,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
 
   @override
   Future<void> onRefresh() => _controller.refreshFromServer();
@@ -112,6 +130,7 @@ class _ReservationRulesPageState extends State<ReservationRulesPage>
       setState(() {
         _editing = false;
       });
+      showAppToast(context, message: 'Reglas de reserva actualizadas.');
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -170,6 +189,7 @@ class _ReservationRulesPageState extends State<ReservationRulesPage>
                             AppEntityRowCard(
                               title: 'Anticipación mínima',
                               subtitle: '${rules.minDaysInAdvance} días',
+                              leading: _leadingIcon(Symbols.calendar_month),
                               selected: true,
                             ),
                             const SizedBox(height: 10),
@@ -177,12 +197,14 @@ class _ReservationRulesPageState extends State<ReservationRulesPage>
                               title: 'Vencimiento de pre-reserva',
                               subtitle:
                                   '${rules.reservationDraftTtlMinutes} minutos',
+                              leading: _leadingIcon(Symbols.timer),
                             ),
                             const SizedBox(height: 10),
                             AppEntityRowCard(
                               title: 'Edades permitidas',
                               subtitle:
                                   '${rules.minAge} a ${rules.maxAge} años',
+                              leading: _leadingIcon(Symbols.groups),
                             ),
                             const SizedBox(height: 10),
                             AppEntityRowCard(
@@ -190,6 +212,7 @@ class _ReservationRulesPageState extends State<ReservationRulesPage>
                               subtitle: rules.requirePaymentProofForConfirmation
                                   ? 'Sí'
                                   : 'No',
+                              leading: _leadingIcon(Symbols.receipt_long),
                             ),
                             if (_isAdmin) ...[
                               const SizedBox(height: 12),
@@ -210,25 +233,25 @@ class _ReservationRulesPageState extends State<ReservationRulesPage>
                             AppTextField(
                               controller: _minDaysCtrl,
                               label: 'Mínimo de días',
-                              keyboardType: TextInputType.number,
+                              inputKind: AppTextInputKind.integer,
                             ),
                             const SizedBox(height: 10),
                             AppTextField(
                               controller: _ttlCtrl,
                               label: 'Vencimiento de pre-reserva (minutos)',
-                              keyboardType: TextInputType.number,
+                              inputKind: AppTextInputKind.integer,
                             ),
                             const SizedBox(height: 10),
                             AppTextField(
                               controller: _minAgeCtrl,
                               label: 'Edad mínima',
-                              keyboardType: TextInputType.number,
+                              inputKind: AppTextInputKind.integer,
                             ),
                             const SizedBox(height: 10),
                             AppTextField(
                               controller: _maxAgeCtrl,
                               label: 'Edad máxima',
-                              keyboardType: TextInputType.number,
+                              inputKind: AppTextInputKind.integer,
                             ),
                             const SizedBox(height: 10),
                             AppSwitchRow(

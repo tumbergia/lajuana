@@ -12,6 +12,7 @@ import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/dashed_border_painter.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
 import 'package:mobile/features/equines/infrastructure/mappers/equine_mapper.dart';
 import 'package:mobile/features/equines/presentation/equine_labels.dart';
@@ -106,16 +107,12 @@ class _EquineDetailScreenState extends State<EquineDetailScreen>
     try {
       await widget.repository.deleteEquine(widget.equineId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Equino eliminado correctamente')),
-      );
+      showAppToast(context, message: 'Equino eliminado correctamente');
       Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isDeleting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al eliminar: $e')),
-      );
+      showAppToast(context, message: 'Error al eliminar: $e', isError: true);
     }
   }
 
@@ -124,16 +121,12 @@ class _EquineDetailScreenState extends State<EquineDetailScreen>
     try {
       await widget.repository.restoreEquine(widget.equineId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Equino restaurado correctamente')),
-      );
+      showAppToast(context, message: 'Equino restaurado correctamente');
       _load();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isDeleting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al restaurar: $e')),
-      );
+      showAppToast(context, message: 'Error al restaurar: $e', isError: true);
     }
   }
 

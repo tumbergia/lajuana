@@ -12,6 +12,10 @@ export 'src/theme/app_theme.dart';
 export 'src/theme/app_theme_notifier.dart';
 export 'src/theme/theme_extensions.dart';
 
+// Input
+export 'src/input/app_input_formatters.dart';
+export 'src/input/app_text_input_kind.dart';
+
 // Widgets
 export 'src/widgets/app_badge.dart';
 export 'src/widgets/app_bottom_nav.dart';

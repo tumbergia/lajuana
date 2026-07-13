@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:mobile_ui/src/input/app_text_input_kind.dart';
 import 'package:mobile_ui/src/theme/theme_extensions.dart';
+
+export 'package:mobile_ui/src/input/app_text_input_kind.dart';
 
 /// Las dos variantes de campo del mockup.
 enum AppTextFieldVariant {
@@ -37,6 +40,10 @@ class AppTextField extends StatelessWidget {
 
   final AppTextFieldVariant variant;
 
+  /// Semantic kind that sets default keyboard and formatters.
+  /// Explicit [keyboardType] / [inputFormatters] override these defaults.
+  final AppTextInputKind? inputKind;
+
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
@@ -55,6 +62,7 @@ class AppTextField extends StatelessWidget {
     this.prefixIcon,
     this.maxLines = 1,
     this.variant = AppTextFieldVariant.filled,
+    this.inputKind,
     this.keyboardType,
     this.inputFormatters,
     this.onChanged,
@@ -70,8 +78,13 @@ class AppTextField extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tokens = theme.appTokens;
+    final kindKeyboard = inputKind?.keyboardType;
+    final kindFormatters = inputKind?.inputFormatters;
     final effectiveKeyboardType =
-        keyboardType ?? (obscureText ? TextInputType.visiblePassword : null);
+        keyboardType ??
+        kindKeyboard ??
+        (obscureText ? TextInputType.visiblePassword : null);
+    final effectiveFormatters = inputFormatters ?? kindFormatters;
 
     // ── Borders ────────────────────────────────────────────────────────────
     InputBorder underline(Color color, [double width = 1.0]) =>
@@ -138,7 +151,7 @@ class AppTextField extends StatelessWidget {
           enableSuggestions: !obscureText,
           maxLines: maxLines,
           keyboardType: effectiveKeyboardType,
-          inputFormatters: inputFormatters,
+          inputFormatters: effectiveFormatters,
           onChanged: onChanged,
           style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
           decoration: InputDecoration(

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/configuration/domain/la_juana_configuration.dart';
 import 'package:mobile/features/configuration/infrastructure/configuration_api_client.dart';
+import 'package:mobile/shared/input_validation.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
@@ -132,10 +133,17 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
       }
     }
     if (bold) {
-      final fee = double.tryParse(boldFee.text.trim());
+      final fee = InputValidation.parseDecimal(boldFee.text);
       if (boldUrl.text.trim().isEmpty) {
         setState(() {
           error = 'El enlace de Bold es obligatorio si Bold está activo.';
+        });
+        return;
+      }
+      if (!InputValidation.isValidHttpUrl(boldUrl.text)) {
+        setState(() {
+          error =
+              'El enlace de Bold debe ser una URL válida que empiece por http:// o https://.';
         });
         return;
       }
@@ -152,7 +160,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
       error = null;
     });
     try {
-      final fee = double.tryParse(boldFee.text.trim()) ?? 7;
+      final fee = InputValidation.parseDecimal(boldFee.text) ?? 7;
       final v = await widget.module.api.updatePayments({
         'manual_transfer_enabled': manual,
         'account_bank': bank.text.trim(),
@@ -192,6 +200,22 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
         color: theme.colorScheme.onSurfaceVariant,
         fontWeight: FontWeight.w800,
         letterSpacing: 1.4,
+      ),
+    );
+  }
+
+  Widget _leadingIcon(IconData icon) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(
+        icon,
+        size: 22,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     );
   }
@@ -246,6 +270,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
                                     holder.text.trim(),
                                 ].join(' · ').ifEmpty('Activa')
                               : 'Desactivada',
+                          leading: _leadingIcon(Symbols.account_balance),
                           selected: true,
                         ),
                         const SizedBox(height: 10),
@@ -254,6 +279,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
                           subtitle: bold
                               ? 'Activo · comisión ${boldFee.text.trim()}%'
                               : 'Desactivado',
+                          leading: _leadingIcon(Symbols.link),
                         ),
                         const SizedBox(height: 12),
                         AppButton(
@@ -282,7 +308,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
                           AppTextField(
                             controller: number,
                             label: 'Número de cuenta',
-                            keyboardType: TextInputType.number,
+                            inputKind: AppTextInputKind.integer,
                           ),
                           const SizedBox(height: 10),
                           AppTextField(controller: holder, label: 'Titular'),
@@ -290,6 +316,7 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
                           AppTextField(
                             controller: holderId,
                             label: 'Documento del titular',
+                            inputKind: AppTextInputKind.integer,
                           ),
                           const SizedBox(height: 10),
                           AppTextField(
@@ -311,20 +338,13 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
                           AppTextField(
                             controller: boldUrl,
                             label: 'Enlace fijo de pago Bold',
-                            keyboardType: TextInputType.url,
+                            inputKind: AppTextInputKind.url,
                           ),
                           const SizedBox(height: 10),
                           AppTextField(
                             controller: boldFee,
                             label: 'Comisión adicional (%)',
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(r'[0-9.]'),
-                              ),
-                            ],
+                            inputKind: AppTextInputKind.decimal,
                           ),
                           const SizedBox(height: 10),
                           AppTextField(

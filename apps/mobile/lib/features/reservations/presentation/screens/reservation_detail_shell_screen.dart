@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:mobile_core/mobile_core.dart';
 
-import 'package:mobile_ui/src/theme/app_colors.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
@@ -906,27 +905,15 @@ class _ReservationDetailShellScreenState
                 () {
                   if (!mounted) return;
                   if (_controller.confirmationErrorCode != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          _controller.confirmationErrorMessage ??
-                              'Error al confirmar reserva',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        backgroundColor: AppColors.danger,
-                      ),
+                    showAppToast(
+                      context,
+                      message: _controller.confirmationErrorMessage ??
+                          'Error al confirmar reserva',
+                      isError: true,
                     );
                   } else if (_controller.detail?.status ==
                       ReservationStatus.confirmed) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Reserva confirmada',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
+                    showAppToast(context, message: 'Reserva confirmada');
                   }
                 },
               );
@@ -961,27 +948,15 @@ class _ReservationDetailShellScreenState
               _controller.cancelReservation(isAdmin: _isAdmin).whenComplete(() {
                 if (!mounted) return;
                 if (_controller.cancellationErrorCode != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        _controller.cancellationErrorMessage ??
-                            'Error al cancelar reserva',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: AppColors.danger,
-                    ),
+                  showAppToast(
+                    context,
+                    message: _controller.cancellationErrorMessage ??
+                        'Error al cancelar reserva',
+                    isError: true,
                   );
                 } else if (_controller.detail?.status ==
                     ReservationStatus.cancelled) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Reserva cancelada',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  showAppToast(context, message: 'Reserva cancelada');
                 }
               });
             }
@@ -1007,25 +982,13 @@ class _ReservationDetailShellScreenState
         _controller.deleteReservation(isAdmin: _isAdmin).whenComplete(() {
           if (!mounted) return;
           if (_controller.deleteErrorCode != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  _controller.deleteErrorMessage ?? 'Error al eliminar reserva',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                backgroundColor: AppColors.danger,
-              ),
+            showAppToast(
+              context,
+              message: _controller.deleteErrorMessage ?? 'Error al eliminar reserva',
+              isError: true,
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Reserva eliminada',
-                  style: TextStyle(color: Colors.white),
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
+            showAppToast(context, message: 'Reserva eliminada');
           }
         });
       },
@@ -1049,26 +1012,14 @@ class _ReservationDetailShellScreenState
         _controller.restoreReservation(isAdmin: _isAdmin).whenComplete(() {
           if (!mounted) return;
           if (_controller.deleteErrorCode != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  _controller.deleteErrorMessage ??
-                      'Error al restaurar reserva',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                backgroundColor: AppColors.danger,
-              ),
+            showAppToast(
+              context,
+              message: _controller.deleteErrorMessage ??
+                  'Error al restaurar reserva',
+              isError: true,
             );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Reserva restaurada',
-                  style: TextStyle(color: Colors.white),
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
+            showAppToast(context, message: 'Reserva restaurada');
           }
         });
       },

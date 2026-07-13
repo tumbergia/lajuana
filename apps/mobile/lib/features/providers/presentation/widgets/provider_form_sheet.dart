@@ -6,6 +6,7 @@ import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile/features/providers/presentation/models/provider_view_models.dart';
 import 'package:mobile/features/providers/presentation/utils/phone_country.dart';
 import 'package:mobile/features/providers/presentation/widgets/provider_phone_field.dart';
+import 'package:mobile/shared/input_validation.dart';
 
 class ProviderFormSheet extends StatefulWidget {
   const ProviderFormSheet({super.key, this.existing});
@@ -71,7 +72,9 @@ class _ProviderFormSheetState extends State<ProviderFormSheet> {
     super.dispose();
   }
 
-  bool get _canSubmit => _nameCtrl.text.trim().isNotEmpty;
+  bool get _canSubmit =>
+      _nameCtrl.text.trim().isNotEmpty &&
+      InputValidation.isValidOptionalEmail(_emailCtrl.text);
 
   List<String> _parseCategories(String raw) {
     if (raw.trim().isEmpty) return const [];
@@ -201,7 +204,8 @@ class _ProviderFormSheetState extends State<ProviderFormSheet> {
               controller: _emailCtrl,
               label: 'Correo',
               hintText: 'contacto@ejemplo.com',
-              keyboardType: TextInputType.emailAddress,
+              inputKind: AppTextInputKind.email,
+              onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
             ProviderPhoneField(

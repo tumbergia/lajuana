@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -19,6 +20,19 @@ import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 
 /// Rojo de marca (mismo tono del botón de correo en proveedores).
 const Color _mapsActionRed = Color(0xFFD93025);
+
+/// Rojo del pin: intenso en dark mode para contrastar con el basemap.
+const Color _mapPinRedLight = Color(0xFFD93025);
+const Color _mapPinRedDark = Color(0xFFFF2D20);
+
+/// Invierte tiles claras → dark map con carreteras y líneas bien visibles.
+/// Misma matriz que [darkModeTilesContainerBuilder] de flutter_map.
+const ColorFilter _darkMapFromLightTilesFilter = ColorFilter.matrix(<double>[
+  0.574, -1.43, -0.144, 0, 255,
+  -0.426, -0.43, -0.144, 0, 255,
+  -0.426, -1.43, 0.856, 0, 255,
+  0, 0, 0, 1, 0,
+]);
 
 class BusinessLocationPage extends StatefulWidget {
   const BusinessLocationPage({super.key, required this.module});
@@ -49,8 +63,6 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
 
   static const _defaultLightTiles =
       'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  static const _defaultDarkTiles =
-      'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
 
   @override
   Future<void> onRefresh() => _load();
@@ -85,13 +97,127 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
 
   void _centerMapOn(LatLng target, {double zoom = 15}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !editing) return;
+      if (!mounted) return;
       try {
         mapController.move(target, zoom);
       } catch (_) {
         // MapController aún no está ligado al mapa.
       }
     });
+  }
+
+  Widget _leadingIcon(IconData icon) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Icon(
+        icon,
+        size: 22,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  Widget _leadingAppIcon() {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: 40,
+      height: 40,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      alignment: Alignment.center,
+      child: SvgPicture.asset(
+        'assets/branding/app_icon.svg',
+        width: 22,
+        height: 22,
+        fit: BoxFit.contain,
+        colorFilter: ColorFilter.mode(
+          scheme.onSurfaceVariant,
+          BlendMode.srcIn,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMap(ThemeData theme, AppThemeTokens tokens) {
+    return SizedBox(
+      height: 280,
+      child: ClipRRect(
+        borderRadius: tokens.radiusMd,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            FlutterMap(
+              // Recrea el mapa al entrar en edición / cambiar modo
+              // para que initialCenter coincida con el punto guardado.
+              key: ValueKey(
+                'biz-map-${editing ? (adjustingMap ? 'adj' : 'edit') : 'view'}-'
+                '${savedPoint.latitude.toStringAsFixed(5)}-'
+                '${savedPoint.longitude.toStringAsFixed(5)}',
+              ),
+              mapController: mapController,
+              options: MapOptions(
+                initialCenter: point,
+                initialZoom: 15,
+                interactionOptions: InteractionOptions(
+                  flags: !editing
+                      ? InteractiveFlag.pinchZoom |
+                            InteractiveFlag.drag |
+                            InteractiveFlag.doubleTapZoom
+                      : adjustingMap
+                      ? InteractiveFlag.all
+                      : InteractiveFlag.pinchZoom |
+                            InteractiveFlag.drag |
+                            InteractiveFlag.doubleTapZoom,
+                ),
+              ),
+              children: [
+                _buildTileLayer(theme.brightness),
+                if (!adjustingMap)
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: point,
+                        width: _MapPin.size,
+                        height: _MapPin.size,
+                        // topCenter: el widget queda encima del
+                        // punto; la punta (abajo del pin) cae
+                        // exactamente sobre la coordenada.
+                        alignment: Alignment.topCenter,
+                        child: _MapPin(
+                          color: theme.brightness == Brightness.dark
+                              ? _mapPinRedDark
+                              : _mapPinRedLight,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+            if (adjustingMap)
+              // Misma geometría: punta en el centro del mapa
+              // (= coordenada que se guardará).
+              IgnorePointer(
+                child: Transform.translate(
+                  offset: const Offset(0, -_MapPin.size / 2),
+                  child: _MapPin(
+                    color: theme.brightness == Brightness.dark
+                        ? _mapPinRedDark
+                        : _mapPinRedLight,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _load() async {
@@ -107,7 +233,7 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
         loading = false;
         error = null;
       });
-      if (editing) _centerMapOn(point);
+      _centerMapOn(point);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -207,19 +333,30 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
     }
   }
 
-  String _tileUrl(Brightness brightness) {
+  String _tileUrl() {
     const configured = String.fromEnvironment('MAP_TILE_URL');
     if (configured.isNotEmpty) return configured;
-    return brightness == Brightness.dark
-        ? _defaultDarkTiles
-        : _defaultLightTiles;
+    // En dark mode también usamos tiles claras: el ColorFilter las invierte
+    // y deja carreteras/líneas mucho más legibles que Carto Dark Matter.
+    return _defaultLightTiles;
+  }
+
+  Widget _buildTileLayer(Brightness brightness) {
+    final tiles = TileLayer(
+      urlTemplate: _tileUrl(),
+      userAgentPackageName: 'com.lajuana.mobile',
+    );
+    if (brightness != Brightness.dark) return tiles;
+    return ColorFiltered(
+      colorFilter: _darkMapFromLightTilesFilter,
+      child: tiles,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = theme.appTokens;
-    final scheme = theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -272,15 +409,18 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
                             if (municipality.text.trim().isNotEmpty)
                               municipality.text.trim(),
                           ].join(' · '),
-                          selected: true,
+                          leading: _leadingAppIcon(),
                         ),
                         if (directions.text.trim().isNotEmpty) ...[
                           const SizedBox(height: 10),
                           AppEntityRowCard(
                             title: 'Indicaciones',
                             subtitle: directions.text.trim(),
+                            leading: _leadingIcon(Symbols.directions),
                           ),
                         ],
+                        const SizedBox(height: 12),
+                        _buildMap(theme, tokens),
                         const SizedBox(height: 12),
                         _MapsRedButton(
                           label: 'Abrir en Google Maps',
@@ -317,68 +457,7 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
                           maxLines: 3,
                         ),
                         const SizedBox(height: 12),
-                        SizedBox(
-                          height: 280,
-                          child: ClipRRect(
-                            borderRadius: tokens.radiusMd,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                FlutterMap(
-                                  // Recrea el mapa al entrar en edición / cambiar modo
-                                  // para que initialCenter coincida con el punto guardado.
-                                  key: ValueKey(
-                                    'biz-map-${adjustingMap ? 'adj' : 'view'}-'
-                                    '${savedPoint.latitude.toStringAsFixed(5)}-'
-                                    '${savedPoint.longitude.toStringAsFixed(5)}',
-                                  ),
-                                  mapController: mapController,
-                                  options: MapOptions(
-                                    initialCenter: point,
-                                    initialZoom: 15,
-                                    interactionOptions: InteractionOptions(
-                                      flags: adjustingMap
-                                          ? InteractiveFlag.all
-                                          : InteractiveFlag.pinchZoom |
-                                                InteractiveFlag.drag |
-                                                InteractiveFlag.doubleTapZoom,
-                                    ),
-                                  ),
-                                  children: [
-                                    TileLayer(
-                                      urlTemplate: _tileUrl(theme.brightness),
-                                      userAgentPackageName: 'com.lajuana.mobile',
-                                    ),
-                                    if (!adjustingMap)
-                                      MarkerLayer(
-                                        markers: [
-                                          Marker(
-                                            point: point,
-                                            width: _MapPin.size,
-                                            height: _MapPin.size,
-                                            // topCenter: el widget queda encima del
-                                            // punto; la punta (abajo del pin) cae
-                                            // exactamente sobre la coordenada.
-                                            alignment: Alignment.topCenter,
-                                            child: _MapPin(color: scheme.error),
-                                          ),
-                                        ],
-                                      ),
-                                  ],
-                                ),
-                                if (adjustingMap)
-                                  // Misma geometría: punta en el centro del mapa
-                                  // (= coordenada que se guardará).
-                                  IgnorePointer(
-                                    child: Transform.translate(
-                                      offset: const Offset(0, -_MapPin.size / 2),
-                                      child: _MapPin(color: scheme.error),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        _buildMap(theme, tokens),
                         const SizedBox(height: 12),
                         if (!adjustingMap) ...[
                           AppButton(

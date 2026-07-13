@@ -17,10 +17,12 @@ class ExperiencesModuleScreen extends StatefulWidget {
     super.key,
     this.catalogsModule,
     required this.authController,
+    this.showHeader = true,
   });
 
   final CatalogsModule? catalogsModule;
   final AuthController authController;
+  final bool showHeader;
 
   bool get canEdit =>
       authController.currentUser?.role == 'admin';
@@ -73,6 +75,9 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.showHeader) {
+      return _buildBodyContent();
+    }
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
       child: Column(

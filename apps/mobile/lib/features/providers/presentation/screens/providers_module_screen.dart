@@ -8,6 +8,7 @@ import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_domain/src/providers/providers_repository.dart';
 import 'package:mobile/features/providers/infrastructure/mappers/provider_mapper.dart';
 import 'package:mobile/features/providers/infrastructure/repositories/fallback_providers_repository.dart';
@@ -104,15 +105,11 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
         );
         await _listController.refresh();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Proveedor registrado correctamente')),
-          );
+          showAppToast(context, message: 'Proveedor registrado correctamente');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al registrar el proveedor')),
-          );
+          showAppToast(context, message: 'Error al registrar el proveedor', isError: true);
         }
       }
     }
@@ -154,15 +151,11 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
         );
         await _listController.refresh();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Proveedor actualizado correctamente')),
-          );
+          showAppToast(context, message: 'Proveedor actualizado correctamente');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al actualizar el proveedor')),
-          );
+          showAppToast(context, message: 'Error al actualizar el proveedor', isError: true);
         }
       }
     }
@@ -194,15 +187,11 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
         await _repository.deactivateProvider(provider.id);
         await _listController.refresh();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Proveedor desactivado')),
-          );
+          showAppToast(context, message: 'Proveedor desactivado');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al desactivar el proveedor')),
-          );
+          showAppToast(context, message: 'Error al desactivar el proveedor', isError: true);
         }
       }
     }
@@ -213,15 +202,11 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
       await _repository.reactivateProvider(provider.id);
       await _listController.refresh();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Proveedor reactivado')),
-        );
+        showAppToast(context, message: 'Proveedor reactivado');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al reactivar el proveedor')),
-        );
+        showAppToast(context, message: 'Error al reactivar el proveedor', isError: true);
       }
     }
   }

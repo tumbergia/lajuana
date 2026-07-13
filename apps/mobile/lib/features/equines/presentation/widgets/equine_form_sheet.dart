@@ -8,11 +8,13 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/theme/app_radii.dart';
 import 'package:mobile_ui/src/widgets/dashed_border_painter.dart';
 import 'package:mobile_domain/src/equines/equine_operational_status.dart';
 import 'package:mobile/features/equines/presentation/equine_labels.dart';
 import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
+import 'package:mobile/shared/input_validation.dart';
 
 /// Modal bottom sheet para crear o editar un equino (V1 simplificada).
 ///
@@ -330,7 +332,7 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               label: 'Número de inventario',
               hintText: 'Ej: 1234',
               controller: _inventoryNumberController,
-              keyboardType: TextInputType.number,
+              inputKind: AppTextInputKind.integer,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Icon(Symbols.tag_rounded, size: 18, color: scheme.onSurfaceVariant),
@@ -406,7 +408,7 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               label: 'Peso (kg)',
               hintText: 'Ej: 450',
               controller: _weightController,
-              keyboardType: TextInputType.number,
+              inputKind: AppTextInputKind.decimal,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Icon(Symbols.weight_rounded, size: 18, color: scheme.onSurfaceVariant),
@@ -417,8 +419,7 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               label: 'Alzada (m)',
               hintText: 'Ej: 1.55',
               controller: _heightController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
+              inputKind: AppTextInputKind.decimal,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Icon(Symbols.height_rounded, size: 18, color: scheme.onSurfaceVariant),
@@ -429,7 +430,7 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               label: 'Carga máxima jinete (kg)',
               hintText: 'Ej: 90',
               controller: _maxRiderWeightController,
-              keyboardType: TextInputType.number,
+              inputKind: AppTextInputKind.decimal,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Icon(Symbols.fitness_center_rounded, size: 18, color: scheme.onSurfaceVariant),
@@ -587,8 +588,6 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
   }
 
   Future<void> _pickImage() async {
-    final messenger = ScaffoldMessenger.of(context);
-
     try {
       final picker = ImagePicker();
       final image = await picker.pickImage(
@@ -607,8 +606,10 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
     } catch (e) {
       debugPrint('Error picking image: $e');
       if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text('Error al seleccionar foto: $e')),
+        showAppToast(
+          context,
+          message: 'Error al seleccionar foto: $e',
+          isError: true,
         );
       }
     }
@@ -617,9 +618,7 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
   void _onSave() {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El nombre es obligatorio')),
-      );
+      showAppToast(context, message: 'El nombre es obligatorio', isError: true);
       return;
     }
 
@@ -627,15 +626,16 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
     // cuando el backend exponga el endpoint de creación/edición.
     Navigator.of(context).pop(<String, dynamic>{
       'name': name,
-      'inventory_number': int.tryParse(_inventoryNumberController.text),
+      'inventory_number': InputValidation.parseInteger(_inventoryNumberController.text),
       'species': _species,
       'breed': _breedController.text.trim().nullIfEmpty,
       'sex': _sex,
       'coat_color': _coatColorController.text.trim().nullIfEmpty,
       'gait': _gaitController.text.trim().nullIfEmpty,
-      'weight_kg': double.tryParse(_weightController.text),
-      'height_m': double.tryParse(_heightController.text),
-      'max_rider_weight_kg': double.tryParse(_maxRiderWeightController.text),
+      'weight_kg': InputValidation.parseDecimal(_weightController.text),
+      'height_m': InputValidation.parseDecimal(_heightController.text),
+      'max_rider_weight_kg':
+          InputValidation.parseDecimal(_maxRiderWeightController.text),
       'operational_status': _status == EquineOperationalStatus.inService
           ? 'in_service'
           : _status.name,

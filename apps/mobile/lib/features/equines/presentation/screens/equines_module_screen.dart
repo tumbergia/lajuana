@@ -15,6 +15,7 @@ import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/cards/app_image_feature_card.dart';
 import 'package:mobile_ui/src/widgets/cards/app_logbook_timeline.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
@@ -263,9 +264,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
         if (result != null && mounted) {
           final success = await _controller.createEquine(result);
           if (success && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Equino creado correctamente')),
-            );
+            showAppToast(context, message: 'Equino creado correctamente');
           }
         }
       },
@@ -398,12 +397,9 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                                   result,
                                 );
                                 if (success && mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Equino actualizado correctamente',
-                                      ),
-                                    ),
+                                  showAppToast(
+                                    context,
+                                    message: 'Equino actualizado correctamente',
                                   );
                                 }
                               }
@@ -497,7 +493,6 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                     icon: Symbols.edit_rounded,
                     variant: AppButtonVariant.secondary,
                     onPressed: () {
-                      final messenger = ScaffoldMessenger.of(context);
                       Navigator.of(ctx).pop();
                       _controller.selectEquine(equine.id);
                       final detail = _controller.selectedDetail;
@@ -514,12 +509,9 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                             result,
                           );
                           if (success && mounted) {
-                            messenger.showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Equino actualizado correctamente',
-                                ),
-                              ),
+                            showAppToast(
+                              context,
+                              message: 'Equino actualizado correctamente',
                             );
                           }
                         }

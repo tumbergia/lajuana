@@ -7,6 +7,7 @@ import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/auth/presentation/auth_routes.dart';
 import 'package:mobile/features/auth/presentation/auth_ui_helpers.dart';
+import 'package:mobile/shared/input_validation.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key, required this.controller});
@@ -50,7 +51,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             !passwordsMatch && _confirmCtrl.text.isNotEmpty;
         final validForm =
             _fullNameCtrl.text.trim().isNotEmpty &&
-            _emailCtrl.text.trim().isNotEmpty &&
+            InputValidation.isValidEmail(_emailCtrl.text) &&
             _passwordCtrl.text.length >= 8 &&
             passwordsMatch &&
             !widget.controller.isLoading;
@@ -133,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             controller: _emailCtrl,
                             label: 'Correo',
                             hintText: 'usuario@lajuana.co',
-                            keyboardType: TextInputType.emailAddress,
+                            inputKind: AppTextInputKind.email,
                             onChanged: (_) => setState(() {}),
                           ),
                         ),
@@ -144,6 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: AppTextField(
                             controller: _passwordCtrl,
                             label: 'Contrasena',
+                            inputKind: AppTextInputKind.password,
                             obscureText: _obscurePassword,
                             suffix: IconButton(
                               onPressed: () {
@@ -167,6 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: AppTextField(
                             controller: _confirmCtrl,
                             label: 'Confirmar contrasena',
+                            inputKind: AppTextInputKind.password,
                             obscureText: _obscureConfirm,
                             suffix: IconButton(
                               onPressed: () {

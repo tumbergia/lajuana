@@ -21,7 +21,6 @@ import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
-import 'package:mobile/features/catalogs/experiences/presentation/screens/experiences_module_screen.dart';
 import 'package:mobile/features/equines/presentation/screens/equines_module_screen.dart';
 import 'package:mobile/features/assignments/assignments_module.dart';
 import 'package:mobile/features/reservations/presentation/screens/reservations_module_screen.dart';
@@ -98,8 +97,9 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
 
   void _onBottomNavTap(AppNavItem item) {
     if (item == AppNavItem.none) return;
-    if (item != AppNavItem.mas) {
-      // Sub-destinos de Mas se conservan al reentrar al mismo tab.
+    // Experiencias ya no es tab independiente — redirige a Más.
+    if (item == AppNavItem.experiencias) {
+      item = AppNavItem.mas;
     }
     _ensureTab(item);
     _shellNav.selectTab(item);
@@ -152,12 +152,19 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           eventRepository: widget.equineEventRepository,
           userRole: widget.authController.currentUser?.role,
         );
-      case AppNavItem.experiencias:
-        return ExperiencesModuleScreen(
-          catalogsModule: widget.catalogsModule,
-          authController: widget.authController,
-        );
       case AppNavItem.mas:
+        return MoreFlowScreen(
+          controller: widget.authController,
+          contactsApiClient: widget.contactsApiClient,
+          catalogsModule: widget.catalogsModule,
+          saddlesModule: widget.saddlesModule,
+          providersModule: widget.providersModule,
+          onCallRequested: widget.onCallRequested,
+          configurationModule: widget.configurationModule,
+        );
+      case AppNavItem.experiencias:
+        // Experiencias ahora vive dentro de Más — no debería llegar aquí.
+        // Se deja como redirect defensivo.
         return MoreFlowScreen(
           controller: widget.authController,
           contactsApiClient: widget.contactsApiClient,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_ui/src/theme/app_colors.dart';
 import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_detail_controller.dart';
@@ -89,11 +90,10 @@ Future<void> showRejectDialog(
                           onPressed: () {
                             final reason = reasonCtrl.text.trim();
                             if (reason.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Debes indicar un motivo'),
-                                ),
+                              showAppToast(
+                                context,
+                                message: 'Debes indicar un motivo',
+                                isError: true,
                               );
                               return;
                             }

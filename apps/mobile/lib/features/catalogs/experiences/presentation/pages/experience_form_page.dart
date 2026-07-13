@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:mobile_ui/mobile_ui.dart';
@@ -9,14 +8,6 @@ import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 import 'package:mobile/features/catalogs/experiences/presentation/controllers/experience_form_controller.dart';
-
-final _integerInputFormatters = <TextInputFormatter>[
-  FilteringTextInputFormatter.digitsOnly,
-];
-
-final _decimalInputFormatters = <TextInputFormatter>[
-  FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d*')),
-];
 
 class ExperienceFormPage extends StatefulWidget {
   const ExperienceFormPage({
@@ -326,8 +317,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                   AppTextField(
                                     controller: _duracionExperienciaCtrl,
                                     label: 'Duracion experiencia (minutos)',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.schedule_rounded, size: 20),
                                     onChanged: (value) => _controller
                                         .actualizarDuracionExperiencia(
@@ -338,8 +328,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                   AppTextField(
                                     controller: _duracionRecorridoCtrl,
                                     label: 'Duracion recorrido (minutos)',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.timer_rounded, size: 20),
                                     onChanged: (value) =>
                                         _controller.actualizarDuracionRecorrido(
@@ -355,8 +344,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                   child: AppTextField(
                                     controller: _duracionExperienciaCtrl,
                                     label: 'Duracion experiencia (minutos)',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.schedule_rounded, size: 20),
                                     onChanged: (value) => _controller
                                         .actualizarDuracionExperiencia(
@@ -369,8 +357,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                   child: AppTextField(
                                     controller: _duracionRecorridoCtrl,
                                     label: 'Duracion recorrido (minutos)',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.timer_rounded, size: 20),
                                     onChanged: (value) =>
                                         _controller.actualizarDuracionRecorrido(
@@ -408,10 +395,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                         AppTextField(
                           controller: _distanciaCtrl,
                           label: 'Distancia en kilometros (opcional)',
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: _decimalInputFormatters,
+                          inputKind: AppTextInputKind.decimal,
                           prefixIcon: const Icon(Icons.straighten_rounded, size: 20),
                           onChanged: (value) =>
                               _controller.actualizarDistanciaKm(
@@ -475,24 +459,21 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                   AppTextField(
                                     controller: _tarifaMinCtrl,
                                     label: 'Personas desde',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.person_rounded, size: 20),
                                   ),
                                   const SizedBox(height: 10),
                                   AppTextField(
                                     controller: _tarifaMaxCtrl,
                                     label: 'Personas hasta',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.group_add_rounded, size: 20),
                                   ),
                                   const SizedBox(height: 10),
                                   AppTextField(
                                     controller: _tarifaValorCtrl,
                                     label: 'Valor por persona',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.payments_rounded, size: 20),
                                   ),
                                 ],
@@ -504,8 +485,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                   child: AppTextField(
                                     controller: _tarifaMinCtrl,
                                     label: 'Personas desde',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.person_rounded, size: 20),
                                   ),
                                 ),
@@ -514,8 +494,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                   child: AppTextField(
                                     controller: _tarifaMaxCtrl,
                                     label: 'Personas hasta',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.group_add_rounded, size: 20),
                                   ),
                                 ),
@@ -524,8 +503,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                   child: AppTextField(
                                     controller: _tarifaValorCtrl,
                                     label: 'Valor por persona',
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: _integerInputFormatters,
+                                    inputKind: AppTextInputKind.integer,
                                     prefixIcon: const Icon(Icons.payments_rounded, size: 20),
                                   ),
                                 ),
@@ -842,22 +820,19 @@ class _TarifaEditSheetState extends State<_TarifaEditSheet> {
           AppTextField(
             controller: _minCtrl,
             label: 'Personas desde',
-            keyboardType: TextInputType.number,
-            inputFormatters: _integerInputFormatters,
+            inputKind: AppTextInputKind.integer,
           ),
           const SizedBox(height: 10),
           AppTextField(
             controller: _maxCtrl,
             label: 'Personas hasta',
-            keyboardType: TextInputType.number,
-            inputFormatters: _integerInputFormatters,
+            inputKind: AppTextInputKind.integer,
           ),
           const SizedBox(height: 10),
           AppTextField(
             controller: _valCtrl,
             label: 'Valor por persona',
-            keyboardType: TextInputType.number,
-            inputFormatters: _integerInputFormatters,
+            inputKind: AppTextInputKind.integer,
           ),
           const SizedBox(height: 16),
           Row(children: [

@@ -5,6 +5,7 @@ import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_scaffold.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_domain/src/equines/equine_operational_status.dart';
 import 'package:mobile/features/equines/presentation/controllers/equine_events_controller.dart';
 import 'package:mobile/features/equines/presentation/equine_event_labels.dart';
@@ -114,19 +115,19 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
     if (!mounted) return;
 
     if (widget.controller.validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(widget.controller.validationError!)),
+      showAppToast(
+        context,
+        message: widget.controller.validationError!,
+        isError: true,
       );
       return;
     }
 
     if (created == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            widget.controller.saveError ?? 'No se pudo guardar el registro.',
-          ),
-        ),
+      showAppToast(
+        context,
+        message: widget.controller.saveError ?? 'No se pudo guardar el registro.',
+        isError: true,
       );
       return;
     }
@@ -134,7 +135,7 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
     final message = created.syncPending
         ? 'Registro guardado offline. Se sincronizará cuando haya conexión.'
         : 'Registro guardado correctamente.';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    showAppToast(context, message: message);
     Navigator.of(context).pop(true);
   }
 
@@ -250,7 +251,7 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
             AppTextField(
               controller: _weightController,
               label: 'Peso medido (kg)',
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputKind: AppTextInputKind.decimal,
               readOnly: isSaving,
               onChanged: c.setMeasuredWeightText,
             ),

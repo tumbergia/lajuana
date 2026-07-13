@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'package:mobile_ui/src/widgets/app_toast.dart';
+
 import 'package:mobile/app/utils/file_saver.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
@@ -95,19 +97,13 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
     try {
       await saveFile(bytes, filename, contentType);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Descargado: $filename'),
-          duration: const Duration(seconds: 4),
-        ),
-      );
+      showAppToast(context, message: 'Descargado: $filename');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al descargar: $e'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ),
+      showAppToast(
+        context,
+        message: 'Error al descargar: $e',
+        isError: true,
       );
     }
   }

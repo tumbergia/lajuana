@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
+import 'package:mobile_ui/src/input/app_input_formatters.dart';
 import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile/features/providers/presentation/utils/phone_country.dart';
@@ -98,7 +98,7 @@ class ProviderPhoneFieldState extends State<ProviderPhoneField> {
         TextField(
           controller: _localCtrl,
           keyboardType: TextInputType.phone,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          inputFormatters: AppInputFormatters.phone,
           onChanged: (_) => _notifyChanged(),
           style: theme.textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
           decoration: InputDecoration(

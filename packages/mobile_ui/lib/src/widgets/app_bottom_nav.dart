@@ -160,19 +160,6 @@ class _AppBottomNavState extends State<AppBottomNav>
                 ),
                 Expanded(
                   child: _NavButton(
-                    item: AppNavItem.experiencias,
-                    current: widget.current,
-                    label: 'Experiencias',
-                    icon: Symbols.explore,
-                    onTap: _handleTap,
-                    onHoldStart: _onLongPressStart,
-                    onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.experiencias,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.experiencias,
-                  ),
-                ),
-                Expanded(
-                  child: _NavButton(
                     item: AppNavItem.mas,
                     current: widget.current,
                     label: 'Más',

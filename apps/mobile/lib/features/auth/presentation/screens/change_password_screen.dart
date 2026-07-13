@@ -86,6 +86,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 AppTextField(
                   controller: _currentCtrl,
                   label: 'Contrasena actual',
+                  inputKind: AppTextInputKind.password,
                   obscureText: _obscureCurrent,
                   suffix: IconButton(
                     onPressed: () {
@@ -105,6 +106,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 AppTextField(
                   controller: _newCtrl,
                   label: 'Nueva contrasena',
+                  inputKind: AppTextInputKind.password,
                   obscureText: _obscureNew,
                   suffix: IconButton(
                     onPressed: () {
@@ -124,6 +126,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 AppTextField(
                   controller: _confirmCtrl,
                   label: 'Confirmar nueva',
+                  inputKind: AppTextInputKind.password,
                   obscureText: _obscureConfirm,
                   suffix: IconButton(
                     onPressed: () {

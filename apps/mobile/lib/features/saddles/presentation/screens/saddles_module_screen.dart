@@ -9,6 +9,7 @@ import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_domain/src/saddles/saddles_repository.dart';
 import 'package:mobile/features/saddles/infrastructure/repositories/fallback_saddles_repository.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
@@ -93,15 +94,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         );
         await _listController.refresh();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Silla registrada correctamente')),
-          );
+          showAppToast(context, message: 'Silla registrada correctamente');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al registrar la silla')),
-          );
+          showAppToast(context, message: 'Error al registrar la silla', isError: true);
         }
       }
     }
@@ -125,15 +122,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         );
         await _listController.refresh();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Silla actualizada correctamente')),
-          );
+          showAppToast(context, message: 'Silla actualizada correctamente');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al actualizar la silla')),
-          );
+          showAppToast(context, message: 'Error al actualizar la silla', isError: true);
         }
       }
     }
@@ -165,15 +158,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         await _repository.deleteSaddle(saddle.id);
         await _listController.refresh();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Silla eliminada')),
-          );
+          showAppToast(context, message: 'Silla eliminada');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al eliminar la silla')),
-          );
+          showAppToast(context, message: 'Error al eliminar la silla', isError: true);
         }
       }
     }
@@ -184,15 +173,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
       await _repository.restoreSaddle(saddle.id);
       await _listController.refresh();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Silla restaurada')),
-        );
+        showAppToast(context, message: 'Silla restaurada');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al restaurar la silla')),
-        );
+        showAppToast(context, message: 'Error al restaurar la silla', isError: true);
       }
     }
   }
