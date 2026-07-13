@@ -15,6 +15,7 @@ import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_scaffold.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/app_switch_row.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/widgets/app_timeline.dart';
@@ -410,6 +411,40 @@ class _ReservationDetailShellScreenState
             backgroundColor: _paymentStatusBgColor(detail.paymentStatus),
             foregroundColor: _paymentStatusFgColor(detail.paymentStatus),
           ),
+          if (_isAdmin) ...[
+            const SizedBox(height: 16),
+            AppSwitchRow(
+              title: 'Asistente de IA',
+              subtitle: detail.assistantDisabled
+                  ? 'Desactivado para esta reserva'
+                  : 'Activo para esta reserva',
+              value: !detail.assistantDisabled,
+              onChanged: _controller.assistantToggleState.isLoading
+                  ? null
+                  : (enabled) async {
+                      await _controller.setAssistantDisabled(
+                        disabled: !enabled,
+                        isAdmin: true,
+                      );
+                      if (!mounted) return;
+                      if (_controller.assistantToggleState.isError) {
+                        showAppToast(
+                          context,
+                          message:
+                              _controller.assistantToggleState.errorMessage ??
+                              'No se pudo actualizar el asistente.',
+                        );
+                      } else {
+                        showAppToast(
+                          context,
+                          message: enabled
+                              ? 'Asistente activado para esta reserva.'
+                              : 'Asistente desactivado para esta reserva.',
+                        );
+                      }
+                    },
+            ),
+          ],
           const SizedBox(height: 16),
 
           // Confirm reservation action (admin only)

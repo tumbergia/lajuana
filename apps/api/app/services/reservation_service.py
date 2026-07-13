@@ -270,10 +270,13 @@ class ReservationService:
         include_deleted: bool = False,
         limit: int = 200,
         skip: int = 0,
+        assistant_disabled: bool | None = None,
     ) -> list[ReservationDocument]:
         query: dict[str, object] = {}
         if not include_deleted:
             query["deleted_at"] = None
+        if assistant_disabled is not None:
+            query["assistant_disabled"] = assistant_disabled
         if actor_role == UserRole.GUIDE:
             query["status"] = ReservationStatus.CONFIRMED
             return await ReservationDocument.find(query).skip(skip).limit(limit).to_list()
@@ -283,11 +286,14 @@ class ReservationService:
         self,
         actor_role: UserRole,
         include_deleted: bool = False,
+        assistant_disabled: bool | None = None,
     ) -> int:
         """Total count of visible reservations (for X-Total-Count header)."""
         query: dict[str, object] = {}
         if not include_deleted:
             query["deleted_at"] = None
+        if assistant_disabled is not None:
+            query["assistant_disabled"] = assistant_disabled
         if actor_role == UserRole.GUIDE:
             query["status"] = ReservationStatus.CONFIRMED
             return await ReservationDocument.find(query).count()
@@ -298,7 +304,7 @@ class ReservationService:
         reservation_id: str,
         actor_role: UserRole | None = None,
     ) -> ReservationDocument:
-        doc = await ReservationDocument.get(reservation_id)
+        doc = await self.find_by_code_or_id(reservation_id)
         if doc is None:
             raise ApiError(
                 status_code=404,
@@ -325,13 +331,16 @@ class ReservationService:
         return len(reservations) > 0
 
     async def find_by_code_or_id(self, identifier: str) -> ReservationDocument | None:
-        """Busca una reserva por su ObjectId (24 caracteres)
-        o usando coincidencia parcial del código."""
-        if len(identifier) == 24:
+        """Busca una reserva por ObjectId válido o por código exacto (case-insensitive)."""
+        import re
+
+        if PydanticObjectId.is_valid(identifier):
             doc = await ReservationDocument.get(identifier)
             if doc:
                 return doc
-        return await ReservationDocument.find_one({"code": {"$regex": identifier, "$options": "i"}})
+        return await ReservationDocument.find_one(
+            {"code": {"$regex": f"^{re.escape(identifier)}$", "$options": "i"}}
+        )
 
     async def update(
         self,

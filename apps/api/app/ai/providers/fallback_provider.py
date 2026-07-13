@@ -17,8 +17,8 @@ TModel = TypeVar("TModel", bound=BaseModel)
 
 class FallbackLLMProvider:
     def __init__(self, providers: list[tuple[str, StructuredLLMProvider]]) -> None:
-        if len(providers) != 3:
-            raise LLMProviderError("La configuración activa requiere exactamente tres rutas.")
+        if not providers:
+            raise LLMProviderError("La configuración activa no tiene rutas de modelo.")
         self._providers = providers
         self.last_token_usage: dict[str, int] | None = None
 

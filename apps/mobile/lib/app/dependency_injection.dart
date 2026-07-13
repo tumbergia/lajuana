@@ -190,6 +190,7 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
       readAccessToken: readAccessToken,
       refreshSession: refreshSession,
     ),
+    reservationsRepository: reservationsModule.repository,
   );
 
   return AppDependencies(

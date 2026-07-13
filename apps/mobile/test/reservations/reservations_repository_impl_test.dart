@@ -20,6 +20,7 @@ class _FakeApiClient implements ReservationsApiClient {
   @override
   Future<List<ReservationListItemDto>> listReservations({
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     wasCalled = true;
     if (shouldThrow) throw Exception('API error');
@@ -29,6 +30,13 @@ class _FakeApiClient implements ReservationsApiClient {
   @override
   Future<ReservationDetailDto> getReservationById(String id) =>
       throw UnimplementedError('not used in this test');
+
+  @override
+  Future<ReservationDetailDto> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) =>
+      throw UnimplementedError();
 
   @override
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) =>

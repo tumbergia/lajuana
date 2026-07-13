@@ -111,6 +111,10 @@ async def list_reservations(
         Depends(require_permissions(Permission.RESERVATION_READ)),
     ],
     include_deleted: bool = Query(default=False, description="Incluir reservas borradas logicamente"),
+    assistant_disabled: bool | None = Query(
+        default=None,
+        description="Filtrar por asistente desactivado en la reserva",
+    ),
     limit: int = Query(default=200, ge=1, le=1000, description="Max items"),
     skip: int = Query(default=0, ge=0, description="Items to skip"),
     reservation_service: ReservationService = Depends(get_reservation_service),
@@ -119,12 +123,14 @@ async def list_reservations(
     total = await reservation_service.count(
         actor_role=current_user.role,
         include_deleted=include_deleted,
+        assistant_disabled=assistant_disabled,
     )
     response.headers["X-Total-Count"] = str(total)
 
     docs = await reservation_service.list(
         actor_role=current_user.role,
         include_deleted=include_deleted,
+        assistant_disabled=assistant_disabled,
         limit=limit,
         skip=skip,
     )

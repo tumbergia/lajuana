@@ -10,6 +10,7 @@ class AiConfiguration {
 
   final bool enabled;
   final String source;
+  final List<String>? mutedPhones;
   final List<AiRoute> routes;
   final int? version;
   final String? updatedAt;
@@ -18,6 +19,7 @@ class AiConfiguration {
     {
     required this.enabled,
     required this.source,
+    this.mutedPhones,
     required this.routes,
     this.version,
     this.updatedAt,
@@ -28,6 +30,8 @@ class AiConfiguration {
     return AiConfiguration(
       enabled: json['enabled'] as bool,
       source: json['source'] as String,
+      mutedPhones: (json['muted_phones'] as List<dynamic>?)
+        ?.cast<String>(),
       routes: (json['routes'] as List<dynamic>?)
         ?.map((e) => AiRoute.fromJson(e as Map<String, dynamic>)).toList() ?? [],
       version: json['version'] as int?,
@@ -38,6 +42,7 @@ class AiConfiguration {
   Map<String, dynamic> toJson() => {
     'enabled': enabled,
     'source': source,
+    'muted_phones': mutedPhones,
     'routes': routes,
     'version': version,
     'updated_at': updatedAt,

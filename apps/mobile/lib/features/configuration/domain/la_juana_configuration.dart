@@ -1,3 +1,34 @@
+class AiEnvProvider {
+  const AiEnvProvider({
+    required this.available,
+    this.provider = 'gemini',
+    this.model,
+    this.fallbackModels = const [],
+    this.keysConfigured = 0,
+  });
+
+  final bool available;
+  final String provider;
+  final String? model;
+  final List<String> fallbackModels;
+  final int keysConfigured;
+
+  factory AiEnvProvider.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return const AiEnvProvider(available: false);
+    }
+    return AiEnvProvider(
+      available: json['available'] as bool? ?? false,
+      provider: json['provider'] as String? ?? 'gemini',
+      model: json['model'] as String?,
+      fallbackModels: (json['fallback_models'] as List? ?? const [])
+          .map((e) => e.toString())
+          .toList(growable: false),
+      keysConfigured: json['keys_configured'] as int? ?? 0,
+    );
+  }
+}
+
 class AiRouteConfiguration {
   const AiRouteConfiguration({
     required this.position,
@@ -23,17 +54,30 @@ class AiConfiguration {
   const AiConfiguration({
     required this.enabled,
     required this.source,
+    this.providerMode = 'env',
+    this.mutedPhones = const [],
     required this.routes,
+    this.envProvider = const AiEnvProvider(available: false),
     required this.version,
   });
   final bool enabled;
   final String source;
+  final String providerMode;
+  final List<String> mutedPhones;
   final List<AiRouteConfiguration> routes;
+  final AiEnvProvider envProvider;
   final int version;
+
+  bool get usesEnvProvider => providerMode != 'manual';
+
   factory AiConfiguration.fromJson(Map<String, dynamic> json) =>
       AiConfiguration(
         enabled: json['enabled'] as bool? ?? false,
         source: json['source'] as String? ?? 'unconfigured',
+        providerMode: json['provider_mode'] as String? ?? 'env',
+        mutedPhones: (json['muted_phones'] as List? ?? const [])
+            .map((e) => e.toString())
+            .toList(),
         routes: (json['routes'] as List? ?? const [])
             .map(
               (e) => AiRouteConfiguration.fromJson(
@@ -41,6 +85,11 @@ class AiConfiguration {
               ),
             )
             .toList(),
+        envProvider: AiEnvProvider.fromJson(
+          json['env_provider'] is Map
+              ? Map<String, dynamic>.from(json['env_provider'] as Map)
+              : null,
+        ),
         version: json['version'] as int? ?? 1,
       );
 }

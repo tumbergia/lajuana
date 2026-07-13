@@ -31,11 +31,13 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     try {
       // 1. Fetch list from backend (summary endpoint).
       final dtos = await _apiClient.listReservations(
         includeDeleted: includeDeleted,
+        assistantDisabled: assistantDisabled,
       );
 
       // 2. Map directly — no detail hydration needed.
@@ -55,6 +57,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
                 'holder_name': item.holderName,
                 'holder_email': item.holderEmail,
                 'holder_phone': item.holderPhone,
+                'assistant_disabled': item.assistantDisabled,
                 'experience_id': item.experienceId,
                 'experience_name': item.experienceName,
                 'requested_date': item.requestedDate,
@@ -107,6 +110,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
           'holder_name': dto.holderName,
           'holder_email': dto.holderEmail,
           'holder_phone': dto.holderPhone,
+          'assistant_disabled': dto.assistantDisabled,
           'requested_date': dto.requestedDate,
           'quoted_total_amount': dto.quotedTotalAmount,
           'currency': dto.currency,
@@ -174,6 +178,20 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
       if (cached == null) rethrow;
       return dtoToDetail(_payloadToDetailDto(cached.payload));
     }
+  }
+
+  @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    final dto = await _apiClient.updateReservation(
+      reservationId: reservationId,
+      assistantDisabled: assistantDisabled,
+    );
+    final detail = dtoToDetail(dto);
+    await _cacheDetailPayload(dto);
+    return detail;
   }
 
   @override
@@ -354,6 +372,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
         'holder_name': dto.holderName,
         'holder_email': dto.holderEmail,
         'holder_phone': dto.holderPhone,
+        'assistant_disabled': dto.assistantDisabled,
         'requested_date': dto.requestedDate,
         'quoted_total_amount': dto.quotedTotalAmount,
         'currency': dto.currency,
@@ -488,6 +507,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
       holderName: payload['holder_name'] as String?,
       holderEmail: payload['holder_email'] as String?,
       holderPhone: payload['holder_phone'] as String?,
+      assistantDisabled: payload['assistant_disabled'] as bool? ?? false,
       experienceId: payload['experience_id'] as String?,
       experienceName: payload['experience_name'] as String?,
       requestedDate: payload['requested_date'] as String?,
@@ -522,6 +542,7 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
       holderName: payload['holder_name'] as String?,
       holderEmail: payload['holder_email'] as String?,
       holderPhone: payload['holder_phone'] as String?,
+      assistantDisabled: payload['assistant_disabled'] as bool? ?? false,
       requestedDate: payload['requested_date'] as String?,
       quotedTotalAmount: payload['quoted_total_amount'] as String?,
       currency: payload['currency'] as String?,

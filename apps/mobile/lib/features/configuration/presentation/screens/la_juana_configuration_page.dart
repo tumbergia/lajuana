@@ -8,6 +8,7 @@ import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/configuration/presentation/screens/ai_configuration_page.dart';
 import 'package:mobile/features/configuration/presentation/screens/business_location_page.dart';
 import 'package:mobile/features/configuration/presentation/screens/payment_methods_page.dart';
+import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
@@ -18,11 +19,13 @@ class LaJuanaConfigurationPage extends StatelessWidget {
     required this.module,
     required this.catalogsModule,
     required this.authController,
+    this.reservationsRepository,
   });
 
   final LaJuanaConfigurationModule module;
   final CatalogsModule catalogsModule;
   final AuthController authController;
+  final ReservationsRepository? reservationsRepository;
 
   void _open(BuildContext context, Widget page) =>
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
@@ -31,6 +34,7 @@ class LaJuanaConfigurationPage extends StatelessWidget {
     return Container(
       width: 40,
       height: 40,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(4),
@@ -80,7 +84,13 @@ class LaJuanaConfigurationPage extends StatelessWidget {
           subtitle: 'Servicios y rutas de respaldo del asistente',
           leading: _leadingIcon(context, Symbols.psychology),
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-          onTap: () => _open(context, AiConfigurationPage(module: module)),
+          onTap: () => _open(
+            context,
+            AiConfigurationPage(
+              module: module,
+              reservationsRepository: reservationsRepository,
+            ),
+          ),
         ),
         const SizedBox(height: 12),
         AppEntityRowCard(

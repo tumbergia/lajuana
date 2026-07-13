@@ -41,6 +41,7 @@ class ReservationDetailController extends ChangeNotifier {
   ActionState<void> cancellationState = ActionState.idle();
   ActionState<void> deleteState = ActionState.idle();
   ActionState<void> restoreState = ActionState.idle();
+  ActionState<void> assistantToggleState = ActionState.idle();
 
   // ── Computed helpers for UI (derived from individual ActionStates) ──
 
@@ -428,6 +429,41 @@ class ReservationDetailController extends ChangeNotifier {
     }
   }
 
+  Future<void> setAssistantDisabled({
+    required bool disabled,
+    required bool isAdmin,
+  }) async {
+    if (!isAdmin) {
+      assistantToggleState = ActionState.error(
+        'permission.denied',
+        'No tienes permisos para cambiar el asistente.',
+      );
+      notifyListeners();
+      return;
+    }
+    if (assistantToggleState.isLoading || detail == null) return;
+
+    assistantToggleState = ActionState.loading();
+    notifyListeners();
+
+    try {
+      detail = await _repository.updateReservation(
+        reservationId: detail!.id,
+        assistantDisabled: disabled,
+      );
+      assistantToggleState = ActionState.success();
+    } on ReservationsApiFailure catch (e) {
+      assistantToggleState = ActionState.error(e.code, e.message);
+    } catch (_) {
+      assistantToggleState = ActionState.error(
+        'common.error',
+        'Error inesperado al actualizar el asistente.',
+      );
+    } finally {
+      notifyListeners();
+    }
+  }
+
   // ── Reset ──
 
   void reset() {
@@ -444,6 +480,7 @@ class ReservationDetailController extends ChangeNotifier {
     cancellationState = ActionState.idle();
     deleteState = ActionState.idle();
     restoreState = ActionState.idle();
+    assistantToggleState = ActionState.idle();
     notifyListeners();
   }
 }

@@ -29,10 +29,20 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    throw UnimplementedError();
+  }
+
+
+  @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     return [];
   }
@@ -219,10 +229,20 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    throw UnimplementedError();
+  }
+
+
+  @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     return [];
   }
@@ -441,10 +461,20 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    throw UnimplementedError();
+  }
+
+
+  @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     return [];
   }
@@ -663,10 +693,20 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    throw UnimplementedError();
+  }
+
+
+  @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     return [];
   }

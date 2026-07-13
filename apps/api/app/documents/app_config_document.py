@@ -42,6 +42,7 @@ class BusinessLocationConfig(BaseModel):
 
 
 AiService = Literal["gemini", "openai", "groq", "openrouter"]
+AiProviderMode = Literal["env", "manual"]
 
 
 class AiRouteConfig(BaseModel):
@@ -53,6 +54,10 @@ class AiRouteConfig(BaseModel):
 
 class AiConfigurationConfig(BaseModel):
     enabled: bool = False
+    # env = Gemini + fallbacks desde variables de entorno
+    # manual = rutas/modelos configurados en la UI
+    provider_mode: AiProviderMode = "env"
+    muted_phones: list[str] = Field(default_factory=list)
     routes: list[AiRouteConfig] = Field(
         default_factory=lambda: [AiRouteConfig(position=i) for i in range(1, 4)]
     )

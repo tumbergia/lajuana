@@ -27,6 +27,7 @@ import 'package:mobile/features/providers/presentation/screens/providers_module_
 import 'package:mobile/features/saddles/presentation/screens/saddles_module_screen.dart';
 import 'package:mobile/features/saddles/saddles_module.dart';
 import 'package:mobile/features/providers/providers_module.dart';
+import 'package:mobile/features/reservations/reservations_module.dart';
 
 enum _MoreDestination {
   menu,
@@ -48,6 +49,7 @@ class MoreFlowScreen extends StatefulWidget {
     this.providersModule,
     this.onCallRequested,
     this.configurationModule,
+    this.reservationsModule,
   });
 
   final AuthController controller;
@@ -57,6 +59,7 @@ class MoreFlowScreen extends StatefulWidget {
   final ProvidersModule? providersModule;
   final Future<bool> Function(String phone)? onCallRequested;
   final LaJuanaConfigurationModule? configurationModule;
+  final ReservationsModule? reservationsModule;
 
   @override
   State<MoreFlowScreen> createState() => _MoreFlowScreenState();
@@ -286,6 +289,8 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
                     module: widget.configurationModule!,
                     catalogsModule: widget.catalogsModule!,
                     authController: widget.controller,
+                    reservationsRepository:
+                        widget.reservationsModule?.repository,
                   ),
                 ),
               );

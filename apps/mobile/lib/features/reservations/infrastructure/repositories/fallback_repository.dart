@@ -19,12 +19,21 @@ class FallbackRepository implements ReservationsRepository {
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     return const <ReservationListItem>[];
   }
 
   @override
   Future<ReservationDetail> getReservationById(String reservationId) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
     throw Exception('ReservationsModule no inyectado');
   }
 

@@ -27,10 +27,20 @@ class _FakeSuccessRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    throw UnimplementedError();
+  }
+
+
+  @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     return [];
   }
@@ -217,10 +227,20 @@ class _FakeErrorRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    throw UnimplementedError();
+  }
+
+
+  @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     return [];
   }
@@ -411,10 +431,20 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    throw UnimplementedError();
+  }
+
+
+  @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     return [];
   }

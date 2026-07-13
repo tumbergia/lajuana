@@ -25,6 +25,7 @@ class ReservationUpdateSchema(BaseModel):
     holder_email: EmailStr | None = None
     holder_phone: str | None = None
     quoted_total_amount: Decimal | None = None
+    assistant_disabled: bool | None = None
 
 
 class ReservationConfirmSchema(BaseModel):
@@ -66,6 +67,7 @@ class ReservationResponseSchema(AuditMetadataSchema):
     holder_name: str | None
     holder_email: EmailStr | None
     holder_phone: str | None
+    assistant_disabled: bool = False
     requested_date: date | None
     quoted_total_amount: Decimal | None
     currency: str
@@ -98,6 +100,7 @@ class ReservationListItemSchema(AuditMetadataSchema):
     holder_name: str | None = None
     holder_email: str | None = None
     holder_phone: str | None = None
+    assistant_disabled: bool = False
     experience_id: str
     experience_name: str | None = None
     requested_date: date | None = None

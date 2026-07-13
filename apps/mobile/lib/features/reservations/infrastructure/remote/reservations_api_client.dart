@@ -28,10 +28,16 @@ class ReservationsApiClient {
 
   Future<List<ReservationListItemDto>> listReservations({
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
-    final path = includeDeleted
-        ? '/reservations?include_deleted=true'
-        : '/reservations';
+    final params = <String>[];
+    if (includeDeleted) params.add('include_deleted=true');
+    if (assistantDisabled != null) {
+      params.add('assistant_disabled=$assistantDisabled');
+    }
+    final path = params.isEmpty
+        ? '/reservations'
+        : '/reservations?${params.join('&')}';
     final response = await _authorizedRequest(
       method: 'GET',
       path: path,
@@ -64,6 +70,21 @@ class ReservationsApiClient {
     final response = await _authorizedRequest(
       method: 'GET',
       path: '/reservations/$reservationId',
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
+  Future<ReservationDetailDto> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'PATCH',
+      path: '/reservations/$reservationId',
+      body: {
+        if (assistantDisabled != null) 'assistant_disabled': assistantDisabled,
+      },
     );
     final data = _decodeBody(response.body);
     return ReservationDetailDto.fromJson(data);

@@ -25,6 +25,7 @@ class ReservationDocument(AuditDocument):
     holder_name: str | None = None
     holder_email: EmailStr | None = None
     holder_phone: str | None = None
+    assistant_disabled: bool = False
     requested_date: date | None = None
     blocks_day: bool = False
     availability_lock_key: str | None = None

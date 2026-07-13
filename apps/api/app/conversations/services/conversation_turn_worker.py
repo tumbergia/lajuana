@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from typing import Any, Protocol
 from uuid import uuid4
 
+from app.ai.assistant.assistant_gate import AssistantGate
 from app.ai.assistant.orchestrator import AssistantOrchestrator
 from app.ai.language.detector import detect_explicit_language_request, detect_language
 from app.ai.language.messages import t
@@ -50,6 +51,7 @@ class ConversationTurnWorker:
         outbound_service: WhatsAppOutboundService,
     ) -> None:
         self._orchestrator = AssistantOrchestrator()
+        self._assistant_gate = AssistantGate()
         self._lock_service = lock_service
         self._buffer_service = buffer_service
         self._outbound_service = outbound_service
@@ -323,6 +325,18 @@ class ConversationTurnWorker:
                 input_message_ids=reloaded.message_ids,
             )
             await turn.insert()
+
+            if not await self._assistant_gate.is_allowed(buffer_doc.normalized_phone):
+                turn.status = "skipped_disabled"
+                turn.responded_at = datetime.now(UTC)
+                await turn.save()
+                await self._buffer_service.mark_processed(buffer=reloaded)
+                logger.info(
+                    "[conversation_id=%s] Assistant disabled; turn skipped | messages=%d",
+                    conversation_id,
+                    len(events),
+                )
+                return True
 
             if await self._try_process_pending_media_with_code(
                 combined_text=combined_input,

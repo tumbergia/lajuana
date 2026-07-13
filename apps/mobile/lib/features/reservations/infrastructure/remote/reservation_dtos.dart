@@ -8,6 +8,7 @@ class ReservationListItemDto {
     this.holderName,
     this.holderEmail,
     this.holderPhone,
+    this.assistantDisabled = false,
     this.experienceId,
     this.experienceName,
     this.requestedDate,
@@ -29,6 +30,7 @@ class ReservationListItemDto {
   final String? holderName;
   final String? holderEmail;
   final String? holderPhone;
+  final bool assistantDisabled;
   final String? experienceId;
   final String? experienceName;
   final String? requestedDate;
@@ -51,6 +53,7 @@ class ReservationListItemDto {
       holderName: json['holder_name'] as String?,
       holderEmail: json['holder_email'] as String?,
       holderPhone: json['holder_phone'] as String?,
+      assistantDisabled: json['assistant_disabled'] as bool? ?? false,
       experienceId: json['experience_id'] as String?,
       experienceName: json['experience_name'] as String?,
       requestedDate: json['requested_date'] as String?,
@@ -236,6 +239,7 @@ class ReservationDetailDto {
     this.holderName,
     this.holderEmail,
     this.holderPhone,
+    this.assistantDisabled = false,
     this.requestedDate,
     this.quotedTotalAmount,
     this.currency,
@@ -264,6 +268,7 @@ class ReservationDetailDto {
   final String? holderName;
   final String? holderEmail;
   final String? holderPhone;
+  final bool assistantDisabled;
   final String? requestedDate;
   final String? quotedTotalAmount;
   final String? currency;
@@ -296,6 +301,7 @@ class ReservationDetailDto {
       holderName: json['holder_name'] as String?,
       holderEmail: json['holder_email'] as String?,
       holderPhone: json['holder_phone'] as String?,
+      assistantDisabled: json['assistant_disabled'] as bool? ?? false,
       requestedDate: json['requested_date'] as String?,
       quotedTotalAmount: json['quoted_total_amount'] as String?,
       currency: json['currency'] as String?,

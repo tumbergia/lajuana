@@ -11,6 +11,7 @@ class ReservationUpdate {
   final String? holderEmail;
   final String? holderPhone;
   final String? quotedTotalAmount;
+  final String? assistantDisabled;
 
   const ReservationUpdate(
     {
@@ -19,6 +20,7 @@ class ReservationUpdate {
     this.holderEmail,
     this.holderPhone,
     this.quotedTotalAmount,
+    this.assistantDisabled,
     }
   );
 
@@ -29,6 +31,7 @@ class ReservationUpdate {
       holderEmail: json['holder_email'] as String?,
       holderPhone: json['holder_phone'] as String?,
       quotedTotalAmount: json['quoted_total_amount'] as String?,
+      assistantDisabled: json['assistant_disabled'] as String?,
     );
   }
 
@@ -38,6 +41,7 @@ class ReservationUpdate {
     'holder_email': holderEmail,
     'holder_phone': holderPhone,
     'quoted_total_amount': quotedTotalAmount,
+    'assistant_disabled': assistantDisabled,
   };
 
 }

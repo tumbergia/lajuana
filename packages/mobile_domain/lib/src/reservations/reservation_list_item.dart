@@ -11,6 +11,7 @@ class ReservationListItem {
     this.holderName,
     this.holderEmail,
     this.holderPhone,
+    this.assistantDisabled = false,
     required this.participantCount,
     this.registeredParticipantsCount,
     this.paymentStatus,
@@ -31,6 +32,7 @@ class ReservationListItem {
   final String? holderName;
   final String? holderEmail;
   final String? holderPhone;
+  final bool assistantDisabled;
   final int participantCount;
   final int? registeredParticipantsCount;
   final String? paymentStatus;
@@ -55,6 +57,7 @@ class ReservationListItem {
       holderName: source.holderName,
       holderEmail: source.holderEmail,
       holderPhone: source.holderPhone,
+      assistantDisabled: source.assistantDisabled ?? false,
       participantCount: source.participantCount,
       registeredParticipantsCount: source.participantsCompletedCount,
       paymentStatus: source.paymentStatus.value,

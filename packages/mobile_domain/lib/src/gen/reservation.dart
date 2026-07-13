@@ -27,6 +27,7 @@ class Reservation {
   final String holderName;
   final String holderEmail;
   final String holderPhone;
+  final bool? assistantDisabled;
   final String requestedDate;
   final String quotedTotalAmount;
   final String currency;
@@ -65,6 +66,7 @@ class Reservation {
     required this.holderName,
     required this.holderEmail,
     required this.holderPhone,
+    this.assistantDisabled,
     required this.requestedDate,
     required this.quotedTotalAmount,
     required this.currency,
@@ -105,6 +107,7 @@ class Reservation {
       holderName: json['holder_name'] as String,
       holderEmail: json['holder_email'] as String,
       holderPhone: json['holder_phone'] as String,
+      assistantDisabled: json['assistant_disabled'] as bool?,
       requestedDate: json['requested_date'] as String,
       quotedTotalAmount: json['quoted_total_amount'] as String,
       currency: json['currency'] as String,
@@ -147,6 +150,7 @@ class Reservation {
     'holder_name': holderName,
     'holder_email': holderEmail,
     'holder_phone': holderPhone,
+    'assistant_disabled': assistantDisabled,
     'requested_date': requestedDate,
     'quoted_total_amount': quotedTotalAmount,
     'currency': currency,

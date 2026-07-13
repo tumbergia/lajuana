@@ -14,6 +14,7 @@ class ReservationDetail {
     this.holderName,
     this.holderEmail,
     this.holderPhone,
+    this.assistantDisabled = false,
     this.experienceId,
     this.experienceName,
     required this.participantCount,
@@ -50,6 +51,7 @@ class ReservationDetail {
       holderName: source.holderName.isNotEmpty ? source.holderName : null,
       holderEmail: source.holderEmail.isNotEmpty ? source.holderEmail : null,
       holderPhone: source.holderPhone.isNotEmpty ? source.holderPhone : null,
+      assistantDisabled: source.assistantDisabled ?? false,
       experienceId: source.experienceId,
       experienceName: null,
       requestedDate: source.requestedDate.isNotEmpty ? source.requestedDate : null,
@@ -89,6 +91,7 @@ class ReservationDetail {
   final String? holderName;
   final String? holderEmail;
   final String? holderPhone;
+  final bool assistantDisabled;
   final String? experienceId;
   final String? experienceName;
   final int participantCount;

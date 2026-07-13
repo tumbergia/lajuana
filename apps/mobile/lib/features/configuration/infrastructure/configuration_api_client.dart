@@ -28,6 +28,27 @@ class ConfigurationApiClient {
   final Future<bool> Function() _refreshSession;
   final http.Client _http;
 
+  static String _errorMessage(Object? decoded) {
+    if (decoded is! Map) {
+      return 'No se pudo guardar la configuración.';
+    }
+    final message = decoded['message'] as String?;
+    final details = decoded['details'];
+    if (details is Map) {
+      final fields = details['fields'];
+      if (fields is List && fields.isNotEmpty) {
+        final first = fields.first;
+        if (first is Map) {
+          final reason = first['msg'] as String? ?? first['reason'] as String?;
+          if (reason != null && reason.isNotEmpty) {
+            return reason;
+          }
+        }
+      }
+    }
+    return message ?? 'No se pudo guardar la configuración.';
+  }
+
   Future<AiConfiguration> getAi() async =>
       AiConfiguration.fromJson(await _request('GET', '/config/ai'));
   Future<AiConfiguration> updateAi(Map<String, dynamic> body) async =>
@@ -80,10 +101,7 @@ class ConfigurationApiClient {
             ? null
             : jsonDecode(response.body);
         throw ConfigurationApiFailure(
-          decoded is Map
-              ? (decoded['message'] as String? ??
-                    'No se pudo guardar la configuración.')
-              : 'No se pudo guardar la configuración.',
+          _errorMessage(decoded),
           statusCode: response.statusCode,
         );
       }

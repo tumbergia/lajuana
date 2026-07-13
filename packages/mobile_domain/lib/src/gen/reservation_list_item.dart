@@ -22,6 +22,7 @@ class ReservationListItem {
   final String? holderName;
   final String? holderEmail;
   final String? holderPhone;
+  final bool? assistantDisabled;
   final String experienceId;
   final String? experienceName;
   final String? requestedDate;
@@ -49,6 +50,7 @@ class ReservationListItem {
     this.holderName,
     this.holderEmail,
     this.holderPhone,
+    this.assistantDisabled,
     required this.experienceId,
     this.experienceName,
     this.requestedDate,
@@ -78,6 +80,7 @@ class ReservationListItem {
       holderName: json['holder_name'] as String?,
       holderEmail: json['holder_email'] as String?,
       holderPhone: json['holder_phone'] as String?,
+      assistantDisabled: json['assistant_disabled'] as bool?,
       experienceId: json['experience_id'] as String,
       experienceName: json['experience_name'] as String?,
       requestedDate: json['requested_date'] as String?,
@@ -107,6 +110,7 @@ class ReservationListItem {
     'holder_name': holderName,
     'holder_email': holderEmail,
     'holder_phone': holderPhone,
+    'assistant_disabled': assistantDisabled,
     'experience_id': experienceId,
     'experience_name': experienceName,
     'requested_date': requestedDate,

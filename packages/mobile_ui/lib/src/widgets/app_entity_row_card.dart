@@ -38,55 +38,63 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
     final showAccent = widget.accentColor != null;
 
     final body = Padding(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (widget.leading != null)
-            ...[widget.leading!, const SizedBox(width: 12)],
+          if (widget.leading != null) ...[
+            Align(
+              alignment: Alignment.center,
+              child: widget.leading!,
+            ),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: widget.subtitle.isNotEmpty
-                  ? CrossAxisAlignment.start
-                  : CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Text(
                         widget.title.toUpperCase(),
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: scheme.onSurface,
+                              height: 1.2,
                             ),
                       ),
                     ),
-                    ?widget.badge,
-                    if (widget.badge != null && widget.trailing != null)
+                    if (widget.badge != null) ...[
                       const SizedBox(width: 8),
-                    ?widget.trailing,
+                      widget.badge!,
+                    ],
                   ],
                 ),
                 if (widget.subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     widget.subtitle.toUpperCase(),
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                           fontWeight: FontWeight.w500,
+                          height: 1.25,
                         ),
                   ),
                 ],
               ],
             ),
           ),
+          if (widget.trailing != null) ...[
+            const SizedBox(width: 12),
+            Align(
+              alignment: Alignment.center,
+              child: widget.trailing!,
+            ),
+          ],
         ],
       ),
     );

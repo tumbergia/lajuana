@@ -19,6 +19,7 @@ from app.documents import (
 from app.schemas.config import (
     AiConfigurationSchema,
     AiConfigurationUpdateSchema,
+    AiEnvProviderSchema,
     AiRouteSchema,
     BusinessLocationSchema,
     BusinessLocationUpdateSchema,
@@ -183,15 +184,40 @@ class ConfigService:
     async def get_ai_configuration_document(self) -> AppConfigDocument | None:
         return await AppConfigDocument.find_one({"key": AI_CONFIGURATION_KEY})
 
+    def _env_provider_schema(self) -> AiEnvProviderSchema:
+        from app.core.config import settings
+
+        keys = [
+            settings.gemini_api_key,
+            settings.gemini_api_key_2,
+            settings.gemini_api_key_3,
+        ]
+        keys_configured = sum(1 for key in keys if (key or "").strip())
+        fallbacks = [
+            part.strip()
+            for part in (settings.gemini_fallback_models or "").split(",")
+            if part.strip()
+        ]
+        return AiEnvProviderSchema(
+            available=bool((settings.gemini_api_key or "").strip()),
+            provider="gemini",
+            model=settings.gemini_model or None,
+            fallback_models=fallbacks,
+            keys_configured=keys_configured,
+        )
+
     async def get_ai_configuration(self) -> AiConfigurationSchema:
         from app.core.config import settings
 
+        env_provider = self._env_provider_schema()
         config = await self.get_ai_configuration_document()
         if config and config.ai_configuration:
             ai = config.ai_configuration
             return AiConfigurationSchema(
                 enabled=ai.enabled,
                 source="database",
+                provider_mode=getattr(ai, "provider_mode", None) or "env",
+                muted_phones=list(ai.muted_phones),
                 routes=[
                     AiRouteSchema(
                         position=r.position,
@@ -201,6 +227,7 @@ class ConfigService:
                     )
                     for r in sorted(ai.routes, key=lambda item: item.position)
                 ],
+                env_provider=env_provider,
                 version=config.version,
                 updated_at=config.updated_at,
             )
@@ -208,6 +235,8 @@ class ConfigService:
             return AiConfigurationSchema(
                 enabled=True,
                 source="legacy_env",
+                provider_mode="env",
+                muted_phones=[],
                 routes=[
                     AiRouteSchema(
                         position=1,
@@ -218,11 +247,15 @@ class ConfigService:
                     AiRouteSchema(position=2),
                     AiRouteSchema(position=3),
                 ],
+                env_provider=env_provider,
             )
         return AiConfigurationSchema(
             enabled=False,
             source="unconfigured",
+            provider_mode="env",
+            muted_phones=[],
             routes=[AiRouteSchema(position=i) for i in range(1, 4)],
+            env_provider=env_provider,
         )
 
     async def update_ai_configuration(
@@ -231,6 +264,9 @@ class ConfigService:
         *,
         actor_id: PydanticObjectId | None = None,
     ) -> AiConfigurationSchema:
+        from app.channels.whatsapp.normalizer import normalize_phone
+        from app.core.config import settings
+
         config = await self.get_ai_configuration_document()
         if config is None:
             config = AppConfigDocument(key=AI_CONFIGURATION_KEY)
@@ -244,40 +280,93 @@ class ConfigService:
                 code="config.version_conflict",
                 message="La configuración cambió en otro dispositivo.",
             )
+        existing_ai = config.ai_configuration
         existing = {
             r.position: r
-            for r in (config.ai_configuration.routes if config.ai_configuration else [])
+            for r in (existing_ai.routes if existing_ai else [])
         }
-        routes: list[AiRouteConfig] = []
-        for incoming in sorted(payload.routes, key=lambda item: item.position):
-            encrypted = (
-                existing.get(incoming.position).encrypted_api_key
-                if existing.get(incoming.position)
-                else None
-            )
-            if incoming.clear_api_key:
-                encrypted = None
-            if incoming.api_key is not None and incoming.api_key.get_secret_value():
-                encrypted = encrypt_secret(incoming.api_key.get_secret_value())
-            routes.append(
-                AiRouteConfig(
-                    position=incoming.position,
-                    service=incoming.service,
-                    model=(incoming.model or "").strip() or None,
-                    encrypted_api_key=encrypted,
+        provider_mode = (
+            payload.provider_mode
+            or (existing_ai.provider_mode if existing_ai else None)
+            or "env"
+        )
+        if payload.routes is None:
+            routes = [
+                existing.get(i) or AiRouteConfig(position=i) for i in range(1, 4)
+            ]
+        else:
+            routes = []
+            for incoming in sorted(payload.routes, key=lambda item: item.position):
+                encrypted = (
+                    existing.get(incoming.position).encrypted_api_key
+                    if existing.get(incoming.position)
+                    else None
                 )
-            )
-        if payload.enabled and any(
-            not (r.service and r.model and r.encrypted_api_key) for r in routes
-        ):
-            raise ApiError(
-                status_code=422,
-                code="config.ai_incomplete",
-                message="Las tres rutas requieren servicio, modelo y clave.",
-            )
-        config.ai_configuration = AiConfigurationConfig(enabled=payload.enabled, routes=routes)
+                if incoming.clear_api_key:
+                    encrypted = None
+                if incoming.api_key is not None and incoming.api_key.get_secret_value():
+                    encrypted = encrypt_secret(incoming.api_key.get_secret_value())
+                routes.append(
+                    AiRouteConfig(
+                        position=incoming.position,
+                        service=incoming.service,
+                        model=(incoming.model or "").strip() or None,
+                        encrypted_api_key=encrypted,
+                    )
+                )
+        if payload.enabled:
+            if provider_mode == "env":
+                if not (settings.gemini_api_key or "").strip():
+                    raise ApiError(
+                        status_code=422,
+                        code="config.ai_env_unavailable",
+                        message=(
+                            "No hay GEMINI_API_KEY en el servidor. "
+                            "Configura el entorno o usa modelos personalizados."
+                        ),
+                    )
+            else:
+                complete = [
+                    r
+                    for r in routes
+                    if r.service and r.model and r.encrypted_api_key
+                ]
+                if not complete:
+                    raise ApiError(
+                        status_code=422,
+                        code="config.ai_incomplete",
+                        message=(
+                            "Configura al menos un modelo con servicio, nombre y clave "
+                            "para usar el modo personalizado."
+                        ),
+                    )
+        muted: list[str] = []
+        seen: set[str] = set()
+        for raw in payload.muted_phones:
+            try:
+                phone = normalize_phone(raw)
+            except ValueError:
+                raise ApiError(
+                    status_code=422,
+                    code="config.invalid_muted_phone",
+                    message=f"Número de teléfono inválido: {raw!r}",
+                ) from None
+            if phone not in seen:
+                seen.add(phone)
+                muted.append(phone)
+        config.ai_configuration = AiConfigurationConfig(
+            enabled=payload.enabled,
+            provider_mode=provider_mode,
+            muted_phones=muted,
+            routes=routes,
+        )
         await self._persist(config)
-        await self._audit(actor_id, "ai_configuration", ["enabled", "routes"], config.version)
+        await self._audit(
+            actor_id,
+            "ai_configuration",
+            ["enabled", "provider_mode", "muted_phones", "routes"],
+            config.version,
+        )
         return await self.get_ai_configuration()
 
     async def get_summary(self) -> ConfigurationSummarySchema:

@@ -161,6 +161,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           providersModule: widget.providersModule,
           onCallRequested: widget.onCallRequested,
           configurationModule: widget.configurationModule,
+          reservationsModule: widget.reservationsModule,
         );
       case AppNavItem.experiencias:
         // Experiencias ahora vive dentro de Más — no debería llegar aquí.
@@ -173,6 +174,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           providersModule: widget.providersModule,
           onCallRequested: widget.onCallRequested,
           configurationModule: widget.configurationModule,
+          reservationsModule: widget.reservationsModule,
         );
       case AppNavItem.none:
         return const SizedBox.shrink();

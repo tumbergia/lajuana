@@ -30,6 +30,38 @@ def test_ai_configuration_requires_exactly_three_routes() -> None:
         AiConfigurationUpdateSchema(enabled=True, routes=[route])
 
 
+def test_ai_configuration_allows_toggle_without_routes() -> None:
+    payload = AiConfigurationUpdateSchema(
+        enabled=False,
+        muted_phones=["+573001112233"],
+        routes=None,
+    )
+    assert payload.routes is None
+    assert payload.muted_phones == ["+573001112233"]
+
+
+def test_ai_configuration_accepts_provider_mode() -> None:
+    payload = AiConfigurationUpdateSchema(
+        enabled=True,
+        provider_mode="env",
+        routes=None,
+    )
+    assert payload.provider_mode == "env"
+
+
+def test_ai_configuration_accepts_incomplete_routes_when_disabling() -> None:
+    payload = AiConfigurationUpdateSchema(
+        enabled=False,
+        routes=[
+            AiRouteUpdateSchema(position=1),
+            AiRouteUpdateSchema(position=2),
+            AiRouteUpdateSchema(position=3),
+        ],
+    )
+    assert payload.enabled is False
+    assert len(payload.routes or []) == 3
+
+
 def test_ai_models_have_no_defaults() -> None:
     route = AiRouteUpdateSchema(position=1, service="openai")
     assert route.model is None

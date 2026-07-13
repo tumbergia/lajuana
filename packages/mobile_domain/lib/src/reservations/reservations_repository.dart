@@ -15,9 +15,16 @@ abstract class ReservationsRepository {
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   });
 
   Future<ReservationDetail> getReservationById(String reservationId);
+
+  /// Actualiza campos editables de la reserva (p. ej. assistant_disabled).
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  });
 
   Future<List<ReservationListItem>> getCachedReservations();
 

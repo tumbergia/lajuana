@@ -109,6 +109,7 @@ class BusinessLocationUpdateSchema(BaseModel):
 
 
 AiService = Literal["gemini", "openai", "groq", "openrouter"]
+AiProviderMode = Literal["env", "manual"]
 
 
 class AiRouteSchema(BaseModel):
@@ -118,10 +119,21 @@ class AiRouteSchema(BaseModel):
     credential_configured: bool = False
 
 
+class AiEnvProviderSchema(BaseModel):
+    available: bool
+    provider: str = "gemini"
+    model: str | None = None
+    fallback_models: list[str] = Field(default_factory=list)
+    keys_configured: int = 0
+
+
 class AiConfigurationSchema(BaseModel):
     enabled: bool
     source: str
+    provider_mode: AiProviderMode = "env"
+    muted_phones: list[str] = Field(default_factory=list)
     routes: list[AiRouteSchema]
+    env_provider: AiEnvProviderSchema | None = None
     version: int = 1
     updated_at: datetime | None = None
 
@@ -136,17 +148,17 @@ class AiRouteUpdateSchema(BaseModel):
 
 class AiConfigurationUpdateSchema(BaseModel):
     enabled: bool = False
-    routes: list[AiRouteUpdateSchema]
+    provider_mode: AiProviderMode | None = None
+    muted_phones: list[str] = Field(default_factory=list)
+    routes: list[AiRouteUpdateSchema] | None = None
     expected_version: int | None = None
 
     @model_validator(mode="after")
     def validate_routes(self) -> "AiConfigurationUpdateSchema":
+        if self.routes is None:
+            return self
         if len(self.routes) != 3 or {r.position for r in self.routes} != {1, 2, 3}:
             raise ValueError("Se requieren exactamente tres rutas en posiciones 1, 2 y 3")
-        if self.enabled:
-            for route in self.routes:
-                if route.service is None or not (route.model or "").strip():
-                    raise ValueError("Las tres rutas deben tener servicio y modelo para activar IA")
         return self
 
 
