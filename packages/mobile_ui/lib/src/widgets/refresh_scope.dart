@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 /// Colocado en el shell sobre el area de navegacion.
@@ -15,9 +17,14 @@ import 'package:flutter/material.dart';
 /// en el stack y al hacer pop el detalle, el callback de la lista
 /// vuelve a ser el activo.
 class RefreshScope extends StatefulWidget {
-  const RefreshScope({super.key, required this.child});
+  const RefreshScope({super.key, required this.child, this.onAfterRefresh});
 
   final Widget child;
+
+  /// Se invoca después de cada pull-to-refresh (haya tenido éxito o no), sin
+  /// importar qué pantalla lo disparó. Pensado para revalidar conectividad de
+  /// inmediato en vez de esperar al próximo ciclo de un timer periódico.
+  final Future<void> Function()? onAfterRefresh;
 
   static RefreshScopeState? of(BuildContext context) {
     return context.findAncestorStateOfType<RefreshScopeState>();
@@ -60,7 +67,13 @@ class RefreshScopeState extends State<RefreshScope> {
     return RefreshIndicator(
       onRefresh: () async {
         final cb = _activeCallback;
-        if (cb != null) await cb();
+        try {
+          if (cb != null) await cb();
+        } finally {
+          // Siempre, haya fallado o no: si el refresh no pudo llegar al
+          // servidor, esto lo detecta ya mismo en vez de esperar el timer.
+          unawaited(widget.onAfterRefresh?.call());
+        }
       },
       notificationPredicate: (notification) =>
           _activeCallback != null &&
