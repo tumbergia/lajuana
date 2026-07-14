@@ -18,7 +18,7 @@ import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/voice_pull_scope.dart';
 import 'widgets/shell_status_region.dart';
-import 'package:mobile/features/analytics/presentation/screens/leads_screen.dart';
+import 'package:mobile/features/analytics/presentation/screens/analytics_home_screen.dart';
 import 'package:mobile/features/configuration/presentation/screens/more_flow_screen.dart';
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/notifications/notifications_module.dart';
@@ -254,9 +254,18 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
   Widget _tabRoot(AppNavItem tab) {
     switch (tab) {
       case AppNavItem.inicio:
-        return LeadsScreen(
+        return AnalyticsHomeScreen(
           analyticsApiClient: widget.analyticsApiClient,
           userDisplayName: widget.authController.currentUser?.fullName,
+          userKey: widget.authController.currentUser?.remoteId ??
+              widget.authController.currentUser?.email ??
+              'default',
+          reservationsModule: widget.reservationsModule,
+          authController: widget.authController,
+          catalogsModule: widget.catalogsModule,
+          assignmentsModule: widget.assignmentsModule,
+          equineRepository: widget.equineRepository,
+          equineEventRepository: widget.equineEventRepository,
         );
       case AppNavItem.reservas:
         return ReservationsModuleScreen(

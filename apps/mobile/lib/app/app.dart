@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:mobile/features/auth/presentation/auth_routes.dart';
 import 'dependency_injection.dart';
@@ -92,6 +93,17 @@ class _LaJuanaAppState extends State<LaJuanaApp> {
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),
         themeMode: _themeMode,
+        locale: const Locale('es', 'CO'),
+        supportedLocales: const [
+          Locale('es', 'CO'),
+          Locale('es'),
+          Locale('en'),
+        ],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         initialRoute: '/',
         onGenerateRoute: _router!.onGenerateRoute,
         themeAnimationDuration: _themeTransitionDuration,

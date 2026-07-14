@@ -4,6 +4,9 @@ Add new migrations at the end. Never reorder or remove applied versions.
 """
 
 from app.migrations.base import Migration
+from app.migrations.versions.backfill_participant_country_codes import (
+    BackfillParticipantCountryCodesMigration,
+)
 from app.migrations.versions.backfill_schedule_is_active import (
     BackfillScheduleIsActiveMigration,
 )
@@ -26,4 +29,5 @@ MIGRATIONS: list[Migration] = [
     BackfillSyncMetadataMigration(),
     MigrateProviderFieldsMigration(),
     ConfigureLaJuanaSettingsMigration(),
+    BackfillParticipantCountryCodesMigration(),
 ]

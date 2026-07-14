@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'analytics_visual_tokens.dart';
 import 'app_colors.dart';
 import 'app_radii.dart';
 import 'app_text_theme.dart';
@@ -12,6 +13,9 @@ abstract final class AppTheme {
   static ThemeData _themeData(ColorScheme scheme, Brightness brightness) {
     final textTheme = AppTextThemes.baseTextTheme(scheme.onSurface);
     const tokens = AppThemeTokens.base();
+    final analyticsTokens = brightness == Brightness.dark
+        ? AnalyticsVisualTokens.dark(scheme)
+        : AnalyticsVisualTokens.light(scheme);
     final pageTitleStyle = textTheme.titleLarge?.copyWith(
       fontFamily: 'Manrope',
       fontSize: 20,
@@ -27,7 +31,7 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       textTheme: textTheme,
-      extensions: const [tokens],
+      extensions: [tokens, analyticsTokens],
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,

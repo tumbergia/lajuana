@@ -11,6 +11,7 @@ export 'src/theme/app_text_theme.dart';
 export 'src/theme/app_theme.dart';
 export 'src/theme/app_theme_notifier.dart';
 export 'src/theme/theme_extensions.dart';
+export 'src/theme/analytics_visual_tokens.dart';
 
 // Input
 export 'src/input/app_input_formatters.dart';

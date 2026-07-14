@@ -20,8 +20,9 @@ class AllLeadsScreen extends StatefulWidget {
 }
 
 class _AllLeadsScreenState extends State<AllLeadsScreen> {
-  late List<String> _draftPinned;
-  late List<String> _draftExcluded;
+  // Non-late so hot reload / rebuild before initState cannot throw.
+  List<String> _draftPinned = [];
+  List<String> _draftExcluded = [];
   String? _localError;
 
   @override

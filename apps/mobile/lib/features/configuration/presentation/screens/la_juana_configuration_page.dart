@@ -20,12 +20,18 @@ class LaJuanaConfigurationPage extends StatelessWidget {
     required this.catalogsModule,
     required this.authController,
     this.reservationsRepository,
+    this.showHeader = true,
+    this.onBack,
   });
 
   final LaJuanaConfigurationModule module;
   final CatalogsModule catalogsModule;
   final AuthController authController;
   final ReservationsRepository? reservationsRepository;
+
+  /// When false, omits the page header for in-tab embedding (e.g. Más).
+  final bool showHeader;
+  final VoidCallback? onBack;
 
   void _open(BuildContext context, Widget page) =>
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
@@ -48,23 +54,25 @@ class LaJuanaConfigurationPage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-    child: ListView(
+  Widget build(BuildContext context) {
+    final list = ListView(
+      padding: EdgeInsets.zero,
       children: [
-        AppSectionHeader(
-          eyebrow: 'Más',
-          title: 'Configuración de La Juana',
-          subtitle:
-              'Administra reservas, inteligencia artificial, pagos y ubicación.',
-          trailing: AppButton(
-            label: 'Volver',
-            icon: Icons.arrow_back_rounded,
-            variant: AppButtonVariant.ghost,
-            onPressed: () => Navigator.pop(context),
+        if (showHeader) ...[
+          AppSectionHeader(
+            eyebrow: 'Más',
+            title: 'Configuración de La Juana',
+            subtitle:
+                'Administra reservas, inteligencia artificial, pagos y ubicación.',
+            trailing: AppButton(
+              label: 'Volver',
+              icon: Icons.arrow_back_rounded,
+              variant: AppButtonVariant.ghost,
+              onPressed: onBack ?? () => Navigator.pop(context),
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
+          const SizedBox(height: 20),
+        ],
         AppEntityRowCard(
           title: 'Reglas de reserva',
           subtitle: 'Anticipación, vencimiento, edades y comprobantes',
@@ -109,6 +117,13 @@ class LaJuanaConfigurationPage extends StatelessWidget {
           onTap: () => _open(context, BusinessLocationPage(module: module)),
         ),
       ],
-    ),
-  );
+    );
+
+    if (!showHeader) return list;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+      child: list,
+    );
+  }
 }

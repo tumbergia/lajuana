@@ -50,7 +50,8 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
       fontWeight: FontWeight.w800,
       color: scheme.onSurface,
       height: 1.2,
-      letterSpacing: 0.4,
+      // Long wrapped labels look too airy with tracking; keep spacing for short titles.
+      letterSpacing: widget.wrapTitle ? 0 : 0.4,
     );
     final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
       color: scheme.onSurfaceVariant,
