@@ -5,19 +5,24 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import time
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from bson.decimal128 import Decimal128
 
+from app.common.collections import Collections
 from app.common.enums import (
+    AssignmentStatus,
     Permission,
     ROLE_PERMISSIONS,
     ReservationStatus,
     UserRole,
 )
 from app.core.time import APP_TIMEZONE, today_colombia
+
+_logger = logging.getLogger("lajuana.analytics")
 from app.documents import (
     AssignmentDocument,
     EquineDocument,
@@ -269,6 +274,7 @@ class AnalyticsQueryService:
         modules: list[AnalyticsModule] = []
         for mid, result in zip(ids_to_build, results, strict=True):
             if isinstance(result, Exception):
+                _logger.exception("analytics module failed id=%s", mid, exc_info=result)
                 modules.append(
                     AnalyticsModule(
                         id=mid,
@@ -307,6 +313,62 @@ class AnalyticsQueryService:
         start = datetime.combine(period.start, datetime.min.time(), tzinfo=APP_TIMEZONE)
         end = datetime.combine(period.end, datetime.max.time(), tzinfo=APP_TIMEZONE)
         return start.astimezone(timezone.utc), end.astimezone(timezone.utc)
+
+    @staticmethod
+    def _service_date_bounds(start: date, end: date) -> tuple[datetime, datetime]:
+        """BSON-safe bounds for Beanie `date` fields (stored as naive midnight)."""
+        return (
+            datetime.combine(start, datetime.min.time()),
+            datetime.combine(end, datetime.min.time()),
+        )
+
+    @staticmethod
+    def _format_service_date(value: Any) -> str:
+        if isinstance(value, datetime):
+            return value.date().isoformat()
+        if isinstance(value, date):
+            return value.isoformat()
+        return str(value)
+
+    @staticmethod
+    def _positive_int(value: Any) -> int | None:
+        if value is None:
+            return None
+        try:
+            n = int(value)
+        except (TypeError, ValueError):
+            return None
+        return n if n > 0 else None
+
+    @classmethod
+    def _experience_capacity(cls, exp: Any) -> int | None:
+        """Resolve experience cupo for occupancy (standard → base → pricing tiers)."""
+        if exp is None:
+            return None
+        for attr in ("standard_max_participants", "base_capacity"):
+            n = cls._positive_int(getattr(exp, attr, None))
+            if n is not None:
+                return n
+        pricing = getattr(exp, "pricing", None)
+        if pricing is None and isinstance(exp, dict):
+            pricing = exp.get("pricing")
+        tiers = getattr(pricing, "tiers", None) if pricing is not None else None
+        if tiers is None and isinstance(pricing, dict):
+            tiers = pricing.get("tiers")
+        if tiers:
+            values: list[int] = []
+            for tier in tiers:
+                raw = (
+                    tier.get("max_participants")
+                    if isinstance(tier, dict)
+                    else getattr(tier, "max_participants", None)
+                )
+                n = cls._positive_int(raw)
+                if n is not None:
+                    values.append(n)
+            if values:
+                return max(values)
+        return None
 
     async def _status_counts_in_period(self, period: Period) -> dict[str, int]:
         start, end = self._dt_bounds(period)
@@ -552,7 +614,7 @@ class AnalyticsQueryService:
         elif top:
             insight = (
                 f"La mayoría de las reservas de este periodo están en estado "
-                f"«{top.label}» ({int(top.raw_value)})."
+                f"{top.label} ({int(top.raw_value)})."
             )
             status = ModuleStatus.OK
         else:
@@ -864,11 +926,12 @@ class AnalyticsQueryService:
     ) -> AnalyticsModule:
         today = today_colombia()
         horizon = today + timedelta(days=30)
+        date_start, date_end = self._service_date_bounds(today, horizon)
         pipeline = [
             {
                 "$match": {
                     "status": ReservationStatus.CONFIRMED.value,
-                    "requested_date": {"$gte": today.isoformat(), "$lte": horizon.isoformat()},
+                    "requested_date": {"$gte": date_start, "$lte": date_end},
                 }
             },
             {
@@ -883,8 +946,6 @@ class AnalyticsQueryService:
             {"$sort": {"_id.date": 1}},
             {"$limit": 20},
         ]
-        # requested_date is stored as date — match with date objects when possible
-        pipeline[0]["$match"]["requested_date"] = {"$gte": today, "$lte": horizon}
         raw = await self._aggregate(ReservationDocument, pipeline)
 
         ranking: list[RankingItem] = []
@@ -892,30 +953,25 @@ class AnalyticsQueryService:
         low_occupancy = 0
         for idx, r in enumerate(raw, start=1):
             exp_id = r["_id"]["experience_id"]
+            service_date = self._format_service_date(r["_id"]["date"])
             exp = await ExperienceDocument.get(exp_id)
             name = exp.name if exp else "Experiencia"
-            capacity = None
-            if exp:
-                capacity = exp.standard_max_participants or exp.base_capacity
+            capacity = self._experience_capacity(exp)
             participants = int(r["participants"])
             if not capacity or capacity <= 0:
                 degraded = True
                 share = None
-                label = f"{name} · {r['_id']['date']}"
-                formatted = f"{participants} participantes"
+                formatted = f"{participants}/—"
             else:
                 share = round(participants / capacity * 100, 1)
-                label = f"{name} · {r['_id']['date']}"
                 formatted = f"{participants}/{capacity}"
-                if share >= 75:
-                    low_occupancy += 0
-                elif share < 25:
+                if share < 25:
                     low_occupancy += 1
             ranking.append(
                 RankingItem(
                     rank=idx,
-                    key=f"{exp_id}:{r['_id']['date']}",
-                    label=str(label),
+                    key=f"{exp_id}:{service_date}",
+                    label=f"{name} · {service_date}",
                     raw_value=float(participants),
                     formatted_value=formatted,
                     unit="participantes",
@@ -927,16 +983,31 @@ class AnalyticsQueryService:
         if total_upcoming == 0:
             insight = "No hay salidas programadas para los próximos 30 días."
             status = ModuleStatus.EMPTY
-        elif low_occupancy > 0:
-            insight = (
-                f"{low_occupancy} salida{'s' if low_occupancy != 1 else ''} próxima"
-                f"{'s' if low_occupancy != 1 else ''} "
-                f"tiene{'n' if low_occupancy != 1 else ''} menos del 25 % de sus cupos ocupados."
+            primary = PrimaryValue(
+                raw=0,
+                formatted="0/—",
+                unit="",
+                value_type=ValueType.RATIO,
             )
-            status = ModuleStatus.DEGRADED if degraded else ModuleStatus.OK
         else:
-            insight = f"Hay {total_upcoming} salidas confirmadas en los próximos 30 días."
-            status = ModuleStatus.DEGRADED if degraded else ModuleStatus.OK
+            top = ranking[0]
+            # Hero KPI = first departure as X/max (not "N participantes").
+            primary = PrimaryValue(
+                raw=top.raw_value,
+                formatted=top.formatted_value,
+                unit="",
+                value_type=ValueType.RATIO,
+            )
+            if low_occupancy > 0:
+                insight = (
+                    f"{low_occupancy} salida{'s' if low_occupancy != 1 else ''} próxima"
+                    f"{'s' if low_occupancy != 1 else ''} "
+                    f"tiene{'n' if low_occupancy != 1 else ''} menos del 25 % de sus cupos ocupados."
+                )
+                status = ModuleStatus.DEGRADED if degraded else ModuleStatus.OK
+            else:
+                insight = f"Hay {total_upcoming} salidas confirmadas en los próximos 30 días."
+                status = ModuleStatus.DEGRADED if degraded else ModuleStatus.OK
 
         return AnalyticsModule(
             id="occupancy",
@@ -953,12 +1024,7 @@ class AnalyticsQueryService:
                 label="Próximos 30 días",
                 preset=DateRangePreset.CUSTOM,
             ),
-            primary_value=PrimaryValue(
-                raw=float(total_upcoming),
-                formatted=str(total_upcoming),
-                unit="salidas",
-                value_type=ValueType.COUNT,
-            ),
+            primary_value=primary,
             ranking=ranking,
             status=status,
             insight_text=insight,
@@ -1144,11 +1210,12 @@ class AnalyticsQueryService:
     ) -> AnalyticsModule:
         today = today_colombia()
         horizon = today + timedelta(days=30)
+        date_start, date_end = self._service_date_bounds(today, horizon)
         pipeline = [
             {
                 "$match": {
                     "status": ReservationStatus.CONFIRMED.value,
-                    "requested_date": {"$gte": today, "$lte": horizon},
+                    "requested_date": {"$gte": date_start, "$lte": date_end},
                 }
             },
             {
@@ -1293,29 +1360,72 @@ class AnalyticsQueryService:
         now: datetime,
         freshness: Freshness,
     ) -> AnalyticsModule:
-        equines = await EquineDocument.find_all().to_list()
+        # Live count from assignments × reservations in period (denormalized
+        # equine counters are not maintained and must not be used here).
+        # Rolling presets end at "today"; extend forward like occupancy so
+        # scheduled upcoming load is visible in the ranking.
+        today = today_colombia()
+        window_end = period.end
+        if period.end >= today:
+            window_end = max(period.end, today + timedelta(days=30))
+        date_start, date_end = self._service_date_bounds(period.start, window_end)
+        pipeline = [
+            {
+                "$match": {
+                    "is_active": True,
+                    "status": {
+                        "$nin": [
+                            AssignmentStatus.CANCELLED.value,
+                            AssignmentStatus.REPLACED.value,
+                        ]
+                    },
+                }
+            },
+            {
+                "$lookup": {
+                    "from": Collections.RESERVATIONS,
+                    "localField": "reservation_id",
+                    "foreignField": "_id",
+                    "as": "reservation",
+                }
+            },
+            {"$unwind": "$reservation"},
+            {
+                "$match": {
+                    "reservation.status": {"$in": _CONFIRMED_LIKE},
+                    "reservation.requested_date": {
+                        "$gte": date_start,
+                        "$lte": date_end,
+                    },
+                }
+            },
+            {"$group": {"_id": "$equine_id", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 10},
+        ]
+        raw = await self._aggregate(AssignmentDocument, pipeline)
+
         ranking: list[RankingItem] = []
-        workloads = sorted(
-            equines,
-            key=lambda e: getattr(e, "workload_last_7_days", 0) or 0,
-            reverse=True,
-        )
-        for idx, e in enumerate(workloads[:10], start=1):
-            wl = getattr(e, "workload_last_7_days", 0) or 0
+        total_wl = 0
+        for idx, row in enumerate(raw, start=1):
+            count = int(row["count"])
+            total_wl += count
+            equine = await EquineDocument.get(row["_id"])
+            name = equine.name if equine else "Equino"
             ranking.append(
                 RankingItem(
                     rank=idx,
-                    key=str(e.id),
-                    label=e.name,
-                    raw_value=float(wl),
-                    formatted_value=str(wl),
+                    key=str(row["_id"]),
+                    label=name,
+                    raw_value=float(count),
+                    formatted_value=str(count),
                     unit="servicios",
                 )
             )
+
         concentrated = sum(1 for r in ranking[:3] if r.raw_value > 0)
-        total_wl = sum(r.raw_value for r in ranking)
         if total_wl == 0:
-            insight = "No hay carga de trabajo registrada en los últimos 7 días."
+            insight = "No hay carga de trabajo registrada en este periodo."
             status = ModuleStatus.EMPTY
         elif concentrated >= 3:
             insight = "La carga de trabajo está concentrada en 3 mulas."
@@ -1324,19 +1434,21 @@ class AnalyticsQueryService:
             insight = "La carga de trabajo se distribuye entre varios equinos."
             status = ModuleStatus.OK
 
-        avg = round(total_wl / len(equines), 1) if equines else 0.0
         return AnalyticsModule(
             id="equine_workload",
             category=ModuleCategory.EQUINES,
             title="Carga de trabajo equina",
-            description="Servicios recientes por equino (últimos 7 días).",
+            description=(
+                "Asignaciones a reservas confirmadas o completadas en el periodo "
+                "(incluye salidas próximas si el rango llega hasta hoy)."
+            ),
             visualization=VisualizationType.RANKING,
             period=period,
             primary_value=PrimaryValue(
-                raw=avg,
-                formatted=format_count(avg),
-                unit="promedio",
-                value_type=ValueType.RATIO,
+                raw=float(total_wl),
+                formatted=format_count(float(total_wl)),
+                unit="servicios",
+                value_type=ValueType.COUNT,
             ),
             ranking=ranking,
             status=status,
@@ -1344,7 +1456,7 @@ class AnalyticsQueryService:
             action=ModuleAction(label="Abrir detalle", target="equines"),
             generated_at=now,
             freshness=freshness,
-            empty_message="No hay carga de trabajo registrada en los últimos 7 días.",
+            empty_message="No hay carga de trabajo registrada en este periodo.",
         )
 
     async def _module_equine_care_alerts(

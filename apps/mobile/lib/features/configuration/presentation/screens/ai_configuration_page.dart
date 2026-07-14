@@ -14,6 +14,7 @@ import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_card.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_search_field.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_select_field.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
@@ -1143,10 +1144,9 @@ class _ReservationPickerSheetState extends State<_ReservationPickerSheet> {
                   ),
             ),
             const SizedBox(height: 12),
-            AppTextField(
+            AppSearchField(
               controller: _searchCtrl,
-              hintText: 'Buscar por código, nombre o teléfono...',
-              suffix: const Icon(Icons.search_rounded, size: 20),
+              hintText: 'Buscar por codigo, nombre o telefono...',
             ),
             const SizedBox(height: 12),
             Expanded(

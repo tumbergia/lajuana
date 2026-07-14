@@ -12,6 +12,7 @@ class AppDonutChart extends StatelessWidget {
     this.centerLabel,
     this.height,
     this.showLegend = true,
+    this.onSectionTap,
   });
 
   final List<AppChartPoint> points;
@@ -19,6 +20,31 @@ class AppDonutChart extends StatelessWidget {
   final String? centerLabel;
   final double? height;
   final bool showLegend;
+  final ValueChanged<int>? onSectionTap;
+
+  Color _colorFor(BuildContext context, int i) {
+    final explicit = points[i].color;
+    if (explicit != null) return explicit;
+    final tokens = Theme.of(context).analyticsTokens;
+    return tokens.seriesPalette[i % tokens.seriesPalette.length];
+  }
+
+  static Color _labelOn(Color background) {
+    return background.computeLuminance() > 0.55
+        ? const Color(0xFF1A1A1A)
+        : Colors.white;
+  }
+
+  void _handleTouch(FlTouchEvent event, PieTouchResponse? response) {
+    final onTap = onSectionTap;
+    if (onTap == null) return;
+    if (event is! FlTapUpEvent) return;
+    final section = response?.touchedSection;
+    if (section == null) return;
+    final index = section.touchedSectionIndex;
+    if (index < 0 || index >= points.length) return;
+    onTap(index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +76,10 @@ class AppDonutChart extends StatelessWidget {
                     PieChartData(
                       sectionsSpace: 2,
                       centerSpaceRadius: centerR,
+                      pieTouchData: PieTouchData(
+                        enabled: onSectionTap != null,
+                        touchCallback: _handleTouch,
+                      ),
                       sections: [
                         for (var i = 0; i < points.length; i++)
                           PieChartSectionData(
@@ -58,16 +88,23 @@ class AppDonutChart extends StatelessWidget {
                             title: points[i].value > 0 && total > 0
                                 ? '${((points[i].value / total) * 100).round()}%'
                                 : '',
-                            color: tokens.seriesPalette[
-                                i % tokens.seriesPalette.length],
+                            color: _colorFor(context, i),
                             radius: sectionR,
+                            borderSide: _colorFor(context, i)
+                                        .computeLuminance() >
+                                    0.85
+                                ? BorderSide(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .outline
+                                        .withValues(alpha: 0.55),
+                                  )
+                                : BorderSide.none,
                             titleStyle: Theme.of(context)
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimary,
+                                  color: _labelOn(_colorFor(context, i)),
                                   fontWeight: FontWeight.w700,
                                 ),
                           ),
@@ -76,12 +113,15 @@ class AppDonutChart extends StatelessWidget {
                     duration: chartAnimationOf(context),
                   ),
                   if (centerLabel != null)
-                    Text(
-                      centerLabel!,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                    IgnorePointer(
+                      child: Text(
+                        centerLabel!,
+                        textAlign: TextAlign.center,
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                      ),
                     ),
                 ],
               ),
@@ -94,8 +134,7 @@ class AppDonutChart extends StatelessWidget {
                 for (var i = 0; i < points.length; i++)
                   (
                     label: '${points[i].label} (${_fmt(points[i].value)})',
-                    color: tokens
-                        .seriesPalette[i % tokens.seriesPalette.length],
+                    color: _colorFor(context, i),
                   ),
               ],
             ),

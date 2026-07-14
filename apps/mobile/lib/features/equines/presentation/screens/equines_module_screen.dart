@@ -9,6 +9,7 @@ import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile_ui/src/widgets/app_metric_card.dart';
+import 'package:mobile_ui/src/widgets/app_search_field.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
@@ -190,56 +191,34 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
     return Row(
       children: [
         Expanded(
-          child: TextField(
+          child: AppSearchField(
             controller: _searchController,
+            hintText: 'Buscar equino...',
             onChanged: (v) => setState(() => _searchQuery = v),
-            decoration: InputDecoration(
-              hintText: 'Buscar equino…',
-              prefixIcon: Icon(Symbols.search_rounded, size: 20),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(Symbols.close_rounded, size: 18),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() => _searchQuery = '');
-                      },
-                    )
-                  : null,
-              isDense: true,
-              filled: true,
-              fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
-            ),
           ),
         ),
         const SizedBox(width: 8),
-        Material(
-          color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(8),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(8),
-            onTap: () => setState(() {
-              _viewMode = _viewMode == _ViewMode.grid
-                  ? _ViewMode.list
-                  : _ViewMode.grid;
-            }),
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Icon(
-                _viewMode == _ViewMode.grid
-                    ? Symbols.grid_view_rounded
-                    : Symbols.format_list_bulleted_rounded,
-                size: 22,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+        SizedBox(
+          height: 44,
+          width: 44,
+          child: Material(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(2),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(2),
+              onTap: () => setState(() {
+                _viewMode = _viewMode == _ViewMode.grid
+                    ? _ViewMode.list
+                    : _ViewMode.grid;
+              }),
+              child: Center(
+                child: Icon(
+                  _viewMode == _ViewMode.grid
+                      ? Symbols.grid_view_rounded
+                      : Symbols.format_list_bulleted_rounded,
+                  size: 22,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           ),
@@ -283,9 +262,9 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
         children: [
           _buildMetricsRow(),
           const SizedBox(height: 8),
-          _buildStatusFilter(),
-          const SizedBox(height: 12),
           _buildSearchRow(),
+          const SizedBox(height: 12),
+          _buildStatusFilter(),
           const SizedBox(height: 12),
           _buildRegisterButton(),
           const SizedBox(height: 16),
@@ -303,12 +282,12 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
           if (hasEquines) _buildMetricsRow(),
           if (hasEquines) const SizedBox(height: 8),
 
-          // ── Status filter ────────────────────────────────────────────
-          _buildStatusFilter(),
-          const SizedBox(height: 12),
-
           // ── Search + view toggle ─────────────────────────────────────
           _buildSearchRow(),
+          const SizedBox(height: 12),
+
+          // ── Status filter ────────────────────────────────────────────
+          _buildStatusFilter(),
           const SizedBox(height: 12),
 
           // ── Botón Registrar equino ────────────────────────────────────
@@ -478,6 +457,28 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                           equineId: equine.id,
                           repository: widget.repository,
                           userRole: widget.userRole,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  label: 'Ver timeline',
+                  icon: Icons.history_rounded,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => EquineTimelineScreen(
+                          equineId: equine.id,
+                          equineName: equine.name,
+                          repository: widget.repository,
+                          eventRepository: widget.eventRepository,
                         ),
                       ),
                     );

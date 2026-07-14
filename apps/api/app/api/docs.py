@@ -272,6 +272,29 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "error_codes": ["auth.unauthorized", "auth.forbidden", "experience.not_found"],
         "service_docstring": "Realiza inactivación lógica de experiencia.",
     },
+    "experiences_purge": {
+        "summary": "Eliminar experiencia definitivamente",
+        "description": (
+            "Elimina permanentemente una experiencia inactiva. "
+            "Falla si sigue activa o si tiene reservas asociadas."
+        ),
+        "permissions": ["experience.delete"],
+        "responses": {
+            200: "Experiencia eliminada definitivamente.",
+            401: "No autenticado.",
+            403: "Sin permisos.",
+            404: "Experiencia no existe.",
+            409: "Experiencia activa o con reservas asociadas.",
+        },
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.forbidden",
+            "experience.not_found",
+            "experience.still_active",
+            "experience.has_reservations",
+        ],
+        "service_docstring": "Borra definitivamente una experiencia inactiva sin reservas.",
+    },
     "experiences_quote": {
         "summary": "Cotizar experiencia",
         "description": (
@@ -1628,6 +1651,7 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "experiences_get": ("GET", "/api/v1/experiences/{experience_id}"),
     "experiences_update": ("PATCH", "/api/v1/experiences/{experience_id}"),
     "experiences_delete": ("DELETE", "/api/v1/experiences/{experience_id}"),
+    "experiences_purge": ("DELETE", "/api/v1/experiences/{experience_id}/permanent"),
     "experiences_quote": ("POST", "/api/v1/experiences/{experience_id}/quote"),
     "schedules_create": ("POST", "/api/v1/schedules"),
     "schedules_list": ("GET", "/api/v1/schedules"),

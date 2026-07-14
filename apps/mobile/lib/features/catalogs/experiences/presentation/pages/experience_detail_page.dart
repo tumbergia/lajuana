@@ -79,6 +79,12 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
     await _load();
   }
 
+  Future<void> _activate() async {
+    if (_experience == null) return;
+    await widget.module.experiences.activate(_experience!.id);
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final experience = _experience;
@@ -313,13 +319,22 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
                             },
                           ),
                           const SizedBox(height: 8),
-                          AppButton(
-                            label: 'Desactivar',
-                            icon: Icons.block_rounded,
-                            variant: AppButtonVariant.secondary,
-                            expanded: true,
-                            onPressed: _deactivate,
-                          ),
+                          if (experience.isActive)
+                            AppButton(
+                              label: 'Desactivar',
+                              icon: Icons.block_rounded,
+                              variant: AppButtonVariant.secondary,
+                              expanded: true,
+                              onPressed: _deactivate,
+                            )
+                          else
+                            AppButton(
+                              label: 'Reactivar',
+                              icon: Icons.restart_alt_rounded,
+                              variant: AppButtonVariant.secondary,
+                              expanded: true,
+                              onPressed: _activate,
+                            ),
                         ],
                       ],
                     ],

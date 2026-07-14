@@ -165,8 +165,15 @@ class _HorizontalBars extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < points.length; i++) ...[
-            if (i > 0) const SizedBox(height: 10),
-            _row(context, points[i], maxV, tokens.seriesPalette[i % tokens.seriesPalette.length]),
+            if (i > 0) const SizedBox(height: 12),
+            _row(
+              context,
+              points[i],
+              maxV,
+              points[i].color ??
+                  tokens.seriesPalette[i % tokens.seriesPalette.length],
+              tokens.barRadius + 2,
+            ),
           ],
         ],
       ),
@@ -178,9 +185,13 @@ class _HorizontalBars extends StatelessWidget {
     AppChartPoint point,
     double maxV,
     Color color,
+    double radius,
   ) {
     final scheme = Theme.of(context).colorScheme;
     final fraction = (point.value / maxV).clamp(0.0, 1.0);
+    final valueLabel = point.secondaryLabel ??
+        '${point.value == point.value.roundToDouble() ? point.value.toInt() : point.value.toStringAsFixed(1)}'
+            '${unit.isEmpty ? '' : ' $unit'}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -189,28 +200,48 @@ class _HorizontalBars extends StatelessWidget {
             Expanded(
               child: Text(
                 point.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
               ),
             ),
             Text(
-              '${point.value == point.value.roundToDouble() ? point.value.toInt() : point.value.toStringAsFixed(1)}'
-              '${unit.isEmpty ? '' : ' $unit'}',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
+              valueLabel,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onSurface,
                   ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: fraction,
-            minHeight: 10,
-            backgroundColor: scheme.surfaceContainerHighest,
-            color: color,
+          borderRadius: BorderRadius.circular(radius),
+          child: SizedBox(
+            height: 11,
+            width: double.infinity,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ColoredBox(color: scheme.surfaceContainerHighest),
+                FractionallySizedBox(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: fraction,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          color.withValues(alpha: 0.82),
+                          color,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

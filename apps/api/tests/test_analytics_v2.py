@@ -39,7 +39,11 @@ from app.services.analytics_catalog_service import (
 from app.services.analytics_country_normalizer import AnalyticsCountryNormalizer
 from app.services.analytics_export_service import AnalyticsExportService
 from app.services.analytics_preferences_service import AnalyticsPreferencesService
-from app.services.analytics_query_service import aggregation_grain, resolve_period
+from app.services.analytics_query_service import (
+    AnalyticsQueryService,
+    aggregation_grain,
+    resolve_period,
+)
 from app.services.analytics_service import HOME_INELIGIBLE_IDS, _lead
 
 
@@ -92,6 +96,63 @@ def test_aggregation_grain() -> None:
     assert aggregation_grain(p365) == "month"
 
 
+def test_service_date_bounds_are_bson_encodable() -> None:
+    """Raw Motor aggregates cannot encode datetime.date — use naive datetime."""
+    from bson import encode
+
+    start, end = AnalyticsQueryService._service_date_bounds(
+        date(2026, 7, 14), date(2026, 8, 13)
+    )
+    assert isinstance(start, datetime)
+    assert isinstance(end, datetime)
+    encode({"requested_date": {"$gte": start, "$lte": end}})
+    assert AnalyticsQueryService._format_service_date(start) == "2026-07-14"
+    assert AnalyticsQueryService._format_service_date(date(2026, 8, 13)) == "2026-08-13"
+
+
+def test_experience_capacity_prefers_standard_then_tiers() -> None:
+    from types import SimpleNamespace
+
+    assert AnalyticsQueryService._experience_capacity(None) is None
+    assert (
+        AnalyticsQueryService._experience_capacity(
+            SimpleNamespace(standard_max_participants=10, base_capacity=8, pricing=None)
+        )
+        == 10
+    )
+    assert (
+        AnalyticsQueryService._experience_capacity(
+            SimpleNamespace(standard_max_participants=None, base_capacity=8, pricing=None)
+        )
+        == 8
+    )
+    tiers = [
+        SimpleNamespace(max_participants=4),
+        SimpleNamespace(max_participants=12),
+    ]
+    assert (
+        AnalyticsQueryService._experience_capacity(
+            SimpleNamespace(
+                standard_max_participants=None,
+                base_capacity=None,
+                pricing=SimpleNamespace(tiers=tiers),
+            )
+        )
+        == 12
+    )
+
+
+def test_equine_workload_reads_assignments_not_stale_field() -> None:
+    """Workload must be computed from assignments, not the stale equine field."""
+    import inspect
+
+    src = inspect.getsource(AnalyticsQueryService._module_equine_workload)
+    assert "workload_last_7_days" not in src
+    assert "AssignmentDocument" in src
+    assert "requested_date" in src
+    assert "Collections.RESERVATIONS" in src
+
+
 # ── countries ────────────────────────────────────────────────────────────
 
 
@@ -103,6 +164,9 @@ def test_country_normalizer_common_variants() -> None:
     assert n.normalize("EEUU").country_code == "US"
     assert n.normalize("México").country_code == "MX"
     assert n.normalize("us").country_code == "US"
+    assert n.normalize("Somalia").country_code == "SO"
+    assert n.normalize("SO").country_code == "SO"
+    assert n.normalize("so").country_name == "Somalia"
 
 
 def test_country_normalizer_does_not_invent() -> None:

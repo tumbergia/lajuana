@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
@@ -24,6 +25,9 @@ abstract class ReservationsRepository {
   });
 
   Future<ReservationDetail> getReservationById(String reservationId);
+
+  /// Crea una reserva manualmente (online-only).
+  Future<ReservationDetail> createReservation(ReservationCreate payload);
 
   /// Actualiza campos editables de la reserva (p. ej. assistant_disabled).
   Future<ReservationDetail> updateReservation({

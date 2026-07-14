@@ -115,6 +115,22 @@ void main() {
     expect(find.byType(RankingInsightCard), findsNothing);
   });
 
+  testWidgets('participant_readiness uses DonutInsightCard', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        InsightModuleCard(
+          module: module(
+            id: 'participant_readiness',
+            visualization: 'progress',
+            category: 'participants',
+          ),
+        ),
+      ),
+    );
+    expect(find.byType(DonutInsightCard), findsOneWidget);
+    expect(find.byType(ProgressInsightCard), findsNothing);
+  });
+
   testWidgets('ranking visualization uses RankingInsightCard', (tester) async {
     await tester.pumpWidget(
       wrap(InsightModuleCard(module: module(id: 'top_experiences', visualization: 'ranking'))),

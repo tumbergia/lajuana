@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_search_field.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
-import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile/features/assignments/assignments_module.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
@@ -16,6 +16,7 @@ import 'package:mobile/features/reservations/infrastructure/repositories/fallbac
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservations_list_controller.dart';
 import 'package:mobile/features/reservations/presentation/widgets/reservation_row_card.dart';
+import 'reservation_create_page.dart';
 import 'reservation_detail_shell_screen.dart';
 
 class ReservationsModuleScreen extends StatefulWidget {
@@ -86,6 +87,34 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
     if (mounted) setState(() {});
   }
 
+  bool get _canCreateReservation {
+    final role = widget.authController?.currentUser?.role;
+    return role == 'admin' &&
+        widget.reservationsModule != null &&
+        widget.catalogsModule != null;
+  }
+
+  Future<void> _openCreateReservation() async {
+    final reservationsModule = widget.reservationsModule;
+    final catalogsModule = widget.catalogsModule;
+    if (reservationsModule == null || catalogsModule == null) return;
+
+    final createdId = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ReservationCreatePage(
+          reservationsModule: reservationsModule,
+          catalogsModule: catalogsModule,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    await _listController.refresh();
+    if (createdId != null && createdId.isNotEmpty && mounted) {
+      _openReservationDetail(createdId);
+    }
+  }
+
   void _openReservationDetail(String reservationId) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -140,12 +169,9 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: AppTextField(
+                      child: AppSearchField(
                         controller: _searchController,
                         hintText: 'Buscar por titular, codigo...',
-                        variant: AppTextFieldVariant.filled,
-                        suffix:
-                            const Icon(Icons.search_rounded, size: 20),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -156,9 +182,9 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                         color: Theme.of(context)
                             .colorScheme
                             .surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(2),
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(2),
                           onTap: _openReservationCalendar,
                           child: Center(
                             child: Icon(
@@ -189,6 +215,16 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                         label: 'Eliminadas', value: 'eliminadas'),
                   ],
                 ),
+
+                if (_canCreateReservation) ...[
+                  const SizedBox(height: 12),
+                  AppButton(
+                    label: 'Crear reserva',
+                    icon: Icons.add,
+                    expanded: true,
+                    onPressed: _openCreateReservation,
+                  ),
+                ],
 
                 // Offline banner
                 if (state ==

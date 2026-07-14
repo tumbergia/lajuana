@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/gen/reservation_rules.dart' as gen;
 
 import 'reservation_dtos.dart';
@@ -70,6 +71,21 @@ class ReservationsApiClient {
     final response = await _authorizedRequest(
       method: 'GET',
       path: '/reservations/$reservationId',
+    );
+    final data = _decodeBody(response.body);
+    return ReservationDetailDto.fromJson(data);
+  }
+
+  /// Creates a reservation manually. Online-only.
+  Future<ReservationDetailDto> createReservation(
+    ReservationCreate payload,
+  ) async {
+    final body = Map<String, dynamic>.from(payload.toJson())
+      ..removeWhere((_, value) => value == null);
+    final response = await _authorizedRequest(
+      method: 'POST',
+      path: '/reservations',
+      body: body,
     );
     final data = _decodeBody(response.body);
     return ReservationDetailDto.fromJson(data);

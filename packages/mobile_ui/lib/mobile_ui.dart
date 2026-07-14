@@ -29,6 +29,7 @@ export 'src/widgets/app_entity_row_card.dart';
 export 'src/widgets/app_metric_card.dart';
 export 'src/widgets/app_page_app_bar.dart';
 export 'src/widgets/app_scaffold.dart';
+export 'src/widgets/app_search_field.dart';
 export 'src/widgets/app_section_header.dart';
 export 'src/widgets/app_segmented_filter.dart';
 export 'src/widgets/app_select_field.dart';

@@ -3,10 +3,10 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_search_field.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
-import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_domain/src/providers/providers_repository.dart';
@@ -282,11 +282,9 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        AppTextField(
+        AppSearchField(
           controller: _searchController,
           hintText: 'Buscar por nombre o ubicacion...',
-          variant: AppTextFieldVariant.filled,
-          suffix: const Icon(Icons.search_rounded, size: 20),
         ),
         const SizedBox(height: 12),
         AppSegmentedFilter<String>(

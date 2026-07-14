@@ -163,6 +163,18 @@ class CatalogsRepository {
               );
             }
           }
+          if (changeType == 'purge' &&
+              stream == 'experiences' &&
+              payload is Map) {
+            final id = payload['id'] as String?;
+            if (id != null) {
+              await txn.delete(
+                'experiences_local',
+                where: 'remote_id = ? OR id = ?',
+                whereArgs: [id, id],
+              );
+            }
+          }
         }
       }
     });
@@ -507,6 +519,106 @@ class CatalogsRepository {
     await _tryFlushQueue();
   }
 
+  Future<void> activateExperience(String id) async {
+    final db = await _database.database;
+    final row = await db.query(
+      'experiences_local',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (row.isEmpty) return;
+    final current = row.first;
+    final remoteId = current['remote_id'] as String?;
+    final version = parseInt(current['version_remote']);
+    final isActive = (current['is_active'] as int? ?? 1) == 1;
+    if (isActive) return;
+
+    await db.update(
+      'experiences_local',
+      {
+        'is_active': 1,
+        'sync_status': catalogSyncStatusToDb(CatalogSyncStatus.pending),
+        'sync_error': null,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    await _enqueue(
+      entityType: 'experience',
+      operationType: 'update',
+      entityLocalId: id,
+      entityRemoteId: remoteId,
+      baseVersion: version,
+      payload: const {'is_active': true},
+    );
+    await _tryFlushQueue();
+  }
+
+  Future<void> purgeExperience(String id) async {
+    final db = await _database.database;
+    final row = await db.query(
+      'experiences_local',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (row.isEmpty) return;
+    final current = row.first;
+    final remoteId = current['remote_id'] as String?;
+    final version = parseInt(current['version_remote']);
+    final isActive = (current['is_active'] as int? ?? 1) == 1;
+    if (isActive) {
+      throw CatalogsApiFailure(
+        code: 'experience.still_active',
+        message:
+            'La experiencia debe estar desactivada antes de eliminarla definitivamente.',
+      );
+    }
+
+    if (remoteId == null || remoteId.isEmpty) {
+      await db.delete('experiences_local', where: 'id = ?', whereArgs: [id]);
+      return;
+    }
+
+    await db.delete(
+      'sync_queue',
+      where: "entity_type = 'experience' AND entity_local_id = ?",
+      whereArgs: [id],
+    );
+    await _enqueue(
+      entityType: 'experience',
+      operationType: 'purge',
+      entityLocalId: id,
+      entityRemoteId: remoteId,
+      baseVersion: version,
+      payload: const {},
+    );
+    await flushQueue();
+
+    final leftover = await db.query(
+      'sync_queue',
+      where: "entity_type = 'experience' AND entity_local_id = ? AND operation_type = 'purge'",
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (leftover.isNotEmpty) {
+      final errorCode = leftover.first['error_code'] as String?;
+      final errorMessage = leftover.first['error_message'] as String?;
+      await db.delete(
+        'sync_queue',
+        where: 'operation_id = ?',
+        whereArgs: [leftover.first['operation_id']],
+      );
+      throw CatalogsApiFailure(
+        code: errorCode ?? 'experience.purge_failed',
+        message:
+            errorMessage ??
+            'No se pudo eliminar la experiencia definitivamente.',
+      );
+    }
+  }
+
   Future<CatalogReservationRules> getReservationRules() async {
     final db = await _database.database;
     final rows = await db.query(
@@ -797,6 +909,25 @@ class CatalogsRepository {
     final remoteId = result['entity_remote_id'] as String?;
     final version = parseInt(result['version']);
     final payload = result['payload'];
+    if (op.entityType == 'experience' && op.operationType == 'purge') {
+      await db.delete(
+        'experiences_local',
+        where: 'id = ? OR remote_id = ?',
+        whereArgs: [
+          op.entityLocalId,
+          remoteId ?? op.entityRemoteId ?? op.entityLocalId,
+        ],
+      );
+      await db.delete(
+        'id_map',
+        where: "entity_type = 'experience' AND (local_id = ? OR remote_id = ?)",
+        whereArgs: [
+          op.entityLocalId,
+          remoteId ?? op.entityRemoteId ?? op.entityLocalId,
+        ],
+      );
+      return;
+    }
     if (remoteId != null && remoteId.isNotEmpty) {
       await db.insert('id_map', {
         'local_id': op.entityLocalId,

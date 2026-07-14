@@ -10,11 +10,13 @@ class AppChartPoint {
     required this.label,
     required this.value,
     this.secondaryLabel,
+    this.color,
   });
 
   final String label;
   final double value;
   final String? secondaryLabel;
+  final Color? color;
 }
 
 @immutable
