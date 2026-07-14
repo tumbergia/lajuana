@@ -62,6 +62,7 @@ class _NotificationsSettingsPageState extends State<NotificationsSettingsPage> {
       return;
     }
     if (enabled) {
+      await NotificationBackgroundService.requestPermissions();
       await NotificationBackgroundService.registerPeriodic();
     } else {
       await NotificationBackgroundService.cancel();

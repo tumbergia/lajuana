@@ -251,6 +251,31 @@ void main() {
     });
   });
 
+  group('NotificationArrivalCopy', () {
+    test('matches heads-up: La Juana + translated headline', () {
+      final copy = NotificationArrivalCopy.from(
+        eventType: 'reservation_status_changed',
+        title: 'Estado de reserva actualizado',
+        body: 'Ana Pérez — RES-TEST: quoted → confirmed',
+      );
+
+      expect(copy.label, 'La Juana');
+      expect(copy.headline, 'Cotizado → Confirmada');
+    });
+
+    test('uses count label when multiple arrive', () {
+      final copy = NotificationArrivalCopy.from(
+        eventType: 'reservation_confirmed',
+        title: 'Nueva reserva confirmada',
+        body: 'Reserva RES-42 confirmada - 3 participantes.',
+        count: 3,
+      );
+
+      expect(copy.label, '3 notificaciones');
+      expect(copy.headline, 'Confirmada · 3 participantes');
+    });
+  });
+
   group('formatRelativeTime', () {
     final now = DateTime.utc(2026, 7, 13, 23, 0, 0);
 

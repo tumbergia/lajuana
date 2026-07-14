@@ -100,6 +100,40 @@ class NotificationContent {
   }
 }
 
+/// Copy shared by in-app heads-up toast and local/system push notifications.
+class NotificationArrivalCopy {
+  const NotificationArrivalCopy({
+    required this.label,
+    required this.headline,
+  });
+
+  /// Top line ("La Juana" or "N notificaciones"), same as heads-up.
+  final String label;
+
+  /// Main line with Spanish/humanized content (no raw status tokens).
+  final String headline;
+
+  factory NotificationArrivalCopy.from({
+    required String eventType,
+    required String title,
+    required String body,
+    String? contactPhone,
+    int count = 1,
+  }) {
+    final content = NotificationContent.from(
+      eventType: eventType,
+      title: title,
+      body: body,
+      contactPhone: contactPhone,
+    );
+    final headline = content.previewLine.isNotEmpty
+        ? content.previewLine
+        : (title.trim().isNotEmpty ? title.trim() : 'Nueva notificación');
+    final label = count > 1 ? '$count notificaciones' : 'La Juana';
+    return NotificationArrivalCopy(label: label, headline: headline);
+  }
+}
+
 String notificationStatusLabel(String raw) {
   final token = raw.trim();
   if (token.isEmpty) return token;

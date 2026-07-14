@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:mobile_domain/src/gen/in_app_notification.dart';
 import 'package:mobile_domain/src/gen/notification_preferences.dart';
 import 'package:mobile/features/notifications/domain/notifications_repository.dart';
+import 'package:mobile/features/notifications/infrastructure/notification_background_service.dart';
+import 'package:mobile/features/notifications/presentation/notification_content.dart';
 
 enum NotificationsLoadState { idle, loading, success, error }
 
@@ -48,6 +50,11 @@ class NotificationsController extends ChangeNotifier {
   bool _listVisible = false;
   bool _loadingList = false;
 
+  /// After the first successful sync we know the current inbox baseline.
+  /// Until then, existing unread must not be treated as brand-new arrivals
+  /// (that spam local notifications on cold start).
+  bool _baselineReady = false;
+
   Future<void> loadInitial() async {
     if (_loadingList) return;
     _loadingList = true;
@@ -62,6 +69,7 @@ class NotificationsController extends ChangeNotifier {
       items = results[0] as List<InAppNotification>;
       unreadCount = results[1] as int;
       loadState = NotificationsLoadState.success;
+      _seedBaselineFromCurrentInbox();
     } catch (error) {
       errorMessage = error.toString();
       loadState = NotificationsLoadState.error;
@@ -80,7 +88,8 @@ class NotificationsController extends ChangeNotifier {
       final shouldReloadList = forceList ||
           _listVisible ||
           nextUnread != previousUnread ||
-          (nextUnread > 0 && items.isEmpty);
+          (nextUnread > 0 && items.isEmpty) ||
+          !_baselineReady;
 
       unreadCount = nextUnread;
 
@@ -92,25 +101,63 @@ class NotificationsController extends ChangeNotifier {
         }
       }
 
+      if (!_baselineReady) {
+        _seedBaselineFromCurrentInbox();
+        notifyListeners();
+        return;
+      }
+
       if (nextUnread > previousUnread && !_listVisible) {
         pendingArrivalCount = nextUnread - previousUnread;
         if (items.isNotEmpty) {
           final newest = items.first;
-          pendingArrivalTitle = newest.title;
+          final arrival = NotificationArrivalCopy.from(
+            eventType: newest.eventType,
+            title: newest.title,
+            body: newest.body,
+            contactPhone: newest.contactPhone,
+            count: pendingArrivalCount,
+          );
+          pendingArrivalTitle = arrival.headline;
           pendingArrivalBody = newest.body;
           pendingArrivalId = newest.id;
           pendingArrivalEventType = newest.eventType;
+          unawaited(
+            NotificationBackgroundService.showLocal(
+              title: arrival.label,
+              body: arrival.headline,
+              id: pendingArrivalId?.hashCode ??
+                  DateTime.now().millisecondsSinceEpoch,
+            ),
+          );
+          unawaited(
+            NotificationBackgroundService.markLastSeenId(pendingArrivalId),
+          );
         } else {
           pendingArrivalTitle = 'Tienes notificaciones nuevas';
           pendingArrivalBody = null;
           pendingArrivalId = null;
           pendingArrivalEventType = null;
+          unawaited(
+            NotificationBackgroundService.showLocal(
+              title: 'La Juana',
+              body: pendingArrivalTitle!,
+              id: DateTime.now().millisecondsSinceEpoch,
+            ),
+          );
         }
       }
 
       notifyListeners();
     } catch (_) {
       // Best-effort polling; ignore transient errors.
+    }
+  }
+
+  void _seedBaselineFromCurrentInbox() {
+    _baselineReady = true;
+    if (items.isNotEmpty) {
+      unawaited(NotificationBackgroundService.markLastSeenId(items.first.id));
     }
   }
 

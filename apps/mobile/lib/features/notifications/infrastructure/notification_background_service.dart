@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile/features/notifications/presentation/notification_content.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:workmanager/workmanager.dart';
@@ -12,11 +15,16 @@ const notificationBackgroundTaskName = 'lajuana.notifications.poll';
 const _lastSeenKey = 'notifications.last_seen_id';
 const _apiBaseUrlKey = 'notifications.api_base_url';
 const _backgroundEnabledKey = 'notifications.background_enabled';
+const _androidChannelId = 'lajuana_in_app';
+const _androidChannelName = 'Notificaciones La Juana';
+const _androidChannelDescription = 'Alertas operativas in-app';
 
 /// Background polling + local notifications (Android/iOS). No-op elsewhere.
 class NotificationBackgroundService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+
+  static bool _pluginReady = false;
 
   /// Workmanager and local notifications are only supported on Android/iOS.
   static bool get supportsBackgroundNotifications {
@@ -26,12 +34,83 @@ class NotificationBackgroundService {
 
   static Future<void> initialize() async {
     if (!supportsBackgroundNotifications) return;
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const ios = DarwinInitializationSettings();
-    await _plugin.initialize(
-      const InitializationSettings(android: android, iOS: ios),
-    );
+    await _ensurePluginInitialized();
+    await requestPermissions();
     await Workmanager().initialize(notificationCallbackDispatcher);
+  }
+
+  /// Lightweight init for Workmanager isolates (no Workmanager re-register).
+  static Future<void> initializeForBackgroundIsolate() async {
+    if (!supportsBackgroundNotifications) return;
+    WidgetsFlutterBinding.ensureInitialized();
+    DartPluginRegistrant.ensureInitialized();
+    await _ensurePluginInitialized();
+  }
+
+  static Future<void> _ensurePluginInitialized() async {
+    if (_pluginReady) return;
+    // Small icons must be a white alpha mask on transparent — not the launcher.
+    // Prefer @drawable/ic_notification; fall back if the resource was stripped.
+    var defaultIcon = '@drawable/ic_notification';
+    try {
+      await _initializeWithIcon(defaultIcon);
+    } catch (error, stack) {
+      debugPrint(
+        'Notification init with ic_notification failed: $error\n$stack',
+      );
+      defaultIcon = '@mipmap/ic_launcher';
+      await _initializeWithIcon(defaultIcon);
+    }
+    await _ensureAndroidChannel();
+    _pluginReady = true;
+  }
+
+  static Future<void> _initializeWithIcon(String defaultIcon) async {
+    final android = AndroidInitializationSettings(defaultIcon);
+    const ios = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+    await _plugin.initialize(
+      InitializationSettings(android: android, iOS: ios),
+    );
+  }
+
+  static Future<void> _ensureAndroidChannel() async {
+    if (!Platform.isAndroid) return;
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    await android?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        _androidChannelId,
+        _androidChannelName,
+        description: _androidChannelDescription,
+        importance: Importance.high,
+      ),
+    );
+  }
+
+  /// Android 13+ / iOS: prompt for notification permission when needed.
+  static Future<bool> requestPermissions() async {
+    if (!supportsBackgroundNotifications) return false;
+    if (Platform.isAndroid) {
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      final granted = await android?.requestNotificationsPermission();
+      return granted ?? false;
+    }
+    if (Platform.isIOS) {
+      final ios = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      final granted = await ios?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      return granted ?? false;
+    }
+    return false;
   }
 
   static Future<void> persistApiBaseUrl(String baseUrl) async {
@@ -48,6 +127,20 @@ class NotificationBackgroundService {
     if (!supportsBackgroundNotifications) return false;
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_backgroundEnabledKey) ?? true;
+  }
+
+  /// Persist newest seen id so background polling does not re-notify.
+  static Future<void> markLastSeenId(String? notificationId) async {
+    if (!supportsBackgroundNotifications) return;
+    if (notificationId == null || notificationId.isEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_lastSeenKey, notificationId);
+    } catch (error, stack) {
+      if (kDebugMode) {
+        debugPrint('markLastSeenId failed: $error\n$stack');
+      }
+    }
   }
 
   static Future<void> registerPeriodic() async {
@@ -77,18 +170,42 @@ class NotificationBackgroundService {
     int id = 0,
   }) async {
     if (!supportsBackgroundNotifications) return;
-    const android = AndroidNotificationDetails(
-      'lajuana_in_app',
-      'Notificaciones La Juana',
-      channelDescription: 'Alertas operativas in-app',
-      importance: Importance.high,
-      priority: Priority.high,
+    try {
+      await _ensurePluginInitialized();
+      await _plugin.show(
+        id,
+        title,
+        body,
+        _notificationDetails(icon: '@drawable/ic_notification'),
+      );
+    } catch (error, stack) {
+      debugPrint('showLocal failed with ic_notification: $error\n$stack');
+      // Release shrinker can strip Dart-only drawables; fall back so alerts still fire.
+      try {
+        await _plugin.show(
+          id,
+          title,
+          body,
+          _notificationDetails(icon: '@mipmap/ic_launcher'),
+        );
+      } catch (fallbackError, fallbackStack) {
+        debugPrint('showLocal fallback failed: $fallbackError\n$fallbackStack');
+      }
+    }
+  }
+
+  static NotificationDetails _notificationDetails({required String icon}) {
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        _androidChannelId,
+        _androidChannelName,
+        channelDescription: _androidChannelDescription,
+        icon: icon,
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: const DarwinNotificationDetails(),
     );
-    const details = NotificationDetails(
-      android: android,
-      iOS: DarwinNotificationDetails(),
-    );
-    await _plugin.show(id, title, body, details);
   }
 }
 
@@ -97,9 +214,12 @@ void notificationCallbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     if (task != notificationBackgroundTaskName) return Future.value(true);
     try {
+      await NotificationBackgroundService.initializeForBackgroundIsolate();
       await _pollAndNotify();
-    } catch (_) {
-      // Swallow background errors; next tick will retry.
+    } catch (error, stack) {
+      if (kDebugMode) {
+        debugPrint('Notification background poll failed: $error\n$stack');
+      }
     }
     return Future.value(true);
   });
@@ -130,38 +250,41 @@ Future<void> _pollAndNotify() async {
 
   final lastSeen = prefs.getString(_lastSeenKey);
   final items = decoded.whereType<Map>().toList();
+  final newestId = items.first['id']?.toString();
+
+  // Cold start / first background run: seed cursor without notifying so the
+  // existing unread inbox does not dump as "new" when opening the app.
+  if (lastSeen == null || lastSeen.isEmpty) {
+    await NotificationBackgroundService.markLastSeenId(newestId);
+    return;
+  }
+
   final fresh = <Map>[];
   for (final item in items) {
     final id = item['id']?.toString();
     if (id == null) continue;
-    if (lastSeen != null && id == lastSeen) break;
+    if (id == lastSeen) break;
     fresh.add(item);
   }
   if (fresh.isEmpty) return;
 
-  if (fresh.length == 1) {
-    final item = fresh.first;
-    await NotificationBackgroundService.showLocal(
-      title: item['title']?.toString() ?? 'Nueva notificación',
-      body: item['body']?.toString() ?? '',
-      id: item['id'].hashCode,
-    );
-  } else {
-    await NotificationBackgroundService.showLocal(
-      title: '${fresh.length} notificaciones nuevas',
-      body: fresh
-          .take(3)
-          .map((item) => item['title']?.toString() ?? '')
-          .where((t) => t.isNotEmpty)
-          .join(' · '),
-      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-    );
-  }
+  final newest = fresh.first;
+  final arrival = NotificationArrivalCopy.from(
+    eventType: newest['event_type']?.toString() ?? '',
+    title: newest['title']?.toString() ?? '',
+    body: newest['body']?.toString() ?? '',
+    contactPhone: newest['contact_phone']?.toString(),
+    count: fresh.length,
+  );
+  await NotificationBackgroundService.showLocal(
+    title: arrival.label,
+    body: arrival.headline,
+    id: fresh.length == 1
+        ? newest['id'].hashCode
+        : DateTime.now().millisecondsSinceEpoch ~/ 1000,
+  );
 
-  final newestId = items.first['id']?.toString();
-  if (newestId != null) {
-    await prefs.setString(_lastSeenKey, newestId);
-  }
+  await NotificationBackgroundService.markLastSeenId(newestId);
 }
 
 Future<String?> _readAccessTokenFromSqlite() async {

@@ -268,8 +268,60 @@ void main() {
 
     expect(controller.hasArrivalBanner, isTrue);
     expect(controller.pendingArrivalCount, 2);
-    expect(controller.pendingArrivalTitle, 'Nueva reserva');
+    // Parsed headline (same as inbox / push), not the raw API title.
+    expect(controller.pendingArrivalTitle, 'Cuerpo');
     expect(controller.pendingArrivalId, '1');
+  });
+
+  test('first quiet refresh seeds baseline without arrival spam', () async {
+    repository.items = [
+      _item(id: '1', title: 'Ya estaba'),
+      _item(id: '2', title: 'También'),
+    ];
+    repository.unread = 2;
+
+    await controller.refreshQuietly(forceList: true);
+
+    expect(controller.unreadCount, 2);
+    expect(controller.items, hasLength(2));
+    expect(controller.hasArrivalBanner, isFalse);
+    expect(controller.pendingArrivalCount, 0);
+
+    repository.items = [
+      _item(id: '3', title: 'Nueva'),
+      ...repository.items,
+    ];
+    repository.unread = 3;
+    await controller.refreshQuietly();
+
+    expect(controller.hasArrivalBanner, isTrue);
+    expect(controller.pendingArrivalCount, 1);
+    expect(controller.pendingArrivalId, '3');
+  });
+
+  test('refreshQuietly formats status tokens for arrival banner', () async {
+    repository.items = [];
+    repository.unread = 0;
+    await controller.loadInitial();
+
+    repository.items = [
+      InAppNotification(
+        version: 1,
+        createdAt: DateTime.utc(2026, 7, 13, 12),
+        updatedAt: DateTime.utc(2026, 7, 13, 12),
+        id: 'status-1',
+        userId: 'user-1',
+        reservationId: 'res-1',
+        title: 'Estado de reserva actualizado',
+        body: 'Ana Pérez — RES-TEST: quoted → confirmed',
+        read: false,
+        eventType: 'reservation_status_changed',
+      ),
+    ];
+    repository.unread = 1;
+    await controller.refreshQuietly();
+
+    expect(controller.pendingArrivalTitle, 'Cotizado → Confirmada');
   });
 
   test('refreshQuietly does not set arrival banner when list is visible', () async {

@@ -102,6 +102,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
     final enabled = await NotificationBackgroundService.isEnabled();
     module.controller.setBackgroundPollingEnabled(enabled);
     if (enabled) {
+      await NotificationBackgroundService.requestPermissions();
       await NotificationBackgroundService.registerPeriodic();
     }
   }
