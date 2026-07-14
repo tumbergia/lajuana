@@ -289,6 +289,7 @@ class ReservationDetailController extends ChangeNotifier {
   Future<void> confirmReservation({
     required bool isAdmin,
     String? notes,
+    String? startTime,
   }) async {
     if (!isAdmin) {
       confirmationState = ActionState.error(
@@ -307,6 +308,7 @@ class ReservationDetailController extends ChangeNotifier {
       detail = await _repository.confirmReservation(
         reservationId: detail!.id,
         notes: notes,
+        startTime: startTime,
       );
       confirmationState = ActionState.success();
     } on ReservationsApiFailure catch (e) {

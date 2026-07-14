@@ -68,6 +68,7 @@ abstract class ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   });
 
   /// Cancels a reservation (online-only, admin-only).

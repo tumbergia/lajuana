@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/assignments/infrastructure/remote/assignments_api_client.dart';
 import 'package:mobile_domain/src/assignments/assignment_board.dart';
 import 'package:mobile_domain/mobile_domain.dart';
 import 'package:mobile_domain/src/assignments/assignments_repository.dart';
@@ -302,8 +303,8 @@ class AssignmentBoardController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isFinalizing = false;
-      _actionError = e.toString();
-      _actionErrorCode = 'batchUpdate.failed';
+      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionErrorCode = e is AssignmentsApiFailure ? e.code : 'batchUpdate.failed';
       notifyListeners();
     }
   }
@@ -332,8 +333,8 @@ class AssignmentBoardController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isRevertingFinalize = false;
-      _actionError = e.toString();
-      _actionErrorCode = 'unfinalizeAll.failed';
+      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionErrorCode = e is AssignmentsApiFailure ? e.code : 'unfinalizeAll.failed';
       notifyListeners();
     }
   }
@@ -362,8 +363,8 @@ class AssignmentBoardController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isRevertingFinalize = false;
-      _actionError = e.toString();
-      _actionErrorCode = 'unfinalize.failed';
+      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionErrorCode = e is AssignmentsApiFailure ? e.code : 'unfinalize.failed';
       notifyListeners();
     }
   }
@@ -399,10 +400,44 @@ class AssignmentBoardController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isCreating = false;
-      _actionError = e.toString();
-      _actionErrorCode = 'observation.failed';
+      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionErrorCode = e is AssignmentsApiFailure ? e.code : 'observation.failed';
       notifyListeners();
     }
+  }
+
+  /// Assign a saddle to a pending (draft) assignment by participant id.
+  /// For server-tracked assignments, use [update] with [assignmentId] instead.
+  void assignSaddle({
+    required String participantId,
+    String? saddleId,
+  }) {
+    if (!canMutate) {
+      _actionError = 'Sin permisos o sin conexión para asignar silla.';
+      _actionErrorCode = 'permission.denied';
+      notifyListeners();
+      return;
+    }
+
+    final existingPending = _pendingAssignments[participantId];
+    if (existingPending == null) {
+      _actionError = 'Primero asigna un equino.';
+      _actionErrorCode = 'assignment.equine_required';
+      notifyListeners();
+      return;
+    }
+
+    _pendingAssignments[participantId] = _PendingAssignment(
+      assignmentId: existingPending.assignmentId,
+      equineId: existingPending.equineId,
+      saddleId: saddleId,
+    );
+
+    _patchLocalBoardAfterAssign(
+      participantId: participantId,
+      equineId: existingPending.equineId,
+      saddleId: saddleId,
+    );
   }
 
   /// Remove a pending (draft) assignment that has no server id.

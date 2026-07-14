@@ -86,6 +86,7 @@ class _FakeSuccessRepository implements ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     return detail;
   }
@@ -237,6 +238,7 @@ class _FakeErrorRepository implements ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw Exception('Network error');
   }
@@ -392,6 +394,7 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw Exception('Network error');
   }

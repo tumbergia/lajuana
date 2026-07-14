@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/analytics/remote/analytics_api_client.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
@@ -12,8 +13,8 @@ import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
 import 'package:mobile_ui/src/widgets/app_top_bar.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'widgets/shell_status_region.dart';
+import 'package:mobile/features/analytics/presentation/screens/leads_screen.dart';
 import 'package:mobile/features/configuration/presentation/screens/more_flow_screen.dart';
-import 'package:mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
 import 'package:mobile/features/catalogs/experiences/presentation/screens/experiences_module_screen.dart';
@@ -28,6 +29,7 @@ class AuthenticatedShell extends StatefulWidget {
     super.key,
     required this.authController,
     required this.contactsApiClient,
+    required this.analyticsApiClient,
     this.catalogsModule,
     this.reservationsModule,
     this.saddlesModule,
@@ -39,6 +41,7 @@ class AuthenticatedShell extends StatefulWidget {
 
   final AuthController authController;
   final AuthApiClient contactsApiClient;
+  final AnalyticsApiClient analyticsApiClient;
   final CatalogsModule? catalogsModule;
   final ReservationsModule? reservationsModule;
   final SaddlesModule? saddlesModule;
@@ -89,9 +92,8 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
   Widget _tabRoot(AppNavItem tab) {
     switch (tab) {
       case AppNavItem.inicio:
-        return DashboardScreen(
-          authController: widget.authController,
-          onNavigateToTab: _onBottomNavTap,
+        return LeadsScreen(
+          analyticsApiClient: widget.analyticsApiClient,
         );
       case AppNavItem.reservas:
         return ReservationsModuleScreen(

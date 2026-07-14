@@ -39,6 +39,7 @@ class AssignmentBoardScreen extends StatefulWidget {
 
 class _AssignmentBoardScreenState extends State<AssignmentBoardScreen> {
   final _observationController = TextEditingController();
+  String? _lastActionErrorCode;
 
   @override
   void initState() {
@@ -54,7 +55,26 @@ class _AssignmentBoardScreenState extends State<AssignmentBoardScreen> {
   }
 
   void _onStateChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    final errCode = widget.controller.actionErrorCode;
+    if (widget.controller.actionError != null &&
+        errCode != _lastActionErrorCode) {
+      _lastActionErrorCode = errCode;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final msg = widget.controller.actionError;
+        if (msg != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(msg),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+          widget.controller.clearActionError();
+        }
+      });
+    }
+    setState(() {});
   }
 
   @override
