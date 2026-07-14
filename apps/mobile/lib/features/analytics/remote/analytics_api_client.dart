@@ -32,6 +32,29 @@ class AnalyticsApiClient {
     return _decodeBody(response.body);
   }
 
+  Future<Map<String, dynamic>> fetchLeadsPreferences() async {
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/analytics/leads/preferences',
+    );
+    return _decodeBody(response.body);
+  }
+
+  Future<Map<String, dynamic>> updateLeadsPreferences({
+    required List<String> pinnedLeadIds,
+    required List<String> excludedLeadIds,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'PUT',
+      path: '/analytics/leads/preferences',
+      body: {
+        'pinned_lead_ids': pinnedLeadIds,
+        'excluded_lead_ids': excludedLeadIds,
+      },
+    );
+    return _decodeBody(response.body);
+  }
+
   Future<Uint8List> downloadExport({String? leadId}) async {
     final qs = leadId != null ? '?lead_id=$leadId' : '';
     final response = await _authorizedRequest(
@@ -61,6 +84,12 @@ class AnalyticsApiClient {
           return _http.get(uri, headers: _headers(accessToken));
         case 'POST':
           return _http.post(
+            uri,
+            headers: _headers(accessToken),
+            body: body != null ? jsonEncode(body) : null,
+          );
+        case 'PUT':
+          return _http.put(
             uri,
             headers: _headers(accessToken),
             body: body != null ? jsonEncode(body) : null,

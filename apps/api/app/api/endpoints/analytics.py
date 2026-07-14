@@ -6,6 +6,11 @@ from fastapi.responses import Response
 
 from app.api.deps import get_analytics_service  # type: ignore[attr-defined]
 from app.common.enums import Permission
+from app.documents import UserDocument
+from app.schemas.analytics import (
+    LeadsPreferencesSchema,
+    LeadsPreferencesUpdateSchema,
+)
 from app.services.analytics_service import AnalyticsService
 
 from ..deps import require_permissions
@@ -21,7 +26,7 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 )
 async def get_leads(
     current_user: Annotated[
-        object, Depends(require_permissions(Permission.RESERVATION_READ))
+        UserDocument, Depends(require_permissions(Permission.RESERVATION_READ))
     ],
     svc: AnalyticsService = Depends(get_analytics_service),
     force_refresh: bool = False,
@@ -30,12 +35,50 @@ async def get_leads(
 
 
 @router.get(
+    "/leads/preferences",
+    response_model=LeadsPreferencesSchema,
+    operation_id="get_analytics_leads_preferences",
+)
+async def get_leads_preferences(
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.RESERVATION_READ))
+    ],
+) -> LeadsPreferencesSchema:
+    return LeadsPreferencesSchema.from_user_prefs(current_user.leads_preferences)
+
+
+@router.put(
+    "/leads/preferences",
+    response_model=LeadsPreferencesSchema,
+    operation_id="update_analytics_leads_preferences",
+)
+async def update_leads_preferences(
+    body: LeadsPreferencesUpdateSchema,
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.RESERVATION_READ))
+    ],
+) -> LeadsPreferencesSchema:
+    cleaned = LeadsPreferencesSchema.from_user_prefs(
+        {
+            "pinned_lead_ids": body.pinned_lead_ids,
+            "excluded_lead_ids": body.excluded_lead_ids,
+        }
+    )
+    current_user.leads_preferences = {
+        "pinned_lead_ids": cleaned.pinned_lead_ids,
+        "excluded_lead_ids": cleaned.excluded_lead_ids,
+    }
+    await current_user.save()
+    return cleaned
+
+
+@router.get(
     "/leads/export",
     operation_id="export_analytics_leads",
 )
 async def export_leads(
     current_user: Annotated[
-        object, Depends(require_permissions(Permission.RESERVATION_READ))
+        UserDocument, Depends(require_permissions(Permission.RESERVATION_READ))
     ],
     svc: AnalyticsService = Depends(get_analytics_service),
     lead_id: str | None = None,

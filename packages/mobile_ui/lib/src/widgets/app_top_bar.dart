@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mobile_ui/src/theme/app_theme_notifier.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 
 class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   static const _bannerAspectRatio = 1600 / 567;
   static const _logoHeight = 40.0;
+  static const double toolbarHeight = 64;
 
   final VoidCallback? onNotificationsTap;
   final VoidCallback? onThemeToggleTap;
@@ -29,11 +31,12 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(64);
+  Size get preferredSize => const Size.fromHeight(toolbarHeight);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = theme.appTokens;
     final surfaceColor =
         theme.appBarTheme.backgroundColor ?? const Color(0xFF131313);
     final foregroundColor = theme.appBarTheme.foregroundColor ?? Colors.white;
@@ -47,9 +50,9 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
       child: SafeArea(
         bottom: false,
         child: SizedBox(
-          height: 64,
+          height: toolbarHeight,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: EdgeInsets.symmetric(horizontal: tokens.spaceXl),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -70,7 +73,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                         ),
                       ),
                       if (title != null) ...[
-                        const SizedBox(width: 16),
+                        SizedBox(width: tokens.spaceLg),
                         Expanded(
                           child: Text(
                             title!,
@@ -100,8 +103,9 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                         showDot: false,
                         iconColor: theme.colorScheme.error,
                         backgroundColor: Colors.transparent,
+                        borderRadius: tokens.radiusMd,
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: tokens.spaceSm),
                     ],
                     _TopBarIconButton(
                       icon: theme.brightness == Brightness.dark
@@ -111,14 +115,16 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                       showDot: false,
                       iconColor: foregroundColor,
                       backgroundColor: Colors.transparent,
+                      borderRadius: tokens.radiusMd,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: tokens.spaceSm),
                     _TopBarIconButton(
                       icon: Icons.notifications_none_rounded,
                       onTap: onNotificationsTap,
                       showDot: showNotificationDot,
                       iconColor: foregroundColor,
                       backgroundColor: Colors.transparent,
+                      borderRadius: tokens.radiusMd,
                     ),
                   ],
                 ),
@@ -137,6 +143,7 @@ class _TopBarIconButton extends StatelessWidget {
   final bool showDot;
   final Color iconColor;
   final Color backgroundColor;
+  final BorderRadius borderRadius;
 
   const _TopBarIconButton({
     required this.icon,
@@ -144,16 +151,17 @@ class _TopBarIconButton extends StatelessWidget {
     required this.showDot,
     required this.iconColor,
     required this.backgroundColor,
+    required this.borderRadius,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: backgroundColor,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: borderRadius,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: borderRadius,
         child: SizedBox(
           width: 32,
           height: 36,
@@ -180,9 +188,9 @@ class _NotificationDot extends StatelessWidget {
     return Container(
       width: 7,
       height: 7,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.redAccent,
-        borderRadius: BorderRadius.circular(999),
+        shape: BoxShape.circle,
       ),
     );
   }

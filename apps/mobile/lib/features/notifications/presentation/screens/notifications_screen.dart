@@ -17,6 +17,7 @@ import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_confirm_dialog.dart';
+import 'package:mobile_ui/src/widgets/app_page_app_bar.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/app_toast.dart';
@@ -447,16 +448,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     final hasItems = controller.items.isNotEmpty;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notificaciones'),
-        titleSpacing: 8,
-        leadingWidth: 64,
-        leading: IconButton(
-          padding: const EdgeInsets.only(left: 16),
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        actionsPadding: const EdgeInsets.only(right: 16),
+      appBar: AppPageAppBar(
+        title: 'Notificaciones',
         actions: [
           if (controller.unreadCount > 0)
             IconButton(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
@@ -163,11 +164,12 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = Theme.of(context).appTokens;
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, _) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+          padding: EdgeInsets.all(tokens.spaceLg),
           child: LayoutBuilder(
             builder: (context, constraints) {
               final body = KeyedSubtree(
@@ -217,27 +219,34 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
   }
 
   Widget _menuLeadingIcon(IconData icon) {
+    final scheme = Theme.of(context).colorScheme;
+    final tokens = Theme.of(context).appTokens;
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(4),
+        color: scheme.surfaceContainerHighest,
+        borderRadius: tokens.radiusMd,
       ),
       child: Icon(
         icon,
         size: 22,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        color: scheme.onSurfaceVariant,
       ),
     );
   }
 
   Widget _buildMenu() {
+    final tokens = Theme.of(context).appTokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppSectionHeader(eyebrow: 'Más', title: 'Opciones adicionales'),
-        const SizedBox(height: 20),
+        const AppSectionHeader(
+          eyebrow: 'Más',
+          title: 'Opciones adicionales',
+          variant: AppSectionHeaderVariant.compact,
+        ),
+        SizedBox(height: tokens.spaceLg),
         AppEntityRowCard(
           title: 'Perfil',
           subtitle: 'Datos del usuario y estado de cuenta',
@@ -245,7 +254,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.profile),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spaceMd),
         if (widget.notificationsModule != null) ...[
           AppEntityRowCard(
             title: 'Notificaciones',
@@ -262,7 +271,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
               );
             },
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: tokens.spaceMd),
         ],
         AppEntityRowCard(
           title: 'Números',
@@ -271,7 +280,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.contacts),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spaceMd),
         AppEntityRowCard(
           title: 'Experiencias',
           subtitle: 'Catálogo de productos',
@@ -279,7 +288,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.experiencias),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spaceMd),
         AppEntityRowCard(
           title: 'Proveedores',
           subtitle: 'Catálogo operativo',
@@ -287,7 +296,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.providers),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spaceMd),
         AppEntityRowCard(
           title: 'Sillas',
           subtitle: 'Inventario de montura',
@@ -298,7 +307,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         if (widget.catalogsModule != null &&
             widget.configurationModule != null &&
             widget.controller.currentUser?.role == 'admin') ...[
-          const SizedBox(height: 12),
+          SizedBox(height: tokens.spaceMd),
           AppEntityRowCard(
             title: 'Configuración',
             subtitle: 'De la Juana',

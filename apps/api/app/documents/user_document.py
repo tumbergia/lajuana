@@ -18,6 +18,8 @@ class UserDocument(AuditDocument):
     refresh_token_hash: str | None = None
     # event_type -> enabled. Missing keys default to True (all on).
     notification_preferences: dict[str, bool] = Field(default_factory=dict)
+    # Home leads: { "pinned_lead_ids": [...], "excluded_lead_ids": [...] }
+    leads_preferences: dict = Field(default_factory=dict)
 
     class Settings:
         name = Collections.USERS

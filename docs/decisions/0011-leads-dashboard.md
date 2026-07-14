@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-13
 
-**Estado:** Implementado
+**Estado:** Implementado (actualizado 2026-07-14)
 
 ## Contexto
 
@@ -14,49 +14,61 @@ Se necesitaba un panel de indicadores en vivo que reemplazara esa pantalla.
 
 Reemplazar el Tablero Operativo completo por un **Leads Dashboard** que:
 
-1. Muestra 5 indicadores aleatorios del total al abrir la app (cambian con
-   pull-to-refresh).
-2. Permite expandir a la lista completa agrupada por categorías.
-3. Exporta a .xlsx (server-side con openpyxl): individual por lead o todos
-   juntos (una hoja por lead).
-4. Los datos se sirven desde un nuevo endpoint REST
-   `GET /api/v1/analytics/leads` con caché en memoria de 5 min.
+1. Muestra hasta 5 indicadores en Inicio: **pins del usuario** (ordenados) +
+   relleno aleatorio del pool elegible. El relleno solo se regenera al cargar /
+   pull-to-refresh.
+2. Pool elegible = `home_eligible=true` y no está en `excluded_lead_ids` del usuario.
+3. Permite expandir a la lista completa agrupada por categorías.
+4. Exporta a .xlsx (server-side con openpyxl): individual por lead o todos
+   juntos (una hoja por categoría).
+5. Los datos se sirven desde `GET /api/v1/analytics/leads` con caché en memoria
+   de 5 min.
+6. Preferencias por usuario en
+   `GET/PUT /api/v1/analytics/leads/preferences`
+   (`pinned_lead_ids` máx. 5, `excluded_lead_ids`), persistidas en
+   `UserDocument.leads_preferences`. Se pueden ocultar **cualquier** KPI
+   (incluidos los de blacklist). La UI de configuración edita en lote y
+   confirma con una barra sticky antes de persistir.
+7. El relleno aleatorio es **ponderado** por `home_priority` (sesgo a ingresos,
+   pagos y acciones de dinero).
 
 ## Cambios estructurales
 
 ### Backend
 
-- `apps/api/app/schemas/analytics.py` — Schemas LeadItem, LeadCategory, AnalyticsResponse
-- `apps/api/app/services/analytics_service.py` — Servicio con ~42 KPIs agrupados
-  en 7 categorías, queries paralelas con `asyncio.gather`, caché TTL 5 min.
-- `apps/api/app/api/endpoints/analytics.py` — Router con GET /leads y GET /leads/export
-- Registrado en router.py, deps.py, di.py.
-- Dependencia `openpyxl` agregada a pyproject.toml.
+- `apps/api/app/schemas/analytics.py` — LeadItem (+ `home_eligible`), LeadCategory,
+  AnalyticsResponse, LeadsPreferencesSchema
+- `apps/api/app/services/analytics_service.py` — KPIs por categoría, queries
+  paralelas, caché TTL 5 min, blacklist `HOME_INELIGIBLE_IDS`, métricas de
+  bitácora equina (`EquineEventDocument`)
+- `apps/api/app/api/endpoints/analytics.py` — GET /leads, GET/PUT preferences,
+  GET /leads/export
+- `UserDocument.leads_preferences` — pins y exclusiones por usuario
 
 ### Frontend
 
-- `apps/mobile/lib/features/analytics/` — Nuevo feature completo:
-  - `remote/analytics_api_client.dart` — HTTP client (sigue patrón existente)
-  - `presentation/controllers/leads_controller.dart` — ChangeNotifier
-  - `presentation/screens/leads_screen.dart` — Home con 5 cards aleatorias
-  - `presentation/screens/all_leads_screen.dart` — Lista completa por categorías
-  - `presentation/widgets/lead_card.dart` — Card individual
-  - `presentation/widgets/lead_category_section.dart` — Sección expandible
-- `apps/mobile/lib/features/dashboard/` **eliminado** (reemplazado por analytics)
-- `test/dashboard/` **eliminado**
+- `apps/mobile/lib/features/analytics/` — feature completo:
+  - `remote/analytics_api_client.dart`
+  - `presentation/controllers/leads_controller.dart` — selección home + prefs
+  - `presentation/screens/leads_screen.dart` — Inicio
+  - `presentation/screens/all_leads_screen.dart` — lista completa
+  - `presentation/screens/configure_leads_screen.dart` — pins / exclusiones
+  - widgets de card y sección
 
-### Dependencias
+## Categorías de KPIs (7)
 
-- `apps/mobile/lib/app/dependency_injection.dart` — AnalyticsApiClient agregado
-- `apps/mobile/lib/app/shell/authenticated_shell.dart` — analyticsApiClient inyectado
-- `apps/mobile/lib/app/navigation/app_router.dart` — analyticsApiClient pasado al shell
+1. `accion` — Pendientes de accion
+2. `reservas` — Embudo de reservas
+3. `dinero` — Ingresos y pagos
+4. `eq_operacion` — Equinos (operacion)
+5. `eq_salud` — Equinos (salud) + bitácora (eventos 7d, cuidados vencidos/próximos,
+   lesiones recientes, severidad alta)
+6. `personas` — Participantes y origen
+7. `catalogo` — Inventario y catalogo (mayoría con `home_eligible=false`)
 
-## Categorías de KPIs
+## Blacklist de Inicio (`home_eligible=false`)
 
-1. Volumen de reservas (~10 indicadores)
-2. Ingresos (~4 indicadores)
-3. Equinos (~10 indicadores)
-4. Participantes (~6 indicadores)
-5. Experiencias (~6 indicadores)
-6. Pagos (~6 indicadores)
-7. Operación (~5 indicadores)
+Totales / inventario / demografía lenta, p.ej. `eq_total`, `eq_mules`,
+`eq_horses`, `eq_donkeys`, `par_total`, `par_avg_age`, `par_top_level`,
+`ori_*`, `exp_total` / tipos de catálogo, `vol_total`, `pay_total`,
+`op_usuarios`, `op_usuarios_total`. Siguen visibles en “Ver todos”.

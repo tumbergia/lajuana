@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:mobile/features/notifications/infrastructure/notification_background_service.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_page_app_bar.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/app_switch_row.dart';
@@ -72,20 +74,27 @@ class _NotificationsSettingsPageState extends State<NotificationsSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final controller = widget.controller;
+    final tokens = Theme.of(context).appTokens;
     final prefs = controller.preferences?.preferences ?? const <String, bool>{};
     final bgSupported =
         NotificationBackgroundService.supportsBackgroundNotifications;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notificaciones')),
+      appBar: const AppPageAppBar(title: 'Notificaciones'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+        padding: EdgeInsets.fromLTRB(
+          tokens.spaceLg,
+          tokens.spaceMd,
+          tokens.spaceLg,
+          tokens.spaceXl * 1.5,
+        ),
         children: [
           const AppSectionHeader(
             eyebrow: 'Dispositivo',
             title: 'Alertas locales',
+            variant: AppSectionHeaderVariant.compact,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: tokens.spaceLg),
           AppSwitchRow(
             title: 'Notificaciones en segundo plano',
             subtitle: bgSupported
@@ -94,16 +103,17 @@ class _NotificationsSettingsPageState extends State<NotificationsSettingsPage> {
             value: controller.backgroundPollingEnabled && bgSupported,
             onChanged: bgSupported ? _toggleBackground : null,
           ),
-          const SizedBox(height: 28),
+          SizedBox(height: tokens.spaceXl + tokens.spaceXs),
           const AppSectionHeader(
             eyebrow: 'Preferencias',
             title: 'Que recibir',
+            variant: AppSectionHeaderVariant.compact,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: tokens.spaceLg),
           if (controller.preferencesLoading)
-            const Padding(
-              padding: EdgeInsets.only(top: 24),
-              child: AppCenteredLoader(fill: false),
+            Padding(
+              padding: EdgeInsets.only(top: tokens.spaceXl),
+              child: const AppCenteredLoader(fill: false),
             )
           else if (controller.errorMessage != null &&
               controller.preferences == null)
@@ -119,7 +129,7 @@ class _NotificationsSettingsPageState extends State<NotificationsSettingsPage> {
             ..._preferenceLabels.entries.map((entry) {
               final enabled = prefs[entry.key] ?? true;
               return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+                padding: EdgeInsets.only(bottom: tokens.spaceSm),
                 child: AppSwitchRow(
                   title: entry.value,
                   value: enabled,

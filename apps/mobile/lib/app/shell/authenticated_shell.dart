@@ -256,6 +256,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
       case AppNavItem.inicio:
         return LeadsScreen(
           analyticsApiClient: widget.analyticsApiClient,
+          userDisplayName: widget.authController.currentUser?.fullName,
         );
       case AppNavItem.reservas:
         return ReservationsModuleScreen(
