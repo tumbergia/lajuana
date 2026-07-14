@@ -137,14 +137,14 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
             const AppCenteredLoader(),
             const SizedBox(height: 16),
             Text(
-              'Sincronizando experiencias…',
+              'Cargando experiencias…',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Conectando con el servidor',
+              'Un momento',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -194,14 +194,14 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'No hay experiencias sincronizadas',
+              'No hay experiencias',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Conectate al backend o verifica la conexion',
+              'Desliza para actualizar o verifica tu conexión',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -209,8 +209,8 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () => _controller.refreshFromServer(),
-              icon: const Icon(Icons.sync_rounded),
-              label: const Text('Sincronizar desde servidor'),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Actualizar'),
             ),
           ],
         ),

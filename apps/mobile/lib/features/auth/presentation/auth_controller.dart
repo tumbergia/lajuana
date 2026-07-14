@@ -78,6 +78,20 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  /// Re-verifica conectividad/alcance del backend bajo demanda.
+  ///
+  /// `NetworkStatusResolver.observe()` solo emite cuando cambia el tipo de
+  /// enlace (Wi‑Fi/datos/offline) — si el backend cae mientras el enlace
+  /// sigue activo, nadie lo detecta hasta el próximo cambio de red. Este
+  /// método permite a llamadores periódicos (p. ej. el timer de sync del
+  /// shell) forzar una comprobación real y mantener `networkStatus` fiel al
+  /// estado actual del servidor.
+  Future<void> recheckNetworkStatus() async {
+    final next = await _networkStatusResolver.current();
+    if (next == networkStatus) return;
+    _onNetworkStatus(next);
+  }
+
   Future<void> loginSubmitted({
     required String email,
     required String password,

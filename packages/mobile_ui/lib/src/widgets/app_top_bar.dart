@@ -8,9 +8,14 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
 
   final VoidCallback? onNotificationsTap;
   final VoidCallback? onThemeToggleTap;
+  final VoidCallback? onOfflineTap;
   final String? title;
   final String logoAssetPath;
   final bool showNotificationDot;
+
+  /// Muestra un ícono compacto de "sin conexión" en vez del banner de estado.
+  /// Tocarlo dispara [onOfflineTap] (p. ej. un toast con el detalle).
+  final bool showOfflineIndicator;
 
   const AppTopBar({
     super.key,
@@ -18,7 +23,9 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.title,
     this.onNotificationsTap,
     this.onThemeToggleTap,
+    this.onOfflineTap,
     this.showNotificationDot = false,
+    this.showOfflineIndicator = false,
   });
 
   @override
@@ -86,6 +93,16 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (showOfflineIndicator) ...[
+                      _TopBarIconButton(
+                        icon: Icons.wifi_off_rounded,
+                        onTap: onOfflineTap,
+                        showDot: false,
+                        iconColor: theme.colorScheme.error,
+                        backgroundColor: Colors.transparent,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     _TopBarIconButton(
                       icon: theme.brightness == Brightness.dark
                           ? Icons.light_mode_rounded

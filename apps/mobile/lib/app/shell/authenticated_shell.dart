@@ -1,4 +1,4 @@
-import 'dart:async' show unawaited;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +13,7 @@ import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/app/navigation/shell_navigation_controller.dart';
 import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
 import 'package:mobile_ui/src/widgets/app_top_bar.dart';
+import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/voice_pull_scope.dart';
 import 'widgets/shell_status_region.dart';
@@ -67,11 +68,17 @@ class AuthenticatedShell extends StatefulWidget {
   State<AuthenticatedShell> createState() => _AuthenticatedShellState();
 }
 
-class _AuthenticatedShellState extends State<AuthenticatedShell> {
+class _AuthenticatedShellState extends State<AuthenticatedShell>
+    with WidgetsBindingObserver {
+  /// Intervalo del reintento periódico de sincronización en segundo plano.
+  static const _periodicSyncInterval = Duration(seconds: 90);
+
   late final ShellNavigationController _shellNav;
   final Map<AppNavItem, GlobalKey<NavigatorState>> _navigatorKeys = {};
   final Set<AppNavItem> _visitedTabs = {};
-  bool _wasBackendReachable = false;
+  BackendReachability _lastReachability = BackendReachability.unknown;
+  Timer? _syncTimer;
+  bool _isSyncing = false;
   DateTime? _lastBackPress;
 
   @override
@@ -79,14 +86,82 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
     super.initState();
     _shellNav = ShellNavigationController();
     _ensureTab(AppNavItem.inicio);
+    WidgetsBinding.instance.addObserver(this);
     // Carga el conteo de ítems que quedaron en cola de sesiones previas.
     unawaited(widget.outbox?.refreshCachedPendingCount() ?? Future<void>.value());
+    // Vacía cualquier cola pendiente al arrancar y arranca el reintento
+    // periódico para que la sincronización sea automática y transparente.
+    // Solo si hay fuentes de sincronización (evita timers ociosos en tests).
+    if (widget.catalogsModule != null ||
+        widget.outbox != null ||
+        widget.reservationsModule != null) {
+      unawaited(_syncAll());
+      _syncTimer = Timer.periodic(
+        _periodicSyncInterval,
+        (_) => unawaited(_maybeSync()),
+      );
+    }
   }
 
   @override
   void dispose() {
+    _syncTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _shellNav.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Al volver a primer plano intentamos vaciar la cola de inmediato.
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_maybeSync());
+    }
+  }
+
+  /// Re-verifica conectividad real y sincroniza si corresponde; usado por el
+  /// timer periódico y el ciclo de vida (resume). La re-verificación es la
+  /// única forma de detectar que el backend cayó mientras el enlace de red
+  /// sigue activo (ver `AuthController.recheckNetworkStatus`).
+  Future<void> _maybeSync() async {
+    await widget.authController.recheckNetworkStatus();
+    if (widget.authController.networkStatus.canReachBackend) {
+      unawaited(_syncAll());
+    }
+  }
+
+  /// Vacía todas las colas de salida (catálogos + outbox compartido),
+  /// reintentando también las operaciones que habían fallado. Best-effort:
+  /// nunca lanza, para poder invocarse desde timers/lifecycle sin riesgo.
+  Future<void> _syncAll() async {
+    if (_isSyncing) return;
+    _isSyncing = true;
+    try {
+      final catalogs = widget.catalogsModule?.repository;
+      if (catalogs != null) {
+        try {
+          await catalogs.syncNow(includeFailed: true);
+        } catch (_) {
+          // Ignorado: la sincronización se reintenta sola en el próximo ciclo.
+        }
+      }
+      try {
+        await (widget.outbox?.autoSync() ?? Future<void>.value());
+      } catch (_) {
+        // Ignorado: idem.
+      }
+      final reservations = widget.reservationsModule?.repository;
+      if (reservations != null) {
+        try {
+          await reservations.syncNow();
+        } catch (_) {
+          // Ignorado: idem — reservas/participantes/comprobantes se
+          // reintentan solos en el próximo ciclo.
+        }
+      }
+    } finally {
+      _isSyncing = false;
+    }
   }
 
   void _ensureTab(AppNavItem tab) {
@@ -186,21 +261,28 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
     return AnimatedBuilder(
       animation: Listenable.merge([widget.authController, _shellNav]),
       builder: (context, _) {
-        final canReachBackend =
-            widget.authController.networkStatus.canReachBackend;
-        if (canReachBackend && !_wasBackendReachable) {
-          if (widget.catalogsModule != null) {
-            // includeFailed: reintenta también lo que había fallado antes
-            // (con clave nueva), no solo lo pendiente.
-            unawaited(
-              widget.catalogsModule!.repository.syncNow(includeFailed: true),
+        final reachability =
+            widget.authController.networkStatus.backendReachability;
+        if (reachability == BackendReachability.reachable &&
+            _lastReachability != BackendReachability.reachable) {
+          // Recuperamos el backend: vaciamos las colas (incluye fallidas).
+          unawaited(_syncAll());
+        } else if (reachability == BackendReachability.unreachable &&
+            _lastReachability == BackendReachability.reachable) {
+          // Se perdió el backend: aviso efímero como toast superior en vez de
+          // un banner persistente.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            showAppTopToast(
+              context,
+              message:
+                  'Servidor no alcanzable. Revisa tu conexión o que el API esté en marcha.',
+              isError: true,
+              icon: Icons.cloud_off_rounded,
             );
-          }
-          // Vaciar la cola de salida compartida (asignaciones, saddles);
-          // autoSync ya reintenta las fallidas.
-          unawaited(widget.outbox?.autoSync() ?? Future<void>.value());
+          });
         }
-        _wasBackendReachable = canReachBackend;
+        _lastReachability = reachability;
 
         final showReconnectOverlay =
             widget.authController.isLoading &&
@@ -247,15 +329,32 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
           child: Stack(
           children: [
             Scaffold(
-              appBar: const AppTopBar(
+              appBar: AppTopBar(
                 logoAssetPath: 'assets/branding/lajuana-banner.svg',
+                // Un solo ícono para "no hay conexión completa con el
+                // servidor": sin enlace de red O sesión sin poder verificarse
+                // (isOfflineRestricted, que en la práctica siempre implica que
+                // el backend no respondió). Antes eran dos indicadores
+                // separados (ícono + banner "Sesión local") — se unifican
+                // para no confundir al usuario con dos avisos distintos.
+                showOfflineIndicator:
+                    widget.authController.networkStatus.linkType ==
+                        LinkType.offline ||
+                    widget.authController.isOfflineRestricted,
+                onOfflineTap: () => showAppTopToast(
+                  context,
+                  message: widget.authController.networkStatus.linkType ==
+                          LinkType.offline
+                      ? 'Sin Wi‑Fi ni datos. El modo local sigue disponible si aplica.'
+                      : 'Sin conexión con el servidor. Sesión local: acciones críticas están bloqueadas.',
+                  icon: Icons.wifi_off_rounded,
+                ),
               ),
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ShellStatusRegion(
                     controller: widget.authController,
-                    outbox: widget.outbox,
                   ),
                   Expanded(
                     child: VoicePullScope(
@@ -263,6 +362,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell> {
                       displacement: MediaQuery.of(context).padding.bottom + 72,
                       onTriggered: _openAdminVoiceSheet,
                       child: RefreshScope(
+                        onAfterRefresh: _maybeSync,
                         child: Stack(
                           fit: StackFit.expand,
                           children: [

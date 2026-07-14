@@ -46,13 +46,6 @@ class SessionViewScreen extends StatelessWidget {
               const SizedBox(height: 12),
               authStateBadge(controller.authState),
               const SizedBox(height: 12),
-              if (controller.hasPendingSync)
-                const AppBadge(
-                  label: 'Cambios pendientes de sincronización',
-                  tone: AppBadgeTone.warning,
-                  uppercase: false,
-                ),
-              const SizedBox(height: 12),
               AppEntityRowCard(
                 title: user?.fullName ?? 'Sin usuario',
                 subtitle:
