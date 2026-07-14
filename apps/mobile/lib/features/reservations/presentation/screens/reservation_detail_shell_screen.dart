@@ -944,39 +944,188 @@ class _ReservationDetailShellScreenState
 
     showDialog<void>(
       context: context,
-      icon: canConfirm
-          ? Icons.check_circle_outline_rounded
-          : Icons.error_outline_rounded,
-      title: canConfirm ? 'Confirmar reserva' : '¡Verifica el pago!',
-      message: canConfirm
-          ? 'El sistema revalidará disponibilidad y descontará cupos.\n\n'
-                'Esta acción requiere conexión.'
-          : !paymentOk
-          ? 'Antes de confirmar la reserva, tienes que aprobar el comprobante de pago.'
-          : 'La reserva ya está en estado terminal.',
-      confirmLabel: canConfirm ? 'Confirmar' : 'Cerrar',
-      style: canConfirm ? DialogStyle.regular : DialogStyle.warning,
-      height: 280,
-      onConfirm: canConfirm
-          ? () {
-              _controller.confirmReservation(isAdmin: _isAdmin).whenComplete(
-                () {
-                  if (!mounted) return;
-                  if (_controller.confirmationErrorCode != null) {
-                    showAppToast(
-                      context,
-                      message: _controller.confirmationErrorMessage ??
-                          'Error al confirmar reserva',
-                      isError: true,
-                    );
-                  } else if (_controller.detail?.status ==
-                      ReservationStatus.confirmed) {
-                    showAppToast(context, message: 'Reserva confirmada');
-                  }
-                },
-              );
-            }
-          : () {},
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: scheme.surfaceContainerHigh,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: tokens.radiusXl,
+              ),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 40,
+              ),
+              contentPadding: EdgeInsets.zero,
+              content: Padding(
+                padding: EdgeInsets.all(tokens.spaceXl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline_rounded,
+                      size: 48,
+                      color: scheme.primary,
+                    ),
+                    SizedBox(height: tokens.spaceLg),
+                    Text(
+                      'Confirmar reserva',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: tokens.spaceSm),
+                    Text(
+                      'El sistema revalidará disponibilidad y descontará cupos.\n'
+                      'Esta acción requiere conexión.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    SizedBox(height: tokens.spaceLg),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerLow,
+                        borderRadius: tokens.radiusMd,
+                        border: Border.all(
+                          color: scheme.outlineVariant,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      child: InkWell(
+                        borderRadius: tokens.radiusMd,
+                        onTap: () async {
+                          final picked = await showTimePicker(
+                            context: context,
+                            initialTime: selectedTime,
+                            helpText: 'Selecciona la hora de inicio',
+                            confirmText: 'Aceptar',
+                            cancelText: 'Cancelar',
+                            builder: (context, child) {
+                              return MediaQuery(
+                                data: MediaQuery.of(context).copyWith(
+                                  alwaysUse24HourFormat: true,
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (picked != null) {
+                            setDialogState(() {
+                              selectedTime = picked;
+                            });
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.schedule_rounded,
+                                size: 20,
+                                color: scheme.primary,
+                              ),
+                              SizedBox(width: tokens.spaceSm),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Hora de inicio',
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                    Text(
+                                      selectedTime.format(context),
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.edit_calendar_rounded,
+                                size: 18,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: tokens.spaceXl),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            label: 'Cancelar',
+                            variant: AppButtonVariant.secondary,
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            expanded: true,
+                            height: 48,
+                          ),
+                        ),
+                        SizedBox(width: tokens.spaceSm),
+                        Expanded(
+                          child: AppButton(
+                            label: 'Confirmar',
+                            variant: AppButtonVariant.primary,
+                            onPressed: () {
+                              Navigator.of(ctx).pop();
+                              final hour =
+                                  selectedTime.hour.toString().padLeft(2, '0');
+                              final minute = selectedTime.minute
+                                  .toString()
+                                  .padLeft(2, '0');
+                              final startTime = '$hour:$minute';
+                              _controller
+                                  .confirmReservation(
+                                isAdmin: _isAdmin,
+                                startTime: startTime,
+                              )
+                                  .whenComplete(() {
+                                if (!mounted) return;
+                                if (_controller.confirmationErrorCode != null) {
+                                  showAppToast(
+                                    context,
+                                    message: _controller
+                                            .confirmationErrorMessage ??
+                                        'Error al confirmar reserva',
+                                    isError: true,
+                                  );
+                                } else if (_controller.detail?.status ==
+                                    ReservationStatus.confirmed) {
+                                  showAppToast(
+                                    context,
+                                    message: 'Reserva confirmada',
+                                  );
+                                }
+                              });
+                            },
+                            expanded: true,
+                            height: 48,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

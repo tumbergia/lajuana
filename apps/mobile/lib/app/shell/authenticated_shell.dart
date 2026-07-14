@@ -25,7 +25,6 @@ import 'package:mobile/features/notifications/notifications_module.dart';
 import 'package:mobile/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:mobile/features/notifications/presentation/widgets/notification_heads_up.dart';
 import 'package:mobile/features/notifications/infrastructure/notification_background_service.dart';
-import 'package:mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
 import 'package:mobile/features/equines/presentation/screens/equines_module_screen.dart';

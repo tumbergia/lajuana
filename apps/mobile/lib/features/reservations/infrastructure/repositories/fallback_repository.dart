@@ -74,14 +74,6 @@ class FallbackRepository implements ReservationsRepository {
   }
 
   @override
-  Future<ReservationDetail> approvePaymentWithoutProof({
-    required String reservationId,
-    String? note,
-  }) async {
-    throw Exception('ReservationsModule no inyectado');
-  }
-
-  @override
   Future<ReservationDetail> rejectPaymentProof({
     required String paymentProofId,
     required String reason,

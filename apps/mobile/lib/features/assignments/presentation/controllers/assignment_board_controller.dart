@@ -580,11 +580,7 @@ class AssignmentBoardController extends ChangeNotifier {
           'related_participant_id': relatedParticipantId,
         if (relatedEquineId != null) 'related_equine_id': relatedEquineId,
       },
-      _isCreating = false;
-      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
-      _actionErrorCode = e is AssignmentsApiFailure ? e.code : 'observation.failed';
-      notifyListeners();
-    }
+    );
   }
 
   /// Assign a saddle to a pending (draft) assignment by participant id.
