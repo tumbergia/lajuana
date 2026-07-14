@@ -1,12 +1,29 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile/app/sync/sync_outbox_client.dart';
 import 'package:mobile/features/reservations/infrastructure/local/reservation_local_records.dart';
 import 'package:mobile/features/reservations/infrastructure/local/reservations_local_data_source.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservation_dtos.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservations_api_client.dart';
 import 'package:mobile/features/reservations/infrastructure/repositories/reservations_repository_impl.dart';
+import 'package:mobile/features/reservations/infrastructure/sync/reservations_sync_coordinator.dart';
 import 'package:mobile_domain/src/gen/reservation_rules.dart' as gen;
+
+/// Coordinador con un cliente que nunca se invoca en estos tests (solo se
+/// ejercitan los métodos de lectura/caché de ReservationsRepositoryImpl).
+ReservationsSyncCoordinator _fakeSyncCoordinator(
+  ReservationsLocalDataSource localDataSource,
+) {
+  return ReservationsSyncCoordinator(
+    localDataSource: localDataSource,
+    api: SyncOutboxClient(
+      baseUrl: 'http://test.local/api/v1',
+      readAccessToken: () async => null,
+      refreshSession: () async => false,
+    ),
+  );
+}
 
 // ── Fakes ───────────────────────────────────────────────────────────────────
 
@@ -185,6 +202,12 @@ class _FakeLocalDataSource implements ReservationsLocalDataSource {
 
   @override
   Future<void> setLastSyncAt(DateTime time) async {}
+
+  @override
+  Future<String?> getSyncCursor(String stream) async => null;
+
+  @override
+  Future<void> setSyncCursor(String stream, String cursor) async {}
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -218,6 +241,7 @@ void main() {
       final repo = ReservationsRepositoryImpl(
         apiClient: api,
         localDataSource: local,
+        syncCoordinator: _fakeSyncCoordinator(local),
       );
 
       final items = await repo.listReservations();
@@ -242,6 +266,7 @@ void main() {
       final repo = ReservationsRepositoryImpl(
         apiClient: api,
         localDataSource: local,
+        syncCoordinator: _fakeSyncCoordinator(local),
       );
 
       final items = await repo.listReservations();
@@ -256,6 +281,7 @@ void main() {
       final repo = ReservationsRepositoryImpl(
         apiClient: api,
         localDataSource: local,
+        syncCoordinator: _fakeSyncCoordinator(local),
       );
 
       expect(
@@ -273,6 +299,7 @@ void main() {
       final repo = ReservationsRepositoryImpl(
         apiClient: api,
         localDataSource: local,
+        syncCoordinator: _fakeSyncCoordinator(local),
       );
 
       await repo.listReservations();

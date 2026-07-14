@@ -1,11 +1,13 @@
 import 'package:http/http.dart' as http;
 
+import 'package:mobile/app/sync/sync_outbox_client.dart';
 import 'package:mobile/features/auth/infrastructure/token_storage.dart';
 import 'domain/repositories/reservations_repository.dart';
 import 'infrastructure/local/reservations_database.dart';
 import 'infrastructure/local/reservations_local_data_source.dart';
 import 'infrastructure/remote/reservations_api_client.dart';
 import 'infrastructure/repositories/reservations_repository_impl.dart';
+import 'infrastructure/sync/reservations_sync_coordinator.dart';
 import 'presentation/controllers/reservation_detail_controller.dart';
 import 'presentation/controllers/reservations_list_controller.dart';
 
@@ -22,6 +24,7 @@ class ReservationsModule {
     required String baseUrl,
     required TokenStorage tokenStorage,
     required Future<bool> Function() refreshSession,
+    required SyncOutboxClient outbox,
     http.Client? httpClient,
   }) {
     final database = ReservationsDatabase.instance;
@@ -37,9 +40,15 @@ class ReservationsModule {
       httpClient: httpClient,
     );
 
+    final syncCoordinator = ReservationsSyncCoordinator(
+      localDataSource: localDataSource,
+      api: outbox,
+    );
+
     final repository = ReservationsRepositoryImpl(
       apiClient: apiClient,
       localDataSource: localDataSource,
+      syncCoordinator: syncCoordinator,
     );
 
     final listController = ReservationsListController(

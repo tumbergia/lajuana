@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
@@ -8,6 +9,13 @@ class ReservationsDatabase {
 
   static final ReservationsDatabase instance = ReservationsDatabase._();
 
+  @visibleForTesting
+  factory ReservationsDatabase.forTesting(Database database) {
+    final db = ReservationsDatabase._();
+    db._database = database;
+    return db;
+  }
+
   Database? _database;
 
   Future<Database> get database async {
@@ -17,7 +25,7 @@ class ReservationsDatabase {
     final path = p.join(databasesPath, 'la_juana_reservations_v1.db');
     _database = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE reservations_list_cache (
@@ -41,6 +49,22 @@ class ReservationsDatabase {
             value TEXT NOT NULL
           );
         ''');
+        await db.execute('''
+          CREATE TABLE sync_cursors (
+            stream TEXT PRIMARY KEY,
+            cursor TEXT NOT NULL
+          );
+        ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS sync_cursors (
+              stream TEXT PRIMARY KEY,
+              cursor TEXT NOT NULL
+            );
+          ''');
+        }
       },
     );
     return _database!;

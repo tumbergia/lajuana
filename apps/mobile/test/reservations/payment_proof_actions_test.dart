@@ -24,6 +24,9 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   final ReservationDetail detail;
 
   @override
+  Future<void> syncNow() async {}
+
+  @override
   Future<ReservationDetail> getReservationById(String reservationId) async {
     return detail;
   }
@@ -223,6 +226,9 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
 
 /// Fake repository that always throws a permissions error.
 class _FakePermissionErrorRepository implements ReservationsRepository {
+  @override
+  Future<void> syncNow() async {}
+
   @override
   Future<ReservationDetail> getReservationById(String reservationId) async {
     throw Exception('Network error');
@@ -456,6 +462,9 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
 /// Fake repository that always throws a state conflict error.
 class _FakeConflictErrorRepository implements ReservationsRepository {
   @override
+  Future<void> syncNow() async {}
+
+  @override
   Future<ReservationDetail> getReservationById(String reservationId) async {
     throw Exception('Network error');
   }
@@ -687,6 +696,9 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
 
 /// Fake repository that always throws a network error.
 class _FakeNetworkErrorRepository implements ReservationsRepository {
+  @override
+  Future<void> syncNow() async {}
+
   @override
   Future<ReservationDetail> getReservationById(String reservationId) async {
     throw Exception('Network error');

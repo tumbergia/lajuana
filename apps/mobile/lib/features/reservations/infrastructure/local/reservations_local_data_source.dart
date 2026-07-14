@@ -87,6 +87,30 @@ class ReservationsLocalDataSource {
     await db.delete('reservations_list_cache');
     await db.delete('reservation_detail_cache');
     await db.delete('reservations_sync_meta');
+    await db.delete('sync_cursors');
+  }
+
+  /// Cursor del protocolo `/sync` para un stream dado (reservations,
+  /// participants, payment_proofs, o la marca `__bootstrap_done__`).
+  Future<String?> getSyncCursor(String stream) async {
+    final db = await _database.database;
+    final rows = await db.query(
+      'sync_cursors',
+      where: 'stream = ?',
+      whereArgs: [stream],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['cursor'] as String?;
+  }
+
+  Future<void> setSyncCursor(String stream, String cursor) async {
+    final db = await _database.database;
+    await db.insert(
+      'sync_cursors',
+      {'stream': stream, 'cursor': cursor},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<DateTime?> getLastSyncAt() async {

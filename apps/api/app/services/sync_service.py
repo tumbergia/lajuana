@@ -45,6 +45,7 @@ from app.services.config_service import ConfigService
 from app.services.mappers import (
     equine_to_response,
     experience_to_response,
+    reservation_to_response,
     saddle_to_response,
     user_to_response,
 )
@@ -282,6 +283,7 @@ class SyncService:
         self._experience_service = experience_service
         self._equine_service = equine_service
         self._saddle_service = saddle_service
+        self._reservation_service = reservation_service
 
         self.executor = SyncOperationExecutor(
             experience_handler=self._experience_handler,
@@ -291,11 +293,17 @@ class SyncService:
         )
 
     async def build_bootstrap(self, *, current_user: UserDocument) -> dict:
-        """Full initial sync snapshot — experiences, equines, etc."""
+        """Full initial sync snapshot — experiences, equines, reservas activas+recientes, etc."""
         can_read_config = Permission.CONFIG_READ in ROLE_PERMISSIONS[current_user.role]
         experiences = await self._experience_service.list()
         equines = await self._equine_service.list()
         saddles = await self._saddle_service.list() if self._saddle_service else []
+        reservations = (
+            await self._reservation_service.list_for_bootstrap(actor_role=current_user.role)
+            if self._reservation_service
+            else []
+        )
+        reservations_response = [await reservation_to_response(r) for r in reservations]
         cursors = await _latest_stream_cursors()
         if not can_read_config:
             cursors.pop("config", None)
@@ -315,6 +323,9 @@ class SyncService:
             ],
             "equines": [equine_to_response(item).model_dump(mode="json") for item in equines],
             "saddles": [saddle_to_response(item).model_dump(mode="json") for item in saddles],
+            # Nested participants/payment_proofs por reserva — coincide con lo que
+            # ReservationDetailDto.fromJson (mobile) espera para cachear offline.
+            "reservations": [item.model_dump(mode="json") for item in reservations_response],
             "cursors": cursors,
         }
 

@@ -209,6 +209,7 @@ class TestPaymentProofReject:
     def test_reject_empty_reason_rejected_by_schema(self) -> None:
         """Empty reason rejected by Pydantic schema validation (min_length=1)."""
         from pydantic import ValidationError
+
         from app.schemas.payment_proof import PaymentProofRejectSchema
 
         with pytest.raises(ValidationError):
@@ -248,5 +249,315 @@ class TestPaymentProofReject:
                     actor_role=UserRole.ADMIN,
                 )
             assert exc.value.status_code == 409
+
+        asyncio.run(run())
+
+
+class _CapturingSyncChangeDocument:
+    """Fake de SyncChangeDocument — captura kwargs sin tocar Mongo."""
+
+    captured: list[dict] = []
+
+    def __init__(self, **kwargs: object) -> None:
+        _CapturingSyncChangeDocument.captured.append(kwargs)
+
+    async def insert(self) -> _CapturingSyncChangeDocument:
+        return self
+
+
+@pytest.fixture(autouse=True)
+def _capture_sync_changes(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
+    from app.services import sync_change_recorder as rec
+
+    _CapturingSyncChangeDocument.captured = []
+    monkeypatch.setattr(rec, "SyncChangeDocument", _CapturingSyncChangeDocument)
+
+    async def _fake_payload(entity_type: str, doc: object) -> dict:
+        return {"entity_type": entity_type, "id": getattr(doc, "id", None)}
+
+    monkeypatch.setattr(rec, "_build_payload", _fake_payload)
+    return _CapturingSyncChangeDocument.captured
+
+
+class TestPaymentProofSyncEmission:
+    """record_change() debe emitirse en cada transición de pago."""
+
+    def test_verify_payment_emits_proof_and_reservation(
+        self, monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+    ) -> None:
+        proof = _proof()
+        reservation = _reservation()
+
+        async def run() -> None:
+            async def _mock_proof_get(_: str) -> object:
+                return proof
+
+            async def _mock_res_get(_: str) -> object:
+                return reservation
+
+            async def _save() -> None:
+                pass
+
+            proof.save = _save  # type: ignore[assignment]
+            reservation.save = _save  # type: ignore[assignment]
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.PaymentProofDocument.get", _mock_proof_get
+            )
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.ReservationDocument.get", _mock_res_get
+            )
+
+            from app.schemas.payment_proof import PaymentProofVerifySchema
+            from app.services.payment_proof_service import PaymentProofService
+
+            svc = PaymentProofService()
+            await svc.verify_payment(
+                payment_proof_id="660000000000000000000501",
+                payload=PaymentProofVerifySchema(confirmation_token="VERIFY_PAYMENT"),
+                actor_id="660000000000000000000001",
+                actor_role=UserRole.ADMIN,
+            )
+
+            entity_types = [c["entity_type"] for c in _capture_sync_changes]
+            assert entity_types == ["payment_proof", "reservation"]
+
+        asyncio.run(run())
+
+    def test_approve_payment_emits_proof_and_reservation_twice(
+        self, monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+    ) -> None:
+        """approve_payment guarda la reserva dos veces (sync de pago + status
+        PAYMENT_RECEIVED) — la reserva debe emitirse en ambos saves."""
+        proof = _proof()
+        reservation = _reservation()
+
+        async def run() -> None:
+            async def _mock_proof_get(_: str) -> object:
+                return proof
+
+            async def _mock_res_get(_: str) -> object:
+                return reservation
+
+            async def _save() -> None:
+                pass
+
+            async def _create_audit_log_noop(*_args: object, **_kwargs: object) -> None:
+                pass
+
+            proof.save = _save  # type: ignore[assignment]
+            reservation.save = _save  # type: ignore[assignment]
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.PaymentProofDocument.get", _mock_proof_get
+            )
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.ReservationDocument.get", _mock_res_get
+            )
+
+            from app.schemas.payment_proof import PaymentProofApproveSchema
+            from app.services.payment_proof_service import PaymentProofService
+
+            svc = PaymentProofService()
+            monkeypatch.setattr(svc, "_create_audit_log", _create_audit_log_noop)
+            await svc.approve_payment(
+                payment_proof_id="660000000000000000000501",
+                payload=PaymentProofApproveSchema(confirmation_token="APPROVE_PAYMENT"),
+                actor_id="660000000000000000000001",
+                actor_role=UserRole.ADMIN,
+            )
+
+            entity_types = [c["entity_type"] for c in _capture_sync_changes]
+            # 1er save (sync proof+reservation) + 2do save (status PAYMENT_RECEIVED).
+            assert entity_types == ["payment_proof", "reservation", "reservation"]
+
+        asyncio.run(run())
+
+    def test_approve_payment_without_proof_emits_reservation_only(
+        self, monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+    ) -> None:
+        reservation = _reservation(status=ReservationStatus.PENDING_PAYMENT)
+
+        async def run() -> None:
+            async def _mock_res_get(_: str) -> object:
+                return reservation
+
+            async def _save() -> None:
+                pass
+
+            async def _create_audit_log_noop(*_args: object, **_kwargs: object) -> None:
+                pass
+
+            reservation.save = _save  # type: ignore[assignment]
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.ReservationDocument.get", _mock_res_get
+            )
+
+            from app.services.payment_proof_service import PaymentProofService
+
+            svc = PaymentProofService()
+            monkeypatch.setattr(svc, "_create_audit_log", _create_audit_log_noop)
+            await svc.approve_payment_without_proof(
+                reservation_id="660000000000000000000001",
+                actor_id="660000000000000000000001",
+                actor_role=UserRole.ADMIN,
+            )
+
+            entity_types = [c["entity_type"] for c in _capture_sync_changes]
+            assert entity_types == ["reservation"]
+
+        asyncio.run(run())
+
+    def test_reject_payment_emits_proof_and_reservation(
+        self, monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+    ) -> None:
+        proof = _proof()
+        reservation = _reservation()
+
+        async def run() -> None:
+            async def _mock_proof_get(_: str) -> object:
+                return proof
+
+            async def _mock_res_get(_: str) -> object:
+                return reservation
+
+            async def _save() -> None:
+                pass
+
+            proof.save = _save  # type: ignore[assignment]
+            reservation.save = _save  # type: ignore[assignment]
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.PaymentProofDocument.get", _mock_proof_get
+            )
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.ReservationDocument.get", _mock_res_get
+            )
+
+            from app.schemas.payment_proof import PaymentProofRejectSchema
+            from app.services.payment_proof_service import PaymentProofService
+
+            svc = PaymentProofService()
+            await svc.reject_payment(
+                payment_proof_id="660000000000000000000501",
+                payload=PaymentProofRejectSchema(
+                    confirmation_token="REJECT_PAYMENT", reason="Duplicado"
+                ),
+                actor_id="660000000000000000000001",
+                actor_role=UserRole.ADMIN,
+            )
+
+            entity_types = [c["entity_type"] for c in _capture_sync_changes]
+            assert entity_types == ["payment_proof", "reservation"]
+
+        asyncio.run(run())
+
+    def test_unverify_payment_emits_proof_and_reservation(
+        self, monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+    ) -> None:
+        proof = _proof(status=PaymentStatus.VERIFIED)
+        reservation = _reservation()
+
+        async def run() -> None:
+            async def _mock_proof_get(_: str) -> object:
+                return proof
+
+            async def _mock_res_get(_: str) -> object:
+                return reservation
+
+            async def _save() -> None:
+                pass
+
+            proof.save = _save  # type: ignore[assignment]
+            reservation.save = _save  # type: ignore[assignment]
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.PaymentProofDocument.get", _mock_proof_get
+            )
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.ReservationDocument.get", _mock_res_get
+            )
+
+            from app.schemas.payment_proof import PaymentProofUnverifySchema
+            from app.services.payment_proof_service import PaymentProofService
+
+            svc = PaymentProofService()
+            await svc.unverify_payment(
+                payment_proof_id="660000000000000000000501",
+                payload=PaymentProofUnverifySchema(confirmation_token="UNVERIFY_PAYMENT"),
+                actor_id="660000000000000000000001",
+                actor_role=UserRole.ADMIN,
+            )
+
+            entity_types = [c["entity_type"] for c in _capture_sync_changes]
+            assert entity_types == ["payment_proof", "reservation"]
+
+        asyncio.run(run())
+
+    def test_unreject_payment_emits_proof_and_reservation(
+        self, monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+    ) -> None:
+        proof = _proof(status=PaymentStatus.REJECTED)
+        reservation = _reservation()
+
+        async def run() -> None:
+            async def _mock_proof_get(_: str) -> object:
+                return proof
+
+            async def _mock_res_get(_: str) -> object:
+                return reservation
+
+            async def _save() -> None:
+                pass
+
+            proof.save = _save  # type: ignore[assignment]
+            reservation.save = _save  # type: ignore[assignment]
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.PaymentProofDocument.get", _mock_proof_get
+            )
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.ReservationDocument.get", _mock_res_get
+            )
+
+            from app.schemas.payment_proof import PaymentProofUnrejectSchema
+            from app.services.payment_proof_service import PaymentProofService
+
+            svc = PaymentProofService()
+            await svc.unreject_payment(
+                payment_proof_id="660000000000000000000501",
+                payload=PaymentProofUnrejectSchema(confirmation_token="UNREJECT_PAYMENT"),
+                actor_id="660000000000000000000001",
+                actor_role=UserRole.ADMIN,
+            )
+
+            entity_types = [c["entity_type"] for c in _capture_sync_changes]
+            assert entity_types == ["payment_proof", "reservation"]
+
+        asyncio.run(run())
+
+    def test_update_emits_payment_proof_only(
+        self, monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+    ) -> None:
+        proof = _proof()
+
+        async def run() -> None:
+            async def _mock_proof_get(_: str) -> object:
+                return proof
+
+            async def _save() -> None:
+                pass
+
+            proof.save = _save  # type: ignore[assignment]
+            monkeypatch.setattr(
+                "app.services.payment_proof_service.PaymentProofDocument.get", _mock_proof_get
+            )
+
+            from app.schemas.payment_proof import PaymentProofUpdateSchema
+            from app.services.payment_proof_service import PaymentProofService
+
+            svc = PaymentProofService()
+            await svc.update(
+                "660000000000000000000501",
+                PaymentProofUpdateSchema(filename="renamed.pdf"),
+            )
+
+            entity_types = [c["entity_type"] for c in _capture_sync_changes]
+            assert entity_types == ["payment_proof"]
 
         asyncio.run(run())

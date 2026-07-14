@@ -125,13 +125,14 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
   final catalogsModule = CatalogsModule(catalogsRepository);
 
   // ── Shared offline outbox ──
+  final syncOutboxClient = SyncOutboxClient(
+    baseUrl: apiBaseUrl,
+    readAccessToken: readAccessToken,
+    refreshSession: refreshSession,
+  );
   final outbox = OutboxRepository(
     database: SyncDatabase.instance,
-    api: SyncOutboxClient(
-      baseUrl: apiBaseUrl,
-      readAccessToken: readAccessToken,
-      refreshSession: refreshSession,
-    ),
+    api: syncOutboxClient,
   );
 
   // ── Core modules (reservations, saddles, assignments) ──
@@ -141,6 +142,7 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     baseUrl: apiBaseUrl,
     tokenStorage: tokenStorage,
     refreshSession: refreshSession,
+    outbox: syncOutboxClient,
   );
 
   final saddlesModule = SaddlesModule.create(

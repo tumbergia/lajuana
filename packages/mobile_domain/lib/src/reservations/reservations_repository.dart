@@ -11,6 +11,11 @@ import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 
 abstract class ReservationsRepository {
+  /// Bootstrap-si-hace-falta + pull incremental de reservas/participantes/
+  /// comprobantes, para que el modo offline tenga toda la información sin
+  /// depender de haber abierto cada pantalla estando online.
+  Future<void> syncNow();
+
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,

@@ -22,6 +22,9 @@ class _FakeSuccessRepository implements ReservationsRepository {
   _FakeSuccessRepository(this.detail);
 
   @override
+  Future<void> syncNow() async {}
+
+  @override
   Future<ReservationDetail> getReservationById(String reservationId) async {
     return detail;
   }
@@ -221,6 +224,9 @@ class _FakeSuccessRepository implements ReservationsRepository {
 
 /// A fake repository that always throws.
 class _FakeErrorRepository implements ReservationsRepository {
+  @override
+  Future<void> syncNow() async {}
+
   @override
   Future<ReservationDetail> getReservationById(String reservationId) async {
     throw Exception('Network error');
@@ -424,6 +430,9 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   final ReservationDetail cachedDetail;
 
   _FakeOfflineWithCacheRepository(this.cachedDetail);
+
+  @override
+  Future<void> syncNow() async {}
 
   @override
   Future<ReservationDetail> getReservationById(String reservationId) async {

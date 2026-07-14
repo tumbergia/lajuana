@@ -15,16 +15,23 @@ import 'package:mobile/features/reservations/infrastructure/local/reservations_l
 import 'package:mobile/features/reservations/infrastructure/mappers/reservation_mapper.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservation_dtos.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservations_api_client.dart';
+import 'package:mobile/features/reservations/infrastructure/sync/reservations_sync_coordinator.dart';
 
 class ReservationsRepositoryImpl implements ReservationsRepository {
   ReservationsRepositoryImpl({
     required ReservationsApiClient apiClient,
     required ReservationsLocalDataSource localDataSource,
+    required ReservationsSyncCoordinator syncCoordinator,
   })  : _apiClient = apiClient,
-        _localDataSource = localDataSource;
+        _localDataSource = localDataSource,
+        _syncCoordinator = syncCoordinator;
 
   final ReservationsApiClient _apiClient;
   final ReservationsLocalDataSource _localDataSource;
+  final ReservationsSyncCoordinator _syncCoordinator;
+
+  @override
+  Future<void> syncNow() => _syncCoordinator.syncNow();
 
   @override
   Future<List<ReservationListItem>> listReservations({

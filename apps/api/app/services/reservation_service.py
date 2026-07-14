@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Servicio de negocio para el agregado Reservation."""
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 from beanie import PydanticObjectId
 from pymongo.errors import DuplicateKeyError
@@ -28,6 +28,7 @@ from app.documents import (
 from app.services.config_service import ConfigService
 from app.services.notification_service import NotificationService
 from app.services.participant_form_link_service import ParticipantFormLinkService
+from app.services.sync_change_recorder import record_change
 
 ACTIVE_RESERVATION_STATUSES = {
     ReservationStatus.QUOTED,
@@ -224,6 +225,7 @@ class ReservationService:
         await self._sync_day_lock_fields(doc)
         try:
             await doc.insert()
+            await record_change(entity_type="reservation", doc=doc)
         except DuplicateKeyError as exc:
             details = exc.details if isinstance(exc.details, dict) else {}
             key_pattern = details.get("keyPattern", {})
@@ -281,6 +283,41 @@ class ReservationService:
             query["status"] = ReservationStatus.CONFIRMED
             return await ReservationDocument.find(query).skip(skip).limit(limit).to_list()
         return await ReservationDocument.find(query).skip(skip).limit(limit).to_list()
+
+    async def list_for_bootstrap(
+        self,
+        actor_role: UserRole,
+        recent_days: int = 30,
+        limit: int = 200,
+    ) -> list[ReservationDocument]:
+        """Snapshot inicial para `/sync/bootstrap`: reservas activas + las
+        canceladas/completadas/expiradas recientes (no todo el historial)."""
+        cutoff = datetime.now(UTC) - timedelta(days=recent_days)
+        query: dict[str, object] = {
+            "deleted_at": None,
+            "$or": [
+                {"status": {"$in": [s.value for s in ACTIVE_RESERVATION_STATUSES]}},
+                {
+                    "status": {
+                        "$in": [
+                            ReservationStatus.CANCELLED.value,
+                            ReservationStatus.COMPLETED.value,
+                            ReservationStatus.EXPIRED.value,
+                        ]
+                    },
+                    "updated_at": {"$gte": cutoff},
+                },
+            ],
+        }
+        if actor_role == UserRole.GUIDE:
+            # Un guía solo ve reservas confirmadas, igual que en list().
+            query = {"deleted_at": None, "status": ReservationStatus.CONFIRMED}
+        return (
+            await ReservationDocument.find(query)
+            .sort("-updated_at")
+            .limit(limit)
+            .to_list()
+        )
 
     async def count(
         self,
@@ -353,6 +390,7 @@ class ReservationService:
             setattr(doc, field, value)
         doc.updated_by = actor_id
         await doc.save()
+        await record_change(entity_type="reservation", doc=doc)
         return doc
 
     async def transition_status(
@@ -446,6 +484,7 @@ class ReservationService:
             f"{settings.participant_form_base_url}/?token={raw_token}"
         )
         await reservation.save()
+        await record_change(entity_type="reservation", doc=reservation)
 
         try:
             experience = await ExperienceDocument.get(reservation.experience_id)
@@ -494,6 +533,7 @@ class ReservationService:
         if target_status == ReservationStatus.PAYMENT_RECEIVED:
             reservation.payment_status = PaymentStatus.RECEIVED
         await reservation.save()
+        await record_change(entity_type="reservation", doc=reservation)
 
         if target_status == ReservationStatus.PAYMENT_RECEIVED:
             try:
@@ -529,6 +569,7 @@ class ReservationService:
         reservation.cancelled_at = datetime.now(UTC)
         reservation.updated_by = actor_id
         await reservation.save()
+        await record_change(entity_type="reservation", doc=reservation)
 
         # Send WhatsApp cancellation notification (best-effort via outbox)
         if notify_client:
@@ -554,6 +595,7 @@ class ReservationService:
         doc = await self.get(reservation_id)
         doc.deleted_at = datetime.now(UTC)
         await doc.save()
+        await record_change(entity_type="reservation", doc=doc, change_type="delete")
         return doc
 
     async def restore(self, reservation_id: str) -> ReservationDocument:
@@ -561,6 +603,7 @@ class ReservationService:
         doc = await self.get(reservation_id)
         doc.deleted_at = None
         await doc.save()
+        await record_change(entity_type="reservation", doc=doc)
         return doc
 
     async def validate_participant_forms_completed(

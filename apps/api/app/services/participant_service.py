@@ -11,6 +11,7 @@ from app.schemas.participant import (
     ParticipantUpdateSchema,
 )
 from app.services.participant_form_link_service import ParticipantFormLinkService
+from app.services.sync_change_recorder import record_change
 
 REQUIRED_FIELDS_FOR_OPERATIONAL_COMPLETION = (
     "first_name",
@@ -95,6 +96,7 @@ class ParticipantService:
         doc = ParticipantDocument(reservation_id=reservation.id, **payload.model_dump())
         doc.is_completed = self._is_completed(doc)
         await doc.insert()
+        await record_change(entity_type="participant", doc=doc)
         reservation.participant_ids.append(doc.id)
         await reservation.save()
         await self._maybe_audit_participant_registered(doc, was_completed=False)
@@ -163,6 +165,7 @@ class ParticipantService:
         )
         doc.is_completed = self._is_completed(doc)
         await doc.insert()
+        await record_change(entity_type="participant", doc=doc)
 
         if reservation is not None:
             reservation.participant_ids.append(doc.id)
@@ -192,6 +195,7 @@ class ParticipantService:
             setattr(doc, field, value)
         doc.is_completed = self._is_completed(doc)
         await doc.save()
+        await record_change(entity_type="participant", doc=doc)
         await self._maybe_audit_participant_registered(doc, was_completed=was_completed)
         return doc
 

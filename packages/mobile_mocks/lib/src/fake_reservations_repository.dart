@@ -67,6 +67,9 @@ class FakeReservationsRepository implements ReservationsRepository {
   }
 
   @override
+  Future<void> syncNow() async {}
+
+  @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,

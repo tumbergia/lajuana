@@ -25,6 +25,7 @@ from app.schemas.payment_proof import (
     PaymentProofVerifySchema,
 )
 from app.services.storage import get_storage_adapter
+from app.services.sync_change_recorder import record_change
 
 ALLOWED_CONTENT_TYPES = {
     "image/jpeg",
@@ -96,6 +97,7 @@ class PaymentProofService:
         reservation.payment_proof_ids.append(doc.id)
         reservation.payment_status = PaymentStatus.RECEIVED
         await reservation.save()
+        await self._record_proof_and_reservation_change(doc=doc, reservation=reservation)
 
         from app.services.reservation_audit_helpers import write_reservation_audit_log
 
@@ -150,6 +152,7 @@ class PaymentProofService:
             if field in updates:
                 setattr(doc, field, updates[field])
         await doc.save()
+        await record_change(entity_type="payment_proof", doc=doc)
         return doc
 
     async def verify_payment(
@@ -233,6 +236,7 @@ class PaymentProofService:
         reservation.status = ReservationStatus.PAYMENT_RECEIVED
         reservation.updated_by = actor_id
         await reservation.save()
+        await record_change(entity_type="reservation", doc=reservation)
 
         # Audit log — best-effort (non-critical, won't roll back on failure)
         await self._create_audit_log(
@@ -314,6 +318,7 @@ class PaymentProofService:
         reservation.status = ReservationStatus.PAYMENT_RECEIVED
         reservation.updated_by = actor_id
         await reservation.save()
+        await record_change(entity_type="reservation", doc=reservation)
 
         await self._create_audit_log(
             reservation_id=reservation.id,
@@ -583,6 +588,17 @@ class PaymentProofService:
                 reservation_id,
             )
 
+    async def _record_proof_and_reservation_change(
+        self,
+        *,
+        doc: PaymentProofDocument,
+        reservation: ReservationDocument,
+    ) -> None:
+        """Emite el cambio del comprobante y el de la reserva (su
+        payment_status siempre cambia junto con el del comprobante)."""
+        await record_change(entity_type="payment_proof", doc=doc)
+        await record_change(entity_type="reservation", doc=reservation)
+
     async def _sync_proof_and_reservation_payment_status(
         self,
         *,
@@ -601,6 +617,7 @@ class PaymentProofService:
         await doc.save()
         try:
             await reservation.save()
+            await self._record_proof_and_reservation_change(doc=doc, reservation=reservation)
         except Exception as exc:
             doc.status = previous_doc_status
             reservation.payment_status = previous_reservation_payment_status
@@ -729,6 +746,7 @@ class PaymentProofService:
         reservation.payment_proof_ids.append(doc.id)
         reservation.payment_status = PaymentStatus.RECEIVED
         await reservation.save()
+        await self._record_proof_and_reservation_change(doc=doc, reservation=reservation)
 
         proof_id = str(doc.id)
         task = asyncio.create_task(self._background_download(proof_id))

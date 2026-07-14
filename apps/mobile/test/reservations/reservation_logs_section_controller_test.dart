@@ -20,6 +20,9 @@ class _FakeTimelineRepository implements ReservationsRepository {
   int deleteCount = 0;
 
   @override
+  Future<void> syncNow() async {}
+
+  @override
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
     String reservationId,
   ) async {

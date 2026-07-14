@@ -15,6 +15,9 @@ import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 /// [ReservationsModule] no está inyectado.
 class FallbackRepository implements ReservationsRepository {
   @override
+  Future<void> syncNow() async {}
+
+  @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
     String? query,
