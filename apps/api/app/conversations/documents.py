@@ -15,6 +15,7 @@ class WhatsAppInboundEventDocument(Document):
     body: str | None = None
     media_id: str | None = None
     caption: str | None = None
+    transcription: str | None = None
     provider_timestamp: datetime | None = None
     received_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     status: str = "received"

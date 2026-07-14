@@ -140,12 +140,18 @@ class Container:
             saddle_service=self._services["saddle_service"],
         )
 
+        # ── Analytics service (stateless, no dependencies) ──
+        from app.services.analytics_service import AnalyticsService
+
+        self._services["analytics_service"] = AnalyticsService()
+
         # ── WhatsApp ingestion (depends on resolver + buffer) ──
         from app.channels.whatsapp.ingestion_service import WhatsAppIngestionService
 
         self._services["whatsapp_ingestion_service"] = WhatsAppIngestionService(
             resolver=self._services["conversation_resolver"],
             buffer_service=self._services["message_buffer_service"],
+            outbound_service=self._services["whatsapp_outbound_service"],
         )
 
     # ------------------------------------------------------------------
@@ -255,6 +261,10 @@ class Container:
     @property
     def conversation_resolver(self) -> Any:
         return self._services["conversation_resolver"]
+
+    @property
+    def analytics_service(self) -> Any:
+        return self._services["analytics_service"]
 
     @property
     def message_buffer_service(self) -> Any:

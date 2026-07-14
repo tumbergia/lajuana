@@ -29,6 +29,7 @@ class _EventLike(Protocol):
     body: str | None
     media_id: str | None
     message_type: str
+    transcription: str | None = None
 
 
 def combine_messages(events: list[_EventLike]) -> str:
@@ -36,6 +37,8 @@ def combine_messages(events: list[_EventLike]) -> str:
     for event in events:
         if event.body:
             parts.append(event.body.strip())
+        elif event.message_type == "audio" and event.transcription:
+            parts.append(event.transcription.strip())
         elif event.media_id and event.message_type == "audio":
             parts.append("[Audio recibido pendiente de transcripción]")
         elif event.media_id:
@@ -312,7 +315,21 @@ class ConversationTurnWorker:
             events = [events_dict[mid] for mid in reloaded.message_ids if mid in events_dict]
 
             events.sort(key=lambda e: e.received_at or datetime(2020, 1, 1, tzinfo=UTC))
+
+            types = [f"{e.message_type}(transcription={bool(e.transcription) if hasattr(e,'transcription') else 'N/A'})" for e in events]
+            logger.info(
+                "[conversation_id=%s] Processing buffer | events=%s | count=%d",
+                conversation_id,
+                ", ".join(types),
+                len(events),
+            )
+
             combined_input = combine_messages(events)
+            logger.info(
+                "[conversation_id=%s] combined_input=%.300s",
+                conversation_id,
+                combined_input,
+            )
             trace_id = str(uuid4())
 
             turn = ConversationTurnDocument(
@@ -390,6 +407,11 @@ class ConversationTurnWorker:
                 )
                 return True
 
+            logger.info(
+                "[conversation_id=%s] Calling orchestrator | input=%.200s",
+                conversation_id,
+                combined_input,
+            )
             response = await self._orchestrator.ask(
                 AskRequest(
                     message=combined_input,

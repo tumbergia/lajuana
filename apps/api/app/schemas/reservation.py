@@ -30,6 +30,7 @@ class ReservationUpdateSchema(BaseModel):
 
 class ReservationConfirmSchema(BaseModel):
     notes: str | None = None
+    start_time: str | None = None
 
 
 class ReservationApprovePaymentSchema(BaseModel):

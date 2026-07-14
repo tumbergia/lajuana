@@ -405,6 +405,7 @@ class NotificationService:
         reservation: ReservationDocument,
         experience_name: str,
         scheduled_date: str,
+        start_time: str | None = None,
     ) -> NotificationOutboxDocument | None:
         if not reservation.holder_phone:
             return None

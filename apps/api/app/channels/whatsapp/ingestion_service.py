@@ -1,11 +1,22 @@
 from datetime import UTC, datetime
+from uuid import uuid4
 
+from app.ai.assistant.orchestrator import AssistantOrchestrator
+from app.ai.language.messages import t
 from app.channels.whatsapp.normalizer import build_conversation_id
-from app.channels.whatsapp.parser import parse_whatsapp_payload
+from app.channels.whatsapp.parser import ParsedMessage, parse_whatsapp_payload
+from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
 from app.conversations.documents import WhatsAppInboundEventDocument
 from app.conversations.services.conversation_resolver import ConversationResolver
 from app.conversations.services.message_buffer_service import MessageBufferService
 from app.core.logging import logger
+from app.documents.conversation_session_document import ConversationSessionDocument
+from app.documents.conversation_turn_document import ConversationTurnDocument
+from app.schemas.ask import AskRequest
+from app.services.audio_transcription_service import download_and_transcribe
+
+
+_SUPPORTED_DOCUMENT_MIMES = {"application/pdf"}
 
 
 class WhatsAppIngestionService:
@@ -13,9 +24,58 @@ class WhatsAppIngestionService:
         self,
         resolver: ConversationResolver,
         buffer_service: MessageBufferService,
+        outbound_service: WhatsAppOutboundService | None = None,
     ) -> None:
         self._resolver = resolver
         self._buffer_service = buffer_service
+        self._orchestrator = AssistantOrchestrator()
+        self._outbound_service = outbound_service
+
+    async def _get_conversation_language(self, conversation_id: str) -> str:
+        try:
+            session = await ConversationSessionDocument.find_one(
+                {"conversation_key": conversation_id, "status": "active"},
+            )
+            if session and session.language:
+                return session.language
+        except Exception:
+            pass
+        return "es"
+
+    async def _reject_and_log(
+        self,
+        *,
+        parsed: ParsedMessage,
+        conversation_id: str,
+        message_key: str,
+        log_type: str,
+    ) -> None:
+        if not self._outbound_service:
+            return
+        lang = await self._get_conversation_language(conversation_id)
+        text = t(message_key, lang)
+        turn = ConversationTurnDocument(
+            trace_id=str(uuid4()),
+            channel="whatsapp",
+            from_phone=parsed.normalized_phone,
+            user_message="",
+            conversation_id=conversation_id,
+            status="responded",
+            response_text=text,
+            responded_at=datetime.now(UTC),
+        )
+        await turn.insert()
+        await self._outbound_service.send(
+            turn=turn,
+            to_phone=parsed.normalized_phone,
+            text=text,
+        )
+        logger.info(
+            "[conversation_id=%s] Rejected %s | wa_message_id=%s",
+            conversation_id,
+            log_type,
+            parsed.wa_message_id,
+        )
 
     async def ingest(self, payload: dict) -> int:
         parsed_messages = parse_whatsapp_payload(payload)
@@ -70,18 +130,115 @@ class WhatsAppIngestionService:
                 continue
 
             body = parsed.body or ""
+            transcription = None
             if parsed.message_type == "audio":
-                body = "[Audio recibido pendiente de transcripción]"
+                try:
+                    transcription = await download_and_transcribe(parsed.media_id)
+                    body = transcription
+                    logger.info(
+                        "[ingestion] Audio transcribed | wa_message_id=%s transcription=%.200s",
+                        parsed.wa_message_id,
+                        transcription,
+                    )
+                except Exception as exc:
+                    logger.error(
+                        "[ingestion] Audio transcription failed | wa_message_id=%s error=%s",
+                        parsed.wa_message_id,
+                        exc,
+                        exc_info=True,
+                    )
+                    body = "[Audio no pudo ser transcrito]"
             elif parsed.media_id and parsed.message_type != "text":
                 body = parsed.caption or f"[{parsed.message_type} recibido]"
 
-            await self._buffer_service.add_message(
-                conversation_id=conversation_id,
-                normalized_phone=parsed.normalized_phone,
-                channel="whatsapp",
-                message_id=parsed.wa_message_id,
-                body=body,
-            )
+            if transcription:
+                await collection.update_one(
+                    {"wa_message_id": parsed.wa_message_id},
+                    {"$set": {"transcription": transcription}},
+                )
+
+            # ── Unsupported message types (sticker, video, location, etc.) ──
+            if parsed.message_type == "unsupported":
+                await self._reject_and_log(
+                    parsed=parsed,
+                    conversation_id=conversation_id,
+                    message_key="unsupported_file_type",
+                    log_type=f"unsupported type (raw_type={parsed.raw_payload.get('type', 'unknown')})",
+                )
+                ingested_count += 1
+                continue
+
+            # ── Non-PDF documents (Word, Excel, etc.) ──
+            if parsed.message_type == "document":
+                doc_info = (parsed.raw_payload or {}).get("document") or {}
+                doc_mime = (doc_info.get("mime_type") or "").lower()
+                if doc_mime and doc_mime not in _SUPPORTED_DOCUMENT_MIMES:
+                    await self._reject_and_log(
+                        parsed=parsed,
+                        conversation_id=conversation_id,
+                        message_key="unsupported_document_type",
+                        log_type=f"unsupported document mime={doc_mime}",
+                    )
+                    ingested_count += 1
+                    continue
+
+            # Audio: process immediately, skip buffer to avoid double-response
+            if parsed.message_type == "audio" and body and self._outbound_service:
+                try:
+                    trace_id = str(uuid4())
+                    turn = ConversationTurnDocument(
+                        trace_id=trace_id,
+                        channel="whatsapp",
+                        from_phone=parsed.normalized_phone,
+                        user_message=body,
+                        conversation_id=conversation_id,
+                        status="processing",
+                        input_message_ids=[parsed.wa_message_id],
+                    )
+                    await turn.insert()
+
+                    response = await self._orchestrator.ask(
+                        AskRequest(
+                            message=body,
+                            channel="whatsapp",
+                            from_phone=parsed.normalized_phone,
+                            conversation_id=conversation_id,
+                            trace_id=trace_id,
+                            conversation_turn_id=str(turn.id),
+                        )
+                    )
+
+                    turn.status = "responded"
+                    turn.response_text = response.response
+                    turn.responded_at = datetime.now(UTC)
+                    await turn.save()
+
+                    await self._outbound_service.send(
+                        turn=turn,
+                        to_phone=parsed.normalized_phone,
+                        text=response.response,
+                    )
+
+                    logger.info(
+                        "[conversation_id=%s] Audio processed directly | turn=%s",
+                        conversation_id,
+                        turn.id,
+                    )
+                except Exception as exc:
+                    logger.error(
+                        "[conversation_id=%s] Direct audio processing failed | error=%s",
+                        conversation_id,
+                        exc,
+                        exc_info=True,
+                    )
+            else:
+                await self._buffer_service.add_message(
+                    conversation_id=conversation_id,
+                    normalized_phone=parsed.normalized_phone,
+                    channel="whatsapp",
+                    message_id=parsed.wa_message_id,
+                    body=body,
+                )
 
             ingested_count += 1
 

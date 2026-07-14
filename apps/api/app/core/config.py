@@ -52,6 +52,10 @@ class Settings(BaseSettings):
 
     assistant_min_plan_confidence: float = 0.55
 
+    whisper_model_size: str = "base"
+    whisper_device: str = "cpu"
+    whisper_compute_type: str = "int8"
+
     whatsapp_verify_token: str = "change-me"
     whatsapp_app_secret: str = ""
     whatsapp_access_token: str = ""

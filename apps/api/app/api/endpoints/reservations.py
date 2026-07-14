@@ -310,14 +310,18 @@ async def update_reservation(
 )
 async def confirm_reservation(
     reservation_id: str,
-    _: ReservationConfirmSchema,
+    payload: ReservationConfirmSchema,
     current_user: Annotated[
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_CONFIRM)),
     ],
     reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
-    doc = await reservation_service.confirm_reservation(reservation_id, actor_id=current_user.id)
+    doc = await reservation_service.confirm_reservation(
+        reservation_id,
+        actor_id=current_user.id,
+        start_time=payload.start_time,
+    )
     return await reservation_to_response(doc)
 
 

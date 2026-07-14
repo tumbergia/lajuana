@@ -203,6 +203,24 @@ class AssistantOrchestrator:
             if phone and "holder_phone" not in session.slot_values:
                 session.slot_values["holder_phone"] = phone
 
+        # Auto-clear stale pending tools (30min timeout)
+        _pending_ts = session.slot_values.get("_pending_tool_timestamp")
+        if _pending_ts:
+            try:
+                from datetime import timedelta
+                if isinstance(_pending_ts, str):
+                    _pending_ts = datetime.fromisoformat(_pending_ts)
+                if (datetime.now(UTC) - _pending_ts) > timedelta(minutes=30):
+                    session.slot_values.pop("_pending_tool_name", None)
+                    session.slot_values.pop("_pending_tool_args", None)
+                    session.slot_values.pop("_pending_tool_timestamp", None)
+                    logger.info(
+                        "[conversation_id=%s] Cleared stale pending tool (30min timeout)",
+                        conversation_id,
+                    )
+            except Exception:
+                pass
+
         # Handle pending tool confirmations
         pending_tool = session.slot_values.get("_pending_tool_name")
         if pending_tool and self._is_confirmation(request.message):
@@ -217,6 +235,7 @@ class AssistantOrchestrator:
             # User cancelled, clear pending tool
             session.slot_values.pop("_pending_tool_name", None)
             session.slot_values.pop("_pending_tool_args", None)
+            session.slot_values.pop("_pending_tool_timestamp", None)
             session.last_intent = "confirmation_cancelled"
             session.turn_count += 1
             await session.save()
@@ -445,6 +464,7 @@ class AssistantOrchestrator:
             confirm_msg = t("tool_confirmation", session.language, tool_name=plan.tool_name or "")
             session.slot_values["_pending_tool_name"] = plan.tool_name
             session.slot_values["_pending_tool_args"] = plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
+            session.slot_values["_pending_tool_timestamp"] = datetime.now(UTC).isoformat()
             session.last_intent = "pending_confirmation"
             session.last_trace_id = trace_id
             session.turn_count += 1
@@ -595,15 +615,27 @@ class AssistantOrchestrator:
 
     @staticmethod
     def _is_confirmation(message: str) -> bool:
-        """Detecta si el mensaje es una confirmación afirmativa."""
         msg_lower = message.lower().strip()
-        return msg_lower in CONFIRM_WORDS or any(word in msg_lower for word in CONFIRM_WORDS)
+        if msg_lower in CONFIRM_WORDS:
+            return True
+        for phrase in CONFIRM_WORDS:
+            words = phrase.split()
+            pattern = r'\b' + r'\s+'.join(re.escape(w) for w in words) + r'\b'
+            if re.search(pattern, msg_lower):
+                return True
+        return False
 
     @staticmethod
     def _is_cancellation(message: str) -> bool:
-        """Detecta si el mensaje es una cancelación."""
         msg_lower = message.lower().strip()
-        return msg_lower in CANCEL_WORDS or any(word in msg_lower for word in CANCEL_WORDS)
+        if msg_lower in CANCEL_WORDS:
+            return True
+        for phrase in CANCEL_WORDS:
+            words = phrase.split()
+            pattern = r'\b' + r'\s+'.join(re.escape(w) for w in words) + r'\b'
+            if re.search(pattern, msg_lower):
+                return True
+        return False
 
     async def _execute_pending_tool(
         self,

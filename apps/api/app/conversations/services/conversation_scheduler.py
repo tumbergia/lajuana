@@ -29,21 +29,35 @@ class ConversationScheduler:
         self._running = True
         logger.info("[scheduler] Starting loop | interval=%ds", settings.scheduler_loop_seconds)
 
+        tick = 0
         try:
             while self._running:
+                tick += 1
                 try:
-                    processed = await self._worker.process_due_buffers(limit=25)
-                    if processed:
-                        logger.info("[scheduler] Processed %d buffer(s)", processed)
+                    buffers = await self._worker._buffer_service.find_due_buffers(limit=25)
+                    if buffers:
+                        logger.info(
+                            "[scheduler] Found %d due buffer(s) | iteration=%d",
+                            len(buffers),
+                            tick,
+                        )
+                        processed = await self._worker.process_due_buffers(limit=25)
+                        if processed:
+                            logger.info("[scheduler] Processed %d buffer(s) | iteration=%d", processed, tick)
+                    elif tick % 15 == 0:
+                        logger.info(
+                            "[scheduler] Heartbeat | iteration=%d | no due buffers",
+                            tick,
+                        )
                 except Exception:
-                    logger.exception("[scheduler] Error in worker loop")
+                    logger.exception("[scheduler] Error in worker loop | iteration=%d", tick)
 
                 await asyncio.sleep(settings.scheduler_loop_seconds)
         except asyncio.CancelledError:
-            logger.info("[scheduler] Loop cancelled")
+            logger.info("[scheduler] Loop cancelled | iteration=%d", tick)
         finally:
             self._running = False
-            logger.info("[scheduler] Loop stopped")
+            logger.info("[scheduler] Loop stopped | iteration=%d", tick)
 
     def stop(self) -> None:
         self._running = False
