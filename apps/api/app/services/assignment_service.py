@@ -105,6 +105,12 @@ class AssignmentService:
             previous_status=None,
             new_status=doc.status.value,
         )
+        await self._notify_assignment_changed(
+            reservation_id=str(doc.reservation_id),
+            actor_id=actor_id,
+            action="creada",
+            dedup_suffix=f"create:{doc.id}",
+        )
         return doc
 
     async def get(self, assignment_id: str) -> AssignmentDocument:
@@ -173,6 +179,12 @@ class AssignmentService:
             action="assignment.updated",
             previous_status=None,
             new_status=doc.status.value,
+        )
+        await self._notify_assignment_changed(
+            reservation_id=str(doc.reservation_id),
+            actor_id=actor_id,
+            action="actualizada",
+            dedup_suffix=f"update:{doc.id}:{doc.version}",
         )
         return doc
 
@@ -1047,6 +1059,44 @@ class AssignmentService:
         if actor_role == UserRole.GUIDE:
             return AssignmentSource.MANUAL_GUIDE
         return AssignmentSource.MANUAL_ADMIN
+
+    async def _notify_assignment_changed(
+        self,
+        *,
+        reservation_id: str,
+        actor_id: PydanticObjectId | None,
+        action: str,
+        dedup_suffix: str,
+    ) -> None:
+        try:
+            from app.common.enums import NotificationEventType
+            from app.core.di import Container
+
+            reservation = await ReservationDocument.get(reservation_id)
+            holder = (
+                reservation.holder_name
+                if reservation is not None and reservation.holder_name
+                else "Cliente"
+            )
+            code = (
+                reservation.code
+                if reservation is not None
+                else reservation_id
+            )
+            await Container.get_instance().notification_service.enqueue_admin_in_app(
+                event_type=NotificationEventType.ASSIGNMENT_CHANGED,
+                title="Asignaciones actualizadas",
+                body=f"Asignación {action} — {holder} · reserva {code}",
+                reservation_id=reservation_id,
+                actor_user_id=str(actor_id) if actor_id else None,
+                dedup_suffix=dedup_suffix,
+                contact_phone=reservation.holder_phone if reservation is not None else None,
+            )
+        except Exception:
+            logger.exception(
+                "[assignment] Failed to enqueue assignment_changed | reservation=%s",
+                reservation_id,
+            )
 
     async def _log_audit(
         self,

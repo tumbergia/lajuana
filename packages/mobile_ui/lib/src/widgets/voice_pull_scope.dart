@@ -15,7 +15,7 @@ class VoicePullScope extends StatefulWidget {
     required this.enabled,
     required this.onTriggered,
     this.displacement = 48,
-    this.triggerDistance = 80,
+    this.triggerDistance = 110,
     this.pointerZoneHeight = 96,
   });
 
@@ -32,9 +32,13 @@ class VoicePullScope extends StatefulWidget {
 
 class _VoicePullScopeState extends State<VoicePullScope>
     with SingleTickerProviderStateMixin {
+  /// Evita re-disparar el mic por overscroll residual / gestos dobles.
+  static const Duration _triggerCooldown = Duration(seconds: 3);
+
   double _dragOffset = 0;
   bool _atBottom = false;
   bool _isTriggering = false;
+  DateTime? _lastTriggeredAt;
   ScrollMetrics? _lastMetrics;
   int? _activePointer;
   double _pointerDragStart = 0;
@@ -123,8 +127,6 @@ class _VoicePullScopeState extends State<VoicePullScope>
       var nextOffset = _dragOffset;
       if (overscrollPastBottom > 0) {
         nextOffset = overscrollPastBottom;
-      } else if (delta < 0) {
-        nextOffset += -delta;
       } else if (delta > 0 && _dragOffset > 0) {
         nextOffset = math.max(0, _dragOffset - delta);
       }
@@ -220,7 +222,14 @@ class _VoicePullScopeState extends State<VoicePullScope>
 
   Future<void> _triggerVoice() async {
     if (_isTriggering) return;
+    final last = _lastTriggeredAt;
+    if (last != null &&
+        DateTime.now().difference(last) < _triggerCooldown) {
+      _animateReset();
+      return;
+    }
     _isTriggering = true;
+    _lastTriggeredAt = DateTime.now();
     setState(() {});
 
     try {

@@ -9,6 +9,7 @@ from pymongo.errors import DuplicateKeyError
 
 from app.common.enums import (
     Channel,
+    NotificationEventType,
     ParticipantFormStatus,
     PaymentStatus,
     ReservationStatus,
@@ -245,7 +246,10 @@ class ReservationService:
 
         if status in (ReservationStatus.CONTACT, ReservationStatus.QUOTED):
             try:
-                await self.notification_service.enqueue_reservation_created(doc)
+                await self.notification_service.enqueue_reservation_created(
+                    doc,
+                    actor_user_id=str(actor_id) if actor_id else None,
+                )
             except Exception:
                 logger.exception(
                     "[reservation=%s] Failed to enqueue reservation created",
@@ -386,11 +390,32 @@ class ReservationService:
         actor_id: PydanticObjectId | None = None,
     ) -> ReservationDocument:
         doc = await self.get(reservation_id)
+        changed_fields = [field for field in payload if getattr(doc, field, None) != payload[field]]
         for field, value in payload.items():
             setattr(doc, field, value)
         doc.updated_by = actor_id
         await doc.save()
         await record_change(entity_type="reservation", doc=doc)
+
+        if changed_fields:
+            try:
+                holder = doc.holder_name or "Cliente"
+                code = doc.code or str(doc.id)
+                fields_preview = ", ".join(changed_fields[:5])
+                await self.notification_service.enqueue_admin_in_app(
+                    event_type=NotificationEventType.RESERVATION_UPDATED,
+                    title="Reserva actualizada",
+                    body=f"{holder} — {code}: {fields_preview}",
+                    reservation_id=str(doc.id),
+                    actor_user_id=str(actor_id) if actor_id else None,
+                    dedup_suffix=f"update:{doc.version}",
+                    contact_phone=doc.holder_phone,
+                )
+            except Exception:
+                logger.exception(
+                    "[reservation=%s] Failed to enqueue reservation updated",
+                    doc.id,
+                )
         return doc
 
     async def transition_status(
@@ -527,6 +552,7 @@ class ReservationService:
         actor_id: PydanticObjectId | None = None,
     ) -> ReservationDocument:
         reservation = await self.get(reservation_id)
+        previous_status = reservation.status
         await self.transition_status(reservation, target_status)
         await self._sync_day_lock_fields(reservation)
         reservation.updated_by = actor_id
@@ -550,6 +576,28 @@ class ReservationService:
             except Exception:
                 logger.exception(
                     "[reservation=%s] Failed to enqueue post service",
+                    reservation.id,
+                )
+
+        if previous_status != target_status:
+            try:
+                holder = reservation.holder_name or "Cliente"
+                code = reservation.code or str(reservation.id)
+                await self.notification_service.enqueue_admin_in_app(
+                    event_type=NotificationEventType.RESERVATION_STATUS_CHANGED,
+                    title="Estado de reserva actualizado",
+                    body=(
+                        f"{holder} — {code}: "
+                        f"{previous_status.value} → {target_status.value}"
+                    ),
+                    reservation_id=str(reservation.id),
+                    actor_user_id=str(actor_id) if actor_id else None,
+                    dedup_suffix=f"{previous_status.value}->{target_status.value}",
+                    contact_phone=reservation.holder_phone,
+                )
+            except Exception:
+                logger.exception(
+                    "[reservation=%s] Failed to enqueue status changed",
                     reservation.id,
                 )
 
@@ -587,6 +635,24 @@ class ReservationService:
                     "[reservation=%s] Failed to enqueue cancellation WhatsApp",
                     reservation.id,
                 )
+
+        try:
+            holder = reservation.holder_name or "Cliente"
+            code = reservation.code or str(reservation.id)
+            await self.notification_service.enqueue_admin_in_app(
+                event_type=NotificationEventType.RESERVATION_STATUS_CHANGED,
+                title="Reserva cancelada",
+                body=f"{holder} — {code} (antes: {previous_status.value})",
+                reservation_id=str(reservation.id),
+                actor_user_id=str(actor_id) if actor_id else None,
+                dedup_suffix=f"cancel:{previous_status.value}",
+                contact_phone=reservation.holder_phone,
+            )
+        except Exception:
+            logger.exception(
+                "[reservation=%s] Failed to enqueue cancellation in-app",
+                reservation.id,
+            )
 
         return reservation
 

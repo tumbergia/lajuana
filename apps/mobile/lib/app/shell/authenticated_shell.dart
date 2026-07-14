@@ -19,6 +19,10 @@ import 'package:mobile_ui/src/widgets/voice_pull_scope.dart';
 import 'widgets/shell_status_region.dart';
 import 'package:mobile/features/configuration/presentation/screens/more_flow_screen.dart';
 import 'package:mobile/features/configuration/configuration_module.dart';
+import 'package:mobile/features/notifications/notifications_module.dart';
+import 'package:mobile/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:mobile/features/notifications/presentation/widgets/notification_heads_up.dart';
+import 'package:mobile/features/notifications/infrastructure/notification_background_service.dart';
 import 'package:mobile/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
@@ -47,6 +51,7 @@ class AuthenticatedShell extends StatefulWidget {
     this.outbox,
     required this.voiceAssistantModule,
     this.configurationModule,
+    this.notificationsModule,
     this.onCallRequested,
   });
 
@@ -62,6 +67,7 @@ class AuthenticatedShell extends StatefulWidget {
   final EquineEventRepository equineEventRepository;
   final VoiceAssistantModule voiceAssistantModule;
   final LaJuanaConfigurationModule? configurationModule;
+  final NotificationsModule? notificationsModule;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -101,12 +107,49 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
         (_) => unawaited(_maybeSync()),
       );
     }
+    // Defer so notifyListeners does not mark the shell dirty during mount.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.notificationsModule?.controller.startForegroundPolling();
+      unawaited(_registerBackgroundNotifications());
+    });
+  }
+
+  Future<void> _registerBackgroundNotifications() async {
+    final module = widget.notificationsModule;
+    if (module == null) return;
+    final enabled = await NotificationBackgroundService.isEnabled();
+    module.controller.setBackgroundPollingEnabled(enabled);
+    if (enabled) {
+      await NotificationBackgroundService.requestPermissions();
+      await NotificationBackgroundService.registerPeriodic();
+    }
+  }
+
+  void _openNotificationsInbox({String? openNotificationId}) {
+    final module = widget.notificationsModule;
+    if (module == null) return;
+    module.controller.dismissArrivalBanner();
+    final nav = _navigatorKeys[_shellNav.currentTab]?.currentState;
+    nav?.push(
+      MaterialPageRoute<void>(
+        builder: (_) => NotificationsScreen(
+          controller: module.controller,
+          reservationsModule: widget.reservationsModule,
+          catalogsModule: widget.catalogsModule,
+          authController: widget.authController,
+          assignmentsModule: widget.assignmentsModule,
+          initialOpenNotificationId: openNotificationId,
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
     _syncTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    widget.notificationsModule?.controller.stopForegroundPolling();
     _shellNav.dispose();
     super.dispose();
   }
@@ -237,6 +280,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
           onCallRequested: widget.onCallRequested,
           configurationModule: widget.configurationModule,
           reservationsModule: widget.reservationsModule,
+          notificationsModule: widget.notificationsModule,
         );
       case AppNavItem.experiencias:
         // Experiencias ahora vive dentro de Más — no debería llegar aquí.
@@ -250,6 +294,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
           onCallRequested: widget.onCallRequested,
           configurationModule: widget.configurationModule,
           reservationsModule: widget.reservationsModule,
+          notificationsModule: widget.notificationsModule,
         );
       case AppNavItem.none:
         return const SizedBox.shrink();
@@ -259,7 +304,12 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([widget.authController, _shellNav]),
+      animation: Listenable.merge([
+        widget.authController,
+        _shellNav,
+        if (widget.notificationsModule != null)
+          widget.notificationsModule!.controller,
+      ]),
       builder: (context, _) {
         final reachability =
             widget.authController.networkStatus.backendReachability;
@@ -267,6 +317,15 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
             _lastReachability != BackendReachability.reachable) {
           // Recuperamos el backend: vaciamos las colas (incluye fallidas).
           unawaited(_syncAll());
+          // Defer unread refresh: calling notifyListeners mid-build crashes
+          // the AnimatedBuilder that listens to NotificationsController.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            unawaited(
+              widget.notificationsModule?.controller.refreshUnreadCount() ??
+                  Future<void>.value(),
+            );
+          });
         } else if (reachability == BackendReachability.unreachable &&
             _lastReachability == BackendReachability.reachable) {
           // Se perdió el backend: aviso efímero como toast superior en vez de
@@ -289,6 +348,10 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
             widget.authController.authState ==
                 LocalAuthState.signedInLocalUnverified &&
             widget.authController.networkStatus.linkType != LinkType.offline;
+
+        final unread = widget.notificationsModule?.controller.unreadCount ?? 0;
+        final notificationsController = widget.notificationsModule?.controller;
+        final showHeadsUp = notificationsController?.hasArrivalBanner == true;
 
         return PopScope(
           canPop: false,
@@ -349,6 +412,10 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
                       : 'Sin conexión con el servidor. Sesión local: acciones críticas están bloqueadas.',
                   icon: Icons.wifi_off_rounded,
                 ),
+                showNotificationDot: unread > 0,
+                onNotificationsTap: widget.notificationsModule == null
+                    ? null
+                    : () => _openNotificationsInbox(),
               ),
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -397,6 +464,22 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
                     : null,
               ),
             ),
+            if (showHeadsUp && notificationsController != null)
+              NotificationHeadsUp(
+                key: ValueKey(
+                  'arrival-${notificationsController.pendingArrivalId}-'
+                  '${notificationsController.pendingArrivalCount}',
+                ),
+                title: notificationsController.pendingArrivalTitle!,
+                body: notificationsController.pendingArrivalBody,
+                eventType: notificationsController.pendingArrivalEventType,
+                count: notificationsController.pendingArrivalCount,
+                onTap: () => _openNotificationsInbox(
+                  openNotificationId:
+                      notificationsController.pendingArrivalId,
+                ),
+                onDismiss: notificationsController.dismissArrivalBanner,
+              ),
             if (showReconnectOverlay)
               const Positioned.fill(child: SessionLoadingView()),
           ],

@@ -16,6 +16,7 @@ class NotificationOutboxDocument(AuditDocument):
     template_key: str | None = None
     subject: str | None = None
     rendered_body: str | None = None
+    contact_phone: str | None = None
     status: NotificationStatus = NotificationStatus.PENDING
     scheduled_for: datetime | None = None
     sent_at: datetime | None = None

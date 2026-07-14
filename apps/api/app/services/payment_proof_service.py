@@ -109,6 +109,27 @@ class PaymentProofService:
             payment_proof_id=doc.id,
             reason=doc.filename,
         )
+
+        try:
+            from app.common.enums import NotificationEventType
+            from app.core.di import Container
+
+            holder = reservation.holder_name or "Cliente"
+            code = reservation.code or str(reservation.id)
+            await Container.get_instance().notification_service.enqueue_admin_in_app(
+                event_type=NotificationEventType.PAYMENT_PROOF_REGISTERED,
+                title="Nuevo comprobante de pago",
+                body=f"{holder} — {code}: {doc.filename or 'comprobante'}|{doc.id}",
+                reservation_id=str(reservation.id),
+                actor_user_id=str(actor_id) if actor_id else None,
+                dedup_suffix=str(doc.id),
+                contact_phone=reservation.holder_phone,
+            )
+        except Exception:
+            logger.exception(
+                "[payment_proof=%s] Failed to enqueue payment proof registered",
+                doc.id,
+            )
         return doc
 
     async def get(self, payment_proof_id: str) -> PaymentProofDocument:
@@ -751,6 +772,26 @@ class PaymentProofService:
         proof_id = str(doc.id)
         task = asyncio.create_task(self._background_download(proof_id))
         task.add_done_callback(lambda t: self._on_background_download_done(t, proof_id))
+
+        try:
+            from app.common.enums import NotificationEventType
+            from app.core.di import Container
+
+            holder = reservation.holder_name or "Cliente"
+            code = reservation.code or str(reservation.id)
+            await Container.get_instance().notification_service.enqueue_admin_in_app(
+                event_type=NotificationEventType.PAYMENT_PROOF_REGISTERED,
+                title="Nuevo comprobante de pago (WhatsApp)",
+                body=f"{holder} — {code}: {filename}|{proof_id}",
+                reservation_id=str(reservation.id),
+                dedup_suffix=proof_id,
+                contact_phone=reservation.holder_phone,
+            )
+        except Exception:
+            logger.exception(
+                "[payment_proof=%s] Failed to enqueue WhatsApp payment proof",
+                proof_id,
+            )
 
         return doc
 

@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.common.enums import NotificationChannel, NotificationStatus
+from app.common.enums import NOTIFICATION_PREFERENCE_KEYS, NotificationChannel, NotificationStatus
 from app.schemas.common import AuditMetadataSchema
 
 
@@ -68,8 +68,36 @@ class NotificationOutboxListSchema(BaseModel):
 class InAppNotificationResponseSchema(AuditMetadataSchema):
     id: str
     user_id: str
-    reservation_id: str | None
+    reservation_id: str | None = None
     title: str
     body: str
     read: bool
     event_type: str
+    contact_phone: str | None = None
+
+
+class InAppUnreadCountSchema(BaseModel):
+    unread_count: int = Field(ge=0)
+
+
+class InAppClearResultSchema(BaseModel):
+    cleared_count: int = Field(ge=0)
+
+
+class NotificationPreferencesSchema(BaseModel):
+    """Per-user toggles for in-app notification event types. Missing keys default to True."""
+
+    preferences: dict[str, bool] = Field(default_factory=dict)
+
+    @classmethod
+    def from_user_prefs(cls, prefs: dict[str, bool] | None) -> "NotificationPreferencesSchema":
+        stored = prefs or {}
+        return cls(
+            preferences={
+                key: stored.get(key, True) for key in NOTIFICATION_PREFERENCE_KEYS
+            }
+        )
+
+
+class NotificationPreferencesUpdateSchema(BaseModel):
+    preferences: dict[str, bool] = Field(default_factory=dict)

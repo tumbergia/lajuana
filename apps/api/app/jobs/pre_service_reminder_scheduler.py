@@ -20,6 +20,7 @@ class PreServiceReminderScheduler:
         self._service = service
         self._running = False
         self._processed_today: set[str] = set()
+        self._admin_summary_sent_for: date | None = None
         self._current_date: date = date.today()
 
     @property
@@ -37,6 +38,7 @@ class PreServiceReminderScheduler:
             while self._running:
                 try:
                     await self._schedule_reminders()
+                    await self._schedule_admin_tomorrow_summary()
                 except Exception:
                     logger.exception("[pre-service-reminder] Error in worker loop")
 
@@ -54,6 +56,7 @@ class PreServiceReminderScheduler:
         if today != self._current_date:
             self._processed_today.clear()
             self._current_date = today
+            self._admin_summary_sent_for = None
 
         tomorrow = today + timedelta(days=1)
 
@@ -78,6 +81,54 @@ class PreServiceReminderScheduler:
 
             if days_until == 1:
                 await self._enqueue_reminder(reservation)
+
+    async def _schedule_admin_tomorrow_summary(self) -> None:
+        today = date.today()
+        if self._admin_summary_sent_for == today:
+            return
+
+        # Send admin summary once after 08:00 UTC (best-effort daily digest).
+        now = datetime.now(UTC)
+        if now.hour < 8:
+            return
+
+        tomorrow = today + timedelta(days=1)
+        reservations = await ReservationDocument.find(
+            {
+                "status": {"$in": [
+                    ReservationStatus.CONFIRMED.value,
+                    ReservationStatus.PAYMENT_RECEIVED.value,
+                ]},
+                "requested_date": tomorrow,
+            }
+        ).to_list()
+
+        if not reservations:
+            self._admin_summary_sent_for = today
+            return
+
+        lines = []
+        for reservation in reservations[:20]:
+            holder = reservation.holder_name or "Cliente"
+            code = reservation.code or str(reservation.id)
+            lines.append(
+                f"• {code}|{reservation.id}: {holder} ({reservation.participant_count})"
+            )
+        extra = len(reservations) - len(lines)
+        if extra > 0:
+            lines.append(f"… y {extra} más")
+
+        await self._service.enqueue_admin_in_app(
+            event_type=NotificationEventType.TOMORROW_SERVICES_SUMMARY,
+            title=f"Reservas de mañana ({len(reservations)})",
+            body="\n".join(lines),
+            dedup_suffix=today.isoformat(),
+        )
+        self._admin_summary_sent_for = today
+        logger.info(
+            "[pre-service-reminder] Admin tomorrow summary sent | count=%d",
+            len(reservations),
+        )
 
     async def _enqueue_reminder(self, reservation: ReservationDocument) -> None:
         # Only cancel entries that are pending/scheduled/failed, never SENT.

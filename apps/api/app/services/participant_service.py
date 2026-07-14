@@ -64,6 +64,28 @@ class ParticipantService:
             ),
         )
 
+        try:
+            from app.common.enums import NotificationEventType
+            from app.core.di import Container
+            from app.core.logging import logger
+
+            code = reservation.code or str(reservation.id)
+            await Container.get_instance().notification_service.enqueue_admin_in_app(
+                event_type=NotificationEventType.PARTICIPANT_FORM_COMPLETED,
+                title="Participante completó formulario",
+                body=f"{participant_name or 'Participante'} — reserva {code}",
+                reservation_id=str(reservation.id),
+                dedup_suffix=str(doc.id),
+                contact_phone=reservation.holder_phone,
+            )
+        except Exception:
+            from app.core.logging import logger
+
+            logger.exception(
+                "[participant=%s] Failed to enqueue form completed notification",
+                doc.id,
+            )
+
     async def get(self, participant_id: str) -> ParticipantDocument:
         doc = await ParticipantDocument.get(participant_id)
         if doc is None:

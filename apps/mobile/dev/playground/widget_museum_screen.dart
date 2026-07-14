@@ -20,6 +20,7 @@ import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_select_field.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
+import 'package:mobile_ui/src/widgets/app_switch.dart';
 import 'package:mobile_ui/src/widgets/app_switch_row.dart';
 import 'package:mobile_ui/src/widgets/app_term_help.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
@@ -829,9 +830,22 @@ final List<_WidgetEntry> _formEntries = [
     demo: _demoSelectField,
   ),
   _WidgetEntry(
+    name: 'AppSwitch',
+    filePath: 'app/widgets/app_switch.dart',
+    description:
+        'Switch deslizante cuadrado (AppRadii.lg). Track 48×28, thumb 22×22.',
+    constructorParams: [
+      'required bool value',
+      'required ValueChanged<bool>? onChanged',
+      'String? semanticsLabel',
+    ],
+    demo: _demoSwitch,
+  ),
+  _WidgetEntry(
     name: 'AppSwitchRow',
     filePath: 'app/widgets/app_switch_row.dart',
-    description: 'Fila de switch compacta para formularios de configuración.',
+    description:
+        'Fila en AppEntityRowCard con AppSwitch cuadrado. Tipografía y padding del card.',
     constructorParams: [
       'required String title',
       'required bool value',
@@ -1509,6 +1523,21 @@ Widget _demoSelectField(BuildContext context) {
     onChanged: (_) {},
   );
 }
+
+Widget _demoSwitch(BuildContext context) {
+  return const Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      AppSwitch(value: false, onChanged: _noopBool),
+      SizedBox(width: 16),
+      AppSwitch(value: true, onChanged: _noopBool),
+      SizedBox(width: 16),
+      AppSwitch(value: true, onChanged: null),
+    ],
+  );
+}
+
+void _noopBool(bool _) {}
 
 Widget _demoSwitchRow(BuildContext context) {
   return AppSwitchRow(

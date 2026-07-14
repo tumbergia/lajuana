@@ -61,15 +61,20 @@ class NotificationService:
     async def enqueue(
         self,
         event_type: NotificationEventType,
-        reservation_id: str,
+        reservation_id: str | None,
         channel: NotificationChannel,
         recipient_type: str,
         recipient_identifier: str,
         variables: dict[str, str] | None = None,
         scheduled_for: datetime | None = None,
         dedup_suffix: str | None = None,
+        subject: str | None = None,
+        body: str | None = None,
+        skip_template: bool = False,
+        contact_phone: str | None = None,
     ) -> NotificationOutboxDocument:
-        dedup_key = f"{event_type.value}:{reservation_id}:{recipient_type}:{channel.value}"
+        reservation_key = reservation_id or "none"
+        dedup_key = f"{event_type.value}:{reservation_key}:{recipient_type}:{channel.value}"
         if dedup_suffix:
             dedup_key += f":{dedup_suffix}"
 
@@ -79,38 +84,41 @@ class NotificationService:
         if existing is not None:
             return existing
 
-        template = await NotificationTemplateDocument.find_one(
-            {
-                "template_key": f"{event_type.value}.{recipient_type}",
-                "channel": channel.value,
-                "is_active": True,
-            }
-        )
-
-        rendered_body = None
-        subject = None
+        rendered_body = body
+        rendered_subject = subject
         template_key = None
-        if template is not None and variables:
-            rendered_body = render_template(template.body, variables)
-            subject = render_subject(template.subject, variables)
-            template_key = template.template_key
-        elif template is None:
-            logger.warning(
-                "[notif] Template not found | event=%s | recipient=%s | channel=%s",
-                event_type.value,
-                recipient_type,
-                channel.value,
+
+        if not skip_template:
+            template = await NotificationTemplateDocument.find_one(
+                {
+                    "template_key": f"{event_type.value}.{recipient_type}",
+                    "channel": channel.value,
+                    "is_active": True,
+                }
             )
 
+            if template is not None and variables:
+                rendered_body = render_template(template.body, variables)
+                rendered_subject = render_subject(template.subject, variables)
+                template_key = template.template_key
+            elif template is None and body is None:
+                logger.warning(
+                    "[notif] Template not found | event=%s | recipient=%s | channel=%s",
+                    event_type.value,
+                    recipient_type,
+                    channel.value,
+                )
+
         doc = NotificationOutboxDocument(
-            reservation_id=PydanticObjectId(reservation_id),
+            reservation_id=PydanticObjectId(reservation_id) if reservation_id else None,
             event_type=event_type.value,
             recipient_type=recipient_type,
             recipient_identifier=recipient_identifier,
             channel=channel,
             template_key=template_key,
-            subject=subject,
+            subject=rendered_subject,
             rendered_body=rendered_body,
+            contact_phone=contact_phone,
             status=(NotificationStatus.SCHEDULED if scheduled_for else NotificationStatus.PENDING),
             scheduled_for=(
                 scheduled_for.replace(tzinfo=UTC)
@@ -122,8 +130,59 @@ class NotificationService:
         await doc.insert()
         return doc
 
+    async def enqueue_admin_in_app(
+        self,
+        event_type: NotificationEventType,
+        title: str,
+        body: str,
+        reservation_id: str | None = None,
+        actor_user_id: str | None = None,
+        dedup_suffix: str | None = None,
+        contact_phone: str | None = None,
+    ) -> list[NotificationOutboxDocument]:
+        """Fan-out an in-app notification to active admins, excluding actor and respecting prefs."""
+        admins = await UserDocument.find(
+            {"is_active": True, "role": UserRole.ADMIN},
+        ).to_list()
+
+        tasks = []
+        for user in admins:
+            if actor_user_id and str(user.id) == actor_user_id:
+                continue
+            if not user.prefers_notification(event_type.value):
+                continue
+            tasks.append(
+                self.enqueue(
+                    event_type=event_type,
+                    reservation_id=reservation_id,
+                    channel=NotificationChannel.IN_APP,
+                    recipient_type="internal",
+                    recipient_identifier=str(user.id),
+                    subject=title,
+                    body=body,
+                    skip_template=True,
+                    dedup_suffix=f"{str(user.id)}:{dedup_suffix}" if dedup_suffix else str(user.id),
+                    contact_phone=contact_phone,
+                )
+            )
+
+        if not tasks:
+            return []
+        entries = list(await asyncio.gather(*tasks))
+        # Deliver in-app immediately so the inbox updates without waiting for the outbox poll.
+        for entry in entries:
+            if getattr(entry, "status", None) == NotificationStatus.PENDING:
+                try:
+                    await self.send_from_outbox(entry)
+                except Exception:
+                    logger.exception(
+                        "[notif] Immediate in-app delivery failed | outbox=%s",
+                        getattr(entry, "id", None),
+                    )
+        return entries
+
     async def enqueue_reservation_created(
-        self, reservation: ReservationDocument
+        self, reservation: ReservationDocument, actor_user_id: str | None = None
     ) -> list[NotificationOutboxDocument]:
         entries: list[NotificationOutboxDocument] = []
 
@@ -139,6 +198,18 @@ class NotificationService:
             )
             entries.append(entry)
 
+        holder = reservation.holder_name or "Cliente"
+        code = reservation.code or str(reservation.id)
+        admin_entries = await self.enqueue_admin_in_app(
+            event_type=NotificationEventType.RESERVATION_CREATED,
+            title="Nueva reserva",
+            body=f"{holder} — {code} ({reservation.participant_count} participantes)",
+            reservation_id=str(reservation.id),
+            actor_user_id=actor_user_id,
+            dedup_suffix="created",
+            contact_phone=reservation.holder_phone,
+        )
+        entries.extend(admin_entries)
         return entries
 
     async def enqueue_payment_received(
@@ -264,13 +335,30 @@ class NotificationService:
             return
         else:
             entry.attempt_count += 1
+            entry.last_error = result.error_detail
             if entry.attempt_count >= entry.max_attempts:
                 entry.status = NotificationStatus.FAILED
-            else:
-                entry.status = NotificationStatus.PENDING
-            entry.last_error = result.error_detail
+                await entry.save()
+                if entry.channel == NotificationChannel.WHATSAPP:
+                    await self._notify_whatsapp_delivery_failed(entry)
+                return
+            entry.status = NotificationStatus.PENDING
 
         await entry.save()
+
+    async def _notify_whatsapp_delivery_failed(
+        self, entry: NotificationOutboxDocument
+    ) -> None:
+        preview = (entry.subject or entry.event_type or "mensaje").strip()
+        phone = entry.recipient_identifier or "desconocido"
+        await self.enqueue_admin_in_app(
+            event_type=NotificationEventType.WHATSAPP_DELIVERY_FAILED,
+            title="Fallo envío WhatsApp",
+            body=f"No se pudo enviar a {phone}: {preview}. {entry.last_error or ''}".strip(),
+            reservation_id=str(entry.reservation_id) if entry.reservation_id else None,
+            dedup_suffix=str(entry.id),
+            contact_phone=phone if phone != "desconocido" else None,
+        )
 
     async def retry(self, outbox_id: str) -> NotificationOutboxDocument:
         doc = await NotificationOutboxDocument.get(outbox_id)

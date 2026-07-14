@@ -385,6 +385,26 @@ def generate_model(
                 lines.append(f"        ?.map((e) => {inner}.fromJson(e as Map<String, dynamic>)).toList()" + ("," if not req else " ?? [],"))
         elif dtype == "Map<String, dynamic>":
             lines.append(f"      {fname}: json['{json_key}'] { 'as Map<String, dynamic>' if req else 'as Map<String, dynamic>?' },")
+        elif dtype.startswith("Map<String, ") and dtype.endswith(">"):
+            inner = dtype[len("Map<String, "):-1]
+            cast_expr = {
+                "bool": "value == true",
+                "int": "(value as num).toInt()",
+                "double": "(value as num).toDouble()",
+                "String": "value.toString()",
+            }.get(inner, "value")
+            prefix = f"      {fname}: "
+            map_expr = (
+                f"Map<String, {inner}>.from("
+                f"(json['{json_key}'] as Map).map("
+                f"(key, value) => MapEntry(key.toString(), {cast_expr}),))"
+            )
+            if req:
+                lines.append(f"{prefix}{map_expr},")
+            else:
+                lines.append(
+                    f"{prefix}json['{json_key}'] != null ? {map_expr} : null,"
+                )
         elif dtype in enum_names:
             # Enum type: parse from String
             if req:

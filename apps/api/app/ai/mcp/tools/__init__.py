@@ -335,6 +335,26 @@ async def request_human_review(**kwargs: Any) -> dict[str, Any]:
         )
         await doc.insert()
 
+        try:
+            from app.common.enums import NotificationEventType
+            from app.core.di import Container
+
+            phone_hint = conversation_id.split(":")[-1] if conversation_id else ""
+            await Container.get_instance().notification_service.enqueue_admin_in_app(
+                event_type=NotificationEventType.HUMAN_REVIEW_REQUESTED,
+                title="Cliente solicita atención humana",
+                body=f"{phone_hint or conversation_id}: {summary}",
+                dedup_suffix=doc.review_id,
+                contact_phone=phone_hint or None,
+            )
+        except Exception:
+            from app.core.logging import logger
+
+            logger.exception(
+                "[human_review=%s] Failed to enqueue admin notification",
+                doc.review_id,
+            )
+
         output = RequestHumanReviewOutput(
             trace_id=trace_id,
             requested=True,
