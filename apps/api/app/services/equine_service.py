@@ -155,6 +155,17 @@ class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdate
                     notes=event.description,
                     severity=event.severity,
                     affects_availability=event.affects_availability,
+                    measured_weight_kg=event.measured_weight_kg,
+                    measured_height_m=event.measured_height_m,
+                    next_due_at=event.next_due_at,
+                    performed_by=event.performed_by,
+                    medication_name=event.medication_name,
+                    dosage=event.dosage,
+                    lab_result_summary=event.lab_result_summary,
+                    resulting_operational_status=(
+                        event.resulting_operational_status
+                    ),
+                    rest_until=event.rest_until,
                 )
             )
 

@@ -450,6 +450,15 @@ class TestEquineTimelineMerge:
             description="Sin reacción",
             severity="low",
             affects_availability=False,
+            measured_weight_kg=None,
+            measured_height_m=None,
+            next_due_at=None,
+            performed_by=None,
+            medication_name=None,
+            dosage=None,
+            lab_result_summary=None,
+            resulting_operational_status=None,
+            rest_until=None,
         )
 
         class FakeFind:

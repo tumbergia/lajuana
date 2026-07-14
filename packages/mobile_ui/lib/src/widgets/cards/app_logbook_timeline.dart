@@ -5,13 +5,30 @@ import 'package:mobile_ui/src/theme/theme_extensions.dart';
 
 enum AppLogbookEntryState { active, completed, neutral, warning, error }
 
+/// Par etiqueta/valor para el detalle estructurado de una entrada de bitácora.
+class AppLogbookDetail {
+  const AppLogbookDetail({
+    required this.label,
+    required this.value,
+    this.fullWidth = false,
+  });
+
+  final String label;
+  final String value;
+
+  /// Cuando es `true` el detalle ocupa el ancho completo de la fila (útil para
+  /// valores largos como resúmenes o medicación).
+  final bool fullWidth;
+}
+
 class AppLogbookTimelineEntry {
   const AppLogbookTimelineEntry({
     required this.title,
     required this.dateLabel,
-    required this.reservationLabel,
-    required this.guideLabel,
-    required this.durationLabel,
+    this.reservationLabel,
+    this.guideLabel,
+    this.durationLabel,
+    this.details,
     this.state = AppLogbookEntryState.neutral,
     this.badge,
     this.observations,
@@ -25,9 +42,17 @@ class AppLogbookTimelineEntry {
 
   final String title;
   final String dateLabel;
-  final String reservationLabel;
-  final String guideLabel;
-  final String durationLabel;
+
+  /// Campos genéricos (bitácora de servicio). Si se provee [details], estos se
+  /// ignoran a favor del detalle estructurado.
+  final String? reservationLabel;
+  final String? guideLabel;
+  final String? durationLabel;
+
+  /// Detalle estructurado en cuadrícula. Reemplaza a los campos genéricos
+  /// cuando está presente; pensado para bitácoras ricas (p. ej. equinos).
+  final List<AppLogbookDetail>? details;
+
   final AppLogbookEntryState state;
   final AppBadge? badge;
   final String? observations;
@@ -142,6 +167,7 @@ class AppLogbookEntryCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final tokens = theme.appTokens;
+    final infoBoxes = _infoBoxes(entry);
 
     return Material(
       color: scheme.surfaceContainerHighest,
@@ -183,28 +209,10 @@ class AppLogbookEntryCard extends StatelessWidget {
                   if (entry.badge != null) entry.badge!,
                 ],
               ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _InfoBox(
-                      label: 'Reserva',
-                      value: entry.reservationLabel,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _InfoBox(label: 'Guia', value: entry.guideLabel),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _InfoBox(
-                      label: 'Duracion',
-                      value: entry.durationLabel,
-                    ),
-                  ),
-                ],
-              ),
+              if (infoBoxes.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                _InfoGrid(boxes: infoBoxes),
+              ],
               if (entry.highlightedContent != null) ...[
                 const SizedBox(height: 14),
                 Container(
@@ -292,6 +300,52 @@ class AppLogbookEntryCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Resuelve los cuadros de detalle a mostrar: el detalle estructurado si se
+/// proveyó, o los campos genéricos (bitácora de servicio) que tengan valor.
+List<AppLogbookDetail> _infoBoxes(AppLogbookTimelineEntry entry) {
+  final details = entry.details;
+  if (details != null) return details;
+  final legacy = <AppLogbookDetail>[];
+  void add(String label, String? value) {
+    if (value != null && value.isNotEmpty && value != '-') {
+      legacy.add(AppLogbookDetail(label: label, value: value));
+    }
+  }
+
+  add('Reserva', entry.reservationLabel);
+  add('Guia', entry.guideLabel);
+  add('Duracion', entry.durationLabel);
+  return legacy;
+}
+
+class _InfoGrid extends StatelessWidget {
+  const _InfoGrid({required this.boxes});
+
+  final List<AppLogbookDetail> boxes;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 8.0;
+        final maxWidth = constraints.maxWidth;
+        final halfWidth = (maxWidth - spacing) / 2;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final box in boxes)
+              SizedBox(
+                width: box.fullWidth ? maxWidth : halfWidth,
+                child: _InfoBox(label: box.label, value: box.value),
+              ),
+          ],
+        );
+      },
     );
   }
 }

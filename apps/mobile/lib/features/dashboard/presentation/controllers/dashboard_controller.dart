@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-enum DashboardSubroute { resumen, pendientes, salidas, sync }
+enum DashboardSubroute { resumen, pendientes, salidas }
 
 class DashboardController extends ChangeNotifier {
   DashboardSubroute _subroute = DashboardSubroute.resumen;

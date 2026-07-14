@@ -227,3 +227,15 @@ class EquineTimelineEntrySchema(BaseModel):
     notes: str | None = None
     severity: str | None = None
     affects_availability: bool = False
+
+    # Detalle estructurado del evento de cuidado (solo source="equine_event").
+    # Permite una bitácora profunda sin necesidad de abrir cada evento.
+    measured_weight_kg: Decimal | None = None
+    measured_height_m: Decimal | None = None
+    next_due_at: datetime | None = None
+    performed_by: str | None = None
+    medication_name: str | None = None
+    dosage: str | None = None
+    lab_result_summary: str | None = None
+    resulting_operational_status: EquineOperationalStatus | None = None
+    rest_until: datetime | None = None

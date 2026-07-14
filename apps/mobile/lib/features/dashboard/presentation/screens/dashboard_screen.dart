@@ -11,7 +11,6 @@ import 'package:mobile/features/dashboard/presentation/controllers/dashboard_con
 import 'package:mobile/features/dashboard/presentation/widgets/dashboard_departures_block.dart';
 import 'package:mobile/features/dashboard/presentation/widgets/dashboard_pending_block.dart';
 import 'package:mobile/features/dashboard/presentation/widgets/dashboard_summary_block.dart';
-import 'package:mobile/features/dashboard/presentation/widgets/dashboard_sync_block.dart';
 import 'package:mobile/features/shared/presentation/widgets/module_subroute_header.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -84,9 +83,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     if (catalogs != null) {
       futures.add(catalogs.autoSync());
     }
-    if (_controller.subroute == DashboardSubroute.sync) {
-      futures.add(widget.authController.refreshRequested());
-    }
     await Future.wait(futures);
   }
 
@@ -136,7 +132,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                   'Resumen',
                   'Pendientes',
                   'Salidas',
-                  'Sync',
                 ],
                 currentSubrouteIndex: _controller.subroute.index,
                 onSubrouteTap: _controller.selectSubrouteByIndex,
@@ -176,11 +171,6 @@ class _DashboardScreenState extends State<DashboardScreen>
         );
       case DashboardSubroute.salidas:
         return DashboardDeparturesBlock(reservations: reservations);
-      case DashboardSubroute.sync:
-        return DashboardSyncBlock(
-          authController: widget.authController,
-          reservations: reservations,
-        );
     }
   }
 }

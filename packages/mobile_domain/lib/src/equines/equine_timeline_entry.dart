@@ -11,6 +11,15 @@ class EquineTimelineEntry {
     this.severity,
     this.affectsAvailability = false,
     this.syncPending = false,
+    this.measuredWeightKg,
+    this.measuredHeightM,
+    this.nextDueAt,
+    this.performedBy,
+    this.medicationName,
+    this.dosage,
+    this.labResultSummary,
+    this.resultingOperationalStatus,
+    this.restUntil,
   });
 
   final String id;
@@ -23,4 +32,16 @@ class EquineTimelineEntry {
   final String? severity;
   final bool affectsAvailability;
   final bool syncPending;
+
+  // Detalle estructurado del evento de cuidado (source == 'equine_event').
+  // Se muestra en la bitácora para dar profundidad sin abrir cada evento.
+  final double? measuredWeightKg;
+  final double? measuredHeightM;
+  final DateTime? nextDueAt;
+  final String? performedBy;
+  final String? medicationName;
+  final String? dosage;
+  final String? labResultSummary;
+  final String? resultingOperationalStatus;
+  final DateTime? restUntil;
 }

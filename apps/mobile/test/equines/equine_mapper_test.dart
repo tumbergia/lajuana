@@ -195,7 +195,7 @@ void main() {
       );
       final logEntry = EquineMapper.timelineEntryToLogbookEntry(entry);
       expect(logEntry.title, 'Llegada');
-      expect(logEntry.dateLabel, '01/06/2026');
+      expect(logEntry.dateLabel, '01/06/2026 · 10:00');
     });
 
     test('maps incident to warning state', () {
@@ -209,6 +209,41 @@ void main() {
       );
       final logEntry = EquineMapper.timelineEntryToLogbookEntry(entry);
       expect(logEntry.observations, 'Tropiezó');
+    });
+
+    test('surfaces structured detail for a care event', () {
+      final entry = EquineTimelineEntry(
+        id: 'evt-1',
+        source: 'equine_event',
+        eventType: 'weight',
+        happenedAt: DateTime(2026, 6, 2, 9),
+        title: 'Control de peso',
+        performedBy: 'Vet. Ana',
+        measuredWeightKg: 420,
+      );
+      final logEntry = EquineMapper.timelineEntryToLogbookEntry(entry);
+      final details = logEntry.details;
+      expect(details, isNotNull);
+      String valueFor(String label) =>
+          details!.firstWhere((d) => d.label == label).value;
+      expect(valueFor('Tipo'), 'Peso');
+      expect(valueFor('Realizado por'), 'Vet. Ana');
+      expect(valueFor('Peso'), '420 kg');
+      // El badge lleva el tipo de evento cuando no está pendiente.
+      expect(logEntry.badge, isNotNull);
+    });
+
+    test('flags pending sync entries in the badge', () {
+      final entry = EquineTimelineEntry(
+        id: 'evt-2',
+        source: 'equine_event',
+        eventType: 'note',
+        happenedAt: DateTime(2026, 6, 3, 8),
+        title: 'Nota',
+        syncPending: true,
+      );
+      final logEntry = EquineMapper.timelineEntryToLogbookEntry(entry);
+      expect(logEntry.badge?.label, 'Pendiente');
     });
   });
 }

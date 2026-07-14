@@ -8,6 +8,7 @@ import 'package:mobile_domain/src/equines/equine_event.dart';
 import 'package:mobile_domain/src/equines/equine_timeline_entry.dart';
 import 'package:mobile_domain/src/gen/equine.dart' as gen;
 import 'package:mobile/features/equines/presentation/models/equine_view_models.dart';
+import 'package:mobile/features/equines/presentation/equine_event_labels.dart';
 import 'package:mobile/features/equines/infrastructure/remote/equine_dtos.dart';
 
 /// Mapea EquineDto del backend  →  Equine del dominio  →  ViewModel para UI.
@@ -97,32 +98,29 @@ class EquineMapper {
   }
 
   static EquineTimelineEntry timelineEntryDtoToDomain(EquineTimelineEntryDto dto) {
-    final parsed = DateTime.tryParse(dto.happenedAt)?.toUtc();
-    if (parsed == null) {
-      // Si la fecha no se puede parsear, usar epoch como centinela.
-      // La UI ocultará entradas con happenedAt en 1970.
-      return EquineTimelineEntry(
-        id: dto.id,
-        source: dto.source,
-        eventType: dto.eventType,
-        happenedAt: DateTime.utc(1970),
-        title: dto.title,
-        reservationId: dto.reservationId,
-        notes: dto.notes,
-        severity: dto.severity,
-        affectsAvailability: dto.affectsAvailability,
-      );
-    }
+    // Si la fecha no se puede parsear, usar epoch como centinela.
+    // La UI ocultará entradas con happenedAt en 1970.
+    final happenedAt =
+        DateTime.tryParse(dto.happenedAt)?.toUtc() ?? DateTime.utc(1970);
     return EquineTimelineEntry(
       id: dto.id,
       source: dto.source,
       eventType: dto.eventType,
-      happenedAt: parsed,
+      happenedAt: happenedAt,
       title: dto.title,
       reservationId: dto.reservationId,
       notes: dto.notes,
       severity: dto.severity,
       affectsAvailability: dto.affectsAvailability,
+      measuredWeightKg: dto.measuredWeightKg,
+      measuredHeightM: dto.measuredHeightM,
+      nextDueAt: DateTime.tryParse(dto.nextDueAt ?? '')?.toUtc(),
+      performedBy: dto.performedBy,
+      medicationName: dto.medicationName,
+      dosage: dto.dosage,
+      labResultSummary: dto.labResultSummary,
+      resultingOperationalStatus: dto.resultingOperationalStatus,
+      restUntil: DateTime.tryParse(dto.restUntil ?? '')?.toUtc(),
     );
   }
 
@@ -137,6 +135,11 @@ class EquineMapper {
       severity: event.severity,
       affectsAvailability: event.affectsAvailability,
       syncPending: event.syncPending,
+      measuredWeightKg: event.measuredWeightKg,
+      nextDueAt: event.nextDueAt,
+      performedBy: event.performedBy,
+      resultingOperationalStatus: event.resultingOperationalStatus,
+      restUntil: event.restUntil,
     );
   }
 
@@ -144,21 +147,106 @@ class EquineMapper {
     EquineTimelineEntry entry, {
     VoidCallback? onTap,
   }) {
-    final observations = <String>[
-      if (entry.syncPending) 'Pendiente de sincronización',
-      if (entry.notes != null && entry.notes!.isNotEmpty) entry.notes!,
-    ].join(' · ');
+    final isCare = entry.source == 'equine_event';
+
+    // Badge con el tipo de evento (o "Pendiente" si aún no sincronizó).
+    final badge = AppBadge(
+      label: entry.syncPending
+          ? 'Pendiente'
+          : equineEventTypeLabel(entry.eventType),
+      tone: entry.syncPending
+          ? AppBadgeTone.warning
+          : _badgeToneFromState(_logbookStateFromEntry(entry)),
+      uppercase: false,
+    );
+
+    // Detalle estructurado: profundiza la bitácora mostrando cada dato del
+    // evento de cuidado sin necesidad de abrirlo.
+    final details = <AppLogbookDetail>[
+      AppLogbookDetail(label: 'Tipo', value: equineEventTypeLabel(entry.eventType)),
+      if (entry.severity != null)
+        AppLogbookDetail(
+          label: 'Severidad',
+          value: equineEventSeverityLabel(entry.severity!),
+        ),
+      if (entry.performedBy != null && entry.performedBy!.isNotEmpty)
+        AppLogbookDetail(label: 'Realizado por', value: entry.performedBy!),
+      if (entry.measuredWeightKg != null)
+        AppLogbookDetail(
+          label: 'Peso',
+          value: '${_formatDecimal(entry.measuredWeightKg!)} kg',
+        ),
+      if (entry.measuredHeightM != null)
+        AppLogbookDetail(
+          label: 'Altura',
+          value: '${_formatDecimal(entry.measuredHeightM!)} m',
+        ),
+      if (entry.nextDueAt != null)
+        AppLogbookDetail(
+          label: 'Próximo control',
+          value: _formatDateShort(entry.nextDueAt!.toLocal()),
+        ),
+      if (entry.resultingOperationalStatus != null)
+        AppLogbookDetail(
+          label: 'Estado resultante',
+          value: _statusLabel(
+            EquineOperationalStatus.fromApi(entry.resultingOperationalStatus!),
+          ),
+        ),
+      if (entry.restUntil != null)
+        AppLogbookDetail(
+          label: 'Reposo hasta',
+          value: _formatDateShort(entry.restUntil!.toLocal()),
+        ),
+      if (entry.affectsAvailability)
+        const AppLogbookDetail(
+          label: 'Disponibilidad',
+          value: 'Afecta disponibilidad',
+        ),
+      if (entry.medicationName != null && entry.medicationName!.isNotEmpty)
+        AppLogbookDetail(
+          label: 'Medicación',
+          value: entry.dosage != null && entry.dosage!.isNotEmpty
+              ? '${entry.medicationName} · ${entry.dosage}'
+              : entry.medicationName!,
+          fullWidth: true,
+        ),
+      if (entry.labResultSummary != null && entry.labResultSummary!.isNotEmpty)
+        AppLogbookDetail(
+          label: 'Resultado',
+          value: entry.labResultSummary!,
+          fullWidth: true,
+        ),
+      if (!isCare && entry.reservationId != null)
+        AppLogbookDetail(label: 'Reserva', value: entry.reservationId!),
+    ];
 
     return AppLogbookTimelineEntry(
       title: entry.title,
-      dateLabel: _formatDateShort(entry.happenedAt),
-      reservationLabel: entry.reservationId ?? '-',
-      guideLabel: entry.source == 'equine_event' ? 'Cuidado' : 'Servicio',
-      durationLabel: '-',
+      dateLabel: _formatDateTimeShort(entry.happenedAt.toLocal()),
+      details: details,
+      badge: badge,
       state: _logbookStateFromEntry(entry),
-      observations: observations.isEmpty ? null : observations,
+      observations: (entry.notes != null && entry.notes!.isNotEmpty)
+          ? entry.notes
+          : null,
       onTap: onTap,
     );
+  }
+
+  static AppBadgeTone _badgeToneFromState(AppLogbookEntryState state) {
+    switch (state) {
+      case AppLogbookEntryState.active:
+        return AppBadgeTone.primary;
+      case AppLogbookEntryState.completed:
+        return AppBadgeTone.success;
+      case AppLogbookEntryState.warning:
+        return AppBadgeTone.warning;
+      case AppLogbookEntryState.error:
+        return AppBadgeTone.danger;
+      case AppLogbookEntryState.neutral:
+        return AppBadgeTone.neutral;
+    }
   }
 
   static AppLogbookEntryState _logbookStateFromEntry(EquineTimelineEntry entry) {
@@ -201,6 +289,23 @@ class EquineMapper {
 
   static String _formatDateShort(DateTime dt) {
     return '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+  }
+
+  static String _formatDateTimeShort(DateTime dt) {
+    final hh = dt.hour.toString().padLeft(2, '0');
+    final mm = dt.minute.toString().padLeft(2, '0');
+    return '${_formatDateShort(dt)} · $hh:$mm';
+  }
+
+  /// Formatea un decimal sin ceros sobrantes (420.0 → "420", 3.50 → "3.5").
+  static String _formatDecimal(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(0);
+    }
+    return value
+        .toStringAsFixed(2)
+        .replaceFirst(RegExp(r'0+$'), '')
+        .replaceFirst(RegExp(r'\.$'), '');
   }
 
   static String _statusLabel(EquineOperationalStatus status) {

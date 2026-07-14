@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
-import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_scaffold.dart';
+import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/cards/app_logbook_timeline.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
@@ -39,9 +39,35 @@ class EquineTimelineScreen extends StatefulWidget {
 class _EquineTimelineScreenState extends State<EquineTimelineScreen>
     with RefreshableState {
   bool _isLoading = false;
-  List<AppLogbookTimelineEntry> _entries = [];
+  List<EquineTimelineEntry> _domainEntries = [];
+  String? _category;
   bool _hasError = false;
-  String _errorMessage = '';
+
+  // Categorías para filtrar la bitácora. Agrupan los tipos de evento en cubos
+  // navegables sin saturar la barra de filtros.
+  static const _healthTypes = <String>{
+    'health_check', 'injury', 'treatment', 'medication', 'vaccination',
+    'farrier', 'hoof_care', 'dentistry', 'lab_test',
+  };
+  static const _availabilityTypes = <String>{
+    'rest', 'availability_change',
+  };
+
+  String _categoryOf(EquineTimelineEntry e) {
+    if (e.source != 'equine_event') return 'servicio';
+    if (e.affectsAvailability || _availabilityTypes.contains(e.eventType)) {
+      return 'disponibilidad';
+    }
+    if (_healthTypes.contains(e.eventType)) return 'salud';
+    return 'manejo';
+  }
+
+  List<EquineTimelineEntry> get _filteredDomain {
+    if (_category == null) return _domainEntries;
+    return _domainEntries
+        .where((e) => _categoryOf(e) == _category)
+        .toList(growable: false);
+  }
 
   @override
   Future<void> onRefresh() => _loadTimeline();
@@ -56,7 +82,6 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
     setState(() {
       _isLoading = true;
       _hasError = false;
-      _errorMessage = '';
     });
 
     try {
@@ -76,16 +101,13 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
 
       if (!mounted) return;
       setState(() {
-        _entries = merged
-            .map((e) => EquineMapper.timelineEntryToLogbookEntry(e))
-            .toList(growable: false);
+        _domainEntries = merged;
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _hasError = true;
-        _errorMessage = e.toString();
         _isLoading = false;
       });
     }
@@ -96,7 +118,7 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
     final scheme = Theme.of(context).colorScheme;
 
     return AppScaffold(
-      scrollable: _entries.isNotEmpty,
+      scrollable: _domainEntries.isNotEmpty,
       appBar: AppBar(
         title: Text(
           widget.equineName,
@@ -154,15 +176,26 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
       );
     }
 
-    if (_entries.isEmpty) {
+    if (_domainEntries.isEmpty) {
       return RefreshableViewport(child: _buildEmptyState());
     }
+
+    final filtered = _filteredDomain;
+    final entries = filtered
+        .map((e) => EquineMapper.timelineEntryToLogbookEntry(e))
+        .toList(growable: false);
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Filtro por categoría de la bitácora.
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _buildCategoryFilter(),
+        ),
+
         // Timeline header
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -183,7 +216,7 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '${_entries.length}',
+                  '${entries.length}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -200,14 +233,39 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
           ),
         ),
 
-        // Timeline entries
-        AppLogbookTimeline(
-          entries: _entries,
-        ),
+        // Timeline entries (o aviso si el filtro no tiene registros).
+        if (entries.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 48),
+            child: Center(
+              child: Text(
+                'Sin registros en esta categoría',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+              ),
+            ),
+          )
+        else
+          AppLogbookTimeline(entries: entries),
 
         const SizedBox(height: 80), // Space for FAB
       ],
     ),
+    );
+  }
+
+  Widget _buildCategoryFilter() {
+    return AppSegmentedFilter<String?>(
+      value: _category,
+      onChanged: (value) => setState(() => _category = value),
+      items: const [
+        AppSegmentedFilterItem(label: 'TODOS', value: null),
+        AppSegmentedFilterItem(label: 'SALUD', value: 'salud'),
+        AppSegmentedFilterItem(label: 'DISPONIBILIDAD', value: 'disponibilidad'),
+        AppSegmentedFilterItem(label: 'MANEJO', value: 'manejo'),
+        AppSegmentedFilterItem(label: 'SERVICIO', value: 'servicio'),
+      ],
     );
   }
 

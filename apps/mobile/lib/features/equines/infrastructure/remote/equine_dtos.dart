@@ -221,6 +221,15 @@ class EquineTimelineEntryDto {
     this.notes,
     this.severity,
     this.affectsAvailability = false,
+    this.measuredWeightKg,
+    this.measuredHeightM,
+    this.nextDueAt,
+    this.performedBy,
+    this.medicationName,
+    this.dosage,
+    this.labResultSummary,
+    this.resultingOperationalStatus,
+    this.restUntil,
   });
 
   final String id;
@@ -232,6 +241,15 @@ class EquineTimelineEntryDto {
   final String? notes;
   final String? severity;
   final bool affectsAvailability;
+  final double? measuredWeightKg;
+  final double? measuredHeightM;
+  final String? nextDueAt;
+  final String? performedBy;
+  final String? medicationName;
+  final String? dosage;
+  final String? labResultSummary;
+  final String? resultingOperationalStatus;
+  final String? restUntil;
 
   factory EquineTimelineEntryDto.fromJson(Map<String, dynamic> json) {
     return EquineTimelineEntryDto(
@@ -244,6 +262,16 @@ class EquineTimelineEntryDto {
       notes: json['notes'] as String?,
       severity: json['severity'] as String?,
       affectsAvailability: json['affects_availability'] as bool? ?? false,
+      measuredWeightKg: EquineDto._parseDecimal(json['measured_weight_kg']),
+      measuredHeightM: EquineDto._parseDecimal(json['measured_height_m']),
+      nextDueAt: json['next_due_at'] as String?,
+      performedBy: json['performed_by'] as String?,
+      medicationName: json['medication_name'] as String?,
+      dosage: json['dosage'] as String?,
+      labResultSummary: json['lab_result_summary'] as String?,
+      resultingOperationalStatus:
+          json['resulting_operational_status'] as String?,
+      restUntil: json['rest_until'] as String?,
     );
   }
 }

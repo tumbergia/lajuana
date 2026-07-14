@@ -29,11 +29,6 @@ void main() {
       expect(controller.subroute, DashboardSubroute.salidas);
     });
 
-    test('changes to sync', () {
-      controller.selectSubrouteByIndex(3);
-      expect(controller.subroute, DashboardSubroute.sync);
-    });
-
     test('does nothing if already on the same subroute', () {
       controller.selectSubrouteByIndex(2);
       expect(controller.subroute, DashboardSubroute.salidas);
