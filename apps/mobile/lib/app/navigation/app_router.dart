@@ -77,6 +77,7 @@ class AppRouter {
             ? AuthenticatedShell(
                 authController: deps.authController,
                 contactsApiClient: deps.apiClient,
+                analyticsApiClient: deps.analyticsApiClient,
                 catalogsModule: deps.catalogsModule,
                 reservationsModule: deps.reservationsModule,
                 saddlesModule: deps.saddlesModule,

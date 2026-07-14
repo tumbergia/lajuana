@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:mobile_core/mobile_core.dart';
 
+import 'package:mobile_ui/src/theme/app_colors.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
@@ -919,7 +921,28 @@ class _ReservationDetailShellScreenState
         detail.status != ReservationStatus.expired;
     final canConfirm = paymentOk && notTerminal;
 
-    AppConfirmDialog.show(
+    if (!canConfirm) {
+      AppConfirmDialog.show(
+        context: context,
+        icon: Icons.error_outline_rounded,
+        title: '¡Verifica el pago!',
+        message: !paymentOk
+            ? 'Antes de confirmar la reserva, tienes que aprobar el comprobante de pago.'
+            : 'La reserva ya está en estado terminal.',
+        confirmLabel: 'Cerrar',
+        style: DialogStyle.warning,
+        height: 280,
+        onConfirm: () {},
+      );
+      return;
+    }
+
+    final theme = Theme.of(context);
+    final tokens = theme.appTokens;
+    final scheme = theme.colorScheme;
+    TimeOfDay selectedTime = TimeOfDay.now();
+
+    showDialog<void>(
       context: context,
       icon: canConfirm
           ? Icons.check_circle_outline_rounded

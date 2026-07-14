@@ -1,3 +1,4 @@
+import 'package:mobile/features/analytics/remote/analytics_api_client.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/backend_reachability_service.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/connectivity_service.dart';
@@ -36,6 +37,7 @@ class AppDependencies {
   const AppDependencies({
     required this.authController,
     required this.apiClient,
+    required this.analyticsApiClient,
     required this.catalogsModule,
     required this.reservationsModule,
     required this.saddlesModule,
@@ -51,6 +53,7 @@ class AppDependencies {
 
   final AuthController authController;
   final AuthApiClient apiClient;
+  final AnalyticsApiClient analyticsApiClient;
   final CatalogsModule catalogsModule;
   final ReservationsModule reservationsModule;
   final SaddlesModule saddlesModule;
@@ -169,6 +172,13 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     outbox: outbox,
   );
 
+  // ── Analytics client ──
+  final analyticsApiClient = AnalyticsApiClient(
+    baseUrl: apiBaseUrl,
+    readAccessToken: readAccessToken,
+    refreshSession: refreshSession,
+  );
+
   // ── Equine module ──
   final equinesApiClient = EquinesApiClient(
     baseUrl: apiBaseUrl,
@@ -208,6 +218,7 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
   return AppDependencies(
     authController: authController,
     apiClient: apiClient,
+    analyticsApiClient: analyticsApiClient,
     catalogsModule: catalogsModule,
     reservationsModule: reservationsModule,
     saddlesModule: saddlesModule,

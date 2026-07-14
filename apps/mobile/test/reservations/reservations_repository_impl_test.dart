@@ -91,6 +91,7 @@ class _FakeApiClient implements ReservationsApiClient {
   Future<ReservationDetailDto> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) =>
       throw UnimplementedError();
 

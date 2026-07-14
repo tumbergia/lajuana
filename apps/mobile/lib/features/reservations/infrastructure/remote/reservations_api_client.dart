@@ -193,12 +193,14 @@ class ReservationsApiClient {
   Future<ReservationDetailDto> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     final response = await _authorizedRequest(
       method: 'POST',
       path: '/reservations/$reservationId/confirm',
       body: {
         if (notes != null) 'notes': notes,
+        if (startTime != null) 'start_time': startTime,
       },
     );
     final data = _decodeBody(response.body);

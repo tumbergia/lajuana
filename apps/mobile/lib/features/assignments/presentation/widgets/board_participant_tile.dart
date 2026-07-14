@@ -127,17 +127,6 @@ class BoardParticipantTile extends StatelessWidget {
           validationMessage: validationMessage,
           safetyFlags: assignment?.warnings ?? [],
         ),
-
-        if (ctrl.actionError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              ctrl.actionError!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.error,
-              ),
-            ),
-          ),
       ],
     );
   }
@@ -224,8 +213,8 @@ class BoardParticipantTile extends StatelessWidget {
   // ── Saddle picker dialog ──
 
   void _showSaddlePicker(BuildContext context) {
+    final participantId = participant.participantId;
     final aid = participant.assignment?.assignmentId;
-    if (aid == null) return;
     final currentSaddleId = participant.assignment?.saddleId;
     final saddles = availableSaddles.where((s) => s.isAvailable).toList();
     String? selectedSaddleId = currentSaddleId;
@@ -266,10 +255,17 @@ class BoardParticipantTile extends StatelessWidget {
                     ? null
                     : () {
                         Navigator.of(ctx).pop();
-                        ctrl.update(
-                          assignmentId: aid,
-                          saddleId: selectedSaddleId!,
-                        );
+                        if (aid != null) {
+                          ctrl.update(
+                            assignmentId: aid,
+                            saddleId: selectedSaddleId!,
+                          );
+                        } else {
+                          ctrl.assignSaddle(
+                            participantId: participantId,
+                            saddleId: selectedSaddleId!,
+                          );
+                        }
                       },
                 child: ctrl.isUpdating
                     ? const SizedBox(
@@ -289,8 +285,8 @@ class BoardParticipantTile extends StatelessWidget {
   // ── Remove confirmations ──
 
   void _showRemoveSaddleConfirm(BuildContext context) {
+    final participantId = participant.participantId;
     final aid = participant.assignment?.assignmentId;
-    if (aid == null) return;
 
     AppConfirmDialog.show(
       context: context,
@@ -299,7 +295,13 @@ class BoardParticipantTile extends StatelessWidget {
       message: '¿Quitar la silla asignada a ${participant.fullName}?',
       confirmLabel: 'Sí',
       style: DialogStyle.danger,
-      onConfirm: () => ctrl.update(assignmentId: aid, saddleId: null),
+      onConfirm: () {
+        if (aid != null) {
+          ctrl.update(assignmentId: aid, saddleId: null);
+        } else {
+          ctrl.assignSaddle(participantId: participantId, saddleId: null);
+        }
+      },
     );
   }
 

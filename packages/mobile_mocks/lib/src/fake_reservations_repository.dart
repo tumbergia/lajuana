@@ -149,6 +149,7 @@ class FakeReservationsRepository implements ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw UnimplementedError('confirmReservation not implemented in fake');
   }

@@ -58,6 +58,14 @@ class FallbackRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
+    String? note,
+  }) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
   Future<ReservationDetail> approvePaymentProof({
     required String paymentProofId,
     String? note,
@@ -101,6 +109,7 @@ class FallbackRepository implements ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw Exception('ReservationsModule no inyectado');
   }

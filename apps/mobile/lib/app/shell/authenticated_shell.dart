@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/analytics/remote/analytics_api_client.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/auth/presentation/widgets/session_loading_view.dart';
@@ -17,6 +18,7 @@ import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/voice_pull_scope.dart';
 import 'widgets/shell_status_region.dart';
+import 'package:mobile/features/analytics/presentation/screens/leads_screen.dart';
 import 'package:mobile/features/configuration/presentation/screens/more_flow_screen.dart';
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/notifications/notifications_module.dart';
@@ -41,6 +43,7 @@ class AuthenticatedShell extends StatefulWidget {
     super.key,
     required this.authController,
     required this.contactsApiClient,
+    required this.analyticsApiClient,
     this.catalogsModule,
     this.reservationsModule,
     this.saddlesModule,
@@ -57,6 +60,7 @@ class AuthenticatedShell extends StatefulWidget {
 
   final AuthController authController;
   final AuthApiClient contactsApiClient;
+  final AnalyticsApiClient analyticsApiClient;
   final CatalogsModule? catalogsModule;
   final ReservationsModule? reservationsModule;
   final SaddlesModule? saddlesModule;
@@ -251,11 +255,8 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
   Widget _tabRoot(AppNavItem tab) {
     switch (tab) {
       case AppNavItem.inicio:
-        return DashboardScreen(
-          authController: widget.authController,
-          onNavigateToTab: _onBottomNavTap,
-          reservationsModule: widget.reservationsModule,
-          catalogsModule: widget.catalogsModule,
+        return LeadsScreen(
+          analyticsApiClient: widget.analyticsApiClient,
         );
       case AppNavItem.reservas:
         return ReservationsModuleScreen(

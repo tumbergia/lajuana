@@ -222,10 +222,12 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     final dto = await _apiClient.confirmReservation(
       reservationId: reservationId,
       notes: notes,
+      startTime: startTime,
     );
     final detail = dtoToDetail(dto);
 
