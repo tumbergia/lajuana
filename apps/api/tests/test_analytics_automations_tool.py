@@ -99,13 +99,30 @@ async def _run_returns_summary(monkeypatch: pytest.MonkeyPatch) -> None:
             s = r.status.value if hasattr(r.status, 'value') else str(r.status)
             amt = int(r.quoted_total_amount) if hasattr(r, 'quoted_total_amount') and r.quoted_total_amount else 0
             status_amounts[s] = status_amounts.get(s, 0) + amt
-        results = [
-            {"_id": s, "count": sum(1 for r in reservations if (r.status.value if hasattr(r.status, 'value') else str(r.status)) == s), "total_amount": status_amounts[s]}
-            for s in status_amounts
-        ]
-        return FakeAggregateQuery(results)
+        # Series pipeline groups by date with "total"; status pipeline uses "total_amount".
+        is_series = any(
+            isinstance(stage.get("$group", {}).get("_id"), dict)
+            and "$dateToString" in str(stage.get("$group", {}).get("_id", {}))
+            for stage in pipeline
+        )
+        if is_series:
+            results = [
+                {"_id": "2026-07-01", "total": status_amounts.get("confirmed", 0)}
+            ]
+        else:
+            results = [
+                {"_id": s, "count": sum(1 for r in reservations if (r.status.value if hasattr(r.status, 'value') else str(r.status)) == s), "total_amount": status_amounts[s]}
+                for s in status_amounts
+            ]
+        return results
 
-    monkeypatch.setattr(ReservationDocument, "aggregate", fake_aggregate)
+    async def fake_aggregate_async(pipeline):
+        return fake_aggregate(pipeline)
+
+    monkeypatch.setattr(
+        "app.ai.mcp.tools.analytics._aggregate",
+        fake_aggregate_async,
+    )
     monkeypatch.setattr("app.ai.mcp.tools.analytics.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await admin_get_sales_summary(trace_id=str(uuid4()))
@@ -114,6 +131,13 @@ async def _run_returns_summary(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result["total_reservations"] == 2
     assert result["total_revenue"] == 500000
     assert len(result["by_status"]) == 2
+    chart = result["chart"]
+    assert chart is not None
+    assert chart["type"] == "line"
+    assert chart["value_type"] == "currency"
+    assert chart["title"] == "Ingresos comprometidos"
+    assert len(chart["series"]) == 1
+    assert chart["series"][0]["points"][0]["value"] == 500000.0
 
 
 def test_returns_summary(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -147,9 +171,15 @@ async def _run_returns_funnel(monkeypatch: pytest.MonkeyPatch) -> None:
     def fake_aggregate(pipeline):
         from collections import Counter
         status_counts: Counter = Counter(r.status.value if hasattr(r.status, 'value') else str(r.status) for r in reservations)
-        return FakeAggregateQuery([{"_id": s, "count": c} for s, c in status_counts.items()])
+        return [{"_id": s, "count": c} for s, c in status_counts.items()]
 
-    monkeypatch.setattr(ReservationDocument, "aggregate", fake_aggregate)
+    async def fake_aggregate_async(pipeline):
+        return fake_aggregate(pipeline)
+
+    monkeypatch.setattr(
+        "app.ai.mcp.tools.analytics._aggregate",
+        fake_aggregate_async,
+    )
     monkeypatch.setattr("app.ai.mcp.tools.analytics.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await admin_get_reservation_funnel(trace_id=str(uuid4()))
@@ -164,6 +194,11 @@ async def _run_returns_funnel(monkeypatch: pytest.MonkeyPatch) -> None:
     assert stages["quoted"] == 1
     assert stages["confirmed"] == 1
     assert stages["completed"] == 1
+
+    chart = result["chart"]
+    assert chart["type"] == "bar"
+    assert chart["value_type"] == "count"
+    assert len(chart["points"]) == 6
 
 
 def test_returns_funnel(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -211,12 +246,18 @@ async def _run_returns_channel_performance(monkeypatch: pytest.MonkeyPatch) -> N
             channel_counts[ch] += 1
             if r.status in (ReservationStatus.CONFIRMED, ReservationStatus.COMPLETED):
                 channel_confirmed[ch] += 1
-        return FakeAggregateQuery([
+        return [
             {"_id": ch, "count": channel_counts[ch], "confirmed": channel_confirmed[ch]}
             for ch in channel_counts
-        ])
+        ]
 
-    monkeypatch.setattr(ReservationDocument, "aggregate", fake_aggregate)
+    async def fake_aggregate_async(pipeline):
+        return fake_aggregate(pipeline)
+
+    monkeypatch.setattr(
+        "app.ai.mcp.tools.analytics._aggregate",
+        fake_aggregate_async,
+    )
     monkeypatch.setattr("app.ai.mcp.tools.analytics.ToolCallLogDocument", FakeToolLogDoc)
 
     result = await admin_get_channel_performance(trace_id=str(uuid4()))
@@ -226,6 +267,15 @@ async def _run_returns_channel_performance(monkeypatch: pytest.MonkeyPatch) -> N
     whatsapp = next(c for c in result["channels"] if c["channel"] == "whatsapp")
     assert whatsapp["count"] == 2
     assert whatsapp["confirmed"] == 1
+
+    chart = result["chart"]
+    assert chart["type"] == "donut"
+    assert chart["value_type"] == "count"
+    assert chart["title"] == "Origen por canal"
+    labels = {p["label"] for p in chart["points"]}
+    assert "WhatsApp" in labels
+    assert "Instagram" in labels
+    assert all(p["color"] for p in chart["points"])
 
 
 def test_returns_channel_performance(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -274,6 +324,12 @@ async def _run_returns_occupancy(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result["avg_occupancy_pct"] == 100.0
     assert result["occupancy"][0]["experience_name"] == "Media Jornada"
 
+    chart = result["chart"]
+    assert chart["type"] == "bar"
+    assert chart["value_type"] == "percent"
+    assert chart["points"][0]["label"] == "Media Jornada"
+    assert chart["points"][0]["value"] == 100.0
+
 
 def test_returns_occupancy(monkeypatch: pytest.MonkeyPatch) -> None:
     asyncio.run(_run_returns_occupancy(monkeypatch))
@@ -316,6 +372,12 @@ async def _run_returns_workload_report(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result["blocking_reasons"] == []
     assert result["total_equines"] == 1
     assert result["total_assignments"] == 0
+
+    chart = result["chart"]
+    assert chart["type"] == "bar"
+    assert chart["value_type"] == "count"
+    assert chart["points"][0]["label"] == "Pegaso"
+    assert chart["points"][0]["value"] == 0.0
 
 
 def test_returns_workload_report(monkeypatch: pytest.MonkeyPatch) -> None:

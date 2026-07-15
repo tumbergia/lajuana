@@ -994,7 +994,7 @@ class _TintedBar extends StatelessWidget {
   }
 }
 
-class CountryRankingCard extends StatelessWidget {
+class CountryRankingCard extends StatefulWidget {
   const CountryRankingCard({
     super.key,
     required this.module,
@@ -1010,8 +1010,38 @@ class CountryRankingCard extends StatelessWidget {
 
   static const int _visibleLimit = 5;
 
+  @override
+  State<CountryRankingCard> createState() => _CountryRankingCardState();
+}
+
+class _CountryRankingCardState extends State<CountryRankingCard> {
+  String? _focusKey;
+
+  AnalyticsModule get module => widget.module;
+  bool get refreshing => widget.refreshing;
+  bool get hero => widget.hero;
+
   void _openInfo(BuildContext context, {RankingItem? focus}) {
-    showIndicatorDetailSheet(context, module: module);
+    final key = focus?.key;
+    if (key != null) setState(() => _focusKey = key);
+    showIndicatorDetailSheet(
+      context,
+      module: module,
+      focusKey: key ?? _focusKey,
+    );
+  }
+
+  void _selectSection(int index, List<RankingItem> items, {required bool hasMore}) {
+    if (index < 0 || index >= items.length) {
+      _openInfo(context);
+      return;
+    }
+    setState(() => _focusKey = items[index].key);
+    // Con más países de los visibles, abre el desglose completo y
+    // posiciona el scroll en el ítem (el sheet hace ensureVisible).
+    if (hasMore) {
+      _openInfo(context, focus: items[index]);
+    }
   }
 
   @override
@@ -1035,8 +1065,8 @@ class CountryRankingCard extends StatelessWidget {
     }
 
     final allItems = module.ranking;
-    final items = allItems.take(_visibleLimit).toList();
-    final hasMore = allItems.length > _visibleLimit;
+    final items = allItems.take(CountryRankingCard._visibleLimit).toList();
+    final hasMore = allItems.length > CountryRankingCard._visibleLimit;
     final total = items.fold<double>(0, (sum, item) => sum + item.rawValue);
     final points = [
       for (final item in items)
@@ -1103,13 +1133,8 @@ class CountryRankingCard extends StatelessWidget {
                 : total.toStringAsFixed(0),
             height: hero ? tokens.chartHeightWide : tokens.chartHeightStandard,
             showLegend: false,
-            onSectionTap: (index) {
-              if (index < 0 || index >= items.length) {
-                _openInfo(context);
-                return;
-              }
-              _openInfo(context, focus: items[index]);
-            },
+            onSectionTap: (index) =>
+                _selectSection(index, items, hasMore: hasMore),
           ),
           SizedBox(height: appTokens.spaceMd),
           for (var i = 0; i < items.length; i++) ...[
@@ -1117,6 +1142,7 @@ class CountryRankingCard extends StatelessWidget {
             _CountryLegendRow(
               item: items[i],
               color: points[i].color ?? scheme.outline,
+              highlighted: _focusKey != null && items[i].key == _focusKey,
               onTap: () => _openInfo(context, focus: items[i]),
             ),
           ],
@@ -1130,7 +1156,7 @@ class CountryRankingCard extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: appTokens.spaceXs),
                   child: Text(
-                    'Mostrando top $_visibleLimit · toca para ver todos (${allItems.length})',
+                    'Mostrando top ${CountryRankingCard._visibleLimit} · toca para ver todos (${allItems.length})',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -1154,21 +1180,28 @@ class _CountryLegendRow extends StatelessWidget {
     required this.item,
     required this.color,
     this.onTap,
+    this.highlighted = false,
   });
 
   final RankingItem item;
   final Color color;
   final VoidCallback? onTap;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final appTokens = Theme.of(context).appTokens;
     final share = item.sharePercentage;
-    final row = Padding(
+    final row = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       padding: EdgeInsets.symmetric(
         horizontal: appTokens.spaceSm,
         vertical: appTokens.spaceXs,
+      ),
+      decoration: BoxDecoration(
+        color: highlighted ? color.withValues(alpha: 0.16) : Colors.transparent,
+        borderRadius: appTokens.radiusMd,
       ),
       child: Row(
         children: [
@@ -1367,9 +1400,9 @@ class ActionCenterCard extends StatelessWidget {
 
 /// Donut a la izquierda + leyenda a la derecha (layout distinto a tendencia).
 ///
-/// Tap en sección / leyenda / botón info abre el desglose (mismo patrón que
-/// [CountryRankingCard]).
-class DonutInsightCard extends StatelessWidget {
+/// Tap en un fragmento resalta el ítem de la leyenda; tap en leyenda / info
+/// abre el desglose (mismo patrón que [CountryRankingCard]).
+class DonutInsightCard extends StatefulWidget {
   const DonutInsightCard({
     super.key,
     required this.module,
@@ -1385,12 +1418,38 @@ class DonutInsightCard extends StatelessWidget {
   final bool compact;
   final bool hero;
 
+  @override
+  State<DonutInsightCard> createState() => _DonutInsightCardState();
+}
+
+class _DonutInsightCardState extends State<DonutInsightCard> {
+  String? _focusKey;
+
+  AnalyticsModule get module => widget.module;
+  bool get refreshing => widget.refreshing;
+  bool get compact => widget.compact;
+  bool get hero => widget.hero;
+
   Color _colorForItem(BuildContext context, BreakdownItem item, int index) {
     return breakdownItemColor(context, module, item, index);
   }
 
   void _openInfo(BuildContext context, {BreakdownItem? focus}) {
-    showIndicatorDetailSheet(context, module: module);
+    final key = focus?.key;
+    if (key != null) setState(() => _focusKey = key);
+    showIndicatorDetailSheet(
+      context,
+      module: module,
+      focusKey: key ?? _focusKey,
+    );
+  }
+
+  void _selectSection(int index, List<BreakdownItem> items) {
+    if (index < 0 || index >= items.length) {
+      _openInfo(context);
+      return;
+    }
+    setState(() => _focusKey = items[index].key);
   }
 
   @override
@@ -1470,13 +1529,7 @@ class DonutInsightCard extends StatelessWidget {
                     centerLabel: module.primaryValue?.formatted,
                     height: h,
                     showLegend: false,
-                    onSectionTap: (index) {
-                      if (index < 0 || index >= items.length) {
-                        _openInfo(context);
-                        return;
-                      }
-                      _openInfo(context, focus: items[index]);
-                    },
+                    onSectionTap: (index) => _selectSection(index, items),
                   ),
                 ),
               ),
@@ -1493,6 +1546,8 @@ class DonutInsightCard extends StatelessWidget {
                         color: points[i].color ??
                             tokens.seriesPalette[
                                 i % tokens.seriesPalette.length],
+                        highlighted:
+                            _focusKey != null && items[i].key == _focusKey,
                         onTap: () => _openInfo(context, focus: items[i]),
                       ),
                     ],
@@ -1516,11 +1571,13 @@ class _BreakdownLegendRow extends StatelessWidget {
     required this.item,
     required this.color,
     this.onTap,
+    this.highlighted = false,
   });
 
   final BreakdownItem item;
   final Color color;
   final VoidCallback? onTap;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
@@ -1536,10 +1593,19 @@ class _BreakdownLegendRow extends StatelessWidget {
     final swatchBorder = isLight
         ? Border.all(color: scheme.outline.withValues(alpha: 0.55))
         : null;
-    final row = Padding(
+    final row = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       padding: EdgeInsets.symmetric(
         horizontal: appTokens.spaceSm,
         vertical: appTokens.spaceXs,
+      ),
+      decoration: BoxDecoration(
+        color: highlighted
+            ? (isLight
+                ? scheme.surfaceContainerHighest
+                : color.withValues(alpha: 0.16))
+            : Colors.transparent,
+        borderRadius: appTokens.radiusMd,
       ),
       child: Row(
         children: [

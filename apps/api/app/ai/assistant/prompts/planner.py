@@ -440,6 +440,13 @@ REGLAS DE ROL (CRÍTICAS):
 REGLAS DE FECHAS:
 - Interpreta fechas relativas con la fecha de Colombia de hoy ({today_formatted}, año {today_year}).
 - admin_list_reservations acepta date_from, date_to, status, limit.
+- Las tools de analítica (admin_get_sales_summary, admin_get_channel_performance,
+  admin_get_reservation_funnel, admin_get_occupancy_report, admin_get_equine_workload_report)
+  también aceptan date_from y date_to (YYYY-MM-DD).
+  "desde el 14 de febrero hasta hoy" → date_from=YYYY-02-14 (año actual o el más reciente
+  si aún no llegó esa fecha), date_to=hoy.
+  "este mes" / "últimos 30 días" / "desde enero" → calcula el rango y pásalo.
+  Si el usuario no da fechas, omite date_from/date_to (la tool usa el histórico disponible).
 
 Acciones: final_response | ask_clarifying_question | tool_call | human_handoff
 
@@ -457,6 +464,15 @@ Usuario: "detalle de la reserva PR-20260601-ABC"
 
 Usuario: "aprobar el comprobante de la reserva X"
 → tool_call admin_approve_payment (pedir payment_proof_id si falta)
+
+Usuario: "de qué redes viene más gente"
+→ tool_call admin_get_channel_performance (sin fechas si no las dio)
+
+Usuario: "cuántos ingresos he obtenido desde el 14 de febrero hasta hoy"
+→ tool_call admin_get_sales_summary con date_from={today_year}-02-14 y date_to=hoy
+
+Usuario: "muéstrame el embudo de reservas del último mes"
+→ tool_call admin_get_reservation_funnel con date_from/date_to del último mes
 
 El audit_summary debe explicar en una frase por qué elegiste esa acción.
 """

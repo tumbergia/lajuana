@@ -42,6 +42,7 @@ Future<void> showIndicatorDetailSheet(
   BuildContext context, {
   required AnalyticsModule module,
   DashboardController? controller,
+  String? focusKey,
 }) {
   final ctrl = controller ?? AnalyticsDownloadScope.maybeOf(context);
   return showModalBottomSheet<void>(
@@ -56,6 +57,7 @@ Future<void> showIndicatorDetailSheet(
     builder: (ctx) => IndicatorDetailSheet(
       module: module,
       controller: ctrl,
+      focusKey: focusKey,
     ),
   );
 }
@@ -67,10 +69,15 @@ class IndicatorDetailSheet extends StatefulWidget {
     super.key,
     required this.module,
     this.controller,
+    this.focusKey,
   });
 
   final AnalyticsModule module;
   final DashboardController? controller;
+
+  /// When set (e.g. after tapping a donut section), the matching breakdown /
+  /// ranking row is highlighted.
+  final String? focusKey;
 
   @override
   State<IndicatorDetailSheet> createState() => _IndicatorDetailSheetState();
@@ -78,10 +85,36 @@ class IndicatorDetailSheet extends StatefulWidget {
 
 class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
   final GlobalKey _chartKey = GlobalKey();
+  final GlobalKey _focusRowKey = GlobalKey();
   bool _busyXlsx = false;
   bool _busyPng = false;
+  late String? _focusKey = widget.focusKey;
 
   AnalyticsModule get module => widget.module;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_focusKey != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToFocus());
+    }
+  }
+
+  void _setFocus(String key) {
+    setState(() => _focusKey = key);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToFocus());
+  }
+
+  void _scrollToFocus() {
+    final ctx = _focusRowKey.currentContext;
+    if (ctx == null || !mounted) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+      alignment: 0.25,
+    );
+  }
 
   Future<void> _downloadXlsx() async {
     final ctrl = widget.controller ?? AnalyticsDownloadScope.maybeOf(context);
@@ -241,7 +274,11 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
                   color: scheme.surface,
                   child: Padding(
                     padding: EdgeInsets.all(tokens.spaceSm),
-                    child: _DetailChart(module: module, accent: accent),
+                    child: _DetailChart(
+                      module: module,
+                      accent: accent,
+                      onDonutSectionTap: _setFocus,
+                    ),
                   ),
                 ),
               ),
@@ -282,7 +319,12 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
                     ),
               ),
               SizedBox(height: tokens.spaceMd),
-              _DetailTable(module: module, accent: accent),
+              _DetailTable(
+                module: module,
+                accent: accent,
+                focusKey: _focusKey,
+                focusRowKey: _focusRowKey,
+              ),
               SizedBox(height: tokens.spaceXl),
               Text(
                 'Descargar',
@@ -424,10 +466,15 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
 }
 
 class _DetailChart extends StatelessWidget {
-  const _DetailChart({required this.module, required this.accent});
+  const _DetailChart({
+    required this.module,
+    required this.accent,
+    this.onDonutSectionTap,
+  });
 
   final AnalyticsModule module;
   final Color accent;
+  final ValueChanged<String>? onDonutSectionTap;
 
   @override
   Widget build(BuildContext context) {
@@ -480,6 +527,12 @@ class _DetailChart extends StatelessWidget {
             : total.toStringAsFixed(0),
         height: tokens.chartHeightWide,
         showLegend: true,
+        onSectionTap: onDonutSectionTap == null
+            ? null
+            : (index) {
+                if (index < 0 || index >= items.length) return;
+                onDonutSectionTap!(items[index].key);
+              },
       );
     }
 
@@ -504,6 +557,12 @@ class _DetailChart extends StatelessWidget {
           centerLabel: module.primaryValue?.formatted,
           height: tokens.chartHeightWide,
           showLegend: true,
+          onSectionTap: onDonutSectionTap == null
+              ? null
+              : (index) {
+                  if (index < 0 || index >= items.length) return;
+                  onDonutSectionTap!(items[index].key);
+                },
         );
       }
       // Action lists: compact spark of counts
@@ -680,10 +739,46 @@ class _SheetBarRow extends StatelessWidget {
 }
 
 class _DetailTable extends StatelessWidget {
-  const _DetailTable({required this.module, required this.accent});
+  const _DetailTable({
+    required this.module,
+    required this.accent,
+    this.focusKey,
+    this.focusRowKey,
+  });
 
   final AnalyticsModule module;
   final Color accent;
+  final String? focusKey;
+  final GlobalKey? focusRowKey;
+
+  Widget _highlightedRow({
+    required BuildContext context,
+    required Color swatch,
+    required bool highlighted,
+    required Widget child,
+  }) {
+    final tokens = Theme.of(context).appTokens;
+    final scheme = Theme.of(context).colorScheme;
+    final isLight = swatch.computeLuminance() > 0.85;
+    return AnimatedContainer(
+      key: highlighted ? focusRowKey : null,
+      duration: const Duration(milliseconds: 200),
+      margin: EdgeInsets.only(bottom: tokens.spaceSm),
+      padding: EdgeInsets.symmetric(
+        horizontal: tokens.spaceSm,
+        vertical: tokens.spaceXs,
+      ),
+      decoration: BoxDecoration(
+        color: highlighted
+            ? (isLight
+                ? scheme.surfaceContainerHighest
+                : swatch.withValues(alpha: 0.16))
+            : Colors.transparent,
+        borderRadius: tokens.radiusMd,
+      ),
+      child: child,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -719,8 +814,16 @@ class _DetailTable extends StatelessWidget {
       return Column(
         children: [
           for (var i = 0; i < module.breakdown.length; i++)
-            Padding(
-              padding: EdgeInsets.only(bottom: tokens.spaceSm),
+            _highlightedRow(
+              context: context,
+              swatch: breakdownItemColor(
+                context,
+                module,
+                module.breakdown[i],
+                i,
+              ),
+              highlighted:
+                  focusKey != null && module.breakdown[i].key == focusKey,
               child: Row(
                 children: [
                   Container(
@@ -768,8 +871,14 @@ class _DetailTable extends StatelessWidget {
       return Column(
         children: [
           for (var i = 0; i < module.ranking.length; i++)
-            Padding(
-              padding: EdgeInsets.only(bottom: tokens.spaceSm),
+            _highlightedRow(
+              context: context,
+              swatch: countryFlagColor(
+                module.ranking[i].countryCode,
+                fallback: accent,
+              ),
+              highlighted:
+                  focusKey != null && module.ranking[i].key == focusKey,
               child: Row(
                 children: [
                   SizedBox(
@@ -782,7 +891,12 @@ class _DetailTable extends StatelessWidget {
                           ),
                     ),
                   ),
-                  Expanded(child: Text(module.ranking[i].label)),
+                  Expanded(
+                    child: Text(
+                      module.ranking[i].countryName ??
+                          module.ranking[i].label,
+                    ),
+                  ),
                   Text(
                     module.ranking[i].formattedValue,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(

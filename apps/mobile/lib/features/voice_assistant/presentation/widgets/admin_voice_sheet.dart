@@ -9,8 +9,10 @@ import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/app_voice_fab.dart';
 
 import '../../domain/voice_platform_support.dart';
+import '../../domain/voice_chart_spec.dart';
 import '../controllers/voice_assistant_controller.dart';
 import '../navigation/voice_assistant_navigation.dart';
+import 'voice_chart_card.dart';
 import 'voice_result_presenter.dart';
 
 class AdminVoiceSheet extends StatefulWidget {
@@ -108,6 +110,7 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
         final isAnsweredPhase = controller.phase == VoicePhase.answered ||
             controller.phase == VoicePhase.handoff;
         final structuredResult = _structuredResult(controller);
+        final chartSpec = _chartSpec(controller);
         final showManualInput = !isAnsweredPhase &&
             (controller.allowsManualInput ||
                 !controller.speechSupported ||
@@ -188,6 +191,10 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                                 items: structuredResult.items,
                               ),
                             ],
+                            if (chartSpec != null) ...[
+                              const SizedBox(height: 12),
+                              VoiceChartCard(spec: chartSpec),
+                            ],
                             if (showManualInput) ...[
                               const SizedBox(height: 16),
                               AppTextField(
@@ -257,7 +264,8 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     const headerAndGaps = 130.0;
     final actionsHeight = switch (phase) {
       VoicePhase.awaitingConfirmation => 188.0,
-      VoicePhase.answered || VoicePhase.handoff => 132.0,
+      // Chart + actions: leave more room for the scrollable body.
+      VoicePhase.answered || VoicePhase.handoff => 120.0,
       VoicePhase.needsInput || VoicePhase.error => 132.0,
       _ => 88.0,
     };
@@ -426,6 +434,18 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     );
   }
 
+  VoiceChartSpec? _chartSpec(VoiceAssistantController controller) {
+    final result = controller.result;
+    if (result == null) return null;
+    if (controller.phase != VoicePhase.answered &&
+        controller.phase != VoicePhase.handoff &&
+        controller.phase != VoicePhase.awaitingConfirmation &&
+        controller.phase != VoicePhase.needsInput) {
+      return null;
+    }
+    return VoiceChartSpec.tryParse(result.toolOutput['chart']);
+  }
+
   String _bodyKey(
     VoiceAssistantController controller,
     VoiceStructuredResult? structuredResult,
@@ -434,8 +454,10 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     if (controller.phase == VoicePhase.processing) {
       return 'processing:${controller.processingStage.name}';
     }
-    if (structuredResult != null) {
-      return 'structured:${controller.result!.traceId}:${structuredResult.summary}';
+    final chart = _chartSpec(controller);
+    if (structuredResult != null || chart != null) {
+      return 'structured:${controller.result!.traceId}:'
+          '${structuredResult?.summary ?? ''}:${chart?.title ?? ''}';
     }
     if (controller.result != null &&
         (controller.phase == VoicePhase.answered ||
@@ -459,6 +481,17 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     }
     if (structuredResult != null) {
       return structuredResult.summary;
+    }
+    final chart = _chartSpec(controller);
+    if (chart != null &&
+        controller.result != null &&
+        controller.result!.response.trim().isNotEmpty) {
+      return controller.result!.response;
+    }
+    if (chart != null) {
+      return chart.subtitle == null
+          ? chart.title
+          : '${chart.title}. ${chart.subtitle}';
     }
     if (controller.result != null &&
         (controller.phase == VoicePhase.answered ||

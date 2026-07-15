@@ -86,10 +86,23 @@ _ADMIN_REJECT_PAYMENT = [
 _ADMIN_SALES_REPORT = [
     r"\b(reporte|resumen)\b.*\b(ventas?)\b",
     r"\b(ventas?)\b.*\b(reporte|resumen)\b",
+    r"\b(ingresos?|facturacion|facturación)\b",
+    r"\bcuantos?\s+ingresos?\b",
+    r"\bcuántos?\s+ingresos?\b",
+]
+
+_ADMIN_CHANNEL_PERFORMANCE = [
+    r"\b(redes?|canales?|canal|origen|origenes|orígenes)\b",
+    r"\b(de\s+donde|de\s+dónde)\b.*\b(viene|vienen|gente|clientes?)\b",
+    r"\bwhatsapp\b.*\b(facebook|instagram|email)\b",
+]
+
+_ADMIN_FUNNEL_REPORT = [
+    r"\b(embudo|funnel|conversion|conversión)\b",
 ]
 
 _ADMIN_OCCUPANCY_REPORT = [
-    r"\b(reporte|ocupacion)\b",
+    r"\b(reporte|ocupacion|ocupación)\b",
 ]
 
 _ADMIN_EQUINE_WORKLOAD = [
@@ -225,13 +238,48 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
         )
 
     if _matches_any(msg_lower, _ADMIN_SALES_REPORT):
+        report_args = ToolArgs()
+        date_range = _extract_date_range(msg_lower)
+        if date_range:
+            report_args.date_from = date_range[0]  # type: ignore[attr-defined]
+            report_args.date_to = date_range[1]  # type: ignore[attr-defined]
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.9,
             tool_name="admin_get_sales_summary",
-            arguments=args,
-            user_goal="El admin quiere un reporte de ventas.",
+            arguments=report_args,
+            user_goal="El admin quiere un reporte de ventas / ingresos.",
             audit_summary="Intent admin: reporte de ventas.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CHANNEL_PERFORMANCE):
+        report_args = ToolArgs()
+        date_range = _extract_date_range(msg_lower)
+        if date_range:
+            report_args.date_from = date_range[0]  # type: ignore[attr-defined]
+            report_args.date_to = date_range[1]  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_channel_performance",
+            arguments=report_args,
+            user_goal="El admin quiere ver de qué canales/redes viene la gente.",
+            audit_summary="Intent admin: rendimiento por canal.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_FUNNEL_REPORT):
+        report_args = ToolArgs()
+        date_range = _extract_date_range(msg_lower)
+        if date_range:
+            report_args.date_from = date_range[0]  # type: ignore[attr-defined]
+            report_args.date_to = date_range[1]  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_reservation_funnel",
+            arguments=report_args,
+            user_goal="El admin quiere ver el embudo de reservas.",
+            audit_summary="Intent admin: embudo de conversión.",
         )
 
     if _matches_any(msg_lower, _ADMIN_OCCUPANCY_REPORT):
