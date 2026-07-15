@@ -98,16 +98,16 @@ def extract_date_from_message(message: str) -> str | None:
         normalized = re.sub(rf"\b{typo}\b", correct, normalized, flags=re.IGNORECASE)
 
     patterns = [
-        # "20 de junio de 2026"
-        r"(?:del?\s+)?(\d{1,2})\s+de\s+([a-záéíóúñ]+)\s+de\s+(\d{4})",
-        # "20 junio 2026"
+        # "20 de junio de 2026" / "20 of agust of 2026"
+        r"(?:del?\s+)?(\d{1,2})\s+(?:de|of)\s+([a-záéíóúñ]+)\s+(?:de|of)\s+(\d{4})",
+        # "20 junio 2026" / "20 august 2026"
         r"(?:del?\s+)?(\d{1,2})\s+([a-záéíóúñ]+)\s+(\d{4})",
         # "20/06/2026" o "20-06-2026"
         r"(\d{1,2})[/-](\d{1,2})[/-](\d{4})",
         # "2026-06-20" (ya iso)
         r"(\d{4})-(\d{2})-(\d{2})",
-        # "5 de agosto" (sin año → asumimos año actual o próximo si ya pasó)
-        r"(?:del?\s+)?(\d{1,2})\s+de\s+([a-záéíóúñ]+)(?:\s+de\s+(\d{4}))?",
+        # "5 de agosto" / "5 of august" (sin año)
+        r"(?:del?\s+)?(\d{1,2})\s+(?:de|of)\s+([a-záéíóúñ]+)(?:\s+(?:de|of)\s+(\d{4}))?",
         # "5 agosto" / "5 august" / "5 agust" (typo corregido arriba)
         r"(?:del?\s+)?(\d{1,2})\s+([a-záéíóúñ]+)(?:\s+(\d{4}))?",
         # English: "august 5" / "august 5, 2026" / "aug 5"
