@@ -85,6 +85,7 @@ def _public_payment_stage(status: str) -> str:
 async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.pop("trace_id", None) or str(uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
+    language: str = kwargs.pop("language", "es")
     started = time.perf_counter()
 
     payload: CreateReservationDraftInput | None = None
@@ -109,6 +110,7 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
             quote_snapshot=payload.quote_snapshot,
             conversation_id=payload.conversation_id,
             trace_id=trace_id,
+            holder_language=language,
         )
         payment_config = await container.config_service.get_payment_instructions()
 

@@ -26,6 +26,9 @@ class ReservationDocument(AuditDocument):
     holder_email: EmailStr | None = None
     holder_phone: str | None = None
     assistant_disabled: bool = False
+    # Idioma del titular al momento de crear la reserva. Se usa para
+    # seleccionar el template de WhatsApp correcto (es/en).
+    holder_language: str = "es"
     requested_date: date | None = None
     blocks_day: bool = False
     availability_lock_key: str | None = None

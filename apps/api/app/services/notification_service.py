@@ -72,9 +72,12 @@ class NotificationService:
         body: str | None = None,
         skip_template: bool = False,
         contact_phone: str | None = None,
+        language: str = "es",
     ) -> NotificationOutboxDocument:
         reservation_key = reservation_id or "none"
-        dedup_key = f"{event_type.value}:{reservation_key}:{recipient_type}:{channel.value}"
+        # La dedup_key incluye el idioma para que cada (evento, recipient, idioma)
+        # genere su propia entrada — así no colisionan ES/EN entre sí.
+        dedup_key = f"{event_type.value}:{reservation_key}:{recipient_type}:{channel.value}:{language}"
         if dedup_suffix:
             dedup_key += f":{dedup_suffix}"
 
@@ -93,9 +96,20 @@ class NotificationService:
                 {
                     "template_key": f"{event_type.value}.{recipient_type}",
                     "channel": channel.value,
+                    "language": language,
                     "is_active": True,
                 }
             )
+            # Fallback a español si no hay versión en el idioma del cliente.
+            if template is None and language != "es":
+                template = await NotificationTemplateDocument.find_one(
+                    {
+                        "template_key": f"{event_type.value}.{recipient_type}",
+                        "channel": channel.value,
+                        "language": "es",
+                        "is_active": True,
+                    }
+                )
 
             if template is not None and variables:
                 rendered_body = render_template(template.body, variables)
@@ -251,6 +265,10 @@ class NotificationService:
     ) -> list[NotificationOutboxDocument]:
         vars = self._build_customer_vars(reservation)
         tasks: list[NotificationOutboxDocument] = []
+        # El email al customer SIEMPRE va en español (cliente-facing formal).
+        # Los templates bilingües se aplican a WhatsApp (donde el cliente ya
+        # interactuó en otro idioma).
+        customer_lang = "es"
 
         if reservation.holder_email:
             tasks.append(
@@ -261,6 +279,7 @@ class NotificationService:
                     recipient_type="customer",
                     recipient_identifier=reservation.holder_email,
                     variables=vars,
+                    language=customer_lang,
                 )
             )
 
@@ -406,9 +425,11 @@ class NotificationService:
         experience_name: str,
         scheduled_date: str,
         start_time: str | None = None,
+        language: str | None = None,
     ) -> NotificationOutboxDocument | None:
         if not reservation.holder_phone:
             return None
+        lang = language or reservation.holder_language or "es"
         vars = {
             "customer_name": reservation.holder_name or "Cliente",
             "reservation_code": reservation.code,
@@ -423,15 +444,18 @@ class NotificationService:
             recipient_type="customer",
             recipient_identifier=reservation.holder_phone,
             variables=vars,
+            language=lang,
         )
 
     async def enqueue_payment_approved_form(
         self,
         reservation: ReservationDocument,
         experience_name: str,
+        language: str | None = None,
     ) -> NotificationOutboxDocument | None:
         if not reservation.holder_phone:
             return None
+        lang = language or reservation.holder_language or "es"
         vars = {
             "customer_name": reservation.holder_name or "Cliente",
             "experience_name": experience_name,
@@ -444,14 +468,17 @@ class NotificationService:
             recipient_type="customer",
             recipient_identifier=reservation.holder_phone,
             variables=vars,
+            language=lang,
         )
 
     async def enqueue_payment_approved_location(
         self,
         reservation: ReservationDocument,
+        language: str | None = None,
     ) -> NotificationOutboxDocument | None:
         if not reservation.holder_phone:
             return None
+        lang = language or reservation.holder_language or "es"
         vars = {
             "customer_name": reservation.holder_name or "Cliente",
             **await self.business_location_vars(),
@@ -463,6 +490,7 @@ class NotificationService:
             recipient_type="customer",
             recipient_identifier=reservation.holder_phone,
             variables=vars,
+            language=lang,
         )
 
     async def enqueue_payment_rejected(
@@ -470,9 +498,11 @@ class NotificationService:
         reservation: ReservationDocument,
         experience_name: str,
         rejection_reason: str,
+        language: str | None = None,
     ) -> NotificationOutboxDocument | None:
         if not reservation.holder_phone:
             return None
+        lang = language or reservation.holder_language or "es"
         vars = {
             "customer_name": reservation.holder_name or "Cliente",
             "experience_name": experience_name,
@@ -485,15 +515,18 @@ class NotificationService:
             recipient_type="customer",
             recipient_identifier=reservation.holder_phone,
             variables=vars,
+            language=lang,
         )
 
     async def enqueue_participant_form_resent(
         self,
         reservation: ReservationDocument,
         experience_name: str,
+        language: str | None = None,
     ) -> NotificationOutboxDocument | None:
         if not reservation.holder_phone:
             return None
+        lang = language or reservation.holder_language or "es"
         vars = {
             "customer_name": reservation.holder_name or "Cliente",
             "experience_name": experience_name,
@@ -506,15 +539,18 @@ class NotificationService:
             recipient_type="customer",
             recipient_identifier=reservation.holder_phone,
             variables=vars,
+            language=lang,
         )
 
     async def enqueue_reservation_cancelled(
         self,
         reservation: ReservationDocument,
         experience_name: str,
+        language: str | None = None,
     ) -> NotificationOutboxDocument | None:
         if not reservation.holder_phone:
             return None
+        lang = language or reservation.holder_language or "es"
         vars = {
             "customer_name": reservation.holder_name or "Cliente",
             "reservation_code": reservation.code,
@@ -527,6 +563,7 @@ class NotificationService:
             recipient_type="customer",
             recipient_identifier=reservation.holder_phone,
             variables=vars,
+            language=lang,
         )
 
     def _build_customer_vars(self, reservation: ReservationDocument) -> dict[str, str]:

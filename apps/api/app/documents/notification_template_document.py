@@ -7,7 +7,12 @@ from app.documents.base import AuditDocument
 
 
 class NotificationTemplateDocument(AuditDocument):
-    template_key: Indexed(str, unique=True)
+    # La unicidad se garantiza por la combinación (template_key, channel, language).
+    # Antes el índice era unique sobre template_key solo, lo que impedía tener
+    # la misma plantilla en español e inglés. Si vienes de una versión previa,
+    # ejecuta el script `drop_notification_template_unique_index.py` para
+    # eliminar el índice legacy `template_key_1` antes de iniciar.
+    template_key: Indexed(str, name="nt_template_key_idx")
     channel: NotificationChannel
     language: str = "es"
     subject: str | None = None
@@ -19,3 +24,9 @@ class NotificationTemplateDocument(AuditDocument):
 
     class Settings:
         name = Collections.NOTIFICATION_TEMPLATES
+        indexes = [
+            "channel",
+            "language",
+            # Búsqueda principal: plantilla activa por (key, channel, lang)
+            ("template_key", "channel", "language", "is_active"),
+        ]

@@ -1,4 +1,9 @@
-"""Seed notification templates for all notification event types."""
+"""Seed notification templates for all notification event types.
+
+Templates se siembran en DOS idiomas (es/en) cuando aplica a clientes finales.
+El campo `language` permite que el `notification_service` seleccione el
+template correcto según el `holder_language` del reservation.
+"""
 
 import asyncio
 
@@ -6,9 +11,13 @@ from app.common.enums import NotificationChannel
 from app.core.db import init_db
 from app.documents.notification_template_document import NotificationTemplateDocument
 
+# Cada entrada: (template_key, language, channel, body, variables_allowed)
+# Los emails y notificaciones internas se mantienen en español únicamente.
 SEED_TEMPLATES = [
+    # ── Email: reservation_created.customer ──────────────────────────────
     {
         "template_key": "reservation_created.customer",
+        "language": "es",
         "channel": NotificationChannel.EMAIL,
         "subject": "Solicitud recibida - {{reservation_code}} - La Juana",
         "body": """<h2>Hola {{customer_name}},</h2>
@@ -21,8 +30,10 @@ SEED_TEMPLATES = [
 <p>¡Gracias por elegir La Juana!</p>""",
         "variables_allowed": ["customer_name", "reservation_code", "participants_count"],
     },
+    # ── Email: reservation_confirmed.customer ────────────────────────────
     {
         "template_key": "reservation_confirmed.customer",
+        "language": "es",
         "channel": NotificationChannel.EMAIL,
         "subject": "Reserva {{reservation_code}} confirmada - La Juana",
         "body": """<h2>¡Hola {{customer_name}}!</h2>
@@ -35,8 +46,10 @@ SEED_TEMPLATES = [
 <p>¡Prepárate para vivir una experiencia inolvidable!</p>""",
         "variables_allowed": ["customer_name", "reservation_code", "participants_count"],
     },
+    # ── Email: reservation_confirmed.internal ────────────────────────────
     {
         "template_key": "reservation_confirmed.internal",
+        "language": "es",
         "channel": NotificationChannel.EMAIL,
         "subject": "Nueva reserva confirmada - {{reservation_code}}",
         "body": """<h2>Reserva confirmada</h2>
@@ -50,13 +63,16 @@ SEED_TEMPLATES = [
     },
     {
         "template_key": "reservation_confirmed.internal",
+        "language": "es",
         "channel": NotificationChannel.IN_APP,
         "subject": "Nueva reserva confirmada",
         "body": "Reserva {{reservation_code}} confirmada - {{participants_count}} participantes.",
         "variables_allowed": ["reservation_code", "participants_count", "customer_name"],
     },
+    # ── Email: participant_form_link_generated.customer ───────────────────
     {
         "template_key": "participant_form_link_generated.customer",
+        "language": "es",
         "channel": NotificationChannel.EMAIL,
         "subject": "Formulario de participantes - {{reservation_code}} - La Juana",
         "body": """<h2>Hola {{customer_name}},</h2>
@@ -71,8 +87,10 @@ SEED_TEMPLATES = [
             "form_expires_at",
         ],
     },
+    # ── Email: pre_service_reminder.customer ──────────────────────────────
     {
         "template_key": "pre_service_reminder.customer",
+        "language": "es",
         "channel": NotificationChannel.EMAIL,
         "subject": "Tu experiencia es mañana - {{reservation_code}} - La Juana",
         "body": """<h2>Hola {{customer_name}},</h2>
@@ -115,6 +133,7 @@ SEED_TEMPLATES = [
     },
     {
         "template_key": "post_service_completed.customer",
+        "language": "es",
         "channel": NotificationChannel.EMAIL,
         "subject": "Gracias por vivir La Juana - {{reservation_code}}",
         "body": """<h2>Hola {{customer_name}},</h2>
@@ -124,9 +143,11 @@ SEED_TEMPLATES = [
 <p>¡Te esperamos pronto para una nueva aventura!</p>""",
         "variables_allowed": ["customer_name", "reservation_code", "participants_count"],
     },
-    # --- WhatsApp transactional templates (deterministic, not chatbot) ---
+    # ── WhatsApp: payment_approved_form_sent.customer ────────────────────
+    # ES + EN — enviado cuando el admin aprueba el comprobante de pago.
     {
         "template_key": "payment_approved_form_sent.customer",
+        "language": "es",
         "channel": NotificationChannel.WHATSAPP,
         "subject": None,
         "body": (
@@ -134,14 +155,24 @@ SEED_TEMPLATES = [
             "fue aprobado. Por favor completa el formulario de participantes "
             "obligatorio en este enlace: {{form_url}}"
         ),
-        "variables_allowed": [
-            "customer_name",
-            "experience_name",
-            "form_url",
-        ],
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
     },
     {
+        "template_key": "payment_approved_form_sent.customer",
+        "language": "en",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hi {{customer_name}}, your payment for {{experience_name}} "
+            "has been approved. Please complete the mandatory participants form "
+            "at this link: {{form_url}}"
+        ),
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
+    },
+    # ── WhatsApp: payment_approved_location_sent.customer ────────────────
+    {
         "template_key": "payment_approved_location_sent.customer",
+        "language": "es",
         "channel": NotificationChannel.WHATSAPP,
         "subject": None,
         "body": (
@@ -173,7 +204,41 @@ SEED_TEMPLATES = [
         ],
     },
     {
+        "template_key": "payment_approved_location_sent.customer",
+        "language": "en",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Payment confirmed! Here is the information for your experience:\n\n"
+            "{{location_name}} location:\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
+            "RECOMMENDATIONS FOR THE ACTIVITY\n\n"
+            "- Wear comfortable clothes: long pants, long-sleeve shirt or t-shirt, "
+            "closed shoes, socks covering the ankles, a windbreaker jacket.\n"
+            "- Hydration (we avoid single-use plastic bottles, so please bring "
+            "your own reusable bottle).\n"
+            "- Sunscreen\n"
+            "- Insect repellent\n"
+            "- Hat or cap\n"
+            "- Camera and/or binoculars in case you want to spot and record species.\n"
+            "- And the best attitude to enjoy, alongside LA JUANA's mules, the "
+            "beautiful landscapes the destination has to offer.\n\n"
+            "*During our activities wearing a helmet is mandatory. "
+            "It will be provided by LA JUANA.\n\n"
+            "We look forward to seeing you!"
+        ),
+        "variables_allowed": [
+            "customer_name",
+            "location_name",
+            "location_url",
+            "location_directions",
+        ],
+    },
+    # ── WhatsApp: payment_rejected_sent.customer ──────────────────────────
+    {
         "template_key": "payment_rejected_sent.customer",
+        "language": "es",
         "channel": NotificationChannel.WHATSAPP,
         "subject": None,
         "body": (
@@ -181,14 +246,24 @@ SEED_TEMPLATES = [
             "{{experience_name}} fue rechazado. Motivo: {{rejection_reason}}. "
             "Por favor envía un nuevo comprobante válido para continuar."
         ),
-        "variables_allowed": [
-            "customer_name",
-            "experience_name",
-            "rejection_reason",
-        ],
+        "variables_allowed": ["customer_name", "experience_name", "rejection_reason"],
     },
     {
+        "template_key": "payment_rejected_sent.customer",
+        "language": "en",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hi {{customer_name}}, the payment proof for "
+            "{{experience_name}} was rejected. Reason: {{rejection_reason}}. "
+            "Please send a new valid proof to continue."
+        ),
+        "variables_allowed": ["customer_name", "experience_name", "rejection_reason"],
+    },
+    # ── WhatsApp: reservation_confirmed_logistics_sent.customer ───────────
+    {
         "template_key": "reservation_confirmed_logistics_sent.customer",
+        "language": "es",
         "channel": NotificationChannel.WHATSAPP,
         "subject": None,
         "body": (
@@ -219,21 +294,64 @@ SEED_TEMPLATES = [
         ],
     },
     {
+        "template_key": "reservation_confirmed_logistics_sent.customer",
+        "language": "en",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Your reservation {{reservation_code}} has been confirmed! "
+            "Here is the information for your {{experience_name}} "
+            "on {{scheduled_date}}:\n\n"
+            "{{location_name}} location:\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
+            "RECOMMENDATIONS FOR THE ACTIVITY\n\n"
+            "- Wear comfortable clothes: long pants, long-sleeve shirt or t-shirt, "
+            "closed shoes, socks covering the ankles, a windbreaker jacket.\n"
+            "- Hydration (bring your reusable bottle).\n"
+            "- Sunscreen and insect repellent.\n"
+            "- Hat or cap.\n"
+            "- Camera and/or binoculars.\n"
+            "- Arrive 15 minutes before the scheduled time.\n\n"
+            "We look forward to seeing you!"
+        ),
+        "variables_allowed": [
+            "customer_name",
+            "reservation_code",
+            "experience_name",
+            "scheduled_date",
+            "location_name",
+            "location_url",
+            "location_directions",
+        ],
+    },
+    # ── WhatsApp: participant_form_resent.customer ───────────────────────
+    {
         "template_key": "participant_form_resent.customer",
+        "language": "es",
         "channel": NotificationChannel.WHATSAPP,
         "subject": None,
         "body": (
             "Hola {{customer_name}}, aquí está nuevamente el enlace del "
             "formulario de participantes para {{experience_name}}: {{form_url}}"
         ),
-        "variables_allowed": [
-            "customer_name",
-            "experience_name",
-            "form_url",
-        ],
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
     },
     {
+        "template_key": "participant_form_resent.customer",
+        "language": "en",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hi {{customer_name}}, here is the participants form link again "
+            "for {{experience_name}}: {{form_url}}"
+        ),
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
+    },
+    # ── WhatsApp: reservation_cancelled.customer ──────────────────────────
+    {
         "template_key": "reservation_cancelled.customer",
+        "language": "es",
         "channel": NotificationChannel.WHATSAPP,
         "subject": None,
         "body": (
@@ -241,11 +359,19 @@ SEED_TEMPLATES = [
             "{{reservation_code}} para {{experience_name}} ha sido cancelada. "
             "Si tienes alguna duda o deseas reprogramar, escríbenos y con gusto te ayudaremos. "
         ),
-        "variables_allowed": [
-            "customer_name",
-            "reservation_code",
-            "experience_name",
-        ],
+        "variables_allowed": ["customer_name", "reservation_code", "experience_name"],
+    },
+    {
+        "template_key": "reservation_cancelled.customer",
+        "language": "en",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hi, we're sorry to inform you that your reservation "
+            "{{reservation_code}} for {{experience_name}} has been cancelled. "
+            "If you have any questions or would like to reschedule, write to us and we'll be happy to help. "
+        ),
+        "variables_allowed": ["customer_name", "reservation_code", "experience_name"],
     },
 ]
 
@@ -258,6 +384,7 @@ async def seed_notification_templates() -> int:
             {
                 "template_key": tpl["template_key"],
                 "channel": tpl["channel"],
+                "language": tpl.get("language", "es"),
             }
         )
         if existing is not None:

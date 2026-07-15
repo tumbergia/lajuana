@@ -36,9 +36,66 @@ MESES_ABR = {
 }
 MESES_ABR.update({f"{k}.": v for k, v in list(MESES_ABR.items())})
 
+ENGLISH_MONTHS = {
+    "january": 1,
+    "february": 2,
+    "march": 3,
+    "april": 4,
+    "may": 5,
+    "june": 6,
+    "july": 7,
+    "august": 8,
+    "september": 9,
+    "october": 10,
+    "november": 11,
+    "december": 12,
+}
+
+ENGLISH_MONTHS_ABR = {
+    "jan": 1,
+    "feb": 2,
+    "mar": 3,
+    "apr": 4,
+    "may": 5,
+    "jun": 6,
+    "jul": 7,
+    "aug": 8,
+    "sep": 9,
+    "sept": 9,
+    "oct": 10,
+    "nov": 11,
+    "dec": 12,
+}
+ENGLISH_MONTHS_ABR.update({f"{k}.": v for k, v in list(ENGLISH_MONTHS_ABR.items())})
+
+# Variantes y errores tipográficos comunes que el usuario mete al escribir rápido.
+# Mapeo a clave canónica.
+MONTH_TYPOS = {
+    "agust": "august",
+    "agost": "august",
+    "augus": "august",
+    "setiembre": "september",
+    "septiem": "september",
+    "diciem": "december",
+    "ener": "january",
+    "febr": "february",
+    "marz": "march",
+    "abri": "april",
+    "jul": "july",
+    "juni": "june",
+    "octu": "october",
+    "novi": "november",
+}
+
 
 def extract_date_from_message(message: str) -> str | None:
     normalized = message.lower().strip()
+    today = now_colombia().date()
+    current_year = today.year
+
+    # Aplica correcciones de typos a meses antes de las regex
+    for typo, correct in MONTH_TYPOS.items():
+        normalized = re.sub(rf"\b{typo}\b", correct, normalized, flags=re.IGNORECASE)
 
     patterns = [
         # "20 de junio de 2026"
@@ -49,38 +106,81 @@ def extract_date_from_message(message: str) -> str | None:
         r"(\d{1,2})[/-](\d{1,2})[/-](\d{4})",
         # "2026-06-20" (ya iso)
         r"(\d{4})-(\d{2})-(\d{2})",
+        # "5 de agosto" (sin año → asumimos año actual o próximo si ya pasó)
+        r"(?:del?\s+)?(\d{1,2})\s+de\s+([a-záéíóúñ]+)(?:\s+de\s+(\d{4}))?",
+        # "5 agosto" / "5 august" / "5 agust" (typo corregido arriba)
+        r"(?:del?\s+)?(\d{1,2})\s+([a-záéíóúñ]+)(?:\s+(\d{4}))?",
+        # English: "august 5" / "august 5, 2026" / "aug 5"
+        r"([a-z]+)\.?\s+(\d{1,2})(?:,?\s+(\d{4}))?",
     ]
 
     for pattern in patterns:
-        match = re.search(pattern, normalized)
-        if match:
+        for match in re.finditer(pattern, normalized):
             groups = match.groups()
-            if pattern == patterns[3]:
-                a, b, c = int(groups[1]), int(groups[2]), int(groups[0])
-                try:
+            try:
+                if pattern == patterns[3]:
+                    a, b, c = int(groups[1]), int(groups[2]), int(groups[0])
                     return date(c, a, b).isoformat()
-                except ValueError:
-                    continue
 
-            if pattern in (patterns[0], patterns[1]):
-                day, month_str, year = int(groups[0]), groups[1], int(groups[2])
-                month = MESES.get(month_str) or MESES_ABR.get(month_str)
-                if month is None:
-                    continue
-                try:
+                if pattern in (patterns[0], patterns[1]):
+                    day, month_str, year = int(groups[0]), groups[1], int(groups[2])
+                    month = MESES.get(month_str) or MESES_ABR.get(month_str)
+                    if month is None:
+                        continue
                     return date(year, month, day).isoformat()
-                except ValueError:
+
+                if pattern == patterns[2]:
+                    a, b, c = int(groups[0]), int(groups[1]), int(groups[2])
+                    for day, month, year in [(a, b, c), (b, a, c)]:
+                        if month > 12:
+                            continue
+                        try:
+                            return date(year, month, day).isoformat()
+                        except ValueError:
+                            continue
                     continue
 
-            if pattern == patterns[2]:
-                a, b, c = int(groups[0]), int(groups[1]), int(groups[2])
-                for day, month, year in [(a, b, c), (b, a, c)]:
-                    if month > 12:
+                if pattern in (patterns[4], patterns[5]):
+                    day = int(groups[0])
+                    month_str = groups[1]
+                    year = int(groups[2]) if groups[2] else current_year
+                    month = (
+                        MESES.get(month_str)
+                        or MESES_ABR.get(month_str)
+                        or ENGLISH_MONTHS.get(month_str)
+                        or ENGLISH_MONTHS_ABR.get(month_str)
+                    )
+                    if month is None:
                         continue
                     try:
-                        return date(year, month, day).isoformat()
+                        candidate = date(year, month, day)
                     except ValueError:
                         continue
+                    if candidate < today:
+                        candidate = date(year + 1, month, day)
+                    return candidate.isoformat()
+
+                if pattern == patterns[6]:
+                    month_str = groups[0]
+                    day = int(groups[1])
+                    year = int(groups[2]) if groups[2] else current_year
+                    month = (
+                        MESES.get(month_str)
+                        or MESES_ABR.get(month_str)
+                        or ENGLISH_MONTHS.get(month_str)
+                        or ENGLISH_MONTHS_ABR.get(month_str)
+                    )
+                    if month is None:
+                        continue
+                    try:
+                        candidate = date(year, month, day)
+                    except ValueError:
+                        continue
+                    if candidate < today:
+                        candidate = date(year + 1, month, day)
+                    return candidate.isoformat()
+            except (ValueError, KeyError):
+                continue
 
     return None
 

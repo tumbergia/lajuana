@@ -1,3 +1,4 @@
+import asyncio
 import re
 from datetime import UTC, datetime
 from typing import Any, Protocol
@@ -18,6 +19,7 @@ from app.conversations.services.conversation_lock_service import (
     ConversationLockService,
 )
 from app.conversations.services.message_buffer_service import MessageBufferService
+from app.core.config import settings
 from app.core.logging import logger
 from app.documents import ReservationDocument
 from app.documents.conversation_session_document import ConversationSessionDocument
@@ -412,16 +414,47 @@ class ConversationTurnWorker:
                 conversation_id,
                 combined_input,
             )
-            response = await self._orchestrator.ask(
-                AskRequest(
-                    message=combined_input,
-                    channel="whatsapp",
-                    from_phone=buffer_doc.normalized_phone,
-                    conversation_id=conversation_id,
-                    trace_id=trace_id,
-                    conversation_turn_id=str(turn.id),
+            # Timeout duro: si el LLM cuelga, abortamos el turno y respondemos
+            # con un fallback en vez de quedarnos con el lock ocupado.
+            try:
+                response = await asyncio.wait_for(
+                    self._orchestrator.ask(
+                        AskRequest(
+                            message=combined_input,
+                            channel="whatsapp",
+                            from_phone=buffer_doc.normalized_phone,
+                            conversation_id=conversation_id,
+                            trace_id=trace_id,
+                            conversation_turn_id=str(turn.id),
+                        )
+                    ),
+                    timeout=settings.orchestrator_turn_timeout_seconds,
                 )
-            )
+            except asyncio.TimeoutError:
+                logger.error(
+                    "[conversation_id=%s] Orchestrator timeout after %ds; aborting turn",
+                    conversation_id,
+                    settings.orchestrator_turn_timeout_seconds,
+                )
+                turn.status = "tool_error"
+                turn.error_code = "orchestrator.timeout"
+                turn.response_text = t(
+                    "provider_error",
+                    await self._resolve_session_language(
+                        conversation_id=conversation_id,
+                        combined_text=combined_input,
+                        normalized_phone=buffer_doc.normalized_phone,
+                    ),
+                )
+                turn.responded_at = datetime.now(UTC)
+                await turn.save()
+                await self._outbound_service.send(
+                    turn=turn,
+                    to_phone=buffer_doc.normalized_phone,
+                    text=turn.response_text,
+                )
+                await self._buffer_service.mark_processed(buffer=reloaded)
+                return True
 
             turn.status = "responded"
             turn.response_text = response.response

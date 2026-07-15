@@ -219,6 +219,40 @@ class QuoteExperienceOutput(BaseModel):
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 
+class CheckAvailabilityAndQuoteInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    experience_id: str | None = None
+    experience_query: str | None = None
+    requested_date: date
+    participant_count: int = Field(ge=1, le=8)
+
+    @model_validator(mode="after")
+    def require_experience(self):
+        if not self.experience_id and not self.experience_query:
+            raise ValueError("experience_id_or_experience_query_required")
+        return self
+
+
+class CheckAvailabilityAndQuoteOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    available: bool
+    quoted: bool
+    trace_id: str
+    tool_name: Literal["check_availability_and_quote"] = "check_availability_and_quote"
+    experience_id: str | None = None
+    experience_name: str | None = None
+    requested_date: date
+    participant_count: int
+    unit_price: int | None = None
+    subtotal: int | None = None
+    currency: str = "COP"
+    quote_snapshot: dict | None = None
+    response: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+
+
 class SuggestAlternativeDatesInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -374,6 +408,7 @@ class AttachPaymentProofToReservationOutput(BaseModel):
     proof_status: Literal["received", "under_review", "duplicate", "rejected"] = "received"
     message: str
     response: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 
 # ── Cliente: consultar medios de pago por WhatsApp ────────────────

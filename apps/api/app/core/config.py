@@ -82,7 +82,15 @@ class Settings(BaseSettings):
     buffer_debounce_seconds: int = 10
     buffer_max_seconds: int = 30
     buffer_max_messages: int = 15
-    buffer_lock_seconds: int = 60
+    # Lock TTL para un turno. Debe ser MAYOR que gemini_timeout_seconds para
+    # que un turno largo legítimo no pierda el lock; el doble es seguro.
+    buffer_lock_seconds: int = 90
+    # Cualquier lock más viejo que esto se considera muerto y se libera solo.
+    buffer_stale_lock_seconds: int = 300
+    # Timeout duro para la llamada al orchestrator.ask: si el LLM cuelga
+    # más allá de esto, el turno se aborta, el lock se libera y el bot
+    # responde con un fallback. Protege contra LLMs atascados.
+    orchestrator_turn_timeout_seconds: int = 75
     scheduler_loop_seconds: int = 1
 
     @model_validator(mode="after")

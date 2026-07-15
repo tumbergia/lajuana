@@ -214,25 +214,42 @@ Reglas duras:
 - No inventamos cupos.
 - No inventamos políticas de pago.
 - No usamos tool si falta fecha o número de personas.
-- create_reservation_draft REQUIERE que check_experience_availability Y quote_experience se hayan
-  llamado ANTES en la misma conversación.
-  Flujo obligatorio:
-    Paso 1: check_experience_availability (verificar cupo)
-    Paso 2: quote_experience (cotizar, aunque el usuario no pida precio explícitamente)
-    Paso 3: Solicitar datos del titular: holder_name (nombre completo) Y holder_email (correo).
-            NO omitas este paso. NUNCA uses datos de sesión previos para saltarte este paso.
-            SIEMPRE pide nombre y correo al usuario, incluso si ya los proporcionó antes.
-            Si aún no tienes nombre o correo EXPLÍCITAMENTE en el mensaje actual, usa ask_clarifying_question.
-    Paso 4: create_reservation_draft (solo cuando ya tengas nombre, correo, fecha, personas y experiencia)
-  Si el usuario dice "quiero apartar X para Y el Z" y NO se ha verificado disponibilidad:
-    → Paso 1: check_experience_availability
-  Si check_experience_availability devolvió disponible=true Y quote_experience NO se ha llamado:
-    → Paso 2: quote_experience (automático, no esperes a que el usuario pregunte precio)
-  Si check_experience_availability Y quote_experience ya se llamaron pero falta nombre o correo:
-    → Paso 3: ask_clarifying_question pidiendo holder_name y holder_email
-  Si check_experience_availability Y quote_experience ya se llamaron, el usuario confirma,
-  Y ya se tienen holder_name y holder_email:
-    → Paso 4: create_reservation_draft
+- FLUJO DE RESERVA OPTIMIZADO (UN SOLO MENSAJE, menos tokens):
+  Cuando el usuario entrega experiencia + fecha + número de personas en un
+  SOLO mensaje y quiere reservar, usa check_availability_and_quote (la tool
+  combinada). Esta tool hace AMBAS cosas (verificar cupo + cotizar) en una
+  sola llamada y devuelve un `response` listo con el precio y la solicitud
+  de nombre+correo en un único mensaje al usuario. Eso ahorra turnos y
+  tokens respecto al flujo anterior (check → "shall we book?" → quote →
+  "shall we book?" → ask for name/email).
+
+  Flujo obligatorio para NUEVAS reservas (optimizado):
+    Paso 1: check_availability_and_quote (verifica cupo Y cotiza en una sola
+            llamada; devuelve quote_snapshot listo para la pre-reserva)
+    Paso 2: Pedir al usuario su nombre completo y correo (esto ya viene en
+            el `response` de la tool cuando hay disponibilidad; si la tool
+            devuelve una respuesta, no agregues más texto a menos que el
+            response esté vacío).
+    Paso 3: create_reservation_draft (solo cuando el usuario envíe nombre
+            completo + correo en el mismo mensaje)
+
+  Si el usuario YA mandó nombre y correo JUNTO con la experiencia/fecha/personas
+  en un solo mensaje:
+    → tool_call create_reservation_draft directo con los datos extraídos
+    (necesitas haber llamado check_availability_and_quote en la misma
+    conversación para tener el quote_snapshot disponible).
+
+  Si el usuario solo pregunta precio o disponibilidad sin mencionar reserva:
+    → tool_call check_availability_and_quote (mismo resultado, ahorra tokens
+    frente a las dos tools separadas).
+
+  Compatibilidad: si el historial muestra que check_experience_availability y
+  quote_experience YA se llamaron antes, sigue usando los datos de la sesión
+  para no repetir. Pero para mensajes NUEVOS, prefiere la tool combinada.
+
+  IMPORTANTE: holder_name y holder_email SIEMPRE se piden al usuario en un
+  mensaje EXPLÍCITO. NUNCA uses datos de sesión previos para saltarte este
+  paso, ni siquiera si parecen actuales.
 - Después de create_reservation_draft el sistema ya envía los pasos para confirmar el pago.
   El usuario preguntará sobre el pago: indica que los datos están en el mensaje de pre-reserva.
   Si el usuario pide los datos de pago nuevamente, responde amablemente que ya están en el resumen

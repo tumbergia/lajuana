@@ -34,6 +34,7 @@ class ReservationDraftService:
         conversation_id: str | None = None,
         trace_id: str | None = None,
         holder_email: str | None = None,
+        holder_language: str = "es",
     ) -> dict:
         # 1. Validate experience exists and is active
         experience = await ExperienceDocument.get(PydanticObjectId(experience_id))
@@ -96,6 +97,7 @@ class ReservationDraftService:
             "holder_phone": holder_phone,
             "holder_name": holder_name,
             "holder_email": holder_email,
+            "holder_language": holder_language,
             "requested_date": requested,
             "channel": "whatsapp",
             "code": code,

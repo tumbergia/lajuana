@@ -58,6 +58,7 @@ CANCEL_WORDS: set[str] = {
 
 REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
     "check_availability": ["experience_id", "requested_date", "participant_count"],
+    "check_availability_and_quote": ["experience_id", "requested_date", "participant_count"],
     "create_reservation": ["experience_id", "requested_date", "participant_count"],
     "suggest_alternative_dates": ["experience_id"],
     "create_reservation_draft": [
@@ -528,18 +529,52 @@ class AssistantOrchestrator:
             latency_ms=latency_ms,
         ).insert()
 
-        # Tools que entregan un `response` literal en su output y NO deben pasar
-        # por compose_tool_response (evita que el LLM mienta, p.ej. "te envié
-        # los detalles al correo" cuando no hay sistema de email). Incluye
-        # create_reservation_draft (pasos + banco + ubicación) y
-        # get_payment_instructions (medios de pago por WhatsApp) y
-        # attach_payment_proof_to_reservation (confirmación de comprobante).
+        # ── Capa 2: Red de seguridad de traducción ──
+        # Localiza los campos user-facing (response, blocking_reasons[].message)
+        # al idioma de la conversación si no es español. Captura cualquier
+        # mensaje hardcodeado que se haya escapado de Capa 1.
+        # IMPORTANTE: para tools que ya entregan su `response` pre-localizado
+        # con `t()` (ver LITERAL_RESPONSE_TOOLS abajo), NO traducimos: el
+        # re-paso por el LLM puede romper el formato (viñetas, alineación,
+        # secciones numeradas) y degradar la legibilidad. Solo localizamos
+        # campos huérfanos (e.g. un mensaje de error en español) en esos casos.
         LITERAL_RESPONSE_TOOLS: set[str] = {
             "create_reservation_draft",
             "get_payment_instructions",
             "attach_payment_proof_to_reservation",
+            "check_availability_and_quote",
+            "cancel_reservation",
+            "update_reservation_date",
+            "update_reservation_participants",
+            "get_all_experiences",
         }
-        if plan.tool_name in LITERAL_RESPONSE_TOOLS and tool_output.get("response"):
+        if status == "success" and session.language != "es":
+            from app.ai.assistant.translator import localize_tool_output
+
+            if plan.tool_name in LITERAL_RESPONSE_TOOLS and tool_output.get("response"):
+                # Respuesta ya localizada vía `t()` en la tool. Solo localizar
+                # campos huérfanos (e.g. blocking_reasons) si los hay.
+                tool_output = await localize_tool_output(
+                    tool_output, session.language, skip_response=True
+                )
+            else:
+                tool_output = await localize_tool_output(tool_output, session.language)
+
+        # Tools que entregan un `response` literal en su output y NO deben pasar
+        # por compose_tool_response (evita que el LLM mienta, p.ej. "te envié
+        # los detalles al correo" cuando no hay sistema de email). Incluye
+        # create_reservation_draft (pasos + banco + ubicación),
+        # get_payment_instructions (medios de pago por WhatsApp),
+        # attach_payment_proof_to_reservation (confirmación de comprobante),
+        # check_availability_and_quote (cotización + solicitud de datos),
+        # y las tools de self-service (cancel/modify) que ya devuelven un
+        # mensaje listo para enviar.
+        if (
+            plan.tool_name in LITERAL_RESPONSE_TOOLS
+            and tool_output.get("response")
+            and not tool_output.get("error")
+            and not tool_output.get("blocking_reasons")
+        ):
             response = tool_output["response"]
         else:
             try:

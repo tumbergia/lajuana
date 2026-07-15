@@ -4,6 +4,7 @@ import time
 from typing import Any
 from uuid import uuid4
 
+from app.ai.language.messages import t
 from app.ai.mcp.tool_contracts import GetPaymentInstructionsInput, GetPaymentInstructionsOutput
 from app.core.di import Container
 from app.documents.tool_call_log_document import ToolCallLogDocument
@@ -13,20 +14,26 @@ from app.services.payment_message_service import render_payment_steps
 async def get_payment_instructions(**kwargs: Any) -> dict[str, Any]:
     trace_id = str(kwargs.pop("trace_id", None) or uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
+    language: str = kwargs.pop("language", "es")
     started = time.perf_counter()
     filtered = {k: v for k, v in kwargs.items() if k in GetPaymentInstructionsInput.model_fields}
     payload = GetPaymentInstructionsInput.model_validate(filtered)
     config = await Container.get_instance().config_service.get_payment_instructions()
-    code_line = f"Reserva: {payload.reservation_code}\n\n" if payload.reservation_code else ""
+
+    if payload.reservation_code:
+        code_line = f"{t('payment_instructions_reservation_label', language)} {payload.reservation_code}\n\n"
+    else:
+        code_line = ""
+
     if payload.bold_requested and not config.bold_enabled:
         response = (
-            f"{code_line}El pago por Bold no está disponible en este momento.\n\n"
-            f"{render_payment_steps(config)}"
+            f"{code_line}{t('payment_instructions_bold_unavailable', language)}\n\n"
+            f"{render_payment_steps(config, language)}"
         )
     else:
         response = (
-            f"{code_line}Para confirmar tu reserva sigue estos pasos:\n\n"
-            f"{render_payment_steps(config)}"
+            f"{code_line}{t('payment_instructions_follow_steps', language)}\n\n"
+            f"{render_payment_steps(config, language)}"
         )
     output = GetPaymentInstructionsOutput(
         trace_id=trace_id,

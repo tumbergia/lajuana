@@ -23,6 +23,19 @@ _AVAILABILITY_KEYWORDS = [
     r"\b(hay.cupo|disponibilidad|se.puede|hay.lugar|cabemos|caben|cupo.disponible)\b",
 ]
 
+# Intención de reservar con datos completos: cuando el usuario dice "quiero
+# reservar X para fecha N personas", disparamos la tool combinada
+# (check_availability_and_quote) que verifica cupo, cotiza y pregunta por
+# nombre/correo en una sola respuesta.
+_RESERVE_INTENT_KEYWORDS = [
+    r"\b(quiero|quisiera|me.gustaria|me.interesa|deseo|necesito)\b.*\b(reservar|apartar|separar|agendar)\b",
+    r"\b(reservar|apartar|separar|agendar)\b.*\b(para|el|la)\b",
+    r"\b(hazme|hazme.la|armame|montame)\b.*\b(reserva|apartado)\b",
+    r"\b(i\s+want\s+to|i'?d\s+like\s+to|i\s+would\s+like\s+to|please|need\s+to|let'?s)\b.*\b(book|reserve)\b",
+    r"\b(book|reserve)\b.*\b(the|for|on)\b",
+    r"\b(make\s+a\s+booking|make\s+a\s+reservation)\b",
+]
+
 _SESSION_KEYWORDS = [
     r"\b(en.que.va|estado|como.va.mi|status.de.mi|situacion.de.mi)\b",
 ]
@@ -306,10 +319,42 @@ def _extract_experience_name(text: str) -> str | None:
         r"hablame\s+de\s+",
         r"dime\s+mas\s+(sobre|de)\s+",
         r"quiero\s+saber\s+(de|sobre)\s+",
+        r"(i\s+want\s+to|i\s+would\s+like\s+to|please|need\s+to)\s+(book|reserve)\s+(the\s+)?",
+        r"(book|reserve)\s+(the\s+)?",
+        r"(quiero|quisiera|me.gustaria|me.interesa|deseo|necesito)\s+(reservar|apartar|separar|agendar)\s+(la|el|los|las)?\s*",
+        r"(reservar|apartar|separar|agendar)\s+(la|el|los|las)\s+",
     ]:
         cleaned = re.sub(f"^{prefix}", "", cleaned, flags=re.IGNORECASE).strip()
-    # Strip leading articles
-    cleaned = re.sub(r"^(el|la|los|las|un|una)\s+", "", cleaned, flags=re.IGNORECASE).strip()
+    # Strip leading articles (ES + EN)
+    cleaned = re.sub(r"^(el|la|los|las|un|una|the|a|an)\s+", "", cleaned, flags=re.IGNORECASE).strip()
+    # Strip trailing date/people info: "X para 3 el 5 de agosto"
+    cleaned = re.split(
+        r"\s+(para|el|la|los|las|y|a|con|for|on|at)\s+\d",
+        cleaned,
+        maxsplit=1,
+        flags=re.IGNORECASE,
+    )[0].strip()
+    # Strip trailing month names / date words: "X 5 de agosto" or "X august 5"
+    cleaned = re.split(
+        r"\s+\d{1,2}\s+(de\s+)?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|ago|sep|sept|oct|nov|dec|agust|augus|agost)",
+        cleaned,
+        maxsplit=1,
+        flags=re.IGNORECASE,
+    )[0].strip()
+    # Strip trailing bare date: "X august 5" / "X 5"
+    cleaned = re.split(
+        r"\s+\d{1,2}$",
+        cleaned,
+        maxsplit=1,
+        flags=re.IGNORECASE,
+    )[0].strip()
+    # Strip trailing prepositions que quedaron sueltos
+    cleaned = re.sub(
+        r"\s+(para|con|de|y|a|for|with|on|at)$",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    ).strip()
     # Strip trailing punctuation
     cleaned = cleaned.rstrip(",.!?;:.\n\r ")
     if len(cleaned) > 2 and not any(
@@ -321,10 +366,16 @@ def _extract_experience_name(text: str) -> str | None:
 
 
 def _extract_participant_count(text: str) -> int | None:
-    m = re.search(r"(\d+)\s*(?:personas?|participantes?|pax|adultos?|niños?)", text.lower())
+    m = re.search(
+        r"(\d+)\s*(?:personas?|participantes?|pax|adultos?|niños?|people|persons?|guests?)",
+        text.lower(),
+    )
     if m:
         return int(m.group(1))
-    m = re.search(r"(?:para|somos?|seriamos?)\s*(\d+)", text.lower())
+    m = re.search(
+        r"(?:para|somos?|seriamos?|for)\s*(\d+)",
+        text.lower(),
+    )
     if m:
         return int(m.group(1))
     return None
@@ -411,6 +462,32 @@ def detect_and_build_plan(
             audit_summary="Intent detectado: consultar detalle de experiencia.",
         )
 
+    # ── Intención de reservar: experiencia + fecha + personas → check_availability_and_quote ──
+    # Se evalúa ANTES que PRICE/AVAILABILITY para que "quiero reservar la
+    # montaña de cristal para el 5 de agosto 3 personas" dispare la tool
+    # combinada (ahorra 1 turno y reduce tokens).
+    if _matches_any(msg_lower, _RESERVE_INTENT_KEYWORDS) and exp_name:
+        args = ToolArgs()
+        args.experience_query = exp_name
+        participants = _extract_participant_count(msg_lower)
+        if participants:
+            args.participant_count = participants
+        date_str = _extract_date(msg_lower)
+        if date_str:
+            args.requested_date = date_str
+        if args.participant_count and args.requested_date:
+            return AssistantPlan(
+                action=AssistantAction.TOOL_CALL,
+                confidence=0.95,
+                tool_name="check_availability_and_quote",
+                arguments=args,
+                user_goal="El usuario quiere reservar (disponibilidad + cotización combinadas).",
+                audit_summary=(
+                    "Intent detectado: reserva con datos completos, "
+                    "usando tool combinada."
+                ),
+            )
+
     # ── Price / quote ──
     if _matches_any(msg_lower, _PRICE_KEYWORDS):
         args = ToolArgs()
@@ -422,6 +499,17 @@ def detect_and_build_plan(
         date_str = _extract_date(msg_lower)
         if date_str:
             args.requested_date = date_str
+        # Si tenemos los 3 datos (experiencia + fecha + personas) usamos la
+        # tool combinada (ahorra un turno al cliente).
+        if args.experience_query and args.participant_count and args.requested_date:
+            return AssistantPlan(
+                action=AssistantAction.TOOL_CALL,
+                confidence=0.92,
+                tool_name="check_availability_and_quote",
+                arguments=args,
+                user_goal="El usuario quiere saber precio y disponibilidad.",
+                audit_summary="Intent detectado: cotizar (combinado con disponibilidad).",
+            )
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.9,
@@ -442,6 +530,16 @@ def detect_and_build_plan(
         date_str = _extract_date(msg_lower)
         if date_str:
             args.requested_date = date_str
+        # Si tenemos los 3 datos, usamos la combinada.
+        if args.experience_query and args.participant_count and args.requested_date:
+            return AssistantPlan(
+                action=AssistantAction.TOOL_CALL,
+                confidence=0.92,
+                tool_name="check_availability_and_quote",
+                arguments=args,
+                user_goal="El usuario quiere saber disponibilidad y precio.",
+                audit_summary="Intent detectado: disponibilidad (combinado con cotización).",
+            )
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.9,
@@ -471,5 +569,29 @@ def detect_and_build_plan(
             user_goal="El usuario quiere saber el estado de su reserva.",
             audit_summary="Intent detectado: consulta de estado de reserva.",
         )
+
+    # ── Fallback: si el usuario entrega experiencia + fecha + personas en un
+    # solo mensaje sin ningún keyword explícito (típico de respuestas a
+    # "¿qué experiencia, cuántas personas, qué fecha?"), asumimos intención
+    # de reservar y disparamos la tool combinada. Esto evita un turno extra.
+    if exp_name:
+        participants = _extract_participant_count(user_message)
+        date_str = _extract_date(user_message)
+        if participants and date_str:
+            return AssistantPlan(
+                action=AssistantAction.TOOL_CALL,
+                confidence=0.85,
+                tool_name="check_availability_and_quote",
+                arguments=ToolArgs(
+                    experience_query=exp_name,
+                    participant_count=participants,
+                    requested_date=date_str,
+                ),
+                user_goal="El usuario entregó experiencia + fecha + personas.",
+                audit_summary=(
+                    "Intent fallback: el usuario completó los 3 datos "
+                    "sin keyword explícito, asumiendo intención de reservar."
+                ),
+            )
 
     return None

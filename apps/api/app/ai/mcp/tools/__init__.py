@@ -86,6 +86,7 @@ from app.ai.mcp.tools.automations import (
     send_post_service_message,
 )
 from app.ai.mcp.tools.availability import check_experience_availability
+from app.ai.mcp.tools.check_and_quote import check_availability_and_quote
 from app.ai.mcp.tools.catalog import list_experiences
 from app.ai.mcp.tools.client_reservations import (
     cancel_reservation,

@@ -38,6 +38,7 @@ _TOOLS: dict[str, object] = {
     "admin_list_human_review_requests": tools.admin_list_human_review_requests,
     # ── Client: availability & detail ──
     "check_experience_availability": tools.check_experience_availability,
+    "check_availability_and_quote": tools.check_availability_and_quote,
     "get_experience_detail": tools.get_experience_detail,
     "get_public_business_rules": tools.get_public_business_rules,
     "list_available_schedules": tools.list_available_schedules,

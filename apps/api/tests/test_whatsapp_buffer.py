@@ -8,7 +8,7 @@ import pytest
 
 from app.channels.whatsapp.normalizer import build_conversation_id, normalize_phone
 from app.channels.whatsapp.parser import parse_whatsapp_payload
-from app.conversations.services.conversation_lock_service import LOCK_SECONDS
+from app.conversations.services.conversation_lock_service import LOCK_SECONDS  # noqa: F401  # backward-compat
 from app.conversations.services.conversation_turn_worker import combine_messages
 from app.conversations.services.message_buffer_service import (
     DEBOUNCE_SECONDS,
@@ -194,4 +194,8 @@ def test_constants() -> None:
     assert DEBOUNCE_SECONDS == 10
     assert MAX_BUFFER_SECONDS == 30
     assert MAX_MESSAGES_PER_BUFFER == 15
-    assert LOCK_SECONDS == 60
+    # LOCK_SECONDS es el valor legacy de la constante importada. Hoy se
+    # sigue exponiendo por compatibilidad, pero el valor operativo real
+    # está en settings.buffer_lock_seconds (default 90s para turnos
+    # legítimamente largos sin perder el lock).
+    assert LOCK_SECONDS == 90
