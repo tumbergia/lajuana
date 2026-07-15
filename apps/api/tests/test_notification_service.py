@@ -1,5 +1,6 @@
 import asyncio
 from datetime import UTC, datetime
+from types import SimpleNamespace
 
 import pytest
 
@@ -56,6 +57,21 @@ class _FakeDoc:
 
     async def save(self) -> None:
         return None
+
+
+class _FakeOutboxStoreDoc(_FakeDoc):
+    inserted: list["_FakeOutboxStoreDoc"] = []
+
+    @classmethod
+    async def find_one(cls, query: dict[str, object]) -> "_FakeOutboxStoreDoc | None":
+        dedup_key = query["deduplication_key"]
+        for doc in cls.inserted:
+            if doc.deduplication_key == dedup_key and doc.status != NotificationStatus.CANCELLED:
+                return doc
+        return None
+
+    async def insert(self) -> None:
+        self.__class__.inserted.append(self)
 
 
 def test_build_customer_vars() -> None:
@@ -170,6 +186,104 @@ def test_send_from_outbox_exhausts_retries() -> None:
     asyncio.run(svc.send_from_outbox(entry))  # type: ignore[arg-type]
     assert entry.status == NotificationStatus.FAILED
     assert entry.attempt_count == 1
+
+
+def test_send_from_outbox_provider_exception_recovers() -> None:
+    from app.services.notification_service import NotificationService
+
+    class _CrashProvider:
+        async def send(self, _entry: object) -> object:
+            raise RuntimeError("boom")
+
+        async def validate_config(self) -> bool:
+            return True
+
+    svc = NotificationService()
+    svc._providers[NotificationChannel.EMAIL] = _CrashProvider()
+
+    entry = _FakeDoc(
+        channel=NotificationChannel.EMAIL,
+        status=NotificationStatus.PENDING,
+        event_type="test",
+        recipient_type="customer",
+        recipient_identifier="test@example.com",
+        attempt_count=0,
+        max_attempts=3,
+        last_error=None,
+        sent_at=None,
+        provider_message_id=None,
+    )
+
+    save_calls = 0
+
+    async def _fake_save() -> None:
+        nonlocal save_calls
+        save_calls += 1
+
+    entry.save = _fake_save
+    asyncio.run(svc.send_from_outbox(entry))  # type: ignore[arg-type]
+    assert entry.status == NotificationStatus.PENDING
+    assert entry.attempt_count == 1
+    assert entry.last_error == "boom"
+    assert save_calls == 2
+
+
+@pytest.mark.asyncio
+async def test_enqueue_payment_received_keeps_each_recipient_distinct(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.common.enums import NotificationEventType, UserRole
+    from app.services import notification_service as ns
+
+    async def _find_template(*_a: object, **_k: object) -> None:
+        return None
+
+    async def _list_admins() -> list[SimpleNamespace]:
+        return [
+            SimpleNamespace(
+                id="660000000000000000000010",
+                email="admin1@test.com",
+                role=UserRole.ADMIN,
+            ),
+            SimpleNamespace(
+                id="660000000000000000000011",
+                email="admin2@test.com",
+                role=UserRole.ADMIN,
+            ),
+        ]
+
+    _FakeOutboxStoreDoc.inserted.clear()
+    monkeypatch.setattr(ns, "NotificationOutboxDocument", _FakeOutboxStoreDoc)
+    monkeypatch.setattr(ns.NotificationTemplateDocument, "find_one", staticmethod(_find_template))
+    monkeypatch.setattr(
+        ns.UserDocument,
+        "find",
+        lambda *_a, **_k: SimpleNamespace(to_list=_list_admins),
+    )
+
+    reservation = SimpleNamespace(
+        id="660000000000000000000099",
+        code="RES-99",
+        holder_name="Juan Perez",
+        holder_email="juan@test.com",
+        participant_count=2,
+        completed_at=None,
+    )
+
+    svc = ns.NotificationService()
+    entries = await svc.enqueue_payment_received(reservation)
+
+    assert len(entries) == 4
+    assert len(_FakeOutboxStoreDoc.inserted) == 4
+    assert {entry.recipient_identifier for entry in entries} == {
+        "admin1@test.com",
+        "admin2@test.com",
+        "660000000000000000000010",
+        "660000000000000000000011",
+    }
+    assert all(
+        entry.event_type == NotificationEventType.RESERVATION_CONFIRMED.value for entry in entries
+    )
 
 
 def test_get_provider_returns_correct_provider() -> None:

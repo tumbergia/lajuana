@@ -16,6 +16,9 @@ from app.migrations.versions.backfill_sync_metadata import (
 from app.migrations.versions.configure_lajuana_settings import (
     ConfigureLaJuanaSettingsMigration,
 )
+from app.migrations.versions.fix_notification_template_natural_key_index import (
+    FixNotificationTemplateNaturalKeyIndexMigration,
+)
 from app.migrations.versions.migrate_provider_fields import (
     MigrateProviderFieldsMigration,
 )
@@ -30,4 +33,5 @@ MIGRATIONS: list[Migration] = [
     MigrateProviderFieldsMigration(),
     ConfigureLaJuanaSettingsMigration(),
     BackfillParticipantCountryCodesMigration(),
+    FixNotificationTemplateNaturalKeyIndexMigration(),
 ]

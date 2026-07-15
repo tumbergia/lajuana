@@ -14,6 +14,7 @@ import pytest
 
 from app.common.enums import ReservationStatus, UserRole
 from app.core.di import Container
+from app.core.errors import ApiError
 from app.services import sync_change_recorder as rec
 
 
@@ -89,6 +90,97 @@ def test_update_emits_reservation_change(
         assert _capture_sync_changes[0]["stream"] == "reservations"
         assert _capture_sync_changes[0]["entity_type"] == "reservation"
         assert _capture_sync_changes[0]["change_type"] == "upsert"
+
+    asyncio.run(run())
+
+
+def test_update_allows_assistant_disabled_for_gateable_reservation(
+    monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+) -> None:
+    res = _reservation(status=ReservationStatus.PRE_RESERVED, assistant_disabled=False)
+
+    async def run() -> None:
+        async def _mock_get(_rid: str, **_kwargs: object) -> object:
+            return res
+
+        async def _mock_save() -> None:
+            pass
+
+        res.save = _mock_save  # type: ignore[assignment]
+
+        svc = Container.get_instance().reservation_service
+        monkeypatch.setattr(svc, "get", _mock_get)
+
+        result = await svc.update(
+            "660000000000000000000001",
+            {"assistant_disabled": True},
+        )
+
+        assert result.assistant_disabled is True
+        assert len(_capture_sync_changes) == 1
+
+    asyncio.run(run())
+
+
+def test_update_rejects_assistant_disabled_without_holder_phone(
+    monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+) -> None:
+    res = _reservation(holder_phone=None, assistant_disabled=False)
+
+    async def run() -> None:
+        async def _mock_get(_rid: str, **_kwargs: object) -> object:
+            return res
+
+        async def _unexpected_save() -> None:
+            raise AssertionError("save should not be called")
+
+        res.save = _unexpected_save  # type: ignore[assignment]
+
+        svc = Container.get_instance().reservation_service
+        monkeypatch.setattr(svc, "get", _mock_get)
+
+        with pytest.raises(ApiError) as exc_info:
+            await svc.update(
+                "660000000000000000000001",
+                {"assistant_disabled": True},
+            )
+
+        exc = exc_info.value
+        assert getattr(exc, "status_code", None) == 400
+        assert "teléfono del titular" in str(getattr(exc, "message", exc))
+        assert _capture_sync_changes == []
+
+    asyncio.run(run())
+
+
+def test_update_rejects_assistant_disabled_for_non_gate_status(
+    monkeypatch: pytest.MonkeyPatch, _capture_sync_changes: list[dict]
+) -> None:
+    res = _reservation(status=ReservationStatus.CANCELLED, assistant_disabled=False)
+
+    async def run() -> None:
+        async def _mock_get(_rid: str, **_kwargs: object) -> object:
+            return res
+
+        async def _unexpected_save() -> None:
+            raise AssertionError("save should not be called")
+
+        res.save = _unexpected_save  # type: ignore[assignment]
+
+        svc = Container.get_instance().reservation_service
+        monkeypatch.setattr(svc, "get", _mock_get)
+
+        with pytest.raises(ApiError) as exc_info:
+            await svc.update(
+                "660000000000000000000001",
+                {"assistant_disabled": True},
+            )
+
+        exc = exc_info.value
+        assert getattr(exc, "status_code", None) == 400
+        assert "gate de WhatsApp" in str(getattr(exc, "message", exc))
+        assert getattr(exc, "details", {}) == {"status": ReservationStatus.CANCELLED.value}
+        assert _capture_sync_changes == []
 
     asyncio.run(run())
 

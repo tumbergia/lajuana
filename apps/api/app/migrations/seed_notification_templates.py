@@ -254,12 +254,11 @@ async def seed_notification_templates() -> int:
     await init_db()
     count = 0
     for tpl in SEED_TEMPLATES:
-        existing = await NotificationTemplateDocument.find_one(
-            {
-                "template_key": tpl["template_key"],
-                "channel": tpl["channel"],
-            }
-        )
+        natural_key = {
+            "template_key": tpl["template_key"],
+            "channel": tpl["channel"],
+        }
+        existing = await NotificationTemplateDocument.find_one(natural_key)
         if existing is not None:
             continue
         doc = NotificationTemplateDocument(**tpl)

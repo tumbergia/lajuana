@@ -1,12 +1,13 @@
-from __future__ import annotations
-
 """Servicio de negocio para el agregado Reservation."""
+
+from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
 
 from beanie import PydanticObjectId
 from pymongo.errors import DuplicateKeyError
 
+from app.common.constants import build_code
 from app.common.enums import (
     Channel,
     NotificationEventType,
@@ -15,7 +16,6 @@ from app.common.enums import (
     ReservationStatus,
     UserRole,
 )
-from app.common.constants import build_code
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.core.logging import logger
@@ -32,6 +32,15 @@ from app.services.participant_form_link_service import ParticipantFormLinkServic
 from app.services.sync_change_recorder import record_change
 
 ACTIVE_RESERVATION_STATUSES = {
+    ReservationStatus.QUOTED,
+    ReservationStatus.PRE_RESERVED,
+    ReservationStatus.PENDING_PAYMENT,
+    ReservationStatus.PAYMENT_RECEIVED,
+    ReservationStatus.CONFIRMED,
+}
+
+ASSISTANT_GATE_RESERVATION_STATUSES = {
+    ReservationStatus.CONTACT,
     ReservationStatus.QUOTED,
     ReservationStatus.PRE_RESERVED,
     ReservationStatus.PENDING_PAYMENT,
@@ -390,6 +399,26 @@ class ReservationService:
         actor_id: PydanticObjectId | None = None,
     ) -> ReservationDocument:
         doc = await self.get(reservation_id)
+        if "assistant_disabled" in payload:
+            if not doc.holder_phone:
+                raise ApiError(
+                    status_code=400,
+                    code=ErrorCode.VALIDATION_ERROR,
+                    message=(
+                        "assistant_disabled solo puede actualizarse en reservas con teléfono"
+                        " del titular."
+                    ),
+                )
+            if doc.status not in ASSISTANT_GATE_RESERVATION_STATUSES:
+                raise ApiError(
+                    status_code=400,
+                    code=ErrorCode.VALIDATION_ERROR,
+                    message=(
+                        "assistant_disabled solo puede actualizarse en reservas con estados"
+                        " que afectan el gate de WhatsApp."
+                    ),
+                    details={"status": doc.status.value},
+                )
         changed_fields = [field for field in payload if getattr(doc, field, None) != payload[field]]
         for field, value in payload.items():
             setattr(doc, field, value)
@@ -787,5 +816,3 @@ class ReservationService:
             }
 
         return result
-
-

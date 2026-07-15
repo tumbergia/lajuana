@@ -1,8 +1,10 @@
 import traceback
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
 
+from app.ai.assistant.assistant_gate import AssistantGate
 from app.ai.assistant.orchestrator import AssistantOrchestrator
 from app.api.deps import get_current_user
 from app.common.enums import UserRole
@@ -38,13 +40,22 @@ router = APIRouter(tags=["Assistant"])
 )
 async def admin_ask(
     request: AdminAskRequest,
-    current_user: UserDocument = Depends(get_current_user),
+    current_user: Annotated[UserDocument, Depends(get_current_user)],
 ) -> AskResponse:
     if current_user.role != UserRole.ADMIN:
         raise ApiError(
             status_code=403,
             code=ErrorCode.AUTH_FORBIDDEN,
             message="Se requiere rol de administrador para usar este endpoint.",
+        )
+
+    gate = AssistantGate()
+    decision = await gate.evaluate()
+    if not decision.allowed:
+        raise ApiError(
+            status_code=409,
+            code="assistant.disabled",
+            message="El asistente está deshabilitado globalmente.",
         )
 
     orchestrator = AssistantOrchestrator()
