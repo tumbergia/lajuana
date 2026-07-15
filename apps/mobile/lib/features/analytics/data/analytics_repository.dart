@@ -113,8 +113,18 @@ class AnalyticsRepository {
         .toList(growable: false);
   }
 
-  Future<List<int>> downloadExport({String range = 'last_30_days'}) async {
-    final bytes = await _api.downloadDashboardExport(range: range);
+  Future<List<int>> downloadExport({
+    String range = 'last_30_days',
+    List<String>? moduleIds,
+    String? dateFrom,
+    String? dateTo,
+  }) async {
+    final bytes = await _api.downloadDashboardExport(
+      range: range,
+      moduleIds: moduleIds,
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+    );
     return bytes;
   }
 }

@@ -16,6 +16,7 @@ class InsightCardShell extends StatelessWidget {
     this.insightText,
     this.actionLabel,
     this.onAction,
+    this.onInfo,
     this.accentColor,
     this.refreshing = false,
     this.chartFirst = true,
@@ -30,6 +31,7 @@ class InsightCardShell extends StatelessWidget {
   final String? insightText;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final VoidCallback? onInfo;
   final Color? accentColor;
   final bool refreshing;
   final bool chartFirst;
@@ -57,6 +59,19 @@ class InsightCardShell extends StatelessWidget {
               ),
             ),
             if (refreshing) const ChartRefreshingBadge(),
+            if (onInfo != null)
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Detalle y descarga',
+                onPressed: onInfo,
+                icon: Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
           ],
         ),
         if (periodLabel.isNotEmpty) ...[

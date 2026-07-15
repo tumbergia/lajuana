@@ -10,6 +10,7 @@ import 'package:mobile/features/analytics/presentation/widgets/charts/app_line_c
 import 'package:mobile/features/analytics/presentation/widgets/charts/app_sparkline.dart';
 import 'package:mobile/features/analytics/presentation/widgets/country_flag_colors.dart';
 import 'package:mobile/features/analytics/presentation/widgets/insights/insight_card_shell.dart';
+import 'package:mobile/features/analytics/presentation/widgets/insights/indicator_detail_sheet.dart';
 import 'package:mobile/features/providers/presentation/utils/phone_country.dart';
 
 List<AppChartPoint> chartPointsFromSeries(AnalyticsSeries series) {
@@ -74,6 +75,18 @@ Color breakdownItemColor(
         return tokens.success;
       case 'pending':
         return tokens.warning;
+    }
+  }
+  if (module.id == 'reservation_origins') {
+    switch (item.key) {
+      case 'whatsapp':
+        return const Color(0xFF25D366);
+      case 'facebook':
+        return const Color(0xFF1877F2);
+      case 'instagram':
+        return const Color(0xFFE1306C);
+      case 'email':
+        return const Color(0xFF64748B);
     }
   }
   return tokens.seriesPalette[index % tokens.seriesPalette.length];
@@ -216,6 +229,7 @@ class KpiInsightCard extends StatelessWidget {
             title: module.title,
             period: module.period.label,
             refreshing: refreshing,
+            onInfo: () => showIndicatorDetailSheet(context, module: module),
           ),
           SizedBox(height: Theme.of(context).appTokens.spaceMd),
           if (module.primaryValue != null)
@@ -306,6 +320,19 @@ class TrendInsightCard extends StatelessWidget {
                 ),
               ),
               if (refreshing) const ChartRefreshingBadge(),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Detalle y descarga',
+                onPressed: () =>
+                    showIndicatorDetailSheet(context, module: module),
+                icon: Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
           if (description.isNotEmpty) ...[
@@ -551,6 +578,19 @@ class RankingInsightCard extends StatelessWidget {
                 ),
               ),
               if (refreshing) const ChartRefreshingBadge(),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Detalle y descarga',
+                onPressed: () =>
+                    showIndicatorDetailSheet(context, module: module),
+                icon: Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
           if (description.isNotEmpty) ...[
@@ -707,6 +747,19 @@ class ProgressInsightCard extends StatelessWidget {
                 ),
               ),
               if (refreshing) const ChartRefreshingBadge(),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                tooltip: 'Detalle y descarga',
+                onPressed: () =>
+                    showIndicatorDetailSheet(context, module: module),
+                icon: Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
           if (description.isNotEmpty) ...[
@@ -958,20 +1011,7 @@ class CountryRankingCard extends StatelessWidget {
   static const int _visibleLimit = 5;
 
   void _openInfo(BuildContext context, {RankingItem? focus}) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: false,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Theme.of(context).appTokens.radiusXl.topLeft,
-        ),
-      ),
-      builder: (ctx) => _CountryRankingInfoSheet(
-        module: module,
-        focusKey: focus?.key,
-      ),
-    );
+    showIndicatorDetailSheet(context, module: module);
   }
 
   @override
@@ -1109,161 +1149,26 @@ class CountryRankingCard extends StatelessWidget {
   }
 }
 
-class _CountryRankingInfoSheet extends StatelessWidget {
-  const _CountryRankingInfoSheet({
-    required this.module,
-    this.focusKey,
-  });
-
-  final AnalyticsModule module;
-  final String? focusKey;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tokens = Theme.of(context).appTokens;
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    final items = module.ranking;
-    final description = module.description.trim();
-    final insight = module.insightText?.trim();
-
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          tokens.spaceXl,
-          tokens.spaceLg,
-          tokens.spaceXl,
-          tokens.spaceXl + bottomInset,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: tokens.radiusSm,
-                ),
-              ),
-            ),
-            SizedBox(height: tokens.spaceXl),
-            Row(
-              children: [
-                Icon(
-                  Icons.public,
-                  color: chromeAccentForModule(context, module),
-                  size: 22,
-                ),
-                SizedBox(width: tokens.spaceSm),
-                Expanded(
-                  child: Text(
-                    module.title,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: tokens.spaceXs),
-            Text(
-              module.period.dateRangeLabel.isNotEmpty
-                  ? module.period.dateRangeLabel
-                  : module.period.label,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-            ),
-            if (description.isNotEmpty) ...[
-              SizedBox(height: tokens.spaceMd),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
-            if (insight != null && insight.isNotEmpty) ...[
-              SizedBox(height: tokens.spaceMd),
-              Text(
-                insight,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ],
-            if (module.primaryValue != null) ...[
-              SizedBox(height: tokens.spaceLg),
-              AppMetricCard(
-                title: 'Total del periodo',
-                value: module.primaryValue!.formatted,
-                suffix: module.primaryValue!.unit.isEmpty
-                    ? null
-                    : module.primaryValue!.unit,
-                icon: Icons.public,
-                compact: true,
-              ),
-            ],
-            SizedBox(height: tokens.spaceXl),
-            Text(
-              'DESGLOSE',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                  ),
-            ),
-            SizedBox(height: tokens.spaceSm),
-            for (final item in items) ...[
-              _CountryLegendRow(
-                item: item,
-                color: countryFlagColor(
-                  _Flag._resolveIso(
-                    item.countryCode,
-                    item.countryName ?? item.label,
-                  ),
-                  fallback: scheme.outline,
-                ),
-                highlighted: focusKey != null && item.key == focusKey,
-              ),
-              SizedBox(height: tokens.spaceSm),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _CountryLegendRow extends StatelessWidget {
   const _CountryLegendRow({
     required this.item,
     required this.color,
     this.onTap,
-    this.highlighted = false,
   });
 
   final RankingItem item;
   final Color color;
   final VoidCallback? onTap;
-  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final appTokens = Theme.of(context).appTokens;
     final share = item.sharePercentage;
-    final row = AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+    final row = Padding(
       padding: EdgeInsets.symmetric(
         horizontal: appTokens.spaceSm,
         vertical: appTokens.spaceXs,
-      ),
-      decoration: BoxDecoration(
-        color: highlighted ? color.withValues(alpha: 0.16) : Colors.transparent,
-        borderRadius: appTokens.radiusMd,
       ),
       child: Row(
         children: [
@@ -1400,6 +1305,7 @@ class ActionCenterCard extends StatelessWidget {
         accentColor: tokens.success,
         refreshing: refreshing,
         chartFirst: false,
+        onInfo: () => showIndicatorDetailSheet(context, module: module),
         child: AppChartEmptyState(
           message: module.emptyMessage ?? 'No hay pendientes críticos.',
           icon: Icons.check_circle_outline,
@@ -1415,6 +1321,7 @@ class ActionCenterCard extends StatelessWidget {
       accentColor: tokens.warning,
       refreshing: refreshing,
       chartFirst: false,
+      onInfo: () => showIndicatorDetailSheet(context, module: module),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1483,21 +1390,7 @@ class DonutInsightCard extends StatelessWidget {
   }
 
   void _openInfo(BuildContext context, {BreakdownItem? focus}) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: false,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Theme.of(context).appTokens.radiusXl.topLeft,
-        ),
-      ),
-      builder: (ctx) => _BreakdownInfoSheet(
-        module: module,
-        focusKey: focus?.key,
-        colorFor: (item, index) => _colorForItem(ctx, item, index),
-      ),
-    );
+    showIndicatorDetailSheet(context, module: module);
   }
 
   @override
@@ -1618,138 +1511,16 @@ class DonutInsightCard extends StatelessWidget {
   }
 }
 
-class _BreakdownInfoSheet extends StatelessWidget {
-  const _BreakdownInfoSheet({
-    required this.module,
-    required this.colorFor,
-    this.focusKey,
-  });
-
-  final AnalyticsModule module;
-  final String? focusKey;
-  final Color Function(BreakdownItem item, int index) colorFor;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tokens = Theme.of(context).appTokens;
-    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
-    final items = module.breakdown;
-    final description = module.description.trim();
-    final insight = module.insightText?.trim();
-
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          tokens.spaceXl,
-          tokens.spaceLg,
-          tokens.spaceXl,
-          tokens.spaceXl + bottomInset,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: tokens.radiusSm,
-                ),
-              ),
-            ),
-            SizedBox(height: tokens.spaceXl),
-            Text(
-              module.title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            SizedBox(height: tokens.spaceXs),
-            Text(
-              module.period.dateRangeLabel.isNotEmpty
-                  ? module.period.dateRangeLabel
-                  : module.period.label,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-            ),
-            if (description.isNotEmpty) ...[
-              SizedBox(height: tokens.spaceMd),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
-            if (insight != null && insight.isNotEmpty) ...[
-              SizedBox(height: tokens.spaceMd),
-              Text(
-                insight,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ],
-            if (module.primaryValue != null) ...[
-              SizedBox(height: tokens.spaceLg),
-              AppMetricCard(
-                title: module.id == 'payment_status'
-                    ? 'Por revisar'
-                    : module.id == 'participant_readiness'
-                        ? 'Pendientes'
-                        : 'Total del periodo',
-                value: module.primaryValue!.formatted,
-                suffix: module.primaryValue!.unit.isEmpty
-                    ? null
-                    : module.primaryValue!.unit,
-                icon: module.id == 'payment_status'
-                    ? Icons.receipt_long_outlined
-                    : module.id == 'participant_readiness'
-                        ? Icons.person_outline_rounded
-                        : Icons.donut_large_rounded,
-                compact: true,
-              ),
-            ],
-            SizedBox(height: tokens.spaceXl),
-            Text(
-              'DESGLOSE',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                  ),
-            ),
-            SizedBox(height: tokens.spaceSm),
-            for (var i = 0; i < items.length; i++) ...[
-              _BreakdownLegendRow(
-                item: items[i],
-                color: colorFor(items[i], i),
-                highlighted: focusKey != null && items[i].key == focusKey,
-              ),
-              SizedBox(height: tokens.spaceSm),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _BreakdownLegendRow extends StatelessWidget {
   const _BreakdownLegendRow({
     required this.item,
     required this.color,
     this.onTap,
-    this.highlighted = false,
   });
 
   final BreakdownItem item;
   final Color color;
   final VoidCallback? onTap;
-  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
@@ -1765,19 +1536,10 @@ class _BreakdownLegendRow extends StatelessWidget {
     final swatchBorder = isLight
         ? Border.all(color: scheme.outline.withValues(alpha: 0.55))
         : null;
-    final row = AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+    final row = Padding(
       padding: EdgeInsets.symmetric(
         horizontal: appTokens.spaceSm,
         vertical: appTokens.spaceXs,
-      ),
-      decoration: BoxDecoration(
-        color: highlighted
-            ? (isLight
-                ? scheme.surfaceContainerHighest
-                : color.withValues(alpha: 0.16))
-            : Colors.transparent,
-        borderRadius: appTokens.radiusMd,
       ),
       child: Row(
         children: [
@@ -1837,11 +1599,13 @@ class _TitleRow extends StatelessWidget {
     required this.title,
     required this.period,
     this.refreshing = false,
+    this.onInfo,
   });
 
   final String title;
   final String period;
   final bool refreshing;
+  final VoidCallback? onInfo;
 
   @override
   Widget build(BuildContext context) {
@@ -1869,6 +1633,19 @@ class _TitleRow extends StatelessWidget {
           ),
         ),
         if (refreshing) ChartRefreshingBadge(),
+        if (onInfo != null)
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            tooltip: 'Detalle y descarga',
+            onPressed: onInfo,
+            icon: Icon(
+              Icons.info_outline_rounded,
+              size: 18,
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
       ],
     );
   }

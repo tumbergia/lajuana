@@ -87,6 +87,14 @@ CATALOG: list[CatalogModule] = [
         permission=Permission.RESERVATION_READ,
     ),
     _mod(
+        id="reservation_origins",
+        category=ModuleCategory.RESERVATIONS,
+        title="Orígenes de reserva",
+        description="De dónde llegan las reservas nuevas (WhatsApp, redes, correo).",
+        viz=VisualizationType.DONUT,
+        permission=Permission.RESERVATION_READ,
+    ),
+    _mod(
         id="confirmed_value_trend",
         category=ModuleCategory.MONEY,
         title="Ingresos comprometidos",

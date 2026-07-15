@@ -436,8 +436,13 @@ class DashboardController extends ChangeNotifier {
     );
   }
 
-  Future<List<int>> downloadExport() =>
-      _repository.downloadExport(range: _range);
+  Future<List<int>> downloadExport({List<String>? moduleIds}) =>
+      _repository.downloadExport(
+        range: _range,
+        moduleIds: moduleIds,
+        dateFrom: _dateFromIso,
+        dateTo: _dateToIso,
+      );
 
   void _applySnapshot(
     DashboardSnapshot snapshot, {

@@ -12,6 +12,7 @@ from app.schemas.analytics_v2 import (
     ANALYTICS_SCHEMA_VERSION,
     AnalyticsModule,
     AnalyticsPreferencesUpdateSchema,
+    BreakdownItem,
     ComparisonMode,
     DashboardQuery,
     DashboardResponse,
@@ -326,7 +327,7 @@ def _sample_dashboard() -> DashboardResponse:
         preset=DateRangePreset.LAST_30_DAYS,
     )
     fresh = Freshness(generated_at=now, label="Actualizado ahora")
-    mod = AnalyticsModule(
+    trend = AnalyticsModule(
         id="reservation_trend",
         category=ModuleCategory.RESERVATIONS,
         title="Tendencia de reservas",
@@ -347,25 +348,48 @@ def _sample_dashboard() -> DashboardResponse:
                 ],
             )
         ],
-        ranking=[
-            RankingItem(
-                rank=1,
-                key="CO",
-                label="Colombia",
-                raw_value=10,
-                formatted_value="10",
-                country_code="CO",
-                country_name="Colombia",
-                share_percentage=50.0,
-            )
-        ],
         status=ModuleStatus.OK,
         insight_text="Las reservas aumentaron frente al periodo anterior.",
         generated_at=now,
         freshness=fresh,
     )
+    origins = AnalyticsModule(
+        id="reservation_origins",
+        category=ModuleCategory.RESERVATIONS,
+        title="Orígenes de reserva",
+        description="Canales de origen",
+        visualization=VisualizationType.DONUT,
+        period=period,
+        primary_value=PrimaryValue(
+            raw=10, formatted="10", unit="reservas", value_type=ValueType.COUNT
+        ),
+        breakdown=[
+            BreakdownItem(
+                dimension="channel",
+                key="whatsapp",
+                label="WhatsApp",
+                raw_value=6,
+                formatted_value="6",
+                unit="reservas",
+                share_percentage=60.0,
+            ),
+            BreakdownItem(
+                dimension="channel",
+                key="instagram",
+                label="Instagram",
+                raw_value=4,
+                formatted_value="4",
+                unit="reservas",
+                share_percentage=40.0,
+            ),
+        ],
+        status=ModuleStatus.OK,
+        insight_text="La mayoría de las reservas llegan por WhatsApp (60%, 6 reservas).",
+        generated_at=now,
+        freshness=fresh,
+    )
     return DashboardResponse(
-        modules=[mod],
+        modules=[trend, origins],
         period=period,
         generated_at=now,
         freshness=fresh,
@@ -373,7 +397,7 @@ def _sample_dashboard() -> DashboardResponse:
     )
 
 
-def test_export_has_four_visible_sheets_and_reopens() -> None:
+def test_export_has_resumen_and_one_sheet_per_indicator() -> None:
     svc = AnalyticsExportService()
     data, filename = svc.export_dashboard(
         _sample_dashboard(), generated_by="Ana Admin", include_logo=False
@@ -381,9 +405,93 @@ def test_export_has_four_visible_sheets_and_reopens() -> None:
     assert filename.endswith(".xlsx")
     assert "analitica_" in filename
     names = AnalyticsExportService.visible_sheet_names(data)
-    assert names == ["Resumen", "Indicadores", "Tendencias", "Desgloses"]
+    assert names[0] == "Resumen"
+    assert "Tendencia de reservas" in names
+    assert "Orígenes de reserva" in names
+    assert "Indicadores" not in names
+    assert "Tendencias" not in names
+    assert "Desgloses" not in names
     hits = AnalyticsExportService.assert_no_forbidden_terms_in_visible(data)
     assert hits == [], hits
+    assert AnalyticsExportService.chart_count(data) >= 2
+
+
+def test_export_single_module_filter_shape() -> None:
+    """When only one module is present (module_ids filter), Resumen + 1 sheet."""
+    full = _sample_dashboard()
+    single = DashboardResponse(
+        modules=[full.modules[1]],  # origins only
+        period=full.period,
+        generated_at=full.generated_at,
+        freshness=full.freshness,
+        schema_version=full.schema_version,
+    )
+    svc = AnalyticsExportService()
+    data, _ = svc.export_dashboard(single, generated_by="Ana", include_logo=False)
+    names = AnalyticsExportService.visible_sheet_names(data)
+    assert names == ["Resumen", "Orígenes de reserva"]
+    assert AnalyticsExportService.chart_count(data) >= 1
+
+
+def test_catalog_includes_reservation_origins() -> None:
+    catalog = AnalyticsCatalogService().get_catalog(UserRole.ADMIN)
+    ids = {m.id for m in catalog.modules}
+    assert "reservation_origins" in ids
+    origins = next(m for m in catalog.modules if m.id == "reservation_origins")
+    assert origins.recommended_visualization == VisualizationType.DONUT
+    assert origins.title == "Orígenes de reserva"
+
+
+def test_channel_colors_canonical() -> None:
+    from app.services.analytics_colors import CHANNEL_COLORS, breakdown_color
+
+    assert CHANNEL_COLORS["whatsapp"] == "25D366"
+    assert CHANNEL_COLORS["facebook"] == "1877F2"
+    assert CHANNEL_COLORS["instagram"] == "E1306C"
+    assert CHANNEL_COLORS["email"] == "64748B"
+    assert breakdown_color("reservation_origins", "whatsapp", 0) == "25D366"
+
+
+def test_rich_analysis_for_donut_and_line() -> None:
+    from app.services.analytics_analysis import (
+        analysis_parameter_rows,
+        build_rich_analysis,
+    )
+
+    dash = _sample_dashboard()
+    trend_lines = build_rich_analysis(dash.modules[0])
+    assert any("promedio" in line.lower() for line in trend_lines)
+    assert any("Rango:" in line or "mínimo" in line.lower() for line in trend_lines)
+    assert any("Dispersión" in line or "Inicio→fin" in line or "Tendencia" in line for line in trend_lines)
+
+    origins_lines = build_rich_analysis(dash.modules[1])
+    assert any("WhatsApp" in line for line in origins_lines)
+    assert any("HHI" in line or "Concentración" in line or "concentr" in line.lower() for line in origins_lines)
+    assert any("Redes sociales" in line for line in origins_lines)
+
+    trend_params = dict(analysis_parameter_rows(dash.modules[0]))
+    assert "Puntos" in trend_params
+    assert "Promedio" in trend_params
+    origins_params = dict(analysis_parameter_rows(dash.modules[1]))
+    assert "HHI" in origins_params
+    assert "Líder" in origins_params
+
+
+def test_export_includes_parameters_section() -> None:
+    svc = AnalyticsExportService()
+    data, _ = svc.export_dashboard(
+        _sample_dashboard(), generated_by="Ana", include_logo=False
+    )
+    from io import BytesIO
+
+    from openpyxl import load_workbook
+
+    wb = load_workbook(BytesIO(data))
+    ws = wb["Orígenes de reserva"]
+    values = [str(c.value) if c.value is not None else "" for row in ws.iter_rows() for c in row]
+    assert any(v == "Parámetros" for v in values)
+    assert any(v == "HHI" for v in values)
+    assert any(v == "Análisis" for v in values)
 
 
 def test_export_continues_without_logo() -> None:

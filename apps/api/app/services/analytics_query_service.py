@@ -91,6 +91,13 @@ _EQ_STATUS_LABELS = {
     "restricted": "Restringidos",
 }
 
+_CHANNEL_LABELS = {
+    "whatsapp": "WhatsApp",
+    "facebook": "Facebook",
+    "instagram": "Instagram",
+    "email": "Correo",
+}
+
 _CONFIRMED_LIKE = [
     ReservationStatus.CONFIRMED.value,
     ReservationStatus.COMPLETED.value,
@@ -227,10 +234,15 @@ class AnalyticsQueryService:
     ) -> DashboardResponse:
         period, previous = resolve_period(query)
         allowed = self._catalog.allowed_module_ids(role)
+        explicit = bool(query.module_ids)
         requested = query.module_ids or list(allowed)
         module_ids = [m for m in requested if m in allowed]
-        # Always include action_center when computing full dashboard if permitted
-        if "action_center" in allowed and "action_center" not in module_ids:
+        # Auto-include action_center only on full dashboards (no explicit filter).
+        if (
+            not explicit
+            and "action_center" in allowed
+            and "action_center" not in module_ids
+        ):
             module_ids = ["action_center", *module_ids]
 
         key = self._cache_key(role=role, query=query, module_ids=module_ids, period=period)
@@ -251,6 +263,7 @@ class AnalyticsQueryService:
             "action_center": self._module_action_center,
             "reservation_trend": self._module_reservation_trend,
             "reservation_status": self._module_reservation_status,
+            "reservation_origins": self._module_reservation_origins,
             "confirmed_value_trend": self._module_confirmed_value,
             "payment_status": self._module_payment_status,
             "top_experiences": self._module_top_experiences,
@@ -375,6 +388,15 @@ class AnalyticsQueryService:
         pipeline = [
             {"$match": {"created_at": {"$gte": start, "$lte": end}}},
             {"$group": {"_id": "$status", "count": {"$sum": 1}}},
+        ]
+        raw = await self._aggregate(ReservationDocument, pipeline)
+        return _count_by_field(raw)
+
+    async def _channel_counts_in_period(self, period: Period) -> dict[str, int]:
+        start, end = self._dt_bounds(period)
+        pipeline = [
+            {"$match": {"created_at": {"$gte": start, "$lte": end}}},
+            {"$group": {"_id": "$channel", "count": {"$sum": 1}}},
         ]
         raw = await self._aggregate(ReservationDocument, pipeline)
         return _count_by_field(raw)
@@ -645,6 +667,71 @@ class AnalyticsQueryService:
                 "La tasa de conversión comercial está bloqueada: no hay "
                 "historial de embudo suficiente."
             ),
+        )
+
+    async def _module_reservation_origins(
+        self,
+        *,
+        period: Period,
+        previous: Period,
+        query: DashboardQuery,
+        now: datetime,
+        freshness: Freshness,
+    ) -> AnalyticsModule:
+        counts = await self._channel_counts_in_period(period)
+        total = sum(counts.values())
+        breakdown = [
+            BreakdownItem(
+                dimension="channel",
+                key=key,
+                label=_CHANNEL_LABELS.get(key, key),
+                raw_value=float(value),
+                formatted_value=str(value),
+                unit="reservas",
+                share_percentage=round(value / total * 100, 1) if total else 0.0,
+            )
+            for key, value in sorted(counts.items(), key=lambda x: -x[1])
+        ]
+        top = breakdown[0] if breakdown else None
+        if total == 0:
+            insight = "Todavía no hay reservas en este periodo."
+            status = ModuleStatus.EMPTY
+        elif top and top.share_percentage is not None and top.share_percentage >= 50:
+            insight = (
+                f"La mayoría de las reservas llegan por {top.label} "
+                f"({top.share_percentage:.0f}%, {int(top.raw_value)} reservas)."
+            )
+            status = ModuleStatus.OK
+        elif top:
+            insight = (
+                f"El canal principal es {top.label} "
+                f"({int(top.raw_value)} de {int(total)} reservas)."
+            )
+            status = ModuleStatus.OK
+        else:
+            insight = None
+            status = ModuleStatus.OK
+
+        return AnalyticsModule(
+            id="reservation_origins",
+            category=ModuleCategory.RESERVATIONS,
+            title="Orígenes de reserva",
+            description="De dónde llegan las reservas nuevas (WhatsApp, redes, correo).",
+            visualization=VisualizationType.DONUT,
+            period=period,
+            primary_value=PrimaryValue(
+                raw=float(total),
+                formatted=str(total),
+                unit="reservas",
+                value_type=ValueType.COUNT,
+            ),
+            breakdown=breakdown,
+            status=status,
+            insight_text=insight,
+            action=ModuleAction(label="Ver reservas", target="reservations"),
+            generated_at=now,
+            freshness=freshness,
+            empty_message="Todavía no hay reservas en este periodo.",
         )
 
     async def _module_confirmed_value(

@@ -82,6 +82,8 @@ class AnalyticsComparison {
     this.label,
     this.percentageDelta,
     this.absoluteFormatted,
+    this.previousFormatted,
+    this.sufficientSample = true,
   });
 
   factory AnalyticsComparison.fromJson(Map<String, dynamic> json) {
@@ -90,6 +92,8 @@ class AnalyticsComparison {
       label: json['label'] as String?,
       percentageDelta: (json['percentage_delta'] as num?)?.toDouble(),
       absoluteFormatted: json['absolute_formatted'] as String?,
+      previousFormatted: json['previous_formatted'] as String?,
+      sufficientSample: json['sufficient_sample'] as bool? ?? true,
     );
   }
 
@@ -97,6 +101,8 @@ class AnalyticsComparison {
   final String? label;
   final double? percentageDelta;
   final String? absoluteFormatted;
+  final String? previousFormatted;
+  final bool sufficientSample;
 }
 
 class SeriesPoint {

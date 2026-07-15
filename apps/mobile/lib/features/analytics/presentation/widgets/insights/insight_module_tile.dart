@@ -13,6 +13,7 @@ ChartSkeletonVariant skeletonForModuleId(String id) {
     case 'confirmed_value_trend':
       return ChartSkeletonVariant.line;
     case 'reservation_status':
+    case 'reservation_origins':
     case 'payment_status':
     case 'equine_availability':
       return ChartSkeletonVariant.donut;
@@ -36,6 +37,8 @@ String loadingTitleFor(String id, List<CatalogModule> catalog) {
       return 'Tareas pendientes';
     case 'reservation_trend':
       return 'Tendencia de reservas';
+    case 'reservation_origins':
+      return 'Orígenes de reserva';
     case 'confirmed_value_trend':
       return 'Ingresos comprometidos';
     case 'top_experiences':

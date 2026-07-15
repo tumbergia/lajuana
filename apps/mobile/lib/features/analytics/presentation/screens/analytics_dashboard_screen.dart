@@ -6,6 +6,7 @@ import 'package:mobile_ui/mobile_ui.dart';
 import 'package:mobile/app/utils/file_saver.dart';
 import 'package:mobile/features/analytics/presentation/controllers/dashboard_controller.dart';
 import 'package:mobile/features/analytics/presentation/widgets/insights/analytics_state_views.dart';
+import 'package:mobile/features/analytics/presentation/widgets/insights/indicator_detail_sheet.dart';
 import 'package:mobile/features/analytics/presentation/widgets/insights/insight_module_tile.dart';
 
 /// Nivel 2 — Analítica completa: todas las métricas del catálogo.
@@ -43,7 +44,9 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
     final tokens = Theme.of(context).appTokens;
     final ctrl = widget.controller;
 
-    return Scaffold(
+    return AnalyticsDownloadScope(
+      controller: ctrl,
+      child: Scaffold(
       appBar: const AppPageAppBar(title: 'Analítica'),
       body: ListenableBuilder(
         listenable: ctrl,
@@ -189,6 +192,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
             },
           );
         },
+      ),
       ),
     );
   }

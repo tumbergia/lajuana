@@ -9,6 +9,7 @@ import 'package:mobile/features/analytics/presentation/screens/analytics_dashboa
 import 'package:mobile/features/analytics/presentation/screens/configure_analytics_screen.dart';
 import 'package:mobile/features/analytics/presentation/widgets/insights/analytics_interval_sheet.dart';
 import 'package:mobile/features/analytics/presentation/widgets/insights/analytics_state_views.dart';
+import 'package:mobile/features/analytics/presentation/widgets/insights/indicator_detail_sheet.dart';
 import 'package:mobile/features/analytics/presentation/widgets/insights/insight_module_tile.dart';
 import 'package:mobile/features/analytics/remote/analytics_api_client.dart';
 import 'package:mobile/features/assignments/assignments_module.dart';
@@ -234,7 +235,9 @@ class _AnalyticsHomeScreenState extends State<AnalyticsHomeScreen>
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).appTokens;
 
-    return Padding(
+    return AnalyticsDownloadScope(
+      controller: _controller,
+      child: Padding(
       padding: EdgeInsets.fromLTRB(
         tokens.spaceXl,
         tokens.spaceXl,
@@ -457,6 +460,7 @@ class _AnalyticsHomeScreenState extends State<AnalyticsHomeScreen>
             ],
           );
         },
+      ),
       ),
     );
   }

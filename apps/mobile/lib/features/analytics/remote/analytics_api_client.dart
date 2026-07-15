@@ -120,10 +120,21 @@ class AnalyticsApiClient {
 
   Future<Uint8List> downloadDashboardExport({
     String range = 'last_30_days',
+    List<String>? moduleIds,
+    String? dateFrom,
+    String? dateTo,
   }) async {
+    final params = <String, String>{
+      'range': range,
+      if (moduleIds != null && moduleIds.isNotEmpty)
+        'module_ids': moduleIds.join(','),
+      if (dateFrom != null) 'date_from': dateFrom,
+      if (dateTo != null) 'date_to': dateTo,
+    };
+    final qs = Uri(queryParameters: params).query;
     final response = await _authorizedRequest(
       method: 'GET',
-      path: '/analytics/dashboard/export?range=$range',
+      path: '/analytics/dashboard/export?$qs',
     );
     return response.bodyBytes;
   }
