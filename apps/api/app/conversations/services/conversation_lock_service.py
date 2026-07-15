@@ -28,7 +28,7 @@ class ConversationLockService:
         # para evitar que un crash anterior bloquee la conversación indefinidamente.
         await collection.update_many(
             {
-                "conversation_id": conversation_id,
+                "conversation_key": conversation_id,
                 "locked_until": {"$lt": stale_threshold, "$ne": None},
             },
             {"$set": {"locked_until": None, "locked_by": None}},
@@ -36,7 +36,7 @@ class ConversationLockService:
 
         result = await collection.find_one_and_update(
             {
-                "conversation_id": conversation_id,
+                "conversation_key": conversation_id,
                 "$or": [
                     {"locked_until": None},
                     {"locked_until": {"$lt": now}},
@@ -54,6 +54,6 @@ class ConversationLockService:
     async def release(self, *, conversation_id: str) -> None:
         collection = ConversationSessionDocument.get_motor_collection()
         await collection.find_one_and_update(
-            {"conversation_id": conversation_id},
+            {"conversation_key": conversation_id},
             {"$set": {"locked_until": None, "locked_by": None}},
         )
