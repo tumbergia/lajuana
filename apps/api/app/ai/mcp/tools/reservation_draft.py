@@ -41,6 +41,28 @@ def _format_expiry(value: Any) -> str:
     return str(value)
 
 
+def _format_date_human(d: Any, language: str) -> str:
+    if isinstance(d, str):
+        try:
+            from datetime import date as _date
+            d = _date.fromisoformat(d)
+        except (ValueError, TypeError):
+            return str(d)
+    if hasattr(d, "month") and hasattr(d, "day") and hasattr(d, "year"):
+        months_en = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December",
+        ]
+        months_es = [
+            "enero", "febrero", "marzo", "abril", "mayo", "junio",
+            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+        ]
+        if language == "en":
+            return f"{months_en[d.month - 1]} {d.day}, {d.year}"
+        return f"{d.day} de {months_es[d.month - 1]} de {d.year}"
+    return str(d)
+
+
 def _build_pre_reservation_response(
     *,
     code: str,
@@ -63,7 +85,7 @@ def _build_pre_reservation_response(
         f"{_t('pre_reservation_registered', language)}\n\n"
         f"{_t('pre_reservation_summary_header', language)}\n"
         f"- {_t('pre_reservation_field_experience', language)}: {experience}\n"
-        f"- {_t('pre_reservation_field_date', language)}: {requested_date}\n"
+        f"- {_t('pre_reservation_field_date', language)}: {_format_date_human(requested_date, language)}\n"
         f"- {_t('pre_reservation_field_participants', language)}: {participant_count}\n"
         f"- {_t('pre_reservation_field_amount', language)}: {_format_currency(subtotal, currency)}\n"
         f"- {_t('pre_reservation_field_code', language)}: {code}\n"
