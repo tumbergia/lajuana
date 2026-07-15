@@ -26,6 +26,9 @@ class ParticipantDocument(AuditDocument):
     document_number: str
     phone: str
     country: str
+    # Normalized ISO 3166-1 alpha-2 (optional; backfilled by migration).
+    country_code: str | None = None
+    country_name: str | None = None
     city: str
     height_cm: Decimal
     weight_kg: Decimal

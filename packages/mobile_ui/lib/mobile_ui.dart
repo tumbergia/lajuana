@@ -11,6 +11,7 @@ export 'src/theme/app_text_theme.dart';
 export 'src/theme/app_theme.dart';
 export 'src/theme/app_theme_notifier.dart';
 export 'src/theme/theme_extensions.dart';
+export 'src/theme/analytics_visual_tokens.dart';
 
 // Input
 export 'src/input/app_input_formatters.dart';
@@ -26,7 +27,9 @@ export 'src/widgets/app_centered_loader.dart';
 export 'src/widgets/app_confirm_dialog.dart';
 export 'src/widgets/app_entity_row_card.dart';
 export 'src/widgets/app_metric_card.dart';
+export 'src/widgets/app_page_app_bar.dart';
 export 'src/widgets/app_scaffold.dart';
+export 'src/widgets/app_search_field.dart';
 export 'src/widgets/app_section_header.dart';
 export 'src/widgets/app_segmented_filter.dart';
 export 'src/widgets/app_select_field.dart';

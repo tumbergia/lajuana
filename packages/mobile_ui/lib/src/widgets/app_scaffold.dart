@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget child;
@@ -27,8 +28,15 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tokens = Theme.of(context).appTokens;
     final content = Padding(
-      padding: padding ?? const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: padding ??
+          EdgeInsets.fromLTRB(
+            tokens.spaceLg,
+            tokens.spaceLg,
+            tokens.spaceLg,
+            tokens.spaceXl + tokens.spaceSm,
+          ),
       child: child,
     );
 

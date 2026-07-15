@@ -7,6 +7,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:mobile_ui/mobile_ui.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
+import 'package:mobile/features/catalogs/data/catalogs_sync_api.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
 import 'package:mobile/features/catalogs/experiences/presentation/controllers/experiences_tab_controller.dart';
 import 'package:mobile/features/catalogs/experiences/presentation/pages/experience_detail_page.dart';
@@ -35,7 +36,6 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
     with RefreshableState {
   late final ExperiencesTabController _controller;
   late final TextEditingController _searchController;
-  String _searchQuery = '';
   bool _missingModule = false;
 
   @override
@@ -222,39 +222,10 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
     return Row(
       children: [
         Expanded(
-          child: TextField(
+          child: AppSearchField(
             controller: _searchController,
-            onChanged: (v) {
-              _searchQuery = v;
-              _controller.setSearchQuery(v);
-            },
-            decoration: InputDecoration(
-              hintText: 'Buscar experiencia…',
-              prefixIcon: Icon(Symbols.search_rounded, size: 20),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(Symbols.close_rounded, size: 18),
-                      onPressed: () {
-                        _searchController.clear();
-                        _searchQuery = '';
-                        _controller.setSearchQuery('');
-                      },
-                    )
-                  : null,
-              isDense: true,
-              filled: true,
-              fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
-            ),
+            hintText: 'Buscar experiencia...',
+            onChanged: _controller.setSearchQuery,
           ),
         ),
         if (_controller.isRefreshing) ...[
@@ -265,6 +236,20 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildStatusFilter() {
+    return AppSegmentedFilter<String>(
+      value: _controller.includeInactive ? 'inactive' : 'active',
+      initialValue: 'active',
+      onChanged: (value) {
+        _controller.setIncludeInactive(value == 'inactive');
+      },
+      items: const [
+        AppSegmentedFilterItem(label: 'Activas', value: 'active'),
+        AppSegmentedFilterItem(label: 'Inactivas', value: 'inactive'),
       ],
     );
   }
@@ -307,6 +292,8 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
           ],
           _buildSearchRow(),
           const SizedBox(height: 12),
+          _buildStatusFilter(),
+          const SizedBox(height: 12),
           _buildCreateButton(),
           const SizedBox(height: 16),
           Expanded(child: Center(child: _buildEmptyFilterMessage())),
@@ -325,6 +312,8 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
             const SizedBox(height: 16),
           ],
           _buildSearchRow(),
+          const SizedBox(height: 12),
+          _buildStatusFilter(),
           const SizedBox(height: 12),
           _buildCreateButton(),
           const SizedBox(height: 16),
@@ -434,34 +423,83 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
     );
   }
 
-  void _confirmDeleteExperience(CatalogExperience experience) {
+  void _confirmDeactivateExperience(CatalogExperience experience) {
     AppConfirmDialog.show(
       context: context,
-      icon: Icons.delete_outline_rounded,
-      title: 'Eliminar experiencia',
+      icon: Icons.block_rounded,
+      title: 'Desactivar experiencia',
       message:
           'La experiencia "${experience.name}" se desactivara del catalogo. '
-          'Esta accion es reversible editando su estado.',
-      confirmLabel: 'Eliminar',
+          'Podras reactivarla despues desde Inactivas.',
+      confirmLabel: 'Desactivar',
       style: DialogStyle.danger,
       height: 280,
-      onConfirm: () => _deleteExperience(experience),
+      onConfirm: () => _deactivateExperience(experience),
     );
   }
 
-  Future<void> _deleteExperience(CatalogExperience experience) async {
+  void _confirmPurgeExperience(CatalogExperience experience) {
+    AppConfirmDialog.show(
+      context: context,
+      icon: Icons.delete_forever_rounded,
+      title: 'Eliminar definitivamente',
+      message:
+          'La experiencia "${experience.name}" se borrara de forma permanente. '
+          'Esta accion no se puede deshacer.',
+      confirmLabel: 'Eliminar definitivamente',
+      style: DialogStyle.danger,
+      height: 300,
+      onConfirm: () => _purgeExperience(experience),
+    );
+  }
+
+  Future<void> _deactivateExperience(CatalogExperience experience) async {
     try {
       await widget.catalogsModule!.experiences.deactivate(experience.id);
       if (!mounted) return;
-      showAppToast(context, message: 'Experiencia eliminada correctamente');
+      showAppToast(context, message: 'Experiencia desactivada');
       await _controller.loadLocalThenRefresh(refreshServer: true);
     } catch (_) {
       if (!mounted) return;
       showAppToast(
         context,
-        message: 'No se pudo eliminar la experiencia. Intenta de nuevo.',
+        message: 'No se pudo desactivar la experiencia. Intenta de nuevo.',
         isError: true,
       );
+    }
+  }
+
+  Future<void> _activateExperience(CatalogExperience experience) async {
+    try {
+      await widget.catalogsModule!.experiences.activate(experience.id);
+      if (!mounted) return;
+      showAppToast(context, message: 'Experiencia reactivada');
+      await _controller.loadLocalThenRefresh(refreshServer: true);
+    } catch (_) {
+      if (!mounted) return;
+      showAppToast(
+        context,
+        message: 'No se pudo reactivar la experiencia. Intenta de nuevo.',
+        isError: true,
+      );
+    }
+  }
+
+  Future<void> _purgeExperience(CatalogExperience experience) async {
+    try {
+      await widget.catalogsModule!.experiences.purge(experience.id);
+      if (!mounted) return;
+      showAppToast(
+        context,
+        message: 'Experiencia eliminada definitivamente',
+      );
+      await _controller.loadLocalThenRefresh(refreshServer: true);
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is CatalogsApiFailure
+          ? error.message
+          : 'No se pudo eliminar la experiencia definitivamente.';
+      showAppToast(context, message: message, isError: true);
     }
   }
 
@@ -558,12 +596,39 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
                   SizedBox(
                     width: double.infinity,
                     child: AppButton(
-                      label: 'Eliminar',
-                      icon: Icons.delete_outline_rounded,
+                      label: 'Desactivar',
+                      icon: Icons.block_rounded,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _confirmDeactivateExperience(experience);
+                      },
+                    ),
+                  ),
+                ] else ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Reactivar',
+                      icon: Icons.restart_alt_rounded,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _activateExperience(experience);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Eliminar definitivamente',
+                      icon: Icons.delete_forever_rounded,
                       variant: AppButtonVariant.danger,
                       onPressed: () {
                         Navigator.of(ctx).pop();
-                        _confirmDeleteExperience(experience);
+                        _confirmPurgeExperience(experience);
                       },
                     ),
                   ),

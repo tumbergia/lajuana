@@ -27,6 +27,7 @@ OPERATION_DOC_MAP = {
     "getExperienceById": "experiences_get",
     "updateExperienceById": "experiences_update",
     "deactivateExperienceById": "experiences_delete",
+    "purgeExperienceById": "experiences_purge",
     "createReservation": "reservations_create",
     "checkReservationAvailability": "reservations_availability",
     "listReservations": "reservations_list",

@@ -31,6 +31,7 @@ class ExperiencesTabController extends ChangeNotifier {
   List<CatalogExperience> _items = const [];
   List<CatalogExperience> _allItems = const [];
   String _searchQuery = '';
+  bool _includeInactive = false;
   bool _isRefreshing = false;
 
   ExperiencesTabLoadState get loadState => _loadState;
@@ -38,20 +39,31 @@ class ExperiencesTabController extends ChangeNotifier {
   List<CatalogExperience> get items => _items;
   List<CatalogExperience> get allItems => _allItems;
   String get searchQuery => _searchQuery;
+  bool get includeInactive => _includeInactive;
   bool get isRefreshing => _isRefreshing;
 
   List<CatalogExperience> get _filteredItems {
+    final byStatus = _includeInactive
+        ? _allItems.where((e) => !e.isActive)
+        : _allItems.where((e) => e.isActive);
     final q = _searchQuery.trim().toLowerCase();
-    if (q.isEmpty) return _allItems;
-    return _allItems.where((e) {
+    if (q.isEmpty) return byStatus.toList(growable: false);
+    return byStatus.where((e) {
       return e.name.toLowerCase().contains(q) ||
           e.slug.toLowerCase().contains(q) ||
           (e.subtitle?.toLowerCase() ?? '').contains(q);
-    }).toList();
+    }).toList(growable: false);
   }
 
   void setSearchQuery(String value) {
     _searchQuery = value;
+    _applyFilter();
+    notifyListeners();
+  }
+
+  void setIncludeInactive(bool value) {
+    if (_includeInactive == value) return;
+    _includeInactive = value;
     _applyFilter();
     notifyListeners();
   }

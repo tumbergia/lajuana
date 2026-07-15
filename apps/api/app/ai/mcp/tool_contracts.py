@@ -708,6 +708,40 @@ class UpdateEquineAvailabilityOutput(BaseModel):
 # ── Horizonte 8: Analítica, reportes y automatizaciones ──────
 
 
+class ToolChartPoint(BaseModel):
+    """Single data point for donut/bar/progress charts rendered by the mobile voice sheet."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    value: float
+    secondary_label: str | None = None
+    color: str | None = None  # hex without '#', e.g. "25D366"
+
+
+class ToolChartSeries(BaseModel):
+    """Named series for line charts."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    points: list[ToolChartPoint] = Field(default_factory=list)
+    color: str | None = None
+
+
+class ToolChartSpec(BaseModel):
+    """Chart-ready payload that the voice assistant renders inline."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: Literal["donut", "bar", "line", "progress"]
+    value_type: Literal["count", "currency", "percent"] = "count"
+    title: str
+    subtitle: str | None = None
+    points: list[ToolChartPoint] = Field(default_factory=list)
+    series: list[ToolChartSeries] = Field(default_factory=list)
+
+
 class SalesSummaryInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -733,6 +767,7 @@ class SalesSummaryOutput(BaseModel):
     currency: str = "COP"
     date_from: str | None = None
     date_to: str | None = None
+    chart: ToolChartSpec | None = None
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 
@@ -761,6 +796,7 @@ class ReservationFunnelOutput(BaseModel):
     total_converted: int = 0
     date_from: str | None = None
     date_to: str | None = None
+    chart: ToolChartSpec | None = None
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 
@@ -788,6 +824,7 @@ class ChannelPerformanceOutput(BaseModel):
     total: int
     date_from: str | None = None
     date_to: str | None = None
+    chart: ToolChartSpec | None = None
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 
@@ -820,6 +857,7 @@ class OccupancyReportOutput(BaseModel):
     avg_occupancy_pct: float = 0.0
     date_from: str | None = None
     date_to: str | None = None
+    chart: ToolChartSpec | None = None
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 
@@ -849,6 +887,7 @@ class EquineWorkloadReportOutput(BaseModel):
     total_assignments: int = 0
     date_from: str | None = None
     date_to: str | None = None
+    chart: ToolChartSpec | None = None
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 

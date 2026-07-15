@@ -32,11 +32,109 @@ class AnalyticsApiClient {
     return _decodeBody(response.body);
   }
 
+  Future<Map<String, dynamic>> fetchLeadsPreferences() async {
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/analytics/leads/preferences',
+    );
+    return _decodeBody(response.body);
+  }
+
+  Future<Map<String, dynamic>> updateLeadsPreferences({
+    required List<String> pinnedLeadIds,
+    required List<String> excludedLeadIds,
+  }) async {
+    final response = await _authorizedRequest(
+      method: 'PUT',
+      path: '/analytics/leads/preferences',
+      body: {
+        'pinned_lead_ids': pinnedLeadIds,
+        'excluded_lead_ids': excludedLeadIds,
+      },
+    );
+    return _decodeBody(response.body);
+  }
+
   Future<Uint8List> downloadExport({String? leadId}) async {
     final qs = leadId != null ? '?lead_id=$leadId' : '';
     final response = await _authorizedRequest(
       method: 'GET',
       path: '/analytics/leads/export$qs',
+    );
+    return response.bodyBytes;
+  }
+
+  // ── v2 dashboard ──────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> fetchDashboard({
+    String range = 'last_30_days',
+    bool comparison = true,
+    List<String>? moduleIds,
+    bool forceRefresh = false,
+    String? dateFrom,
+    String? dateTo,
+  }) async {
+    final params = <String, String>{
+      'range': range,
+      'comparison': comparison.toString(),
+      if (forceRefresh) 'force_refresh': 'true',
+      if (moduleIds != null && moduleIds.isNotEmpty)
+        'module_ids': moduleIds.join(','),
+      if (dateFrom != null) 'date_from': dateFrom,
+      if (dateTo != null) 'date_to': dateTo,
+    };
+    final qs = Uri(queryParameters: params).query;
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/analytics/dashboard?$qs',
+    );
+    return _decodeBody(response.body);
+  }
+
+  Future<Map<String, dynamic>> fetchCatalog() async {
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/analytics/dashboard/catalog',
+    );
+    return _decodeBody(response.body);
+  }
+
+  Future<Map<String, dynamic>> fetchDashboardPreferences() async {
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/analytics/dashboard/preferences',
+    );
+    return _decodeBody(response.body);
+  }
+
+  Future<Map<String, dynamic>> updateDashboardPreferences(
+    Map<String, dynamic> body,
+  ) async {
+    final response = await _authorizedRequest(
+      method: 'PUT',
+      path: '/analytics/dashboard/preferences',
+      body: body,
+    );
+    return _decodeBody(response.body);
+  }
+
+  Future<Uint8List> downloadDashboardExport({
+    String range = 'last_30_days',
+    List<String>? moduleIds,
+    String? dateFrom,
+    String? dateTo,
+  }) async {
+    final params = <String, String>{
+      'range': range,
+      if (moduleIds != null && moduleIds.isNotEmpty)
+        'module_ids': moduleIds.join(','),
+      if (dateFrom != null) 'date_from': dateFrom,
+      if (dateTo != null) 'date_to': dateTo,
+    };
+    final qs = Uri(queryParameters: params).query;
+    final response = await _authorizedRequest(
+      method: 'GET',
+      path: '/analytics/dashboard/export?$qs',
     );
     return response.bodyBytes;
   }
@@ -61,6 +159,12 @@ class AnalyticsApiClient {
           return _http.get(uri, headers: _headers(accessToken));
         case 'POST':
           return _http.post(
+            uri,
+            headers: _headers(accessToken),
+            body: body != null ? jsonEncode(body) : null,
+          );
+        case 'PUT':
+          return _http.put(
             uri,
             headers: _headers(accessToken),
             body: body != null ? jsonEncode(body) : null,
@@ -113,6 +217,11 @@ class AnalyticsApiClient {
       throw AnalyticsApiFailure(
         code: 'network.invalid_response',
         message: 'Respuesta inválida del servidor.',
+      );
+    } on http.ClientException {
+      throw AnalyticsApiFailure(
+        code: 'network.unavailable',
+        message: 'No hay conexión con el servidor.',
       );
     }
   }

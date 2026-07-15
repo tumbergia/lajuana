@@ -60,6 +60,7 @@ PROTECTED_ENDPOINTS = [
     ("get", f"/api/v1/experiences/{FAKE_ID}", None),
     ("patch", f"/api/v1/experiences/{FAKE_ID}", {"name": "Cabalgata premium"}),
     ("delete", f"/api/v1/experiences/{FAKE_ID}", None),
+    ("delete", f"/api/v1/experiences/{FAKE_ID}/permanent", None),
     (
         "post",
         "/api/v1/reservations",

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
@@ -94,6 +95,12 @@ class _FakeSuccessRepository implements ReservationsRepository {
     String? note,
   }) async {
     return detail;
+  }
+
+
+  @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
   }
 
   @override
@@ -298,6 +305,12 @@ class _FakeErrorRepository implements ReservationsRepository {
     String? note,
   }) async {
     throw Exception('Network error');
+  }
+
+
+  @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
   }
 
   @override
@@ -506,6 +519,12 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
     String? note,
   }) async {
     throw Exception('Network error');
+  }
+
+
+  @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
   }
 
   @override

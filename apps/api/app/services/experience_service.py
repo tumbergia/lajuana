@@ -5,7 +5,7 @@ from pymongo.errors import DuplicateKeyError
 
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-from app.documents import ExperienceDocument
+from app.documents import ExperienceDocument, ReservationDocument
 from app.schemas.experience import (
     ExperienceCreateSchema,
     ExperiencePricingSchema,
@@ -274,6 +274,44 @@ class ExperienceService:
         doc.is_active = False
         await doc.save()
         await record_change(entity_type="experience", doc=doc, change_type="delete")
+        return doc
+
+    async def purge(self, experience_id: str) -> ExperienceDocument:
+        """Elimina definitivamente una experiencia inactiva.
+
+        Requiere desactivación previa y falla si hay reservas asociadas.
+        """
+        doc = await self.get(experience_id)
+        if doc.is_active:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.EXPERIENCE_STILL_ACTIVE,
+                message=(
+                    "La experiencia debe estar desactivada antes de "
+                    "eliminarla definitivamente."
+                ),
+                details={"experience_id": experience_id},
+            )
+
+        reservation_count = await ReservationDocument.find(
+            {"experience_id": doc.id}
+        ).count()
+        if reservation_count > 0:
+            raise ApiError(
+                status_code=409,
+                code=ErrorCode.EXPERIENCE_HAS_RESERVATIONS,
+                message=(
+                    "No se puede eliminar la experiencia porque tiene "
+                    "reservas asociadas."
+                ),
+                details={
+                    "experience_id": experience_id,
+                    "reservation_count": reservation_count,
+                },
+            )
+
+        await record_change(entity_type="experience", doc=doc, change_type="purge")
+        await doc.delete()
         return doc
 
     async def quote(

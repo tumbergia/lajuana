@@ -35,6 +35,8 @@ class ErrorCode:
     )
     EXPERIENCE_INCLUSIONS_REQUIRED = "experience.inclusions_required"
     EXPERIENCE_INACTIVE = "experience.inactive"
+    EXPERIENCE_STILL_ACTIVE = "experience.still_active"
+    EXPERIENCE_HAS_RESERVATIONS = "experience.has_reservations"
     EXPERIENCE_PRICING_MISSING = "experience.pricing_missing"
     EXPERIENCE_PRICING_TIER_NOT_FOUND = "experience.pricing_tier_not_found"
     SCHEDULE_EXPERIENCE_MISMATCH = "schedule.experience_mismatch"

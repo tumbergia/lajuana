@@ -141,20 +141,28 @@ class _AppCardState extends State<AppCard> with SingleTickerProviderStateMixin {
               ? Border.all(color: scheme.outlineVariant.withValues(alpha: 0.4))
               : null,
         ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (showAccent && widget.accentColor != null)
-                Container(width: 4, color: widget.accentColor),
-              Expanded(
-                child: Padding(
-                  padding: widget.padding ?? EdgeInsets.all(tokens.spaceLg),
-                  child: content,
-                ),
+        // Stack + Positioned accent avoids IntrinsicHeight, which breaks
+        // LayoutBuilder-based children (e.g. fl_chart).
+        child: Stack(
+          children: [
+            if (showAccent && widget.accentColor != null)
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 4,
+                child: ColoredBox(color: widget.accentColor!),
               ),
-            ],
-          ),
+            Padding(
+              padding: EdgeInsets.only(
+                left: showAccent && widget.accentColor != null ? 4 : 0,
+              ),
+              child: Padding(
+                padding: widget.padding ?? EdgeInsets.all(tokens.spaceLg),
+                child: content,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,28 +1,11 @@
-from datetime import datetime
+"""Backward-compatible re-exports. Prefer analytics_v2 for new code."""
 
-from pydantic import BaseModel
-
-
-class LeadItem(BaseModel):
-    id: str
-    category: str
-    title: str
-    value: str
-    unit: str
-    description: str
-    icon: str
-    order: int
-    details: list[dict[str, str]] = []
-
-
-class LeadCategory(BaseModel):
-    id: str
-    name: str
-    icon: str
-    leads: list[LeadItem]
-
-
-class AnalyticsResponse(BaseModel):
-    categories: list[LeadCategory]
-    generated_at: datetime
-    total_leads: int
+from app.schemas.analytics_v2 import (  # noqa: F401
+    AnalyticsPreferencesSchema,
+    AnalyticsPreferencesUpdateSchema,
+    AnalyticsResponse,
+    LeadCategory,
+    LeadItem,
+    LeadsPreferencesSchema,
+    LeadsPreferencesUpdateSchema,
+)

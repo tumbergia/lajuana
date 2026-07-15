@@ -601,6 +601,20 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "participante es menor de 12 o mayor de 65 anios",
         "detail_keys": ("participant_id", "age_years"),
     },
+    "B409-031": {
+        "http_status": 409,
+        "code": ErrorCode.EXPERIENCE_STILL_ACTIVE,
+        "name": "Experiencia aún activa",
+        "trigger": "intento de purge con is_active True",
+        "detail_keys": ("experience_id",),
+    },
+    "B409-032": {
+        "http_status": 409,
+        "code": ErrorCode.EXPERIENCE_HAS_RESERVATIONS,
+        "name": "Experiencia con reservas",
+        "trigger": "intento de purge con reservas asociadas",
+        "detail_keys": ("experience_id", "reservation_count"),
+    },
 }
 
 
@@ -660,6 +674,11 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_400": (),
         "cases_404": ("B404-002",),
         "cases_409": (),
+    },
+    ("DELETE", "/api/v1/experiences/{experience_id}/permanent"): {
+        "cases_400": (),
+        "cases_404": ("B404-002",),
+        "cases_409": ("B409-031", "B409-032"),
     },
     ("POST", "/api/v1/experiences/{experience_id}/quote"): {
         "cases_400": ("B400-032",),

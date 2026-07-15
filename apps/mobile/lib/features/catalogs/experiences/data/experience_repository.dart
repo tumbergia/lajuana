@@ -112,6 +112,11 @@ class ExperienceRepository {
 
   Future<void> deactivate(String id) =>
       _catalogsRepository.deactivateExperience(id);
+
+  Future<void> activate(String id) =>
+      _catalogsRepository.activateExperience(id);
+
+  Future<void> purge(String id) => _catalogsRepository.purgeExperience(id);
 }
 
 Map<String, dynamic>? _durationToMap(CatalogExperienceDuration? value) {

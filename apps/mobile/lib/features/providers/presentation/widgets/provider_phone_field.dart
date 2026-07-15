@@ -1,3 +1,4 @@
+import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 
 import 'package:mobile_ui/src/input/app_input_formatters.dart';
@@ -148,9 +149,13 @@ class _CountryPrefix extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              country.flagEmoji,
-              style: const TextStyle(fontSize: 20),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: CountryFlag.fromCountryCode(
+                country.iso,
+                width: 22,
+                height: 16,
+              ),
             ),
             const SizedBox(width: 6),
             Text(
@@ -270,9 +275,13 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                   final country = _filtered[index];
                   final selected = country.iso == widget.selected.iso;
                   return ListTile(
-                    leading: Text(
-                      country.flagEmoji,
-                      style: const TextStyle(fontSize: 24),
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: CountryFlag.fromCountryCode(
+                        country.iso,
+                        width: 28,
+                        height: 20,
+                      ),
                     ),
                     title: Text(country.name),
                     trailing: Text(

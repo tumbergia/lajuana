@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_ui/mobile_ui.dart';
 
 import 'package:mobile/features/analytics/remote/analytics_api_client.dart';
 import 'package:mobile/features/analytics/presentation/controllers/leads_controller.dart';
 import 'package:mobile/features/analytics/presentation/widgets/lead_card.dart';
+import 'package:mobile/features/analytics/presentation/widgets/lead_category_colors.dart';
+import 'package:mobile/features/analytics/presentation/widgets/lead_detail_sheet.dart';
 import 'package:mobile/features/analytics/presentation/screens/all_leads_screen.dart';
-import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
-import 'package:mobile_ui/src/widgets/refresh_scope.dart';
-import 'package:mobile_ui/src/widgets/app_section_header.dart';
 
 class LeadsScreen extends StatefulWidget {
   const LeadsScreen({
     super.key,
     required this.analyticsApiClient,
+    this.userDisplayName,
   });
 
   final AnalyticsApiClient analyticsApiClient;
+  final String? userDisplayName;
 
   @override
   State<LeadsScreen> createState() => _LeadsScreenState();
@@ -45,30 +47,51 @@ class _LeadsScreenState extends State<LeadsScreen> with RefreshableState {
   @override
   Future<void> onRefresh() => _controller.refresh();
 
+  void _openHub(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AllLeadsScreen(controller: _controller),
+      ),
+    );
+  }
+
+  String get _greetingName {
+    final raw = widget.userDisplayName?.trim() ?? '';
+    if (raw.isEmpty) return 'equipo';
+    return raw.split(RegExp(r'\s+')).first;
+  }
+
   @override
   Widget build(BuildContext context) {
     final ctrl = _controller;
-    final scheme = Theme.of(context).colorScheme;
+    final tokens = Theme.of(context).appTokens;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+      padding: EdgeInsets.fromLTRB(
+        tokens.spaceXl,
+        tokens.spaceXl,
+        tokens.spaceXl,
+        tokens.spaceXl,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AppSectionHeader(
-            eyebrow: 'Inicio',
-            title: 'Panel de indicadores',
-            subtitle: 'Resumen operativo del sistema',
+            eyebrow: 'Hola',
+            title: _greetingName,
           ),
-          const SizedBox(height: 20),
-          _buildBody(ctrl, scheme),
+          SizedBox(height: tokens.spaceXl),
+          _buildBody(ctrl),
         ],
       ),
     );
   }
 
-  Widget _buildBody(LeadsController ctrl, ColorScheme scheme) {
+  Widget _buildBody(LeadsController ctrl) {
+    final scheme = Theme.of(context).colorScheme;
+    final tokens = Theme.of(context).appTokens;
+
     if (ctrl.isLoading && ctrl.categories.isEmpty) {
       return const AppCenteredLoader();
     }
@@ -79,25 +102,67 @@ class _LeadsScreenState extends State<LeadsScreen> with RefreshableState {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline_rounded, size: 48, color: scheme.error),
-            const SizedBox(height: 12),
-            Text(ctrl.error!, style: TextStyle(color: scheme.error)),
-            const SizedBox(height: 16),
-            FilledButton.icon(
+            SizedBox(height: tokens.spaceMd),
+            Text(
+              'No se pudieron cargar los indicadores',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: tokens.spaceSm),
+            Text(
+              ctrl.error!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: tokens.spaceLg),
+            AppButton(
+              label: 'REINTENTAR',
+              icon: Icons.refresh_rounded,
               onPressed: () => ctrl.loadLeads(forceRefresh: true),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reintentar'),
             ),
           ],
         ),
       );
     }
 
-    final leads = ctrl.randomFive;
+    final leads = ctrl.homeLeads;
     if (leads.isEmpty) {
       return Center(
-        child: Text(
-          'No hay indicadores disponibles.',
-          style: TextStyle(color: scheme.onSurfaceVariant),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.insights_outlined,
+              size: 48,
+              color: scheme.onSurfaceVariant,
+            ),
+            SizedBox(height: tokens.spaceMd),
+            Text(
+              'Sin indicadores',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            SizedBox(height: tokens.spaceSm),
+            Text(
+              'Abre el panel para ver y configurar indicadores.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: tokens.spaceLg),
+            AppButton(
+              label: 'VER INDICADORES',
+              icon: Icons.view_list_rounded,
+              variant: AppButtonVariant.secondary,
+              onPressed: () => _openHub(context),
+            ),
+          ],
         ),
       );
     }
@@ -106,41 +171,43 @@ class _LeadsScreenState extends State<LeadsScreen> with RefreshableState {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Indicadores del momento',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
+          'INDICADORES DEL MOMENTO',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
                 color: scheme.onSurface,
               ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spaceMd),
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: leads.length + 1,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemCount: leads.length,
+          separatorBuilder: (_, _) => SizedBox(height: tokens.spaceSm),
           itemBuilder: (context, index) {
-            if (index == leads.length) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: OutlinedButton.icon(
-                  onPressed: () => _openAllLeads(context),
-                  icon: const Icon(Icons.view_list_rounded, size: 18),
-                  label: const Text('Ver todos los indicadores'),
-                ),
-              );
-            }
-            return LeadCard(lead: leads[index]);
+            final lead = leads[index];
+            return LeadCard(
+              lead: lead,
+              pinned: ctrl.isPinned(lead.id),
+              accentColor: leadCategoryAccent(context, lead.category),
+              onTap: () => showLeadDetailSheet(
+                context,
+                lead: lead,
+                pinned: ctrl.isPinned(lead.id),
+                onExport: () => ctrl.exportSingle(lead.id),
+              ),
+            );
           },
         ),
+        SizedBox(height: tokens.spaceLg),
+        AppButton(
+          label: 'VER Y CONFIGURAR',
+          icon: Icons.dashboard_customize_rounded,
+          variant: AppButtonVariant.secondary,
+          expanded: true,
+          onPressed: () => _openHub(context),
+        ),
       ],
-    );
-  }
-
-  void _openAllLeads(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AllLeadsScreen(controller: _controller),
-      ),
     );
   }
 }

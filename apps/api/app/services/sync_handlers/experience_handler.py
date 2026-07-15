@@ -50,4 +50,8 @@ class ExperienceSyncHandler:
             require_remote_id(operation)
             await ensure_base_version(ExperienceDocument, operation.entity_remote_id, operation.base_version)
             return await self.experience_service.deactivate(operation.entity_remote_id)
+        if op_type == "purge":
+            require_remote_id(operation)
+            await ensure_base_version(ExperienceDocument, operation.entity_remote_id, operation.base_version)
+            return await self.experience_service.purge(operation.entity_remote_id)
         return None

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
@@ -216,6 +217,14 @@ class ReservationsRepositoryImpl implements ReservationsRepository {
     final cached = await _localDataSource.getCachedDetail(reservationId);
     if (cached == null) return null;
     return dtoToDetail(_payloadToDetailDto(cached.payload));
+  }
+
+  @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    final dto = await _apiClient.createReservation(payload);
+    final detail = dtoToDetail(dto);
+    await _cacheDetailPayload(dto);
+    return detail;
   }
 
   @override

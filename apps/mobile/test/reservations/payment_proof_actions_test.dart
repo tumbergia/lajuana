@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
@@ -96,6 +97,12 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
     String? note,
   }) async {
     return detail;
+  }
+
+
+  @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
   }
 
   @override
@@ -316,6 +323,12 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
       message: 'No tienes permisos para deshacer rechazo.',
       statusCode: 403,
     );
+  }
+
+
+  @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
   }
 
   @override
@@ -554,6 +567,12 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
     );
   }
 
+
+  @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
+  }
+
   @override
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
@@ -788,6 +807,12 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
       message: 'No hay conexión con el servidor.',
       statusCode: 0,
     );
+  }
+
+
+  @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
   }
 
   @override

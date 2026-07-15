@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'analytics_visual_tokens.dart';
 import 'app_colors.dart';
+import 'app_radii.dart';
 import 'app_text_theme.dart';
 import 'theme_extensions.dart';
 
@@ -10,6 +12,18 @@ abstract final class AppTheme {
 
   static ThemeData _themeData(ColorScheme scheme, Brightness brightness) {
     final textTheme = AppTextThemes.baseTextTheme(scheme.onSurface);
+    const tokens = AppThemeTokens.base();
+    final analyticsTokens = brightness == Brightness.dark
+        ? AnalyticsVisualTokens.dark(scheme)
+        : AnalyticsVisualTokens.light(scheme);
+    final pageTitleStyle = textTheme.titleLarge?.copyWith(
+      fontFamily: 'Manrope',
+      fontSize: 20,
+      fontWeight: FontWeight.w800,
+      height: 1.4,
+      letterSpacing: 2,
+      color: scheme.onSurface,
+    );
 
     return ThemeData(
       useMaterial3: true,
@@ -17,13 +31,27 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: scheme.surface,
       textTheme: textTheme,
-      extensions: const [AppThemeTokens.base()],
+      extensions: [tokens, analyticsTokens],
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         foregroundColor: scheme.onSurface,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: textTheme.titleLarge,
+        toolbarHeight: 64,
+        titleSpacing: tokens.spaceSm,
+        actionsPadding: EdgeInsets.only(right: tokens.spaceLg),
+        titleTextStyle: pageTitleStyle,
+        iconTheme: IconThemeData(color: scheme.onSurface, size: 22),
+        actionsIconTheme: IconThemeData(color: scheme.onSurface, size: 22),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          foregroundColor: scheme.onSurface,
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppRadii.radiusLg,
+          ),
+        ),
       ),
       cardTheme: CardThemeData(
         color: scheme.surfaceContainer,

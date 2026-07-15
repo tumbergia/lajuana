@@ -65,6 +65,7 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("experience", "create"): Permission.EXPERIENCE_CREATE,
     ("experience", "update"): Permission.EXPERIENCE_UPDATE,
     ("experience", "delete"): Permission.EXPERIENCE_DELETE,
+    ("experience", "purge"): Permission.EXPERIENCE_DELETE,
     ("reservation_rules", "update"): Permission.CONFIG_UPDATE,
     ("reservation", "create"): Permission.RESERVATION_CREATE,
     ("reservation", "update"): Permission.RESERVATION_UPDATE,

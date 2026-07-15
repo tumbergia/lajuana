@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:mobile_domain/src/reservation_status.dart';
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
@@ -143,6 +144,12 @@ class FakeReservationsRepository implements ReservationsRepository {
     String? note,
   }) async {
     throw UnimplementedError('unrejectPaymentProof not implemented in fake');
+  }
+
+
+  @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
   }
 
   @override

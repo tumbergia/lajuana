@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, date, datetime, timezone
+from typing import Any
 from uuid import uuid4
 
 from app.ai.assistant.date_extractor import extract_date_from_message
@@ -109,6 +110,9 @@ def _fallback_tool_response(tool_output: dict) -> str:
         return str(tool_output["message"])
     if tool_output.get("error"):
         return f"Error: {tool_output['error']}"
+    analytics = _analytics_summary_response(tool_output)
+    if analytics:
+        return analytics
     parts: list[str] = []
     if "total" in tool_output:
         parts.append(f"Total: {tool_output['total']}")
@@ -118,6 +122,75 @@ def _fallback_tool_response(tool_output: dict) -> str:
         if msg:
             parts.append(str(msg))
     return " ".join(parts) if parts else "Operación completada."
+
+
+def _format_cop(amount: Any) -> str:
+    try:
+        numeric = float(amount)
+    except (TypeError, ValueError):
+        numeric = 0.0
+    text = f"{int(round(numeric)):,}".replace(",", ".")
+    return f"${text} COP"
+
+
+def _analytics_summary_response(tool_output: dict) -> str | None:
+    """Resumen corto y determinista para tools de analítica con chart."""
+    tool_name = tool_output.get("tool_name")
+    blocking = tool_output.get("blocking_reasons") or []
+    if blocking:
+        first = blocking[0] if isinstance(blocking[0], dict) else {}
+        msg = first.get("message") if isinstance(first, dict) else None
+        return str(msg) if msg else None
+
+    period = ""
+    date_from = tool_output.get("date_from")
+    date_to = tool_output.get("date_to")
+    if date_from and date_to:
+        period = f" del {date_from} al {date_to}"
+    elif date_from:
+        period = f" desde {date_from}"
+
+    if tool_name == "admin_get_sales_summary":
+        revenue = tool_output.get("total_revenue") or 0
+        total = tool_output.get("total_reservations") or 0
+        return (
+            f"Ingresos comprometidos{period}: {_format_cop(revenue)}. "
+            f"{total} reservas en el periodo. Te muestro la gráfica."
+        )
+    if tool_name == "admin_get_channel_performance":
+        total = tool_output.get("total") or 0
+        channels = tool_output.get("channels") or []
+        top = ""
+        if channels and isinstance(channels[0], dict):
+            top = f" El canal líder es {channels[0].get('channel', '')}."
+        return f"Origen de {total} reservas{period}.{top} Te muestro la gráfica."
+    if tool_name == "admin_get_reservation_funnel":
+        start = tool_output.get("total_start") or 0
+        converted = tool_output.get("total_converted") or 0
+        return (
+            f"Embudo{period}: {start} reservas al inicio, "
+            f"{converted} confirmadas/completadas. Te muestro la gráfica."
+        )
+    if tool_name == "admin_get_occupancy_report":
+        avg = tool_output.get("avg_occupancy_pct") or 0
+        return f"Ocupación promedio{period}: {avg}%. Te muestro la gráfica."
+    if tool_name == "admin_get_equine_workload_report":
+        total = tool_output.get("total_assignments") or 0
+        equines = tool_output.get("total_equines") or 0
+        return (
+            f"Carga equina{period}: {total} asignaciones en {equines} equinos. "
+            "Te muestro la gráfica."
+        )
+    return None
+
+
+ANALYTICS_LITERAL_TOOLS: set[str] = {
+    "admin_get_sales_summary",
+    "admin_get_channel_performance",
+    "admin_get_reservation_funnel",
+    "admin_get_occupancy_report",
+    "admin_get_equine_workload_report",
+}
 
 
 def _build_missing_fields_response(missing: list[str], language: str = "es") -> str:
@@ -548,34 +621,17 @@ class AssistantOrchestrator:
             "update_reservation_participants",
             "get_all_experiences",
         }
-        if status == "success" and session.language != "es":
-            from app.ai.assistant.translator import localize_tool_output
-
-            if plan.tool_name in LITERAL_RESPONSE_TOOLS and tool_output.get("response"):
-                # Respuesta ya localizada vía `t()` en la tool. Solo localizar
-                # campos huérfanos (e.g. blocking_reasons) si los hay.
-                tool_output = await localize_tool_output(
-                    tool_output, session.language, skip_response=True
-                )
-            else:
-                tool_output = await localize_tool_output(tool_output, session.language)
-
-        # Tools que entregan un `response` literal en su output y NO deben pasar
-        # por compose_tool_response (evita que el LLM mienta, p.ej. "te envié
-        # los detalles al correo" cuando no hay sistema de email). Incluye
-        # create_reservation_draft (pasos + banco + ubicación),
-        # get_payment_instructions (medios de pago por WhatsApp),
-        # attach_payment_proof_to_reservation (confirmación de comprobante),
-        # check_availability_and_quote (cotización + solicitud de datos),
-        # y las tools de self-service (cancel/modify) que ya devuelven un
-        # mensaje listo para enviar.
-        if (
-            plan.tool_name in LITERAL_RESPONSE_TOOLS
-            and tool_output.get("response")
-            and not tool_output.get("error")
-            and not tool_output.get("blocking_reasons")
-        ):
+        analytics_summary = (
+            _analytics_summary_response(tool_output)
+            if plan.tool_name in ANALYTICS_LITERAL_TOOLS
+            else None
+        )
+        if plan.tool_name in LITERAL_RESPONSE_TOOLS and tool_output.get("response"):
             response = tool_output["response"]
+        elif analytics_summary:
+            # Evita que el composer LLM invente fallos suaves cuando la tool ya
+            # trajo chart + números válidos (caso reportado en voz admin).
+            response = analytics_summary
         else:
             try:
                 response = await compose_tool_response(
