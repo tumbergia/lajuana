@@ -151,15 +151,16 @@ async def test_buffer_creates_new(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.mark.asyncio
 async def test_buffer_appends(monkeypatch: pytest.MonkeyPatch) -> None:
+    now = datetime.now(UTC)
     existing = FakeDoc(
         buffer_id="b1",
         conversation_id="w:+57",
         message_ids=["m1"],
         combined_preview="hola",
         status="scheduled",
-        first_message_at=datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC),
-        last_message_at=datetime(2026, 1, 1, 0, 0, 0, tzinfo=UTC),
-        scheduled_for=datetime(2026, 1, 1, 0, 0, 4, tzinfo=UTC),
+        first_message_at=now,
+        last_message_at=now,
+        scheduled_for=now,
         version=1,
     )
 

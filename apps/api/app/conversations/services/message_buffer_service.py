@@ -154,6 +154,87 @@ class MessageBufferService:
             },
         )
 
+    async def merge_pending_buffers(
+        self, *, primary: MessageBufferDocument
+    ) -> list[MessageBufferDocument]:
+        """Une el buffer primario con todos los demás buffers pendientes
+        del mismo `conversation_id` en una sola unidad de procesamiento.
+
+        Caso de uso: el bot tarda 6+ minutos en responder. Mientras tanto
+        el usuario envía varios mensajes (sí/no, nombre+correo, comprobante,
+        código de reserva). Sin este merge, el scheduler procesa cada
+        buffer como un turno independiente, perdiendo contexto (e.g. el
+        comprobante no se asocia a la reserva creada en otro turno).
+
+        Estrategia:
+          1. Buscar todos los buffers "scheduled" del mismo conversation_id
+             (excluyendo el primario).
+          2. Mover sus message_ids al primario.
+          3. Marcar los secundarios como "absorbed" (estado terminal que el
+             scheduler no recoge).
+          4. Devolver [primary, *secundarios] para que el caller marque
+             todos como "processed" al final del turno.
+
+        El primario sigue siendo el que conserva `scheduled_for` (la fecha
+        de su creación) y `combined_preview` ya se actualizó en cada
+        add_message, así que el orden cronológico se preserva.
+        """
+        pending_others = (
+            await MessageBufferDocument.find(
+                {
+                    "conversation_id": primary.conversation_id,
+                    "status": "scheduled",
+                    "buffer_id": {"$ne": primary.buffer_id},
+                }
+            )
+            .sort("first_message_at")
+            .to_list()
+        )
+
+        if not pending_others:
+            return [primary]
+
+        # Une los message_ids en el primario sin duplicados
+        seen = set(primary.message_ids)
+        for other in pending_others:
+            for mid in other.message_ids:
+                if mid not in seen:
+                    primary.message_ids.append(mid)
+                    seen.add(mid)
+
+        primary.version += 1
+        primary.last_message_at = max(
+            primary.last_message_at or primary.first_message_at,
+            *(o.last_message_at for o in pending_others),
+        )
+        await primary.save()
+
+        # Marca los secundarios como "absorbed" (estado terminal invisible
+        # para find_due_buffers). El caller los marca como "processed" al
+        # final del turno.
+        now = datetime.now(UTC)
+        collection = MessageBufferDocument.get_motor_collection()
+        for other in pending_others:
+            await collection.find_one_and_update(
+                {"buffer_id": other.buffer_id, "status": "scheduled"},
+                {
+                    "$set": {
+                        "status": "absorbed",
+                        "absorbed_at": now,
+                        "absorbed_by_buffer_id": primary.buffer_id,
+                    }
+                },
+            )
+
+        logger.info(
+            "[conversation_id=%s] Merged %d pending buffer(s) into buffer_id=%s (total %d messages)",
+            primary.conversation_id,
+            len(pending_others),
+            primary.buffer_id,
+            len(primary.message_ids),
+        )
+        return [primary, *pending_others]
+
     async def mark_processing(self, *, buffer: MessageBufferDocument) -> bool:
         now = datetime.now(UTC)
         collection = MessageBufferDocument.get_motor_collection()

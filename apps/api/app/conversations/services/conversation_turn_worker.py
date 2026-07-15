@@ -304,6 +304,24 @@ class ConversationTurnWorker:
             await self._lock_service.release(conversation_id=conversation_id)
             return False
 
+        # MERGE: une el buffer actual con cualquier otro buffer pendiente
+        # ("scheduled") del mismo conversation_id, en orden de creación.
+        # Esto evita que mensajes enviados mientras el LLM responde se
+        # procesen como turnos independientes y se pierda contexto (e.g.
+        # el comprobante de pago se asocia con la reserva correcta).
+        merged_buffers = await self._buffer_service.merge_pending_buffers(
+            primary=reloaded,
+        )
+        if len(merged_buffers) > 1:
+            logger.info(
+                "[conversation_id=%s] Merged %d pending buffer(s) into one turn",
+                conversation_id,
+                len(merged_buffers),
+            )
+        # A partir de aquí trabajamos sobre el buffer primario (que ahora
+        # contiene todos los message_ids mergeados).
+        reloaded = merged_buffers[0]
+
         marked = await self._buffer_service.mark_processing(buffer=reloaded)
         if not marked:
             await self._lock_service.release(conversation_id=conversation_id)
@@ -468,6 +486,10 @@ class ConversationTurnWorker:
             )
 
             await self._buffer_service.mark_processed(buffer=reloaded)
+            # Marca también como "processed" los buffers mergeados para que
+            # el scheduler no intente reprocesarlos.
+            for merged in merged_buffers[1:]:
+                await self._buffer_service.mark_processed(buffer=merged)
             logger.info(
                 "[conversation_id=%s] Turn processed | messages=%d",
                 conversation_id,

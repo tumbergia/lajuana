@@ -360,17 +360,24 @@ def build_language_instruction(language: str) -> str:
     if language == "en":
         return (
             "RESPONSE LANGUAGE: English (en).\n"
-            "The user is writing in English.\n"
-            "You MUST ALWAYS respond in English, in the same language as the user.\n"
+            "The user is in an English-language conversation. The user may write\n"
+            "names, slang, or short phrases in other languages, but the conversation\n"
+            "language is English. You MUST respond in English regardless of the\n"
+            "language of the latest user message.\n"
             f"{tone}"
             "Exception: for unsupported languages, respond in English.\n"
         )
     return (
         f"IDIOMA DE RESPUESTA: {lang_name} ({language}).\n"
-        f"El usuario está escribiendo en {lang_name}.\n"
-        f"Debes responder SIEMPRE en {lang_name}, exactamente en el mismo idioma del usuario.\n"
-        f"Si el usuario escribe en español, responde en español.\n"
-        f"Si el usuario escribe en inglés, responde en inglés.\n"
+        f"El usuario está en una conversación en {lang_name}. El usuario puede\n"
+        f"escribir nombres, jerga o frases cortas en otros idiomas, pero el\n"
+        f"idioma de la conversación es {lang_name}. Debes responder SIEMPRE en\n"
+        f"{lang_name}, sin importar el idioma del último mensaje del usuario.\n"
         f"{tone}"
         "Excepción: para idiomas no soportados, responde en inglés.\n"
     )
+
+
+def get_language_upper_token(language: str) -> str:
+    """Token en mayúsculas para inyectar en prompts."""
+    return "INGLÉS" if language == "en" else "ESPAÑOL"

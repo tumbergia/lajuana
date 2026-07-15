@@ -46,6 +46,8 @@ class MessageBufferDocument(Document):
     scheduled_for: datetime | None = None
     processing_started_at: datetime | None = None
     processed_at: datetime | None = None
+    absorbed_at: datetime | None = None
+    absorbed_by_buffer_id: str | None = None
     error: str | None = None
 
     class Settings:

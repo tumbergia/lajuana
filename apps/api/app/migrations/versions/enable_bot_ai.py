@@ -30,12 +30,16 @@ async def enable_bot_ai() -> bool:
         )
         return False
 
-    ai_config = doc.ai_configuration or {}
-    if ai_config.get("enabled") is True:
+    ai_config = doc.ai_configuration
+    if ai_config is None:
+        logger.error("ai_configuration is None, cannot enable")
+        return False
+
+    if ai_config.enabled is True:
         logger.info("AI is already enabled, nothing to do")
         return False
 
-    ai_config["enabled"] = True
+    ai_config.enabled = True
     doc.ai_configuration = ai_config
     doc.version += 1
     await doc.save()

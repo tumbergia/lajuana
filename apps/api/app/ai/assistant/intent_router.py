@@ -377,7 +377,7 @@ def _extract_experience_name(text: str) -> str | None:
     cleaned = re.sub(r"^(el|la|los|las|un|una|the|a|an)\s+", "", cleaned, flags=re.IGNORECASE).strip()
     # Strip trailing date/people info: "X para 3 el 5 de agosto"
     cleaned = re.split(
-        r"\s+(para|el|la|los|las|y|a|con|for|on|at)\s+\d",
+        r"\s+(para|el|la|los|las|y|a|con|for|on|at|people|personas|participantes|adultos|kids|guests|niños)\b",
         cleaned,
         maxsplit=1,
         flags=re.IGNORECASE,
@@ -396,9 +396,9 @@ def _extract_experience_name(text: str) -> str | None:
         maxsplit=1,
         flags=re.IGNORECASE,
     )[0].strip()
-    # Strip trailing prepositions que quedaron sueltos
+    # Strip trailing prepositions/words que quedaron sueltos
     cleaned = re.sub(
-        r"\s+(para|con|de|y|a|for|with|on|at)$",
+        r"\s+(para|con|de|y|a|for|with|on|at|in)$",
         "",
         cleaned,
         flags=re.IGNORECASE,
