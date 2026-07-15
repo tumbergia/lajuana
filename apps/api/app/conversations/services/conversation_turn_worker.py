@@ -206,6 +206,7 @@ class ConversationTurnWorker:
             media_mime_type=mime_type,
             filename=filename,
             caption=event.caption,
+            language=lang,
         )
         turn.status = "responded"
         turn.response_text = result.get(
@@ -270,6 +271,7 @@ class ConversationTurnWorker:
             filename=pending.get("filename"),
             caption=pending.get("caption"),
             public_reservation_code=reservation_code,
+            language=lang,
         )
         session.pending_media_proof = None
         session.updated_at = datetime.now(UTC)

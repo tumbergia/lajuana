@@ -4,6 +4,7 @@ import time
 from typing import Any
 from uuid import uuid4
 
+from app.ai.language.messages import t as _t
 from app.ai.mcp.tool_contracts import (
     CancelReservationInput,
     CancelReservationOutput,
@@ -23,6 +24,7 @@ from app.core.di import Container
 async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.pop("trace_id", None) or str(uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
+    language: str = kwargs.pop("language", "es")
     started = time.perf_counter()
 
     payload: CancelReservationInput | None = None
@@ -45,7 +47,7 @@ async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="reservation.not_found",
-                        message="No encontré una reserva con ese código y teléfono.",
+                        message=_t("client_reservation_not_found", language),
                     )
                 ],
             )
@@ -56,11 +58,8 @@ async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
                 cancelled=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message="Solo se pueden cancelar reservas con pago pendiente.",
-                response=(
-                    "Lo siento, solo puedo cancelar reservas que aún no tienen pago registrado. "
-                    "Si necesitas ayuda con esta reserva, te transfiero con un asesor."
-                ),
+                message=_t("client_reservation_cannot_cancel_paid", language),
+                response=_t("client_reservation_cannot_cancel_paid_response", language),
             )
             return output.model_dump(mode="json")
 
@@ -75,11 +74,8 @@ async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
             cancelled=True,
             trace_id=trace_id,
             reservation_code=doc.code,
-            message="Reserva cancelada exitosamente.",
-            response=(
-                f"Listo, tu reserva {doc.code} ha sido cancelada. "
-                "Si en algún momento quieres reprogramar, escríbeme y con gusto te ayudo."
-            ),
+            message=_t("client_reservation_cancelled_success", language),
+            response=_t("client_reservation_cancelled_response", language, code=doc.code),
         )
         return output.model_dump(mode="json")
 
@@ -89,7 +85,7 @@ async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
             cancelled=False,
             trace_id=trace_id,
             message=exc.message,
-            response="No pude cancelar la reserva en este momento. Intenta de nuevo.",
+            response=_t("client_reservation_unable_to_cancel", language),
             blocking_reasons=[
                 ToolBlockingReason(
                     code=exc.code,
@@ -106,7 +102,7 @@ async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
             cancelled=False,
             trace_id=trace_id,
             message=str(exc),
-            response="Ocurrió un error inesperado. Intenta de nuevo en unos minutos.",
+            response=_t("client_reservation_unexpected_error", language),
             blocking_reasons=[
                 ToolBlockingReason(
                     code=error_code,
@@ -133,6 +129,7 @@ async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
 async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.pop("trace_id", None) or str(uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
+    language: str = kwargs.pop("language", "es")
     started = time.perf_counter()
 
     payload: UpdateReservationDateInput | None = None
@@ -155,7 +152,7 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="reservation.not_found",
-                        message="No encontré una reserva con ese código y teléfono.",
+                        message=_t("client_reservation_not_found", language),
                     )
                 ],
             )
@@ -170,10 +167,8 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
                 updated=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message="No se puede modificar una reserva en estado terminal.",
-                response=(
-                    "Lo siento, esta reserva ya no puede modificarse porque está finalizada o cancelada."
-                ),
+                message=_t("client_reservation_terminal_state", language),
+                response=_t("client_reservation_terminal_state_response", language),
             )
             return output.model_dump(mode="json")
 
@@ -182,11 +177,8 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
                 updated=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message="Solo se pueden modificar reservas con pago pendiente.",
-                response=(
-                    "Lo siento, solo puedo modificar reservas que aún no tienen pago registrado. "
-                    "Si necesitas cambiar una reserva con pago confirmado, te transfiero con un asesor."
-                ),
+                message=_t("client_reservation_cannot_modify_paid", language),
+                response=_t("client_reservation_cannot_modify_paid_response", language),
             )
             return output.model_dump(mode="json")
 
@@ -205,10 +197,10 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             reservation_code=reservation.code,
             new_date=payload.new_date,
-            message="Fecha actualizada exitosamente.",
-            response=(
-                f"Perfecto, cambié la fecha de tu reserva {reservation.code} "
-                f"para el {payload.new_date.isoformat()}. Todo sigue igual."
+            message=_t("client_reservation_date_updated_short", language),
+            response=_t(
+                "client_reservation_date_updated_response", language,
+                code=reservation.code, new_date=payload.new_date.isoformat(),
             ),
         )
         return output.model_dump(mode="json")
@@ -219,7 +211,7 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
             updated=False,
             trace_id=trace_id,
             message=exc.message,
-            response="No pude cambiar la fecha en este momento. Intenta de nuevo.",
+            response=_t("client_reservation_date_unable", language),
             blocking_reasons=[
                 ToolBlockingReason(
                     code=exc.code,
@@ -236,7 +228,7 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
             updated=False,
             trace_id=trace_id,
             message=str(exc),
-            response="Ocurrió un error inesperado. Intenta de nuevo en unos minutos.",
+            response=_t("client_reservation_unexpected_error", language),
             blocking_reasons=[
                 ToolBlockingReason(
                     code=error_code,
@@ -263,6 +255,7 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
 async def update_reservation_participants(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.pop("trace_id", None) or str(uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
+    language: str = kwargs.pop("language", "es")
     started = time.perf_counter()
 
     payload: UpdateReservationParticipantsInput | None = None
@@ -285,7 +278,7 @@ async def update_reservation_participants(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="reservation.not_found",
-                        message="No encontré una reserva con ese código y teléfono.",
+                        message=_t("client_reservation_not_found", language),
                     )
                 ],
             )
@@ -300,10 +293,8 @@ async def update_reservation_participants(**kwargs: Any) -> dict[str, Any]:
                 updated=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message="No se puede modificar una reserva en estado terminal.",
-                response=(
-                    "Lo siento, esta reserva ya no puede modificarse porque está finalizada o cancelada."
-                ),
+                message=_t("client_reservation_terminal_state", language),
+                response=_t("client_reservation_terminal_state_response", language),
             )
             return output.model_dump(mode="json")
 
@@ -312,11 +303,8 @@ async def update_reservation_participants(**kwargs: Any) -> dict[str, Any]:
                 updated=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message="Solo se pueden modificar reservas con pago pendiente.",
-                response=(
-                    "Lo siento, solo puedo modificar reservas que aún no tienen pago registrado. "
-                    "Si necesitas cambiar una reserva con pago confirmado, te transfiero con un asesor."
-                ),
+                message=_t("client_reservation_cannot_modify_paid", language),
+                response=_t("client_reservation_cannot_modify_paid_response", language),
             )
             return output.model_dump(mode="json")
 
@@ -328,10 +316,10 @@ async def update_reservation_participants(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             reservation_code=reservation.code,
             new_participant_count=payload.new_participant_count,
-            message="Cantidad de participantes actualizada exitosamente.",
-            response=(
-                f"Listo, ahora tu reserva {reservation.code} quedó para "
-                f"{payload.new_participant_count} participantes."
+            message=_t("client_reservation_participants_updated_short", language),
+            response=_t(
+                "client_reservation_participants_updated_response", language,
+                code=reservation.code, count=payload.new_participant_count,
             ),
         )
         return output.model_dump(mode="json")
@@ -342,7 +330,7 @@ async def update_reservation_participants(**kwargs: Any) -> dict[str, Any]:
             updated=False,
             trace_id=trace_id,
             message=exc.message,
-            response="No pude cambiar la cantidad de participantes en este momento. Intenta de nuevo.",
+            response=_t("client_reservation_participants_unable", language),
             blocking_reasons=[
                 ToolBlockingReason(
                     code=exc.code,
@@ -359,7 +347,7 @@ async def update_reservation_participants(**kwargs: Any) -> dict[str, Any]:
             updated=False,
             trace_id=trace_id,
             message=str(exc),
-            response="Ocurrió un error inesperado. Intenta de nuevo en unos minutos.",
+            response=_t("client_reservation_unexpected_error", language),
             blocking_reasons=[
                 ToolBlockingReason(
                     code=error_code,

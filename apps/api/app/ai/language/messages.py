@@ -71,6 +71,12 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "check_quote_available_with_quote": {
         "es": "{experience_name} para {participants} persona(s) el {date} está disponible y sale a ${subtotal} COP (${unit_price} por persona).\n\nPara apartarte la fecha, envíame tu nombre completo y tu correo electrónico. ¿Me los compartes?",
         "en": "{experience_name} for {participants} person(s) on {date} is available and comes out to ${subtotal} COP (${unit_price} per person).\n\nTo reserve the date, please send me your full name and email address. Can you share them?",
+        "fr": "{experience_name} pour {participants} personne(s) le {date} est disponible et coûte ${subtotal} COP (${unit_price} par personne).\n\nPour réserver la date, envoyez-moi votre nom complet et votre adresse e-mail. Pouvez-vous les partager ?",
+        "de": "{experience_name} für {participants} Person(en) am {date} ist verfügbar und kostet ${subtotal} COP (${unit_price} pro Person).\n\nUm das Datum zu reservieren, senden Sie mir bitte Ihren vollständigen Namen und Ihre E-Mail-Adresse. Können Sie diese teilen?",
+        "it": "{experience_name} per {participants} persona/e il {date} è disponibile e costa ${subtotal} COP (${unit_price} a persona).\n\nPer prenotare la data, inviami il tuo nome completo e il tuo indirizzo email. Puoi condividerli?",
+        "ru": "{experience_name} для {participants} чел. {date} доступно и стоит ${subtotal} COP (${unit_price} за человека).\n\nЧтобы забронировать дату, отправьте мне ваше полное имя и адрес электронной почты. Можете их прислать?",
+        "zh": "{experience_name} 在 {date} 有空，可容纳 {participants} 人，总价 ${subtotal} COP（每人 ${unit_price} COP）。\n\n如需预订此日期，请将您的全名和电子邮件地址发送给我。可以分享吗？",
+        "ja": "{experience_name} は {date} に {participants} 名様で空きがあり、料金は ${subtotal} COP（お一人様 ${unit_price} COP）です。\n\n日付を予約するため、お名前とメールアドレスをお送りください。",
     },
     "check_quote_not_found": {
         "es": "No encontré una experiencia que coincida con tu solicitud. ¿Me confirmas el nombre?",
@@ -87,6 +93,23 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "check_quote_pricing_missing": {
         "es": "La experiencia no tiene tarifa configurada para esa cantidad de participantes. ¿Me confirmas el número de personas?",
         "en": "The experience doesn't have a rate configured for that number of participants. Could you confirm the number of people?",
+    },
+    # ── quote_experience ──
+    "quote_experience_not_found": {
+        "es": "No se encontró una experiencia que coincida con la solicitud.",
+        "en": "I couldn't find an experience that matches your request.",
+    },
+    "quote_experience_unavailable": {
+        "es": "La experiencia no está disponible en este momento.",
+        "en": "The experience is not available right now.",
+    },
+    "quote_pricing_missing": {
+        "es": "La experiencia no tiene tarifa configurada para esa cantidad de participantes.",
+        "en": "The experience doesn't have a rate configured for that number of participants.",
+    },
+    "quote_experience_response": {
+        "es": "{experience_name} para {participants} persona(s) sale a ${subtotal} COP (${unit_price} por persona).\n\nSi te interesa, puedo apartarte la fecha. Solo necesito confirmarte unos datos. ¿Te parece?",
+        "en": "{experience_name} for {participants} person(s) comes out to ${subtotal} COP (${unit_price} per person).\n\nIf you're interested, I can reserve the date for you. I just need to confirm a few details. Does that sound good?",
     },
     "greeting": {
         "es": "¡Hola! Soy el asistente de La Juana Colombia. ¿En qué puedo ayudarte?",
@@ -108,39 +131,93 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "payment_step_1_header": {
         "es": "PASO 1. Realizar el pago del valor de la experiencia según número de participantes.",
         "en": "STEP 1. Make the payment for the experience based on the number of participants.",
+        "fr": "ÉTAPE 1. Effectuez le paiement de la valeur de l'expérience selon le nombre de participants.",
+        "de": "SCHRITT 1. Zahlen Sie den Betrag der Erfahrung entsprechend der Teilnehmerzahl.",
+        "it": "PASSO 1. Effettua il pagamento dell'importo dell'esperienza in base al numero di partecipanti.",
+        "ru": "ШАГ 1. Произведите оплату стоимости услуги в зависимости от количества участников.",
+        "zh": "步骤 1. 根据参与人数支付体验费用。",
+        "ja": "ステップ 1. 参加人数に応じた体験料金をお支払いください。",
     },
     "payment_methods_header": {
         "es": "Medios de pago disponibles:",
         "en": "Available payment methods:",
+        "fr": "Moyens de paiement disponibles :",
+        "de": "Verfügbare Zahlungsmethoden:",
+        "it": "Metodi di pagamento disponibili:",
+        "ru": "Доступные способы оплаты:",
+        "zh": "可用的付款方式：",
+        "ja": "利用可能な支払い方法：",
     },
     "payment_account_label": {
         "es": "CUENTA",
         "en": "ACCOUNT",
+        "fr": "COMPTE",
+        "de": "KONTO",
+        "it": "CONTO",
+        "ru": "СЧЁТ",
+        "zh": "账户",
+        "ja": "口座",
     },
     "payment_account_number": {
         "es": "No.",
         "en": "No.",
+        "fr": "N°",
+        "de": "Nr.",
+        "it": "N.",
+        "ru": "№",
+        "zh": "号",
+        "ja": "No.",
     },
     "payment_bold_link_label": {
         "es": "LINK DE PAGO BOLD",
         "en": "BOLD PAYMENT LINK",
+        "fr": "LIEN DE PAIEMENT BOLD",
+        "de": "BOLD-ZAHLUNGSLINK",
+        "it": "LINK DI PAGAMENTO BOLD",
+        "ru": "ССЫЛКА НА ОПЛАТУ BOLD",
+        "zh": "BOLD 付款链接",
+        "ja": "BOLD 支払いリンク",
     },
     "payment_bold_surcharge": {
         "es": "Comisión adicional",
         "en": "Additional surcharge",
+        "fr": "Frais supplémentaires",
+        "de": "Zusätzliche Gebühr",
+        "it": "Commissione aggiuntiva",
+        "ru": "Дополнительная комиссия",
+        "zh": "附加费",
+        "ja": "追加手数料",
     },
     "payment_step_2": {
         "es": "PASO 2. Enviar comprobante de pago por este mismo medio (WhatsApp).",
         "en": "STEP 2. Send the payment proof through this same channel (WhatsApp).",
+        "fr": "ÉTAPE 2. Envoyez la preuve de paiement par ce même canal (WhatsApp).",
+        "de": "SCHRITT 2. Senden Sie den Zahlungsbeleg über denselben Kanal (WhatsApp).",
+        "it": "PASSO 2. Invia la prova di pagamento attraverso questo stesso canale (WhatsApp).",
+        "ru": "ШАГ 2. Отправьте подтверждение оплаты через этот же канал (WhatsApp).",
+        "zh": "步骤 2. 通过同一渠道（WhatsApp）发送付款凭证。",
+        "ja": "ステップ 2. 同じチャネル（WhatsApp）で支払い証明を送信してください。",
     },
     "payment_step_3": {
         "es": "PASO 3. Registrar a cada participante en el formulario que te enviaremos.",
         "en": "STEP 3. Register each participant in the form we will send you.",
+        "fr": "ÉTAPE 3. Inscrivez chaque participant dans le formulaire que nous vous enverrons.",
+        "de": "SCHRITT 3. Registrieren Sie jeden Teilnehmer in dem Formular, das wir Ihnen zusenden werden.",
+        "it": "PASSO 3. Registra ogni partecipante nel modulo che ti invieremo.",
+        "ru": "ШАГ 3. Зарегистрируйте каждого участника в форме, которую мы вам отправим.",
+        "zh": "步骤 3. 在我们将发送给您的表格中注册每位参与者。",
+        "ja": "ステップ 3. お送りするフォームに各参加者を登録してください。",
     },
     # ── Pre-reservation response (create_reservation_draft) ──
     "pre_reservation_registered": {
         "es": "Pre-reserva registrada.",
         "en": "Pre-reservation registered.",
+        "fr": "Pré-réservation enregistrée.",
+        "de": "Vorreservierung registriert.",
+        "it": "Pre-prenotazione registrata.",
+        "ru": "Предварительное бронирование зарегистрировано.",
+        "zh": "预预订已登记。",
+        "ja": "仮予約が登録されました。",
     },
     "pre_reservation_summary_header": {
         "es": "Resumen:",
@@ -202,6 +279,12 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "payment_proof_received_response": {
         "es": "Recibimos tu comprobante para la reserva {code}. Queda en revision administrativa y la reserva aun NO esta confirmada.",
         "en": "We received your proof for reservation {code}. It is under administrative review and the reservation is NOT yet confirmed.",
+        "fr": "Nous avons reçu votre justificatif pour la réservation {code}. Il est en cours de vérification administrative et la réservation n'est PAS encore confirmée.",
+        "de": "Wir haben Ihren Beleg für die Reservierung {code} erhalten. Er wird derzeit administrativ geprüft und die Reservierung ist NOCH NICHT bestätigt.",
+        "it": "Abbiamo ricevuto la tua ricevuta per la prenotazione {code}. È in fase di revisione amministrativa e la prenotazione NON è ancora confermata.",
+        "ru": "Мы получили ваше подтверждение оплаты для бронирования {code}. Оно проходит административную проверку, и бронирование пока НЕ подтверждено.",
+        "zh": "我们已收到预订 {code} 的付款凭证。它正在行政审核中，预订尚未确认。",
+        "ja": "ご予約 {code} の支払い確認を受け取りました。現在事務確認中で、ご予約はまだ確定していません。",
     },
     "payment_proof_unable_to_attach": {
         "es": "No pude asociar el comprobante. Verifica el codigo de reserva y que este aun este pendiente de confirmacion.",
@@ -228,6 +311,10 @@ _MESSAGES: dict[str, dict[str, str]] = {
     "reservation_not_found_message": {
         "es": "No se encontró una pre-reserva con ese código.",
         "en": "No pre-reservation was found with that code.",
+    },
+    "reservation_not_found_by_phone": {
+        "es": "No se encontró una reserva para ese teléfono.",
+        "en": "No reservation was found for that phone number.",
     },
     # ── Client reservations (cancel/update errors) ──
     "client_reservation_cannot_cancel_paid": {
@@ -315,14 +402,70 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "es": "No pude cambiar la fecha en este momento. Intenta de nuevo.",
         "en": "I couldn't change the date right now. Please try again.",
     },
+    "client_reservation_participants_updated_short": {
+        "es": "Cantidad de participantes actualizada exitosamente.",
+        "en": "Number of participants updated successfully.",
+    },
+    "client_reservation_participants_unable": {
+        "es": "No pude cambiar la cantidad de participantes en este momento. Intenta de nuevo.",
+        "en": "I couldn't change the number of participants right now. Please try again.",
+    },
+    # ── Idioma no soportado ──
+    "unsupported_language_message": {
+        "es": "Por ahora solo puedo atenderte en estos idiomas: {supported}. Si me escribes en cualquiera de ellos, con gusto te ayudo.",
+        "en": "Right now I can only assist you in these languages: {supported}. If you write to me in any of them, I'll be happy to help.",
+        "fr": "Pour l'instant, je ne peux vous aider qu'en : {supported}. Si vous m'écrivez dans l'une de ces langues, je serai ravi de vous aider.",
+        "de": "Im Moment kann ich Sie nur in diesen Sprachen unterstützen: {supported}. Wenn Sie mir in einer davon schreiben, helfe ich gerne weiter.",
+        "it": "Al momento posso assisterti solo in queste lingue: {supported}. Se mi scrivi in una di esse, sarò felice di aiutarti.",
+        "ru": "Сейчас я могу помочь вам только на этих языках: {supported}. Если вы напишете мне на одном из них, я с радостью помогу.",
+        "zh": "目前我只能使用以下语言为您服务：{supported}。如果您使用其中任何一种语言给我写信，我将很乐意为您提供帮助。",
+        "ja": "現在、以下の言語のみで対応できます：{supported}。いずれかでメッセージをお送りいただければ、お手伝いいたします。",
+    },
+    "language_name_es": {
+        "es": "español", "en": "Spanish", "fr": "espagnol", "de": "Spanisch",
+        "it": "spagnolo", "ru": "испанский", "zh": "西班牙语", "ja": "スペイン語",
+    },
+    "language_name_en": {
+        "es": "inglés", "en": "English", "fr": "anglais", "de": "Englisch",
+        "it": "inglese", "ru": "английский", "zh": "英语", "ja": "英語",
+    },
+    "language_name_fr": {
+        "es": "francés", "en": "French", "fr": "français", "de": "Französisch",
+        "it": "francese", "ru": "французский", "zh": "法语", "ja": "フランス語",
+    },
+    "language_name_de": {
+        "es": "alemán", "en": "German", "fr": "allemand", "de": "Deutsch",
+        "it": "tedesco", "ru": "немецкий", "zh": "德语", "ja": "ドイツ語",
+    },
+    "language_name_it": {
+        "es": "italiano", "en": "Italian", "fr": "italien", "de": "Italienisch",
+        "it": "italiano", "ru": "итальянский", "zh": "意大利语", "ja": "イタリア語",
+    },
+    "language_name_ru": {
+        "es": "ruso", "en": "Russian", "fr": "russe", "de": "Russisch",
+        "it": "russo", "ru": "русский", "zh": "俄语", "ja": "ロシア語",
+    },
+    "language_name_zh": {
+        "es": "chino", "en": "Chinese", "fr": "chinois", "de": "Chinesisch",
+        "it": "cinese", "ru": "китайский", "zh": "中文", "ja": "中国語",
+    },
+    "language_name_ja": {
+        "es": "japonés", "en": "Japanese", "fr": "japonais", "de": "Japanisch",
+        "it": "giapponese", "ru": "японский", "zh": "日语", "ja": "日本語",
+    },
 }
 
 
 def t(key: str, language: str, **fmt: str) -> str:
-    lang = language if language in {"es", "en"} else "en"
-    msg = _MESSAGES.get(key, {}).get(lang, _MESSAGES.get(key, {}).get("en", key))
+    supported = {"es", "en", "fr", "de", "it", "ru", "zh", "ja"}
+    lang = language if language in supported else "en"
+    translations = _MESSAGES.get(key, {})
+    msg = translations.get(lang) or translations.get("en") or translations.get("es") or key
     if fmt:
-        return msg.format(**fmt)
+        try:
+            return msg.format(**fmt)
+        except (KeyError, IndexError):
+            return msg
     return msg
 
 
@@ -330,10 +473,11 @@ _LANGUAGE_NAMES: dict[str, str] = {
     "es": "español",
     "en": "inglés",
     "fr": "francés",
-    "pt": "portugués",
     "de": "alemán",
     "it": "italiano",
-    "nl": "neerlandés",
+    "ru": "ruso",
+    "zh": "chino",
+    "ja": "japonés",
 }
 
 _LANGUAGE_TONE: dict[str, str] = {

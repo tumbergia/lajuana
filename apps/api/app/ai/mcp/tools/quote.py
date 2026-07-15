@@ -12,6 +12,7 @@ from app.ai.mcp.tool_contracts import (
     QuotePricingTier,
     ToolBlockingReason,
 )
+from app.ai.language.messages import t as _t
 from app.documents.experience_document import ExperienceDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.services.experience_catalog_resolver import (
@@ -43,6 +44,7 @@ def _resolve_pricing_tier(pricing: Any, participant_count: int) -> Any | None:
 async def quote_experience(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.pop("trace_id", None) or str(uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
+    language: str = kwargs.pop("language", "es")
     started = time.perf_counter()
 
     payload: QuoteExperienceInput | None = None
@@ -68,7 +70,7 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="experience.not_found",
-                        message="No se encontró una experiencia que coincida con la solicitud.",
+                        message=_t("quote_experience_not_found", language),
                     )
                 ],
             )
@@ -83,7 +85,7 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="experience.not_found",
-                        message="No se encontró una experiencia que coincida con la solicitud.",
+                        message=_t("quote_experience_not_found", language),
                     )
                 ],
             )
@@ -99,7 +101,7 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="experience.not_found",
-                        message="La experiencia no está disponible en este momento.",
+                        message=_t("quote_experience_unavailable", language),
                     )
                 ],
             )
@@ -119,8 +121,7 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="quote.pricing_not_configured",
-                        message="La experiencia no tiene tarifa configurada "
-                        "para esa cantidad de participantes.",
+                        message=_t("quote_pricing_missing", language),
                     )
                 ],
             )
@@ -136,12 +137,13 @@ async def quote_experience(**kwargs: Any) -> dict[str, Any]:
             participant_count=payload.participant_count,
             unit_price=tier.price_per_person,
             subtotal=subtotal,
-            response=(
-                f"{exp_name} para {payload.participant_count} persona(s) "
-                f"sale a ${subtotal:,.0f} COP "
-                f"(${tier.price_per_person:,.0f} por persona).\n\n"
-                f"Si te interesa, puedo apartarte la fecha. "
-                f"Solo necesito confirmarte unos datos. ¿Te parece?"
+            response=_t(
+                "quote_experience_response",
+                language,
+                experience_name=exp_name,
+                participants=payload.participant_count,
+                subtotal=f"{subtotal:,.0f}",
+                unit_price=f"{tier.price_per_person:,.0f}",
             ),
             pricing_tier=QuotePricingTier(
                 min_participants=tier.min_participants,

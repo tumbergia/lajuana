@@ -144,7 +144,7 @@ SEED_TEMPLATES = [
         "variables_allowed": ["customer_name", "reservation_code", "participants_count"],
     },
     # ── WhatsApp: payment_approved_form_sent.customer ────────────────────
-    # ES + EN — enviado cuando el admin aprueba el comprobante de pago.
+    # Multi-idioma — enviado cuando el admin aprueba el comprobante de pago.
     {
         "template_key": "payment_approved_form_sent.customer",
         "language": "es",
@@ -166,6 +166,76 @@ SEED_TEMPLATES = [
             "Hi {{customer_name}}, your payment for {{experience_name}} "
             "has been approved. Please complete the mandatory participants form "
             "at this link: {{form_url}}"
+        ),
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
+    },
+    {
+        "template_key": "payment_approved_form_sent.customer",
+        "language": "fr",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Bonjour {{customer_name}}, votre paiement pour {{experience_name}} "
+            "a été approuvé. Veuillez remplir le formulaire obligatoire des "
+            "participants à ce lien : {{form_url}}"
+        ),
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
+    },
+    {
+        "template_key": "payment_approved_form_sent.customer",
+        "language": "de",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Hallo {{customer_name}}, Ihre Zahlung für {{experience_name}} "
+            "wurde genehmigt. Bitte füllen Sie das obligatorische "
+            "Teilnehmerformular unter diesem Link aus: {{form_url}}"
+        ),
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
+    },
+    {
+        "template_key": "payment_approved_form_sent.customer",
+        "language": "it",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Ciao {{customer_name}}, il tuo pagamento per {{experience_name}} "
+            "è stato approvato. Per favore compila il modulo obbligatorio "
+            "dei partecipanti a questo link: {{form_url}}"
+        ),
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
+    },
+    {
+        "template_key": "payment_approved_form_sent.customer",
+        "language": "ru",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Здравствуйте, {{customer_name}}! Ваш платёж за {{experience_name}} "
+            "одобрен. Пожалуйста, заполните обязательную форму участников "
+            "по этой ссылке: {{form_url}}"
+        ),
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
+    },
+    {
+        "template_key": "payment_approved_form_sent.customer",
+        "language": "zh",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "您好 {{customer_name}}，您对 {{experience_name}} 的付款已获批准。"
+            "请通过此链接填写必需的参与者表格：{{form_url}}"
+        ),
+        "variables_allowed": ["customer_name", "experience_name", "form_url"],
+    },
+    {
+        "template_key": "payment_approved_form_sent.customer",
+        "language": "ja",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "{{customer_name}} 様、{{experience_name}} の支払いが承認されました。"
+            "下記のリンクから参加者フォーム（必須）にご記入ください：{{form_url}}"
         ),
         "variables_allowed": ["customer_name", "experience_name", "form_url"],
     },
@@ -227,6 +297,200 @@ SEED_TEMPLATES = [
             "*During our activities wearing a helmet is mandatory. "
             "It will be provided by LA JUANA.\n\n"
             "We look forward to seeing you!"
+        ),
+        "variables_allowed": [
+            "customer_name",
+            "location_name",
+            "location_url",
+            "location_directions",
+        ],
+    },
+    {
+        "template_key": "payment_approved_location_sent.customer",
+        "language": "fr",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Paiement confirmé ! Voici les informations pour votre expérience :\n\n"
+            "Emplacement de {{location_name}} :\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
+            "RECOMMANDATIONS POUR L'ACTIVITÉ\n\n"
+            "- Portez des vêtements confortables : pantalon long, chemise ou t-shirt "
+            "à manches longues, chaussures fermées, chaussettes couvrant les chevilles, "
+            "veste coupe-vent.\n"
+            "- Hydratation (nous évitons les bouteilles en plastique à usage unique, "
+            "veuillez apporter votre propre gourde réutilisable).\n"
+            "- Protection solaire\n"
+            "- Répulsif à insectes\n"
+            "- Chapeau ou casquette\n"
+            "- Appareil photo et/ou jumelles au cas où vous voudriez observer et "
+            "enregistrer des espèces.\n"
+            "- Et la meilleure attitude pour profiter, avec les mules de LA JUANA, "
+            "des magnifiques paysages que la destination offre.\n\n"
+            "*Pendant nos activités le port du casque est obligatoire. "
+            "Il sera fourni par LA JUANA.\n\n"
+            "Nous avons hâte de vous accueillir !"
+        ),
+        "variables_allowed": [
+            "customer_name",
+            "location_name",
+            "location_url",
+            "location_directions",
+        ],
+    },
+    {
+        "template_key": "payment_approved_location_sent.customer",
+        "language": "de",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Zahlung bestätigt! Hier sind die Informationen für Ihr Erlebnis:\n\n"
+            "Standort von {{location_name}}:\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
+            "EMPFEHLUNGEN FÜR DIE AKTIVITÄT\n\n"
+            "- Tragen Sie bequeme Kleidung: lange Hose, langärmliges Hemd oder "
+            "T-Shirt, geschlossene Schuhe, Socken, die die Knöchel bedecken, "
+            "Windbreaker.\n"
+            "- Ausreichend Wasser (wir vermeiden Einweg-Plastikflaschen, bitte "
+            "bringen Sie Ihre eigene wiederverwendbare Flasche mit).\n"
+            "- Sonnenschutz\n"
+            "- Insektenschutzmittel\n"
+            "- Hut oder Mütze\n"
+            "- Kamera und/oder Fernglas, falls Sie Arten beobachten und "
+            "fotografieren möchten.\n"
+            "- Und die beste Einstellung, um zusammen mit den Maultieren von "
+            "LA JUANA die wunderschönen Landschaften des Ziels zu genießen.\n\n"
+            "*Während unserer Aktivitäten ist das Tragen eines Helms "
+            "obligatorisch. Dieser wird von LA JUANA gestellt.\n\n"
+            "Wir freuen uns auf Sie!"
+        ),
+        "variables_allowed": [
+            "customer_name",
+            "location_name",
+            "location_url",
+            "location_directions",
+        ],
+    },
+    {
+        "template_key": "payment_approved_location_sent.customer",
+        "language": "it",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Pagamento confermato! Ecco le informazioni per la tua esperienza:\n\n"
+            "Posizione di {{location_name}}:\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
+            "RACCOMANDAZIONI PER L'ATTIVITÀ\n\n"
+            "- Indossa abiti comodi: pantaloni lunghi, camicia o maglietta a maniche "
+            "lunghe, scarpe chiuse, calze che coprano le caviglie, giacca antivento.\n"
+            "- Idratazione (evitiamo bottiglie di plastica monouso, quindi ti "
+            "chiediamo di portare la tua borraccia riutilizzabile).\n"
+            "- Protezione solare\n"
+            "- Repellente per insetti\n"
+            "- Cappello o berretto\n"
+            "- Macchina fotografica e/o binocolo nel caso voglia avvistare e "
+            "registrare specie.\n"
+            "- E l'atteggiamento migliore per godere, insieme ai muli di LA JUANA, "
+            "i bellissimi paesaggi che la destinazione offre.\n\n"
+            "*Durante le nostre attività l'uso del casco è obbligatorio. "
+            "Sarà fornito da LA JUANA.\n\n"
+            "Ti aspettiamo!"
+        ),
+        "variables_allowed": [
+            "customer_name",
+            "location_name",
+            "location_url",
+            "location_directions",
+        ],
+    },
+    {
+        "template_key": "payment_approved_location_sent.customer",
+        "language": "ru",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "Оплата подтверждена! Вот информация о вашем опыте:\n\n"
+            "Расположение {{location_name}}:\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
+            "РЕКОМЕНДАЦИИ ДЛЯ АКТИВНОСТИ\n\n"
+            "- Носите удобную одежду: длинные брюки, рубашку или футболку с "
+            "длинным рукавом, закрытую обувь, носки, закрывающие щиколотки, "
+            "ветрозащитную куртку.\n"
+            "- Гидратация (мы избегаем одноразовых пластиковых бутылок, "
+            "поэтому просим принести свою многоразовую бутылку).\n"
+            "- Солнцезащитный крем\n"
+            "- Средство от насекомых\n"
+            "- Шляпа или кепка\n"
+            "- Камера и/или бинокль на случай, если вы захотите наблюдать и "
+            "фотографировать виды.\n"
+            "- И лучший настрой, чтобы наслаждаться вместе с мулами LA JUANA "
+            "красивыми пейзажами этого места.\n\n"
+            "*Во время наших активностей ношение шлема обязательно. "
+            "Его предоставит LA JUANA.\n\n"
+            "Ждём вас!"
+        ),
+        "variables_allowed": [
+            "customer_name",
+            "location_name",
+            "location_url",
+            "location_directions",
+        ],
+    },
+    {
+        "template_key": "payment_approved_location_sent.customer",
+        "language": "zh",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "付款确认！以下是您体验的信息：\n\n"
+            "{{location_name}} 位置：\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
+            "活动建议\n\n"
+            "- 穿着舒适的衣服：长裤、长袖衬衫或T恤、封闭式鞋子、覆盖脚踝的袜子、防风外套。\n"
+            "- 补水（我们避免使用一次性塑料瓶，请自带可重复使用的水壶）。\n"
+            "- 防晒\n"
+            "- 驱虫剂\n"
+            "- 帽子或棒球帽\n"
+            "- 相机和/或望远镜（如果您想观察和记录物种）。\n"
+            "- 以及与LA JUANA的骡子一起欣赏目的地美丽风景的最佳态度。\n\n"
+            "*在我们的活动中，必须佩戴头盔。头盔将由LA JUANA提供。\n\n"
+            "我们期待您的到来！"
+        ),
+        "variables_allowed": [
+            "customer_name",
+            "location_name",
+            "location_url",
+            "location_directions",
+        ],
+    },
+    {
+        "template_key": "payment_approved_location_sent.customer",
+        "language": "ja",
+        "channel": NotificationChannel.WHATSAPP,
+        "subject": None,
+        "body": (
+            "お支払いが確認されました！体験に関する情報はこちらです：\n\n"
+            "{{location_name}} の場所：\n"
+            "{{location_url}}\n"
+            "{{location_directions}}\n\n"
+            "アクティビティのおすすめ\n\n"
+            "- 快適な服装でお越しください：長ズボン、長袖のシャツまたはTシャツ、"
+            " closed-toeの靴、くるぶしが覆われる靴下、ウィンドブレーカー。\n"
+            "- 水分補給（使い捨てのペットボトルは避けていますので、"
+            "ご自身の reusableボトルをお持ちください）。\n"
+            "- 日焼け止め\n"
+            "- 虫除け\n"
+            "- 帽子またはキャップ\n"
+            "- カメラおよび/または双眼鏡（種の観察や記録をご希望の場合）。\n"
+            "- そして、LA JUANAのら馬と一緒に、目的地の美しい景色を楽しむ最高の姿勢。\n\n"
+            "*アクティビティ中はヘルメットの着用が必須です。"
+            "ヘルメットはLA JUANAが提供します。\n\n"
+            "お会いできるのを楽しみにしています！"
         ),
         "variables_allowed": [
             "customer_name",

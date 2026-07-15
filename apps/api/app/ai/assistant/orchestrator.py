@@ -14,7 +14,7 @@ from app.ai.assistant.intent_router import detect_and_build_plan
 from app.ai.assistant.planner import GeminiPlanner
 from app.ai.assistant.policy import ToolPolicyEngine
 from app.ai.assistant.response_composer import compose_tool_response
-from app.ai.language.detector import detect_explicit_language_request
+from app.ai.language.detector import detect_explicit_language_request, detect_language
 from app.ai.language.messages import t
 from app.ai.mcp import registry
 from app.ai.providers.contracts import LLMProviderError, LLMResourceExhausted, LLMUnavailable
@@ -58,8 +58,7 @@ CANCEL_WORDS: set[str] = {
 }
 
 REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
-    "check_availability": ["experience_id", "requested_date", "participant_count"],
-    "check_availability_and_quote": ["experience_id", "requested_date", "participant_count"],
+    "check_availability_and_quote": ["requested_date", "participant_count"],
     "create_reservation": ["experience_id", "requested_date", "participant_count"],
     "suggest_alternative_dates": ["experience_id"],
     "create_reservation_draft": [
@@ -248,10 +247,44 @@ class AssistantOrchestrator:
             .to_list()
         )
         # ── Política de idioma del bot ────────────────────────────────────
-        # El idioma NUNCA se auto-detecta. El bot nace en español y sólo
-        # cambia cuando el usuario lo pide explícitamente (override persistente)
-        # o revierte a otro idioma con otra petición explícita. Ver ADR-0010.
+        # El idioma SOLO cambia cuando el usuario lo pide EXPLÍCITAMENTE
+        # (e.g. "háblame en inglés", "quiero hablar en español"). Esa petición
+        # se guarda como override persistente. Sin override, el bot conserva
+        # session.language (por defecto "es") sin importar en qué idioma
+        # escriba el usuario en cada mensaje.
         explicit_request = detect_explicit_language_request(request.message)
+        if explicit_request == "unsupported":
+            # El usuario pidió un idioma que NO soportamos. NO cambiamos el
+            # idioma de la sesión. Devolvemos un mensaje en el idioma actual
+            # listando los idiomas soportados, para que el LLM no invente
+            # una respuesta inconsistente.
+            supported_list = ", ".join(
+                t(f"language_name_{code}", session.language)
+                for code in ("es", "en", "fr", "de", "it", "ru", "zh", "ja")
+            )
+            unsupported_msg = t(
+                "unsupported_language_message", session.language,
+                supported=supported_list,
+            )
+            turn = ConversationTurnDocument(
+                trace_id=trace_id,
+                channel=request.channel,
+                conversation_id=conversation_key,
+                user_message=request.message,
+                from_phone=request.from_phone,
+            )
+            turn.response_text = unsupported_msg
+            turn.status = "responded"
+            await turn.insert()
+            session.last_intent = "unsupported_language_request"
+            session.turn_count += 1
+            session.updated_at = datetime.now(timezone.utc)
+            await session.save()
+            return AskResponse(
+                trace_id=trace_id,
+                action=AssistantAction.FINAL_RESPONSE,
+                response=unsupported_msg,
+            )
         if explicit_request:
             session.language_override = explicit_request
             session.language = explicit_request
@@ -259,17 +292,42 @@ class AssistantOrchestrator:
             session.language_streak_lang = None
             session.updated_at = datetime.now(UTC)
             await session.save()
+            # Sincronizar el idioma en TODAS las reservas activas del cliente
+            # para que las notificaciones futuras (admin aprueba pago, etc.)
+            # usen el nuevo idioma, no el holder_language cacheado.
+            if phone:
+                try:
+                    from app.documents import ReservationDocument
+                    from app.common.enums import ReservationStatus as _RS
+                    active_statuses = [
+                        _RS.PRE_RESERVED.value, _RS.PENDING_PAYMENT.value,
+                        _RS.PAYMENT_RECEIVED.value, _RS.QUOTED.value,
+                    ]
+                    await ReservationDocument.find(
+                        {
+                            "holder_phone": phone,
+                            "status": {"$in": active_statuses},
+                        }
+                    ).update_many(
+                        {"$set": {"holder_language": explicit_request}}
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "[conversation_id=%s] Failed to sync reservation languages: %s",
+                        conversation_id, exc,
+                    )
         elif session.language_override:
             override = session.language_override
-            if override not in ("es", "en"):
+            if override not in ("es", "en", "fr", "de", "it", "ru", "zh", "ja"):
                 override = "en"
             if session.language != override:
                 session.language = override
                 session.updated_at = datetime.now(UTC)
                 await session.save()
         # Sin override → se conserva session.language (por defecto "es").
-        # No hay auto-detección: si el usuario no pide explícitamente otro
-        # idioma, el bot sigue respondiendo en el idioma efectivo actual.
+        # El bot NO auto-detecta idioma de cada mensaje. Si el usuario no
+        # pidió explícitamente otro idioma, el bot sigue respondiendo en
+        # el idioma efectivo actual aunque el usuario escriba en otro.
 
         # Propagate from_phone as holder_phone only on client/guide channels
         phone = request.from_phone or getattr(session, "from_phone", None)
@@ -360,6 +418,21 @@ class AssistantOrchestrator:
             session_slots=session.slot_values,
             channel=request.channel,
         )
+
+        # ── Intención genérica de reserva sin datos: limpiar sesión y pedir datos frescos ──
+        # Cuando el usuario dice "quiero hacer una reserva" (sin experiencia/fecha/personas),
+        # el intent router no matchea (no hay datos concretos). Sin esta limpieza, el LLM
+        # recallaría datos viejos de la sesión y ofrecería una cotización obsoleta.
+        # En vez de eso, limpiamos los slots de reserva previos y dejamos que el bot
+        # pida los datos frescos.
+        if forced_plan is None and self._is_generic_reservation_intent(request.message):
+            _cleared = self._clear_stale_reservation_slots(session)
+            if _cleared:
+                logger.info(
+                    "[conversation_id=%s] Cleared stale reservation slots for fresh request",
+                    conversation_id,
+                )
+
         if forced_plan:
             logger.info(
                 "[conversation_id=%s] Intent router matched | tool=%s | action=%s | audit=%s",
@@ -457,15 +530,24 @@ class AssistantOrchestrator:
                 if plan.tool_name == "create_reservation_draft":
                     slots_for_merge.pop("holder_name", None)
                     slots_for_merge.pop("holder_email", None)
+                # Si el plan trae experience_query NUEVO, no arrastrar el
+                # experience_id viejo de la sesión: la tool debe resolver el
+                # query nuevo (no usar el ID cacheado de un turno anterior).
+                if plan_args.get("experience_query"):
+                    slots_for_merge.pop("experience_id", None)
                 merge = merge_slots(
                     session_slots=slots_for_merge,
                     plan_args=plan_args,
                     required_fields=required_fields,
                 )
-                # Always apply merged args and check for missing required fields
+                # Solo aplicar al plan los valores que ya estaban en el plan
+                # original o que son requeridos. NO copiar todo el session slot
+                # (e.g. experience_id viejo) al plan.
                 valid_keys = ToolArgs.model_fields.keys()
+                original_plan_keys = {k for k, v in plan_args.items() if _has_value(v)}
+                allowed_keys = original_plan_keys | set(required_fields)
                 for key, value in merge.merged.items():
-                    if key in valid_keys:
+                    if key in valid_keys and key in allowed_keys:
                         setattr(plan.arguments, key, value)
                 if not merge.still_missing:
                     plan.action = AssistantAction.TOOL_CALL
@@ -820,3 +902,44 @@ class AssistantOrchestrator:
             conversation_id=conversation_id,
             last_trace_id=trace_id,
         ).insert()
+
+    @staticmethod
+    def _is_generic_reservation_intent(message: str) -> bool:
+        """Detecta mensajes genéricos de intención de reserva sin datos concretos.
+
+        Ejemplos: "me gustaria hacer una reserva", "quiero reservar", "necesito apartar".
+        Se diferencia de un mensaje con datos concretos (e.g. "los chorros 4 personas
+        16 agosto") en que estos últimos ya matchean el intent router y devuelven
+        un plan. Aquí solo caen los mensajes que expresan intención sin dar datos.
+        """
+        import re as _re
+        lower = message.lower().strip()
+        patterns = [
+            r"\b(quiero|quisiera|me\s+gustaria|me\s+gustaría|me\s+interesa|deseo|necesito)\b.*\b(reservar|apartar|separar|agendar|reserva|apartado|separado)\b",
+            r"\b(reservar|apartar|separar|agendar|reserva|apartado|separado)\b.*\b(una|el|la|los|las|un|con|para)\b",
+            r"\b(hazme|hazme\s+la|armame|montame)\b.*\b(reserva|apartado)\b",
+        ]
+        return any(_re.search(p, lower) for p in patterns)
+
+    @staticmethod
+    def _clear_stale_reservation_slots(session: Any) -> bool:
+        """Limpia slots de reserva obsoletos de la sesión.
+
+        Cuando el usuario inicia una nueva conversación de reserva, no queremos
+        que el LLM recall datos viejos (experiencia, precio, fecha). Limpiamos
+        los slots relevantes para que el bot pida los datos frescos.
+        """
+        slots = session.slot_values or {}
+        stale_keys = [
+            "experience_id", "experience_name", "experience_query",
+            "quote_snapshot", "requested_date", "participant_count",
+            "schedule_id", "reservation_code",
+        ]
+        cleared = False
+        for k in stale_keys:
+            if k in slots:
+                del slots[k]
+                cleared = True
+        if cleared:
+            session.pending_fields = ["experience_id", "requested_date", "participant_count"]
+        return cleared

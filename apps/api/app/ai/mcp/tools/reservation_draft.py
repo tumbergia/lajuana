@@ -193,6 +193,7 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
 async def get_reservation_public_summary(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.pop("trace_id", None) or str(uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
+    language: str = kwargs.pop("language", "es")
     started = time.perf_counter()
 
     payload: GetReservationPublicSummaryInput | None = None
@@ -215,7 +216,7 @@ async def get_reservation_public_summary(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="reservation.not_found",
-                        message="No se encontró una pre-reserva con ese código.",
+                        message=_t("reservation_not_found_message", language),
                     )
                 ],
             )
@@ -262,6 +263,7 @@ async def get_reservation_public_summary(**kwargs: Any) -> dict[str, Any]:
 async def get_reservation_status_by_phone(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.pop("trace_id", None) or str(uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
+    language: str = kwargs.pop("language", "es")
     started = time.perf_counter()
 
     payload: GetReservationStatusByPhoneInput | None = None
@@ -283,7 +285,7 @@ async def get_reservation_status_by_phone(**kwargs: Any) -> dict[str, Any]:
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="reservation.not_found",
-                        message="No se encontró una reserva para ese teléfono.",
+                        message=_t("reservation_not_found_by_phone", language),
                     )
                 ],
             )
@@ -351,6 +353,7 @@ async def get_reservation_status_by_phone(**kwargs: Any) -> dict[str, Any]:
 async def attach_payment_proof_to_reservation(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.pop("trace_id", None) or str(uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
+    language: str = kwargs.pop("language", "es")
     started = time.perf_counter()
 
     payload: AttachPaymentProofToReservationInput | None = None
@@ -371,15 +374,12 @@ async def attach_payment_proof_to_reservation(**kwargs: Any) -> dict[str, Any]:
                 attached=False,
                 trace_id=trace_id,
                 proof_status="rejected",
-                message="El comprobante debe ser imagen (JPG/PNG) o PDF.",
-                response=(
-                    "Recibi tu archivo, pero el formato no es valido. "
-                    "Por favor envia una imagen (JPG/PNG) o PDF del comprobante."
-                ),
+                message=_t("payment_proof_invalid_format", language),
+                response=_t("payment_proof_invalid_format_response", language),
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="payment_proof.invalid_content_type",
-                        message="Tipo de contenido no permitido.",
+                        message=_t("payment_proof_invalid_format", language),
                         details={"media_mime_type": payload.media_mime_type},
                     )
                 ],
@@ -411,10 +411,9 @@ async def attach_payment_proof_to_reservation(**kwargs: Any) -> dict[str, Any]:
                 reservation_code=reservation.code,
                 reservation_status=_public_payment_stage(reservation.status.value),
                 proof_status="duplicate",
-                message="Comprobante ya recibido anteriormente; se mantiene en revision.",
-                response=(
-                    f"Ya teniamos tu comprobante para la reserva {reservation.code}. "
-                    "Sigue en revision administrativa y la reserva aun no esta confirmada."
+                message=_t("payment_proof_duplicate_short", language),
+                response=_t(
+                    "payment_proof_duplicate_response", language, code=reservation.code
                 ),
             )
             return output.model_dump(mode="json")
@@ -442,10 +441,9 @@ async def attach_payment_proof_to_reservation(**kwargs: Any) -> dict[str, Any]:
             reservation_code=reservation.code,
             reservation_status=reservation_status,
             proof_status="under_review",
-            message="Comprobante recibido y en revision administrativa.",
-            response=(
-                f"Recibimos tu comprobante para la reserva {reservation.code}. "
-                "Queda en revision administrativa y la reserva aun NO esta confirmada."
+            message=_t("payment_proof_received_short", language),
+            response=_t(
+                "payment_proof_received_response", language, code=reservation.code
             ),
         )
         return output.model_dump(mode="json")
@@ -456,10 +454,7 @@ async def attach_payment_proof_to_reservation(**kwargs: Any) -> dict[str, Any]:
             attached=False,
             trace_id=trace_id,
             message=exc.message,
-            response=(
-                "No pude asociar el comprobante. Verifica el codigo de reserva y que este "
-                "aun este pendiente de confirmacion."
-            ),
+            response=_t("payment_proof_unable_to_attach", language),
             blocking_reasons=[
                 ToolBlockingReason(
                     code=exc.code,
@@ -476,10 +471,7 @@ async def attach_payment_proof_to_reservation(**kwargs: Any) -> dict[str, Any]:
             attached=False,
             trace_id=trace_id,
             message=str(exc),
-            response=(
-                "No logramos registrar el comprobante en este momento. "
-                "Intenta de nuevo o comparte el codigo de tu reserva."
-            ),
+            response=_t("payment_proof_unable_register", language),
             blocking_reasons=[
                 ToolBlockingReason(
                     code=error_code,

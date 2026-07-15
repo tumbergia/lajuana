@@ -10,6 +10,7 @@ from app.ai.mcp.tool_contracts import (
     CheckExperienceAvailabilityOutput,
     ToolBlockingReason,
 )
+from app.ai.language.messages import t as _t
 from app.core.config import settings
 from app.documents.experience_document import ExperienceDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
@@ -76,6 +77,7 @@ async def check_experience_availability(
     participant_count: int = 1,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
+    language: str = "es",
     **kwargs: Any,
 ) -> dict[str, Any]:
     started = time.perf_counter()
@@ -107,7 +109,7 @@ async def check_experience_availability(
             reasons.append(
                 ToolBlockingReason(
                     code="experience.not_found",
-                    message="No encontré una experiencia que coincida con la solicitud.",
+                    message=_t("check_quote_not_found", language),
                 )
             )
             output = CheckExperienceAvailabilityOutput(
@@ -126,7 +128,7 @@ async def check_experience_availability(
             reasons.append(
                 ToolBlockingReason(
                     code="reservation.min_notice_violation",
-                    message=f"La reserva requiere mínimo {min_notice_days} días de anticipación.",
+                    message=_t("check_quote_min_notice", language, min_notice_days=min_notice_days),
                 )
             )
             output = CheckExperienceAvailabilityOutput(
@@ -149,7 +151,7 @@ async def check_experience_availability(
             reasons.append(
                 ToolBlockingReason(
                     code="reservation.date_already_booked",
-                    message="Ya existe una reserva activa para esa fecha.",
+                    message=_t("check_quote_already_booked", language),
                 )
             )
 

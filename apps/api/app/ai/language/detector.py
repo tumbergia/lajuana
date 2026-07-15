@@ -120,84 +120,128 @@ def detect_language_stable(
     return top_lang
 
 
+# Catálogo de idiomas soportados por el bot.
+SUPPORTED_RESPONSE_LANGUAGES: set[str] = {"es", "en", "fr", "de", "it", "ru", "zh", "ja"}
+
+# Mapa de nombres nativos y aliases de cada idioma soportado.
+_LANGUAGE_KEYWORDS: dict[str, set[str]] = {
+    "es": {"español", "espanol", "castellano", "spanish", "esp"},
+    "en": {"inglés", "ingles", "english", "anglo", "british"},
+    "fr": {"francés", "frances", "french", "francais", "français"},
+    "de": {"alemán", "aleman", "german", "deutsch", "deutsche"},
+    "it": {"italiano", "italian", "italiana"},
+    "ru": {"ruso", "russian", "ruski", "russkiy", "русский"},
+    "zh": {"chino", "chinese", "mandarin", "mandarín", "中文", "zhongwen"},
+    "ja": {"japonés", "japones", "japanese", "japones", "日本語", "nihongo"},
+}
+
+# Palabras de petición (verbos / expresiones de preferencia) en varios idiomas.
+_INTENT_VERBS = (
+    r"responde|respondeme|respóndeme|hablame|háblame|habla|escribeme|escríbeme"
+    r"|contesta|contestame|contéstame|cambia|cambiar|usa|utiliza|continua|continuar"
+    r"|quiero|prefiero|mejor|me\s+gustaría|me\s+gustaria|deseo|necesito"
+    r"|puedes|podrias|podrías|sigue|seguir|esta|esta\s+conversación|conversacion"
+    r"|i\s+(want|prefer|would\s+like|need|wish)"
+    r"|please|can\s+you|could\s+you|reply|talk|speak|write|answer|chat|continue|switch|use"
+    r"|parle|parles|parlez|parlare|parli|parlami|rispondi|risponde"
+    r"|sprich|sprichst|sprechen|schreib|schreibe|antworten"
+    r"|voglio|vorrei|preferisco"
+    r"|je\s+(veux|voudrais|préfère|parle|continue)"
+    r"|in\s+english|in\s+spanish|in\s+french|in\s+german|in\s+italian"
+)
+
 # Patrones de petición explícita de idioma. El orden importa: se evalúan de
-# arriba a abajo y la primera coincidencia gana. Se prioriza español.
-# Cada entrada: (patrón_regex, idioma_destino) — el destino ya está limitado a
-# los idiomas con catálogo de respuestas (es/en).
-_EXPLICIT_LANGUAGE_REQUESTS: list[tuple[str, str]] = [
-    # Español explícito (prioridad).
-    (
-        r"\b(responde|respondeme|respóndeme|hablame|háblame|habla|escribeme|escríbeme"
-        r"|contesta|contestame|contéstame)\b[^.\n]{0,40}"
-        r"\b(español|espanol|castellano|spanish)\b",
-        "es",
-    ),
-    (
-        r"\b(quiero|prefiero|mejor|me\s+gustaría|me\s+gustaria)\b[^.\n]{0,30}"
-        r"\b(en\s+)?(español|espanol|castellano)\b",
-        "es",
-    ),
-    (
-        r"\b(no\s+(me\s+)?(respondas|hables|contestes|escribas))\b[^.\n]{0,30}"
-        r"(inglés|ingles|english|british)\b",
-        "es",
-    ),
-    (
-        r"\b(español|espanol|castellano|spanish)\b[^.\n]{0,30}"
-        r"\b(por\s+favor|please|pls)\b",
-        "es",
-    ),
-    (r"(?:^|\s)/(español|espanol|spanish)\b", "es"),
-
-    # Inglés explícito.
-    (
-        r"\b(reply|respond|talk|write|answer|speak|chat)\b[^.\n]{0,40}"
-        r"\b(in\s+)?(english|ingles|british)\b",
-        "en",
-    ),
-    (r"\b(español|espanol|castellano|spanish)\b[^.\n]{0,30}\b(no)\b", "en"),
-    (
-        r"\b(no\s+(me\s+)?(respondas|hables|contestes|escribas))\b[^.\n]{0,30}"
-        r"(español|espanol|castellano)\b",
-        "en",
-    ),
-    (
-        r"\b(i\s+(want|prefer|would\s+like|need))\b[^.\n]{0,30}"
-        r"\b(in\s+)?(english|ingles)\b",
-        "en",
-    ),
-    (
-        r"\b(quiero|prefiero|mejor|me\s+gustaría|me\s+gustaria)\b[^.\n]{0,30}"
-        r"\b(en\s+)?(inglés|ingles|english)\b",
-        "en",
-    ),
-    (r"(?:^|\s)/(english|ingles?)\b", "en"),
-]
+# arriba a abajo y la primera coincidencia gana. Devuelven el código del
+# idioma (soportado o no). Si el código no está en SUPPORTED_RESPONSE_LANGUAGES,
+# el caller debe responder con el mensaje "unsupported_language".
+def _build_lang_pattern(verb_part: str, lang_words: set[str]) -> str:
+    words_alt = "|".join(re.escape(w) for w in sorted(lang_words, key=len, reverse=True))
+    return rf"\b(?:{verb_part})\b[^.\n]{{0,50}}\b(?:en\s+|a\s+|al\s+|in\s+)?(?:{words_alt})\b"
 
 
-def _normalize_response_language(lang: str) -> str:
-    """Mapea cualquier idioma al catálogo de respuestas disponible (es/en)."""
-    return lang if lang in RESPONSE_LANGUAGES else "en"
+def _detect_explicit_request_supported(text: str) -> str | None:
+    """Detecta peticiones de idioma soportado. Devuelve el código o None."""
+    if not text or not text.strip():
+        return None
+    lower = text.lower().strip()
+    if len(lower) < 4:
+        return None
+    # Construimos un patrón por idioma (verb + palabras de ese idioma).
+    for lang_code, lang_words in _LANGUAGE_KEYWORDS.items():
+        pattern = _build_lang_pattern(_INTENT_VERBS, lang_words)
+        if re.search(pattern, lower, flags=re.IGNORECASE):
+            return lang_code
+    # Slash commands: "/ingles", "/english", etc.
+    for lang_code, lang_words in _LANGUAGE_KEYWORDS.items():
+        words_alt = "|".join(re.escape(w) for w in sorted(lang_words, key=len, reverse=True))
+        if re.search(rf"(?:^|\s)/(?:{words_alt})\b", lower, flags=re.IGNORECASE):
+            return lang_code
+    # Fallback: mensajes cortos que son SOLO el nombre del idioma
+    # (e.g. "frances", "italiano", "en aleman"). Útil cuando el usuario
+    # responde a "¿en qué idioma?" con el nombre del idioma.
+    stripped = lower.strip(" .,!?")
+    for lang_code, lang_words in _LANGUAGE_KEYWORDS.items():
+        if stripped in lang_words:
+            return lang_code
+    return None
 
 
-def detect_explicit_language_request(text: str) -> str | None:
-    """Reconoce una petición explícita del usuario de cambiar/respetar un idioma.
+def _detect_explicit_request_any(text: str) -> str | None:
+    """Detecta peticiones de idioma INCLUYENDO no soportados.
 
-    Devuelve 'es' o 'en' si detecta una instrucción explícita, o ``None`` si el
-    mensaje no es una petición de idioma. La detección es intencionalmente
-    estricta para evitar falsos positivos en español (ej: 'en español' suelto
-    en cualquier oración se interpreta como petición solo si está cerca de un
-    verbo imperativo o expresión de preferencia).
+    Útil para informar al usuario qué idiomas SÍ soportamos.
     """
     if not text or not text.strip():
         return None
     lower = text.lower().strip()
     if len(lower) < 4:
         return None
-    for pattern, lang in _EXPLICIT_LANGUAGE_REQUESTS:
-        if re.search(pattern, lower):
-            return lang
+    # Buscamos cualquier palabra reconocible como idioma, con o sin verbo.
+    # Palabras comunes de muchos idiomas (no soportados).
+    extra_keywords = {
+        "ar": {"árabe", "arabe", "arabic"},
+        "ko": {"coreano", "korean"},
+        "pt": {"portugués", "portugues", "portuguese"},
+        "nl": {"holandés", "holandes", "dutch", "neerlandés"},
+        "sv": {"sueco", "swedish"},
+        "tr": {"turco", "turkish"},
+        "pl": {"polaco", "polish"},
+        "hi": {"hindi", "hindustani"},
+    }
+    all_langs = dict(_LANGUAGE_KEYWORDS)
+    all_langs.update(extra_keywords)
+    pattern = _build_lang_pattern(_INTENT_VERBS, set().union(*all_langs.values()))
+    m = re.search(pattern, lower, flags=re.IGNORECASE)
+    if m:
+        matched_word = m.group(0).lower()
+        for code, words in all_langs.items():
+            if any(w in matched_word for w in words):
+                return code
     return None
+
+
+def detect_explicit_language_request(text: str) -> str | None:
+    """Reconoce una petición explícita del usuario de cambiar a un idioma.
+
+    Devuelve:
+      - código de idioma soportado (es, en, fr, de, it, ru, zh, ja) si el
+        usuario pidió uno de los soportados;
+      - "unsupported" si pidió un idioma que NO soportamos;
+      - None si el mensaje no es una petición de idioma.
+    """
+    supported = _detect_explicit_request_supported(text)
+    if supported:
+        return supported
+    if _detect_explicit_request_any(text):
+        return "unsupported"
+    return None
+
+
+def _normalize_response_language(lang: str) -> str:
+    """Mapea cualquier idioma al catálogo de respuestas disponible."""
+    if lang in SUPPORTED_RESPONSE_LANGUAGES:
+        return lang
+    return "en"
 
 
 def decide_language(
