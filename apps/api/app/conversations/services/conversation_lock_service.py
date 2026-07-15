@@ -34,6 +34,24 @@ class ConversationLockService:
             {"$set": {"locked_until": None, "locked_by": None}},
         )
 
+        # Debug: inspeccionar el documento actual antes del acquire
+        try:
+            debug_doc = await collection.find_one({"conversation_key": conversation_id})
+            if debug_doc:
+                logger.info(
+                    "[lock_debug] conversation_key=%s locked_until=%s locked_by=%s",
+                    conversation_id,
+                    debug_doc.get("locked_until"),
+                    debug_doc.get("locked_by"),
+                )
+            else:
+                logger.warning(
+                    "[lock_debug] NO session document found for conversation_key=%s",
+                    conversation_id,
+                )
+        except Exception as e:
+            logger.error("[lock_debug] Error inspecting session: %s", e)
+
         result = await collection.find_one_and_update(
             {
                 "conversation_key": conversation_id,
@@ -45,10 +63,10 @@ class ConversationLockService:
             {"$set": {"locked_until": lock_until, "locked_by": "whatsapp_worker"}},
         )
         if result:
-            logger.info("[conversation_id=%s] Lock acquired", conversation_id)
+            logger.info("[conversation_id=%s] Lock acquired (locked_until=%s)", conversation_id, lock_until)
             return True
 
-        logger.info("[conversation_id=%s] Lock not acquired", conversation_id)
+        logger.info("[conversation_id=%s] Lock not acquired | now=%s | stale_threshold=%s", conversation_id, now, stale_threshold)
         return False
 
     async def release(self, *, conversation_id: str) -> None:
