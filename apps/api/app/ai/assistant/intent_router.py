@@ -28,8 +28,8 @@ _AVAILABILITY_KEYWORDS = [
 # (check_availability_and_quote) que verifica cupo, cotiza y pregunta por
 # nombre/correo en una sola respuesta.
 _RESERVE_INTENT_KEYWORDS = [
-    r"\b(quiero|quisiera|me.gustaria|me.interesa|deseo|necesito)\b.*\b(reservar|apartar|separar|agendar)\b",
-    r"\b(reservar|apartar|separar|agendar)\b.*\b(para|el|la)\b",
+    r"\b(quiero|quisiera|me.gustaria|me.interesa|deseo|necesito)\b.*\b(reservar|apartar|separar|agendar|reserva|apartado|separado)\b",
+    r"\b(reservar|apartar|separar|agendar|reserva|apartado|separado)\b.*\b(para|el|la|una|otra)\b",
     r"\b(hazme|hazme.la|armame|montame)\b.*\b(reserva|apartado)\b",
     r"\b(i\s+want\s+to|i'?d\s+like\s+to|i\s+would\s+like\s+to|please|need\s+to|let'?s)\b.*\b(book|reserve)\b",
     r"\b(book|reserve)\b.*\b(the|for|on)\b",

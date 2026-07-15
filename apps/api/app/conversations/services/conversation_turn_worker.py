@@ -143,22 +143,35 @@ class ConversationTurnWorker:
             return True
 
         if len(candidates) > 1:
-            event = media_events[0]
+            # Check if the session has a recently-created reservation_code
+            # so we can attach the proof directly without asking the user.
+            session = await ConversationSessionDocument.find_one(
+                {"conversation_key": conversation_id, "status": "active"},
+            )
+            session_code = (
+                session.slot_values.get("reservation_code")
+                if session and getattr(session, "slot_values", None)
+                else None
+            )
+            if session_code:
+                matched = [r for r in candidates if getattr(r, "code", None) == session_code]
+                if len(matched) == 1:
+                    candidates = matched
+
+        event = media_events[0]
+        raw_media = (event.raw_payload or {}).get(event.message_type) or {}
+        mime_type = raw_media.get("mime_type") or "application/pdf"
+        filename = raw_media.get("filename")
+
+        if len(candidates) > 1:
             try:
-                session = await ConversationSessionDocument.find_one(
-                    {"conversation_key": conversation_id, "status": "active"},
-                )
                 if session and hasattr(session, "pending_media_proof"):
                     session.pending_media_proof = {
                         "wa_message_id": event.wa_message_id,
                         "media_id": event.media_id,
                         "message_type": event.message_type,
-                        "mime_type": (
-                            (event.raw_payload or {}).get(event.message_type) or {}
-                        ).get("mime_type", "application/pdf"),
-                        "filename": (
-                            (event.raw_payload or {}).get(event.message_type) or {}
-                        ).get("filename"),
+                        "mime_type": mime_type,
+                        "filename": filename,
                         "caption": event.caption,
                         "from_phone": normalized_phone,
                     }
@@ -180,11 +193,6 @@ class ConversationTurnWorker:
                 text=turn.response_text,
             )
             return True
-
-        event = media_events[0]
-        raw_media = (event.raw_payload or {}).get(event.message_type) or {}
-        mime_type = raw_media.get("mime_type") or "application/pdf"
-        filename = raw_media.get("filename")
 
         result = await registry.call(
             "attach_payment_proof_to_reservation",
