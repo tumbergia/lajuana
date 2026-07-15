@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime
 from decimal import Decimal
@@ -8,6 +9,8 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from app.ai.language.messages import t as _t
+
+_logger = logging.getLogger(__name__)
 from app.ai.mcp.tool_contracts import (
     AttachPaymentProofToReservationInput,
     AttachPaymentProofToReservationOutput,
@@ -108,6 +111,11 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.pop("trace_id", None) or str(uuid4())
     conversation_turn_id = kwargs.pop("conversation_turn_id", None)
     language: str = kwargs.pop("language", "es")
+    _logger.info(
+        "[reservation_draft_debug] language=%s kwargs_keys=%s",
+        language,
+        list(kwargs.keys()),
+    )
     started = time.perf_counter()
 
     payload: CreateReservationDraftInput | None = None

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
 
 from app.schemas.assistant_plan import AssistantAction, AssistantPlan, ToolArgs
+
+_logger = logging.getLogger(__name__)
 
 _EXPERIENCE_KEYWORDS = [
     r"\b(listame|lista|muestra|dime|enseñame|enseñame|cuales|que.ofrecen|que.hay|que.tienen)\b",
@@ -524,6 +527,10 @@ def detect_and_build_plan(
         exp_id = slots.get("experience_id")
         qs = slots.get("quote_snapshot")
         holder_phone = slots.get("holder_phone")
+        _logger.info(
+            "[name_email_debug] name=%s email=%s exp_id=%s qs=%s holder_phone=%s slots_keys=%s",
+            hname, hmail, exp_id, bool(qs), holder_phone, list(slots.keys()),
+        )
         if exp_id and qs and holder_phone:
             # Extract participant count/date from session or message
             participants = _extract_participant_count(user_message) or slots.get("participant_count", 1)
