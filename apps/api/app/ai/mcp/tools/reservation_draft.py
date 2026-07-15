@@ -7,6 +7,7 @@ from typing import Any
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from app.ai.language.messages import t as _t
 from app.ai.mcp.tool_contracts import (
     AttachPaymentProofToReservationInput,
     AttachPaymentProofToReservationOutput,
@@ -48,29 +49,28 @@ def _build_pre_reservation_response(
     participant_count: int,
     quote_snapshot: dict[str, Any],
     payment_steps: str,
+    language: str = "es",
 ) -> str:
     experience = (
         quote_snapshot.get("experience_name")
         or quote_snapshot.get("experience_id")
-        or "No disponible"
+        or _t("pre_reservation_field_experience", language)
     )
     subtotal = quote_snapshot.get("subtotal")
     currency = quote_snapshot.get("currency", "COP")
 
     return (
-        "Pre-reserva registrada.\n\n"
-        "Resumen:\n"
-        f"- Experiencia: {experience}\n"
-        f"- Fecha: {requested_date}\n"
-        f"- Personas: {participant_count}\n"
-        f"- Valor: {_format_currency(subtotal, currency)}\n"
-        f"- Código: {code}\n"
-        f"- Vence: {_format_expiry(expire_at)}\n\n"
-        "Para confirmar la reserva sigue estos pasos:\n\n"
+        f"{_t('pre_reservation_registered', language)}\n\n"
+        f"{_t('pre_reservation_summary_header', language)}\n"
+        f"- {_t('pre_reservation_field_experience', language)}: {experience}\n"
+        f"- {_t('pre_reservation_field_date', language)}: {requested_date}\n"
+        f"- {_t('pre_reservation_field_participants', language)}: {participant_count}\n"
+        f"- {_t('pre_reservation_field_amount', language)}: {_format_currency(subtotal, currency)}\n"
+        f"- {_t('pre_reservation_field_code', language)}: {code}\n"
+        f"- {_t('pre_reservation_field_expires', language)}: {_format_expiry(expire_at)}\n\n"
+        f"{_t('pre_reservation_confirm_steps', language)}\n\n"
         f"{payment_steps}\n\n"
-        "Importante: esta pre-reserva no está confirmada. "
-        "Solo queda confirmada cuando un administrador verifica el pago "
-        "y revalida la disponibilidad."
+        f"{_t('pre_reservation_important_notice', language)}"
     )
 
 
@@ -126,7 +126,8 @@ async def create_reservation_draft(**kwargs: Any) -> dict[str, Any]:
                 requested_date=payload.requested_date,
                 participant_count=payload.participant_count,
                 quote_snapshot=payload.quote_snapshot,
-                payment_steps=render_payment_steps(payment_config),
+                payment_steps=render_payment_steps(payment_config, language),
+                language=language,
             ),
         )
         return output.model_dump(mode="json")

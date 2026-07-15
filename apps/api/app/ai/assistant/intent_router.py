@@ -443,6 +443,23 @@ def _matches_any(text: str, patterns: list[str]) -> bool:
     return any(re.search(p, lower) for p in patterns)
 
 
+_EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
+
+
+def _extract_name_and_email(text: str) -> tuple[str | None, str | None]:
+    """Extrae nombre y correo de frases como 'juan diego - juan@email.com'."""
+    email_match = _EMAIL_RE.search(text)
+    if not email_match:
+        return None, None
+    email = email_match.group(0)
+    name_part = text[:email_match.start()].strip().rstrip("- ,;:")
+    if not name_part or len(name_part) < 3:
+        name_part = text[email_match.end():].strip().rstrip("- ,;:")
+    if not name_part or len(name_part) < 3:
+        return None, email
+    return name_part, email
+
+
 def detect_and_build_plan(
     user_message: str,
     conversation_context: str | None = None,
@@ -495,6 +512,47 @@ def detect_and_build_plan(
             user_goal="El usuario consulta reglas o ubicación configuradas de La Juana.",
             audit_summary="Intent detectado: consulta de configuración pública vigente.",
         )
+
+    # ── Name + email response → create_reservation_draft direct ──
+    # Cuando el usuario envía su nombre y correo (típicamente después de que
+    # check_availability_and_quote pidió esos datos), y la sesión ya tiene
+    # experience_id + quote_snapshot, disparamos directo la tool de pre-reserva
+    # sin pasar por el LLM.
+    hname, hmail = _extract_name_and_email(user_message)
+    if hname and hmail:
+        slots = session_slots or {}
+        exp_id = slots.get("experience_id")
+        qs = slots.get("quote_snapshot")
+        holder_phone = slots.get("holder_phone")
+        if exp_id and qs and holder_phone:
+            # Extract participant count/date from session or message
+            participants = _extract_participant_count(user_message) or slots.get("participant_count", 1)
+            date_str = _extract_date(user_message) or slots.get("requested_date")
+            args = ToolArgs(
+                experience_id=exp_id,
+                participant_count=participants,
+                holder_phone=holder_phone,
+                holder_name=hname,
+                holder_email=hmail,
+                requested_date=date_str,
+                quote_snapshot=qs,
+            )
+            if date_str:
+                args.requested_date = date_str
+            return AssistantPlan(
+                action=AssistantAction.TOOL_CALL,
+                confidence=0.95,
+                tool_name="create_reservation_draft",
+                arguments=args,
+                user_goal=(
+                    "El usuario proporcionó nombre y correo para completar "
+                    "la pre-reserva."
+                ),
+                audit_summary=(
+                    "Intent detectado: nombre+correo proporcionados, "
+                    "disparando create_reservation_draft directo."
+                ),
+            )
 
     # ── Experience details (check before list to avoid "dime" matching list) ──
     if _matches_any(msg_lower, _DETAIL_KEYWORDS):

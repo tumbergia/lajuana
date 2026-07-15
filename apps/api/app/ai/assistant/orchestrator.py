@@ -567,6 +567,7 @@ class AssistantOrchestrator:
 
         try:
             tool_kwargs = plan.arguments.model_dump(exclude_none=True)
+            tool_kwargs["language"] = session.language
             tool_output = await registry.call(
                 plan.tool_name or "",
                 conversation_id_for_log=conversation_id,
@@ -747,6 +748,7 @@ class AssistantOrchestrator:
         pending_args["conversation_id_for_log"] = conversation_key
         pending_args["trace_id"] = trace_id
         pending_args["conversation_turn_id"] = str(uuid4())
+        pending_args["language"] = lang
 
         started = time.perf_counter()
         error_code: str | None = None

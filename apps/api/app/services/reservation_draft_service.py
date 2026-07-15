@@ -65,6 +65,22 @@ class ReservationDraftService:
             )
 
         # 4. Validate no active reservation on the same date
+        # If a pre-reservation already exists for this phone+experience+date,
+        # return it instead of erroring (idempotent for duplicate submissions).
+        existing = await ReservationDocument.find_one({
+            "holder_phone": holder_phone,
+            "experience_id": experience_id,
+            "requested_date": requested,
+            "status": ReservationStatus.PRE_RESERVED.value,
+        })
+        if existing:
+            return {
+                "created": True,
+                "code": existing.code,
+                "status": existing.status.value,
+                "expire_at": existing.expire_at,
+                "message": f"Pre-reserva {existing.code} ya existente, retornando datos actuales.",
+            }
         await self.reservation_service.ensure_date_available(requested)
 
         # 5. Validate quote_snapshot

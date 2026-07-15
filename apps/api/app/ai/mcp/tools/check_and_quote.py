@@ -65,17 +65,18 @@ def _format_currency(amount: Any, currency: str) -> str:
     return f"${amount} {currency}"
 
 
-def _format_date_for_user(d: date) -> str:
-    """Formato humano para mostrar al usuario: 5 de agosto de 2026 / August 5, 2026."""
-    months_es = [
+def _format_date_for_user(d: date, language: str = "es") -> str:
+    if language == "en":
+        months = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December",
+        ]
+        return f"{months[d.month - 1]} {d.day}, {d.year}"
+    months = [
         "enero", "febrero", "marzo", "abril", "mayo", "junio",
         "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
     ]
-    months_en = [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December",
-    ]
-    return d.strftime("%Y-%m-%d")
+    return f"{d.day} de {months[d.month - 1]} de {d.year}"
 
 
 async def _find_experience(
@@ -261,7 +262,7 @@ async def check_availability_and_quote(**kwargs: Any) -> dict[str, Any]:
             language,
             experience_name=experience_name or "La experiencia",
             participants=payload.participant_count,
-            date=_format_date_for_user(payload.requested_date),
+            date=_format_date_for_user(payload.requested_date, language),
             subtotal=f"{subtotal:,.0f}".replace(",", "."),
             unit_price=f"{unit_price:,.0f}".replace(",", "."),
         )
