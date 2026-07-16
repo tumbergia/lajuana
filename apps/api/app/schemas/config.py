@@ -21,7 +21,10 @@ class EmergencyContactsResponseSchema(BaseModel):
 class ReservationRulesSchema(BaseModel):
     min_days_in_advance: int = Field(ge=0)
     require_payment_proof_for_confirmation: bool = True
-    reservation_draft_ttl_minutes: int = Field(default=30, ge=5, le=1440)
+    # Rango de TTL de la pre-reserva: 5 minutos (mínimo viable) a 20000
+    # minutos (~13.9 días, dos semanas). Rango ampliado para soportar
+    # pre-reservas de varios días/semanas sin vencimiento.
+    reservation_draft_ttl_minutes: int = Field(default=30, ge=5, le=20000)
     min_age: int = Field(default=12, ge=0)
     max_age: int = Field(default=65, ge=0)
 
@@ -29,7 +32,7 @@ class ReservationRulesSchema(BaseModel):
 class ReservationRulesUpdateSchema(BaseModel):
     min_days_in_advance: int | None = Field(default=None, ge=0)
     require_payment_proof_for_confirmation: bool | None = None
-    reservation_draft_ttl_minutes: int | None = Field(default=None, ge=5, le=1440)
+    reservation_draft_ttl_minutes: int | None = Field(default=None, ge=5, le=20000)
     min_age: int | None = Field(default=None, ge=0)
     max_age: int | None = Field(default=None, ge=0)
 

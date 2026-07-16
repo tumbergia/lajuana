@@ -15,10 +15,10 @@ from app.ai.mcp.tool_contracts import (
     UpdateReservationParticipantsOutput,
 )
 from app.common.enums import PaymentStatus, ReservationStatus
+from app.core.di import Container
 from app.core.errors import ApiError
 from app.documents import ReservationDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
-from app.core.di import Container
 
 
 async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
@@ -53,13 +53,21 @@ async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
             )
             return output.model_dump(mode="json")
 
+        # La respuesta al cliente debe ir en el idioma en que se hizo la
+        # reserva (holder_language), no en el idioma de la conversación actual.
+        # Así, si el cliente cambió de idioma a mitad de la sesión, el mensaje
+        # sigue siendo coherente con el contexto original. Ver ADR-0014.
+        response_lang = (
+            getattr(reservation, "holder_language", None) or language
+        )
+
         if reservation.payment_status != PaymentStatus.PENDING:
             output = CancelReservationOutput(
                 cancelled=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message=_t("client_reservation_cannot_cancel_paid", language),
-                response=_t("client_reservation_cannot_cancel_paid_response", language),
+                message=_t("client_reservation_cannot_cancel_paid", response_lang),
+                response=_t("client_reservation_cannot_cancel_paid_response", response_lang),
             )
             return output.model_dump(mode="json")
 
@@ -74,8 +82,12 @@ async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
             cancelled=True,
             trace_id=trace_id,
             reservation_code=doc.code,
-            message=_t("client_reservation_cancelled_success", language),
-            response=_t("client_reservation_cancelled_response", language, code=doc.code),
+            message=_t("client_reservation_cancelled_success", response_lang),
+            response=_t(
+                "client_reservation_cancelled_response",
+                response_lang,
+                code=doc.code,
+            ),
         )
         return output.model_dump(mode="json")
 
@@ -163,24 +175,35 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
             ReservationStatus.COMPLETED,
             ReservationStatus.EXPIRED,
         }:
+            response_lang = (
+                getattr(reservation, "holder_language", None) or language
+            )
             output = UpdateReservationDateOutput(
                 updated=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message=_t("client_reservation_terminal_state", language),
-                response=_t("client_reservation_terminal_state_response", language),
+                message=_t("client_reservation_terminal_state", response_lang),
+                response=_t("client_reservation_terminal_state_response", response_lang),
             )
             return output.model_dump(mode="json")
 
         if reservation.payment_status != PaymentStatus.PENDING:
+            response_lang = (
+                getattr(reservation, "holder_language", None) or language
+            )
             output = UpdateReservationDateOutput(
                 updated=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message=_t("client_reservation_cannot_modify_paid", language),
-                response=_t("client_reservation_cannot_modify_paid_response", language),
+                message=_t("client_reservation_cannot_modify_paid", response_lang),
+                response=_t("client_reservation_cannot_modify_paid_response", response_lang),
             )
             return output.model_dump(mode="json")
+
+        # La respuesta al cliente debe ir en el idioma de la reserva original.
+        response_lang = (
+            getattr(reservation, "holder_language", None) or language
+        )
 
         service = Container.get_instance().reservation_service
         await service.ensure_date_available(
@@ -197,9 +220,9 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             reservation_code=reservation.code,
             new_date=payload.new_date,
-            message=_t("client_reservation_date_updated_short", language),
+            message=_t("client_reservation_date_updated_short", response_lang),
             response=_t(
-                "client_reservation_date_updated_response", language,
+                "client_reservation_date_updated_response", response_lang,
                 code=reservation.code, new_date=payload.new_date.isoformat(),
             ),
         )
@@ -289,24 +312,35 @@ async def update_reservation_participants(**kwargs: Any) -> dict[str, Any]:
             ReservationStatus.COMPLETED,
             ReservationStatus.EXPIRED,
         }:
+            response_lang = (
+                getattr(reservation, "holder_language", None) or language
+            )
             output = UpdateReservationParticipantsOutput(
                 updated=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message=_t("client_reservation_terminal_state", language),
-                response=_t("client_reservation_terminal_state_response", language),
+                message=_t("client_reservation_terminal_state", response_lang),
+                response=_t("client_reservation_terminal_state_response", response_lang),
             )
             return output.model_dump(mode="json")
 
         if reservation.payment_status != PaymentStatus.PENDING:
+            response_lang = (
+                getattr(reservation, "holder_language", None) or language
+            )
             output = UpdateReservationParticipantsOutput(
                 updated=False,
                 trace_id=trace_id,
                 reservation_code=reservation.code,
-                message=_t("client_reservation_cannot_modify_paid", language),
-                response=_t("client_reservation_cannot_modify_paid_response", language),
+                message=_t("client_reservation_cannot_modify_paid", response_lang),
+                response=_t("client_reservation_cannot_modify_paid_response", response_lang),
             )
             return output.model_dump(mode="json")
+
+        # La respuesta al cliente debe ir en el idioma de la reserva original.
+        response_lang = (
+            getattr(reservation, "holder_language", None) or language
+        )
 
         reservation.participant_count = payload.new_participant_count
         await reservation.save()
@@ -316,9 +350,9 @@ async def update_reservation_participants(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             reservation_code=reservation.code,
             new_participant_count=payload.new_participant_count,
-            message=_t("client_reservation_participants_updated_short", language),
+            message=_t("client_reservation_participants_updated_short", response_lang),
             response=_t(
-                "client_reservation_participants_updated_response", language,
+                "client_reservation_participants_updated_response", response_lang,
                 code=reservation.code, count=payload.new_participant_count,
             ),
         )

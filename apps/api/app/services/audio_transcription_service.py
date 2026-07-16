@@ -2,12 +2,12 @@ import asyncio
 
 import httpx
 
-from app.ai.providers.stt_provider import transcribe_audio
+from app.ai.providers.stt_provider import TranscriptionResult, transcribe_audio
 from app.core.config import settings
 from app.core.logging import logger
 
 
-async def download_and_transcribe(media_id: str) -> str:
+async def download_and_transcribe(media_id: str) -> TranscriptionResult:
     if not settings.whatsapp_access_token:
         raise RuntimeError("WhatsApp access token not configured")
 
@@ -43,19 +43,26 @@ async def download_and_transcribe(media_id: str) -> str:
         media_id,
     )
 
-    text = await asyncio.to_thread(transcribe_audio, audio_bytes, mime_type)
+    result = await asyncio.to_thread(transcribe_audio, audio_bytes, mime_type)
 
-    if not text.strip():
+    if not result.text.strip():
         logger.warning(
             "[transcription] Empty result | media_id=%s",
             media_id,
         )
-        text = "[transcripción vacía]"
+        return TranscriptionResult(
+            text="[transcripción vacía]",
+            language=result.language,
+            language_probability=result.language_probability,
+            duration=result.duration,
+        )
 
     logger.info(
-        "[transcription] Result: %.200s | media_id=%s",
-        text,
+        "[transcription] Result: %.200s | lang=%s (p=%.2f) | media_id=%s",
+        result.text,
+        result.language or "?",
+        result.language_probability or 0.0,
         media_id,
     )
 
-    return text
+    return result

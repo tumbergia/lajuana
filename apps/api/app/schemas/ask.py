@@ -12,6 +12,10 @@ class AskRequest(BaseModel):
     conversation_id: str | None = None
     trace_id: str | None = None
     conversation_turn_id: str | None = None
+    audio_language: str | None = Field(
+        default=None,
+        description="Idioma detectado por STT en el mensaje original. None = texto plano.",
+    )
 
 
 class AskResponse(BaseModel):

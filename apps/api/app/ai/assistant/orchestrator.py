@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import time
 from datetime import UTC, date, datetime, timezone
 from typing import Any
@@ -26,6 +27,7 @@ from app.ai.providers.gemini_provider import (
 from app.core.logging import logger
 from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
+from app.documents.reservation_document import ReservationDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.schemas.ask import AskRequest, AskResponse
 from app.schemas.assistant_plan import AssistantAction, ToolArgs
@@ -246,6 +248,12 @@ class AssistantOrchestrator:
             .limit(8)
             .to_list()
         )
+        # ── Resolución temprana de `phone` ───────────────────────────────
+        # Debe estar disponible ANTES de la política de idioma porque la
+        # sincronización de holder_language en reservas activas (línea ~298)
+        # requiere el teléfono. Definirlo aquí también permite usarlo en
+        # cualquier rama posterior sin redefinirlo.
+        phone = request.from_phone or getattr(session, "from_phone", None)
         # ── Política de idioma del bot ────────────────────────────────────
         # El idioma SOLO cambia cuando el usuario lo pide EXPLÍCITAMENTE
         # (e.g. "háblame en inglés", "quiero hablar en español"). Esa petición
@@ -297,7 +305,6 @@ class AssistantOrchestrator:
             # usen el nuevo idioma, no el holder_language cacheado.
             if phone:
                 try:
-                    from app.documents import ReservationDocument
                     from app.common.enums import ReservationStatus as _RS
                     active_statuses = [
                         _RS.PRE_RESERVED.value, _RS.PENDING_PAYMENT.value,
@@ -330,7 +337,7 @@ class AssistantOrchestrator:
         # el idioma efectivo actual aunque el usuario escriba en otro.
 
         # Propagate from_phone as holder_phone only on client/guide channels
-        phone = request.from_phone or getattr(session, "from_phone", None)
+        # (phone ya fue resuelto arriba, antes de la política de idioma).
         if request.channel in {"whatsapp", "test", "mobile_api"}:
             if phone and "holder_phone" not in session.slot_values:
                 session.slot_values["holder_phone"] = phone

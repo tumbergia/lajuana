@@ -1,13 +1,23 @@
+from __future__ import annotations
+
 import os
 import tempfile
+from dataclasses import dataclass
 
 from faster_whisper import WhisperModel
 
 from app.core.config import settings
 from app.core.logging import logger
 
-
 _MODEL: WhisperModel | None = None
+
+
+@dataclass(frozen=True)
+class TranscriptionResult:
+    text: str
+    language: str | None
+    language_probability: float | None
+    duration: float | None
 
 
 def _get_model() -> WhisperModel:
@@ -35,7 +45,7 @@ def unload_model() -> None:
         logger.info("[whisper] Model unloaded")
 
 
-def transcribe_audio(audio_bytes: bytes, mime_type: str = "audio/ogg") -> str:
+def transcribe_audio(audio_bytes: bytes, mime_type: str = "audio/ogg") -> TranscriptionResult:
     model = _get_model()
     ext = _ext_from_mime(mime_type)
 
@@ -44,20 +54,35 @@ def transcribe_audio(audio_bytes: bytes, mime_type: str = "audio/ogg") -> str:
         tmp_path = tmp.name
 
     try:
-        segments, info = model.transcribe(tmp_path, language="es", beam_size=5)
+        segments, info = model.transcribe(
+            tmp_path,
+            language=settings.whisper_language,
+            beam_size=settings.whisper_beam_size,
+            condition_on_previous_text=False,
+            vad_filter=True,
+        )
+
+        detected_lang = info.language
+        detected_prob = info.language_probability
 
         logger.debug(
             "[whisper] Transcribed %.1fs | detected language=%s (p=%.2f)",
             info.duration or 0,
-            info.language,
-            info.language_probability or 0,
+            detected_lang,
+            detected_prob or 0,
         )
 
         text_parts: list[str] = []
         for segment in segments:
             text_parts.append(segment.text.strip())
 
-        return " ".join(text_parts)
+        text = " ".join(text_parts)
+        return TranscriptionResult(
+            text=text,
+            language=detected_lang,
+            language_probability=detected_prob,
+            duration=info.duration,
+        )
     finally:
         try:
             os.unlink(tmp_path)

@@ -8,7 +8,7 @@ from app.ai.assistant.prompts.planner import (
     ADMIN_TOOL_RESULT_RESPONSE_SYSTEM_PROMPT,
     TOOL_RESULT_RESPONSE_SYSTEM_PROMPT,
 )
-from app.ai.language.messages import build_language_instruction
+from app.ai.language.messages import build_language_instruction, get_language_upper_token
 from app.ai.providers.factory import get_llm_provider
 from app.core.logging import logger
 from app.schemas.assistant_plan import AssistantPlan, ToolResultResponse
@@ -30,6 +30,7 @@ async def compose_tool_response(
     )
 
     language_instruction = build_language_instruction(language)
+    language_upper = get_language_upper_token(language)
     prompt_template = (
         ADMIN_TOOL_RESULT_RESPONSE_SYSTEM_PROMPT
         if channel == "admin_api"
@@ -37,6 +38,7 @@ async def compose_tool_response(
     )
     response_prompt = prompt_template.format(
         language_instruction=language_instruction,
+        language_upper=language_upper,
     )
 
     started = time.perf_counter()

@@ -52,9 +52,15 @@ class Settings(BaseSettings):
 
     assistant_min_plan_confidence: float = 0.55
 
-    whisper_model_size: str = "base"
+    whisper_model_size: str = "small"
     whisper_device: str = "cpu"
     whisper_compute_type: str = "int8"
+    # None → auto-detección por Whisper (recomendado para WhatsApp multilingüe).
+    # Forzar un código (e.g. "es") hace que Whisper decodifique SIEMPRE en ese
+    # idioma, lo que produce alucinaciones severas en audios reales en otros
+    # idiomas (mandarín, ruso, japonés). Ver ADR-0013.
+    whisper_language: str | None = None
+    whisper_beam_size: int = 5
 
     whatsapp_verify_token: str = "change-me"
     whatsapp_app_secret: str = ""

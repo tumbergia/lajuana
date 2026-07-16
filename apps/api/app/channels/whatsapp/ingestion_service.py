@@ -2,10 +2,12 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from app.ai.assistant.orchestrator import AssistantOrchestrator
+from app.ai.language.detector import SUPPORTED_RESPONSE_LANGUAGES
 from app.ai.language.messages import t
+from app.ai.providers.stt_provider import TranscriptionResult
 from app.channels.whatsapp.normalizer import build_conversation_id
-from app.channels.whatsapp.parser import ParsedMessage, parse_whatsapp_payload
 from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
+from app.channels.whatsapp.parser import ParsedMessage, parse_whatsapp_payload
 from app.conversations.documents import WhatsAppInboundEventDocument
 from app.conversations.services.conversation_resolver import ConversationResolver
 from app.conversations.services.message_buffer_service import MessageBufferService
@@ -14,7 +16,6 @@ from app.documents.conversation_session_document import ConversationSessionDocum
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.schemas.ask import AskRequest
 from app.services.audio_transcription_service import download_and_transcribe
-
 
 _SUPPORTED_DOCUMENT_MIMES = {"application/pdf"}
 
@@ -77,6 +78,49 @@ class WhatsAppIngestionService:
             parsed.wa_message_id,
         )
 
+    async def _reject_unsupported_audio_language(
+        self,
+        *,
+        parsed: ParsedMessage,
+        conversation_id: str,
+        detected_language: str,
+        transcription: str,
+    ) -> None:
+        """Responde con `unsupported_language_message` cuando el STT detecta
+        un idioma fuera del catálogo soportado. Ver ADR-0013.
+        """
+        if not self._outbound_service:
+            return
+        lang = await self._get_conversation_language(conversation_id)
+        supported_list = ", ".join(
+            t(f"language_name_{code}", lang)
+            for code in ("es", "en", "fr", "de", "it", "ru", "zh", "ja")
+        )
+        text = t("unsupported_language_message", lang, supported=supported_list)
+        turn = ConversationTurnDocument(
+            trace_id=str(uuid4()),
+            channel="whatsapp",
+            from_phone=parsed.normalized_phone,
+            user_message=transcription,
+            conversation_id=conversation_id,
+            status="responded",
+            response_text=text,
+            responded_at=datetime.now(UTC),
+        )
+        await turn.insert()
+        await self._outbound_service.send(
+            turn=turn,
+            to_phone=parsed.normalized_phone,
+            text=text,
+        )
+        logger.info(
+            "[conversation_id=%s] Rejected unsupported audio language | "
+            "wa_message_id=%s detected=%s",
+            conversation_id,
+            parsed.wa_message_id,
+            detected_language,
+        )
+
     async def ingest(self, payload: dict) -> int:
         parsed_messages = parse_whatsapp_payload(payload)
 
@@ -130,15 +174,20 @@ class WhatsAppIngestionService:
                 continue
 
             body = parsed.body or ""
-            transcription = None
+            transcription_result: TranscriptionResult | None = None
+            transcription_language: str | None = None
             if parsed.message_type == "audio":
                 try:
-                    transcription = await download_and_transcribe(parsed.media_id)
-                    body = transcription
+                    transcription_result = await download_and_transcribe(parsed.media_id)
+                    body = transcription_result.text
+                    transcription_language = transcription_result.language
                     logger.info(
-                        "[ingestion] Audio transcribed | wa_message_id=%s transcription=%.200s",
+                        "[ingestion] Audio transcribed | wa_message_id=%s "
+                        "lang=%s (p=%.2f) transcription=%.200s",
                         parsed.wa_message_id,
-                        transcription,
+                        transcription_language or "?",
+                        transcription_result.language_probability or 0.0,
+                        transcription_result.text,
                     )
                 except Exception as exc:
                     logger.error(
@@ -151,10 +200,15 @@ class WhatsAppIngestionService:
             elif parsed.media_id and parsed.message_type != "text":
                 body = parsed.caption or f"[{parsed.message_type} recibido]"
 
-            if transcription:
+            if transcription_result is not None:
                 await collection.update_one(
                     {"wa_message_id": parsed.wa_message_id},
-                    {"$set": {"transcription": transcription}},
+                    {
+                        "$set": {
+                            "transcription": transcription_result.text,
+                            "transcription_language": transcription_language,
+                        }
+                    },
                 )
 
             # ── Unsupported message types (sticker, video, location, etc.) ──
@@ -182,6 +236,23 @@ class WhatsAppIngestionService:
                     ingested_count += 1
                     continue
 
+            # ── Audio en idioma NO soportado: responder unsupported y NO
+            #     pasar al orchestrator. El STT detectó (e.g.) coreano o
+            #     portugués; el bot no puede atender en esos idiomas (ADR-0013).
+            if (
+                parsed.message_type == "audio"
+                and transcription_language
+                and transcription_language not in SUPPORTED_RESPONSE_LANGUAGES
+            ):
+                await self._reject_unsupported_audio_language(
+                    parsed=parsed,
+                    conversation_id=conversation_id,
+                    detected_language=transcription_language,
+                    transcription=body,
+                )
+                ingested_count += 1
+                continue
+
             # Audio: process immediately, skip buffer to avoid double-response
             if parsed.message_type == "audio" and body and self._outbound_service:
                 try:
@@ -205,6 +276,7 @@ class WhatsAppIngestionService:
                             conversation_id=conversation_id,
                             trace_id=trace_id,
                             conversation_turn_id=str(turn.id),
+                            audio_language=transcription_language,
                         )
                     )
 

@@ -104,6 +104,34 @@ def test_reservation_rules_validate_age_range_and_ttl() -> None:
         ReservationRulesUpdateSchema(reservation_draft_ttl_minutes=0)
 
 
+def test_reservation_rules_ttl_supports_two_weeks() -> None:
+    """El TTL de pre-reserva debe aceptar hasta 20000 minutos (~13.9 días,
+    casi dos semanas) para soportar pre-reservas de varios días."""
+    from app.schemas.config import ReservationRulesSchema
+
+    # Mínimo: 5 minutos.
+    rule_min = ReservationRulesSchema(
+        min_days_in_advance=7, reservation_draft_ttl_minutes=5
+    )
+    assert rule_min.reservation_draft_ttl_minutes == 5
+
+    # Máximo ampliado: 20000 minutos (~13.9 días).
+    rule_max = ReservationRulesSchema(
+        min_days_in_advance=7, reservation_draft_ttl_minutes=20000
+    )
+    assert rule_max.reservation_draft_ttl_minutes == 20000
+
+    # Por encima del máximo: rechazado.
+    with pytest.raises(ValidationError):
+        ReservationRulesSchema(
+            min_days_in_advance=7, reservation_draft_ttl_minutes=20001
+        )
+
+    # Por debajo del mínimo: rechazado.
+    with pytest.raises(ValidationError):
+        ReservationRulesUpdateSchema(reservation_draft_ttl_minutes=4)
+
+
 def test_secret_crypto_round_trip_and_no_plaintext(monkeypatch: pytest.MonkeyPatch) -> None:
     key = base64.urlsafe_b64encode(b"x" * 32).decode()
     monkeypatch.setattr(settings, "ai_config_encryption_key", key)

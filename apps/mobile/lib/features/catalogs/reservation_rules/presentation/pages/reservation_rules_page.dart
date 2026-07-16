@@ -103,14 +103,14 @@ class _ReservationRulesPageState extends State<ReservationRulesPage>
         minDays < 0 ||
         ttl == null ||
         ttl < 5 ||
-        ttl > 1440 ||
+        ttl > 20000 ||
         minAge == null ||
         maxAge == null ||
         minAge < 0 ||
         minAge > maxAge) {
       setState(() {
         _error =
-            'Revisa anticipación, vencimiento (5–1440 min) y rango de edades.';
+            'Revisa anticipación, vencimiento (5–20000 min, hasta ~2 semanas) y rango de edades.';
       });
       return;
     }
@@ -239,6 +239,7 @@ class _ReservationRulesPageState extends State<ReservationRulesPage>
                             AppTextField(
                               controller: _ttlCtrl,
                               label: 'Vencimiento de pre-reserva (minutos)',
+                              hintText: '5–20000 (hasta ~2 semanas)',
                               inputKind: AppTextInputKind.integer,
                             ),
                             const SizedBox(height: 10),
