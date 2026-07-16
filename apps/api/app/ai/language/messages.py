@@ -36,8 +36,8 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "en": "I need more information.",
     },
     "tool_confirmation": {
-        "es": "Voy a ejecutar: {tool_name}. ¿Estás seguro? Responde 'sí' para confirmar o 'no' para cancelar.",
-        "en": "I'm going to run: {tool_name}. Are you sure? Reply 'yes' to confirm or 'no' to cancel.",
+        "es": "La acción {tool_name} está lista y solo necesita tu confirmación. Responde 'sí' para ejecutarla o 'no' para cancelarla.",
+        "en": "The action {tool_name} is ready and only needs your confirmation. Reply 'yes' to run it or 'no' to cancel.",
     },
     "no_alternative_dates": {
         "es": "Lo siento, no encontré más fechas disponibles para esta experiencia. Un asesor humano podrá revisar opciones alternativas y ayudarte con lo que necesites. Te transfiero ahora.",

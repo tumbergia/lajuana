@@ -180,6 +180,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               unawaited(openWhatsAppChat(phone, message: message));
             });
           },
+          onSendDirectly: (message) async {
+            return widget.controller.sendWhatsAppMessage(
+              phone: phone ?? '',
+              message: message,
+            );
+          },
           onDelete: () async {
             Navigator.of(sheetContext).pop();
             await widget.controller.deleteOne(item.id);
@@ -558,6 +564,7 @@ class _NotificationDetailSheet extends StatefulWidget {
     required this.onOpenReservationTarget,
     required this.onOpenPaymentProof,
     required this.onWhatsAppReply,
+    required this.onSendDirectly,
     required this.onDelete,
   });
 
@@ -568,6 +575,7 @@ class _NotificationDetailSheet extends StatefulWidget {
       onOpenReservationTarget;
   final VoidCallback onOpenPaymentProof;
   final Future<void> Function(String message) onWhatsAppReply;
+  final Future<bool> Function(String message) onSendDirectly;
   final VoidCallback onDelete;
 
   @override
@@ -578,6 +586,7 @@ class _NotificationDetailSheet extends StatefulWidget {
 class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
   late final TextEditingController _replyController;
   late bool _composingReply;
+  bool _sending = false;
 
   @override
   void initState() {
@@ -744,11 +753,56 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
                   maxLines: 4,
                 ),
                 const SizedBox(height: 12),
-                AppButton(
-                  label: 'Abrir WhatsApp',
-                  icon: Symbols.chat,
-                  onPressed: () =>
-                      widget.onWhatsAppReply(_replyController.text),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        label: 'Abrir WhatsApp',
+                        icon: Symbols.chat,
+                        onPressed: () =>
+                            widget.onWhatsAppReply(_replyController.text),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: Theme.of(context).colorScheme.copyWith(
+                            primary: const Color(0xFF25D366),
+                            onPrimary: Colors.white,
+                          ),
+                        ),
+                        child: AppButton(
+                          label: _sending ? 'Enviando…' : 'Enviar mensaje',
+                          variant: AppButtonVariant.primary,
+                          icon: Symbols.send,
+                          onPressed: _sending
+                              ? null
+                              : () async {
+                                  final msg = _replyController.text.trim();
+                                  if (msg.isEmpty) return;
+                                  setState(() => _sending = true);
+                                  final ok =
+                                      await widget.onSendDirectly(msg);
+                                  setState(() => _sending = false);
+                                  if (ok && mounted) {
+                                    Navigator.of(context).pop();
+                                    showAppToast(
+                                      context,
+                                      message: 'Mensaje enviado.',
+                                    );
+                                  } else if (!ok && mounted) {
+                                    showAppToast(
+                                      context,
+                                      message: 'Error al enviar mensaje.',
+                                      isError: true,
+                                    );
+                                  }
+                                },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
               ] else if (hasWhatsApp) ...[

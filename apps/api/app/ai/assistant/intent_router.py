@@ -122,6 +122,28 @@ _ADMIN_LIST_SADDLES = [
     r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(sillas?|monturas?)\b",
 ]
 
+_ADMIN_SADDLES_AVAILABLE = [
+    r"\b(sillas?|monturas?)\b.*\b(disponibles?)\b.*\b(reserva)\b",
+    r"\b(reserva)\b.*\b(sillas?|monturas?)\b.*\b(disponibles?)\b",
+]
+
+_ADMIN_LIST_EQUINE_EVENTS = [
+    r"\b(eventos?)\b.*\b(equino|equinos?|mula|mulas)\b",
+    r"\b(equino|equinos?|mula|mulas)\b.*\b(eventos?)\b",
+]
+
+_ADMIN_CREATE_EQUINE_EVENT = [
+    r"\b(crea(r)?|registra(r)?|agrega(r)?)\b.*\b(eventos?)\b.*\b(equino|equinos?|mula|mulas)\b",
+]
+
+_ADMIN_UPDATE_EQUINE_EVENT = [
+    r"\b(actualiza(r)?|edita(r)?|modifica(r)?)\b.*\b(eventos?)\b",
+]
+
+_ADMIN_FINALIZE_ALL_ASSIGNMENTS = [
+    r"\b(finaliza(r)?|cerra(r)?)\b.*\b(todas)\b.*\b(asignaciones?)\b",
+]
+
 _ADMIN_EMERGENCY_CONTACTS = [
     r"\b(contactos?.de.?emergencia|emergencias?|numeros?.de.?emergencia)\b",
 ]
@@ -134,6 +156,14 @@ def _extract_reservation_code(text: str) -> str | None:
     m = re.search(r"\b(reserva|codigo)\s+([A-Z0-9-]{4,})\b", text, flags=re.IGNORECASE)
     if m:
         return m.group(2).upper()
+    return None
+
+
+def _extract_object_id(text: str, field_name: str) -> str | None:
+    pattern = rf"\b{re.escape(field_name)}\b\s*[:=]?\s*([a-f0-9]{{24}})"
+    match = re.search(pattern, text, flags=re.IGNORECASE)
+    if match:
+        return match.group(1)
     return None
 
 
@@ -185,9 +215,90 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
             audit_summary="Intent admin: contactos de emergencia.",
         )
 
+    if _matches_any(msg_lower, _ADMIN_FINALIZE_ALL_ASSIGNMENTS):
+        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_finalize_all_assignments",
+            arguments=ToolArgs(reservation_id=reservation_id) if reservation_id else ToolArgs(),
+            user_goal="El admin quiere finalizar todas las asignaciones de una reserva.",
+            audit_summary="Intent admin: finalizar todas las asignaciones.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_SADDLES_AVAILABLE):
+        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_list_available_saddles_for_reservation",
+            arguments=ToolArgs(reservation_id=reservation_id) if reservation_id else ToolArgs(),
+            user_goal="El admin quiere ver sillas disponibles para una reserva.",
+            audit_summary="Intent admin: sillas disponibles por reserva.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CREATE_EQUINE_EVENT):
+        equine_id = _extract_object_id(msg_lower, "equine_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_create_equine_event",
+            arguments=ToolArgs(equine_id=equine_id) if equine_id else ToolArgs(),
+            user_goal="El admin quiere registrar un evento de equino.",
+            audit_summary="Intent admin: crear evento equino.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_UPDATE_EQUINE_EVENT):
+        event_id = _extract_object_id(msg_lower, "event_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_update_equine_event",
+            arguments=ToolArgs(event_id=event_id) if event_id else ToolArgs(),
+            user_goal="El admin quiere actualizar un evento de equino.",
+            audit_summary="Intent admin: actualizar evento equino.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_LIST_EQUINE_EVENTS):
+        equine_id = _extract_object_id(msg_lower, "equine_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_list_equine_events",
+            arguments=ToolArgs(equine_id=equine_id) if equine_id else ToolArgs(),
+            user_goal="El admin quiere ver eventos de un equino.",
+            audit_summary="Intent admin: listar eventos equinos.",
+        )
+
+    saddle_id = _extract_object_id(msg_lower, "saddle_id")
+    if saddle_id and re.search(r"\b(detalle|detalles|info|informacion|ver)\b", msg_lower):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_saddle",
+            arguments=ToolArgs(saddle_id=saddle_id),
+            user_goal="El admin quiere ver detalle de una silla.",
+            audit_summary="Intent admin: detalle de silla.",
+        )
+
+    provider_id = _extract_object_id(msg_lower, "provider_id")
+    if provider_id and re.search(r"\b(detalle|detalles|info|informacion|ver)\b", msg_lower):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_provider",
+            arguments=ToolArgs(provider_id=provider_id),
+            user_goal="El admin quiere ver detalle de un proveedor.",
+            audit_summary="Intent admin: detalle de proveedor.",
+        )
+
     if _matches_any(msg_lower, _ADMIN_ASSIGNMENT_BOARD):
         code = _extract_reservation_code(msg_lower)
-        plan_args = ToolArgs(reservation_code=code) if code else ToolArgs()
+        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+        if reservation_id:
+            plan_args = ToolArgs(reservation_id=reservation_id)
+        else:
+            plan_args = ToolArgs(reservation_code=code) if code else ToolArgs()
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.9,

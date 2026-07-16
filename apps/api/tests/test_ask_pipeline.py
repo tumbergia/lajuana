@@ -59,9 +59,37 @@ def _make_plan(**overrides: Any) -> AssistantPlan:
 class MockPlanner:
     def __init__(self, plan: AssistantPlan) -> None:
         self._plan = plan
+        self.calls = 0
 
     async def plan(self, **kwargs: Any) -> AssistantPlan:
+        self.calls += 1
         return self._plan
+
+
+def _build_session(**overrides: Any) -> Any:
+    async def noop_save() -> None:
+        pass
+
+    data = {
+        "id": "ses-001",
+        "channel": "test",
+        "conversation_key": "demo-key",
+        "status": "active",
+        "slot_values": {},
+        "turn_count": 0,
+        "pending_fields": [],
+        "last_intent": None,
+        "last_trace_id": None,
+        "updated_at": None,
+        "language": "es",
+        "language_override": None,
+        "language_streak": 0,
+        "language_streak_lang": None,
+        "pending_media_proof": None,
+        "save": noop_save,
+    }
+    data.update(overrides)
+    return SimpleNamespace(**data)
 
 
 def _apply_mocks(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -69,27 +97,7 @@ def _apply_mocks(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("app.ai.assistant.orchestrator.ToolCallLogDocument", FakeDoc)
 
     async def fake_load_session(self: Any, **_: Any) -> Any:
-        async def noop_save() -> None:
-            pass
-
-        return SimpleNamespace(
-            id="ses-001",
-            channel="test",
-            conversation_key="demo-key",
-            status="active",
-            slot_values={},
-            turn_count=0,
-            pending_fields=[],
-            last_intent=None,
-            last_trace_id=None,
-            updated_at=None,
-            language="es",
-            language_override=None,
-            language_streak=0,
-            language_streak_lang=None,
-            pending_media_proof=None,
-            save=noop_save,
-        )
+        return _build_session()
 
     monkeypatch.setattr(
         AssistantOrchestrator,
@@ -174,13 +182,14 @@ def test_ask_missing_fields_updates_session(monkeypatch: pytest.MonkeyPatch) -> 
 def test_ask_next_turn_merges_slots_and_calls_availability(monkeypatch: pytest.MonkeyPatch) -> None:
     _apply_mocks(monkeypatch)
     _apply_registry_mock(monkeypatch)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.detect_and_build_plan", lambda **_: None)
 
     plan = _make_plan(
         action=AssistantAction.TOOL_CALL,
         tool_name="check_experience_availability",
         arguments={
             "experience_query": "los chorros",
-            "requested_date": "2026-06-20",
+            "requested_date": "2026-08-20",
             "participant_count": 4,
         },
     )
@@ -189,7 +198,7 @@ def test_ask_next_turn_merges_slots_and_calls_availability(monkeypatch: pytest.M
     async def run() -> Any:
         return await orch.ask(
             AskRequest(
-                message="4 personas el 20 de junio de 2026",
+                message="4 personas el 20 de agosto de 2026",
                 channel="test",
                 conversation_id="demo-003",
             )
@@ -249,6 +258,7 @@ def test_policy_allows_generate_participant_form_link(monkeypatch: pytest.Monkey
 def test_policy_allows_get_participant_form_status(monkeypatch: pytest.MonkeyPatch) -> None:
     """Policy must allow get_participant_form_status (added to LIMITED_WRITE_TOOLS)."""
     _apply_mocks(monkeypatch)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.detect_and_build_plan", lambda **_: None)
 
     plan = _make_plan(
         action=AssistantAction.TOOL_CALL,
@@ -319,6 +329,7 @@ def test_ask_get_participant_form_status_returns_status(
 ) -> None:
     """Chatbot calling get_participant_form_status tool returns form status."""
     _apply_mocks(monkeypatch)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.detect_and_build_plan", lambda **_: None)
 
     async def fake_registry_call(name: str, **kwargs: Any) -> dict[str, Any]:
         if name == "get_participant_form_status":
@@ -384,3 +395,149 @@ def test_tool_call_log_is_created(monkeypatch: pytest.MonkeyPatch) -> None:
 
     asyncio.run(run())
     assert len(insert_called) == 1
+
+
+def test_destructive_tool_requires_explicit_confirmation(monkeypatch: pytest.MonkeyPatch) -> None:
+    _apply_mocks(monkeypatch)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.detect_and_build_plan", lambda **_: None)
+
+    planner = MockPlanner(
+        _make_plan(
+            action=AssistantAction.TOOL_CALL,
+            tool_name="admin_cancel_reservation",
+            arguments={"reservation_code": "RES-001"},
+        )
+    )
+    orch = AssistantOrchestrator(planner=planner)
+    orch._policy = SimpleNamespace(validate=lambda *args, **kwargs: SimpleNamespace(allowed=True))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(message="cancela la reserva RES-001", channel="test", conversation_id="demo-010")
+        )
+
+    result = asyncio.run(run())
+    assert planner.calls == 1
+    assert result.action == AssistantAction.ASK_CLARIFYING_QUESTION
+    assert result.tool_name == "admin_cancel_reservation"
+    assert "está lista" in result.response
+    assert "solo necesita tu confirmación" in result.response
+    assert "Responde 'sí'" in result.response
+
+
+def test_confirmation_reply_executes_pending_tool_without_replanning(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = _build_session()
+
+    monkeypatch.setattr("app.ai.assistant.orchestrator.ConversationTurnDocument", FindableFakeDoc)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.ToolCallLogDocument", FakeDoc)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.detect_and_build_plan", lambda **_: None)
+
+    async def fake_load_session(self: Any, **_: Any) -> Any:
+        return session
+
+    monkeypatch.setattr(AssistantOrchestrator, "_load_or_create_session", fake_load_session)
+
+    registry_calls: list[tuple[str, dict[str, Any]]] = []
+
+    async def fake_registry_call(name: str, **kwargs: Any) -> dict[str, Any]:
+        registry_calls.append((name, kwargs))
+        return {"message": "Reserva cancelada en backend.", "reservation_code": "RES-001"}
+
+    monkeypatch.setattr("app.ai.assistant.orchestrator.registry.call", fake_registry_call)
+
+    planner = MockPlanner(
+        _make_plan(
+            action=AssistantAction.TOOL_CALL,
+            tool_name="admin_cancel_reservation",
+            arguments={"reservation_code": "RES-001"},
+        )
+    )
+    orch = AssistantOrchestrator(planner=planner)
+    orch._policy = SimpleNamespace(validate=lambda *args, **kwargs: SimpleNamespace(allowed=True))
+
+    async def run_flow() -> tuple[Any, Any]:
+        first = await orch.ask(
+            AskRequest(message="cancela la reserva RES-001", channel="test", conversation_id="demo-011")
+        )
+        second = await orch.ask(
+            AskRequest(message="sí, hazlo", channel="test", conversation_id="demo-011")
+        )
+        return first, second
+
+    first_result, second_result = asyncio.run(run_flow())
+
+    assert first_result.action == AssistantAction.ASK_CLARIFYING_QUESTION
+    assert planner.calls == 1
+    assert len(registry_calls) == 1
+    assert registry_calls[0][0] == "admin_cancel_reservation"
+    assert second_result.action == AssistantAction.TOOL_CALL
+    assert second_result.tool_name == "admin_cancel_reservation"
+    assert second_result.response == "Reserva cancelada en backend."
+    assert second_result.planner_output == {}
+    assert session.slot_values.get("_pending_tool_name") is None
+
+
+def test_admin_reservation_id_is_normalized_before_policy(monkeypatch: pytest.MonkeyPatch) -> None:
+    _apply_mocks(monkeypatch)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.detect_and_build_plan", lambda **_: None)
+
+    reservation_id = "6a14f60f51dc79122be5cc97"
+    planner = MockPlanner(
+        _make_plan(
+            action=AssistantAction.TOOL_CALL,
+            tool_name="admin_cancel_reservation",
+            arguments={"reservation_code": reservation_id},
+        )
+    )
+    orch = AssistantOrchestrator(planner=planner)
+    orch._policy = SimpleNamespace(validate=lambda *args, **kwargs: SimpleNamespace(allowed=True))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message=f"Cancelar la reserva con reservation_id {reservation_id}",
+                channel="admin_api",
+                conversation_id="demo-012",
+            )
+        )
+
+    result = asyncio.run(run())
+    assert result.action == AssistantAction.ASK_CLARIFYING_QUESTION
+    assert result.tool_name == "admin_cancel_reservation"
+    assert result.planner_output["arguments"]["reservation_id"] == reservation_id
+
+
+def test_admin_get_reservation_detail_accepts_code(monkeypatch: pytest.MonkeyPatch) -> None:
+    _apply_mocks(monkeypatch)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.detect_and_build_plan", lambda **_: None)
+
+    async def fake_registry_call(name: str, **kwargs: Any) -> dict[str, Any]:
+        assert name == "admin_get_reservation_detail"
+        assert kwargs["code"] == "RES-PAGO-001"
+        return {"found": True, "reservation_id": "res-1", "code": "RES-PAGO-001"}
+
+    monkeypatch.setattr("app.ai.assistant.orchestrator.registry.call", fake_registry_call)
+
+    planner = MockPlanner(
+        _make_plan(
+            action=AssistantAction.TOOL_CALL,
+            tool_name="admin_get_reservation_detail",
+            arguments={"code": "RES-PAGO-001"},
+        )
+    )
+    orch = AssistantOrchestrator(planner=planner)
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message="Ver detalle de la reserva RES-PAGO-001",
+                channel="admin_api",
+                conversation_id="demo-013",
+            )
+        )
+
+    result = asyncio.run(run())
+    assert result.action == AssistantAction.TOOL_CALL
+    assert result.tool_name == "admin_get_reservation_detail"

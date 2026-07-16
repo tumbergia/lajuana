@@ -179,5 +179,9 @@ def get_whatsapp_ingestion_service() -> object:
     return Container.get_instance().whatsapp_ingestion_service
 
 
+def get_whatsapp_outbound_service() -> object:
+    return Container.get_instance().whatsapp_outbound_service
+
+
 def get_analytics_service() -> object:
     return Container.get_instance().analytics_service

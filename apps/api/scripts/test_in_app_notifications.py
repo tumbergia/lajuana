@@ -16,8 +16,8 @@ Uso:
 Opciones:
 
     uv run python scripts/test_in_app_notifications.py \\
-        --email camilo@lajuana.com \\
-        --password camilo123 \\
+        --email TU_ADMIN_EMAIL \\
+        --password TU_ADMIN_PASSWORD \\
         --delay 3
 """
 
@@ -72,8 +72,8 @@ class FixtureData:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--email", default="camilo@lajuana.com")
-    parser.add_argument("--password", default="camilo123")
+    parser.add_argument("--email", required=True)
+    parser.add_argument("--password", required=True)
     parser.add_argument(
         "--delay",
         type=float,

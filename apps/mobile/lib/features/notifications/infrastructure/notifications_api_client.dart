@@ -122,6 +122,22 @@ class NotificationsApiClient {
     return NotificationPreferences.fromJson(Map<String, dynamic>.from(decoded));
   }
 
+  /// Envía un mensaje de WhatsApp directamente a través de la API.
+  /// Usa el servicio outbound de WhatsApp del backend.
+  Future<void> sendWhatsAppMessage({
+    required String phone,
+    required String message,
+  }) async {
+    await _request(
+      'POST',
+      '/whatsapp/send',
+      body: {
+        'to_phone': phone,
+        'message': message,
+      },
+    );
+  }
+
   Future<dynamic> _request(
     String method,
     String path, {

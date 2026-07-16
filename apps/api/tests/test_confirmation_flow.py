@@ -6,6 +6,7 @@ from app.ai.assistant.orchestrator import (
     WRITE_TOOLS_REQUIRING_CONFIRMATION,
     AssistantOrchestrator,
 )
+from app.ai.language.messages import t
 
 
 class TestIsConfirmation:
@@ -93,3 +94,10 @@ class TestWriteToolsRequiringConfirmation:
 
     def test_cancel_words_not_empty(self) -> None:
         assert len(CANCEL_WORDS) >= 5
+
+
+def test_tool_confirmation_message_is_explicit() -> None:
+    message = t("tool_confirmation", "es", tool_name="admin_cancel_reservation")
+    assert "está lista" in message
+    assert "solo necesita tu confirmación" in message
+    assert "Responde 'sí'" in message

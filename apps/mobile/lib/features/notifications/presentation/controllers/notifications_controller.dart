@@ -282,6 +282,22 @@ class NotificationsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Envía un mensaje de WhatsApp directamente a través de la API del backend.
+  /// Retorna `true` si se envió correctamente, `false` si falló.
+  Future<bool> sendWhatsAppMessage({
+    required String phone,
+    required String message,
+  }) async {
+    try {
+      await _repository.sendWhatsAppMessage(phone: phone, message: message);
+      return true;
+    } catch (error) {
+      errorMessage = error.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> setPreference(String key, bool enabled) async {
     final current = Map<String, bool>.from(preferences?.preferences ?? {});
     current[key] = enabled;

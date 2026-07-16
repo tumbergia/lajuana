@@ -22,8 +22,19 @@ class ToolArgs(BaseModel):
 
     experience_query: str | None = None
     experience_id: str | None = None
+    user_id: str | None = None
+    reservation_id: str | None = None
+    participant_id: str | None = None
+    payment_proof_id: str | None = None
+    equine_id: str | None = None
+    provider_id: str | None = None
+    saddle_id: str | None = None
+    assignment_id: str | None = None
+    event_id: str | None = None
     schedule_id: str | None = None
     requested_date: str | None = None
+    date_from: str | None = None
+    date_to: str | None = None
     participant_count: int | None = None
     holder_phone: str | None = None
     holder_name: str | None = None
@@ -38,6 +49,14 @@ class ToolArgs(BaseModel):
     search_days_before: int | None = None
     search_days_after: int | None = None
     limit: int | None = None
+    q: str | None = None
+    provider_type: str | None = None
+    event_type: str | None = None
+    status: str | None = None
+    notes: str | None = None
+    reason: str | None = None
+    enabled: bool | None = None
+    is_active: bool | None = None
     bold_requested: bool = False
 
 

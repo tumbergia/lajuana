@@ -18,18 +18,18 @@ class ToolRegistry:
 
     async def call(
         self,
-        name: str,
+        tool_name: str,
         conversation_id_for_log: str | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        tool = self._tools.get(name)
+        tool = self._tools.get(tool_name)
         if tool is None:
-            raise RuntimeError(f"Unknown tool: {name}")
+            raise RuntimeError(f"Unknown tool: {tool_name}")
 
         logger.info(
             "[conversation_id=%s] Tool called | tool=%s",
             conversation_id_for_log,
-            name,
+            tool_name,
         )
 
         started = time.perf_counter()
@@ -39,7 +39,7 @@ class ToolRegistry:
         logger.info(
             "[conversation_id=%s] Tool result | tool=%s | elapsed_ms=%d | available=%s",
             conversation_id_for_log,
-            name,
+            tool_name,
             elapsed_ms,
             result.get("available") if isinstance(result, dict) else "N/A",
         )

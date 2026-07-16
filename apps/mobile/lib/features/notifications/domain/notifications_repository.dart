@@ -24,6 +24,12 @@ abstract class NotificationsRepository {
   Future<NotificationPreferences> updatePreferences(
     Map<String, bool> preferences,
   );
+
+  /// Envía un mensaje de WhatsApp directamente vía API.
+  Future<void> sendWhatsAppMessage({
+    required String phone,
+    required String message,
+  });
 }
 
 class NotificationsRepositoryImpl implements NotificationsRepository {
@@ -63,4 +69,10 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   Future<NotificationPreferences> updatePreferences(
     Map<String, bool> preferences,
   ) => _api.updatePreferences(preferences);
+
+  @override
+  Future<void> sendWhatsAppMessage({
+    required String phone,
+    required String message,
+  }) => _api.sendWhatsAppMessage(phone: phone, message: message);
 }
