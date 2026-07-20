@@ -56,6 +56,15 @@ class ConversationTurnWorker:
         self._buffer_service = buffer_service
         self._outbound_service = outbound_service
 
+    async def _integration_id_for_conversation(self, conversation_id: str) -> str | None:
+        try:
+            session = await ConversationSessionDocument.find_one(
+                {"conversation_key": conversation_id},
+            )
+        except Exception:
+            return None
+        return getattr(session, "integration_id", None) if session else None
+
     async def _find_active_candidates(self, from_phone: str) -> list[ReservationDocument]:
         allowed = [
             ReservationStatus.PRE_RESERVED.value,
@@ -112,6 +121,7 @@ class ConversationTurnWorker:
         conversation_id: str,
         normalized_phone: str,
         turn: ConversationTurnDocument,
+        integration_id: str | None = None,
     ) -> bool:
         combined_text = combine_messages(events)
         lang = await self._resolve_session_language(
@@ -134,6 +144,7 @@ class ConversationTurnWorker:
                 turn=turn,
                 to_phone=normalized_phone,
                 text=turn.response_text,
+                integration_id=integration_id,
             )
             return True
 
@@ -173,6 +184,7 @@ class ConversationTurnWorker:
                 turn=turn,
                 to_phone=normalized_phone,
                 text=turn.response_text,
+                integration_id=integration_id,
             )
             return True
 
@@ -205,6 +217,7 @@ class ConversationTurnWorker:
             turn=turn,
             to_phone=normalized_phone,
             text=turn.response_text,
+            integration_id=integration_id,
         )
         return True
 
@@ -216,6 +229,7 @@ class ConversationTurnWorker:
         conversation_id: str,
         normalized_phone: str,
         turn: ConversationTurnDocument,
+        integration_id: str | None = None,
     ) -> bool:
         if not combined_text or not combined_text.strip():
             return False
@@ -273,6 +287,7 @@ class ConversationTurnWorker:
             turn=turn,
             to_phone=normalized_phone,
             text=turn.response_text,
+            integration_id=integration_id,
         )
         return True
 
@@ -326,6 +341,8 @@ class ConversationTurnWorker:
             )
             await turn.insert()
 
+            integration_id = await self._integration_id_for_conversation(conversation_id)
+
             if not await self._assistant_gate.is_allowed(buffer_doc.normalized_phone):
                 turn.status = "skipped_disabled"
                 turn.responded_at = datetime.now(UTC)
@@ -366,6 +383,7 @@ class ConversationTurnWorker:
                 conversation_id=conversation_id,
                 normalized_phone=buffer_doc.normalized_phone,
                 turn=turn,
+                integration_id=integration_id,
             ):
                 await self._buffer_service.mark_processed(buffer=reloaded)
                 logger.info(
@@ -381,6 +399,7 @@ class ConversationTurnWorker:
                 conversation_id=conversation_id,
                 normalized_phone=buffer_doc.normalized_phone,
                 turn=turn,
+                integration_id=integration_id,
             ):
                 await self._buffer_service.mark_processed(buffer=reloaded)
                 logger.info(
@@ -410,6 +429,7 @@ class ConversationTurnWorker:
                 turn=turn,
                 to_phone=buffer_doc.normalized_phone,
                 text=response.response,
+                integration_id=integration_id,
             )
 
             await self._buffer_service.mark_processed(buffer=reloaded)

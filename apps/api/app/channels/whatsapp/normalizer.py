@@ -8,8 +8,20 @@ def normalize_phone(phone: str) -> str:
     return f"+{digits}"
 
 
-def build_conversation_id(channel: str, normalized_phone: str) -> str:
-    return f"{channel}:{normalized_phone}"
+def build_conversation_id(
+    channel: str,
+    normalized_phone: str,
+    *,
+    phone_number_id: str | None = None,
+    is_default: bool = True,
+) -> str:
+    # El número "default" (hoy, el único que existe) conserva el formato
+    # histórico para no romper las sesiones activas ya guardadas en Mongo.
+    # Un número adicional conectado vía Coexistence incluye su
+    # phone_number_id para no mezclar conversaciones entre canales.
+    if is_default or not phone_number_id:
+        return f"{channel}:{normalized_phone}"
+    return f"{channel}:{phone_number_id}:{normalized_phone}"
 
 
 # WhatsApp interpreta markdown ligero en el cuerpo del mensaje:

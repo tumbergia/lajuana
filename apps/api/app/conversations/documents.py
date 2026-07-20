@@ -19,6 +19,8 @@ class WhatsAppInboundEventDocument(Document):
     received_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     status: str = "received"
     raw_payload: dict[str, Any] = Field(default_factory=dict)
+    integration_id: str | None = None
+    phone_number_id: str | None = None
 
     class Settings:
         name = "whatsapp_inbound_events"
@@ -64,6 +66,7 @@ class OutboundMessageDocument(Document):
     to_phone: str
     body: str
     provider_message_id: str | None = None
+    integration_id: str | None = None
     status: str = "queued"
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     sent_at: datetime | None = None

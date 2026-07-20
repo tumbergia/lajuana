@@ -27,6 +27,8 @@ class ConversationSessionDocument(Document):
     language_streak: int = 0
     language_streak_lang: str | None = None
     pending_media_proof: dict[str, Any] | None = None
+    integration_id: str | None = None
+    phone_number_id: str | None = None
     version: int = 0
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

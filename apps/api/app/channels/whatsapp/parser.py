@@ -16,6 +16,8 @@ class ParsedMessage:
         caption: str | None = None,
         provider_timestamp: str | None = None,
         raw_payload: dict[str, Any] | None = None,
+        phone_number_id: str | None = None,
+        display_phone_number: str | None = None,
     ) -> None:
         self.wa_message_id = wa_message_id
         self.from_phone = from_phone
@@ -26,6 +28,10 @@ class ParsedMessage:
         self.caption = caption
         self.provider_timestamp = provider_timestamp
         self.raw_payload = raw_payload or {}
+        # Número de negocio (La Juana) que recibió el mensaje — no el
+        # teléfono del cliente. Viene en value.metadata.phone_number_id.
+        self.phone_number_id = phone_number_id
+        self.display_phone_number = display_phone_number
 
 
 def parse_whatsapp_payload(payload: dict[str, Any]) -> list[ParsedMessage]:
@@ -39,10 +45,15 @@ def parse_whatsapp_payload(payload: dict[str, Any]) -> list[ParsedMessage]:
         changes = entry.get("changes") or []
         for change in changes:
             value = change.get("value") or {}
+            metadata = value.get("metadata") or {}
+            phone_number_id = metadata.get("phone_number_id")
+            display_phone_number = metadata.get("display_phone_number")
             raw_messages = value.get("messages") or []
             for raw in raw_messages:
                 parsed = _parse_single_message(raw)
                 if parsed:
+                    parsed.phone_number_id = phone_number_id
+                    parsed.display_phone_number = display_phone_number
                     messages.append(parsed)
 
     return messages

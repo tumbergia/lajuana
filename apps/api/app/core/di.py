@@ -28,6 +28,7 @@ class Container:
     def _init_services(self) -> None:
         """Register all services with their dependencies."""
         # ── Leaf services (no deps on other app services) ──
+        from app.channels.whatsapp.integration_service import WhatsAppIntegrationService
         from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
         from app.conversations.services.conversation_lock_service import (
             ConversationLockService,
@@ -77,7 +78,10 @@ class Container:
         )
         self._services["storage_adapter"] = get_storage_adapter()
         self._services["user_service"] = UserService()
-        self._services["whatsapp_outbound_service"] = WhatsAppOutboundService()
+        self._services["whatsapp_integration_service"] = WhatsAppIntegrationService()
+        self._services["whatsapp_outbound_service"] = WhatsAppOutboundService(
+            integration_service=self._services["whatsapp_integration_service"],
+        )
 
         # ── Services with dependencies ──
         from app.services.auth_service import AuthService
@@ -146,6 +150,7 @@ class Container:
         self._services["whatsapp_ingestion_service"] = WhatsAppIngestionService(
             resolver=self._services["conversation_resolver"],
             buffer_service=self._services["message_buffer_service"],
+            integration_service=self._services["whatsapp_integration_service"],
         )
 
     # ------------------------------------------------------------------
@@ -247,6 +252,10 @@ class Container:
     @property
     def whatsapp_outbound_service(self) -> Any:
         return self._services["whatsapp_outbound_service"]
+
+    @property
+    def whatsapp_integration_service(self) -> Any:
+        return self._services["whatsapp_integration_service"]
 
     @property
     def conversation_lock_service(self) -> Any:

@@ -177,3 +177,7 @@ def get_participant_form_link_service() -> object:
 
 def get_whatsapp_ingestion_service() -> object:
     return Container.get_instance().whatsapp_ingestion_service
+
+
+def get_whatsapp_integration_service() -> object:
+    return Container.get_instance().whatsapp_integration_service

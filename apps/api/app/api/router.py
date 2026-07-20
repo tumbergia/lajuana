@@ -24,6 +24,7 @@ from app.api.endpoints.saddles import router as saddles_router
 from app.api.endpoints.sync import router as sync_router
 from app.api.endpoints.users import router as users_router
 from app.api.endpoints.whatsapp import router as whatsapp_router
+from app.api.endpoints.whatsapp_integrations import router as whatsapp_integrations_router
 from app.core.config import settings
 
 api_router = APIRouter(prefix=f"{settings.api_prefix}/{settings.api_version}")
@@ -51,3 +52,4 @@ api_router.include_router(logs_router)
 api_router.include_router(providers_router)
 api_router.include_router(policies_router)
 api_router.include_router(whatsapp_router)
+api_router.include_router(whatsapp_integrations_router)

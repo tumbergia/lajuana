@@ -42,6 +42,7 @@ from app.documents.sync_change_document import SyncChangeDocument
 from app.documents.sync_operation_receipt_document import SyncOperationReceiptDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.documents.user_document import UserDocument
+from app.documents.whatsapp_integration_document import WhatsAppIntegrationDocument
 
 __all__ = [
     "AssignmentDocument",
@@ -82,6 +83,7 @@ __all__ = [
     "SyncOperationReceiptDocument",
     "UserDocument",
     "WhatsAppInboundEventDocument",
+    "WhatsAppIntegrationDocument",
     "MessageBufferDocument",
     "OutboundMessageDocument",
     "NotificationTemplateDocument",

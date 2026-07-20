@@ -41,6 +41,7 @@ from app.documents import (
     SyncOperationReceiptDocument,
     ToolCallLogDocument,
     UserDocument,
+    WhatsAppIntegrationDocument,
 )
 
 logger = logging.getLogger(__name__)
@@ -160,6 +161,7 @@ async def init_db() -> None:
         NotificationOutboxDocument,
         InAppNotificationDocument,
         FileUploadDocument,
+        WhatsAppIntegrationDocument,
     ]
 
     await init_beanie(database=database, document_models=document_models)
@@ -170,6 +172,15 @@ async def init_db() -> None:
         )
     except PyMongoError:
         logger.warning("[db] Index uq_wa_message_id may already exist — continuing")
+
+    try:
+        await database["whatsapp_integrations"].create_index(
+            "phone_number_id", unique=True, name="uq_whatsapp_integration_phone_number_id"
+        )
+    except PyMongoError:
+        logger.warning(
+            "[db] Index uq_whatsapp_integration_phone_number_id may already exist — continuing"
+        )
 
 
 async def close_db() -> None:

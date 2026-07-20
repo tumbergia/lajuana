@@ -194,6 +194,9 @@ class Permission(StrEnum):
     PARTICIPANT_FORM_LINK_READ = "participant_form_link.read"
     PARTICIPANT_FORM_LINK_REVOKE = "participant_form_link.revoke"
 
+    WHATSAPP_INTEGRATION_READ = "whatsapp_integration.read"
+    WHATSAPP_INTEGRATION_MANAGE = "whatsapp_integration.manage"
+
 
 class NotificationEventType(StrEnum):
     RESERVATION_CREATED = "reservation_created"
