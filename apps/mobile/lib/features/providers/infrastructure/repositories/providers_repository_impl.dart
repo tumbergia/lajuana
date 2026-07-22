@@ -1,34 +1,66 @@
+import 'dart:math';
+
 import 'package:mobile_domain/src/providers/provider_list_item.dart';
 import 'package:mobile_domain/src/providers/providers_repository.dart';
-import 'package:mobile/features/providers/infrastructure/mappers/provider_mapper.dart';
+import 'package:mobile/app/sync/outbox_repository.dart';
+import 'package:mobile/features/providers/infrastructure/local/providers_database.dart';
+import 'package:mobile/features/providers/infrastructure/local/providers_local_data_source.dart';
 import 'package:mobile/features/providers/infrastructure/remote/providers_api_client.dart';
 
+/// Repositorio de proveedores offline-first.
+///
+/// Lecturas: remoto → cache SQLite → fallback local.
+/// Escrituras: local-first + shared outbox.
 class ProvidersRepositoryImpl implements ProvidersRepository {
-  ProvidersRepositoryImpl({required ProvidersApiClient apiClient})
-      : _apiClient = apiClient;
+  ProvidersRepositoryImpl({
+    required ProvidersApiClient apiClient,
+    required OutboxRepository outbox,
+    ProvidersDatabase? database,
+  })  : _apiClient = apiClient,
+        _outbox = outbox,
+        _local = ProvidersLocalDataSource(
+          database: database ?? ProvidersDatabase.instance,
+        ) {
+    _outbox.registerHandler(
+      _entityType,
+      OutboxEntityHandler(
+        onApplied: _onApplied,
+        onFailed: _onFailed,
+      ),
+    );
+  }
+
+  static const String _entityType = 'provider';
 
   final ProvidersApiClient _apiClient;
-  List<ProviderListItem>? _cachedItems;
+  final OutboxRepository _outbox;
+  final ProvidersLocalDataSource _local;
+  final Random _random = Random();
 
   @override
   Future<List<ProviderListItem>> listProviders({
     bool includeDeleted = false,
   }) async {
     try {
-      final items = await _apiClient.listProviders(
-        includeDeleted: includeDeleted,
-      );
-      _cachedItems = items;
-      return items;
+      final items = await _apiClient.listProviders(includeDeleted: true);
+      await _local.upsertAll(items);
     } catch (_) {
-      if (_cachedItems != null) return _cachedItems!;
-      rethrow;
+      // Sin red: servir cache local.
     }
+    return _local.listAll(includeDeleted: includeDeleted);
   }
 
   @override
   Future<ProviderListItem> getProviderById(String providerId) async {
-    return _apiClient.getProviderById(providerId);
+    try {
+      final item = await _apiClient.getProviderById(providerId);
+      await _local.upsert(item);
+      return item;
+    } catch (_) {
+      final cached = await _local.getById(providerId);
+      if (cached == null) rethrow;
+      return cached;
+    }
   }
 
   @override
@@ -47,12 +79,13 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
     String? sourceNotes,
     bool isActive = true,
   }) async {
+    final localId = _nextLocalId();
     final payload = _buildPayload(
       name: name,
-      slug: slugifyProviderName(name),
+      slug: _slugify(name),
       type: type,
       status: status,
-      serviceCategories: serviceCategories,
+      serviceCategories: serviceCategories ?? const [],
       contactName: contactName,
       email: email,
       whatsappPhone: whatsappPhone,
@@ -63,12 +96,30 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
       sourceNotes: sourceNotes,
       isActive: isActive,
     );
-    final item = await _apiClient.createProvider(payload);
-    final cached = _cachedItems;
-    if (cached != null) {
-      _cachedItems = [item, ...cached];
-    }
-    return item;
+
+    final localItem = ProviderListItem(
+      id: localId,
+      name: name,
+      slug: _slugify(name),
+      type: type,
+      status: status,
+      serviceCategories: serviceCategories ?? const [],
+      contactName: contactName,
+      email: email,
+      whatsappPhone: whatsappPhone,
+      locationLabel: locationLabel,
+      isActive: isActive,
+    );
+    await _local.upsert(localItem, syncStatus: 'pending');
+
+    await _outbox.enqueue(
+      entityType: _entityType,
+      operationType: 'create',
+      entityLocalId: localId,
+      payload: payload,
+    );
+
+    return localItem;
   }
 
   @override
@@ -88,64 +139,178 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
     String? sourceNotes,
     bool? isActive,
   }) async {
-    final payload = _buildPayload(
+    final cached = await _local.getById(providerId);
+    if (cached == null) {
+      // Sin copia local: intento en caliente.
+      final payload = _buildPayload(
+        name: name,
+        type: type,
+        status: status,
+        serviceCategories: serviceCategories ?? const [],
+        contactName: contactName,
+        email: email,
+        whatsappPhone: whatsappPhone,
+        locationLabel: locationLabel,
+        capacityNotes: capacityNotes,
+        operationalNotes: operationalNotes,
+        tariffNotes: tariffNotes,
+        sourceNotes: sourceNotes,
+        isActive: isActive,
+      );
+      final item = await _apiClient.updateProvider(providerId, payload);
+      await _local.upsert(item);
+      return item;
+    }
+
+    final merged = _mergeItem(cached,
       name: name,
       type: type,
       status: status,
-      serviceCategories: serviceCategories,
+      serviceCategories: serviceCategories ?? const [],
       contactName: contactName,
       email: email,
       whatsappPhone: whatsappPhone,
       locationLabel: locationLabel,
-      capacityNotes: capacityNotes,
-      operationalNotes: operationalNotes,
-      tariffNotes: tariffNotes,
-      sourceNotes: sourceNotes,
       isActive: isActive,
     );
-    final item = await _apiClient.updateProvider(providerId, payload);
-    final cached = _cachedItems;
-    if (cached != null) {
-      _cachedItems = cached
-          .map((existing) => existing.id == providerId ? item : existing)
-          .toList(growable: false);
-    }
-    return item;
+    await _local.upsert(merged, syncStatus: 'pending');
+
+    await _outbox.enqueue(
+      entityType: _entityType,
+      operationType: 'update',
+      entityLocalId: providerId,
+      entityRemoteId: providerId,
+      payload: _buildPayload(
+        name: name,
+        type: type,
+        status: status,
+        serviceCategories: serviceCategories ?? const [],
+        contactName: contactName,
+        email: email,
+        whatsappPhone: whatsappPhone,
+        locationLabel: locationLabel,
+        capacityNotes: capacityNotes,
+        operationalNotes: operationalNotes,
+        tariffNotes: tariffNotes,
+        sourceNotes: sourceNotes,
+        isActive: isActive,
+      ),
+    );
+
+    return merged;
   }
 
   @override
   Future<void> deactivateProvider(String providerId) async {
-    await _apiClient.deactivateProvider(providerId);
-    final cached = _cachedItems;
-    if (cached != null) {
-      _cachedItems = cached
-          .map(
-            (existing) => existing.id == providerId
-                ? ProviderListItem(
-                    id: existing.id,
-                    name: existing.name,
-                    slug: existing.slug,
-                    type: existing.type,
-                    status: 'inactive',
-                    serviceCategories: existing.serviceCategories,
-                    contactName: existing.contactName,
-                    email: existing.email,
-                    whatsappPhone: existing.whatsappPhone,
-                    locationLabel: existing.locationLabel,
-                    isActive: false,
-                  )
-                : existing,
-          )
-          .toList(growable: false);
+    final cached = await _local.getById(providerId);
+    if (cached == null) {
+      await _apiClient.deactivateProvider(providerId);
+      return;
     }
+    final updated = ProviderListItem(
+      id: cached.id,
+      name: cached.name,
+      slug: cached.slug,
+      type: cached.type,
+      status: 'inactive',
+      serviceCategories: cached.serviceCategories,
+      contactName: cached.contactName,
+      email: cached.email,
+      whatsappPhone: cached.whatsappPhone,
+      locationLabel: cached.locationLabel,
+      isActive: false,
+    );
+    await _local.upsert(updated, syncStatus: 'pending');
+
+    await _outbox.enqueue(
+      entityType: _entityType,
+      operationType: 'deactivate',
+      entityLocalId: providerId,
+      entityRemoteId: providerId,
+      payload: {'status': 'inactive', 'is_active': false},
+    );
   }
 
   @override
   Future<ProviderListItem> reactivateProvider(String providerId) async {
-    return updateProvider(
-      providerId: providerId,
+    final cached = await _local.getById(providerId);
+    if (cached == null) {
+      return updateProvider(
+        providerId: providerId,
+        status: 'active',
+        isActive: true,
+      );
+    }
+    final updated = ProviderListItem(
+      id: cached.id,
+      name: cached.name,
+      slug: cached.slug,
+      type: cached.type,
       status: 'active',
+      serviceCategories: cached.serviceCategories,
+      contactName: cached.contactName,
+      email: cached.email,
+      whatsappPhone: cached.whatsappPhone,
+      locationLabel: cached.locationLabel,
       isActive: true,
+    );
+    await _local.upsert(updated, syncStatus: 'pending');
+
+    await _outbox.enqueue(
+      entityType: _entityType,
+      operationType: 'reactivate',
+      entityLocalId: providerId,
+      entityRemoteId: providerId,
+      payload: {'status': 'active', 'is_active': true},
+    );
+
+    return updated;
+  }
+
+  // ── Outbox handlers ──
+
+  Future<void> _onApplied(OutboxApplied applied) async {
+    await _local.markSynced(
+      applied.entityLocalId,
+      remoteId: applied.entityRemoteId,
+      version: applied.version,
+    );
+  }
+
+  Future<void> _onFailed(OutboxFailed failed) async {
+    await _local.markFailed(
+      failed.entityLocalId,
+      failed.status,
+      error: failed.errorMessage,
+    );
+  }
+
+  // ── Helpers ──
+
+  ProviderListItem _mergeItem(
+    ProviderListItem current, {
+    String? name,
+    String? type,
+    String? status,
+    List<String>? serviceCategories,
+    String? contactName,
+    String? email,
+    String? whatsappPhone,
+    String? locationLabel,
+    bool? isActive,
+  }) {
+    return ProviderListItem(
+      id: current.id,
+      name: name ?? current.name,
+      slug: current.slug,
+      type: type ?? current.type,
+      status: status ?? current.status,
+      serviceCategories: serviceCategories ?? current.serviceCategories,
+      contactName: contactName ?? current.contactName,
+      email: email ?? current.email,
+      whatsappPhone: whatsappPhone ?? current.whatsappPhone,
+      locationLabel: locationLabel ?? current.locationLabel,
+      isActive: isActive ?? current.isActive,
     );
   }
 
@@ -185,5 +350,21 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
     if (sourceNotes != null) payload['source_notes'] = sourceNotes;
     if (isActive != null) payload['is_active'] = isActive;
     return payload;
+  }
+
+  String _slugify(String name) {
+    return name
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s-]'), '')
+        .replaceAll(RegExp(r'\s+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .trim()
+        .replaceAll(RegExp(r'^-|-$'), '');
+  }
+
+  String _nextLocalId() {
+    final stamp = DateTime.now().toUtc().microsecondsSinceEpoch;
+    final suffix = _random.nextInt(999999).toString().padLeft(6, '0');
+    return 'local-provider-$stamp-$suffix';
   }
 }

@@ -248,6 +248,68 @@ class TestUserServiceList:
         asyncio.run(run())
 
 
+class TestUserServiceResolveReference:
+    def test_resolve_user_reference_unique_token_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake_users = [
+            _fake_user_doc(
+                id="660000000000000000000055",
+                email="eduardo@example.com",
+                full_name="Eduardo Perez",
+            ),
+            _fake_user_doc(
+                id="660000000000000000000099",
+                email="maria@example.com",
+                full_name="Maria Lopez",
+            ),
+        ]
+
+        def _fake_find_all() -> FakeFindQuery:
+            return FakeFindQuery(fake_users)
+
+        monkeypatch.setattr("app.services.user_service.UserDocument.find_all", _fake_find_all)
+        service = UserService()
+
+        async def run() -> None:
+            result = await service.resolve_user_reference("eduardo")
+            assert result["status"] == "resolved"
+            assert result["user_id"] == "660000000000000000000055"
+
+        asyncio.run(run())
+
+    def test_resolve_user_reference_ambiguous_token_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake_users = [
+            _fake_user_doc(
+                id="660000000000000000000055",
+                email="eduardo@example.com",
+                full_name="Eduardo Perez",
+            ),
+            _fake_user_doc(
+                id="660000000000000000000056",
+                email="eduardo.gomez@example.com",
+                full_name="Eduardo Gomez",
+            ),
+        ]
+
+        def _fake_find_all() -> FakeFindQuery:
+            return FakeFindQuery(fake_users)
+
+        monkeypatch.setattr("app.services.user_service.UserDocument.find_all", _fake_find_all)
+        service = UserService()
+
+        async def run() -> None:
+            result = await service.resolve_user_reference("eduardo")
+            assert result["status"] == "ambiguous"
+            assert len(result["matches"]) == 2
+
+        asyncio.run(run())
+
+
 class TestUserServiceUpdate:
     """UserService.update_user."""
 

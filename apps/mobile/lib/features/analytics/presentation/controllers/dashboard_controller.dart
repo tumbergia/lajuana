@@ -116,6 +116,9 @@ class DashboardController extends ChangeNotifier {
   AnalyticsFreshness? _freshness;
   AnalyticsPeriod? _period;
   bool _fromCache = false;
+  /// True only when the fallback came from a real connectivity failure
+  /// (timeout / no socket), not from HTTP/server errors while online.
+  bool _isOffline = false;
   bool _refreshing = false;
   /// Full-screen "Analizando…" until the in-flight load settles.
   bool _blockingUi = false;
@@ -124,7 +127,29 @@ class DashboardController extends ChangeNotifier {
   /// Ignores overlapping load() completions (range spam / pull-to-refresh).
   int _loadGeneration = 0;
 
+  /// When true, subsequent loads default to the full catalog (Nivel 2 open).
+  bool _preferAllModules = false;
+
   final Map<String, ModuleSlotNotifier> _slots = {};
+
+  static const _canonicalModuleIds = <String>[
+    'action_center',
+    'reservation_trend',
+    'reservation_status',
+    'reservation_origins',
+    'confirmed_value_trend',
+    'payment_status',
+    'top_experiences',
+    'occupancy',
+    'top_countries',
+    'participant_readiness',
+    'equine_availability',
+    'equine_workload',
+    'equine_care_alerts',
+  ];
+
+  static bool _isConnectivityFailure(String code) =>
+      code == 'network.unavailable' || code == 'network.timeout';
 
   DashboardLoadState get state => _state;
   String? get error => _error;
@@ -137,6 +162,7 @@ class DashboardController extends ChangeNotifier {
   AnalyticsFreshness? get freshness => _freshness;
   AnalyticsPeriod? get period => _period;
   bool get fromCache => _fromCache;
+  bool get isOffline => _isOffline;
   bool get refreshing => _refreshing;
   bool get blockingUi => _blockingUi;
   List<CatalogModule> get catalog => _catalog;
@@ -177,7 +203,7 @@ class DashboardController extends ChangeNotifier {
     final order = _preferences.moduleOrder.isNotEmpty
         ? _preferences.moduleOrder
         : _preferences.selectedModuleIds;
-    return order.take(AnalyticsPreferences.maxModules).toList(growable: false);
+    return List.unmodifiable(order);
   }
 
   /// Every non-blocked catalog module (for “Analítica completa”).
@@ -192,8 +218,16 @@ class DashboardController extends ChangeNotifier {
     for (final id in homeModuleIds) {
       add(id);
     }
-    for (final m in _catalog) {
-      if (!m.blocked) add(m.id);
+    if (_catalog.isNotEmpty) {
+      for (final m in _catalog) {
+        if (!m.blocked) add(m.id);
+      }
+    } else {
+      // Catalog fetch failed — fall back to the known module set so Nivel 2
+      // still requests every indicator (server filters by role).
+      for (final id in _canonicalModuleIds) {
+        add(id);
+      }
     }
     return List.unmodifiable(ids);
   }
@@ -228,13 +262,37 @@ class DashboardController extends ChangeNotifier {
         ],
       );
     }
+    await _ensureCatalog();
+    notifyListeners();
+    await load(showCachedFirst: true, silent: false);
+  }
+
+  Future<void> _ensureCatalog() async {
+    if (_catalog.isNotEmpty) return;
     try {
       _catalog = await _repository.getCatalog();
     } catch (_) {
+      // Leave empty; allModuleIds falls back to the canonical list.
       _catalog = const [];
     }
-    notifyListeners();
-    await load(showCachedFirst: true, silent: false);
+    if (_catalog.isEmpty) {
+      // One soft retry — catalog is required for a complete Nivel 2 list.
+      try {
+        _catalog = await _repository.getCatalog();
+      } catch (_) {
+        _catalog = const [];
+      }
+    }
+  }
+
+  /// Marks Nivel 2 as the preferred scope so concurrent home reloads do not
+  /// shrink the module set while the full dashboard is open.
+  void enterFullAnalytics() {
+    _preferAllModules = true;
+  }
+
+  void leaveFullAnalytics() {
+    _preferAllModules = false;
   }
 
   /// [silent] = keep charts visible (pull-to-refresh). Non-silent clears slots
@@ -248,7 +306,12 @@ class DashboardController extends ChangeNotifier {
     bool allModules = false,
   }) async {
     final generation = ++_loadGeneration;
-    final moduleIds = allModules ? allModuleIds : _activeModuleIds;
+    final useAll = allModules || _preferAllModules;
+    if (useAll) {
+      await _ensureCatalog();
+      if (!_isCurrent(generation)) return;
+    }
+    final moduleIds = useAll ? allModuleIds : _activeModuleIds;
     final blocking = !silent;
 
     if (blocking) {
@@ -282,6 +345,7 @@ class DashboardController extends ChangeNotifier {
         _applySnapshot(fallbackCache, expectedIds: moduleIds);
         _state = DashboardLoadState.loaded;
         _fromCache = false;
+        _isOffline = false;
         _error = null;
         notifyListeners();
       }
@@ -307,20 +371,26 @@ class DashboardController extends ChangeNotifier {
           ? DashboardLoadState.offlineFromCache
           : DashboardLoadState.loaded;
       _fromCache = snapshot.fromCache;
+      // Live success clears offline; cache-returned snapshot without a thrown
+      // failure is treated as stale data, not necessarily offline.
+      _isOffline = false;
       _error = null;
     } on AnalyticsApiFailure catch (e) {
       if (!_isCurrent(generation)) return;
 
+      final offline = _isConnectivityFailure(e.code);
       if (fallbackCache != null) {
         _applySnapshot(fallbackCache, expectedIds: moduleIds);
         _state = DashboardLoadState.offlineFromCache;
         _fromCache = true;
+        _isOffline = offline;
         _error = e.message;
       } else {
         final hadData = moduleIds.any((id) => slotFor(id).hasData);
         if (hadData) {
           _state = DashboardLoadState.offlineFromCache;
           _fromCache = true;
+          _isOffline = offline;
           _error = e.message;
           for (final id in moduleIds) {
             slotFor(id).setError(e.message, keepData: true);
@@ -328,6 +398,7 @@ class DashboardController extends ChangeNotifier {
         } else {
           _state = DashboardLoadState.error;
           _fromCache = false;
+          _isOffline = offline;
           _error = e.message;
           for (final id in moduleIds) {
             slotFor(id).setError(
@@ -399,13 +470,11 @@ class DashboardController extends ChangeNotifier {
     final cleaned = prefs.copyWith(
       selectedModuleIds: prefs.selectedModuleIds
           .where((id) => id != 'action_center')
-          .take(AnalyticsPreferences.maxModules)
           .toList(growable: false),
       moduleOrder: (prefs.moduleOrder.isEmpty
               ? prefs.selectedModuleIds
               : prefs.moduleOrder)
           .where((id) => id != 'action_center')
-          .take(AnalyticsPreferences.maxModules)
           .toList(growable: false),
     );
     _preferences = await _repository.savePreferences(cleaned);

@@ -24,6 +24,14 @@ def _get_service() -> ExperienceService:
     return Container.get_instance().experience_service
 
 
+def _format_experience_matches(matches: list[dict[str, Any]]) -> str:
+    return ", ".join(
+        str(item.get("label") or item.get("name") or item.get("experience_id"))
+        for item in matches[:5]
+        if isinstance(item, dict)
+    )
+
+
 async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
     trace_id = kwargs.get("trace_id") or str(uuid4())
     conversation_turn_id = kwargs.get("conversation_turn_id")
@@ -236,6 +244,42 @@ async def admin_deactivate_experience(**kwargs: Any) -> dict[str, Any]:
 
     try:
         experience_id = kwargs.get("experience_id")
+        if not experience_id and kwargs.get("q"):
+            resolution = await _get_service().resolve_experience_reference(str(kwargs["q"]))
+            if resolution.get("status") == "resolved":
+                experience_id = str(resolution.get("experience_id"))
+            elif resolution.get("matches"):
+                matches = resolution.get("matches", [])
+                message = (
+                    f"Encontré estas coincidencias para experiencia '{resolution.get('reference', kwargs['q'])}': "
+                    f"{_format_experience_matches(matches)}. Indícame el experience_id exacto o copia una de estas opciones."
+                )
+                output = AdminDeactivateExperienceOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    blocking_reasons=[
+                        ToolBlockingReason(
+                            code="experience.reference_ambiguous",
+                            message=message,
+                            details={"matches": matches},
+                        )
+                    ],
+                )
+                return output.model_dump(mode="json")
+            else:
+                message = (
+                    f"No encontré coincidencias para experiencia '{resolution.get('reference', kwargs['q'])}'. "
+                    "Indícame el experience_id exacto o el nombre/slug exacto."
+                )
+                output = AdminDeactivateExperienceOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    blocking_reasons=[
+                        ToolBlockingReason(code="experience.reference_not_found", message=message)
+                    ],
+                )
+                return output.model_dump(mode="json")
+
         if not experience_id:
             output = AdminDeactivateExperienceOutput(
                 deactivated=False,

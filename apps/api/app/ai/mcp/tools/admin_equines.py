@@ -32,6 +32,14 @@ def _safe_str(value: Any) -> str | None:
     return str(value)
 
 
+def _format_equine_matches(matches: list[dict[str, Any]]) -> str:
+    return ", ".join(
+        str(item.get("label") or item.get("name") or item.get("equine_id"))
+        for item in matches[:5]
+        if isinstance(item, dict)
+    )
+
+
 async def admin_list_equines(
     only_available: bool = False,
     trace_id: str | None = None,
@@ -291,7 +299,7 @@ async def admin_update_equine(
 
 
 async def admin_deactivate_equine(
-    equine_id: str,
+    equine_id: str | None = None,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
     **kwargs: Any,
@@ -302,6 +310,55 @@ async def admin_deactivate_equine(
     output: AdminDeactivateEquineOutput | None = None
 
     try:
+        if not equine_id and kwargs.get("q"):
+            resolution = await _get_service().resolve_equine_reference(str(kwargs["q"]))
+            if resolution.get("status") == "resolved":
+                equine_id = str(resolution.get("equine_id"))
+            elif resolution.get("matches"):
+                matches = resolution.get("matches", [])
+                message = (
+                    f"Encontré estas coincidencias para equino '{resolution.get('reference', kwargs['q'])}': "
+                    f"{_format_equine_matches(matches)}. Indícame el equine_id exacto o copia una de estas opciones."
+                )
+                output = AdminDeactivateEquineOutput(
+                    trace_id=trace_id,
+                    deactivated=False,
+                    blocking_reasons=[
+                        ToolBlockingReason(
+                            code="equine.reference_ambiguous",
+                            message=message,
+                            details={"matches": matches},
+                        )
+                    ],
+                )
+                return output.model_dump(mode="json")
+            else:
+                message = (
+                    f"No encontré coincidencias para equino '{resolution.get('reference', kwargs['q'])}'. "
+                    "Indícame el equine_id exacto o el nombre exacto."
+                )
+                output = AdminDeactivateEquineOutput(
+                    trace_id=trace_id,
+                    deactivated=False,
+                    blocking_reasons=[
+                        ToolBlockingReason(code="equine.reference_not_found", message=message)
+                    ],
+                )
+                return output.model_dump(mode="json")
+
+        if not equine_id:
+            output = AdminDeactivateEquineOutput(
+                trace_id=trace_id,
+                deactivated=False,
+                blocking_reasons=[
+                    ToolBlockingReason(
+                        code="equine.id_required",
+                        message="El campo equine_id es obligatorio.",
+                    )
+                ],
+            )
+            return output.model_dump(mode="json")
+
         doc = await _get_service().deactivate(equine_id)
 
         output = AdminDeactivateEquineOutput(
@@ -341,7 +398,7 @@ async def admin_deactivate_equine(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_deactivate_equine",
-            input={"equine_id": equine_id},
+            input={"equine_id": equine_id, "q": kwargs.get("q")},
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,

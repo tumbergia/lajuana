@@ -53,6 +53,82 @@ class TestProviderService:
 
         asyncio.run(run())
 
+    def test_resolve_provider_reference_unique_name_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from app.services.provider_service import ProviderService
+
+        fake_list = [
+            SimpleNamespace(
+                id="660000000000000000000201",
+                name="Patio Central",
+                slug="patio-central",
+                contact_name="Ana",
+                location_label="Filandia",
+                is_active=True,
+            ),
+            SimpleNamespace(
+                id="660000000000000000000202",
+                name="Mirador",
+                slug="mirador",
+                contact_name="Luis",
+                location_label="Salento",
+                is_active=True,
+            ),
+        ]
+
+        async def fake_list_fn(*args: object, **kwargs: object) -> list[SimpleNamespace]:
+            return fake_list
+
+        monkeypatch.setattr(ProviderService, "list", fake_list_fn)
+        service = ProviderService()
+
+        async def run() -> None:
+            result = await service.resolve_provider_reference("patio central")
+            assert result["status"] == "resolved"
+            assert result["provider_id"] == "660000000000000000000201"
+
+        asyncio.run(run())
+
+    def test_resolve_provider_reference_ambiguous_prefix_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from app.services.provider_service import ProviderService
+
+        fake_list = [
+            SimpleNamespace(
+                id="660000000000000000000201",
+                name="Patio Central",
+                slug="patio-central",
+                contact_name="Ana",
+                location_label="Filandia",
+                is_active=True,
+            ),
+            SimpleNamespace(
+                id="660000000000000000000202",
+                name="Patio Centro",
+                slug="patio-centro",
+                contact_name="Luis",
+                location_label="Salento",
+                is_active=True,
+            ),
+        ]
+
+        async def fake_list_fn(*args: object, **kwargs: object) -> list[SimpleNamespace]:
+            return fake_list
+
+        monkeypatch.setattr(ProviderService, "list", fake_list_fn)
+        service = ProviderService()
+
+        async def run() -> None:
+            result = await service.resolve_provider_reference("patio")
+            assert result["status"] == "ambiguous"
+            assert len(result["matches"]) == 2
+
+        asyncio.run(run())
+
     def test_delete_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Deleting a non-existent provider → ApiError 404."""
         from app.services.provider_service import ProviderService

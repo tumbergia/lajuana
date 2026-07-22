@@ -57,6 +57,7 @@ from app.schemas.analytics_v2 import (
     format_currency_cop,
     freshness_label,
 )
+from app.services.analytics_analysis import build_rich_analysis
 from app.services.analytics_catalog_service import AnalyticsCatalogService
 from app.services.analytics_country_normalizer import AnalyticsCountryNormalizer
 
@@ -309,6 +310,11 @@ class AnalyticsQueryService:
                 )
             else:
                 modules.append(result)
+
+        modules = [
+            m.model_copy(update={"analysis": build_rich_analysis(m)})
+            for m in modules
+        ]
 
         response = DashboardResponse(
             modules=modules,
@@ -587,7 +593,7 @@ class AnalyticsQueryService:
             id="reservation_trend",
             category=ModuleCategory.RESERVATIONS,
             title="Tendencia de reservas",
-            description="Reservas nuevas registradas en el periodo.",
+            description="Cómo evolucionan las reservas nuevas en el periodo.",
             visualization=VisualizationType.LINE,
             period=period,
             primary_value=PrimaryValue(
@@ -647,7 +653,7 @@ class AnalyticsQueryService:
             id="reservation_status",
             category=ModuleCategory.RESERVATIONS,
             title="Estado de las reservas",
-            description="Distribución por estado en el periodo (no es una tasa de conversión).",
+            description="Distribución de reservas por estado en el periodo.",
             visualization=VisualizationType.DONUT,
             period=period,
             primary_value=PrimaryValue(
@@ -898,7 +904,7 @@ class AnalyticsQueryService:
             id="payment_status",
             category=ModuleCategory.MONEY,
             title="Comprobantes de pago",
-            description="Estado de los comprobantes. No incluye montos cobrados.",
+            description="Estado de los comprobantes recibidos.",
             visualization=VisualizationType.DONUT,
             period=period,
             primary_value=PrimaryValue(
@@ -984,7 +990,7 @@ class AnalyticsQueryService:
             id="top_experiences",
             category=ModuleCategory.EXPERIENCES,
             title="Experiencias más reservadas",
-            description="Reservas confirmadas o completadas en el periodo.",
+            description="Experiencias con más reservas confirmadas o completadas.",
             visualization=VisualizationType.RANKING,
             period=period,
             primary_value=PrimaryValue(
@@ -1100,10 +1106,7 @@ class AnalyticsQueryService:
             id="occupancy",
             category=ModuleCategory.OPERATIONS,
             title="Ocupación de próximas salidas",
-            description=(
-                "Participantes confirmados frente al cupo de la experiencia. "
-                "No usa capacidad de un schedule (no existe)."
-            ),
+            description="Participantes confirmados frente al cupo de cada experiencia.",
             visualization=VisualizationType.PROGRESS,
             period=Period(
                 start=today,
@@ -1148,10 +1151,7 @@ class AnalyticsQueryService:
                 id="top_countries",
                 category=ModuleCategory.PARTICIPANTS,
                 title="Países de los visitantes",
-                description=(
-                    "Países de residencia de participantes en reservas "
-                    "confirmadas o completadas del periodo."
-                ),
+                description="Países de residencia de los participantes confirmados.",
                 visualization=VisualizationType.RANKING,
                 period=period,
                 primary_value=PrimaryValue(
@@ -1262,10 +1262,7 @@ class AnalyticsQueryService:
             id="top_countries",
             category=ModuleCategory.PARTICIPANTS,
             title="Países de los visitantes",
-            description=(
-                "Países de residencia de participantes en reservas "
-                "confirmadas o completadas del periodo."
-            ),
+            description="Países de residencia de los participantes confirmados.",
             visualization=VisualizationType.RANKING,
             period=period,
             primary_value=PrimaryValue(
@@ -1343,7 +1340,7 @@ class AnalyticsQueryService:
             id="participant_readiness",
             category=ModuleCategory.PARTICIPANTS,
             title="Preparación de participantes",
-            description="Participantes esperados menos registros completos en salidas próximas.",
+            description="Participantes pendientes de registrar en salidas próximas confirmadas.",
             visualization=VisualizationType.PROGRESS,
             period=Period(
                 start=today,
@@ -1420,7 +1417,7 @@ class AnalyticsQueryService:
             id="equine_availability",
             category=ModuleCategory.EQUINES,
             title="Disponibilidad equina",
-            description="Estado operacional actual de los equinos.",
+            description="Cuántas mulas y equinos están disponibles para asignar.",
             visualization=VisualizationType.DONUT,
             period=period,
             primary_value=PrimaryValue(
@@ -1525,10 +1522,7 @@ class AnalyticsQueryService:
             id="equine_workload",
             category=ModuleCategory.EQUINES,
             title="Carga de trabajo equina",
-            description=(
-                "Asignaciones a reservas confirmadas o completadas en el periodo "
-                "(incluye salidas próximas si el rango llega hasta hoy)."
-            ),
+            description="Distribución de la carga entre equinos en el periodo.",
             visualization=VisualizationType.RANKING,
             period=period,
             primary_value=PrimaryValue(
@@ -1628,7 +1622,7 @@ class AnalyticsQueryService:
             id="equine_care_alerts",
             category=ModuleCategory.EQUINES,
             title="Alertas de cuidados",
-            description="Cuidados vencidos, próximos y equinos lesionados.",
+            description="Cuidados vencidos o próximos y alertas de bienestar.",
             visualization=VisualizationType.ACTION_LIST,
             period=period,
             primary_value=PrimaryValue(

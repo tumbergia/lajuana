@@ -163,6 +163,7 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     baseUrl: apiBaseUrl,
     tokenStorage: tokenStorage,
     refreshSession: refreshSession,
+    outbox: outbox,
   );
 
   final assignmentsModule = AssignmentsModule.create(
@@ -193,6 +194,7 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
   final equineEventRepository = EquineEventRepositoryImpl(
     apiClient: equinesApiClient,
     database: equinesDatabase,
+    outbox: outbox,
   );
 
   final voiceAssistantModule = VoiceAssistantModule.create(
@@ -213,6 +215,7 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     baseUrl: apiBaseUrl,
     tokenStorage: tokenStorage,
     refreshSession: refreshSession,
+    outbox: outbox,
   );
 
   return AppDependencies(

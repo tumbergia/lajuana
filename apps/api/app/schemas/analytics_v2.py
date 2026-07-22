@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 
 
 ANALYTICS_SCHEMA_VERSION = 2
-MAX_HOME_MODULES = 4
 
 
 class VisualizationType(StrEnum):
@@ -156,6 +155,7 @@ class AnalyticsModule(BaseModel):
     breakdown: list[BreakdownItem] = Field(default_factory=list)
     status: ModuleStatus = ModuleStatus.OK
     insight_text: str | None = None
+    analysis: list[str] = Field(default_factory=list)
     action: ModuleAction | None = None
     generated_at: datetime
     freshness: Freshness
@@ -210,7 +210,7 @@ class DashboardResponse(BaseModel):
 
 class AnalyticsPreferencesSchema(BaseModel):
     schema_version: int = ANALYTICS_SCHEMA_VERSION
-    selected_module_ids: list[str] = Field(default_factory=list, max_length=MAX_HOME_MODULES)
+    selected_module_ids: list[str] = Field(default_factory=list)
     module_order: list[str] = Field(default_factory=list)
     default_range: DateRangePreset = DateRangePreset.LAST_30_DAYS
     updated_at: datetime | None = None

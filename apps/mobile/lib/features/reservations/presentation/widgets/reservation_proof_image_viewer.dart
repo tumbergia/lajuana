@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:pdfrx/pdfrx.dart';
 
 import 'package:mobile_ui/src/widgets/app_toast.dart';
 
@@ -15,6 +16,7 @@ import 'package:mobile/features/reservations/presentation/helpers/reservation_st
 ///
 /// Downloads the file via streaming (or uses cached bytes) and renders it:
 /// - images (PNG/JPEG): zoomable + pannable via [InteractiveViewer]
+/// - PDFs: in-app preview via [PdfViewer]
 /// - other types: shows a message
 /// - errors: shows retry button
 class ProofImageViewer extends StatefulWidget {
@@ -89,6 +91,13 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
     return ct.contains('image/png') ||
         ct.contains('image/jpeg') ||
         ct.contains('image/jpg');
+  }
+
+  bool get _isPdf {
+    final ct = widget.proof.contentType?.toLowerCase() ?? '';
+    if (ct.contains('application/pdf') || ct.contains('pdf')) return true;
+    final name = widget.proof.filename?.toLowerCase() ?? '';
+    return name.endsWith('.pdf');
   }
 
   Future<void> _saveToDevice(Uint8List bytes) async {
@@ -195,7 +204,18 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
       );
     }
 
-    // Non-image types
+    if (_isPdf && _bytes != null) {
+      return PdfViewer.data(
+        _bytes!,
+        sourceName: widget.proof.filename ??
+            'proof-${widget.proof.id}.pdf',
+        params: const PdfViewerParams(
+          margin: 8,
+        ),
+      );
+    }
+
+    // Non-previewable types
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),

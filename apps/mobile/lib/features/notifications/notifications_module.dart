@@ -1,3 +1,4 @@
+import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/features/auth/infrastructure/token_storage.dart';
 import 'package:mobile/features/notifications/domain/notifications_repository.dart';
 import 'package:mobile/features/notifications/infrastructure/notifications_api_client.dart';
@@ -16,6 +17,7 @@ class NotificationsModule {
     required String baseUrl,
     required TokenStorage tokenStorage,
     required Future<bool> Function() refreshSession,
+    required OutboxRepository outbox,
   }) {
     final apiClient = NotificationsApiClient(
       baseUrl: baseUrl,
@@ -25,7 +27,10 @@ class NotificationsModule {
       },
       refreshSession: refreshSession,
     );
-    final repository = NotificationsRepositoryImpl(apiClient: apiClient);
+    final repository = NotificationsRepositoryImpl(
+      apiClient: apiClient,
+      outbox: outbox,
+    );
     final controller = NotificationsController(repository: repository);
     return NotificationsModule(
       repository: repository,

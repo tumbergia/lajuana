@@ -39,6 +39,22 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "es": "La acción {tool_name} está lista y solo necesita tu confirmación. Responde 'sí' para ejecutarla o 'no' para cancelarla.",
         "en": "The action {tool_name} is ready and only needs your confirmation. Reply 'yes' to run it or 'no' to cancel.",
     },
+    "admin_user_not_found": {
+        "es": "No encontré un usuario que coincida con '{reference}'. Indícame el correo o el user_id exacto.",
+        "en": "I couldn't find a user matching '{reference}'. Please tell me the exact email or user_id.",
+    },
+    "admin_user_ambiguous": {
+        "es": "Encontré varios usuarios para '{reference}': {matches}. Indícame el correo o el user_id exacto.",
+        "en": "I found multiple users for '{reference}': {matches}. Please tell me the exact email or user_id.",
+    },
+    "admin_entity_not_found": {
+        "es": "No encontré coincidencias para {entity} '{reference}'. Indícame el {id_field} exacto o el {exact_hint} exacto.",
+        "en": "I couldn't find a match for {entity} '{reference}'. Please tell me the exact {id_field} or exact {exact_hint}.",
+    },
+    "admin_entity_ambiguous": {
+        "es": "Encontré estas coincidencias para {entity} '{reference}': {matches}. Indícame el {id_field} exacto o copia una de estas opciones.",
+        "en": "I found these matches for {entity} '{reference}': {matches}. Please tell me the exact {id_field} or copy one of these options.",
+    },
     "no_alternative_dates": {
         "es": "Lo siento, no encontré más fechas disponibles para esta experiencia. Un asesor humano podrá revisar opciones alternativas y ayudarte con lo que necesites. Te transfiero ahora.",
         "en": "Sorry, I couldn't find any more available dates for this experience. A human advisor can review alternative options and help you with what you need. I'll transfer you now.",

@@ -164,6 +164,7 @@ Widget _emptyCard(AnalyticsModule module, {required bool refreshing}) {
     builder: (context) {
       return InsightCardShell(
         title: module.title,
+        subtitle: module.description,
         periodLabel: module.period.dateRangeLabel,
         insightText: module.emptyMessage ?? module.insightText,
         refreshing: refreshing,
@@ -227,6 +228,7 @@ class KpiInsightCard extends StatelessWidget {
         children: [
           _TitleRow(
             title: module.title,
+            subtitle: module.description,
             period: module.period.label,
             refreshing: refreshing,
             onInfo: () => showIndicatorDetailSheet(context, module: module),
@@ -1052,6 +1054,7 @@ class _CountryRankingCardState extends State<CountryRankingCard> {
     if (module.isEmpty || module.ranking.isEmpty) {
       return InsightCardShell(
         title: module.title,
+        subtitle: module.description,
         periodLabel: module.period.dateRangeLabel,
         insightText: module.emptyMessage ?? module.insightText,
         refreshing: refreshing,
@@ -1333,6 +1336,7 @@ class ActionCenterCard extends StatelessWidget {
     if (module.isEmpty || module.breakdown.isEmpty) {
       return InsightCardShell(
         title: module.title,
+        subtitle: module.description,
         periodLabel: module.period.dateRangeLabel,
         insightText: module.emptyMessage ?? 'No hay pendientes críticos.',
         accentColor: tokens.success,
@@ -1350,6 +1354,7 @@ class ActionCenterCard extends StatelessWidget {
     final insight = module.insightText?.trim();
     return InsightCardShell(
       title: module.title,
+      subtitle: module.description,
       periodLabel: '',
       accentColor: tokens.warning,
       refreshing: refreshing,
@@ -1664,18 +1669,22 @@ class _TitleRow extends StatelessWidget {
   const _TitleRow({
     required this.title,
     required this.period,
+    this.subtitle,
     this.refreshing = false,
     this.onInfo,
   });
 
   final String title;
   final String period;
+  final String? subtitle;
   final bool refreshing;
   final VoidCallback? onInfo;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final tokens = Theme.of(context).appTokens;
+    final subtitleText = subtitle?.trim() ?? '';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1689,6 +1698,16 @@ class _TitleRow extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
               ),
+              if (subtitleText.isNotEmpty) ...[
+                SizedBox(height: tokens.spaceXs),
+                Text(
+                  subtitleText,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.35,
+                      ),
+                ),
+              ],
               Text(
                 period,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(

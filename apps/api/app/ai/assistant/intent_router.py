@@ -83,6 +83,31 @@ _ADMIN_REJECT_PAYMENT = [
     r"\b(rechaza(r|me)?|rechazar)\b.*\b(pago|comprobante)\b",
 ]
 
+_ADMIN_DEACTIVATE_USER = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(usuario)\b",
+    r"\b(usuario)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
+_ADMIN_DEACTIVATE_PROVIDER = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(proveedor)\b",
+    r"\b(proveedor)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
+_ADMIN_DEACTIVATE_EQUINE = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(equino|mula)\b",
+    r"\b(equino|mula)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
+_ADMIN_DEACTIVATE_SADDLE = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(silla|montura)\b",
+    r"\b(silla|montura)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
+_ADMIN_DEACTIVATE_EXPERIENCE = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(experiencia)\b",
+    r"\b(experiencia)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
 _ADMIN_SALES_REPORT = [
     r"\b(reporte|resumen)\b.*\b(ventas?)\b",
     r"\b(ventas?)\b.*\b(reporte|resumen)\b",
@@ -165,6 +190,25 @@ def _extract_object_id(text: str, field_name: str) -> str | None:
     if match:
         return match.group(1)
     return None
+
+
+def _extract_admin_user_reference(text: str) -> str | None:
+    return _extract_admin_entity_reference(text, ["usuario"])
+
+
+def _extract_admin_entity_reference(text: str, entity_terms: list[str]) -> str | None:
+    cleaned = text.strip()
+    cleaned = re.sub(
+        r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+        " ",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    for entity_term in entity_terms:
+        cleaned = re.sub(rf"\b{re.escape(entity_term)}s?\b", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\b(el|la|al|a|de|del|por favor)\b", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,.!?:;\n\r\t")
+    return cleaned or None
 
 
 def _is_admin_context(channel: str | None, msg_lower: str) -> bool:
@@ -346,6 +390,81 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
             arguments=ToolArgs(),
             user_goal="El admin quiere rechazar un comprobante.",
             audit_summary="Intent admin: rechazar comprobante.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_USER):
+        user_id = _extract_object_id(msg_lower, "user_id")
+        user_reference = None if user_id else _extract_admin_user_reference(msg_lower)
+        plan_args = ToolArgs(user_id=user_id) if user_id else ToolArgs()
+        if user_reference:
+            plan_args.q = user_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_user",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar un usuario.",
+            audit_summary="Intent admin: desactivar usuario.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_PROVIDER):
+        provider_id = _extract_object_id(msg_lower, "provider_id")
+        provider_reference = None if provider_id else _extract_admin_entity_reference(msg_lower, ["proveedor"])
+        plan_args = ToolArgs(provider_id=provider_id) if provider_id else ToolArgs()
+        if provider_reference:
+            plan_args.q = provider_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_provider",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar un proveedor.",
+            audit_summary="Intent admin: desactivar proveedor.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_EQUINE):
+        equine_id = _extract_object_id(msg_lower, "equine_id")
+        equine_reference = None if equine_id else _extract_admin_entity_reference(msg_lower, ["equino", "mula"])
+        plan_args = ToolArgs(equine_id=equine_id) if equine_id else ToolArgs()
+        if equine_reference:
+            plan_args.q = equine_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_equine",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar un equino.",
+            audit_summary="Intent admin: desactivar equino.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_SADDLE):
+        saddle_id = _extract_object_id(msg_lower, "saddle_id")
+        saddle_reference = None if saddle_id else _extract_admin_entity_reference(msg_lower, ["silla", "montura"])
+        plan_args = ToolArgs(saddle_id=saddle_id) if saddle_id else ToolArgs()
+        if saddle_reference:
+            plan_args.q = saddle_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_saddle",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar una silla.",
+            audit_summary="Intent admin: desactivar silla.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_EXPERIENCE):
+        experience_id = _extract_object_id(msg_lower, "experience_id")
+        experience_reference = None if experience_id else _extract_admin_entity_reference(msg_lower, ["experiencia"])
+        plan_args = ToolArgs(experience_id=experience_id) if experience_id else ToolArgs()
+        if experience_reference:
+            plan_args.q = experience_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_experience",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar una experiencia.",
+            audit_summary="Intent admin: desactivar experiencia.",
         )
 
     if _matches_any(msg_lower, _ADMIN_SALES_REPORT):

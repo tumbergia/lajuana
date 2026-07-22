@@ -26,6 +26,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    widget.controller.enterFullAnalytics();
     // Defer past the first build — load() notifies ModuleSlotNotifiers and
     // would otherwise trigger setState during build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -37,6 +38,12 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
             .any((id) => widget.controller.slotFor(id).hasData),
       );
     });
+  }
+
+  @override
+  void dispose() {
+    widget.controller.leaveFullAnalytics();
+    super.dispose();
   }
 
   @override
@@ -102,9 +109,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                         Text(
                           ctrl.refreshing && ctrl.periodRangeLabel.isEmpty
                               ? 'Actualizando gráficas…'
-                              : ctrl.fromCache
-                                  ? '${ctrl.periodRangeLabel} · sin conexión'
-                                  : ctrl.periodRangeLabel,
+                              : ctrl.periodRangeLabel,
                           textAlign: TextAlign.center,
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -112,22 +117,6 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                                         .colorScheme
                                         .onSurfaceVariant,
                                   ),
-                        ),
-                      ],
-                      if (ctrl.fromCache) ...[
-                        SizedBox(height: tokens.spaceMd),
-                        AppStatusBanner(
-                          title: 'Sin conexión',
-                          message:
-                              'Mostrando datos almacenados localmente.',
-                          tone: AppStatusBannerTone.warning,
-                          icon: Icons.wifi_off_rounded,
-                          badgeLabel: 'Offline',
-                          onTap: () => ctrl.load(
-                            forceRefresh: true,
-                            silent: false,
-                            allModules: true,
-                          ),
                         ),
                       ],
                     ],

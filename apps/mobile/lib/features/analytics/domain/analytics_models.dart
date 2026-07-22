@@ -276,6 +276,7 @@ class AnalyticsModule {
     this.ranking = const [],
     this.breakdown = const [],
     this.insightText,
+    this.analysis = const [],
     this.action,
     this.freshness,
     this.emptyMessage,
@@ -310,6 +311,10 @@ class AnalyticsModule {
           .toList(growable: false),
       status: json['status'] as String? ?? 'ok',
       insightText: json['insight_text'] as String?,
+      analysis: (json['analysis'] as List<dynamic>? ?? [])
+          .map((e) => e.toString().trim())
+          .where((e) => e.isNotEmpty)
+          .toList(growable: false),
       action: json['action'] is Map<String, dynamic>
           ? ModuleAction.fromJson(json['action'] as Map<String, dynamic>)
           : null,
@@ -335,6 +340,8 @@ class AnalyticsModule {
   final List<BreakdownItem> breakdown;
   final String status;
   final String? insightText;
+  /// Conversational paragraphs from the API (3–4). Empty → local fallback.
+  final List<String> analysis;
   final ModuleAction? action;
   final AnalyticsFreshness? freshness;
   final String? emptyMessage;
@@ -414,8 +421,6 @@ class AnalyticsPreferences {
   final List<String> selectedModuleIds;
   final List<String> moduleOrder;
   final String defaultRange;
-
-  static const maxModules = 4;
 
   AnalyticsPreferences copyWith({
     List<String>? selectedModuleIds,

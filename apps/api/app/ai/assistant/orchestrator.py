@@ -29,8 +29,13 @@ from app.documents.conversation_session_document import ConversationSessionDocum
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.schemas.ask import AskRequest, AskResponse
-from app.schemas.assistant_plan import AssistantAction, ToolArgs
+from app.schemas.assistant_plan import AssistantAction, AssistantPlan, ToolArgs
 from app.schemas.conversation_session import merge_slots
+from app.services.equine_service import EquineService
+from app.services.experience_service import ExperienceService
+from app.services.provider_service import ProviderService
+from app.services.saddle_service import SaddleService
+from app.services.user_service import UserService
 
 FIELD_LABELS: dict[str, tuple[str, str]] = {
     "experience_id": ("¿qué experiencia te interesa?", "which experience are you interested in?"),
@@ -104,6 +109,9 @@ WRITE_TOOLS_REQUIRING_CONFIRMATION: set[str] = {
 
 def _fallback_tool_response(tool_output: dict) -> str:
     """Respuesta determinista cuando el composer LLM falla."""
+    blocking_message = _extract_blocking_reason_message(tool_output)
+    if blocking_message:
+        return blocking_message
     if tool_output.get("response"):
         return str(tool_output["response"])
     if tool_output.get("message"):
@@ -124,6 +132,16 @@ def _fallback_tool_response(tool_output: dict) -> str:
     return " ".join(parts) if parts else "Operación completada."
 
 
+def _extract_blocking_reason_message(tool_output: dict) -> str | None:
+    blocking = tool_output.get("blocking_reasons") or []
+    for item in blocking:
+        if isinstance(item, dict) and item.get("message"):
+            return str(item["message"])
+        if isinstance(item, str) and item.strip():
+            return item
+    return None
+
+
 def _extract_tool_result_message(tool_name: str | None, tool_output: dict) -> str:
     literal_response_tools: set[str] = {
         "create_reservation_draft",
@@ -135,6 +153,9 @@ def _extract_tool_result_message(tool_name: str | None, tool_output: dict) -> st
         if tool_name in ANALYTICS_LITERAL_TOOLS
         else None
     )
+    blocking_message = _extract_blocking_reason_message(tool_output)
+    if blocking_message:
+        return blocking_message
     if tool_name in literal_response_tools and tool_output.get("response"):
         return str(tool_output["response"])
     if tool_output.get("response"):
@@ -368,6 +389,42 @@ def _normalize_admin_plan_arguments(plan: AssistantPlan, message: str) -> None:
         if isinstance(candidate, str) and _OBJECT_ID_RE.fullmatch(candidate):
             setattr(args, primary_field, candidate)
             break
+
+
+def _format_admin_user_match_summary(matches: list[dict[str, Any]]) -> str:
+    parts: list[str] = []
+    for match in matches[:5]:
+        full_name = match.get("full_name")
+        email = match.get("email")
+        if full_name and email:
+            parts.append(f"{full_name} <{email}>")
+    return ", ".join(parts)
+
+
+def _format_admin_reference_match_summary(matches: list[dict[str, Any]]) -> str:
+    parts: list[str] = []
+    for match in matches[:5]:
+        label = match.get("label")
+        if isinstance(label, str) and label.strip():
+            parts.append(label)
+            continue
+        full_name = match.get("full_name")
+        email = match.get("email")
+        if full_name and email:
+            parts.append(f"{full_name} <{email}>")
+            continue
+        name = match.get("name")
+        code = match.get("code")
+        slug = match.get("slug")
+        if code and name:
+            parts.append(f"{code} ({name})")
+        elif name and slug:
+            parts.append(f"{name} ({slug})")
+        elif name:
+            parts.append(str(name))
+        elif code:
+            parts.append(str(code))
+    return ", ".join(parts)
 
 
 class AssistantOrchestrator:
@@ -678,6 +735,22 @@ class AssistantOrchestrator:
 
         _normalize_admin_plan_arguments(plan, request.message)
 
+        if await self._resolve_admin_reference(plan, session.language):
+            session.pending_fields = plan.missing_fields
+            session.last_intent = plan.action.value
+            session.last_trace_id = trace_id
+            session.turn_count += 1
+            session.updated_at = datetime.now(timezone.utc)
+            await session.save()
+            return AskResponse(
+                trace_id=trace_id,
+                action=plan.action,
+                tool_name=plan.tool_name,
+                planner_output=plan.model_dump(mode="json"),
+                tool_output={},
+                response=plan.response or t("needs_more_info", session.language),
+            )
+
         policy_decision = self._policy.validate(plan, channel=request.channel)
         if not policy_decision.allowed:
             response = (
@@ -940,6 +1013,98 @@ class AssistantOrchestrator:
             tool_output=tool_output,
             response=response,
         )
+
+    async def _resolve_admin_reference(self, plan: AssistantPlan, language: str) -> bool:
+        configs: dict[str, dict[str, Any]] = {
+            "admin_deactivate_user": {
+                "id_field": "user_id",
+                "resolver": UserService().resolve_user_reference,
+                "entity": "usuario" if language == "es" else "user",
+                "exact_hint": "correo" if language == "es" else "email",
+                "use_user_messages": True,
+            },
+            "admin_update_user": {
+                "id_field": "user_id",
+                "resolver": UserService().resolve_user_reference,
+                "entity": "usuario" if language == "es" else "user",
+                "exact_hint": "correo" if language == "es" else "email",
+                "use_user_messages": True,
+            },
+            "admin_deactivate_provider": {
+                "id_field": "provider_id",
+                "resolver": ProviderService().resolve_provider_reference,
+                "entity": "proveedor" if language == "es" else "provider",
+                "exact_hint": "nombre o slug" if language == "es" else "name or slug",
+            },
+            "admin_deactivate_equine": {
+                "id_field": "equine_id",
+                "resolver": EquineService().resolve_equine_reference,
+                "entity": "equino" if language == "es" else "equine",
+                "exact_hint": "nombre" if language == "es" else "name",
+            },
+            "admin_deactivate_saddle": {
+                "id_field": "saddle_id",
+                "resolver": SaddleService().resolve_saddle_reference,
+                "entity": "silla" if language == "es" else "saddle",
+                "exact_hint": "código o nombre" if language == "es" else "code or name",
+            },
+            "admin_deactivate_experience": {
+                "id_field": "experience_id",
+                "resolver": ExperienceService().resolve_experience_reference,
+                "entity": "experiencia" if language == "es" else "experience",
+                "exact_hint": "nombre o slug" if language == "es" else "name or slug",
+            },
+        }
+
+        config = configs.get(plan.tool_name or "")
+        if not config:
+            return False
+        if not plan.arguments or getattr(plan.arguments, config["id_field"], None):
+            return False
+
+        reference = getattr(plan.arguments, "q", None)
+        if not isinstance(reference, str) or not reference.strip():
+            return False
+
+        resolution = await config["resolver"](reference)
+        if resolution.get("status") == "resolved":
+            setattr(plan.arguments, config["id_field"], str(resolution[config["id_field"]]))
+            return False
+
+        plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
+        plan.missing_fields = [config["id_field"]]
+        if config.get("use_user_messages") and resolution.get("status") == "ambiguous":
+            plan.response = t(
+                "admin_user_ambiguous",
+                language,
+                reference=str(resolution.get("reference", reference)),
+                matches=_format_admin_user_match_summary(resolution.get("matches", [])),
+            )
+        elif config.get("use_user_messages"):
+            plan.response = t(
+                "admin_user_not_found",
+                language,
+                reference=str(resolution.get("reference", reference)),
+            )
+        elif resolution.get("matches"):
+            plan.response = t(
+                "admin_entity_ambiguous",
+                language,
+                entity=str(config["entity"]),
+                reference=str(resolution.get("reference", reference)),
+                matches=_format_admin_reference_match_summary(resolution.get("matches", [])),
+                id_field=str(config["id_field"]),
+            )
+        else:
+            plan.response = t(
+                "admin_entity_not_found",
+                language,
+                entity=str(config["entity"]),
+                reference=str(resolution.get("reference", reference)),
+                id_field=str(config["id_field"]),
+                exact_hint=str(config["exact_hint"]),
+            )
+        return True
 
     async def _load_or_create_session(
         self,

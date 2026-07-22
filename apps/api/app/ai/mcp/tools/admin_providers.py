@@ -25,6 +25,14 @@ def _get_service() -> ProviderService:
     return Container.get_instance().provider_service
 
 
+def _format_provider_matches(matches: list[dict[str, Any]]) -> str:
+    return ", ".join(
+        str(item.get("label") or item.get("name") or item.get("provider_id"))
+        for item in matches[:5]
+        if isinstance(item, dict)
+    )
+
+
 async def _log(
     *,
     trace_id: str,
@@ -284,7 +292,7 @@ async def admin_update_provider(
 
 
 async def admin_deactivate_provider(
-    provider_id: str,
+    provider_id: str | None = None,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
     **kwargs: Any,
@@ -295,6 +303,55 @@ async def admin_deactivate_provider(
     output: AdminDeactivateProviderOutput | None = None
 
     try:
+        if not provider_id and kwargs.get("q"):
+            resolution = await _get_service().resolve_provider_reference(str(kwargs["q"]))
+            if resolution.get("status") == "resolved":
+                provider_id = str(resolution.get("provider_id"))
+            elif resolution.get("matches"):
+                matches = resolution.get("matches", [])
+                message = (
+                    f"Encontré estas coincidencias para proveedor '{resolution.get('reference', kwargs['q'])}': "
+                    f"{_format_provider_matches(matches)}. Indícame el provider_id exacto o copia una de estas opciones."
+                )
+                output = AdminDeactivateProviderOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    blocking_reasons=[
+                        ToolBlockingReason(
+                            code="provider.reference_ambiguous",
+                            message=message,
+                            details={"matches": matches},
+                        )
+                    ],
+                )
+                return output.model_dump(mode="json")
+            else:
+                message = (
+                    f"No encontré coincidencias para proveedor '{resolution.get('reference', kwargs['q'])}'. "
+                    "Indícame el provider_id exacto o el nombre/slug exacto."
+                )
+                output = AdminDeactivateProviderOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    blocking_reasons=[
+                        ToolBlockingReason(code="provider.reference_not_found", message=message)
+                    ],
+                )
+                return output.model_dump(mode="json")
+
+        if not provider_id:
+            output = AdminDeactivateProviderOutput(
+                deactivated=False,
+                trace_id=trace_id,
+                blocking_reasons=[
+                    ToolBlockingReason(
+                        code="provider.id_required",
+                        message="El campo provider_id es obligatorio.",
+                    )
+                ],
+            )
+            return output.model_dump(mode="json")
+
         doc = await _get_service().get(provider_id)
         name = doc.name
         await _get_service().delete(provider_id)
@@ -332,7 +389,7 @@ async def admin_deactivate_provider(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_deactivate_provider",
-            input_data={"provider_id": provider_id},
+            input_data={"provider_id": provider_id, "q": kwargs.get("q")},
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,

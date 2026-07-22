@@ -4,13 +4,14 @@ import 'package:mobile_ui/mobile_ui.dart';
 import 'package:mobile/features/analytics/domain/analytics_models.dart';
 import 'package:mobile/features/analytics/presentation/widgets/charts/app_chart_loading_skeleton.dart';
 
-/// Charts-first shell: title → chart hero → value/insight footer.
+/// Charts-first shell: title → subtitle → chart hero → value/insight footer.
 class InsightCardShell extends StatelessWidget {
   const InsightCardShell({
     super.key,
     required this.title,
     required this.periodLabel,
     required this.child,
+    this.subtitle,
     this.primaryValue,
     this.comparisonLabel,
     this.insightText,
@@ -24,6 +25,7 @@ class InsightCardShell extends StatelessWidget {
   });
 
   final String title;
+  final String? subtitle;
   final String periodLabel;
   final Widget child;
   final PrimaryValue? primaryValue;
@@ -42,6 +44,7 @@ class InsightCardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tokens = Theme.of(context).appTokens;
+    final subtitleText = subtitle?.trim() ?? '';
 
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -74,6 +77,16 @@ class InsightCardShell extends StatelessWidget {
               ),
           ],
         ),
+        if (subtitleText.isNotEmpty) ...[
+          SizedBox(height: tokens.spaceXs),
+          Text(
+            subtitleText,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.35,
+                ),
+          ),
+        ],
         if (periodLabel.isNotEmpty) ...[
           SizedBox(height: tokens.spaceXs),
           Text(

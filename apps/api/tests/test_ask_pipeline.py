@@ -479,6 +479,270 @@ def test_confirmation_reply_executes_pending_tool_without_replanning(
     assert session.slot_values.get("_pending_tool_name") is None
 
 
+def test_confirmation_reply_uses_blocking_reason_message(monkeypatch: pytest.MonkeyPatch) -> None:
+    session = _build_session()
+
+    monkeypatch.setattr("app.ai.assistant.orchestrator.ConversationTurnDocument", FindableFakeDoc)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.ToolCallLogDocument", FakeDoc)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.detect_and_build_plan", lambda **_: None)
+
+    async def fake_load_session(self: Any, **_: Any) -> Any:
+        return session
+
+    monkeypatch.setattr(AssistantOrchestrator, "_load_or_create_session", fake_load_session)
+
+    async def fake_registry_call(name: str, **kwargs: Any) -> dict[str, Any]:
+        assert name == "admin_deactivate_user"
+        return {
+            "deactivated": False,
+            "blocking_reasons": [
+                {
+                    "code": "user.self_delete_forbidden",
+                    "message": "No puedes desactivar tu propia cuenta.",
+                }
+            ],
+        }
+
+    monkeypatch.setattr("app.ai.assistant.orchestrator.registry.call", fake_registry_call)
+
+    planner = MockPlanner(
+        _make_plan(
+            action=AssistantAction.TOOL_CALL,
+            tool_name="admin_deactivate_user",
+            arguments={"user_id": "660000000000000000000001"},
+        )
+    )
+    orch = AssistantOrchestrator(planner=planner)
+    orch._policy = SimpleNamespace(validate=lambda *args, **kwargs: SimpleNamespace(allowed=True))
+
+    async def run_flow() -> tuple[Any, Any]:
+        first = await orch.ask(
+            AskRequest(
+                message="borra user_id 660000000000000000000001",
+                channel="admin_api",
+                conversation_id="demo-011b",
+            )
+        )
+        second = await orch.ask(
+            AskRequest(message="sí", channel="admin_api", conversation_id="demo-011b")
+        )
+        return first, second
+
+    first_result, second_result = asyncio.run(run_flow())
+
+    assert first_result.action == AssistantAction.ASK_CLARIFYING_QUESTION
+    assert second_result.response == "No puedes desactivar tu propia cuenta."
+
+
+def test_admin_user_reference_is_resolved_before_confirmation(monkeypatch: pytest.MonkeyPatch) -> None:
+    _apply_mocks(monkeypatch)
+
+    async def fake_resolve_user_reference(self: Any, reference: str) -> dict[str, Any]:
+        assert reference == "eduardo"
+        return {
+            "status": "resolved",
+            "reference": reference,
+            "user_id": "660000000000000000000055",
+            "label": "Eduardo Perez <eduardo@example.com>",
+        }
+
+    monkeypatch.setattr(
+        "app.ai.assistant.orchestrator.UserService.resolve_user_reference",
+        fake_resolve_user_reference,
+    )
+
+    planner = MockPlanner(_make_plan())
+    orch = AssistantOrchestrator(planner=planner)
+    orch._policy = SimpleNamespace(validate=lambda *args, **kwargs: SimpleNamespace(allowed=True))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message="borra el usuario eduardo",
+                channel="admin_api",
+                conversation_id="demo-010a",
+            )
+        )
+
+    result = asyncio.run(run())
+    assert planner.calls == 0
+    assert result.action == AssistantAction.ASK_CLARIFYING_QUESTION
+    assert result.tool_name == "admin_deactivate_user"
+    assert result.planner_output["arguments"]["user_id"] == "660000000000000000000055"
+    assert result.response.startswith("La acción desactivar usuario está lista")
+
+
+def test_admin_user_reference_ambiguous_asks_clarifying_question(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _apply_mocks(monkeypatch)
+
+    async def fake_resolve_user_reference(self: Any, reference: str) -> dict[str, Any]:
+        return {
+            "status": "ambiguous",
+            "reference": reference,
+            "matches": [
+                {
+                    "user_id": "660000000000000000000055",
+                    "email": "eduardo@example.com",
+                    "full_name": "Eduardo Perez",
+                    "is_active": True,
+                },
+                {
+                    "user_id": "660000000000000000000056",
+                    "email": "eduardo.gomez@example.com",
+                    "full_name": "Eduardo Gomez",
+                    "is_active": True,
+                },
+            ],
+        }
+
+    monkeypatch.setattr(
+        "app.ai.assistant.orchestrator.UserService.resolve_user_reference",
+        fake_resolve_user_reference,
+    )
+
+    planner = MockPlanner(_make_plan())
+    orch = AssistantOrchestrator(planner=planner)
+    orch._policy = SimpleNamespace(validate=lambda *args, **kwargs: SimpleNamespace(allowed=True))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message="borra el usuario eduardo",
+                channel="admin_api",
+                conversation_id="demo-010b",
+            )
+        )
+
+    result = asyncio.run(run())
+    assert result.action == AssistantAction.ASK_CLARIFYING_QUESTION
+    assert result.tool_name == "admin_deactivate_user"
+    assert "Encontré varios usuarios" in result.response
+    assert "Eduardo Perez <eduardo@example.com>" in result.response
+
+
+@pytest.mark.parametrize(
+    ("message", "tool_name", "patch_target", "resolver_name", "entity_id"),
+    [
+        (
+            "desactiva el proveedor patio central",
+            "admin_deactivate_provider",
+            "app.ai.assistant.orchestrator.ProviderService.resolve_provider_reference",
+            "provider_id",
+            "660000000000000000000201",
+        ),
+        (
+            "borra la silla asg-22",
+            "admin_deactivate_saddle",
+            "app.ai.assistant.orchestrator.SaddleService.resolve_saddle_reference",
+            "saddle_id",
+            "660000000000000000000202",
+        ),
+        (
+            "desactiva el equino relampago",
+            "admin_deactivate_equine",
+            "app.ai.assistant.orchestrator.EquineService.resolve_equine_reference",
+            "equine_id",
+            "660000000000000000000203",
+        ),
+        (
+            "desactiva experiencia medio dia",
+            "admin_deactivate_experience",
+            "app.ai.assistant.orchestrator.ExperienceService.resolve_experience_reference",
+            "experience_id",
+            "660000000000000000000204",
+        ),
+    ],
+)
+def test_admin_entity_reference_is_resolved_before_confirmation(
+    monkeypatch: pytest.MonkeyPatch,
+    message: str,
+    tool_name: str,
+    patch_target: str,
+    resolver_name: str,
+    entity_id: str,
+) -> None:
+    _apply_mocks(monkeypatch)
+
+    async def fake_resolver(self: Any, reference: str) -> dict[str, Any]:
+        assert reference
+        return {
+            "status": "resolved",
+            "reference": reference,
+            resolver_name: entity_id,
+            "label": reference.title(),
+        }
+
+    monkeypatch.setattr(patch_target, fake_resolver)
+
+    planner = MockPlanner(_make_plan())
+    orch = AssistantOrchestrator(planner=planner)
+    orch._policy = SimpleNamespace(validate=lambda *args, **kwargs: SimpleNamespace(allowed=True))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(message=message, channel="admin_api", conversation_id=f"demo-{tool_name}")
+        )
+
+    result = asyncio.run(run())
+    assert planner.calls == 0
+    assert result.action == AssistantAction.ASK_CLARIFYING_QUESTION
+    assert result.tool_name == tool_name
+    assert result.planner_output["arguments"][resolver_name] == entity_id
+    assert result.response.startswith("La acción")
+
+
+def test_admin_provider_reference_ambiguous_asks_clarifying_question(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _apply_mocks(monkeypatch)
+
+    async def fake_resolve_provider_reference(self: Any, reference: str) -> dict[str, Any]:
+        return {
+            "status": "ambiguous",
+            "reference": reference,
+            "matches": [
+                {
+                    "provider_id": "660000000000000000000055",
+                    "name": "Patio Central",
+                    "slug": "patio-central",
+                    "label": "Patio Central (patio-central)",
+                },
+                {
+                    "provider_id": "660000000000000000000056",
+                    "name": "Patio Centro",
+                    "slug": "patio-centro",
+                    "label": "Patio Centro (patio-centro)",
+                },
+            ],
+        }
+
+    monkeypatch.setattr(
+        "app.ai.assistant.orchestrator.ProviderService.resolve_provider_reference",
+        fake_resolve_provider_reference,
+    )
+
+    planner = MockPlanner(_make_plan())
+    orch = AssistantOrchestrator(planner=planner)
+    orch._policy = SimpleNamespace(validate=lambda *args, **kwargs: SimpleNamespace(allowed=True))
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message="desactiva el proveedor patio central",
+                channel="admin_api",
+                conversation_id="demo-010c",
+            )
+        )
+
+    result = asyncio.run(run())
+    assert result.action == AssistantAction.ASK_CLARIFYING_QUESTION
+    assert result.tool_name == "admin_deactivate_provider"
+    assert "Patio Central (patio-central)" in result.response
+    assert "provider_id exacto" in result.response
+
+
 def test_admin_reservation_id_is_normalized_before_policy(monkeypatch: pytest.MonkeyPatch) -> None:
     _apply_mocks(monkeypatch)
     monkeypatch.setattr("app.ai.assistant.orchestrator.detect_and_build_plan", lambda **_: None)

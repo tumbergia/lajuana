@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:mobile_domain/src/providers/providers_repository.dart';
+import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/features/providers/infrastructure/mappers/provider_mapper.dart';
 import 'package:mobile/features/providers/presentation/models/provider_view_models.dart';
 
@@ -15,10 +16,18 @@ enum ProvidersLoadState {
 }
 
 class ProvidersListController extends ChangeNotifier {
-  ProvidersListController({required ProvidersRepository repository})
-      : _repository = repository;
+  ProvidersListController({
+    required ProvidersRepository repository,
+    OutboxRepository? outbox,
+  }) : _repository = repository {
+    if (outbox != null) {
+      _outbox = outbox;
+      outbox.addListener(_onOutboxChanged);
+    }
+  }
 
   final ProvidersRepository _repository;
+  OutboxRepository? _outbox;
   bool _disposed = false;
 
   ProvidersLoadState state = ProvidersLoadState.idle;
@@ -28,6 +37,12 @@ class ProvidersListController extends ChangeNotifier {
   String? errorCode;
   String? errorMessage;
   DateTime? lastSyncAt;
+
+  /// Cambios locales pendientes de sincronizar (crear/editar/desactivar).
+  bool get hasPendingChanges => (_outbox?.pendingOutboxCount ?? 0) > 0;
+
+  /// Operaciones que fallaron (conflicto/rechazadas).
+  bool get hasFailedChanges => (_outbox?.failedOutboxCount ?? 0) > 0;
 
   List<ProviderRecord> _allItems = const <ProviderRecord>[];
 
@@ -130,9 +145,16 @@ class ProvidersListController extends ChangeNotifier {
 
   bool get hasAnyRecords => _allItems.isNotEmpty;
 
+  void _onOutboxChanged() {
+    // Re-notify so the UI can read hasPendingChanges / hasFailedChanges.
+    _notifyListeners();
+  }
+
   @override
   void dispose() {
     _disposed = true;
+    _outbox?.removeListener(_onOutboxChanged);
+    _outbox = null;
     super.dispose();
   }
 

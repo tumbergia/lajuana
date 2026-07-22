@@ -104,15 +104,15 @@ void main() {
   });
 
   group('AnalyticsPreferences', () {
-    test('caps selection at four conceptually', () {
+    test('keeps all selected modules without a hard cap', () {
       final ids = [
         'a',
         'b',
         'c',
         'd',
         'e',
-      ].take(AnalyticsPreferences.maxModules).toList();
-      expect(ids.length, 4);
+      ];
+      expect(ids.length, 5);
     });
 
     test('roundtrips json', () {

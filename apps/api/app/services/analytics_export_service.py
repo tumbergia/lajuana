@@ -301,11 +301,12 @@ class AnalyticsExportService:
             )
             ws.append([])
 
-        # Analysis section (narrative + extra parameters in prose)
+        # Analysis section (conversational paragraphs)
         ws.append(["Análisis"])
         analysis_row = ws.max_row
         ws.cell(row=analysis_row, column=1).font = _SECTION_FONT
-        for line in build_rich_analysis(mod):
+        paragraphs = list(mod.analysis) if mod.analysis else build_rich_analysis(mod)
+        for line in paragraphs:
             ws.append([line])
         ws.append([])
 
