@@ -31,6 +31,7 @@ import 'package:mobile/features/providers/providers_module.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/notifications/notifications_module.dart';
 import 'package:mobile/features/notifications/presentation/screens/notifications_settings_page.dart';
+import 'package:mobile/features/users/users_module.dart';
 
 enum _MoreDestination {
   menu,
@@ -56,6 +57,7 @@ class MoreFlowScreen extends StatefulWidget {
     this.configurationModule,
     this.reservationsModule,
     this.notificationsModule,
+    this.usersModule,
   });
 
   final AuthController controller;
@@ -67,6 +69,7 @@ class MoreFlowScreen extends StatefulWidget {
   final LaJuanaConfigurationModule? configurationModule;
   final ReservationsModule? reservationsModule;
   final NotificationsModule? notificationsModule;
+  final UsersModule? usersModule;
 
   @override
   State<MoreFlowScreen> createState() => _MoreFlowScreenState();
@@ -289,14 +292,16 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.experiencias),
         ),
-        SizedBox(height: tokens.spaceMd),
-        AppEntityRowCard(
-          title: 'Proveedores',
-          subtitle: 'Catálogo operativo',
-          leading: _menuLeadingIcon(Symbols.handshake),
-          trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-          onTap: () => _open(_MoreDestination.providers),
-        ),
+        if (widget.controller.currentUser?.role == 'admin') ...[
+          SizedBox(height: tokens.spaceMd),
+          AppEntityRowCard(
+            title: 'Proveedores',
+            subtitle: 'Catálogo operativo',
+            leading: _menuLeadingIcon(Symbols.handshake),
+            trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+            onTap: () => _open(_MoreDestination.providers),
+          ),
+        ],
         SizedBox(height: tokens.spaceMd),
         AppEntityRowCard(
           title: 'Sillas',
@@ -340,6 +345,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           child: ProvidersModuleScreen(
             providersModule: widget.providersModule,
             showHeader: false,
+            canManage: widget.controller.currentUser?.role == 'admin',
           ),
         ),
       ],
@@ -365,6 +371,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           child: SaddlesModuleScreen(
             saddlesModule: widget.saddlesModule,
             showHeader: false,
+            canManage: widget.controller.currentUser?.role == 'admin',
           ),
         ),
       ],
@@ -416,6 +423,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           child: NotificationsSettingsPage(
             controller: widget.notificationsModule!.controller,
             showScaffold: false,
+            isAdmin: widget.controller.currentUser?.role == 'admin',
           ),
         ),
       ],
@@ -443,6 +451,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
             catalogsModule: widget.catalogsModule!,
             authController: widget.controller,
             reservationsRepository: widget.reservationsModule?.repository,
+            usersModule: widget.usersModule,
             showHeader: false,
             onBack: () => _open(_MoreDestination.menu),
           ),

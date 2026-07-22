@@ -14,16 +14,16 @@ class ProviderDetailSheet extends StatefulWidget {
     super.key,
     required this.provider,
     required this.loadDetails,
-    required this.onEdit,
-    required this.onDeactivate,
-    required this.onReactivate,
+    this.onEdit,
+    this.onDeactivate,
+    this.onReactivate,
   });
 
   final ProviderRecord provider;
   final Future<ProviderRecord> Function() loadDetails;
-  final VoidCallback onEdit;
-  final VoidCallback onDeactivate;
-  final VoidCallback onReactivate;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDeactivate;
+  final VoidCallback? onReactivate;
 
   @override
   State<ProviderDetailSheet> createState() => _ProviderDetailSheetState();
@@ -175,17 +175,19 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
                 ],
               ),
               const SizedBox(height: 24),
-              AppButton(
-                label: 'Editar',
-                icon: Icons.edit_rounded,
-                expanded: true,
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  widget.onEdit();
-                },
-              ),
-              const SizedBox(height: 10),
-              if (provider.isInactive)
+              if (widget.onEdit != null) ...[
+                AppButton(
+                  label: 'Editar',
+                  icon: Icons.edit_rounded,
+                  expanded: true,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    widget.onEdit!();
+                  },
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (provider.isInactive && widget.onReactivate != null)
                 AppButton(
                   label: 'Reactivar',
                   icon: Icons.restore_rounded,
@@ -193,10 +195,10 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
                   expanded: true,
                   onPressed: () {
                     Navigator.of(context).pop();
-                    widget.onReactivate();
+                    widget.onReactivate!();
                   },
                 )
-              else
+              else if (!provider.isInactive && widget.onDeactivate != null)
                 AppButton(
                   label: 'Desactivar',
                   icon: Icons.delete_outline_rounded,
@@ -204,10 +206,13 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
                   expanded: true,
                   onPressed: () {
                     Navigator.of(context).pop();
-                    widget.onDeactivate();
+                    widget.onDeactivate!();
                   },
                 ),
-              const SizedBox(height: 10),
+              if (widget.onEdit != null ||
+                  widget.onDeactivate != null ||
+                  widget.onReactivate != null)
+                const SizedBox(height: 10),
               AppButton(
                 label: 'Cerrar',
                 icon: Icons.close_rounded,

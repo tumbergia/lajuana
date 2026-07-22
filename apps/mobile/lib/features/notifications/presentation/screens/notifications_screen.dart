@@ -13,6 +13,8 @@ import 'package:mobile/features/notifications/presentation/notification_visuals.
 import 'package:mobile/features/reservations/presentation/screens/reservation_detail_shell_screen.dart';
 import 'package:mobile/features/reservations/presentation/widgets/reservation_proof_image_viewer.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
+import 'package:mobile/features/users/presentation/screens/role_requests_screen.dart';
+import 'package:mobile/features/users/users_module.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
@@ -59,6 +61,7 @@ class NotificationsScreen extends StatefulWidget {
     this.catalogsModule,
     this.authController,
     this.assignmentsModule,
+    this.usersModule,
     this.initialOpenNotificationId,
   });
 
@@ -67,6 +70,7 @@ class NotificationsScreen extends StatefulWidget {
   final CatalogsModule? catalogsModule;
   final AuthController? authController;
   final AssignmentsModule? assignmentsModule;
+  final UsersModule? usersModule;
   final String? initialOpenNotificationId;
 
   @override
@@ -144,6 +148,21 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         return _NotificationDetailSheet(
           item: item,
           contactPhone: phone,
+          onOpenRoleRequests: widget.usersModule == null
+              ? null
+              : () {
+                  final usersModule = widget.usersModule!;
+                  Navigator.of(sheetContext).pop();
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            RoleRequestsScreen(module: usersModule),
+                      ),
+                    );
+                  });
+                },
           onOpenReservation: (subroute) {
             final reservationId = item.reservationId;
             Navigator.of(sheetContext).pop();
@@ -566,6 +585,7 @@ class _NotificationDetailSheet extends StatefulWidget {
     required this.onWhatsAppReply,
     required this.onSendDirectly,
     required this.onDelete,
+    this.onOpenRoleRequests,
   });
 
   final InAppNotification item;
@@ -577,6 +597,7 @@ class _NotificationDetailSheet extends StatefulWidget {
   final Future<void> Function(String message) onWhatsAppReply;
   final Future<bool> Function(String message) onSendDirectly;
   final VoidCallback onDelete;
+  final VoidCallback? onOpenRoleRequests;
 
   @override
   State<_NotificationDetailSheet> createState() =>
@@ -834,6 +855,15 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
                       ? AppButtonVariant.secondary
                       : AppButtonVariant.primary,
                   onPressed: () => widget.onOpenReservation(primarySubroute),
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (item.eventType == 'role_request_created' &&
+                  widget.onOpenRoleRequests != null) ...[
+                AppButton(
+                  label: 'Ver solicitudes',
+                  icon: Symbols.badge,
+                  onPressed: widget.onOpenRoleRequests,
                 ),
                 const SizedBox(height: 8),
               ],

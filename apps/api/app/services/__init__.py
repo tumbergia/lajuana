@@ -14,6 +14,7 @@ from app.services.policy_service import PolicyService
 from app.services.provider_service import ProviderService
 from app.services.reservation_provider_service import ReservationProviderService
 from app.services.reservation_service import ReservationService
+from app.services.role_request_service import RoleRequestService
 from app.services.saddle_service import SaddleService
 from app.services.service_log_service import ServiceLogService
 from app.services.sync_service import SyncService
@@ -36,6 +37,7 @@ __all__ = [
     "ProviderService",
     "ReservationProviderService",
     "ReservationService",
+    "RoleRequestService",
     "SaddleService",
     "ServiceLogService",
     "SyncService",

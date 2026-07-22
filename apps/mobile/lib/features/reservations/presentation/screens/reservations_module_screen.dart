@@ -47,6 +47,33 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
   Future<void> onRefresh() => _listController.refresh();
   final TextEditingController _searchController = TextEditingController();
 
+  bool get _canCreateReservation {
+    final role = widget.authController?.currentUser?.role;
+    return role == 'admin' &&
+        widget.reservationsModule != null &&
+        widget.catalogsModule != null;
+  }
+
+  bool get _isGuide {
+    final role =
+        widget.authController?.currentUser?.role.trim().toLowerCase();
+    return role == 'guide';
+  }
+
+  List<AppSegmentedFilterItem<String?>> get _statusFilterItems {
+    if (_isGuide) {
+      return const [
+        AppSegmentedFilterItem(label: 'Confirmadas', value: 'confirmadas'),
+      ];
+    }
+    return const [
+      AppSegmentedFilterItem(label: 'Pendientes', value: 'pendientes'),
+      AppSegmentedFilterItem(label: 'Confirmadas', value: 'confirmadas'),
+      AppSegmentedFilterItem(label: 'Cerradas', value: 'cerradas'),
+      AppSegmentedFilterItem(label: 'Eliminadas', value: 'eliminadas'),
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +87,9 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
       _ownsListController = true;
     }
     _listController.addListener(_onListChanged);
+    if (_isGuide && _listController.filterGroup != 'confirmadas') {
+      _listController.setFilterGroup('confirmadas');
+    }
     if (_listController.state == ReservationsLoadState.idle) {
       _listController.loadInitial();
     }
@@ -85,13 +115,6 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
 
   void _onListChanged() {
     if (mounted) setState(() {});
-  }
-
-  bool get _canCreateReservation {
-    final role = widget.authController?.currentUser?.role;
-    return role == 'admin' &&
-        widget.reservationsModule != null &&
-        widget.catalogsModule != null;
   }
 
   Future<void> _openCreateReservation() async {
@@ -204,16 +227,8 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                 AppSegmentedFilter<String?>(
                   value: _listController.filterGroup,
                   onChanged: _listController.setFilterGroup,
-                  items: const [
-                    AppSegmentedFilterItem(
-                        label: 'Pendientes', value: 'pendientes'),
-                    AppSegmentedFilterItem(
-                        label: 'Confirmadas', value: 'confirmadas'),
-                    AppSegmentedFilterItem(
-                        label: 'Cerradas', value: 'cerradas'),
-                    AppSegmentedFilterItem(
-                        label: 'Eliminadas', value: 'eliminadas'),
-                  ],
+                  allowDeselect: !_isGuide,
+                  items: _statusFilterItems,
                 ),
 
                 if (_canCreateReservation) ...[

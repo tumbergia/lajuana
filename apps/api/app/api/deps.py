@@ -114,6 +114,10 @@ def get_user_service() -> object:
     return Container.get_instance().user_service
 
 
+def get_role_request_service() -> object:
+    return Container.get_instance().role_request_service
+
+
 def get_experience_service() -> object:
     return Container.get_instance().experience_service
 

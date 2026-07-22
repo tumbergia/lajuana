@@ -24,10 +24,14 @@ class ProvidersModuleScreen extends StatefulWidget {
     super.key,
     this.showHeader = true,
     this.providersModule,
+    this.canManage = true,
   });
 
   final bool showHeader;
   final ProvidersModule? providersModule;
+
+  /// When false (e.g. guide), hide create/edit/deactivate actions.
+  final bool canManage;
 
   @override
   State<ProvidersModuleScreen> createState() => _ProvidersModuleScreenState();
@@ -222,9 +226,11 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
           final full = await _repository.getProviderById(provider.id);
           return listItemToRecord(full);
         },
-        onEdit: () => _openEditSheet(provider),
-        onDeactivate: () => _confirmDeactivateProvider(provider),
-        onReactivate: () => _confirmReactivateProvider(provider),
+        onEdit: widget.canManage ? () => _openEditSheet(provider) : null,
+        onDeactivate:
+            widget.canManage ? () => _confirmDeactivateProvider(provider) : null,
+        onReactivate:
+            widget.canManage ? () => _confirmReactivateProvider(provider) : null,
       ),
     );
   }
@@ -298,13 +304,15 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
             AppSegmentedFilterItem(label: 'Inactivos', value: 'inactive'),
           ],
         ),
-        const SizedBox(height: 12),
-        AppButton(
-          label: 'Registrar proveedor',
-          icon: Icons.add,
-          expanded: true,
-          onPressed: _openCreateSheet,
-        ),
+        if (widget.canManage) ...[
+          const SizedBox(height: 12),
+          AppButton(
+            label: 'Registrar proveedor',
+            icon: Icons.add,
+            expanded: true,
+            onPressed: _openCreateSheet,
+          ),
+        ],
         const SizedBox(height: 16),
         if (_listController.state == ProvidersLoadState.offlineFromCache) ...[
           AppStatusBanner(
@@ -368,7 +376,9 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
             ),
             const SizedBox(height: 4),
             Text(
-              'Registra el primer proveedor usando el boton de arriba',
+              widget.canManage
+                  ? 'Registra el primer proveedor usando el boton de arriba'
+                  : 'Aun no hay proveedores en el catalogo',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -414,17 +424,22 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          'Registra un nuevo proveedor usando el boton de abajo',
+          widget.canManage
+              ? 'Registra un nuevo proveedor usando el boton de abajo'
+              : 'Aun no hay proveedores en el catalogo',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 24),
-        AppButton(
-          label: 'Registrar proveedor',
-          icon: Icons.add,
-          onPressed: _openCreateSheet,
-        ),
+        if (widget.canManage) ...[
+          const SizedBox(height: 24),
+          AppButton(
+            label: 'Registrar proveedor',
+            icon: Icons.add,
+            onPressed: _openCreateSheet,
+          ),
+        ],
       ],
     );
 

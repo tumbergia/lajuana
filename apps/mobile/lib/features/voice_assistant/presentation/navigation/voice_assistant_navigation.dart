@@ -89,6 +89,7 @@ class VoiceAssistantNavigation {
           equineName: equineName,
           repository: equineRepository,
           eventRepository: equineEventRepository,
+          canEdit: authController.currentUser?.role == 'admin',
         ),
       ),
     );

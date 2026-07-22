@@ -95,6 +95,13 @@ class Container:
         )
         self._services["auth_service"] = AuthService()
 
+        from app.services.role_request_service import RoleRequestService
+
+        self._services["role_request_service"] = RoleRequestService(
+            user_service=self._services["user_service"],
+            notification_service=self._services["notification_service"],
+        )
+
         # ── Services that depend on NotificationService ──
         from app.services.booking_service import BookingService
         from app.services.reservation_draft_service import ReservationDraftService
@@ -185,6 +192,10 @@ class Container:
     @property
     def user_service(self) -> Any:
         return self._services["user_service"]
+
+    @property
+    def role_request_service(self) -> Any:
+        return self._services["role_request_service"]
 
     @property
     def experience_service(self) -> Any:

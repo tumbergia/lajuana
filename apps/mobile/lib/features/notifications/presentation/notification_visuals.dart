@@ -90,6 +90,16 @@ NotificationVisuals notificationVisuals(
         tone: AppBadgeTone.warning,
         icon: Symbols.wb_sunny,
       ),
+    'role_request_created' => const NotificationVisuals(
+        label: 'Solicitud de rol',
+        tone: AppBadgeTone.warning,
+        icon: Symbols.badge,
+      ),
+    'role_request_decided' => const NotificationVisuals(
+        label: 'Rol resuelto',
+        tone: AppBadgeTone.primary,
+        icon: Symbols.verified_user,
+      ),
     _ => const NotificationVisuals(
         label: 'Notificación',
         tone: AppBadgeTone.neutral,

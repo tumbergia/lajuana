@@ -6,17 +6,36 @@ import 'package:mobile_ui/src/voice/voice_route.dart';
 
 enum AppNavItem { none, inicio, reservas, equinos, experiencias, mas }
 
+/// Default bottom-nav tabs for administrators (full shell).
+const kDefaultAdminNavItems = <AppNavItem>[
+  AppNavItem.inicio,
+  AppNavItem.reservas,
+  AppNavItem.equinos,
+  AppNavItem.mas,
+];
+
+/// Bottom-nav tabs for guides (no analytics / Inicio).
+const kGuideNavItems = <AppNavItem>[
+  AppNavItem.reservas,
+  AppNavItem.equinos,
+  AppNavItem.mas,
+];
+
 class AppBottomNav extends StatefulWidget {
   final AppNavItem current;
   final ValueChanged<AppNavItem>? onTap;
   final Future<void> Function(BuildContext context, VoiceContext voiceContext)?
       onVoiceLongPress;
 
+  /// Tabs to render. Defaults to the full admin set.
+  final List<AppNavItem> visibleItems;
+
   const AppBottomNav({
     super.key,
     required this.current,
     this.onTap,
     this.onVoiceLongPress,
+    this.visibleItems = kDefaultAdminNavItems,
   });
 
   @override
@@ -119,64 +138,48 @@ class _AppBottomNavState extends State<AppBottomNav>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Expanded(
-                  child: _NavButton(
-                    item: AppNavItem.inicio,
-                    current: widget.current,
-                    label: 'Inicio',
-                    icon: Icons.grid_view_rounded,
-                    onTap: _handleTap,
-                    onHoldStart: _onLongPressStart,
-                    onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.inicio,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.inicio,
+                for (final item in widget.visibleItems)
+                  Expanded(
+                    child: _NavButton(
+                      item: item,
+                      current: widget.current,
+                      label: _labelFor(item),
+                      icon: _iconFor(item),
+                      onTap: _handleTap,
+                      onHoldStart: _onLongPressStart,
+                      onHoldEnd: _onLongPressEnd,
+                      pressed: _pressedItem == item,
+                      launchingVoice: _voiceLaunchingItem == item,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: _NavButton(
-                    item: AppNavItem.reservas,
-                    current: widget.current,
-                    label: 'Reservas',
-                    icon: Icons.calendar_today_rounded,
-                    onTap: _handleTap,
-                    onHoldStart: _onLongPressStart,
-                    onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.reservas,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.reservas,
-                  ),
-                ),
-                Expanded(
-                  child: _NavButton(
-                    item: AppNavItem.equinos,
-                    current: widget.current,
-                    label: 'Equinos',
-                    icon: Symbols.chess_knight,
-                    onTap: _handleTap,
-                    onHoldStart: _onLongPressStart,
-                    onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.equinos,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.equinos,
-                  ),
-                ),
-                Expanded(
-                  child: _NavButton(
-                    item: AppNavItem.mas,
-                    current: widget.current,
-                    label: 'Más',
-                    icon: Icons.menu_rounded,
-                    onTap: _handleTap,
-                    onHoldStart: _onLongPressStart,
-                    onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.mas,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.mas,
-                  ),
-                ),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  String _labelFor(AppNavItem item) {
+    return switch (item) {
+      AppNavItem.inicio => 'Inicio',
+      AppNavItem.reservas => 'Reservas',
+      AppNavItem.equinos => 'Equinos',
+      AppNavItem.experiencias => 'Experiencias',
+      AppNavItem.mas => 'Más',
+      AppNavItem.none => '',
+    };
+  }
+
+  IconData _iconFor(AppNavItem item) {
+    return switch (item) {
+      AppNavItem.inicio => Icons.grid_view_rounded,
+      AppNavItem.reservas => Icons.calendar_today_rounded,
+      AppNavItem.equinos => Symbols.chess_knight,
+      AppNavItem.experiencias => Icons.explore_rounded,
+      AppNavItem.mas => Icons.menu_rounded,
+      AppNavItem.none => Icons.circle,
+    };
   }
 }
 

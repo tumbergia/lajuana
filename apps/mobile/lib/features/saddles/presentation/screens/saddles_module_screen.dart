@@ -23,10 +23,14 @@ class SaddlesModuleScreen extends StatefulWidget {
     super.key,
     this.showHeader = true,
     this.saddlesModule,
+    this.canManage = true,
   });
 
   final bool showHeader;
   final SaddlesModule? saddlesModule;
+
+  /// When false (e.g. guide), hide create/edit/delete actions.
+  final bool canManage;
 
   @override
   State<SaddlesModuleScreen> createState() => _SaddlesModuleScreenState();
@@ -241,45 +245,47 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
                 ),
               ],
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  label: 'Editar',
-                  icon: Icons.edit_rounded,
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    _openEditSheet(saddle);
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (saddle.isDeleted)
+              if (widget.canManage) ...[
                 SizedBox(
                   width: double.infinity,
                   child: AppButton(
-                    label: 'Restaurar',
-                    icon: Icons.restore_rounded,
-                    variant: AppButtonVariant.secondary,
+                    label: 'Editar',
+                    icon: Icons.edit_rounded,
                     onPressed: () {
                       Navigator.of(ctx).pop();
-                      _confirmRestoreSaddle(saddle);
-                    },
-                  ),
-                )
-              else
-                SizedBox(
-                  width: double.infinity,
-                  child: AppButton(
-                    label: 'Eliminar',
-                    icon: Icons.delete_outline_rounded,
-                    variant: AppButtonVariant.secondary,
-                    onPressed: () {
-                      Navigator.of(ctx).pop();
-                      _confirmDeleteSaddle(saddle);
+                      _openEditSheet(saddle);
                     },
                   ),
                 ),
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
+                if (saddle.isDeleted)
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Restaurar',
+                      icon: Icons.restore_rounded,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _confirmRestoreSaddle(saddle);
+                      },
+                    ),
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Eliminar',
+                      icon: Icons.delete_outline_rounded,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _confirmDeleteSaddle(saddle);
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 10),
+              ],
               SizedBox(
                 width: double.infinity,
                 child: AppButton(
@@ -375,25 +381,26 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
               _listController.setShowOnlyAvailable(null);
             }
           },
-          items: const [
-            AppSegmentedFilterItem(label: 'Activas', value: 'active'),
-            AppSegmentedFilterItem(label: 'Disponibles', value: 'available'),
-            AppSegmentedFilterItem(
+          items: [
+            const AppSegmentedFilterItem(label: 'Activas', value: 'active'),
+            const AppSegmentedFilterItem(label: 'Disponibles', value: 'available'),
+            const AppSegmentedFilterItem(
               label: 'No disponibles',
               value: 'unavailable',
             ),
-            AppSegmentedFilterItem(label: 'Eliminadas', value: 'deleted'),
+            if (widget.canManage)
+              const AppSegmentedFilterItem(label: 'Eliminadas', value: 'deleted'),
           ],
         ),
-        const SizedBox(height: 12),
-
-        // Add button
-        AppButton(
-          label: 'Registrar silla',
-          icon: Icons.add,
-          expanded: true,
-          onPressed: _openCreateSheet,
-        ),
+        if (widget.canManage) ...[
+          const SizedBox(height: 12),
+          AppButton(
+            label: 'Registrar silla',
+            icon: Icons.add,
+            expanded: true,
+            onPressed: _openCreateSheet,
+          ),
+        ],
         const SizedBox(height: 16),
 
         // Error banner
@@ -510,17 +517,22 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Registra una nueva silla usando el boton de abajo',
+            widget.canManage
+                ? 'Registra una nueva silla usando el boton de abajo'
+                : 'Aun no hay sillas en el inventario',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          AppButton(
-            label: 'Registrar silla',
-            icon: Icons.add,
-            onPressed: _openCreateSheet,
-          ),
+          if (widget.canManage) ...[
+            const SizedBox(height: 24),
+            AppButton(
+              label: 'Registrar silla',
+              icon: Icons.add,
+              onPressed: _openCreateSheet,
+            ),
+          ],
         ],
       ),
     );

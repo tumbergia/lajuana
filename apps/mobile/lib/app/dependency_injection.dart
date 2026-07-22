@@ -31,6 +31,7 @@ import 'package:mobile/features/voice_assistant/voice_assistant_module.dart';
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/configuration/infrastructure/configuration_api_client.dart';
 import 'package:mobile/features/notifications/notifications_module.dart';
+import 'package:mobile/features/users/users_module.dart';
 
 /// Value object holding all initialized application dependencies.
 class AppDependencies {
@@ -49,6 +50,7 @@ class AppDependencies {
     required this.voiceAssistantModule,
     required this.configurationModule,
     required this.notificationsModule,
+    required this.usersModule,
   });
 
   final AuthController authController;
@@ -64,6 +66,7 @@ class AppDependencies {
   final VoiceAssistantModule voiceAssistantModule;
   final LaJuanaConfigurationModule configurationModule;
   final NotificationsModule notificationsModule;
+  final UsersModule usersModule;
 
   /// Cola de salida compartida para escrituras offline (asignaciones, saddles).
   final OutboxRepository outbox;
@@ -76,6 +79,7 @@ class AppDependencies {
     providersModule.listController.dispose();
     voiceAssistantModule.controller.dispose();
     notificationsModule.dispose();
+    usersModule.dispose();
   }
 }
 
@@ -218,6 +222,12 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     outbox: outbox,
   );
 
+  final usersModule = UsersModule.create(
+    baseUrl: apiBaseUrl,
+    tokenStorage: tokenStorage,
+    refreshSession: refreshSession,
+  );
+
   return AppDependencies(
     authController: authController,
     apiClient: apiClient,
@@ -233,5 +243,6 @@ Future<AppDependencies> createDependencies(String apiBaseUrl) async {
     voiceAssistantModule: voiceAssistantModule,
     configurationModule: configurationModule,
     notificationsModule: notificationsModule,
+    usersModule: usersModule,
   );
 }
