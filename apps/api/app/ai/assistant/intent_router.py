@@ -9,13 +9,18 @@ from app.schemas.assistant_plan import AssistantAction, AssistantPlan, ToolArgs
 _logger = logging.getLogger(__name__)
 
 _EXPERIENCE_KEYWORDS = [
-    r"\b(listame|lista|muestra|dime|enseñame|enseñame|cuales|que.ofrecen|que.hay|que.tienen)\b",
+    # "dime" solo NO basta (rompe "dime eso en español" / "dime la ubicación").
+    r"\b(listame|lista|muestra|enseñame|enseñame|cuales|que.ofrecen|que.hay|que.tienen)\b",
+    r"\b(dime|dame)\b.*\b(experiencias|actividades|planes|recorridos|catalogo|opciones|servicios)\b",
     r"\b(experiencias|actividades|planes|recorridos|catalogo|opciones|servicios)\b",
 ]
 
 _DETAIL_KEYWORDS = [
-    r"\b(detalles?|descripcion|informacion|en.que.consiste|como.es|que.incluye|que.se.hace)\b",
-    r"\b(hablame|cuentame|dime.mas|cuentame|explicame|mas.sobre|quiero.saber)\b",
+    r"\b(detalles?|descripcion|descripción|informacion|información|en.que.consiste|como.es|cómo.es|que.incluye|qué.incluye|que.se.hace|qué.se.hace)\b",
+    r"\b(hablame|háblame|cuentame|cuéntame|dime.mas|dime.más|explicame|explícame|mas.sobre|más.sobre|quiero.saber)\b",
+    r"\bacerca\s+de\b",
+    r"\b(dime|dima|dame)\b.*\b(acerca|sobre)\b",
+    r"\bsobre\s+(la|el|los|las|una?|esta|este)\b",
 ]
 
 _PRICE_KEYWORDS = [
@@ -63,14 +68,36 @@ _BOLD_KEYWORDS = [
 ]
 
 _PUBLIC_CONFIGURATION_KEYWORDS = [
-    r"\b(donde|dnd).*(queda|qda|ubicacion|ubikcion)\b",
-    r"\b(ubicacion|ubikcion|como.llegar|google.maps|maps)\b",
-    r"\b(que|q|cuales).*(edad|edades)\b",
-    r"\b(edad|minima|maxima|rango.de.edad)\b",
-    r"\b(cuanto|cuanto|qto).*(tiempo|tmpo).*(pre.?reserva|preresrva|pagar)\b",
+    r"\b(donde|dónde|dnd).*(queda|quedan|qda|ubicacion|ubicación|ubikcion)\b",
+    r"\b(ubicacion|ubicación|ubikcion|como.llegar|cómo.llegar|google.maps|maps)\b",
+    r"\b(que|qué|q|cuales|cuáles).*(edad|edades)\b",
+    r"\b(edad|minima|mínima|maxima|máxima|rango.de.edad)\b",
+    r"\b(cuanto|cuánto|qto).*(tiempo|tmpo).*(pre.?reserva|preresrva|pagar)\b",
     r"\b(vencimiento|vence|caduca).*(pre.?reserva|preresrva)\b",
     r"\b(cuantos|cuántos).*(dias|días).*(anticipacion|anticipación|antes).*(reservar|rsrvar)\b",
     r"\b(necesito|tengo.que|debo).*(comprobante|soporte).*(pago)\b",
+]
+
+# Historia / cultura / empresa (KB estática). Solo empresa — no “qué es una experiencia”.
+_COMPANY_KNOWLEDGE_KEYWORDS = [
+    r"\b(quienes|quiénes)\s+(somos|son)\b",
+    r"\b(quien|quién|quienes|quiénes)\s+(fundo|fundó|funda|fundaron)\b",
+    r"\bfundador(es)?\b",
+    r"\b(jairo|pamela)\b",
+    r"\b(historia|origen)\b.*\b(juana|empresa|finca|ustedes)\b",
+    r"\b(historia|origen)\s+(de\s+)?(la\s+)?juana\b",
+    r"\b(que|qué)\s+es\s+(esto\s+)?(de\s+)?(la\s+)?juana\b",
+    r"\b(que|qué)\s+es\s+esto\s+de\s+la\s+juana",
+    r"\b(sobre|acerca\s+de)\s+(la\s+)?juana\b",
+    r"\bdescripci[oó]n\s+(general\s+)?(de\s+)?(la\s+)?juana\b",
+    r"\b(informaci[oó]n|info)\s+(general\s+)?(de\s+)?(la\s+)?juana\b",
+    r"\b(cuentame|cuéntame|hablame|háblame|dime)\s+(mas\s+|más\s+)?(sobre\s+|de\s+)?(la\s+)?juana\b",
+    r"\bpaisaje\s+cultural\s+cafetero\b",
+    r"\bunesco\b",
+    r"\bsostenibilidad\b",
+    r"\bpropuesta\s+de\s+valor\b",
+    r"\b(historia|tradicion|tradición)\b.*(mulas?|arrier)",
+    r"\barrier[ií]a\b",
 ]
 
 _ADMIN_CONTEXT_KEYWORDS = [
@@ -362,25 +389,42 @@ def _extract_experience_name(text: str) -> str | None:
     # Strip common greetings first
     for greeting in _GREETINGS:
         cleaned = re.sub(greeting, "", cleaned, flags=re.IGNORECASE).strip()
-    # Remove leading intent phrases
+    # Remove leading intent phrases (order matters: longer / more specific first)
     for prefix in [
         r"dame\s+(los\s+)?(detalles?\s+)?(de\s+)?(la\s+)?(para\s+)?(esta\s+)?(de\s+)?",
         r"en\s+que\s+consiste\s+",
         r"cuentame\s+de\s+",
         r"hablame\s+de\s+",
+        r"(dime|dima)\s+(acerca\s+de\s+|sobre\s+)?",
         r"dime\s+mas\s+(sobre|de)\s+",
         r"quiero\s+saber\s+(de|sobre)\s+",
+        r"acerca\s+de\s+(la|el|los|las)?\s*",
+        r"sobre\s+(la|el|los|las|una?)\s+",
         r"(i\s+want\s+to|i\s+would\s+like\s+to|please|need\s+to)\s+(book|reserve)\s+(the\s+)?",
         r"(book|reserve)\s+(the\s+)?",
+        # "quiero hacer una reserva para la montaña..." / "me gustaria hacer una reservacion para..."
+        r"(quiero|quisiera|me\s+gustaria|me\s+gustaría|deseo|necesito)\s+"
+        r"(hacer\s+)?(una\s+)?(reserva|reservaci[oó]n)\s+(para\s+)?(la|el|los|las)?\s*",
+        r"(hacer\s+)?(una\s+)?(reserva|reservaci[oó]n)\s+(para\s+)?(la|el|los|las)?\s*",
         r"(quiero|quisiera|me.gustaria|me.interesa|deseo|necesito)\s+(reservar|apartar|separar|agendar)\s+(la|el|los|las)?\s*",
         r"(reservar|apartar|separar|agendar)\s+(la|el|los|las)\s+",
     ]:
         cleaned = re.sub(f"^{prefix}", "", cleaned, flags=re.IGNORECASE).strip()
     # Strip leading articles (ES + EN)
     cleaned = re.sub(r"^(el|la|los|las|un|una|the|a|an)\s+", "", cleaned, flags=re.IGNORECASE).strip()
-    # Strip trailing date/people info: "X para 3 el 5 de agosto"
+    # Strip trailing date/people info. Do NOT split on bare "para" when it was already
+    # consumed by a reservation-prefix ("reserva para X"); use "para N personas" patterns.
     cleaned = re.split(
-        r"\s+(para|el|la|los|las|y|a|con|for|on|at|people|personas|participantes|adultos|kids|guests|niños)\b",
+        r"\s+(para\s+\d+|el\s+\d|la\s+\d|los|las|y\s+\d|a\s+\d|con\s+\d|"
+        r"for\s+\d|on\s+\d|at\s+\d|people|personas|participantes|adultos|kids|guests|niños|"
+        r"\d+\s*(personas?|participantes?|people|guests?|adultos?))\b",
+        cleaned,
+        maxsplit=1,
+        flags=re.IGNORECASE,
+    )[0].strip()
+    # Also strip "para 4" style if left after name
+    cleaned = re.split(
+        r"\s+para\s+\d+\b",
         cleaned,
         maxsplit=1,
         flags=re.IGNORECASE,
@@ -410,7 +454,7 @@ def _extract_experience_name(text: str) -> str | None:
     cleaned = cleaned.rstrip(",.!?;:.\n\r ")
     if len(cleaned) > 2 and not any(
         w in cleaned.lower()
-        for w in ["experiencias", "actividades", "planes", "precio", "tienes", "ofrecen"]
+        for w in ["experiencias", "actividades", "planes", "precio", "tienes", "ofrecen", "reserva", "reservacion", "reservación"]
     ):
         return cleaned
     return None
@@ -516,6 +560,42 @@ def detect_and_build_plan(
             audit_summary="Intent detectado: consulta de configuración pública vigente.",
         )
 
+    # ── Horarios de atención → reglas públicas (incluyen opening_hours) ──
+    if re.search(r"\b(horario|horarios|abren|abre|cierran|abierto|opening\s+hours)\b", msg_lower):
+        # Si también piden ubicación, igual usamos reglas públicas (tienen ambos).
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.93,
+            tool_name="get_public_business_rules",
+            arguments=ToolArgs(),
+            user_goal="El usuario pregunta por horarios (y/o ubicación) de La Juana.",
+            audit_summary="Intent detectado: horarios/ubicación vía reglas públicas.",
+        )
+
+    # ── “Qué es una experiencia” → catálogo, NO RAG ──
+    if re.search(r"\b(que|qué)\s+es\s+una\s+experiencia\b", msg_lower):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.92,
+            tool_name="list_experiences",
+            arguments=ToolArgs(limit=50),
+            user_goal="El usuario pregunta qué es una experiencia; mostrar catálogo.",
+            audit_summary="Intent detectado: explicar experiencias vía list_experiences.",
+        )
+
+    # ── Historia / cultura / empresa → KB estática (RAG) ──
+    # Después de reglas live; antes de reserva. Keywords acotados para no
+    # interceptar "quiero reservar… 3 personas…".
+    if _matches_any(msg_lower, _COMPANY_KNOWLEDGE_KEYWORDS):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.93,
+            tool_name="search_company_knowledge",
+            arguments=ToolArgs(query=user_message.strip()[:500]),
+            user_goal="El usuario pregunta por historia, fundadores o cultura de La Juana.",
+            audit_summary="Intent detectado: consulta de conocimiento corporativo (RAG).",
+        )
+
     # ── Name + email response → create_reservation_draft direct ──
     # Cuando el usuario envía su nombre y correo (típicamente después de que
     # check_availability_and_quote pidió esos datos), y la sesión ya tiene
@@ -561,18 +641,111 @@ def detect_and_build_plan(
                 ),
             )
 
-    # ── Experience details (check before list to avoid "dime" matching list) ──
-    if _matches_any(msg_lower, _DETAIL_KEYWORDS):
-        args = ToolArgs()
+    # ── Follow-up de reserva: fecha + personas con experiencia ya en sesión ──
+    # Evita el flujo lento check_availability → "¿te parece?" → quote → "¿aviso?".
+    slots = session_slots or {}
+    followup_participants = _extract_participant_count(msg_lower) or (
+        int(slots["participant_count"])
+        if str(slots.get("participant_count") or "").isdigit()
+        else None
+    )
+    # Fecha del mensaje O de la sesión (turno "3 personas" tras elegir fecha).
+    followup_date = _extract_date(msg_lower) or slots.get("requested_date")
+    if followup_date is not None:
+        followup_date = str(followup_date)
+    session_exp_id = slots.get("experience_id")
+    session_exp_query = slots.get("experience_query") or slots.get("experience_name")
+    # Si el mensaje trae personas (o fecha) y la sesión ya tiene el resto → combinada.
+    msg_has_participants = _extract_participant_count(msg_lower) is not None
+    msg_has_date = _extract_date(msg_lower) is not None
+    if (
+        followup_participants
+        and followup_date
+        and (exp_name or session_exp_id or session_exp_query)
+        and (msg_has_participants or msg_has_date)
+        and msg_lower.strip() not in {"si", "sí", "yes", "ok", "okay", "dale"}
+    ):
+        args = ToolArgs(
+            participant_count=int(followup_participants),
+            requested_date=followup_date,
+        )
         if exp_name:
             args.experience_query = exp_name
+        elif session_exp_query:
+            args.experience_query = str(session_exp_query)
+        if session_exp_id:
+            args.experience_id = str(session_exp_id)
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.93,
+            tool_name="check_availability_and_quote",
+            arguments=args,
+            user_goal="El usuario completó fecha y personas para cotizar/reservar.",
+            audit_summary=(
+                "Intent detectado: fecha+personas con experiencia en sesión; "
+                "tool combinada."
+            ),
+        )
+
+    # ── Experience details (check before list to avoid "dime" matching list) ──
+    # Excepción: "información de todas las experiencias" / "todas" → listado.
+    _catalog_all = bool(
+        re.search(
+            r"\b(todas?|toditos?|completas?|lista\s+completa|el\s+cat[aá]logo)\b",
+            msg_lower,
+        )
+        and _matches_any(msg_lower, _EXPERIENCE_KEYWORDS)
+    )
+    if _matches_any(msg_lower, _DETAIL_KEYWORDS) and not _catalog_all:
+        # "descripción/info de la juana" no es una experiencia del catálogo → RAG
+        if _matches_any(msg_lower, _COMPANY_KNOWLEDGE_KEYWORDS) or re.search(
+            r"\b(descripci[oó]n|informaci[oó]n|info|detalles?)\b.*\b(la\s+)?juana\b",
+            msg_lower,
+        ):
+            return AssistantPlan(
+                action=AssistantAction.TOOL_CALL,
+                confidence=0.94,
+                tool_name="search_company_knowledge",
+                arguments=ToolArgs(query=user_message.strip()[:500]),
+                user_goal="El usuario pide una descripción general de La Juana.",
+                audit_summary=(
+                    "Intent detectado: descripción de empresa (RAG), "
+                    "no detalle de experiencia."
+                ),
+            )
+        # "en qué consiste / no entiendo" sin nombre de experiencia → catálogo
+        vague = bool(
+            re.search(
+                r"\b(no\s+entiend|entiendo|consiste|que\s+se\s+va\s+a\s+hacer|"
+                r"qué\s+se\s+va\s+a\s+hacer|que\s+es\s+una\s+experiencia|"
+                r"qué\s+es\s+una\s+experiencia)\b",
+                msg_lower,
+            )
+        )
+        if not exp_name or vague:
+            return AssistantPlan(
+                action=AssistantAction.TOOL_CALL,
+                confidence=0.9,
+                tool_name="list_experiences",
+                arguments=ToolArgs(limit=50),
+                user_goal="El usuario no entiende qué se hace; mostrar catálogo.",
+                audit_summary=(
+                    "Intent detectado: detalle vago sin experiencia → list_experiences."
+                ),
+            )
+        # Pass the full message so the tool can load the catalog and match
+        # one or many experiences (typos / multi-ask in the same turn).
+        detail_query = (user_message or "").strip()[:800] or exp_name
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.92,
             tool_name="get_experience_detail",
-            arguments=args,
-            user_goal=f"El usuario quiere detalles de una experiencia{' (' + exp_name + ')' if exp_name else ''}.",
-            audit_summary="Intent detectado: consultar detalle de experiencia.",
+            arguments=ToolArgs(experience_query=detail_query),
+            user_goal="El usuario quiere detalles de una o más experiencias.",
+            audit_summary=(
+                "Intent detectado: detalle de experiencia(s) "
+                "(catálogo completo + match)."
+            ),
         )
 
     # ── Intención de reservar: experiencia + fecha + personas → check_availability_and_quote ──

@@ -130,3 +130,60 @@ def test_resolve_empty_query() -> None:
 def test_resolve_none_query() -> None:
     result = _run(ExperienceCatalogResolver().resolve(None, experiences=[]))  # type: ignore[arg-type]
     assert result.status == ExperienceResolutionStatus.NOT_FOUND
+
+
+def test_resolve_many_multi_and_typo() -> None:
+    catalog = [
+        _fake_exp(
+            id="1",
+            name="Cabalgata Básica",
+            slug="cabalgata-basica",
+            aliases=["cabalgata"],
+            tags=[],
+            description="Cabalgata corta.",
+        ),
+        _fake_exp(
+            id="2",
+            name="Los Chorros",
+            slug="los-chorros",
+            aliases=["chorros"],
+            tags=[],
+            description="Cascadas.",
+        ),
+        _fake_exp(
+            id="3",
+            name="Fábrica de Cementos",
+            slug="fabrica-cementos",
+            aliases=["fabrica"],
+            tags=[],
+            description="Recorrido industrial.",
+        ),
+        _fake_exp(
+            id="4",
+            name="Recorrido de medio día",
+            slug="medio-dia",
+            aliases=["medio dia"],
+            tags=[],
+            description="Plan corto.",
+        ),
+    ]
+    query = "cabalgata basica y los chorros y también fabrca"
+    matched = _run(ExperienceCatalogResolver().resolve_many(query, experiences=catalog))
+    names = {m.name for m in matched}
+    assert names == {"Cabalgata Básica", "Los Chorros", "Fábrica de Cementos"}
+
+
+def test_resolve_fuzzy_typo_single() -> None:
+    catalog = [
+        _fake_exp(
+            id="3",
+            name="Fábrica de Cementos",
+            slug="fabrica-cementos",
+            aliases=["fabrica de cementos"],
+            tags=[],
+            description="Industrial.",
+        ),
+    ]
+    result = _run(ExperienceCatalogResolver().resolve("fabrca", experiences=catalog))
+    assert result.status == ExperienceResolutionStatus.FOUND
+    assert result.experience_name == "Fábrica de Cementos"

@@ -5,6 +5,7 @@ from app.ai.assistant.prompts.planner import (
     ADMIN_PLANNER_SYSTEM_PROMPT,
     PLANNER_SYSTEM_PROMPT,
 )
+from app.ai.assistant.tool_catalog import render_tools_for_prompt
 from app.ai.language.messages import build_language_instruction
 from app.ai.providers.factory import get_llm_provider
 from app.core.logging import logger
@@ -201,6 +202,7 @@ class GeminiPlanner:
                 )
 
         language_instruction = build_language_instruction(language)
+        tools_section = render_tools_for_prompt(channel)
 
         if channel == "admin_api":
             system_prompt = ADMIN_PLANNER_SYSTEM_PROMPT.format(
@@ -213,6 +215,7 @@ class GeminiPlanner:
             system_prompt = PLANNER_SYSTEM_PROMPT.format(
                 today_formatted=today_formatted,
                 today_year=str(now.year),
+                tools_section=tools_section,
                 admin_tools_section=admin_tools_section,
                 language_instruction=language_instruction,
             )

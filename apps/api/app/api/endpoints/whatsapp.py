@@ -29,7 +29,16 @@ async def _receive_webhook(
     request: Request,
     ingestion: WhatsAppIngestionService,
 ) -> dict[str, Any]:
-    raw_body = await request.body()
+    try:
+        raw_body = await request.body()
+    except Exception as exc:
+        # Meta/ngrok a veces corta el body (ClientDisconnect); no tumbar el worker.
+        from starlette.requests import ClientDisconnect
+
+        if isinstance(exc, ClientDisconnect) or exc.__class__.__name__ == "ClientDisconnect":
+            logger.warning("[webhook] ClientDisconnect reading body; ignoring")
+            return {"received": True, "ingested_messages": 0, "disconnected": True}
+        raise
     if settings.whatsapp_app_secret:
         supplied = request.headers.get("X-Hub-Signature-256", "")
         expected = (

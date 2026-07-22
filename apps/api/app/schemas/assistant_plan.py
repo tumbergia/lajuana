@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class AssistantAction(StrEnum):
@@ -15,6 +15,15 @@ class RiskLevel(StrEnum):
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
+
+
+def _clip_str(value: object, max_length: int) -> object:
+    """Recorta strings del LLM que exceden el schema (Gemini a veces se pasa)."""
+    if not isinstance(value, str) or len(value) <= max_length:
+        return value
+    if max_length <= 1:
+        return value[:max_length]
+    return value[: max_length - 1].rstrip() + "…"
 
 
 class ToolArgs(BaseModel):
@@ -39,6 +48,8 @@ class ToolArgs(BaseModel):
     search_days_after: int | None = None
     limit: int | None = None
     bold_requested: bool = False
+    query: str | None = None
+    top_k: int | None = None
 
 
 class AssistantPlan(BaseModel):
@@ -78,7 +89,37 @@ class AssistantPlan(BaseModel):
         description="Resumen auditable, sin chain-of-thought.",
     )
 
+    @field_validator("user_goal", mode="before")
+    @classmethod
+    def _clip_user_goal(cls, value: object) -> object:
+        return _clip_str(value, 300)
+
+    @field_validator("response", mode="before")
+    @classmethod
+    def _clip_response(cls, value: object) -> object:
+        return _clip_str(value, 1200)
+
+    @field_validator("response_style", mode="before")
+    @classmethod
+    def _clip_response_style(cls, value: object) -> object:
+        return _clip_str(value, 200)
+
+    @field_validator("audit_summary", mode="before")
+    @classmethod
+    def _clip_audit_summary(cls, value: object) -> object:
+        return _clip_str(value, 500)
+
 
 class ToolResultResponse(BaseModel):
     response: str = Field(min_length=1, max_length=1200)
     audit_summary: str = Field(min_length=1, max_length=500)
+
+    @field_validator("response", mode="before")
+    @classmethod
+    def _clip_response(cls, value: object) -> object:
+        return _clip_str(value, 1200)
+
+    @field_validator("audit_summary", mode="before")
+    @classmethod
+    def _clip_audit_summary(cls, value: object) -> object:
+        return _clip_str(value, 500)

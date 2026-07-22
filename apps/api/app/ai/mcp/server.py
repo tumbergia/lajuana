@@ -19,6 +19,7 @@ from app.ai.mcp.tools import (
     get_experience_detail,
     get_participant_form_status,
     get_public_business_rules,
+    search_company_knowledge,
     get_reservation_public_summary,
     get_reservation_status_by_phone,
     guide_create_service_log,
@@ -75,6 +76,15 @@ mcp.tool(
         "politica de alcohol, comportamiento, restricciones y disclaimer."
     ),
 )(get_public_business_rules)
+
+mcp.tool(
+    name="search_company_knowledge",
+    description=(
+        "Busca en la base de conocimiento estatica de La Juana: "
+        "historia, fundadores, cultura, UNESCO, sostenibilidad. "
+        "No inventa precios ni datos operativos live."
+    ),
+)(search_company_knowledge)
 
 mcp.tool(
     name="list_available_schedules",

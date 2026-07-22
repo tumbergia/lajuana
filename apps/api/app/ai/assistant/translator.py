@@ -8,7 +8,8 @@ Estrategia:
 - LRU cache en memoria para no traducir 2 veces el mismo mensaje.
 - Si el texto ya está en el idioma destino → no traduce.
 - Si la traducción falla → devuelve el texto original (fail-safe).
-- Solo traduce si el idioma destino está en RESPONSE_LANGUAGES (es, en).
+- Solo traduce si el idioma destino está en RESPONSE_LANGUAGES
+  (es, en, fr, de, it, ru, zh, ja).
 """
 
 from __future__ import annotations

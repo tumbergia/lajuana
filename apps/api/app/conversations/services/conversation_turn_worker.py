@@ -308,7 +308,10 @@ class ConversationTurnWorker:
             return False
 
         reloaded = await MessageBufferDocument.find_one(
-            {"buffer_id": buffer_doc.buffer_id, "status": "scheduled"}
+            {
+                "buffer_id": buffer_doc.buffer_id,
+                "status": {"$in": ["scheduled", "processing", "buffering"]},
+            }
         )
         if not reloaded:
             await self._lock_service.release(conversation_id=conversation_id)

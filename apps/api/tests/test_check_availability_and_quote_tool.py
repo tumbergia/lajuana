@@ -260,6 +260,22 @@ def test_intent_router_reserve_with_full_info_uses_combined() -> None:
     assert plan.arguments.participant_count == 3
 
 
+def test_intent_router_hacer_una_reserva_para_uses_combined() -> None:
+    """Regresión: 'hacer una reserva para X' debe extraer la experiencia, no el prefijo."""
+    from app.ai.assistant.intent_router import detect_and_build_plan
+
+    plan = detect_and_build_plan(
+        "quiero hacer una reserva para la montaña de cristal 4 personas el 29 de agosto"
+    )
+    assert plan is not None
+    assert plan.tool_name == "check_availability_and_quote"
+    assert plan.arguments.experience_query
+    assert "cristal" in plan.arguments.experience_query.lower()
+    assert "quiero" not in plan.arguments.experience_query.lower()
+    assert plan.arguments.participant_count == 4
+    assert plan.arguments.requested_date == "2026-08-29"
+
+
 def test_intent_router_full_info_no_keyword_uses_combined_fallback() -> None:
     """Mensaje con exp + fecha + pax sin keyword explícito → fallback a combined."""
     from app.ai.assistant.intent_router import detect_and_build_plan

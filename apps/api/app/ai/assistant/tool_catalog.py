@@ -23,7 +23,11 @@ _TOOL_CATALOG: dict[str, dict[str, object]] = {
     },
     "get_experience_detail": {
         "role": "client",
-        "desc": "Detalle de una experiencia: descripcion, duracion, incluye, precio desde.",
+        "desc": (
+            "Detalle de UNA o VARIAS experiencias. Carga el catálogo completo y "
+            "empareja por nombre/alias (tolera typos). Pasar el mensaje del usuario "
+            "en experience_query cuando pidan info de varias a la vez."
+        ),
         "args": ["experience_id?", "experience_query?"],
     },
     "get_all_experiences": {
@@ -35,6 +39,11 @@ _TOOL_CATALOG: dict[str, dict[str, object]] = {
         "role": "client",
         "desc": "Ubicación, edades, anticipación, vencimiento de pre-reserva, comprobante obligatorio.",
         "args": [],
+    },
+    "search_company_knowledge": {
+        "role": "client",
+        "desc": "SOLO empresa: historia, fundadores, UNESCO, sostenibilidad, horarios, qué es La Juana. NUNCA para ‘qué es una experiencia’ ni catálogo.",
+        "args": ["query:str", "top_k?:int=3"],
     },
     "check_experience_availability": {
         "role": "client",
@@ -63,7 +72,7 @@ _TOOL_CATALOG: dict[str, dict[str, object]] = {
     },
     "create_reservation_draft": {
         "role": "client",
-        "desc": "Crea pre-reserva con TTL. REQUIERE haber llamado antes check_experience_availability Y quote_experience.",
+        "desc": "Crea pre-reserva con TTL. REQUIERE quote_snapshot en sesión (vía check_availability_and_quote o check+quote previos).",
         "args": ["experience_id", "schedule_id?", "participant_count:int<=8", "holder_phone", "holder_name", "holder_email", "requested_date:YYYY-MM-DD", "quote_snapshot:object", "conversation_id"],
     },
     "get_reservation_public_summary": {

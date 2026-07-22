@@ -1,23 +1,25 @@
-"""Tests for get_experience_detail end-to-end with mocked ExperienceDocument.
+"""Tests for get_experience_detail end-to-end with mocked catalog.
 
 Validates:
 - Returns all fields from the document (not just a subset)
-- Fuzzy matching finds experiences by partial name
+- Fuzzy matching finds experiences by partial name / typos
 - Singular/plural variants work
+- Multi-experience queries return all matches
 - Returns 'not found' for non-existent experiences
-- Aliases are searched as fallback
-- Tags are searched as fallback
+- Aliases and tags are searched as fallback
 """
 
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 
 def _make_exp(
+    *,
+    exp_id: str = "exp-001",
     name: str = "Fabrica de Cemento",
     slug: str = "fabrica-de-cemento",
     description: str = "Recorrido por la antigua fabrica de cementos.",
@@ -31,7 +33,7 @@ def _make_exp(
     duration_minutes: int | None = 240,
 ) -> SimpleNamespace:
     return SimpleNamespace(
-        id="exp-001",
+        id=exp_id,
         name=name,
         slug=slug,
         subtitle=subtitle,
@@ -76,27 +78,29 @@ def _make_exp(
     )
 
 
-def _patch_experience_and_log(exp):
-    """Patch ExperienceDocument.find_all and ToolCallLogDocument.insert for a test.
-
-    In Beanie, `find_all()` is sync and returns a query object.
-    The query's `.to_list()` is async and returns the list of docs.
-    """
-    from unittest.mock import MagicMock
-
+def _patch_catalog(experiences: list) -> tuple:
+    """Patch catalog load + ToolCallLogDocument.insert."""
     from app.documents import tool_call_log_document
 
-    query_mock = SimpleNamespace(to_list=AsyncMock(return_value=[exp]))
-
-    # Build a mock class that accepts any kwargs and has an async insert method
     mock_log_doc_class = MagicMock()
     mock_instance = MagicMock()
     mock_instance.insert = AsyncMock()
     mock_log_doc_class.return_value = mock_instance
 
     return (
-        patch("app.documents.ExperienceDocument.find_all", return_value=query_mock),
+        patch(
+            "app.services.experience_catalog_resolver.ExperienceCatalogResolver._load_active",
+            new=AsyncMock(return_value=experiences),
+        ),
+        patch(
+            "app.ai.mcp.tools.experience_detail.ExperienceCatalogResolver._load_active",
+            new=AsyncMock(return_value=experiences),
+        ),
         patch.object(tool_call_log_document, "ToolCallLogDocument", mock_log_doc_class),
+        patch(
+            "app.ai.mcp.tools.experience_detail.ToolCallLogDocument",
+            mock_log_doc_class,
+        ),
     )
 
 
@@ -105,9 +109,8 @@ async def test_get_experience_detail_returns_all_fields() -> None:
     from app.ai.mcp.tools import get_experience_detail
 
     exp = _make_exp()
-
-    exp_patch, log_patch = _patch_experience_and_log(exp)
-    with exp_patch, log_patch:
+    patches = _patch_catalog([exp])
+    with patches[0], patches[1], patches[2], patches[3]:
         result = await get_experience_detail(
             experience_query="Fabrica de Cementos",
             trace_id="trace-1",
@@ -135,8 +138,9 @@ async def test_get_experience_detail_returns_all_fields() -> None:
     assert result["aliases"] == ["Fabrica de Cementos", "Cementos Caldas"]
     assert result["currency"] == "COP"
     assert result["starting_price"] == 120000
+    assert result["response"] is None
+    assert len(result["experiences"]) == 1
 
-    # Pricing details
     assert result["pricing"] is not None
     assert result["pricing"]["currency"] == "COP"
     assert result["pricing"]["prices_are_net"] is True
@@ -146,7 +150,6 @@ async def test_get_experience_detail_returns_all_fields() -> None:
     assert result["pricing"]["tiers"][0]["max_participants"] == 2
     assert result["pricing"]["tiers"][0]["price_per_person"] == 150000
 
-    # Route details
     assert result["route_details"] is not None
     assert result["route_details"]["distance_km"] == 12.5
     assert result["route_details"]["terrain"] == "Mixto"
@@ -155,13 +158,11 @@ async def test_get_experience_detail_returns_all_fields() -> None:
 
 @pytest.mark.asyncio
 async def test_get_experience_detail_singular_plural() -> None:
-    """The bug from the user: searching 'Fábrica de Cementos' must find 'Fábrica de Cemento'."""
     from app.ai.mcp.tools import get_experience_detail
 
     exp = _make_exp(name="Fabrica de Cemento")
-
-    exp_patch, log_patch = _patch_experience_and_log(exp)
-    with exp_patch, log_patch:
+    patches = _patch_catalog([exp])
+    with patches[0], patches[1], patches[2], patches[3]:
         result = await get_experience_detail(
             experience_query="Fabrica de Cementos",
             trace_id="trace-1",
@@ -173,13 +174,11 @@ async def test_get_experience_detail_singular_plural() -> None:
 
 @pytest.mark.asyncio
 async def test_get_experience_detail_with_accents() -> None:
-    """Searches with accents must find experiences without accents in the DB."""
     from app.ai.mcp.tools import get_experience_detail
 
     exp = _make_exp(name="Fabrica de Cemento")
-
-    exp_patch, log_patch = _patch_experience_and_log(exp)
-    with exp_patch, log_patch:
+    patches = _patch_catalog([exp])
+    with patches[0], patches[1], patches[2], patches[3]:
         result = await get_experience_detail(
             experience_query="Fábrica de cemento",
             trace_id="trace-1",
@@ -190,13 +189,85 @@ async def test_get_experience_detail_with_accents() -> None:
 
 
 @pytest.mark.asyncio
+async def test_get_experience_detail_typo_fabrca() -> None:
+    from app.ai.mcp.tools import get_experience_detail
+
+    exp = _make_exp(name="Fábrica de Cementos", aliases=["Fabrica", "Cementos"])
+    patches = _patch_catalog([exp])
+    with patches[0], patches[1], patches[2], patches[3]:
+        result = await get_experience_detail(
+            experience_query="dima acerca de fabrca",
+            trace_id="trace-1",
+        )
+
+    assert result["found"] is True
+    assert "Fabrica" in (result["name"] or "") or "Fábrica" in (result["name"] or "")
+
+
+@pytest.mark.asyncio
+async def test_get_experience_detail_multi_experiences() -> None:
+    from app.ai.mcp.tools import get_experience_detail
+
+    catalog = [
+        _make_exp(
+            exp_id="1",
+            name="Cabalgata Básica",
+            slug="cabalgata-basica",
+            aliases=["cabalgata", "basica"],
+            tags=["caballo"],
+        ),
+        _make_exp(
+            exp_id="2",
+            name="Los Chorros",
+            slug="los-chorros",
+            aliases=["chorros"],
+            tags=["agua"],
+        ),
+        _make_exp(
+            exp_id="3",
+            name="Fábrica de Cementos",
+            slug="fabrica-cementos",
+            aliases=["fabrica", "cementos"],
+            tags=["industrial"],
+        ),
+        _make_exp(
+            exp_id="4",
+            name="Recorrido de medio día",
+            slug="medio-dia",
+            aliases=["medio dia"],
+            tags=["corto"],
+        ),
+    ]
+    query = (
+        "dima acerca de la cabalgata basica\n"
+        "y sobre los chorros\n"
+        "no y también de fabrca"
+    )
+    patches = _patch_catalog(catalog)
+    with patches[0], patches[1], patches[2], patches[3]:
+        result = await get_experience_detail(
+            experience_query=query,
+            trace_id="trace-multi",
+        )
+
+    assert result["found"] is True
+    names = {e["name"] for e in result["experiences"]}
+    assert "Cabalgata Básica" in names
+    assert "Los Chorros" in names
+    assert "Fábrica de Cementos" in names
+    assert "Recorrido de medio día" not in names
+    assert result["response"] is None
+    # Structured payload for the composer (not a WhatsApp template).
+    assert all(e.get("description") for e in result["experiences"])
+
+
+@pytest.mark.asyncio
 async def test_get_experience_detail_not_found() -> None:
     from app.ai.mcp.tools import get_experience_detail
 
     exp = _make_exp(name="Fabrica de Cemento")
-
-    exp_patch, log_patch = _patch_experience_and_log(exp)
-    with exp_patch, log_patch:
+    patches = _patch_catalog([exp])
+    with patches[0], patches[1], patches[2], patches[3]:
         result = await get_experience_detail(
             experience_query="experiencia inexistente xyz",
             trace_id="trace-1",
@@ -204,20 +275,19 @@ async def test_get_experience_detail_not_found() -> None:
 
     assert result["found"] is False
     assert result["blocking_reasons"][0]["code"] == "experience.not_found"
+    assert result["response"] is None
 
 
 @pytest.mark.asyncio
 async def test_get_experience_detail_finds_via_alias() -> None:
-    """If name doesn't match but an alias does, return the experience."""
     from app.ai.mcp.tools import get_experience_detail
 
     exp = _make_exp(
         name="La Montana de Cristal",
         aliases=["Montana de Cristal", "Cristal"],
     )
-
-    exp_patch, log_patch = _patch_experience_and_log(exp)
-    with exp_patch, log_patch:
+    patches = _patch_catalog([exp])
+    with patches[0], patches[1], patches[2], patches[3]:
         result = await get_experience_detail(
             experience_query="Cristal",
             trace_id="trace-1",
@@ -229,7 +299,6 @@ async def test_get_experience_detail_finds_via_alias() -> None:
 
 @pytest.mark.asyncio
 async def test_get_experience_detail_finds_via_tag() -> None:
-    """If name and alias don't match but a tag does, return the experience."""
     from app.ai.mcp.tools import get_experience_detail
 
     exp = _make_exp(
@@ -237,9 +306,8 @@ async def test_get_experience_detail_finds_via_tag() -> None:
         aliases=[],
         tags=["agua", "naturaleza", "rio"],
     )
-
-    exp_patch, log_patch = _patch_experience_and_log(exp)
-    with exp_patch, log_patch:
+    patches = _patch_catalog([exp])
+    with patches[0], patches[1], patches[2], patches[3]:
         result = await get_experience_detail(
             experience_query="naturaleza",
             trace_id="trace-1",
@@ -251,7 +319,6 @@ async def test_get_experience_detail_finds_via_tag() -> None:
 
 @pytest.mark.asyncio
 async def test_get_experience_detail_handles_missing_pricing() -> None:
-    """Experiences without pricing should not crash and should return null fields."""
     from app.ai.mcp.tools import get_experience_detail
 
     exp = _make_exp()
@@ -262,8 +329,8 @@ async def test_get_experience_detail_handles_missing_pricing() -> None:
     exp.duration_hours = None
     exp.duration_days = None
 
-    exp_patch, log_patch = _patch_experience_and_log(exp)
-    with exp_patch, log_patch:
+    patches = _patch_catalog([exp])
+    with patches[0], patches[1], patches[2], patches[3]:
         result = await get_experience_detail(
             experience_query="Fabrica de Cemento",
             trace_id="trace-1",

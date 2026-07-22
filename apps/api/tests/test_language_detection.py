@@ -76,6 +76,23 @@ def test_explicit_english_request_detected() -> None:
     assert detect_explicit_language_request("/english") == "en"
 
 
+def test_explicit_english_with_business_intent_in_same_buffer() -> None:
+    """WhatsApp debounce joins language switch + reservation; must still detect en."""
+    msg = (
+        "Since this message aswer in english\n"
+        "I wanna make the reservation on september 2"
+    )
+    assert detect_explicit_language_request(msg) == "en"
+    assert detect_explicit_language_request(
+        "Since this message answer in english\n"
+        "I wanna make the reservation on september 2"
+    ) == "en"
+
+
+def test_explicit_english_typo_aswer() -> None:
+    assert detect_explicit_language_request("Since this message aswer in english") == "en"
+
+
 def test_explicit_no_request_returns_none() -> None:
     assert detect_explicit_language_request("quiero una reserva para mañana") is None
     assert detect_explicit_language_request("ok") is None

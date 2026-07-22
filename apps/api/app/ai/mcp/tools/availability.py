@@ -155,16 +155,34 @@ async def check_experience_availability(
                 )
             )
 
+        exp_name = _safe_str(_field(experience, "name", "title", "label")) or "la experiencia"
+        response: str | None = None
+        if len(reasons) == 0:
+            from app.ai.mcp.tools.check_and_quote import _format_date_for_user
+
+            response = _t(
+                "check_available_response",
+                language,
+                experience_name=exp_name,
+                participants=payload.participant_count,
+                date=_format_date_for_user(payload.requested_date, language),
+            )
+        elif reasons:
+            # Prefer first blocking message as the user-facing response
+            first = reasons[0]
+            response = getattr(first, "message", None) or str(first)
+
         output = CheckExperienceAvailabilityOutput(
             available=len(reasons) == 0,
             trace_id=trace_id,
             experience_id=_safe_str(getattr(experience, "id", None)),
-            experience_name=_safe_str(_field(experience, "name", "title", "label")),
+            experience_name=exp_name,
             schedule_id=None,
             requested_date=payload.requested_date,
             participant_count=payload.participant_count,
             min_notice_days=min_notice_days,
             blocking_reasons=reasons,
+            response=response,
         )
         return output.model_dump(mode="json")
 

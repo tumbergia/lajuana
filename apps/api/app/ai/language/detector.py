@@ -5,9 +5,8 @@ from langdetect import DetectorFactory, LangDetectException, detect
 DetectorFactory.seed = 0
 
 SUPPORTED_LANGUAGES: set[str] = {"es", "en", "fr", "pt", "de", "it", "nl"}
-# Idiomas soportados como destino de respuestas (catálogo de mensajes).
-# Solo hay catálogo es/en; el resto se mapea a "en" vía messages.t().
-RESPONSE_LANGUAGES: set[str] = {"es", "en"}
+# Idiomas soportados como destino de respuestas (catálogo de mensajes + translator).
+RESPONSE_LANGUAGES: set[str] = {"es", "en", "fr", "de", "it", "ru", "zh", "ja"}
 
 # Strong Spanish indicators — if any match, prefer Spanish over similar languages (pt, fr, it)
 _SPANISH_INDICATORS = [
@@ -137,17 +136,28 @@ _LANGUAGE_KEYWORDS: dict[str, set[str]] = {
 
 # Palabras de petición (verbos / expresiones de preferencia) en varios idiomas.
 _INTENT_VERBS = (
-    r"responde|respondeme|respóndeme|hablame|háblame|habla|escribeme|escríbeme"
-    r"|contesta|contestame|contéstame|cambia|cambiar|usa|utiliza|continua|continuar"
+    r"responde|respondeme|respóndeme|hablame|háblame|habla|hablemos|escribeme|escríbeme"
+    r"|contesta|contestame|contéstame|cambia|cambiar|usa|utiliza"
+    r"|continua|continuar|continuemos|continúe|continue"
+    r"|sigue|seguir|sigamos|seguimos|pasemos|pasemos\s+a"
     r"|quiero|prefiero|mejor|me\s+gustaría|me\s+gustaria|deseo|necesito"
-    r"|puedes|podrias|podrías|sigue|seguir|esta|esta\s+conversación|conversacion"
+    r"|puedes|podrias|podrías|esta|esta\s+conversación|conversacion"
     r"|i\s+(want|prefer|would\s+like|need|wish)"
-    r"|please|can\s+you|could\s+you|reply|talk|speak|write|answer|chat|continue|switch|use"
+    r"|please|can\s+you|could\s+you|reply|talk|speak|write|answer|aswer|anser|answre|chat|continue|switch|use"
+    r"|let'?s\s+(continue|speak|talk|switch)|we\s+continue"
     r"|parle|parles|parlez|parlare|parli|parlami|rispondi|risponde"
     r"|sprich|sprichst|sprechen|schreib|schreibe|antworten"
     r"|voglio|vorrei|preferisco"
     r"|je\s+(veux|voudrais|préfère|parle|continue)"
     r"|in\s+english|in\s+spanish|in\s+french|in\s+german|in\s+italian"
+)
+
+# Verbos / pistas de cambio de idioma que deben funcionar aunque el mensaje
+# traiga también un pedido de negocio (reserva, fecha, etc.) en otra línea.
+_SWITCH_CUES = (
+    r"answer|aswer|anser|answre|reply|respond|respondeme|respóndeme|"
+    r"speak|talk|write|chat|continue|switch|hablame|háblame|responde|"
+    r"please|from\s+now|since\s+this|from\s+this"
 )
 
 # Patrones de petición explícita de idioma. El orden importa: se evalúan de
@@ -156,7 +166,11 @@ _INTENT_VERBS = (
 # el caller debe responder con el mensaje "unsupported_language".
 def _build_lang_pattern(verb_part: str, lang_words: set[str]) -> str:
     words_alt = "|".join(re.escape(w) for w in sorted(lang_words, key=len, reverse=True))
-    return rf"\b(?:{verb_part})\b[^.\n]{{0,50}}\b(?:en\s+|a\s+|al\s+|in\s+)?(?:{words_alt})\b"
+    return (
+        rf"\b(?:{verb_part})\b[^.\n]{{0,50}}"
+        rf"\b(?:en\s+(?:idioma\s+)?|a\s+|al\s+|in\s+(?:the\s+)?language\s+)?"
+        rf"(?:{words_alt})\b"
+    )
 
 
 def _detect_explicit_request_supported(text: str) -> str | None:
@@ -166,23 +180,77 @@ def _detect_explicit_request_supported(text: str) -> str | None:
     lower = text.lower().strip()
     if len(lower) < 4:
         return None
-    # Construimos un patrón por idioma (verb + palabras de ese idioma).
+
+    def _maybe_negate(code: str) -> str:
+        # "no me respondas en inglés" → quiere español (y viceversa).
+        if re.search(
+            r"\bno\s+(?:me\s+)?(?:respond|habl|contest|escri)",
+            lower,
+            flags=re.IGNORECASE,
+        ):
+            if code == "en":
+                return "es"
+            if code == "es":
+                return "en"
+        return code
+
+    def _words_alt(lang_words: set[str]) -> str:
+        return "|".join(re.escape(w) for w in sorted(lang_words, key=len, reverse=True))
+
+    # 0) Multi-intent / buffer WhatsApp: el cambio de idioma puede ir en una
+    # línea y el pedido de negocio en otra. No limitar por longitud total.
+    for lang_code, lang_words in _LANGUAGE_KEYWORDS.items():
+        words = _words_alt(lang_words)
+        if re.search(
+            rf"\b(?:{_SWITCH_CUES})\b.{{0,80}}\b(?:in\s+(?:the\s+)?(?:language\s+)?|en\s+(?:idioma\s+)?)?(?:{words})\b",
+            lower,
+            flags=re.IGNORECASE | re.DOTALL,
+        ):
+            return _maybe_negate(lang_code)
+        if re.search(
+            rf"\b(?:since|from)\s+(?:this\s+)?(?:message|moment|now)\b.{{0,100}}\b(?:{words})\b",
+            lower,
+            flags=re.IGNORECASE | re.DOTALL,
+        ):
+            return _maybe_negate(lang_code)
+        if re.search(
+            rf"\bfrom\s+now\s+on\b.{{0,80}}\b(?:{words})\b",
+            lower,
+            flags=re.IGNORECASE | re.DOTALL,
+        ):
+            return _maybe_negate(lang_code)
+
+    # 1) Patrones clásicos verbo + idioma (mensaje corto o mismo párrafo).
     for lang_code, lang_words in _LANGUAGE_KEYWORDS.items():
         pattern = _build_lang_pattern(_INTENT_VERBS, lang_words)
         if re.search(pattern, lower, flags=re.IGNORECASE):
-            return lang_code
+            return _maybe_negate(lang_code)
     # Slash commands: "/ingles", "/english", etc.
     for lang_code, lang_words in _LANGUAGE_KEYWORDS.items():
-        words_alt = "|".join(re.escape(w) for w in sorted(lang_words, key=len, reverse=True))
-        if re.search(rf"(?:^|\s)/(?:{words_alt})\b", lower, flags=re.IGNORECASE):
+        words = _words_alt(lang_words)
+        if re.search(rf"(?:^|\s)/(?:{words})\b", lower, flags=re.IGNORECASE):
             return lang_code
-    # Fallback: mensajes cortos que son SOLO el nombre del idioma
-    # (e.g. "frances", "italiano", "en aleman"). Útil cuando el usuario
-    # responde a "¿en qué idioma?" con el nombre del idioma.
-    stripped = lower.strip(" .,!?")
-    for lang_code, lang_words in _LANGUAGE_KEYWORDS.items():
-        if stripped in lang_words:
-            return lang_code
+
+    # 2) Fallback por línea (buffers con \n): "… in english" / "en español"
+    # al final de una línea aunque el mensaje completo sea largo.
+    for segment in re.split(r"[\n\r]+", lower):
+        seg = segment.strip()
+        if len(seg) < 4 or len(seg) > 120:
+            continue
+        for lang_code, lang_words in _LANGUAGE_KEYWORDS.items():
+            words = _words_alt(lang_words)
+            if re.search(
+                rf"(?:^|[\s,;])(?:en(?:\s+idioma)?|a|al|in)\s+(?:{words})\s*[.!?]*$",
+                seg,
+                flags=re.IGNORECASE,
+            ):
+                return _maybe_negate(lang_code)
+        stripped = seg.strip(" .,!?")
+        for lang_code, lang_words in _LANGUAGE_KEYWORDS.items():
+            if stripped in lang_words or stripped in {f"en {w}" for w in lang_words} | {
+                f"in {w}" for w in lang_words
+            }:
+                return lang_code
     return None
 
 

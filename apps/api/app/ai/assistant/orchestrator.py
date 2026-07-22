@@ -30,7 +30,7 @@ from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.documents.reservation_document import ReservationDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.schemas.ask import AskRequest, AskResponse
-from app.schemas.assistant_plan import AssistantAction, ToolArgs
+from app.schemas.assistant_plan import AssistantAction, AssistantPlan, ToolArgs
 from app.schemas.conversation_session import merge_slots
 
 FIELD_LABELS: dict[str, tuple[str, str]] = {
@@ -48,6 +48,25 @@ FIELD_LABELS: dict[str, tuple[str, str]] = {
     "new_date": ("¿cuál es la nueva fecha?", "what's the new date?"),
     "new_participant_count": ("¿cuántas personas serían ahora?", "how many people now?"),
 }
+
+# Historial inyectado al planner: WhatsApp más corto para ahorrar tokens.
+_HISTORY_LIMIT_BY_CHANNEL: dict[str, int] = {
+    "whatsapp": 4,
+}
+_DEFAULT_HISTORY_LIMIT = 8
+_HISTORY_MESSAGE_MAX_CHARS = 400
+
+
+def _history_limit_for_channel(channel: str) -> int:
+    return _HISTORY_LIMIT_BY_CHANNEL.get(channel, _DEFAULT_HISTORY_LIMIT)
+
+
+def _truncate_history_text(text: str, max_chars: int = _HISTORY_MESSAGE_MAX_CHARS) -> str:
+    cleaned = (text or "").strip()
+    if len(cleaned) <= max_chars:
+        return cleaned
+    return cleaned[: max_chars - 1].rstrip() + "…"
+
 
 # Constants extracted for testability (W3.6, conv. #6: no lógica en métodos)
 CONFIRM_WORDS: set[str] = {
@@ -240,12 +259,13 @@ class AssistantOrchestrator:
             trace_id=trace_id,
         )
 
+        history_limit = _history_limit_for_channel(request.channel)
         history_turns = (
             await ConversationTurnDocument.find(
                 {"conversation_id": conversation_key, "status": "responded"},
             )
             .sort("-created_at")
-            .limit(8)
+            .limit(history_limit)
             .to_list()
         )
         # ── Resolución temprana de `phone` ───────────────────────────────
@@ -323,6 +343,29 @@ class AssistantOrchestrator:
                         "[conversation_id=%s] Failed to sync reservation languages: %s",
                         conversation_id, exc,
                     )
+            # Cambio de idioma puro: ack inmediato sin LLM (evita que invente
+            # "solo hablo inglés/español").
+            if self._is_pure_language_switch(request.message):
+                switched_msg = t("language_switched", explicit_request)
+                turn = ConversationTurnDocument(
+                    trace_id=trace_id,
+                    channel=request.channel,
+                    conversation_id=conversation_key,
+                    user_message=request.message,
+                    from_phone=request.from_phone,
+                )
+                turn.response_text = switched_msg
+                turn.status = "responded"
+                await turn.insert()
+                session.last_intent = "language_switched"
+                session.turn_count += 1
+                session.updated_at = datetime.now(timezone.utc)
+                await session.save()
+                return AskResponse(
+                    trace_id=trace_id,
+                    action=AssistantAction.FINAL_RESPONSE,
+                    response=switched_msg,
+                )
         elif session.language_override:
             override = session.language_override
             if override not in ("es", "en", "fr", "de", "it", "ru", "zh", "ja"):
@@ -395,9 +438,13 @@ class AssistantOrchestrator:
         history_lines = []
         for turn_history in reversed(history_turns):
             if turn_history.user_message:
-                history_lines.append(f"Usuario: {turn_history.user_message}")
+                history_lines.append(
+                    f"Usuario: {_truncate_history_text(turn_history.user_message)}"
+                )
             if turn_history.response_text:
-                history_lines.append(f"Asistente: {turn_history.response_text}")
+                history_lines.append(
+                    f"Asistente: {_truncate_history_text(turn_history.response_text)}"
+                )
 
         conversation_history = "\n".join(history_lines)
 
@@ -490,6 +537,9 @@ class AssistantOrchestrator:
                     response=t("provider_error", session.language),
                 )
 
+        # Preferir tool combinada cuando el LLM eligió availability/quote sueltos
+        # con fecha + personas (ahorra confirmaciones intermedias).
+        plan = self._upgrade_to_combined_quote(plan, session.slot_values)
         # Fallback: if planner didn't extract date but user message has one
         if (
             plan.arguments
@@ -706,10 +756,13 @@ class AssistantOrchestrator:
             "get_payment_instructions",
             "attach_payment_proof_to_reservation",
             "check_availability_and_quote",
+            "check_experience_availability",
+            "quote_experience",
+            "list_experiences",
+            "search_company_knowledge",
             "cancel_reservation",
             "update_reservation_date",
             "update_reservation_participants",
-            "get_all_experiences",
         }
         analytics_summary = (
             _analytics_summary_response(tool_output)
@@ -805,6 +858,63 @@ class AssistantOrchestrator:
             if re.search(pattern, msg_lower):
                 return True
         return False
+
+    @staticmethod
+    def _is_pure_language_switch(message: str) -> bool:
+        """True si el mensaje es solo un cambio de idioma (sin pedido de negocio)."""
+        lower = (message or "").lower()
+        # Pedido + confusión / pregunta: cambiar idioma y SEGUIR el flujo.
+        business_signals = (
+            r"reserv|cotiz|precio|disponib|experiencia|catalog|catálogo|list"
+            r"|persona|fecha|correo|email|@|comprobante|pago|cancel|fabrica|fábrica"
+            r"|chorros|cabalgata|recorrido|entiend|entend|wtf|ayuda|consiste"
+            r"|que\s+es|qué\s+es|donde|dónde|ubicacion|hola|juana|hacer|confus"
+            r"|no\s+entendi|no\s+entendí|explic|repite|repet|eso\s+mismo|traduc"
+            r"|horario|ubicaci"
+        )
+        if re.search(business_signals, lower):
+            return False
+        return len(lower.strip()) <= 80
+
+    @staticmethod
+    def _upgrade_to_combined_quote(plan: AssistantPlan, session_slots: dict) -> AssistantPlan:
+        """Reescribe availability/quote sueltos a check_availability_and_quote."""
+        if plan.action != AssistantAction.TOOL_CALL:
+            return plan
+        if plan.tool_name not in {
+            "check_experience_availability",
+            "quote_experience",
+        }:
+            return plan
+        args = plan.arguments or ToolArgs()
+        date = args.requested_date or session_slots.get("requested_date")
+        participants = args.participant_count or session_slots.get("participant_count")
+        exp = (
+            args.experience_id
+            or args.experience_query
+            or session_slots.get("experience_id")
+            or session_slots.get("experience_query")
+            or session_slots.get("experience_name")
+        )
+        if not (date and participants and exp):
+            return plan
+        if not args.requested_date:
+            args.requested_date = str(date)
+        if not args.participant_count:
+            args.participant_count = int(participants)
+        if not args.experience_id and session_slots.get("experience_id"):
+            args.experience_id = str(session_slots["experience_id"])
+        if not args.experience_query:
+            q = args.experience_query or session_slots.get("experience_query") or session_slots.get("experience_name")
+            if q:
+                args.experience_query = str(q)
+        plan.tool_name = "check_availability_and_quote"
+        plan.arguments = args
+        plan.audit_summary = (
+            (plan.audit_summary or "")[:400]
+            + " [upgraded to check_availability_and_quote]"
+        )[:500]
+        return plan
 
     @staticmethod
     def _is_cancellation(message: str) -> bool:

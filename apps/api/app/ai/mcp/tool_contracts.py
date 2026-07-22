@@ -41,6 +41,7 @@ class ListExperiencesOutput(BaseModel):
     tool_name: Literal["list_experiences"] = "list_experiences"
     experiences: list[ExperienceSummaryItem]
     total: int
+    response: str | None = None
 
 
 class GetExperienceDetailInput(BaseModel):
@@ -56,24 +57,77 @@ class GetExperienceDetailInput(BaseModel):
         return self
 
 
+class ExperienceDetailItem(BaseModel):
+    """Full catalog fields for one matched experience."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    found: bool = True
+    experience_id: str | None = None
+    name: str | None = None
+    slug: str | None = None
+    subtitle: str | None = None
+    description: str | None = None
+    short_description: str | None = None
+    image_url: str | None = None
+    level: str | None = None
+    difficulty: str | None = None
+    category: str | None = None
+    status: str | None = None
+    is_active: bool | None = None
+    duration: str | None = None
+    duration_hours: int | None = None
+    duration_days: int | None = None
+    base_capacity: int | None = None
+    min_participants: int | None = None
+    standard_max_participants: int | None = None
+    includes: list[str] = Field(default_factory=list)
+    inclusions_display_text: str | None = None
+    restrictions: list[str] = Field(default_factory=list)
+    starting_price: int | None = None
+    currency: str = "COP"
+    pricing: dict[str, Any] | None = None
+    route_details: dict[str, Any] | None = None
+    tags: list[str] = Field(default_factory=list)
+    aliases: list[str] = Field(default_factory=list)
+
+
 class ExperienceDetailOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     trace_id: str
     tool_name: Literal["get_experience_detail"] = "get_experience_detail"
     found: bool
+    # All matches (1..N). Top-level fields below mirror the first match for compat.
+    experiences: list[ExperienceDetailItem] = Field(default_factory=list)
+    response: str | None = None
     experience_id: str | None = None
     name: str | None = None
     slug: str | None = None
+    subtitle: str | None = None
     description: str | None = None
     short_description: str | None = None
-    duration: str | None = None
-    difficulty: str | None = None
+    image_url: str | None = None
     level: str | None = None
+    difficulty: str | None = None
+    category: str | None = None
+    status: str | None = None
+    is_active: bool | None = None
+    duration: str | None = None
+    duration_hours: int | None = None
+    duration_days: int | None = None
+    base_capacity: int | None = None
+    min_participants: int | None = None
+    standard_max_participants: int | None = None
     includes: list[str] = Field(default_factory=list)
+    inclusions_display_text: str | None = None
     restrictions: list[str] = Field(default_factory=list)
     starting_price: int | None = None
     currency: str = "COP"
+    pricing: dict[str, Any] | None = None
+    route_details: dict[str, Any] | None = None
+    tags: list[str] = Field(default_factory=list)
+    aliases: list[str] = Field(default_factory=list)
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 
@@ -102,8 +156,30 @@ class PublicBusinessRulesOutput(BaseModel):
     location_municipality: str
     location_directions: str
     google_maps_url: str
+    opening_hours: str = (
+        "Lunes a domingo: 8:00 a. m. – 6:00 p. m. (hora de Colombia)."
+    )
     general_restrictions: list[str] = Field(default_factory=list)
     disclaimer: str
+
+
+class SearchCompanyKnowledgeInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(min_length=1, max_length=500)
+    top_k: int = Field(default=3, ge=1, le=5)
+
+
+class SearchCompanyKnowledgeOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    tool_name: Literal["search_company_knowledge"] = "search_company_knowledge"
+    query: str
+    chunk_ids: list[str] = Field(default_factory=list)
+    scores: list[float] = Field(default_factory=list)
+    response: str
+    blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
 
 
 class CheckExperienceAvailabilityInput(BaseModel):
@@ -136,6 +212,7 @@ class CheckExperienceAvailabilityOutput(BaseModel):
     capacity_available: int | None = None
     min_notice_days: int | None = None
     blocking_reasons: list[ToolBlockingReason] = Field(default_factory=list)
+    response: str | None = None
 
 
 class AvailableScheduleItem(BaseModel):

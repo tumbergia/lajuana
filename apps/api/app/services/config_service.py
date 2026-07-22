@@ -49,7 +49,14 @@ class ConfigService:
         rules = (
             config.reservation_rules if config and config.reservation_rules else ReservationRules()
         )
-        return ReservationRulesSchema.model_validate(rules.model_dump())
+        data = rules.model_dump()
+        # Defensivo: valores históricos fuera de rango no deben tumbar drafts.
+        ttl = int(data.get("reservation_draft_ttl_minutes") or 30)
+        if ttl < 5:
+            data["reservation_draft_ttl_minutes"] = 5
+        elif ttl > 20000:
+            data["reservation_draft_ttl_minutes"] = 20000
+        return ReservationRulesSchema.model_validate(data)
 
     async def get_reservation_rules_document(self) -> AppConfigDocument | None:
         return await AppConfigDocument.find_one({"key": RESERVATION_RULES_KEY})

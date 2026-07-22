@@ -147,7 +147,34 @@ def test_bot_switches_only_on_explicit_request(monkeypatch: pytest.MonkeyPatch) 
             )
         )
 
+    result = asyncio.run(run())
+    # Pure language switch: ack in English without going through the planner.
+    assert planner.captured_language is None
+    assert "English" in (result.response or "")
+
+
+def test_bot_switches_english_and_continues_when_buffer_has_reservation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Language switch + reservation in one buffered message → en and keep planning."""
+    planner = _setup(monkeypatch)
+    orch = AssistantOrchestrator(planner=planner)
+    combined = (
+        "Since this message aswer in english\n"
+        "I wanna make the reservation on september 2"
+    )
+
+    async def run() -> Any:
+        return await orch.ask(
+            AskRequest(
+                message=combined,
+                channel="whatsapp",
+                conversation_id="demo-lang-buffer",
+            )
+        )
+
     asyncio.run(run())
+    # Planner ran (not pure-language ack) and session language was english.
     assert planner.captured_language == "en"
 
 
@@ -164,5 +191,6 @@ def test_bot_kills_english_after_explicit_spanish_request(monkeypatch: pytest.Mo
             )
         )
 
-    asyncio.run(run())
-    assert planner.captured_language == "es"
+    result = asyncio.run(run())
+    assert planner.captured_language is None
+    assert "español" in (result.response or "").lower()

@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     gemini_api_key_3: str = ""
     gemini_model: str = "gemini-2.5-flash"
     gemini_fallback_models: str = "gemini-3-flash,gemini-3.1-flash-lite,gemini-2.5-flash-lite"
+    gemini_embedding_model: str = "gemini-embedding-001"
     gemini_temperature: float = 0.2
     gemini_timeout_seconds: int = 60
     ai_config_encryption_key: str = ""

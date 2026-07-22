@@ -108,8 +108,134 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "en": "The experience doesn't have a rate configured for that number of participants.",
     },
     "quote_experience_response": {
-        "es": "{experience_name} para {participants} persona(s) sale a ${subtotal} COP (${unit_price} por persona).\n\nSi te interesa, puedo apartarte la fecha. Solo necesito confirmarte unos datos. ¿Te parece?",
-        "en": "{experience_name} for {participants} person(s) comes out to ${subtotal} COP (${unit_price} per person).\n\nIf you're interested, I can reserve the date for you. I just need to confirm a few details. Does that sound good?",
+        "es": "{experience_name} para {participants} persona(s) sale a ${subtotal} COP (${unit_price} por persona).\n\nPara apartarte la fecha, envíame tu nombre completo y tu correo electrónico. ¿Me los compartes?",
+        "en": "{experience_name} for {participants} person(s) comes out to ${subtotal} COP (${unit_price} per person).\n\nTo reserve the date, please send me your full name and email address. Can you share them?",
+        "fr": "{experience_name} pour {participants} personne(s) coûte ${subtotal} COP (${unit_price} par personne).\n\nPour réserver la date, envoyez-moi votre nom complet et votre e-mail. Pouvez-vous les partager ?",
+        "de": "{experience_name} für {participants} Person(en) kostet ${subtotal} COP (${unit_price} pro Person).\n\nUm das Datum zu reservieren, senden Sie mir bitte Ihren vollständigen Namen und Ihre E-Mail. Können Sie diese teilen?",
+        "it": "{experience_name} per {participants} persona/e costa ${subtotal} COP (${unit_price} a persona).\n\nPer prenotare la data, inviami il tuo nome completo e la tua email. Puoi condividerli?",
+        "ru": "{experience_name} для {participants} чел. стоит ${subtotal} COP (${unit_price} за человека).\n\nЧтобы забронировать дату, отправьте полное имя и email. Можете их прислать?",
+        "zh": "{experience_name} 共 {participants} 人，总价 ${subtotal} COP（每人 ${unit_price} COP）。\n\n如需预订，请将您的全名和电子邮件发送给我。可以分享吗？",
+        "ja": "{experience_name} は {participants} 名様で ${subtotal} COP（お一人様 ${unit_price} COP）です。\n\n予約のため、お名前とメールアドレスをお送りください。",
+    },
+    "list_experiences_header": {
+        "es": "Estas son nuestras experiencias disponibles:",
+        "en": "Here are our available experiences:",
+        "fr": "Voici nos expériences disponibles :",
+        "de": "Das sind unsere verfügbaren Erlebnisse:",
+        "it": "Queste sono le nostre esperienze disponibili:",
+        "ru": "Вот наши доступные впечатления:",
+        "zh": "以下是我们目前提供的体验：",
+        "ja": "ご利用いただける体験はこちらです：",
+    },
+    "list_experiences_item": {
+        "es": "• {name} — desde ${price} COP",
+        "en": "• {name} — from ${price} COP",
+        "fr": "• {name} — à partir de ${price} COP",
+        "de": "• {name} — ab ${price} COP",
+        "it": "• {name} — da ${price} COP",
+        "ru": "• {name} — от ${price} COP",
+        "zh": "• {name} — 起价 ${price} COP",
+        "ja": "• {name} — ${price} COP から",
+    },
+    "list_experiences_item_no_price": {
+        "es": "• {name}",
+        "en": "• {name}",
+        "fr": "• {name}",
+        "de": "• {name}",
+        "it": "• {name}",
+        "ru": "• {name}",
+        "zh": "• {name}",
+        "ja": "• {name}",
+    },
+    "list_experiences_footer": {
+        "es": "\n\n¿Cuál te interesa o quieres más detalles de alguna?",
+        "en": "\n\nWhich one interests you, or would you like more details on any?",
+        "fr": "\n\nLaquelle vous intéresse, ou voulez-vous plus de détails ?",
+        "de": "\n\nWelche interessiert Sie, oder möchten Sie mehr Details?",
+        "it": "\n\nQuale ti interessa o vuoi più dettagli su qualcuna?",
+        "ru": "\n\nКакая вас интересует, или нужны подробности?",
+        "zh": "\n\n您对哪一个感兴趣，或者想了解更多详情？",
+        "ja": "\n\nご興味のある体験はありますか？詳細もお伝えできます。",
+    },
+    "list_experiences_empty": {
+        "es": "Ahora mismo no tengo experiencias activas para mostrar. ¿Te ayudo con otra consulta?",
+        "en": "I don't have any active experiences to show right now. Can I help with something else?",
+        "fr": "Je n'ai aucune expérience active à afficher pour le moment. Puis-je vous aider autrement ?",
+        "de": "Ich habe gerade keine aktiven Erlebnisse zum Anzeigen. Kann ich anders helfen?",
+        "it": "Al momento non ho esperienze attive da mostrare. Posso aiutarti con altro?",
+        "ru": "Сейчас нет активных впечатлений для показа. Чем ещё помочь?",
+        "zh": "目前没有可显示的体验。还有什么可以帮您的吗？",
+        "ja": "現在表示できる体験がありません。他にご用件はありますか？",
+    },
+    "experience_detail_title": {
+        "es": "*{name}*",
+        "en": "*{name}*",
+        "fr": "*{name}*",
+        "de": "*{name}*",
+        "it": "*{name}*",
+        "ru": "*{name}*",
+        "zh": "*{name}*",
+        "ja": "*{name}*",
+    },
+    "experience_detail_duration": {
+        "es": "Duración: {duration}",
+        "en": "Duration: {duration}",
+        "fr": "Durée : {duration}",
+        "de": "Dauer: {duration}",
+        "it": "Durata: {duration}",
+        "ru": "Длительность: {duration}",
+        "zh": "时长：{duration}",
+        "ja": "所要時間：{duration}",
+    },
+    "experience_detail_price": {
+        "es": "Desde ${price} {currency}",
+        "en": "From ${price} {currency}",
+        "fr": "À partir de ${price} {currency}",
+        "de": "Ab ${price} {currency}",
+        "it": "Da ${price} {currency}",
+        "ru": "От ${price} {currency}",
+        "zh": "起价 ${price} {currency}",
+        "ja": "${price} {currency} から",
+    },
+    "experience_detail_includes": {
+        "es": "Incluye: {items}",
+        "en": "Includes: {items}",
+        "fr": "Inclus : {items}",
+        "de": "Inbegriffen: {items}",
+        "it": "Include: {items}",
+        "ru": "Включено: {items}",
+        "zh": "包含：{items}",
+        "ja": "含まれるもの：{items}",
+    },
+    "experience_detail_footer": {
+        "es": "\n\n¿Quieres cotizar alguna, ver fechas o reservar?",
+        "en": "\n\nWant a quote, available dates, or to book?",
+        "fr": "\n\nVous voulez un devis, des dates ou réserver ?",
+        "de": "\n\nMöchten Sie ein Angebot, Termine oder buchen?",
+        "it": "\n\nVuoi un preventivo, le date o prenotare?",
+        "ru": "\n\nНужна цена, даты или бронь?",
+        "zh": "\n\n需要报价、日期还是预订？",
+        "ja": "\n\n見積もり・日程・予約をご希望ですか？",
+    },
+    "experience_detail_not_found": {
+        "es": "No encontré esa experiencia en nuestro catálogo. ¿Quieres que te liste las opciones disponibles?",
+        "en": "I couldn't find that experience in our catalog. Want me to list the available options?",
+        "fr": "Je n'ai pas trouvé cette expérience. Voulez-vous la liste des options ?",
+        "de": "Dieses Erlebnis finde ich nicht im Katalog. Soll ich die Optionen listen?",
+        "it": "Non ho trovato quell'esperienza. Vuoi l'elenco delle opzioni?",
+        "ru": "Не нашёл это впечатление в каталоге. Показать доступные варианты?",
+        "zh": "目录里找不到该体验。要我列出可用选项吗？",
+        "ja": "その体験はカタログにありません。一覧をお見せしましょうか？",
+    },
+    "check_available_response": {
+        "es": "{experience_name} para {participants} persona(s) el {date} tiene cupo.\n\nPara darte el precio y apartar la fecha, envíame tu nombre completo y correo, o dime 'cotízame'.",
+        "en": "{experience_name} for {participants} person(s) on {date} has availability.\n\nTo get the price and hold the date, send me your full name and email, or say 'quote me'.",
+        "fr": "{experience_name} pour {participants} personne(s) le {date} a de la place.\n\nPour le prix et réserver, envoyez nom complet et e-mail, ou dites 'cotisez-moi'.",
+        "de": "{experience_name} für {participants} Person(en) am {date} hat freie Plätze.\n\nFür Preis und Reservierung: vollständiger Name und E-Mail, oder sagen Sie 'cotízame'.",
+        "it": "{experience_name} per {participants} persona/e il {date} ha posti.\n\nPer prezzo e prenotazione: nome completo e email, oppure dimmi 'cotízame'.",
+        "ru": "{experience_name} для {participants} чел. на {date} свободно.\n\nДля цены и брони: полное имя и email, или напишите 'cotízame'.",
+        "zh": "{experience_name} 在 {date} 有 {participants} 人的名额。\n\n如需报价并预订，请发送全名和邮箱，或说「cotízame」。",
+        "ja": "{experience_name} は {date} に {participants} 名分の空きがあります。\n\n料金と予約のため、お名前とメールを送るか「cotízame」と伝えてください。",
     },
     "greeting": {
         "es": "¡Hola! Soy el asistente de La Juana Colombia. ¿En qué puedo ayudarte?",
@@ -453,6 +579,16 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "es": "japonés", "en": "Japanese", "fr": "japonais", "de": "Japanisch",
         "it": "giapponese", "ru": "японский", "zh": "日语", "ja": "日本語",
     },
+    "language_switched": {
+        "es": "Perfecto, seguimos en español. ¿En qué te ayudo?",
+        "en": "Perfect, we'll continue in English. How can I help you?",
+        "fr": "Parfait, on continue en français. Comment puis-je vous aider ?",
+        "de": "Perfekt, wir machen auf Deutsch weiter. Womit kann ich helfen?",
+        "it": "Perfetto, continuiamo in italiano. Come posso aiutarti?",
+        "ru": "Отлично, продолжаем на русском. Чем могу помочь?",
+        "zh": "好的，我们用中文继续。需要我帮您什么？",
+        "ja": "承知しました。日本語で続けます。どのようにお手伝いできますか？",
+    },
 }
 
 
@@ -484,16 +620,50 @@ _LANGUAGE_TONE: dict[str, str] = {
     "es": (
         "Mantén un tono cálido, amable y cercano.\n"
         "Habla natural: 'vale', 'cuesta', 'sale', 'tocaría', 'podemos', 'te parece'.\n"
-        "Responde breve para WhatsApp, máximo 2 oraciones.\n"
-        "Termina SIEMPRE con una pregunta breve o invitación a continuar, "
-        "salvo en human_handoff o cierre por políticas.\n"
+        "Responde breve para WhatsApp, salvo listados o plantillas con varios ítems.\n"
+        "Termina con una pregunta breve o invitación a continuar, "
+        "salvo en human_handoff, listados o cierre por políticas.\n"
+        "Si el tool_output ya trae precio o disponibilidad, NO pidas otra confirmación: "
+        "pide nombre y correo o usa el response de la tool.\n"
     ),
     "en": (
         "Keep a warm, friendly, and approachable tone.\n"
         "Speak naturally: 'sure', 'got it', 'let me check', 'does that work?', 'no problem'.\n"
-        "Keep it brief for WhatsApp, max 2 sentences.\n"
-        "ALWAYS end with a short question or invitation to continue, "
-        "unless it's a human handoff or policy closure.\n"
+        "Keep it brief for WhatsApp, except for lists or multi-item templates.\n"
+        "End with a short question or invitation to continue, "
+        "unless it's a handoff, a catalog list, or a policy closure.\n"
+        "If tool_output already has price or availability, do NOT ask another confirmation: "
+        "ask for full name and email or use the tool response.\n"
+    ),
+    "fr": (
+        "Ton chaleureux et naturel pour WhatsApp.\n"
+        "Réponses brèves, sauf listes ou modèles multi-éléments.\n"
+        "Si le tool_output a déjà un prix ou une disponibilité, ne demande pas une autre confirmation.\n"
+    ),
+    "de": (
+        "Warmer, freundlicher Ton für WhatsApp.\n"
+        "Kurz antworten, außer bei Listen oder Vorlagen mit mehreren Einträgen.\n"
+        "Wenn tool_output bereits Preis oder Verfügbarkeit hat, keine weitere Bestätigung verlangen.\n"
+    ),
+    "it": (
+        "Tono caldo e naturale per WhatsApp.\n"
+        "Risposte brevi, tranne elenchi o template con più voci.\n"
+        "Se tool_output ha già prezzo o disponibilità, non chiedere un'altra conferma.\n"
+    ),
+    "ru": (
+        "Тёплый, дружелюбный тон для WhatsApp.\n"
+        "Кратко, кроме списков и шаблонов с несколькими пунктами.\n"
+        "Если в tool_output уже есть цена или доступность — не просите ещё одно подтверждение.\n"
+    ),
+    "zh": (
+        "语气温暖友好，适合 WhatsApp。\n"
+        "尽量简短，列表或多条目模板除外。\n"
+        "如果 tool_output 已有价格或空位信息，不要再要求确认，直接要姓名和邮箱或使用工具回复。\n"
+    ),
+    "ja": (
+        "WhatsApp向けに温かみのある自然な口調で。\n"
+        "リストや複数項目のテンプレート以外は短めに。\n"
+        "tool_output に価格や空きがある場合、追加の確認はせず名前とメールを聞くか tool の response を使う。\n"
     ),
 }
 
@@ -501,6 +671,13 @@ _LANGUAGE_TONE: dict[str, str] = {
 def build_language_instruction(language: str) -> str:
     tone = _LANGUAGE_TONE.get(language, _LANGUAGE_TONE["en"])
     lang_name = _LANGUAGE_NAMES.get(language, "inglés")
+    supported = (
+        "Supported response languages: Spanish, English, French, German, "
+        "Italian, Russian, Chinese, Japanese. NEVER say you only speak "
+        "English or Spanish. NEVER refuse German, Chinese, French, Spanish, "
+        "or any supported language. If the user asks to switch language, "
+        "acknowledge and continue in that language — do not invent limitations."
+    )
     if language == "en":
         return (
             "RESPONSE LANGUAGE: English (en).\n"
@@ -509,7 +686,7 @@ def build_language_instruction(language: str) -> str:
             "language is English. You MUST respond in English regardless of the\n"
             "language of the latest user message.\n"
             f"{tone}"
-            "Exception: for unsupported languages, respond in English.\n"
+            f"{supported}\n"
         )
     return (
         f"IDIOMA DE RESPUESTA: {lang_name} ({language}).\n"
@@ -518,10 +695,22 @@ def build_language_instruction(language: str) -> str:
         f"idioma de la conversación es {lang_name}. Debes responder SIEMPRE en\n"
         f"{lang_name}, sin importar el idioma del último mensaje del usuario.\n"
         f"{tone}"
-        "Excepción: para idiomas no soportados, responde en inglés.\n"
+        f"{supported}\n"
     )
 
 
+_LANGUAGE_UPPER: dict[str, str] = {
+    "es": "ESPAÑOL",
+    "en": "INGLÉS",
+    "fr": "FRANCÉS",
+    "de": "ALEMÁN",
+    "it": "ITALIANO",
+    "ru": "RUSO",
+    "zh": "CHINO",
+    "ja": "JAPONÉS",
+}
+
+
 def get_language_upper_token(language: str) -> str:
-    """Token en mayúsculas para inyectar en prompts."""
-    return "INGLÉS" if language == "en" else "ESPAÑOL"
+    """Token en mayúsculas para inyectar en prompts del composer."""
+    return _LANGUAGE_UPPER.get(language, "INGLÉS")

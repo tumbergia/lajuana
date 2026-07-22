@@ -41,6 +41,7 @@ _TOOLS: dict[str, object] = {
     "check_availability_and_quote": tools.check_availability_and_quote,
     "get_experience_detail": tools.get_experience_detail,
     "get_public_business_rules": tools.get_public_business_rules,
+    "search_company_knowledge": tools.search_company_knowledge,
     "list_available_schedules": tools.list_available_schedules,
     "list_experiences": tools.list_experiences,
     "quote_experience": tools.quote_experience,

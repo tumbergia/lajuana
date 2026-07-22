@@ -88,6 +88,7 @@ from app.ai.mcp.tools.automations import (
 from app.ai.mcp.tools.availability import check_experience_availability
 from app.ai.mcp.tools.check_and_quote import check_availability_and_quote
 from app.ai.mcp.tools.catalog import list_experiences
+from app.ai.mcp.tools.company_knowledge import search_company_knowledge
 from app.ai.mcp.tools.client_reservations import (
     cancel_reservation,
     update_reservation_date,
@@ -117,125 +118,7 @@ from app.ai.mcp.tools.reservation_draft import (
 from app.ai.mcp.tools.schedules import list_available_schedules, suggest_alternative_dates
 
 
-# ── Real implementations for previously stubbed tools ────────
-async def get_experience_detail(**kwargs: Any) -> dict[str, Any]:
-    import re
-    import time
-    import unicodedata
-
-    from app.ai.mcp.tool_contracts import ExperienceDetailOutput, ToolBlockingReason
-    from app.documents import ExperienceDocument
-
-    trace_id = kwargs.get("trace_id", "")
-    conversation_turn_id = kwargs.get("conversation_turn_id")
-    started = time.perf_counter()
-
-    experience_id = kwargs.get("experience_id")
-    experience_query = kwargs.get("experience_query")
-
-    def _normalize(s: str) -> str:
-        nfkd = unicodedata.normalize("NFKD", s)
-        cleaned = nfkd.encode("ascii", "ignore").decode("ascii").lower().strip()
-        return cleaned.rstrip(",.!?;:.\n\r ")
-
-    _STOPWORDS = {"el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "en", "para", "por", "a", "y", "e", "o", "que", "con", "su", "al"}
-
-    def _match_query(exp_name: str, query: str) -> bool:
-        exp_normalized = _normalize(exp_name)
-        query_normalized = _normalize(query)
-        if query_normalized in exp_normalized:
-            return True
-        query_words = [w for w in query_normalized.split() if w not in _STOPWORDS]
-        exp_words = exp_normalized.split()
-        if not query_words:
-            return False
-        for qw in query_words:
-            if not any(qw in ew for ew in exp_words):
-                return False
-        return True
-
-    experience = None
-    if experience_id:
-        experience = await ExperienceDocument.get(experience_id)
-
-    if experience is None and experience_query:
-        all_experiences = await ExperienceDocument.find_all().to_list()
-        for exp in all_experiences:
-            if _match_query(exp.name, experience_query):
-                experience = exp
-                break
-        if experience is None:
-            for exp in all_experiences:
-                if exp.aliases and any(_match_query(a, experience_query) for a in exp.aliases):
-                    experience = exp
-                    break
-        if experience is None:
-            for exp in all_experiences:
-                if exp.tags and any(_match_query(t, experience_query) for t in exp.tags):
-                    experience = exp
-                    break
-
-    if experience is None:
-        output = ExperienceDetailOutput(
-            found=False,
-            trace_id=trace_id,
-            blocking_reasons=[
-                ToolBlockingReason(
-                    code="experience.not_found",
-                    message="No encontré la experiencia solicitada.",
-                )
-            ],
-        )
-        return output.model_dump(mode="json")
-
-    pricing = getattr(experience, "pricing", None)
-    min_price = None
-    if pricing and pricing.tiers:
-        min_price = min(
-            (t.price_per_person for t in pricing.tiers if hasattr(t, "price_per_person")),
-            default=None,
-        )
-
-    duration = getattr(experience, "duration", None)
-    duration_text = (
-        getattr(duration, "display_text", None)
-        or str(getattr(experience, "duration_hours", ""))
-        or str(getattr(experience, "duration_days", ""))
-    )
-
-    inclusions_data = getattr(experience, "inclusions", None)
-    inclusions = getattr(inclusions_data, "items", []) if inclusions_data else []
-
-    output = ExperienceDetailOutput(
-        found=True,
-        trace_id=trace_id,
-        experience_id=str(experience.id),
-        name=experience.name,
-        slug=experience.slug,
-        description=experience.description,
-        short_description=experience.subtitle or (experience.description or "")[:120],
-        duration=duration_text or None,
-        difficulty=str(getattr(experience, "difficulty", "")) or None,
-        level=str(getattr(experience, "level", "")) or None,
-        includes=inclusions,
-        restrictions=[],
-        starting_price=min_price,
-    )
-
-    latency_ms = int((time.perf_counter() - started) * 1000)
-    from app.documents.tool_call_log_document import ToolCallLogDocument
-
-    await ToolCallLogDocument(
-        trace_id=trace_id,
-        conversation_turn_id=conversation_turn_id,
-        tool_name="get_experience_detail",
-        input={"experience_id": experience_id, "experience_query": experience_query},
-        output=output.model_dump(mode="json"),
-        status="success",
-        latency_ms=latency_ms,
-    ).insert()
-
-    return output.model_dump(mode="json")
+from app.ai.mcp.tools.experience_detail import get_experience_detail
 
 
 async def get_public_business_rules(**kwargs: Any) -> dict[str, Any]:
@@ -280,6 +163,10 @@ async def get_public_business_rules(**kwargs: Any) -> dict[str, Any]:
         location_municipality=location.municipality,
         location_directions=location.directions,
         google_maps_url=location.google_maps_url,
+        opening_hours=(
+            "Atendemos todos los días de 8:00 a. m. a 6:00 p. m. (hora de Colombia). "
+            "Lunes a domingo: 8:00 a. m. – 6:00 p. m."
+        ),
         general_restrictions=[
             f"Edad permitida: {reservation_rules.min_age} a {reservation_rules.max_age} años.",
             "Máximo 8 participantes por reserva.",
@@ -488,6 +375,7 @@ __all__ = [
     "quote_experience",
     "schedule_birthday_automation",
     "schedule_visit_anniversary_automation",
+    "search_company_knowledge",
     "send_post_service_message",
     "suggest_alternative_dates",
     "create_reservation_draft",

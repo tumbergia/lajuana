@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from uuid import uuid4
+import asyncio
 
 from app.ai.assistant.orchestrator import AssistantOrchestrator
 from app.ai.language.detector import SUPPORTED_RESPONSE_LANGUAGES
@@ -11,6 +12,7 @@ from app.channels.whatsapp.parser import ParsedMessage, parse_whatsapp_payload
 from app.conversations.documents import WhatsAppInboundEventDocument
 from app.conversations.services.conversation_resolver import ConversationResolver
 from app.conversations.services.message_buffer_service import MessageBufferService
+from app.core.config import settings
 from app.core.logging import logger
 from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
@@ -18,6 +20,10 @@ from app.schemas.ask import AskRequest
 from app.services.audio_transcription_service import download_and_transcribe
 
 _SUPPORTED_DOCUMENT_MIMES = {"application/pdf"}
+
+
+def _is_local_takeover() -> bool:
+    return (settings.app_env or "").lower() in {"local", "dev", "development"}
 
 
 class WhatsAppIngestionService:
@@ -304,15 +310,91 @@ class WhatsAppIngestionService:
                         exc_info=True,
                     )
             else:
-                await self._buffer_service.add_message(
+                buffer_doc = await self._buffer_service.add_message(
                     conversation_id=conversation_id,
                     normalized_phone=parsed.normalized_phone,
                     channel="whatsapp",
                     message_id=parsed.wa_message_id,
                     body=body,
                 )
+                if _is_local_takeover():
+                    # Espera el debounce (y extensiones si llegan más mensajes)
+                    # antes de procesar; el status "buffering" evita que el
+                    # worker remoto robe el buffer en Atlas.
+                    asyncio.create_task(
+                        self._process_buffer_when_due(buffer_doc.buffer_id),
+                        name=f"local-takeover-{buffer_doc.buffer_id[:8]}",
+                    )
 
             ingested_count += 1
 
         logger.info("[ingestion] Ingested %d message(s)", ingested_count)
         return ingested_count
+
+    async def _process_buffer_when_due(self, buffer_id: str) -> None:
+        """Espera scheduled_for (debounce) y luego procesa el buffer local."""
+        try:
+            from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
+            from app.conversations.documents import MessageBufferDocument
+            from app.conversations.services.conversation_lock_service import (
+                ConversationLockService,
+            )
+            from app.conversations.services.conversation_turn_worker import (
+                ConversationTurnWorker,
+            )
+
+            # Hasta ~buffer_debounce + margen; relee por si se extendió.
+            for _ in range(60):
+                buffer_doc = await MessageBufferDocument.find_one(
+                    {
+                        "buffer_id": buffer_id,
+                        "status": {"$in": ["scheduled", "buffering", "processing"]},
+                    }
+                )
+                if not buffer_doc:
+                    logger.info(
+                        "[local-takeover] Buffer %s already claimed/processed",
+                        buffer_id,
+                    )
+                    return
+
+                now = datetime.now(UTC)
+                due = buffer_doc.scheduled_for
+                if due is not None and due.tzinfo is None:
+                    due = due.replace(tzinfo=UTC)
+                if due is None or due <= now:
+                    break
+
+                wait_s = min(2.0, max(0.2, (due - now).total_seconds()))
+                await asyncio.sleep(wait_s)
+            else:
+                buffer_doc = await MessageBufferDocument.find_one(
+                    {"buffer_id": buffer_id}
+                )
+                if not buffer_doc or buffer_doc.status not in {
+                    "scheduled",
+                    "buffering",
+                    "processing",
+                }:
+                    return
+
+            worker = ConversationTurnWorker(
+                lock_service=ConversationLockService(),
+                buffer_service=self._buffer_service,
+                outbound_service=self._outbound_service or WhatsAppOutboundService(),
+            )
+            ok = await worker._process_single_buffer(buffer_doc)
+            logger.info(
+                "[local-takeover] buffer=%s processed=%s",
+                buffer_id,
+                ok,
+            )
+        except Exception:
+            logger.exception(
+                "[local-takeover] Failed processing buffer=%s",
+                buffer_id,
+            )
+
+    async def _process_buffer_immediately(self, buffer_id: str) -> None:
+        """Compat: procesa sin esperar (tests / callers legacy)."""
+        await self._process_buffer_when_due(buffer_id)
