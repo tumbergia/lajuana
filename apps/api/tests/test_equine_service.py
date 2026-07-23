@@ -172,6 +172,50 @@ class TestEquineServiceList:
 
         asyncio.run(run())
 
+    def test_resolve_equine_reference_unique_name_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake_list = [
+            _fake_equine_doc(id="660000000000000000000203", name="Relampago"),
+            _fake_equine_doc(id="660000000000000000000204", name="Pegaso"),
+        ]
+
+        async def fake_list_fn(*args: object, **kwargs: object) -> list[SimpleNamespace]:
+            return fake_list
+
+        monkeypatch.setattr(EquineService, "list", fake_list_fn)
+        service = EquineService()
+
+        async def run() -> None:
+            result = await service.resolve_equine_reference("relampago")
+            assert result["status"] == "resolved"
+            assert result["equine_id"] == "660000000000000000000203"
+
+        asyncio.run(run())
+
+    def test_resolve_equine_reference_ambiguous_token_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake_list = [
+            _fake_equine_doc(id="660000000000000000000203", name="Relampago Azul"),
+            _fake_equine_doc(id="660000000000000000000204", name="Relampago Negro"),
+        ]
+
+        async def fake_list_fn(*args: object, **kwargs: object) -> list[SimpleNamespace]:
+            return fake_list
+
+        monkeypatch.setattr(EquineService, "list", fake_list_fn)
+        service = EquineService()
+
+        async def run() -> None:
+            result = await service.resolve_equine_reference("relampago")
+            assert result["status"] == "ambiguous"
+            assert len(result["matches"]) == 2
+
+        asyncio.run(run())
+
     def test_list_equines_filtered_by_status(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

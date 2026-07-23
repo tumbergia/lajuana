@@ -6,7 +6,11 @@ from uuid import uuid4
 
 from app.ai.assistant.assistant_gate import AssistantGate
 from app.ai.assistant.orchestrator import AssistantOrchestrator
-from app.ai.language.detector import detect_explicit_language_request, detect_language
+from app.ai.language.detector import (
+    SUPPORTED_RESPONSE_LANGUAGES,
+    detect_explicit_language_request,
+    detect_language,
+)
 from app.ai.language.messages import t
 from app.ai.mcp.registry import registry
 from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
@@ -25,6 +29,7 @@ from app.documents import ReservationDocument
 from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.schemas.ask import AskRequest
+from app.services.audio_transcription_service import download_and_transcribe
 
 
 class _EventLike(Protocol):
@@ -37,8 +42,9 @@ class _EventLike(Protocol):
 def combine_messages(events: list[_EventLike]) -> str:
     parts = []
     for event in events:
-        if event.body:
-            parts.append(event.body.strip())
+        text = (event.body or "").strip()
+        if text and text not in {"[audio]", "[Audio recibido pendiente de transcripción]"}:
+            parts.append(text)
         elif event.message_type == "audio" and event.transcription:
             parts.append(event.transcription.strip())
         elif event.media_id and event.message_type == "audio":
@@ -46,6 +52,109 @@ def combine_messages(events: list[_EventLike]) -> str:
         elif event.media_id:
             parts.append(f"[{event.message_type} recibido]")
     return "\n".join(parts)
+
+
+async def ensure_audio_transcriptions(
+    events: list[WhatsAppInboundEventDocument],
+) -> str | None:
+    """STT diferido: transcribe audios pendientes al vencer el buffer.
+
+    Returns the first supported ``transcription_language`` for AskRequest, if any.
+    """
+    audio_language: str | None = None
+    for event in events:
+        if event.message_type != "audio":
+            continue
+        if event.transcription and event.transcription.strip():
+            if not (event.body or "").strip() or event.body in {"[audio]", ""}:
+                event.body = event.transcription
+                try:
+                    await event.save()
+                except Exception:
+                    pass
+            lang = event.transcription_language
+            if (
+                audio_language is None
+                and lang
+                and lang in SUPPORTED_RESPONSE_LANGUAGES
+            ):
+                audio_language = lang
+            continue
+        if not event.media_id:
+            event.body = event.body or "[Audio sin media]"
+            continue
+        try:
+            result = await download_and_transcribe(event.media_id)
+            event.transcription = result.text
+            event.transcription_language = result.language
+            event.body = result.text
+            await event.save()
+            logger.info(
+                "[audio-buffer] Transcribed | wa_message_id=%s lang=%s "
+                "transcription=%.200s",
+                event.wa_message_id,
+                result.language or "?",
+                result.text,
+            )
+            if (
+                audio_language is None
+                and result.language
+                and result.language in SUPPORTED_RESPONSE_LANGUAGES
+            ):
+                audio_language = result.language
+        except Exception as exc:
+            logger.error(
+                "[audio-buffer] Transcription failed | wa_message_id=%s error=%s",
+                event.wa_message_id,
+                exc,
+                exc_info=True,
+            )
+            event.body = "[Audio no pudo ser transcrito]"
+            try:
+                await event.save()
+            except Exception:
+                pass
+    return audio_language
+
+
+def audio_events_unsupported_language(
+    events: list[WhatsAppInboundEventDocument],
+) -> tuple[bool, str | None, str]:
+    """True si hay audio(s) y TODOS los detectados están fuera del catálogo.
+
+    Si hay al menos un audio soportado (o texto no-audio), no rechaza el turno.
+    """
+    audio_events = [e for e in events if e.message_type == "audio"]
+    if not audio_events:
+        return False, None, ""
+    non_audio_text = any(
+        e.message_type != "audio" and (e.body or "").strip() for e in events
+    )
+    supported_audio = []
+    unsupported_audio = []
+    for e in audio_events:
+        lang = e.transcription_language
+        if lang and lang not in SUPPORTED_RESPONSE_LANGUAGES:
+            unsupported_audio.append(e)
+        else:
+            # None lang o soportado: tratar como usable
+            if lang is None or lang in SUPPORTED_RESPONSE_LANGUAGES:
+                if (e.transcription or e.body or "").strip():
+                    supported_audio.append(e)
+    if unsupported_audio and not supported_audio and not non_audio_text:
+        first = unsupported_audio[0]
+        text = "\n".join(
+            (e.transcription or e.body or "").strip()
+            for e in unsupported_audio
+            if (e.transcription or e.body or "").strip()
+        )
+        return True, first.transcription_language, text
+    # Drop unsupported audio bodies so they don't confuse the model
+    for e in unsupported_audio:
+        e.body = ""
+        e.transcription = None
+        e.media_id = None
+    return False, None, ""
 
 
 class ConversationTurnWorker:
@@ -357,6 +466,56 @@ class ConversationTurnWorker:
                 len(events),
             )
 
+            # STT diferido: espera el debounce, luego transcribe todos los audios
+            # del buffer y los une en un solo mensaje (igual que el texto).
+            audio_language = await ensure_audio_transcriptions(events)
+            reject_unsupported, detected_lang, unsupported_text = (
+                audio_events_unsupported_language(events)
+            )
+            if reject_unsupported:
+                session_lang = await self._resolve_session_language(
+                    conversation_id=conversation_id,
+                    combined_text=unsupported_text,
+                    normalized_phone=buffer_doc.normalized_phone,
+                )
+                supported_list = ", ".join(
+                    t(f"language_name_{code}", session_lang)
+                    for code in ("es", "en", "fr", "de", "it", "ru", "zh", "ja")
+                )
+                reject_text = t(
+                    "unsupported_language_message",
+                    session_lang,
+                    supported=supported_list,
+                )
+                turn = ConversationTurnDocument(
+                    trace_id=str(uuid4()),
+                    channel="whatsapp",
+                    from_phone=buffer_doc.normalized_phone,
+                    user_message=unsupported_text,
+                    conversation_id=conversation_id,
+                    status="responded",
+                    response_text=reject_text,
+                    responded_at=datetime.now(UTC),
+                    input_message_ids=reloaded.message_ids,
+                )
+                await turn.insert()
+                await self._outbound_service.send(
+                    turn=turn,
+                    to_phone=buffer_doc.normalized_phone,
+                    text=reject_text,
+                )
+                await self._buffer_service.mark_processed(buffer=reloaded)
+                for merged in merged_buffers[1:]:
+                    await self._buffer_service.mark_processed(buffer=merged)
+                logger.info(
+                    "[conversation_id=%s] Rejected unsupported audio language | "
+                    "detected=%s messages=%d",
+                    conversation_id,
+                    detected_lang,
+                    len(events),
+                )
+                return True
+
             combined_input = combine_messages(events)
             logger.info(
                 "[conversation_id=%s] combined_input=%.300s",
@@ -457,6 +616,7 @@ class ConversationTurnWorker:
                             conversation_id=conversation_id,
                             trace_id=trace_id,
                             conversation_turn_id=str(turn.id),
+                            audio_language=audio_language,
                         )
                     ),
                     timeout=settings.orchestrator_turn_timeout_seconds,

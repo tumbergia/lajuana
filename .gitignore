@@ -47,5 +47,11 @@ apps/api/openapi.json
 scripts/audit_logs/
 scripts/e2e_logs/
 
+# Prompt benchmark outputs (LLM calls; local only)
+apps/api/scripts/benchmark_results/
+
+# Company knowledge vector index (rebuild with scripts/index_company_knowledge.py)
+apps/api/app/ai/knowledge/.index/
+
 # Linux 
 apps/mobile/linux

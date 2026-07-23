@@ -349,43 +349,45 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                           : null,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: AppButton(
-                      label: 'Editar',
-                      icon: Icons.edit_rounded,
-                      onPressed:
-                          _controller.selectedEquineId != null && widget.canEdit
-                          ? () async {
-                              final detail = _controller.selectedDetail;
-                              final result =
-                                  await showModalBottomSheet<
-                                    Map<String, dynamic>
-                                  >(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Theme.of(
+                  if (widget.canEdit) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: AppButton(
+                        label: 'Editar',
+                        icon: Icons.edit_rounded,
+                        onPressed: _controller.selectedEquineId != null
+                            ? () async {
+                                final detail = _controller.selectedDetail;
+                                final result =
+                                    await showModalBottomSheet<
+                                      Map<String, dynamic>
+                                    >(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.surface,
+                                      builder: (_) =>
+                                          EquineFormSheet(existing: detail),
+                                    );
+                                if (result != null && mounted) {
+                                  final success = await _controller.updateEquine(
+                                    _controller.selectedEquineId!,
+                                    result,
+                                  );
+                                  if (success && mounted) {
+                                    showAppToast(
                                       context,
-                                    ).colorScheme.surface,
-                                    builder: (_) =>
-                                        EquineFormSheet(existing: detail),
-                                  );
-                              if (result != null && mounted) {
-                                final success = await _controller.updateEquine(
-                                  _controller.selectedEquineId!,
-                                  result,
-                                );
-                                if (success && mounted) {
-                                  showAppToast(
-                                    context,
-                                    message: 'Equino actualizado correctamente',
-                                  );
+                                      message:
+                                          'Equino actualizado correctamente',
+                                    );
+                                  }
                                 }
                               }
-                            }
-                          : null,
+                            : null,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
               const SizedBox(height: 16),
@@ -479,6 +481,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                           equineName: equine.name,
                           repository: widget.repository,
                           eventRepository: widget.eventRepository,
+                          canEdit: widget.canEdit,
                         ),
                       ),
                     );
@@ -762,6 +765,7 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                   equineName: equineName,
                   repository: widget.repository,
                   eventRepository: widget.eventRepository,
+                  canEdit: widget.canEdit,
                 ),
               ),
             );

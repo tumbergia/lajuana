@@ -95,6 +95,8 @@ class NotificationContent {
         _assignmentChanged(trimmedBody, trimmedTitle, phone),
       'tomorrow_services_summary' =>
         _tomorrowSummary(trimmedBody, trimmedTitle),
+      'role_request_created' || 'role_request_decided' =>
+        _roleRequest(trimmedBody, trimmedTitle),
       _ => _fallback(trimmedBody, trimmedTitle),
     };
   }
@@ -558,6 +560,15 @@ NotificationContent _configurationChanged(String body, String title) {
   }
   return NotificationContent(
     headline: body.isNotEmpty ? body : title,
+  );
+}
+
+NotificationContent _roleRequest(String body, String title) {
+  return NotificationContent(
+    headline: body.isNotEmpty ? body : title,
+    keyFacts: const [
+      NotificationFact(label: 'Tipo', value: 'Solicitud de rol'),
+    ],
   );
 }
 

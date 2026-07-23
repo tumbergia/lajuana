@@ -8,11 +8,15 @@ import 'package:mobile/features/auth/infrastructure/connectivity/network_models.
 import 'package:mobile/features/analytics/remote/analytics_api_client.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/auth/presentation/auth_routes.dart';
 import 'package:mobile/features/auth/presentation/widgets/session_loading_view.dart';
 import 'package:mobile/features/catalogs/catalogs_module.dart';
 import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/app/navigation/shell_navigation_controller.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
+import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_empty_state.dart';
 import 'package:mobile_ui/src/widgets/app_top_bar.dart';
 import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
@@ -25,6 +29,8 @@ import 'package:mobile/features/notifications/notifications_module.dart';
 import 'package:mobile/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:mobile/features/notifications/presentation/widgets/notification_heads_up.dart';
 import 'package:mobile/features/notifications/infrastructure/notification_background_service.dart';
+import 'package:mobile/features/users/presentation/screens/unassigned_access_screen.dart';
+import 'package:mobile/features/users/users_module.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_repository.dart';
 import 'package:mobile/features/equines/presentation/screens/equines_module_screen.dart';
@@ -54,6 +60,7 @@ class AuthenticatedShell extends StatefulWidget {
     required this.voiceAssistantModule,
     this.configurationModule,
     this.notificationsModule,
+    this.usersModule,
     this.onCallRequested,
   });
 
@@ -71,6 +78,7 @@ class AuthenticatedShell extends StatefulWidget {
   final VoiceAssistantModule voiceAssistantModule;
   final LaJuanaConfigurationModule? configurationModule;
   final NotificationsModule? notificationsModule;
+  final UsersModule? usersModule;
   final Future<bool> Function(String phone)? onCallRequested;
 
   @override
@@ -89,12 +97,35 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
   Timer? _syncTimer;
   bool _isSyncing = false;
   DateTime? _lastBackPress;
+  String? _lastKnownRole;
+
+  String get _role =>
+      widget.authController.currentUser?.role.trim().toLowerCase() ??
+      'unassigned';
+
+  bool get _isUnassigned => _role == 'unassigned';
+
+  bool get _isGuide => _role == 'guide';
+
+  bool get _isAdmin => _role == 'admin';
+
+  List<AppNavItem> get _visibleNavItems {
+    if (_isAdmin) return kDefaultAdminNavItems;
+    if (_isGuide) return kGuideNavItems;
+    return const <AppNavItem>[];
+  }
+
+  AppNavItem get _defaultTab =>
+      _isAdmin ? AppNavItem.inicio : AppNavItem.reservas;
 
   @override
   void initState() {
     super.initState();
-    _shellNav = ShellNavigationController();
-    _ensureTab(AppNavItem.inicio);
+    _lastKnownRole = _role;
+    _shellNav = ShellNavigationController(initialTab: _defaultTab);
+    if (!_isUnassigned) {
+      _ensureTab(_defaultTab);
+    }
     WidgetsBinding.instance.addObserver(this);
     // Carga el conteo de ítems que quedaron en cola de sesiones previas.
     unawaited(widget.outbox?.refreshCachedPendingCount() ?? Future<void>.value());
@@ -118,6 +149,25 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
     });
   }
 
+  void _syncShellToRole() {
+    final role = _role;
+    if (role == _lastKnownRole) {
+      if (!_isUnassigned) {
+        _shellNav.ensureAllowed(_visibleNavItems, _defaultTab);
+        _ensureTab(_shellNav.currentTab);
+      }
+      return;
+    }
+    _lastKnownRole = role;
+    if (_isUnassigned) {
+      _visitedTabs.clear();
+      _navigatorKeys.clear();
+      return;
+    }
+    _shellNav.resetTo(_defaultTab);
+    _ensureTab(_defaultTab);
+  }
+
   Future<void> _registerBackgroundNotifications() async {
     final module = widget.notificationsModule;
     if (module == null) return;
@@ -133,6 +183,22 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
     final module = widget.notificationsModule;
     if (module == null) return;
     module.controller.dismissArrivalBanner();
+    if (_isUnassigned) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => NotificationsScreen(
+            controller: module.controller,
+            reservationsModule: widget.reservationsModule,
+            catalogsModule: widget.catalogsModule,
+            authController: widget.authController,
+            assignmentsModule: widget.assignmentsModule,
+            usersModule: widget.usersModule,
+            initialOpenNotificationId: openNotificationId,
+          ),
+        ),
+      );
+      return;
+    }
     final nav = _navigatorKeys[_shellNav.currentTab]?.currentState;
     nav?.push(
       MaterialPageRoute<void>(
@@ -142,6 +208,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
           catalogsModule: widget.catalogsModule,
           authController: widget.authController,
           assignmentsModule: widget.assignmentsModule,
+          usersModule: widget.usersModule,
           initialOpenNotificationId: openNotificationId,
         ),
       ),
@@ -254,6 +321,15 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
   Widget _tabRoot(AppNavItem tab) {
     switch (tab) {
       case AppNavItem.inicio:
+        // Guides never land here; keep a safe fallback.
+        if (!_isAdmin) {
+          return ReservationsModuleScreen(
+            catalogsModule: widget.catalogsModule,
+            authController: widget.authController,
+            reservationsModule: widget.reservationsModule,
+            assignmentsModule: widget.assignmentsModule,
+          );
+        }
         return AnalyticsHomeScreen(
           analyticsApiClient: widget.analyticsApiClient,
           userDisplayName: widget.authController.currentUser?.fullName,
@@ -291,6 +367,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
           configurationModule: widget.configurationModule,
           reservationsModule: widget.reservationsModule,
           notificationsModule: widget.notificationsModule,
+          usersModule: widget.usersModule,
         );
       case AppNavItem.experiencias:
         // Experiencias ahora vive dentro de Más — no debería llegar aquí.
@@ -305,6 +382,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
           configurationModule: widget.configurationModule,
           reservationsModule: widget.reservationsModule,
           notificationsModule: widget.notificationsModule,
+          usersModule: widget.usersModule,
         );
       case AppNavItem.none:
         return const SizedBox.shrink();
@@ -321,6 +399,17 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
           widget.notificationsModule!.controller,
       ]),
       builder: (context, _) {
+        final role = _role;
+        if (role != _lastKnownRole ||
+            (!_isUnassigned &&
+                !_visibleNavItems.contains(_shellNav.currentTab))) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _syncShellToRole();
+            setState(() {});
+          });
+        }
+
         final reachability =
             widget.authController.networkStatus.backendReachability;
         if (reachability == BackendReachability.reachable &&
@@ -367,6 +456,25 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
           canPop: false,
           onPopInvokedWithResult: (didPop, _) {
             if (didPop) return;
+            if (_isUnassigned) {
+              final now = DateTime.now();
+              if (_lastBackPress != null &&
+                  now.difference(_lastBackPress!) <
+                      const Duration(seconds: 2)) {
+                SystemNavigator.pop();
+                return;
+              }
+              _lastBackPress = now;
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  const SnackBar(
+                    content: Text('Presiona atrás otra vez para salir'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              return;
+            }
             // 1. Si el tab activo tiene una sub-ruta abierta (detalle, formulario),
             //    el back la cierra primero.
             final activeNav =
@@ -376,7 +484,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
               return;
             }
             // 2. Si no hay sub-ruta, regresa al tab visitado anteriormente.
-            if (_shellNav.goBack()) {
+            if (_shellNav.goBack(allowed: _visibleNavItems)) {
               _ensureTab(_shellNav.currentTab);
               setState(() {});
               return;
@@ -434,45 +542,51 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
                     controller: widget.authController,
                   ),
                   Expanded(
-                    child: VoicePullScope(
-                      enabled: _isAdminVoiceEnabled,
-                      displacement: MediaQuery.of(context).padding.bottom + 72,
-                      onTriggered: _openAdminVoiceSheet,
-                      child: RefreshScope(
-                        onAfterRefresh: _maybeSync,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            for (final tab in _visitedTabs)
-                              Offstage(
-                                offstage: _shellNav.currentTab != tab,
-                                child: TickerMode(
-                                  enabled: _shellNav.currentTab == tab,
-                                  child: Navigator(
-                                    key: _navigatorKeys[tab],
-                                    onGenerateRoute: (settings) {
-                                      return MaterialPageRoute<void>(
-                                        builder: (ctx) => _tabRoot(tab),
-                                        settings: settings,
-                                      );
-                                    },
-                                  ),
-                                ),
+                    child: _isUnassigned
+                        ? _buildUnassignedBody()
+                        : VoicePullScope(
+                            enabled: _isAdminVoiceEnabled,
+                            displacement:
+                                MediaQuery.of(context).padding.bottom + 72,
+                            onTriggered: _openAdminVoiceSheet,
+                            child: RefreshScope(
+                              onAfterRefresh: _maybeSync,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  for (final tab in _visitedTabs)
+                                    Offstage(
+                                      offstage: _shellNav.currentTab != tab,
+                                      child: TickerMode(
+                                        enabled: _shellNav.currentTab == tab,
+                                        child: Navigator(
+                                          key: _navigatorKeys[tab],
+                                          onGenerateRoute: (settings) {
+                                            return MaterialPageRoute<void>(
+                                              builder: (ctx) => _tabRoot(tab),
+                                              settings: settings,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                          ],
-                        ),
-                      ),
-                    ),
+                            ),
+                          ),
                   ),
                 ],
               ),
-              bottomNavigationBar: AppBottomNav(
-                current: _shellNav.currentTab,
-                onTap: _onBottomNavTap,
-                onVoiceLongPress: _isAdminVoiceEnabled
-                    ? (_, _) => _openAdminVoiceSheet()
-                    : null,
-              ),
+              bottomNavigationBar: _isUnassigned
+                  ? null
+                  : AppBottomNav(
+                      current: _shellNav.currentTab,
+                      visibleItems: _visibleNavItems,
+                      onTap: _onBottomNavTap,
+                      onVoiceLongPress: _isAdminVoiceEnabled
+                          ? (_, _) => _openAdminVoiceSheet()
+                          : null,
+                    ),
             ),
             if (showHeadsUp && notificationsController != null)
               NotificationHeadsUp(
@@ -496,6 +610,55 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
           ),
         );
       },
+    );
+  }
+
+  Future<void> _logoutFromUnassigned() async {
+    await widget.authController.logoutRequested();
+    if (!mounted) return;
+    await Navigator.of(
+      context,
+      rootNavigator: true,
+    ).pushNamedAndRemoveUntil(AuthRoutes.login, (_) => false);
+  }
+
+  Widget _buildUnassignedBody() {
+    final usersModule = widget.usersModule;
+    if (usersModule == null) {
+      final tokens = Theme.of(context).appTokens;
+      return Column(
+        children: [
+          const Expanded(
+            child: AppEmptyState(
+              title: 'Sin acceso todavía',
+              message:
+                  'Tu cuenta aún no tiene un rol asignado. Contacta a un administrador.',
+              icon: Icons.lock_outline_rounded,
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                tokens.spaceXl,
+                0,
+                tokens.spaceXl,
+                tokens.spaceLg,
+              ),
+              child: AppButton(
+                label: 'Cerrar sesión',
+                variant: AppButtonVariant.secondary,
+                expanded: true,
+                onPressed: _logoutFromUnassigned,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return UnassignedAccessScreen(
+      usersModule: usersModule,
+      authController: widget.authController,
     );
   }
 }

@@ -197,7 +197,7 @@ class AnalyticsApiClient {
 
   Future<http.Response> _execute(Future<http.Response> Function() block) async {
     try {
-      return await block().timeout(const Duration(seconds: 12));
+      return await block().timeout(const Duration(seconds: 30));
     } on TimeoutException {
       throw AnalyticsApiFailure(
         code: 'network.timeout',

@@ -263,7 +263,6 @@ class ToolPolicyEngine:
             "admin_update_equine_availability": "equine_id",
             "admin_get_participant": "participant_id",
             "admin_update_participant": "participant_id",
-            "admin_get_reservation_detail": "reservation_id",
             "admin_confirm_reservation": "reservation_id",
             "admin_cancel_reservation": "reservation_id",
             "admin_close_service_execution": "reservation_id",
@@ -280,6 +279,13 @@ class ToolPolicyEngine:
                 return ToolPolicyDecision(
                     allowed=False,
                     reason=f"missing_required_arguments:{required_field}",
+                )
+
+        if plan.tool_name == "admin_get_reservation_detail":
+            if not args.get("reservation_id") and not args.get("code"):
+                return ToolPolicyDecision(
+                    allowed=False,
+                    reason="missing_required_arguments:reservation_id_or_code",
                 )
 
         # Tools que requieren datos de creación

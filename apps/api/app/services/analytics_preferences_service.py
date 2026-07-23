@@ -8,7 +8,6 @@ from app.common.enums import UserRole
 from app.documents import UserDocument
 from app.schemas.analytics_v2 import (
     ANALYTICS_SCHEMA_VERSION,
-    MAX_HOME_MODULES,
     AnalyticsPreferencesSchema,
     AnalyticsPreferencesUpdateSchema,
     DateRangePreset,
@@ -61,8 +60,6 @@ class AnalyticsPreferencesService:
                 continue
             seen.add(mid)
             selected.append(mid)
-            if len(selected) >= MAX_HOME_MODULES:
-                break
 
         order_source = body.module_order if body.module_order is not None else selected
         order: list[str] = []
@@ -108,8 +105,6 @@ class AnalyticsPreferencesService:
                 continue
             seen.add(mid)
             selected.append(mid)
-            if len(selected) >= MAX_HOME_MODULES:
-                break
         if not selected:
             selected = self._catalog.defaults_for_role(role)
         order = list(selected)

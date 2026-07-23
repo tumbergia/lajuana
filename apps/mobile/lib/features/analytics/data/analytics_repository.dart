@@ -1,7 +1,6 @@
 import 'package:mobile/features/analytics/domain/analytics_models.dart';
 import 'package:mobile/features/analytics/infrastructure/local/analytics_local_data_source.dart';
 import 'package:mobile/features/analytics/remote/analytics_api_client.dart';
-import 'package:mobile/features/analytics/remote/analytics_api_error.dart';
 
 class AnalyticsRepository {
   AnalyticsRepository({
@@ -47,31 +46,20 @@ class AnalyticsRepository {
       dateTo: dateTo,
     );
 
-    DashboardSnapshot? cached;
-    final local = await _local.getSnapshot(key);
-    if (local != null) {
-      cached = DashboardSnapshot.fromJson(local.payload, fromCache: true);
-    }
-
-    try {
-      final json = await _api.fetchDashboard(
-        range: range,
-        comparison: comparison,
-        moduleIds: moduleIds,
-        forceRefresh: forceRefresh,
-        dateFrom: dateFrom,
-        dateTo: dateTo,
-      );
-      await _local.cacheSnapshot(
-        cacheKey: key,
-        payload: json,
-        schemaVersion: schemaVersion,
-      );
-      return DashboardSnapshot.fromJson(json);
-    } on AnalyticsApiFailure {
-      if (cached != null) return cached;
-      rethrow;
-    }
+    final json = await _api.fetchDashboard(
+      range: range,
+      comparison: comparison,
+      moduleIds: moduleIds,
+      forceRefresh: forceRefresh,
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+    );
+    await _local.cacheSnapshot(
+      cacheKey: key,
+      payload: json,
+      schemaVersion: schemaVersion,
+    );
+    return DashboardSnapshot.fromJson(json);
   }
 
   Future<DashboardSnapshot?> getCachedDashboard({

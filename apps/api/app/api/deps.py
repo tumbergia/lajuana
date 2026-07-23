@@ -114,6 +114,10 @@ def get_user_service() -> object:
     return Container.get_instance().user_service
 
 
+def get_role_request_service() -> object:
+    return Container.get_instance().role_request_service
+
+
 def get_experience_service() -> object:
     return Container.get_instance().experience_service
 
@@ -177,6 +181,10 @@ def get_participant_form_link_service() -> object:
 
 def get_whatsapp_ingestion_service() -> object:
     return Container.get_instance().whatsapp_ingestion_service
+
+
+def get_whatsapp_outbound_service() -> object:
+    return Container.get_instance().whatsapp_outbound_service
 
 
 def get_analytics_service() -> object:

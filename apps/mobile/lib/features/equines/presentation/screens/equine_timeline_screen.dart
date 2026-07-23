@@ -23,6 +23,7 @@ class EquineTimelineScreen extends StatefulWidget {
   final String equineName;
   final EquineRepository repository;
   final EquineEventRepository eventRepository;
+  final bool canEdit;
 
   const EquineTimelineScreen({
     super.key,
@@ -30,6 +31,7 @@ class EquineTimelineScreen extends StatefulWidget {
     required this.equineName,
     required this.repository,
     required this.eventRepository,
+    this.canEdit = true,
   });
 
   @override
@@ -131,12 +133,14 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      floatingActionButton: FloatingActionButton.small(
-        onPressed: _onAddEntry,
-        backgroundColor: scheme.primary,
-        foregroundColor: scheme.onPrimary,
-        child: const Icon(Icons.add_rounded),
-      ),
+      floatingActionButton: widget.canEdit
+          ? FloatingActionButton.small(
+              onPressed: _onAddEntry,
+              backgroundColor: scheme.primary,
+              foregroundColor: scheme.onPrimary,
+              child: const Icon(Icons.add_rounded),
+            )
+          : null,
       child: _buildBody(),
     );
   }
@@ -288,17 +292,22 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Agregá el primer registro de actividad',
+            widget.canEdit
+                ? 'Agregá el primer registro de actividad'
+                : 'Todavía no hay actividad registrada',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          AppButton(
-            label: 'Agregar registro',
-            icon: Icons.add_rounded,
-            onPressed: _onAddEntry,
-          ),
+          if (widget.canEdit) ...[
+            const SizedBox(height: 24),
+            AppButton(
+              label: 'Agregar registro',
+              icon: Icons.add_rounded,
+              onPressed: _onAddEntry,
+            ),
+          ],
         ],
       ),
     );

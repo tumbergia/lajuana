@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.ai.providers.stt_provider import TranscriptionResult
 from app.channels.whatsapp import ingestion_service
 from app.channels.whatsapp.ingestion_service import WhatsAppIngestionService
 
@@ -55,8 +54,6 @@ def _make_payload(parsed: SimpleNamespace) -> dict[str, Any]:
 
 
 class _FakeCollection:
-    """Replica del motor collection: idempotente sobre `wa_message_id`."""
-
     def __init__(self) -> None:
         self.upserts: list[dict[str, Any]] = []
         self.updates: list[dict[str, Any]] = []
@@ -71,9 +68,7 @@ class _FakeCollection:
 
 def _fake_orchestrator() -> SimpleNamespace:
     orch = SimpleNamespace()
-    orch.ask = AsyncMock(
-        return_value=SimpleNamespace(response="reservaré la fecha")
-    )
+    orch.ask = AsyncMock(return_value=SimpleNamespace(response="ok"))
     return orch
 
 
@@ -91,7 +86,9 @@ def _fake_resolver() -> SimpleNamespace:
 
 def _fake_buffer() -> SimpleNamespace:
     b = SimpleNamespace()
-    b.add_message = AsyncMock(return_value=None)
+    b.add_message = AsyncMock(
+        return_value=SimpleNamespace(buffer_id="buf-1")
+    )
     return b
 
 
@@ -105,135 +102,54 @@ def _build_service(
         buffer_service=_fake_buffer(),  # type: ignore[arg-type]
         outbound_service=_fake_outbound(),  # type: ignore[arg-type]
     )
-    # Reemplazar orchestrator por uno fake.
     service._orchestrator = _fake_orchestrator()  # type: ignore[assignment]
-    # Reemplazar la collection Mongo por la fake.
     monkeypatch.setattr(
         ingestion_service.WhatsAppInboundEventDocument,
         "get_motor_collection",
         classmethod(lambda cls: collection),
     )
-    # Evitar el touch de Beanie sobre Mongo (los tests no inicializan Beanie).
-    class _FakeTurnDoc:
-        def __init__(self, **kwargs: Any) -> None:
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-            self.id = "fake-turn-id"
-
-        async def insert(self) -> None:
-            return None
-
-        async def save(self) -> None:
-            return None
-
-    monkeypatch.setattr(
-        ingestion_service, "ConversationTurnDocument", _FakeTurnDoc
-    )
+    monkeypatch.setattr(ingestion_service, "_is_local_takeover", lambda: False)
     return service
 
 
 @pytest.mark.asyncio
-async def test_audio_in_unsupported_language_returns_unsupported_message(
+async def test_audio_is_buffered_not_processed_immediately(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Cuando el STT detecta un idioma fuera del catálogo soportado, el
-    servicio responde con `unsupported_language_message` y NO invoca al
-    orchestrator. Ver ADR-0013."""
+    """Audio entra al debounce buffer; no STT ni orchestrator en el ingest."""
     parsed = _make_parsed()
     collection = _FakeCollection()
-
-    async def fake_transcribe(media_id: str) -> TranscriptionResult:
-        return TranscriptionResult(
-            text="안녕하세요",
-            language="ko",
-            language_probability=0.95,
-            duration=2.0,
-        )
-
-    monkeypatch.setattr(
-        ingestion_service, "download_and_transcribe", fake_transcribe
-    )
-
     service = _build_service(monkeypatch, collection=collection)
     result = await service.ingest(_make_payload(parsed))
 
     assert result == 1
-    # El orchestrator NO debe haber sido invocado.
     service._orchestrator.ask.assert_not_called()  # type: ignore[attr-defined]
-    # Debe haberse enviado el mensaje de idioma no soportado.
-    service._outbound_service.send.assert_called_once()  # type: ignore[attr-defined]
-    # El documento debe registrar el idioma detectado.
-    persisted = collection.updates
-    assert any(
-        u.get("$set", {}).get("transcription_language") == "ko" for u in persisted
-    )
+    service._outbound_service.send.assert_not_called()  # type: ignore[attr-defined]
+    service._buffer_service.add_message.assert_called_once()  # type: ignore[attr-defined]
+    call_kwargs = service._buffer_service.add_message.call_args.kwargs  # type: ignore[attr-defined]
+    assert call_kwargs["message_id"] == "wamid-1"
+    assert call_kwargs["body"] == "[audio]"
 
 
 @pytest.mark.asyncio
-async def test_audio_in_supported_language_routes_to_orchestrator(
+async def test_two_audios_both_go_to_same_buffer_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Audio en español (detectado por STT) sigue el flujo normal y se
-    procesa por el orchestrator. Verifica que `audio_language` se pasa
-    correctamente en el `AskRequest`."""
-    parsed = _make_parsed()
+    """Dos audios se bufferizan (el merge/debounce los junta después)."""
     collection = _FakeCollection()
-
-    async def fake_transcribe(media_id: str) -> TranscriptionResult:
-        return TranscriptionResult(
-            text="Quiero reservar para mañana",
-            language="es",
-            language_probability=0.98,
-            duration=3.0,
-        )
-
-    monkeypatch.setattr(
-        ingestion_service, "download_and_transcribe", fake_transcribe
-    )
-
     service = _build_service(monkeypatch, collection=collection)
-    await service.ingest(_make_payload(parsed))
 
-    # El orchestrator SÍ se invoca.
-    service._orchestrator.ask.assert_called_once()  # type: ignore[attr-defined]
-    call_args = service._orchestrator.ask.call_args  # type: ignore[attr-defined]
-    ask_request = call_args.args[0]
-    assert ask_request.message == "Quiero reservar para mañana"
-    assert ask_request.audio_language == "es"
-    # La respuesta del orchestrator se envía al cliente.
-    service._outbound_service.send.assert_called_once()  # type: ignore[attr-defined]
-    # El documento persiste el idioma detectado.
-    persisted = collection.updates
-    assert any(
-        u.get("$set", {}).get("transcription_language") == "es" for u in persisted
-    )
-
-
-@pytest.mark.asyncio
-async def test_audio_in_mandarin_routes_to_orchestrator(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Audio en chino mandarín debe procesarse normalmente (zh está en el
-    catálogo soportado) y `audio_language="zh"` debe llegar al orchestrator."""
-    parsed = _make_parsed()
-    collection = _FakeCollection()
-
-    async def fake_transcribe(media_id: str) -> TranscriptionResult:
-        return TranscriptionResult(
-            text="我想预订",
-            language="zh",
-            language_probability=0.93,
-            duration=2.4,
-        )
-
+    p1 = _make_parsed(wa_message_id="a1", media_id="m1")
+    p2 = _make_parsed(wa_message_id="a2", media_id="m2")
+    await service.ingest(_make_payload(p1))
+    # Second upsert needs a fresh upserted_id — reset collection behavior
+    collection2 = _FakeCollection()
     monkeypatch.setattr(
-        ingestion_service, "download_and_transcribe", fake_transcribe
+        ingestion_service.WhatsAppInboundEventDocument,
+        "get_motor_collection",
+        classmethod(lambda cls: collection2),
     )
+    await service.ingest(_make_payload(p2))
 
-    service = _build_service(monkeypatch, collection=collection)
-    await service.ingest(_make_payload(parsed))
-
-    service._orchestrator.ask.assert_called_once()  # type: ignore[attr-defined]
-    ask_request = service._orchestrator.ask.call_args.args[0]  # type: ignore[attr-defined]
-    assert ask_request.audio_language == "zh"
-    assert ask_request.message == "我想预订"
+    assert service._buffer_service.add_message.call_count == 2  # type: ignore[attr-defined]
+    service._orchestrator.ask.assert_not_called()  # type: ignore[attr-defined]

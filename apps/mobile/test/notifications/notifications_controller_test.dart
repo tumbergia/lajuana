@@ -111,6 +111,14 @@ class _FakeNotificationsRepository implements NotificationsRepository {
     prefs = NotificationPreferences(preferences: preferences);
     return prefs;
   }
+
+  @override
+  Future<void> sendWhatsAppMessage({
+    required String phone,
+    required String message,
+  }) async {
+    // No-op in tests.
+  }
 }
 
 InAppNotification _item({

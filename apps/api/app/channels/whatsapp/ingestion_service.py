@@ -3,9 +3,7 @@ from uuid import uuid4
 import asyncio
 
 from app.ai.assistant.orchestrator import AssistantOrchestrator
-from app.ai.language.detector import SUPPORTED_RESPONSE_LANGUAGES
 from app.ai.language.messages import t
-from app.ai.providers.stt_provider import TranscriptionResult
 from app.channels.whatsapp.normalizer import build_conversation_id
 from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
 from app.channels.whatsapp.parser import ParsedMessage, parse_whatsapp_payload
@@ -16,8 +14,6 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.documents.conversation_session_document import ConversationSessionDocument
 from app.documents.conversation_turn_document import ConversationTurnDocument
-from app.schemas.ask import AskRequest
-from app.services.audio_transcription_service import download_and_transcribe
 
 _SUPPORTED_DOCUMENT_MIMES = {"application/pdf"}
 
@@ -84,49 +80,6 @@ class WhatsAppIngestionService:
             parsed.wa_message_id,
         )
 
-    async def _reject_unsupported_audio_language(
-        self,
-        *,
-        parsed: ParsedMessage,
-        conversation_id: str,
-        detected_language: str,
-        transcription: str,
-    ) -> None:
-        """Responde con `unsupported_language_message` cuando el STT detecta
-        un idioma fuera del catálogo soportado. Ver ADR-0013.
-        """
-        if not self._outbound_service:
-            return
-        lang = await self._get_conversation_language(conversation_id)
-        supported_list = ", ".join(
-            t(f"language_name_{code}", lang)
-            for code in ("es", "en", "fr", "de", "it", "ru", "zh", "ja")
-        )
-        text = t("unsupported_language_message", lang, supported=supported_list)
-        turn = ConversationTurnDocument(
-            trace_id=str(uuid4()),
-            channel="whatsapp",
-            from_phone=parsed.normalized_phone,
-            user_message=transcription,
-            conversation_id=conversation_id,
-            status="responded",
-            response_text=text,
-            responded_at=datetime.now(UTC),
-        )
-        await turn.insert()
-        await self._outbound_service.send(
-            turn=turn,
-            to_phone=parsed.normalized_phone,
-            text=text,
-        )
-        logger.info(
-            "[conversation_id=%s] Rejected unsupported audio language | "
-            "wa_message_id=%s detected=%s",
-            conversation_id,
-            parsed.wa_message_id,
-            detected_language,
-        )
-
     async def ingest(self, payload: dict) -> int:
         parsed_messages = parse_whatsapp_payload(payload)
 
@@ -180,42 +133,12 @@ class WhatsAppIngestionService:
                 continue
 
             body = parsed.body or ""
-            transcription_result: TranscriptionResult | None = None
-            transcription_language: str | None = None
+            # Audio: NO transcribir ni responder aquí. Se bufferiza como el
+            # texto; el STT corre al vencer el debounce (varios audios → un turno).
             if parsed.message_type == "audio":
-                try:
-                    transcription_result = await download_and_transcribe(parsed.media_id)
-                    body = transcription_result.text
-                    transcription_language = transcription_result.language
-                    logger.info(
-                        "[ingestion] Audio transcribed | wa_message_id=%s "
-                        "lang=%s (p=%.2f) transcription=%.200s",
-                        parsed.wa_message_id,
-                        transcription_language or "?",
-                        transcription_result.language_probability or 0.0,
-                        transcription_result.text,
-                    )
-                except Exception as exc:
-                    logger.error(
-                        "[ingestion] Audio transcription failed | wa_message_id=%s error=%s",
-                        parsed.wa_message_id,
-                        exc,
-                        exc_info=True,
-                    )
-                    body = "[Audio no pudo ser transcrito]"
+                body = ""
             elif parsed.media_id and parsed.message_type != "text":
                 body = parsed.caption or f"[{parsed.message_type} recibido]"
-
-            if transcription_result is not None:
-                await collection.update_one(
-                    {"wa_message_id": parsed.wa_message_id},
-                    {
-                        "$set": {
-                            "transcription": transcription_result.text,
-                            "transcription_language": transcription_language,
-                        }
-                    },
-                )
 
             # ── Unsupported message types (sticker, video, location, etc.) ──
             if parsed.message_type == "unsupported":
@@ -242,89 +165,21 @@ class WhatsAppIngestionService:
                     ingested_count += 1
                     continue
 
-            # ── Audio en idioma NO soportado: responder unsupported y NO
-            #     pasar al orchestrator. El STT detectó (e.g.) coreano o
-            #     portugués; el bot no puede atender en esos idiomas (ADR-0013).
-            if (
-                parsed.message_type == "audio"
-                and transcription_language
-                and transcription_language not in SUPPORTED_RESPONSE_LANGUAGES
-            ):
-                await self._reject_unsupported_audio_language(
-                    parsed=parsed,
-                    conversation_id=conversation_id,
-                    detected_language=transcription_language,
-                    transcription=body,
+            buffer_doc = await self._buffer_service.add_message(
+                conversation_id=conversation_id,
+                normalized_phone=parsed.normalized_phone,
+                channel="whatsapp",
+                message_id=parsed.wa_message_id,
+                body=body or ("[audio]" if parsed.message_type == "audio" else ""),
+            )
+            if _is_local_takeover():
+                # Espera el debounce (y extensiones si llegan más mensajes)
+                # antes de procesar; el status "buffering" evita que el
+                # worker remoto robe el buffer en Atlas.
+                asyncio.create_task(
+                    self._process_buffer_when_due(buffer_doc.buffer_id),
+                    name=f"local-takeover-{buffer_doc.buffer_id[:8]}",
                 )
-                ingested_count += 1
-                continue
-
-            # Audio: process immediately, skip buffer to avoid double-response
-            if parsed.message_type == "audio" and body and self._outbound_service:
-                try:
-                    trace_id = str(uuid4())
-                    turn = ConversationTurnDocument(
-                        trace_id=trace_id,
-                        channel="whatsapp",
-                        from_phone=parsed.normalized_phone,
-                        user_message=body,
-                        conversation_id=conversation_id,
-                        status="processing",
-                        input_message_ids=[parsed.wa_message_id],
-                    )
-                    await turn.insert()
-
-                    response = await self._orchestrator.ask(
-                        AskRequest(
-                            message=body,
-                            channel="whatsapp",
-                            from_phone=parsed.normalized_phone,
-                            conversation_id=conversation_id,
-                            trace_id=trace_id,
-                            conversation_turn_id=str(turn.id),
-                            audio_language=transcription_language,
-                        )
-                    )
-
-                    turn.status = "responded"
-                    turn.response_text = response.response
-                    turn.responded_at = datetime.now(UTC)
-                    await turn.save()
-
-                    await self._outbound_service.send(
-                        turn=turn,
-                        to_phone=parsed.normalized_phone,
-                        text=response.response,
-                    )
-
-                    logger.info(
-                        "[conversation_id=%s] Audio processed directly | turn=%s",
-                        conversation_id,
-                        turn.id,
-                    )
-                except Exception as exc:
-                    logger.error(
-                        "[conversation_id=%s] Direct audio processing failed | error=%s",
-                        conversation_id,
-                        exc,
-                        exc_info=True,
-                    )
-            else:
-                buffer_doc = await self._buffer_service.add_message(
-                    conversation_id=conversation_id,
-                    normalized_phone=parsed.normalized_phone,
-                    channel="whatsapp",
-                    message_id=parsed.wa_message_id,
-                    body=body,
-                )
-                if _is_local_takeover():
-                    # Espera el debounce (y extensiones si llegan más mensajes)
-                    # antes de procesar; el status "buffering" evita que el
-                    # worker remoto robe el buffer en Atlas.
-                    asyncio.create_task(
-                        self._process_buffer_when_due(buffer_doc.buffer_id),
-                        name=f"local-takeover-{buffer_doc.buffer_id[:8]}",
-                    )
 
             ingested_count += 1
 

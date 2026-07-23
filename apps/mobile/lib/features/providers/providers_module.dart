@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 
+import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/features/auth/infrastructure/token_storage.dart';
 import 'package:mobile_domain/src/providers/providers_repository.dart';
 import 'infrastructure/remote/providers_api_client.dart';
@@ -19,6 +20,7 @@ class ProvidersModule {
     required String baseUrl,
     required TokenStorage tokenStorage,
     required Future<bool> Function() refreshSession,
+    required OutboxRepository outbox,
     http.Client? httpClient,
   }) {
     final apiClient = ProvidersApiClient(
@@ -31,7 +33,10 @@ class ProvidersModule {
       httpClient: httpClient,
     );
 
-    final repository = ProvidersRepositoryImpl(apiClient: apiClient);
+    final repository = ProvidersRepositoryImpl(
+      apiClient: apiClient,
+      outbox: outbox,
+    );
 
     final listController = ProvidersListController(repository: repository);
 

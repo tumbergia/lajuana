@@ -36,6 +36,7 @@ from app.documents.reservation_provider_document import (
     ReservationProviderDocument,
     ReservationProviderStatus,
 )
+from app.documents.role_request_document import RoleRequestDocument
 from app.documents.saddle_document import SaddleDocument
 from app.documents.service_log_document import ServiceLogDocument, ServiceLogEventType
 from app.documents.sync_change_document import SyncChangeDocument
@@ -75,6 +76,7 @@ __all__ = [
     "ReservationProviderDocument",
     "ReservationProviderStatus",
     "ReservationRules",
+    "RoleRequestDocument",
     "SaddleDocument",
     "ServiceLogDocument",
     "ServiceLogEventType",

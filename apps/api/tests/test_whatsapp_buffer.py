@@ -43,11 +43,17 @@ class FakeDoc:
 
 class FakeEvent:
     def __init__(  # noqa: E501
-        self, *, body: str | None = None, media_id: str | None = None, message_type: str = "text"
+        self,
+        *,
+        body: str | None = None,
+        media_id: str | None = None,
+        message_type: str = "text",
+        transcription: str | None = None,
     ):
         self.body = body
         self.media_id = media_id
         self.message_type = message_type
+        self.transcription = transcription
 
 
 # ── Normalizer ──

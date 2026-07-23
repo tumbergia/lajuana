@@ -142,7 +142,10 @@ class _ReservationDetailShellScreenState
   @override
   void initState() {
     super.initState();
-    _subroute = widget.initialSubroute ?? ReservationDetailSubroute.resumen;
+    final initial = widget.initialSubroute ?? ReservationDetailSubroute.resumen;
+    _subroute = (!_isAdmin && initial == ReservationDetailSubroute.pagos)
+        ? ReservationDetailSubroute.resumen
+        : initial;
     _controller =
         widget.reservationsModule?.createDetailController() ??
         ReservationDetailController(
@@ -293,13 +296,14 @@ class _ReservationDetailShellScreenState
               onChanged: (index) {
                 if (index != null) _onSubrouteChanged(index);
               },
-              items: const [
-                AppSegmentedFilterItem(label: 'Resumen', value: 0),
-                AppSegmentedFilterItem(label: 'Participantes', value: 1),
-                AppSegmentedFilterItem(label: 'Pagos', value: 2),
-                AppSegmentedFilterItem(label: 'Asignaciones', value: 3),
-                AppSegmentedFilterItem(label: 'Bitacora', value: 4),
-                AppSegmentedFilterItem(label: 'Proveedores', value: 5),
+              items: [
+                const AppSegmentedFilterItem(label: 'Resumen', value: 0),
+                const AppSegmentedFilterItem(label: 'Participantes', value: 1),
+                if (_isAdmin)
+                  const AppSegmentedFilterItem(label: 'Pagos', value: 2),
+                const AppSegmentedFilterItem(label: 'Asignaciones', value: 3),
+                const AppSegmentedFilterItem(label: 'Bitacora', value: 4),
+                const AppSegmentedFilterItem(label: 'Proveedores', value: 5),
               ],
             ),
             const SizedBox(height: 12),

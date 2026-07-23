@@ -78,6 +78,9 @@ api-typecheck:
 api-mcp:
 	cd apps/api && $(API_PY) -m app.ai.mcp.server
 
+knowledge-index:
+	cd apps/api && $(API_PY) -m scripts.index_company_knowledge --force
+
 api-ask-example:
 	curl -X POST http://localhost:8000/api/v1/ask \
 		-H "Content-Type: application/json" \

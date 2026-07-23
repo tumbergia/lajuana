@@ -225,10 +225,57 @@ async def admin_deactivate_user(**kwargs: Any) -> dict[str, Any]:
     try:
         user_id = kwargs.get("user_id")
         actor_id = kwargs.get("actor_id", "system")
+        if not user_id and kwargs.get("q"):
+            resolution = await _get_service().resolve_user_reference(str(kwargs["q"]))
+            if resolution.get("status") == "resolved":
+                user_id = resolution.get("user_id")
+            elif resolution.get("status") == "ambiguous":
+                matches = resolution.get("matches", [])
+                match_list = ", ".join(
+                    f"{item.get('full_name')} <{item.get('email')}>"
+                    for item in matches
+                    if isinstance(item, dict)
+                )
+                message = (
+                    f"Encontré varios usuarios para '{resolution.get('reference', kwargs['q'])}': "
+                    f"{match_list}. Indícame el correo o el user_id exacto."
+                )
+                output = AdminDeactivateUserOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    message=message,
+                    blocking_reasons=[
+                        ToolBlockingReason(
+                            code="user.reference_ambiguous",
+                            message=message,
+                            details={"matches": matches},
+                        )
+                    ],
+                )
+                return output.model_dump(mode="json")
+            else:
+                message = (
+                    f"No encontré un usuario que coincida con '{resolution.get('reference', kwargs['q'])}'. "
+                    "Indícame el correo o el user_id exacto."
+                )
+                output = AdminDeactivateUserOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    message=message,
+                    blocking_reasons=[
+                        ToolBlockingReason(
+                            code="user.reference_not_found",
+                            message=message,
+                        )
+                    ],
+                )
+                return output.model_dump(mode="json")
+
         if not user_id:
             output = AdminDeactivateUserOutput(
                 deactivated=False,
                 trace_id=trace_id,
+                message="El campo user_id es obligatorio.",
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="user.id_required",
@@ -252,6 +299,7 @@ async def admin_deactivate_user(**kwargs: Any) -> dict[str, Any]:
         output = AdminDeactivateUserOutput(
             deactivated=False,
             trace_id=trace_id,
+            message=exc.message,
             blocking_reasons=[
                 ToolBlockingReason(code=exc.code, message=exc.message, details=exc.details or {})
             ],
@@ -263,6 +311,7 @@ async def admin_deactivate_user(**kwargs: Any) -> dict[str, Any]:
         output = AdminDeactivateUserOutput(
             deactivated=False,
             trace_id=trace_id,
+            message=str(exc),
             blocking_reasons=[ToolBlockingReason(code=error_code, message=str(exc))],
         )
         return output.model_dump(mode="json")

@@ -343,7 +343,16 @@ class NotificationService:
         entry.status = NotificationStatus.SENDING
         await entry.save()
 
-        result = await provider.send(entry)
+        try:
+            result = await provider.send(entry)
+        except Exception as exc:
+            logger.exception(
+                "[notif] Provider send crashed | outbox=%s | channel=%s",
+                getattr(entry, "id", None),
+                entry.channel.value,
+            )
+            await self._record_send_failure(entry, str(exc) or exc.__class__.__name__)
+            return
 
         if result.success:
             entry.status = NotificationStatus.SENT
@@ -352,17 +361,24 @@ class NotificationService:
             await entry.save()
             await self._update_reservation_audit_fields(entry)
             return
-        else:
-            entry.attempt_count += 1
-            entry.last_error = result.error_detail
-            if entry.attempt_count >= entry.max_attempts:
-                entry.status = NotificationStatus.FAILED
-                await entry.save()
-                if entry.channel == NotificationChannel.WHATSAPP:
-                    await self._notify_whatsapp_delivery_failed(entry)
-                return
-            entry.status = NotificationStatus.PENDING
 
+        await self._record_send_failure(entry, result.error_detail)
+
+    async def _record_send_failure(
+        self,
+        entry: NotificationOutboxDocument,
+        error_detail: str | None,
+    ) -> None:
+        entry.attempt_count += 1
+        entry.last_error = error_detail
+        if entry.attempt_count >= entry.max_attempts:
+            entry.status = NotificationStatus.FAILED
+            await entry.save()
+            if entry.channel == NotificationChannel.WHATSAPP:
+                await self._notify_whatsapp_delivery_failed(entry)
+            return
+
+        entry.status = NotificationStatus.PENDING
         await entry.save()
 
     async def _notify_whatsapp_delivery_failed(

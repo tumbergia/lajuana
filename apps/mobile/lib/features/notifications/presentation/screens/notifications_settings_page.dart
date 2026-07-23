@@ -22,6 +22,17 @@ const _preferenceLabels = <String, String>{
   'assignment_changed': 'Asignaciones',
   'tomorrow_services_summary': 'Resumen de servicios de mañana',
   'whatsapp_delivery_failed': 'Fallos de envío WhatsApp',
+  'role_request_created': 'Solicitudes de rol',
+};
+
+const _guidePreferenceKeys = <String>{
+  'reservation_confirmed',
+  'reservation_status_changed',
+  'reservation_updated',
+  'reservation_cancelled',
+  'participant_form_completed',
+  'assignment_changed',
+  'tomorrow_services_summary',
 };
 
 class NotificationsSettingsPage extends StatefulWidget {
@@ -29,12 +40,16 @@ class NotificationsSettingsPage extends StatefulWidget {
     super.key,
     required this.controller,
     this.showScaffold = true,
+    this.isAdmin = true,
   });
 
   final NotificationsController controller;
 
   /// When false, renders body-only content for in-tab embedding (e.g. Más).
   final bool showScaffold;
+
+  /// When false, only guide-relevant preference toggles are shown.
+  final bool isAdmin;
 
   @override
   State<NotificationsSettingsPage> createState() =>
@@ -130,7 +145,12 @@ class _NotificationsSettingsPageState extends State<NotificationsSettingsPage> {
             onTap: controller.loadPreferences,
           )
         else
-          ..._preferenceLabels.entries.map((entry) {
+          ..._preferenceLabels.entries
+              .where(
+                (entry) =>
+                    widget.isAdmin || _guidePreferenceKeys.contains(entry.key),
+              )
+              .map((entry) {
             final enabled = prefs[entry.key] ?? true;
             return Padding(
               padding: EdgeInsets.only(bottom: tokens.spaceSm),

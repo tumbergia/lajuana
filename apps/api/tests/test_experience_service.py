@@ -146,3 +146,77 @@ def test_purge_rejects_active_experience(monkeypatch: pytest.MonkeyPatch) -> Non
 
 def test_purge_rejects_when_has_reservations(monkeypatch: pytest.MonkeyPatch) -> None:
     asyncio.run(_run_purge_rejects_when_has_reservations(monkeypatch))
+
+
+def test_resolve_experience_reference_unique_name_match(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeExperience:
+        def __init__(self, **kwargs: object) -> None:
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+    fake_docs = [
+        FakeExperience(
+            id="660000000000000000000204",
+            name="Medio Dia",
+            slug="medio-dia",
+            aliases=["medio día"],
+            is_active=True,
+        ),
+        FakeExperience(
+            id="660000000000000000000205",
+            name="Dia Completo",
+            slug="dia-completo",
+            aliases=[],
+            is_active=True,
+        ),
+    ]
+
+    async def fake_list(self: ExperienceService, **kwargs: object) -> list[FakeExperience]:
+        return fake_docs
+
+    monkeypatch.setattr(ExperienceService, "list", fake_list)
+    service = ExperienceService()
+
+    async def run() -> None:
+        result = await service.resolve_experience_reference("medio dia")
+        assert result["status"] == "resolved"
+        assert result["experience_id"] == "660000000000000000000204"
+
+    asyncio.run(run())
+
+
+def test_resolve_experience_reference_ambiguous_prefix_match(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeExperience:
+        def __init__(self, **kwargs: object) -> None:
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+
+    fake_docs = [
+        FakeExperience(
+            id="660000000000000000000204",
+            name="Medio Dia Familiar",
+            slug="medio-dia-familiar",
+            aliases=[],
+            is_active=True,
+        ),
+        FakeExperience(
+            id="660000000000000000000205",
+            name="Medio Dia Premium",
+            slug="medio-dia-premium",
+            aliases=[],
+            is_active=True,
+        ),
+    ]
+
+    async def fake_list(self: ExperienceService, **kwargs: object) -> list[FakeExperience]:
+        return fake_docs
+
+    monkeypatch.setattr(ExperienceService, "list", fake_list)
+    service = ExperienceService()
+
+    async def run() -> None:
+        result = await service.resolve_experience_reference("medio dia")
+        assert result["status"] == "ambiguous"
+        assert len(result["matches"]) == 2
+
+    asyncio.run(run())

@@ -20,42 +20,13 @@ class AnalyticsEmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tokens = Theme.of(context).appTokens;
-
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: tokens.spaceXl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 48, color: scheme.onSurfaceVariant),
-            SizedBox(height: tokens.spaceLg),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: tokens.spaceSm),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-            ),
-            if (actionLabel != null && onAction != null) ...[
-              SizedBox(height: tokens.spaceLg),
-              AppButton(
-                label: actionLabel!,
-                icon: Icons.dashboard_customize_rounded,
-                variant: AppButtonVariant.secondary,
-                onPressed: onAction,
-              ),
-            ],
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      title: title,
+      message: message,
+      icon: icon,
+      actionLabel: actionLabel,
+      actionIcon: Icons.dashboard_customize_rounded,
+      onAction: onAction,
     );
   }
 }

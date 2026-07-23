@@ -3,7 +3,7 @@ import 'package:mobile/features/analytics/domain/analytics_models.dart';
 import 'package:mobile/features/analytics/presentation/controllers/dashboard_controller.dart';
 
 void main() {
-  test('home module ids exclude action_center and cap at 4', () {
+  test('home module ids exclude action_center and keep all pins', () {
     final prefs = AnalyticsPreferences(
       selectedModuleIds: const [
         'action_center',
@@ -23,9 +23,8 @@ void main() {
     );
     final cleaned = prefs.selectedModuleIds
         .where((id) => id != 'action_center')
-        .take(AnalyticsPreferences.maxModules)
         .toList();
-    expect(cleaned.length, 4);
+    expect(cleaned.length, 5);
     expect(cleaned.contains('action_center'), isFalse);
   });
 

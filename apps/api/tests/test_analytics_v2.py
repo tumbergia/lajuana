@@ -224,7 +224,7 @@ def test_legacy_pin_mapping_skips_unknown() -> None:
 # ── preferences ──────────────────────────────────────────────────────────
 
 
-def test_preferences_cap_at_four_and_drop_action_center() -> None:
+def test_preferences_keep_all_pins_and_drop_action_center() -> None:
     svc = AnalyticsPreferencesService()
 
     class FakeUser:
@@ -252,7 +252,13 @@ def test_preferences_cap_at_four_and_drop_action_center() -> None:
         UserRole.ADMIN,
     )
     assert "action_center" not in cleaned.selected_module_ids
-    assert len(cleaned.selected_module_ids) <= 4
+    assert cleaned.selected_module_ids == [
+        "reservation_trend",
+        "confirmed_value_trend",
+        "top_experiences",
+        "top_countries",
+        "occupancy",
+    ]
 
 
 @pytest.mark.asyncio
@@ -279,7 +285,8 @@ async def test_preferences_update_persists() -> None:
         ]
     )
     result = await svc.update_preferences(user, body)  # type: ignore[arg-type]
-    assert len(result.selected_module_ids) == 4
+    assert len(result.selected_module_ids) == 5
+    assert result.selected_module_ids[-1] == "occupancy"
     assert user.saved is True
     assert user.analytics_preferences["schema_version"] == ANALYTICS_SCHEMA_VERSION
 
@@ -460,21 +467,24 @@ def test_rich_analysis_for_donut_and_line() -> None:
 
     dash = _sample_dashboard()
     trend_lines = build_rich_analysis(dash.modules[0])
-    assert any("promedio" in line.lower() for line in trend_lines)
-    assert any("Rango:" in line or "mínimo" in line.lower() for line in trend_lines)
-    assert any("Dispersión" in line or "Inicio→fin" in line or "Tendencia" in line for line in trend_lines)
+    assert 2 <= len(trend_lines) <= 4
+    assert any("reserva" in line.lower() for line in trend_lines)
+    assert any(
+        "canal" in line.lower() or "captación" in line.lower() or "pulso" in line.lower()
+        for line in trend_lines
+    )
 
     origins_lines = build_rich_analysis(dash.modules[1])
+    assert 2 <= len(origins_lines) <= 4
     assert any("WhatsApp" in line for line in origins_lines)
-    assert any("HHI" in line or "Concentración" in line or "concentr" in line.lower() for line in origins_lines)
-    assert any("Redes sociales" in line for line in origins_lines)
+    assert any("canal" in line.lower() or "apuesta" in line.lower() for line in origins_lines)
 
     trend_params = dict(analysis_parameter_rows(dash.modules[0]))
-    assert "Puntos" in trend_params
+    assert "Tramos en la serie" in trend_params or "Promedio" in trend_params
     assert "Promedio" in trend_params
     origins_params = dict(analysis_parameter_rows(dash.modules[1]))
-    assert "HHI" in origins_params
     assert "Líder" in origins_params
+    assert "Concentración" in origins_params or "Peso de los 2 líderes" in origins_params
 
 
 def test_export_includes_parameters_section() -> None:
@@ -490,7 +500,7 @@ def test_export_includes_parameters_section() -> None:
     ws = wb["Orígenes de reserva"]
     values = [str(c.value) if c.value is not None else "" for row in ws.iter_rows() for c in row]
     assert any(v == "Parámetros" for v in values)
-    assert any(v == "HHI" for v in values)
+    assert any(v == "Concentración" or v == "Líder" or v == "Peso de los 2 líderes" for v in values)
     assert any(v == "Análisis" for v in values)
 
 

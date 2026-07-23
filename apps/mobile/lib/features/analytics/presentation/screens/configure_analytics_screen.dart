@@ -4,9 +4,122 @@ import 'package:mobile_ui/mobile_ui.dart';
 import 'package:mobile/features/analytics/domain/analytics_models.dart';
 import 'package:mobile/features/analytics/presentation/controllers/dashboard_controller.dart';
 import 'package:mobile/features/analytics/presentation/widgets/insights/analytics_state_views.dart';
-import 'package:mobile/features/analytics/presentation/widgets/lead_card.dart';
-import 'package:mobile/features/analytics/presentation/widgets/lead_icons.dart';
 
+
+IconData _leadIconFor(String name) {
+  switch (name) {
+    case 'receipt_long':
+      return Icons.receipt_long_rounded;
+    case 'pending_actions':
+      return Icons.pending_actions_rounded;
+    case 'contact_mail':
+      return Icons.contact_mail_rounded;
+    case 'request_quote':
+      return Icons.request_quote_rounded;
+    case 'hourglass_bottom':
+      return Icons.hourglass_bottom_rounded;
+    case 'payments':
+      return Icons.payments_rounded;
+    case 'check_circle':
+      return Icons.check_circle_rounded;
+    case 'task_alt':
+      return Icons.task_alt_rounded;
+    case 'cancel':
+      return Icons.cancel_rounded;
+    case 'trending_up':
+      return Icons.trending_up_rounded;
+    case 'account_balance':
+      return Icons.account_balance_rounded;
+    case 'receipt':
+      return Icons.receipt_rounded;
+    case 'verified':
+      return Icons.verified_rounded;
+    case 'groups':
+      return Icons.groups_rounded;
+    case 'pets':
+      return Icons.pets_rounded;
+    case 'check':
+      return Icons.check_rounded;
+    case 'bedtime':
+      return Icons.bedtime_rounded;
+    case 'construction':
+      return Icons.construction_rounded;
+    case 'sick':
+      return Icons.sick_rounded;
+    case 'block':
+      return Icons.block_rounded;
+    case 'fitness_center':
+      return Icons.fitness_center_rounded;
+    case 'people':
+      return Icons.people_rounded;
+    case 'assignment_turned_in':
+      return Icons.assignment_turned_in_rounded;
+    case 'assignment_late':
+      return Icons.assignment_late_rounded;
+    case 'percent':
+      return Icons.percent_rounded;
+    case 'calendar_today':
+      return Icons.calendar_today_rounded;
+    case 'star':
+      return Icons.star_rounded;
+    case 'menu_book':
+      return Icons.menu_book_rounded;
+    case 'public':
+      return Icons.public_rounded;
+    case 'route':
+      return Icons.route_rounded;
+    case 'stars':
+      return Icons.stars_rounded;
+    case 'lock':
+      return Icons.lock_rounded;
+    case 'emoji_events':
+      return Icons.emoji_events_rounded;
+    case 'download':
+      return Icons.download_rounded;
+    case 'hourglass_empty':
+      return Icons.hourglass_empty_rounded;
+    case 'link':
+      return Icons.link_rounded;
+    case 'list_alt':
+      return Icons.list_alt_rounded;
+    case 'flag':
+      return Icons.flag_rounded;
+    case 'person':
+      return Icons.person_rounded;
+    case 'group':
+      return Icons.group_rounded;
+    case 'settings':
+      return Icons.settings_rounded;
+    case 'bar_chart':
+      return Icons.bar_chart_rounded;
+    case 'monetization_on':
+      return Icons.monetization_on_rounded;
+    case 'pie_chart':
+      return Icons.pie_chart_rounded;
+    case 'format_list_numbered':
+      return Icons.format_list_numbered_rounded;
+    case 'priority_high':
+      return Icons.priority_high_rounded;
+    case 'health_and_safety':
+      return Icons.health_and_safety_rounded;
+    case 'healing':
+      return Icons.healing_rounded;
+    case 'event_busy':
+      return Icons.event_busy_rounded;
+    case 'event_available':
+      return Icons.event_available_rounded;
+    case 'monitor_heart':
+      return Icons.monitor_heart_rounded;
+    case 'warning':
+      return Icons.warning_rounded;
+    case 'inventory_2':
+      return Icons.inventory_2_rounded;
+    case 'folder':
+      return Icons.folder_rounded;
+    default:
+      return Icons.help_outline_rounded;
+  }
+}
 
 String analyticsCategoryLabel(String categoryId) {
   switch (categoryId) {
@@ -32,52 +145,52 @@ String analyticsCategoryLabel(String categoryId) {
 IconData analyticsCategoryIcon(String categoryId) {
   switch (categoryId) {
     case 'reservations':
-      return leadIconFor('calendar_today');
+      return _leadIconFor('calendar_today');
     case 'money':
-      return leadIconFor('payments');
+      return _leadIconFor('payments');
     case 'experiences':
-      return leadIconFor('star');
+      return _leadIconFor('star');
     case 'participants':
-      return leadIconFor('public');
+      return _leadIconFor('public');
     case 'operations':
-      return leadIconFor('percent');
+      return _leadIconFor('percent');
     case 'equines':
-      return leadIconFor('pets');
+      return _leadIconFor('pets');
     case 'action':
-      return leadIconFor('priority_high');
+      return _leadIconFor('priority_high');
     default:
-      return leadIconFor('bar_chart');
+      return _leadIconFor('bar_chart');
   }
 }
 
 IconData analyticsModuleIcon(String moduleId) {
   switch (moduleId) {
     case 'reservation_trend':
-      return leadIconFor('trending_up');
+      return _leadIconFor('trending_up');
     case 'reservation_status':
-      return leadIconFor('pie_chart');
+      return _leadIconFor('pie_chart');
     case 'confirmed_value_trend':
-      return leadIconFor('monetization_on');
+      return _leadIconFor('monetization_on');
     case 'payment_status':
-      return leadIconFor('receipt');
+      return _leadIconFor('receipt');
     case 'top_experiences':
-      return leadIconFor('emoji_events');
+      return _leadIconFor('emoji_events');
     case 'top_countries':
-      return leadIconFor('public');
+      return _leadIconFor('public');
     case 'occupancy':
-      return leadIconFor('percent');
+      return _leadIconFor('percent');
     case 'participant_readiness':
-      return leadIconFor('assignment_turned_in');
+      return _leadIconFor('assignment_turned_in');
     case 'equine_availability':
-      return leadIconFor('pets');
+      return _leadIconFor('pets');
     case 'equine_workload':
-      return leadIconFor('fitness_center');
+      return _leadIconFor('fitness_center');
     default:
-      return leadIconFor('bar_chart');
+      return _leadIconFor('bar_chart');
   }
 }
 
-/// Configurar hasta 4 módulos — misma UX visual que AllLeadsScreen.
+/// Configurar módulos fijados en Inicio — misma UX visual que AllLeadsScreen.
 class ConfigureAnalyticsScreen extends StatefulWidget {
   const ConfigureAnalyticsScreen({super.key, required this.controller});
 
@@ -129,8 +242,6 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
     return false;
   }
 
-  bool get _canAdd => _draft.length < AnalyticsPreferences.maxModules;
-
   List<CatalogModule> get _catalog => widget.controller.catalog
       .where((m) => m.homeConfigurable && !m.blocked)
       .toList(growable: false);
@@ -148,11 +259,6 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
       if (_draft.contains(id)) {
         _draft.remove(id);
       } else {
-        if (!_canAdd) {
-          _localError =
-              'Solo puedes fijar hasta ${AnalyticsPreferences.maxModules} indicadores.';
-          return;
-        }
         _draft.add(id);
       }
     });
@@ -366,13 +472,15 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
           eyebrow: 'Preferencias',
           title: 'Indicadores en Inicio',
           subtitle:
-              'Fija hasta ${AnalyticsPreferences.maxModules} indicadores. '
+              'Fija los indicadores que quieres ver en Inicio. '
               'Guarda cuando termines de ajustar.',
           variant: AppSectionHeaderVariant.compact,
         ),
         SizedBox(height: tokens.spaceLg),
         Text(
-          'FIJADOS: ${_draft.length} / ${AnalyticsPreferences.maxModules}',
+          _draft.isEmpty
+              ? 'FIJADOS: ninguno'
+              : 'FIJADOS: ${_draft.length}',
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.6,
@@ -453,9 +561,9 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
                       ),
                     ),
                   ),
-                  trailing: LeadActionIcon(
-                    icon: Icons.push_pin_rounded,
-                    color: chip.background,
+                  trailing: IconButton(
+                    icon: Icon(Icons.push_pin_rounded,
+                        color: chip.background, size: 20),
                     tooltip: 'Quitar fijado',
                     onPressed: () => _togglePin(id),
                   ),
@@ -465,12 +573,13 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
           ),
         ],
         SizedBox(height: tokens.spaceLg),
+        Divider(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+        SizedBox(height: tokens.spaceLg),
         for (var i = 0; i < sortedCats.length; i++)
           _ConfigureCategorySection(
             categoryId: sortedCats[i],
             modules: byCategory[sortedCats[i]]!,
             pinnedIds: pinnedSet,
-            canAdd: _canAdd,
             initiallyExpanded: i == 0,
             onTogglePin: _togglePin,
           ),
@@ -492,7 +601,6 @@ class _ConfigureCategorySection extends StatefulWidget {
     required this.categoryId,
     required this.modules,
     required this.pinnedIds,
-    required this.canAdd,
     required this.onTogglePin,
     this.initiallyExpanded = false,
   });
@@ -500,7 +608,6 @@ class _ConfigureCategorySection extends StatefulWidget {
   final String categoryId;
   final List<CatalogModule> modules;
   final Set<String> pinnedIds;
-  final bool canAdd;
   final void Function(String id) onTogglePin;
   final bool initiallyExpanded;
 
@@ -627,8 +734,6 @@ class _ConfigureCategorySectionState extends State<_ConfigureCategorySection> {
                                   module: mod,
                                   accent: accent,
                                   pinned: widget.pinnedIds.contains(mod.id),
-                                  canPin: widget.canAdd ||
-                                      widget.pinnedIds.contains(mod.id),
                                   onTogglePin: () =>
                                       widget.onTogglePin(mod.id),
                                 ),
@@ -653,14 +758,12 @@ class _ModuleConfigRow extends StatelessWidget {
     required this.module,
     required this.accent,
     required this.pinned,
-    required this.canPin,
     required this.onTogglePin,
   });
 
   final CatalogModule module;
   final Color accent;
   final bool pinned;
-  final bool canPin;
   final VoidCallback onTogglePin;
 
   @override
@@ -694,13 +797,14 @@ class _ModuleConfigRow extends StatelessWidget {
           color: iconFg,
         ),
       ),
-      trailing: LeadActionIcon(
-        icon: pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
-        color: pinned
-            ? accent
-            : (canPin ? scheme.onSurfaceVariant : scheme.outline),
+      trailing: IconButton(
+        icon: Icon(
+          pinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+          color: pinned ? accent : scheme.onSurfaceVariant,
+          size: 20,
+        ),
         tooltip: pinned ? 'Quitar fijado' : 'Fijar en Inicio',
-        onPressed: canPin ? onTogglePin : () {},
+        onPressed: onTogglePin,
       ),
     );
   }

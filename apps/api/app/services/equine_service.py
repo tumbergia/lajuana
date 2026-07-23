@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import re
+import unicodedata
 from datetime import UTC, datetime
 
 from beanie import PydanticObjectId
@@ -19,11 +21,103 @@ from app.schemas.equine import EquineCreateSchema, EquineTimelineEntrySchema, Eq
 from app.services.base_service import BaseService
 
 
+def _normalize_lookup_text(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_text = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    cleaned = re.sub(r"[^a-z0-9._-]+", " ", ascii_text.lower()).strip()
+    return re.sub(r"\s+", " ", cleaned)
+
+
+def _build_equine_label(equine: EquineDocument) -> str:
+    return equine.name
+
+
 class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdateSchema]):
     document_class = EquineDocument
     not_found_code = ErrorCode.EQUINE_NOT_FOUND
     not_found_message = "Equino no encontrado."
     sync_entity_type = "equine"
+
+    async def resolve_equine_reference(self, reference: str) -> dict[str, object]:
+        query = reference.strip()
+        if not query:
+            return {"status": "missing"}
+
+        normalized_query = _normalize_lookup_text(query)
+        equines = await self.list(limit=200)
+        candidates: list[dict[str, object]] = []
+
+        for equine in equines:
+            name = _normalize_lookup_text(equine.name)
+            registry_number = _normalize_lookup_text(equine.registry_number or "")
+            microchip = _normalize_lookup_text(equine.microchip or "")
+            inventory_number = str(equine.inventory_number) if equine.inventory_number is not None else ""
+            tokens = [token for token in name.split(" ") if token]
+            score = 0
+
+            if registry_number and normalized_query == registry_number:
+                score = 100
+            elif microchip and normalized_query == microchip:
+                score = 100
+            elif inventory_number and normalized_query == inventory_number:
+                score = 96
+            elif normalized_query == name:
+                score = 95
+            elif normalized_query in tokens:
+                score = 88
+            elif any(token.startswith(normalized_query) for token in tokens):
+                score = 80
+            elif name.startswith(normalized_query):
+                score = 78
+            elif normalized_query in name:
+                score = 64
+
+            if score == 0:
+                continue
+
+            candidates.append(
+                {
+                    "score": score,
+                    "equine": equine,
+                    "summary": {
+                        "equine_id": str(equine.id),
+                        "name": equine.name,
+                        "is_active": equine.is_active,
+                        "is_available": equine.is_available,
+                        "label": _build_equine_label(equine),
+                    },
+                }
+            )
+
+        if not candidates:
+            return {"status": "not_found", "reference": query, "matches": []}
+
+        candidates.sort(
+            key=lambda item: (
+                -int(item["score"]),
+                not bool(getattr(item["equine"], "is_active", True)),
+                not bool(getattr(item["equine"], "is_available", True)),
+                len(getattr(item["equine"], "name", "")),
+            )
+        )
+        top_score = int(candidates[0]["score"])
+        top_candidates = [item for item in candidates if int(item["score"]) == top_score]
+
+        if len(top_candidates) == 1 and top_score >= 78:
+            equine = top_candidates[0]["equine"]
+            return {
+                "status": "resolved",
+                "reference": query,
+                "equine_id": str(equine.id),
+                "label": _build_equine_label(equine),
+                "match_score": top_score,
+            }
+
+        return {
+            "status": "ambiguous",
+            "reference": query,
+            "matches": [item["summary"] for item in candidates[:5]],
+        }
 
     # ── List/Count con filtros de dominio ──
 

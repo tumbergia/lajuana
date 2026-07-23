@@ -18,6 +18,10 @@ Registro cronológico de decisiones significativas.
 | 0010 | [Política de lenguaje del bot](0010-bot-language-policy.md) | ✅ Aceptado | 2026-06 |
 | 0011 | [Leads Dashboard](0011-leads-dashboard.md) | ♻️ Superado | 2026-07-13 |
 | 0012 | [Analítica e Insights](0012-analytics-insights.md) | ✅ Aceptado | 2026-07-14 |
+| 0013 | [STT multilenguaje](0013-stt-multilang.md) | ✅ Aceptado | 2026-07 |
+| 0014 | [Idioma cancelación = holder_language](0014-cancel-language-holder.md) | ✅ Aceptado | 2026-07-15 |
+| 0015 | [Optimización tokens prompt WhatsApp](0015-prompt-token-optimization.md) | ✅ Aceptado | 2026-07-16 |
+| 0016 | [RAG conocimiento corporativo](0016-company-knowledge-rag.md) | ✅ Aceptado | 2026-07-16 |
 
 Auditoría de métricas: [analytics/metric-audit.md](analytics/metric-audit.md)
 

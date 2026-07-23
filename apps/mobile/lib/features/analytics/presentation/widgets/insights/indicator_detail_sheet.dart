@@ -310,7 +310,7 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
                   ),
                 ),
               ],
-              ..._buildAnalysisSections(context, accent),
+              ..._buildAnalysisSections(context),
               SizedBox(height: tokens.spaceLg),
               Text(
                 'Desglose',
@@ -363,7 +363,7 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
     );
   }
 
-  List<Widget> _buildAnalysisSections(BuildContext context, Color accent) {
+  List<Widget> _buildAnalysisSections(BuildContext context) {
     final tokens = Theme.of(context).appTokens;
     final scheme = Theme.of(context).colorScheme;
     final params = indicatorParameterRows(module);
@@ -436,25 +436,16 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
         ),
       );
       widgets.add(SizedBox(height: tokens.spaceMd));
-      for (final line in analysis) {
+      for (final paragraph in analysis) {
         widgets.add(
           Padding(
-            padding: EdgeInsets.only(bottom: tokens.spaceSm),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Icon(Icons.circle, size: 6, color: accent),
-                ),
-                SizedBox(width: tokens.spaceSm),
-                Expanded(
-                  child: Text(
-                    line,
-                    style: Theme.of(context).textTheme.bodySmall,
+            padding: EdgeInsets.only(bottom: tokens.spaceMd),
+            child: Text(
+              paragraph,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    height: 1.45,
+                    color: scheme.onSurface,
                   ),
-                ),
-              ],
             ),
           ),
         );

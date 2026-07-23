@@ -13,6 +13,8 @@ import 'package:mobile/features/notifications/presentation/notification_visuals.
 import 'package:mobile/features/reservations/presentation/screens/reservation_detail_shell_screen.dart';
 import 'package:mobile/features/reservations/presentation/widgets/reservation_proof_image_viewer.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
+import 'package:mobile/features/users/presentation/screens/role_requests_screen.dart';
+import 'package:mobile/features/users/users_module.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
@@ -59,6 +61,7 @@ class NotificationsScreen extends StatefulWidget {
     this.catalogsModule,
     this.authController,
     this.assignmentsModule,
+    this.usersModule,
     this.initialOpenNotificationId,
   });
 
@@ -67,6 +70,7 @@ class NotificationsScreen extends StatefulWidget {
   final CatalogsModule? catalogsModule;
   final AuthController? authController;
   final AssignmentsModule? assignmentsModule;
+  final UsersModule? usersModule;
   final String? initialOpenNotificationId;
 
   @override
@@ -144,6 +148,21 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         return _NotificationDetailSheet(
           item: item,
           contactPhone: phone,
+          onOpenRoleRequests: widget.usersModule == null
+              ? null
+              : () {
+                  final usersModule = widget.usersModule!;
+                  Navigator.of(sheetContext).pop();
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            RoleRequestsScreen(module: usersModule),
+                      ),
+                    );
+                  });
+                },
           onOpenReservation: (subroute) {
             final reservationId = item.reservationId;
             Navigator.of(sheetContext).pop();
@@ -179,6 +198,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               if (!mounted) return;
               unawaited(openWhatsAppChat(phone, message: message));
             });
+          },
+          onSendDirectly: (message) async {
+            return widget.controller.sendWhatsAppMessage(
+              phone: phone ?? '',
+              message: message,
+            );
           },
           onDelete: () async {
             Navigator.of(sheetContext).pop();
@@ -558,7 +583,9 @@ class _NotificationDetailSheet extends StatefulWidget {
     required this.onOpenReservationTarget,
     required this.onOpenPaymentProof,
     required this.onWhatsAppReply,
+    required this.onSendDirectly,
     required this.onDelete,
+    this.onOpenRoleRequests,
   });
 
   final InAppNotification item;
@@ -568,7 +595,9 @@ class _NotificationDetailSheet extends StatefulWidget {
       onOpenReservationTarget;
   final VoidCallback onOpenPaymentProof;
   final Future<void> Function(String message) onWhatsAppReply;
+  final Future<bool> Function(String message) onSendDirectly;
   final VoidCallback onDelete;
+  final VoidCallback? onOpenRoleRequests;
 
   @override
   State<_NotificationDetailSheet> createState() =>
@@ -578,6 +607,7 @@ class _NotificationDetailSheet extends StatefulWidget {
 class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
   late final TextEditingController _replyController;
   late bool _composingReply;
+  bool _sending = false;
 
   @override
   void initState() {
@@ -744,11 +774,56 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
                   maxLines: 4,
                 ),
                 const SizedBox(height: 12),
-                AppButton(
-                  label: 'Abrir WhatsApp',
-                  icon: Symbols.chat,
-                  onPressed: () =>
-                      widget.onWhatsAppReply(_replyController.text),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        label: 'Abrir WhatsApp',
+                        icon: Symbols.chat,
+                        onPressed: () =>
+                            widget.onWhatsAppReply(_replyController.text),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: Theme.of(context).colorScheme.copyWith(
+                            primary: const Color(0xFF25D366),
+                            onPrimary: Colors.white,
+                          ),
+                        ),
+                        child: AppButton(
+                          label: _sending ? 'Enviando…' : 'Enviar mensaje',
+                          variant: AppButtonVariant.primary,
+                          icon: Symbols.send,
+                          onPressed: _sending
+                              ? null
+                              : () async {
+                                  final msg = _replyController.text.trim();
+                                  if (msg.isEmpty) return;
+                                  setState(() => _sending = true);
+                                  final ok =
+                                      await widget.onSendDirectly(msg);
+                                  setState(() => _sending = false);
+                                  if (ok && mounted) {
+                                    Navigator.of(context).pop();
+                                    showAppToast(
+                                      context,
+                                      message: 'Mensaje enviado.',
+                                    );
+                                  } else if (!ok && mounted) {
+                                    showAppToast(
+                                      context,
+                                      message: 'Error al enviar mensaje.',
+                                      isError: true,
+                                    );
+                                  }
+                                },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
               ] else if (hasWhatsApp) ...[
@@ -780,6 +855,15 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
                       ? AppButtonVariant.secondary
                       : AppButtonVariant.primary,
                   onPressed: () => widget.onOpenReservation(primarySubroute),
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (item.eventType == 'role_request_created' &&
+                  widget.onOpenRoleRequests != null) ...[
+                AppButton(
+                  label: 'Ver solicitudes',
+                  icon: Symbols.badge,
+                  onPressed: widget.onOpenRoleRequests,
                 ),
                 const SizedBox(height: 8),
               ],

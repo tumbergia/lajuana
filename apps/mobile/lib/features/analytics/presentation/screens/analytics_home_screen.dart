@@ -296,22 +296,9 @@ class _AnalyticsHomeScreenState extends State<AnalyticsHomeScreen>
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          if (_controller.fromCache) ...[
-                            AppStatusBanner(
-                              title: 'Sin conexión',
-                              message:
-                                  'Mostrando la última actualización disponible en el dispositivo.',
-                              tone: AppStatusBannerTone.warning,
-                              icon: Icons.wifi_off_rounded,
-                              badgeLabel: 'Offline',
-                              onTap: () => _controller.load(
-                                forceRefresh: true,
-                                silent: false,
-                              ),
-                            ),
-                            SizedBox(height: tokens.spaceMd),
-                          ] else if (_controller.error != null &&
-                              !fullError) ...[
+                          if (_controller.error != null &&
+                              !fullError &&
+                              !_controller.isOffline) ...[
                             AppStatusBanner(
                               title: 'Error de sincronización',
                               message: _controller.error!,
@@ -408,7 +395,7 @@ class _AnalyticsHomeScreenState extends State<AnalyticsHomeScreen>
                           child: AnalyticsEmptyView(
                             title: 'Sin indicadores en Inicio',
                             message:
-                                'Elige hasta 4 indicadores para ver gráficas aquí.',
+                                'Elige indicadores para ver gráficas aquí.',
                             actionLabel: 'Configurar indicadores',
                             onAction: _openConfigure,
                           ),
@@ -467,12 +454,8 @@ class _AnalyticsHomeScreenState extends State<AnalyticsHomeScreen>
 
   String _periodCaption(DashboardController ctrl) {
     if (_isAnalyzing(ctrl)) return '';
-    if (ctrl.fromCache && ctrl.periodRangeLabel.isNotEmpty) {
-      return '${ctrl.periodRangeLabel} · sin conexión';
-    }
     if (ctrl.periodRangeLabel.isNotEmpty) return ctrl.periodRangeLabel;
     if (ctrl.refreshing) return 'Actualizando gráficas…';
-    if (ctrl.fromCache) return 'Sin conexión · última actualización disponible';
     return '';
   }
 }
