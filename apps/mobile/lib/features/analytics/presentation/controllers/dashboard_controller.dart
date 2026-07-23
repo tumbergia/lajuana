@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/analytics/data/analytics_repository.dart';
 import 'package:mobile/features/analytics/domain/analytics_models.dart';
 import 'package:mobile/features/analytics/remote/analytics_api_error.dart';
@@ -379,27 +380,31 @@ class DashboardController extends ChangeNotifier {
       if (!_isCurrent(generation)) return;
 
       final offline = _isConnectivityFailure(e.code);
+      final friendly = userFacingError(
+        e,
+        fallback: 'No pudimos cargar la analítica. Intenta nuevamente.',
+      );
       if (fallbackCache != null) {
         _applySnapshot(fallbackCache, expectedIds: moduleIds);
         _state = DashboardLoadState.offlineFromCache;
         _fromCache = true;
         _isOffline = offline;
-        _error = e.message;
+        _error = friendly;
       } else {
         final hadData = moduleIds.any((id) => slotFor(id).hasData);
         if (hadData) {
           _state = DashboardLoadState.offlineFromCache;
           _fromCache = true;
           _isOffline = offline;
-          _error = e.message;
+          _error = friendly;
           for (final id in moduleIds) {
-            slotFor(id).setError(e.message, keepData: true);
+            slotFor(id).setError(friendly, keepData: true);
           }
         } else {
           _state = DashboardLoadState.error;
           _fromCache = false;
           _isOffline = offline;
-          _error = e.message;
+          _error = friendly;
           for (final id in moduleIds) {
             slotFor(id).setError(
               'No pudimos actualizar esta información. Intenta nuevamente.',

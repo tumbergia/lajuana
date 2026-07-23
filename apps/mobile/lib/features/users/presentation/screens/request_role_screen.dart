@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
 import 'package:mobile/features/auth/presentation/user_role_display.dart';
 import 'package:mobile/features/users/infrastructure/remote/users_api_error.dart';
@@ -68,12 +69,22 @@ class _RequestRoleScreenState extends State<RequestRoleScreen> {
       await widget.authController.profileRefreshRequested();
     } on UsersApiFailure catch (e) {
       if (!mounted) return;
-      showAppToast(context, message: e.message, isError: true);
-    } catch (_) {
+      showAppToast(
+        context,
+        message: userFacingError(
+          e,
+          fallback: 'No se pudo enviar la solicitud',
+        ),
+        isError: true,
+      );
+    } catch (e) {
       if (!mounted) return;
       showAppToast(
         context,
-        message: 'No se pudo enviar la solicitud',
+        message: userFacingError(
+          e,
+          fallback: 'No se pudo enviar la solicitud',
+        ),
         isError: true,
       );
     }

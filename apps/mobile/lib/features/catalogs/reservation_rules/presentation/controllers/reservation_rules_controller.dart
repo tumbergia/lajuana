@@ -2,6 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
 import 'package:mobile/features/catalogs/reservation_rules/data/reservation_rules_repository.dart';
 import 'package:mobile/features/catalogs/reservation_rules/domain/reservation_rules.dart';
@@ -31,7 +32,10 @@ class ReservationRulesController extends ChangeNotifier {
     try {
       rules = await _repository.get();
     } catch (e) {
-      error = e.toString();
+      error = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar las reglas de reserva.',
+      );
     } finally {
       isInitialLoading = false;
       notifyListeners();
@@ -50,7 +54,10 @@ class ReservationRulesController extends ChangeNotifier {
       await _catalogsRepository.refreshReservationRulesFromServer();
       rules = await _repository.get();
     } catch (e) {
-      error = e.toString();
+      error = userFacingError(
+        e,
+        fallback: 'No se pudieron actualizar las reglas de reserva.',
+      );
     } finally {
       isRefreshing = false;
       notifyListeners();
@@ -82,7 +89,10 @@ class ReservationRulesController extends ChangeNotifier {
       await _catalogsRepository.syncNow();
       rules = await _repository.get();
     } catch (e) {
-      error = e.toString();
+      error = userFacingError(
+        e,
+        fallback: 'No se pudieron sincronizar las reglas de reserva.',
+      );
     } finally {
       isSyncing = false;
       notifyListeners();

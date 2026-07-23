@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_photo.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
@@ -182,7 +183,10 @@ class _ReservationLogNoteSheetState extends State<ReservationLogNoteSheet> {
     } catch (error) {
       setState(() {
         _saving = false;
-        _error = error.toString();
+        _error = userFacingError(
+          error,
+          fallback: 'No se pudo preparar la nota.',
+        );
       });
     }
   }

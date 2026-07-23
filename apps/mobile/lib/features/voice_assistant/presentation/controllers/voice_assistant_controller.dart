@@ -5,6 +5,8 @@ import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
+
 import '../../domain/assistant_ask_result.dart';
 import '../../domain/voice_platform_support.dart';
 import '../../infrastructure/remote/voice_assistant_api_client.dart';
@@ -190,9 +192,19 @@ class VoiceAssistantController extends ChangeNotifier {
       );
       _applyResult(response);
     } on VoiceAssistantApiFailure catch (failure) {
-      _setError(failure.message);
-    } catch (_) {
-      _setError('No se pudo enviar el mensaje al asistente.');
+      _setError(
+        userFacingError(
+          failure,
+          fallback: 'No se pudo enviar el mensaje al asistente.',
+        ),
+      );
+    } catch (e) {
+      _setError(
+        userFacingError(
+          e,
+          fallback: 'No se pudo enviar el mensaje al asistente.',
+        ),
+      );
     } finally {
       _stopProcessingTimer();
       notifyListeners();

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 
@@ -33,7 +34,10 @@ class ReservationProvidersSectionController extends ChangeNotifier {
       state = ReservationProvidersLoadState.loaded;
     } catch (error) {
       state = ReservationProvidersLoadState.error;
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudieron cargar los proveedores de la reserva.',
+      );
     }
     notifyListeners();
   }
@@ -64,7 +68,10 @@ class ReservationProvidersSectionController extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo agregar el proveedor.',
+      );
       state = ReservationProvidersLoadState.error;
       notifyListeners();
       return false;
@@ -98,7 +105,10 @@ class ReservationProvidersSectionController extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo actualizar el proveedor.',
+      );
       state = ReservationProvidersLoadState.error;
       notifyListeners();
       return false;
@@ -123,7 +133,10 @@ class ReservationProvidersSectionController extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo quitar el proveedor.',
+      );
       state = ReservationProvidersLoadState.error;
       notifyListeners();
       return false;

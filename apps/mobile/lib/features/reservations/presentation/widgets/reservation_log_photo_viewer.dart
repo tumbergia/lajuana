@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:mobile_ui/src/widgets/app_toast.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/app/utils/file_saver.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_photo.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
@@ -113,7 +114,10 @@ class _ReservationLogPhotoViewerState extends State<ReservationLogPhotoViewer> {
       if (!mounted) return;
       showAppToast(
         context,
-        message: 'Error al descargar: $error',
+        message: userFacingError(
+          error,
+          fallback: 'No se pudo guardar la foto.',
+        ),
         isError: true,
       );
     }

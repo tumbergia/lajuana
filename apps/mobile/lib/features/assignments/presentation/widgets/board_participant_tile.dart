@@ -9,6 +9,7 @@ import 'package:mobile_ui/src/widgets/cards/app_assignment_list_item.dart';
 import 'package:mobile_domain/src/assignments/assignment_board.dart';
 import 'package:mobile_domain/mobile_domain.dart';
 import 'package:mobile/features/assignments/presentation/controllers/assignment_board_controller.dart';
+import 'package:mobile/features/assignments/presentation/helpers/assignment_status_labels.dart';
 
 /// Widget que muestra la asignación de un participante con botones de acción
 /// y dialegs emergentes para elegir equino/silla.
@@ -65,7 +66,7 @@ class BoardParticipantTile extends StatelessWidget {
       } else {
         cardState = AppAssignmentCardState.warning;
         validationMessage =
-            'Estado: ${assignment.status?.name ?? "desconocido"}';
+            'Estado: ${assignmentStatusLabel(assignment.status)}';
       }
     }
 
@@ -95,7 +96,7 @@ class BoardParticipantTile extends StatelessWidget {
             capacityLabel: equineMaxWeight != null
                 ? 'Máx. ${equineMaxWeight.toStringAsFixed(0)} kg'
                 : 'Sin límite de peso',
-            statusLabel: assignment?.status?.name,
+            statusLabel: assignmentStatusLabel(assignment?.status),
             image: _equineImageProvider(assignment?.equineId),
           ),
           saddleLabel: assignment?.saddleLabel ?? '—',

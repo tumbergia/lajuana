@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_domain/src/gen/in_app_notification.dart';
 import 'package:mobile_domain/src/gen/notification_preferences.dart';
 import 'package:mobile/features/notifications/domain/notifications_repository.dart';
@@ -71,7 +72,10 @@ class NotificationsController extends ChangeNotifier {
       loadState = NotificationsLoadState.success;
       _seedBaselineFromCurrentInbox();
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudieron cargar las notificaciones.',
+      );
       loadState = NotificationsLoadState.error;
     } finally {
       _loadingList = false;
@@ -204,7 +208,10 @@ class NotificationsController extends ChangeNotifier {
       unreadCount = items.where((item) => !item.read).length;
       notifyListeners();
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo marcar como leída.',
+      );
       notifyListeners();
     }
   }
@@ -232,7 +239,10 @@ class NotificationsController extends ChangeNotifier {
       unreadCount = 0;
       notifyListeners();
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudieron marcar como leídas.',
+      );
       notifyListeners();
     }
   }
@@ -247,7 +257,10 @@ class NotificationsController extends ChangeNotifier {
       }
       notifyListeners();
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo eliminar la notificación.',
+      );
       notifyListeners();
       rethrow;
     }
@@ -264,7 +277,10 @@ class NotificationsController extends ChangeNotifier {
       }
       notifyListeners();
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo vaciar la bandeja.',
+      );
       notifyListeners();
       rethrow;
     }
@@ -276,7 +292,10 @@ class NotificationsController extends ChangeNotifier {
     try {
       preferences = await _repository.getPreferences();
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudieron cargar las preferencias.',
+      );
     }
     preferencesLoading = false;
     notifyListeners();
@@ -292,7 +311,10 @@ class NotificationsController extends ChangeNotifier {
       await _repository.sendWhatsAppMessage(phone: phone, message: message);
       return true;
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo enviar el mensaje de WhatsApp.',
+      );
       notifyListeners();
       return false;
     }
@@ -305,7 +327,10 @@ class NotificationsController extends ChangeNotifier {
       preferences = await _repository.updatePreferences(current);
       notifyListeners();
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo guardar la preferencia.',
+      );
       notifyListeners();
     }
   }

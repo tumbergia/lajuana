@@ -272,7 +272,7 @@ class AssignmentsApiClient {
     } catch (e) {
       throw AssignmentsApiFailure(
         code: 'network.unreachable',
-        message: 'No se pudo conectar con el servidor: $e',
+        message: 'No se pudo conectar con el servidor.',
       );
     }
 
@@ -323,5 +323,5 @@ class AssignmentsApiFailure implements Exception {
   final String message;
 
   @override
-  String toString() => 'AssignmentsApiFailure($code): $message';
+  String toString() => message;
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/auth/presentation/user_role_display.dart';
 import 'package:mobile/features/users/domain/user_models.dart';
 import 'package:mobile/features/users/infrastructure/remote/users_api_error.dart';
@@ -83,13 +84,23 @@ class _UsersManagementScreenState extends State<UsersManagementScreen>
       }
     } on UsersApiFailure catch (e) {
       if (mounted) {
-        showAppToast(context, message: e.message, isError: true);
+        showAppToast(
+          context,
+          message: userFacingError(
+            e,
+            fallback: 'Error al crear el usuario',
+          ),
+          isError: true,
+        );
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         showAppToast(
           context,
-          message: 'Error al crear el usuario',
+          message: userFacingError(
+            e,
+            fallback: 'Error al crear el usuario',
+          ),
           isError: true,
         );
       }
@@ -116,13 +127,23 @@ class _UsersManagementScreenState extends State<UsersManagementScreen>
       }
     } on UsersApiFailure catch (e) {
       if (mounted) {
-        showAppToast(context, message: e.message, isError: true);
+        showAppToast(
+          context,
+          message: userFacingError(
+            e,
+            fallback: 'Error al actualizar el usuario',
+          ),
+          isError: true,
+        );
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         showAppToast(
           context,
-          message: 'Error al actualizar el usuario',
+          message: userFacingError(
+            e,
+            fallback: 'Error al actualizar el usuario',
+          ),
           isError: true,
         );
       }
@@ -177,11 +198,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen>
         return const RefreshableViewport(child: AppCenteredLoader());
       case UsersLoadState.error:
         return RefreshableViewport(
-          child: AppEntityRowCard(
+          child: AppEmptyState(
+            icon: Icons.error_outline_rounded,
             title: 'No se pudieron cargar los usuarios',
-            subtitle: _controller.errorMessage ?? 'Revisa la conexión',
-            badge: const AppBadge(label: 'Error', tone: AppBadgeTone.danger),
-            onTap: _controller.loadInitial,
+            message: _controller.errorMessage ?? 'Revisa la conexión',
+            actionLabel: 'Reintentar',
+            actionIcon: Icons.refresh_rounded,
+            onAction: _controller.loadInitial,
           ),
         );
       case UsersLoadState.empty:

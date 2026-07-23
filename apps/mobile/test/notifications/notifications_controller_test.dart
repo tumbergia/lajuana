@@ -194,6 +194,11 @@ void main() {
     await controller.loadInitial();
     expect(controller.loadState, NotificationsLoadState.error);
     expect(controller.errorMessage, isNotNull);
+    expect(controller.errorMessage, isNot(contains('Exception')));
+    expect(
+      controller.errorMessage,
+      'No se pudieron cargar las notificaciones.',
+    );
   });
 
   test('markRead updates item and unread count', () async {

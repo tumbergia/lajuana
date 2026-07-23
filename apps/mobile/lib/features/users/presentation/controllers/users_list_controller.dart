@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/users/domain/user_models.dart';
 import 'package:mobile/features/users/infrastructure/remote/users_api_client.dart';
 import 'package:mobile/features/users/infrastructure/remote/users_api_error.dart';
@@ -42,11 +43,17 @@ class UsersListController extends ChangeNotifier {
       state = _allItems.isEmpty ? UsersLoadState.empty : UsersLoadState.success;
       _notify();
     } on UsersApiFailure catch (e) {
-      errorMessage = e.message;
+      errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar los usuarios.',
+      );
       state = UsersLoadState.error;
       _notify();
-    } catch (_) {
-      errorMessage = 'No se pudieron cargar los usuarios.';
+    } catch (e) {
+      errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar los usuarios.',
+      );
       state = UsersLoadState.error;
       _notify();
     }

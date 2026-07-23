@@ -80,7 +80,7 @@ String providerStatusLabel(String status) {
     'inactive' => 'Inactivo',
     'needs_review' => 'Revision',
     'blocked' => 'Bloqueado',
-    _ => status,
+    _ => 'Estado desconocido',
   };
 }
 

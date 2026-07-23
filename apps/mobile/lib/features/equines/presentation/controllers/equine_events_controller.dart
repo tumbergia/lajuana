@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_domain/src/equines/equine_event.dart';
 import 'package:mobile_domain/src/equines/equine_event_repository.dart';
 import 'package:mobile_domain/src/equines/equine_operational_status.dart';
@@ -167,7 +168,10 @@ class EquineEventsController extends ChangeNotifier {
       return lastCreated;
     } catch (e) {
       saveState = EquineEventSaveState.error;
-      saveError = e.toString();
+      saveError = userFacingError(
+        e,
+        fallback: 'No se pudo guardar el evento.',
+      );
       notifyListeners();
       return null;
     }

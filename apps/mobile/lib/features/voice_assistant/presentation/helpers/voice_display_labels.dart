@@ -1,3 +1,4 @@
+import 'package:mobile/features/equines/presentation/equine_event_labels.dart';
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile/features/reservations/presentation/helpers/reservation_status_labels.dart';
 import 'package:mobile/features/providers/presentation/models/provider_view_models.dart';
@@ -97,8 +98,11 @@ String voiceScheduleStatusLabel(String? status) {
   };
 }
 
-String voiceEquineEventTypeLabel(String? eventType) =>
-    humanizeSnakeCase(eventType);
+String voiceEquineEventTypeLabel(String? eventType) {
+  if (eventType == null || eventType.trim().isEmpty) return 'Sin tipo';
+  final key = eventType.trim();
+  return equineEventTypeOptions[key] ?? humanizeSnakeCase(key);
+}
 
 String voiceListSummary({
   required int total,

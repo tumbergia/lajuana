@@ -22,7 +22,7 @@ const equineEventTypeOptions = <String, String>{
 };
 
 String equineEventTypeLabel(String type) =>
-    equineEventTypeOptions[type] ?? type;
+    equineEventTypeOptions[type] ?? 'Otro evento';
 
 const equineEventSeverityOptions = <String, String>{
   'low': 'Baja',
@@ -32,7 +32,7 @@ const equineEventSeverityOptions = <String, String>{
 };
 
 String equineEventSeverityLabel(String severity) =>
-    equineEventSeverityOptions[severity] ?? severity;
+    equineEventSeverityOptions[severity] ?? 'Sin severidad';
 
 String equineOperationalStatusApiValue(EquineOperationalStatus status) {
   switch (status) {

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/assignments/infrastructure/remote/assignments_api_client.dart';
@@ -113,11 +114,17 @@ class AssignmentBoardController extends ChangeNotifier {
           _state = BoardLoadState.offlineFromCache;
           _error = null;
         } else {
-          _error = e.toString();
+          _error = userFacingError(
+            e,
+            fallback: 'No se pudo cargar el tablero de asignaciones.',
+          );
           _state = BoardLoadState.error;
         }
       } catch (_) {
-        _error = e.toString();
+        _error = userFacingError(
+          e,
+          fallback: 'No se pudo cargar el tablero de asignaciones.',
+        );
         _state = BoardLoadState.error;
       }
     }
@@ -336,7 +343,10 @@ class AssignmentBoardController extends ChangeNotifier {
     } catch (e) {
       await _handleFinalizeFailure(e, notes: notes);
       _isFinalizing = false;
-      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionError = userFacingError(
+        e,
+        fallback: 'No se pudieron guardar las asignaciones.',
+      );
       _actionErrorCode = e is AssignmentsApiFailure ? e.code : 'batchUpdate.failed';
       notifyListeners();
     }
@@ -363,7 +373,10 @@ class AssignmentBoardController extends ChangeNotifier {
       return;
     }
     _isFinalizing = false;
-    _actionError = error.toString();
+    _actionError = userFacingError(
+      error,
+      fallback: 'No se pudieron guardar las asignaciones.',
+    );
     _actionErrorCode = 'batchUpdate.failed';
     notifyListeners();
   }
@@ -441,7 +454,10 @@ class AssignmentBoardController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isRevertingFinalize = false;
-      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionError = userFacingError(
+        e,
+        fallback: 'No se pudo revertir la finalización.',
+      );
       _actionErrorCode = e is AssignmentsApiFailure ? e.code : 'unfinalizeAll.failed';
       notifyListeners();
     }
@@ -471,7 +487,10 @@ class AssignmentBoardController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isRevertingFinalize = false;
-      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionError = userFacingError(
+        e,
+        fallback: 'No se pudo revertir la asignación.',
+      );
       _actionErrorCode = e is AssignmentsApiFailure ? e.code : 'unfinalize.failed';
       notifyListeners();
     }
@@ -555,7 +574,10 @@ class AssignmentBoardController extends ChangeNotifier {
       return;
     }
     _isCreating = false;
-    _actionError = error.toString();
+    _actionError = userFacingError(
+      error,
+      fallback: 'No se pudo guardar la observación.',
+    );
     _actionErrorCode = 'observation.failed';
     notifyListeners();
   }

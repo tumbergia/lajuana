@@ -21,7 +21,11 @@ void main() {
       expect(displayBoardBlockReason('En mantenimiento'), 'En mantenimiento');
       expect(
         displayBoardBlockReason('Estado operativo: injured'),
-        'Estado operativo: injured',
+        'Estado operativo: Lesionado',
+      );
+      expect(
+        displayBoardBlockReason('Estado operativo: resting'),
+        'Estado operativo: Descanso',
       );
     });
   });

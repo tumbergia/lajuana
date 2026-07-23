@@ -5,6 +5,7 @@ import 'package:pdfrx/pdfrx.dart';
 
 import 'package:mobile_ui/src/widgets/app_toast.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/app/utils/file_saver.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
@@ -80,7 +81,10 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
       });
     } catch (e) {
       setState(() {
-        _error = 'Error al descargar: $e';
+        _error = userFacingError(
+          e,
+          fallback: 'No se pudo descargar el comprobante.',
+        );
         _loading = false;
       });
     }
@@ -111,7 +115,10 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
       if (!mounted) return;
       showAppToast(
         context,
-        message: 'Error al descargar: $e',
+        message: userFacingError(
+          e,
+          fallback: 'No se pudo guardar el archivo.',
+        ),
         isError: true,
       );
     }

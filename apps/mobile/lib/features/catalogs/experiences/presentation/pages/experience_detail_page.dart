@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
@@ -63,7 +64,10 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
         _error = 'La experiencia no existe en el catalogo local.';
       }
     } catch (e) {
-      _error = e.toString();
+      _error = userFacingError(
+        e,
+        fallback: 'No se pudo cargar la experiencia.',
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -459,7 +463,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
       case 'advanced':
         return 'Avanzada';
       default:
-        return difficulty;
+        return 'Sin dificultad';
     }
   }
 }

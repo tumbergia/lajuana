@@ -248,6 +248,9 @@ void main() {
       expect(notificationStatusLabel('quoted'), 'Cotizado');
       expect(notificationStatusLabel('payment_received'), 'Pago recibido');
       expect(notificationStatusLabel('pending_payment'), 'Pago pendiente');
+      expect(notificationStatusLabel('pending'), 'Pendiente');
+      expect(notificationStatusLabel('approved'), 'Aprobada');
+      expect(notificationStatusLabel('rejected'), 'Rechazada');
     });
   });
 

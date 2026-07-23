@@ -10,5 +10,5 @@ class VoiceAssistantApiFailure implements Exception {
   final int? statusCode;
 
   @override
-  String toString() => 'VoiceAssistantApiFailure($code): $message';
+  String toString() => message;
 }

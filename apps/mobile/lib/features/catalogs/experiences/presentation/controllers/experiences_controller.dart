@@ -2,6 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
 import 'package:mobile/features/catalogs/experiences/data/experience_repository.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
@@ -31,7 +32,10 @@ class ExperiencesController extends ChangeNotifier {
     try {
       items = await _repository.list();
     } catch (e) {
-      error = e.toString();
+      error = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar las experiencias.',
+      );
     } finally {
       isInitialLoading = false;
       notifyListeners();
@@ -50,7 +54,10 @@ class ExperiencesController extends ChangeNotifier {
       await _catalogsRepository.refreshExperiencesFromServer();
       items = await _repository.list();
     } catch (e) {
-      error = e.toString();
+      error = userFacingError(
+        e,
+        fallback: 'No se pudieron actualizar las experiencias.',
+      );
     } finally {
       isRefreshing = false;
       notifyListeners();
@@ -65,7 +72,10 @@ class ExperiencesController extends ChangeNotifier {
       await _catalogsRepository.syncNow();
       items = await _repository.list();
     } catch (e) {
-      error = e.toString();
+      error = userFacingError(
+        e,
+        fallback: 'No se pudo sincronizar las experiencias.',
+      );
     } finally {
       isSyncing = false;
       notifyListeners();

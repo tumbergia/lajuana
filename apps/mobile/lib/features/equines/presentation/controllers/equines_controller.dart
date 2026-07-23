@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_domain/src/equines/equine.dart';
 import 'package:mobile_domain/src/equines/equine_operational_status.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
@@ -155,7 +156,10 @@ class EquinesController extends ChangeNotifier {
         loadLastSyncedAt();
       }
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar los equinos.',
+      );
       _selectedEquineId = null;
       _selectedDetail = null;
       _loadState = EquinesLoadState.error;
@@ -169,7 +173,10 @@ class EquinesController extends ChangeNotifier {
       await loadEquines(); // reload list (incluye detail desde memoria)
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudo crear el equino.',
+      );
       _loadState = EquinesLoadState.error;
       notifyListeners();
       return false;
@@ -182,7 +189,10 @@ class EquinesController extends ChangeNotifier {
       await loadEquines(); // refresh list
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudo eliminar el equino.',
+      );
       _loadState = EquinesLoadState.error;
       notifyListeners();
       return false;
@@ -195,7 +205,10 @@ class EquinesController extends ChangeNotifier {
       await loadEquines(); // refresh list
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudo restaurar el equino.',
+      );
       _loadState = EquinesLoadState.error;
       notifyListeners();
       return false;
@@ -208,7 +221,10 @@ class EquinesController extends ChangeNotifier {
       await loadEquines(); // refresh list (incluye detail desde memoria)
       return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudo actualizar el equino.',
+      );
       _loadState = EquinesLoadState.error;
       notifyListeners();
       return false;

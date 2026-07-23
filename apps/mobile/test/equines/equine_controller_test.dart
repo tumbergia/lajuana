@@ -146,7 +146,7 @@ void main() {
       repo.throwOnList = true;
       await controller.loadEquines();
       expect(controller.loadState, EquinesLoadState.error);
-      expect(controller.errorMessage, isNotEmpty);
+      expect(controller.errorMessage, 'No se pudieron cargar los equinos.');
     });
 
     test('auto-selects first equine', () async {

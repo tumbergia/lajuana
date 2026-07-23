@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart' hide Path;
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/configuration/domain/la_juana_configuration.dart';
 import 'package:mobile/features/configuration/infrastructure/configuration_api_client.dart';
@@ -81,9 +82,10 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
     super.dispose();
   }
 
-  String _friendlyError(Object e) => e is ConfigurationApiFailure
-      ? e.message
-      : 'No se pudo cargar la ubicación.';
+  String _friendlyError(Object e) => userFacingError(
+        e,
+        fallback: 'No se pudo cargar la ubicación.',
+      );
 
   void _apply(BusinessLocationConfiguration v) {
     name.text = v.name;

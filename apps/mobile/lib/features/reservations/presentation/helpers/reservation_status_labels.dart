@@ -20,7 +20,7 @@ String formStatusLabel(String status) {
     case 'accepted':
       return 'Aceptado';
     default:
-      return status;
+      return 'Estado desconocido';
   }
 }
 
@@ -49,8 +49,11 @@ String paymentStatusLabel(String? status) {
       return 'Rechazado';
     case 'accepted':
       return 'Aceptado';
+    case null:
+    case '':
+      return 'Sin informacion';
     default:
-      return status ?? 'Sin informacion';
+      return 'Estado desconocido';
   }
 }
 
@@ -64,8 +67,11 @@ String paymentProofStatusLabel(String? status) {
       return 'Verificado';
     case 'rejected':
       return 'Rechazado';
+    case null:
+    case '':
+      return 'Sin estado';
     default:
-      return status ?? 'Sin estado';
+      return 'Estado desconocido';
   }
 }
 

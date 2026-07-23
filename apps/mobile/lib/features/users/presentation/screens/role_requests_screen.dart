@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/auth/presentation/user_role_display.dart';
 import 'package:mobile/features/users/domain/user_models.dart';
 import 'package:mobile/features/users/infrastructure/remote/users_api_error.dart';
@@ -75,12 +76,22 @@ class _RoleRequestsScreenState extends State<RoleRequestsScreen>
       );
     } on UsersApiFailure catch (e) {
       if (!mounted) return;
-      showAppToast(context, message: e.message, isError: true);
-    } catch (_) {
+      showAppToast(
+        context,
+        message: userFacingError(
+          e,
+          fallback: 'No se pudo resolver la solicitud',
+        ),
+        isError: true,
+      );
+    } catch (e) {
       if (!mounted) return;
       showAppToast(
         context,
-        message: 'No se pudo resolver la solicitud',
+        message: userFacingError(
+          e,
+          fallback: 'No se pudo resolver la solicitud',
+        ),
         isError: true,
       );
     }
@@ -122,11 +133,13 @@ class _RoleRequestsScreenState extends State<RoleRequestsScreen>
         return const RefreshableViewport(child: AppCenteredLoader());
       case RoleRequestsLoadState.error:
         return RefreshableViewport(
-          child: AppEntityRowCard(
+          child: AppEmptyState(
+            icon: Icons.error_outline_rounded,
             title: 'No se pudieron cargar las solicitudes',
-            subtitle: _controller.errorMessage ?? 'Revisa la conexión',
-            badge: const AppBadge(label: 'Error', tone: AppBadgeTone.danger),
-            onTap: _controller.loadPending,
+            message: _controller.errorMessage ?? 'Revisa la conexión',
+            actionLabel: 'Reintentar',
+            actionIcon: Icons.refresh_rounded,
+            onAction: _controller.loadPending,
           ),
         );
       case RoleRequestsLoadState.empty:

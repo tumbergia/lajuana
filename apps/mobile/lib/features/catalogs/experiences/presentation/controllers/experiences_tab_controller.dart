@@ -2,6 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
 import 'package:mobile/features/catalogs/experiences/data/experience_repository.dart';
 import 'package:mobile/features/catalogs/experiences/domain/experience.dart';
@@ -88,7 +89,10 @@ class ExperiencesTabController extends ChangeNotifier {
         _loadState = ExperiencesTabLoadState.success;
       }
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar las experiencias.',
+      );
       _loadState = ExperiencesTabLoadState.error;
     }
     notifyListeners();
@@ -116,7 +120,10 @@ class ExperiencesTabController extends ChangeNotifier {
         _loadState = ExperiencesTabLoadState.success;
       }
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar las experiencias.',
+      );
       _loadState = ExperiencesTabLoadState.error;
     }
     notifyListeners();
@@ -141,7 +148,10 @@ class ExperiencesTabController extends ChangeNotifier {
         _loadState = ExperiencesTabLoadState.success;
       }
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudieron actualizar las experiencias.',
+      );
       if (_allItems.isNotEmpty) {
         _applyFilter();
         _loadState = ExperiencesTabLoadState.offlineFromCache;

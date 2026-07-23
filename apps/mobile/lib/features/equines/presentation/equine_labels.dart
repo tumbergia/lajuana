@@ -14,7 +14,7 @@ String equineSpeciesLabel(String species) {
     case 'horse':
       return 'Caballo';
     default:
-      return species;
+      return 'Otra especie';
   }
 }
 
@@ -26,7 +26,7 @@ String equineSexLabel(String sex) {
     case 'female':
       return 'Hembra';
     default:
-      return sex;
+      return 'Sin dato';
   }
 }
 
@@ -38,7 +38,7 @@ String equineLocationLabel(String location) {
     case 'other':
       return 'Otras instalaciones';
     default:
-      return location;
+      return 'Ubicación desconocida';
   }
 }
 

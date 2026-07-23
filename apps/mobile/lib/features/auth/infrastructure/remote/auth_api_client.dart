@@ -165,7 +165,7 @@ class AuthApiClient {
       // Captura ClientException y cualquier otro error de red no previsto.
       throw AuthFailure(
         code: 'network.unavailable',
-        message: 'Sin conexión ($e)',
+        message: 'Sin conexión',
       );
     }
   }

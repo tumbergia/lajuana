@@ -22,7 +22,7 @@ class SyncApiFailure implements Exception {
   bool get isNetwork => code.startsWith('network.');
 
   @override
-  String toString() => 'SyncApiFailure($code, $message)';
+  String toString() => message;
 }
 
 /// Cliente HTTP del outbox compartido. Generalizacion de `CatalogsSyncApi`

@@ -2,6 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/catalogs/data/catalogs_repository.dart';
 import 'package:mobile/features/catalogs/emergency_contacts/data/emergency_contacts_repository.dart';
 import 'package:mobile/features/catalogs/emergency_contacts/domain/emergency_contact.dart';
@@ -30,7 +31,10 @@ class EmergencyContactsController extends ChangeNotifier {
     try {
       items = await _repository.list();
     } catch (e) {
-      error = e.toString();
+      error = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar los contactos de emergencia.',
+      );
     } finally {
       isInitialLoading = false;
       notifyListeners();
@@ -49,7 +53,10 @@ class EmergencyContactsController extends ChangeNotifier {
       await _catalogsRepository.refreshEmergencyContactsFromServer();
       items = await _repository.list();
     } catch (e) {
-      error = e.toString();
+      error = userFacingError(
+        e,
+        fallback: 'No se pudieron actualizar los contactos de emergencia.',
+      );
     } finally {
       isRefreshing = false;
       notifyListeners();

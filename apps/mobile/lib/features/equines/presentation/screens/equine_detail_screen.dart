@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_ui/src/theme/app_radii.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
@@ -77,7 +78,10 @@ class _EquineDetailScreenState extends State<EquineDetailScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = userFacingError(
+          e,
+          fallback: 'No se pudo cargar el equino.',
+        );
         _isLoading = false;
       });
     }
@@ -112,7 +116,11 @@ class _EquineDetailScreenState extends State<EquineDetailScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isDeleting = false);
-      showAppToast(context, message: 'Error al eliminar: $e', isError: true);
+      showAppToast(
+        context,
+        message: userFacingError(e, fallback: 'No se pudo eliminar el equino.'),
+        isError: true,
+      );
     }
   }
 
@@ -126,7 +134,11 @@ class _EquineDetailScreenState extends State<EquineDetailScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isDeleting = false);
-      showAppToast(context, message: 'Error al restaurar: $e', isError: true);
+      showAppToast(
+        context,
+        message: userFacingError(e, fallback: 'No se pudo restaurar el equino.'),
+        isError: true,
+      );
     }
   }
 

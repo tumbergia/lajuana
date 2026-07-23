@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
@@ -608,7 +609,10 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
       if (mounted) {
         showAppToast(
           context,
-          message: 'Error al seleccionar foto: $e',
+          message: userFacingError(
+            e,
+            fallback: 'No se pudo seleccionar la foto.',
+          ),
           isError: true,
         );
       }

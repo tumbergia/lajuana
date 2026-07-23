@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/configuration/domain/la_juana_configuration.dart';
 import 'package:mobile/features/configuration/infrastructure/configuration_api_client.dart';
@@ -71,8 +72,10 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
     super.dispose();
   }
 
-  String _friendlyError(Object e) =>
-      e is ConfigurationApiFailure ? e.message : 'No se pudo cargar la configuración.';
+  String _friendlyError(Object e) => userFacingError(
+        e,
+        fallback: 'No se pudo cargar la configuración.',
+      );
 
   void _apply(PaymentConfiguration v) {
     bank.text = v.bank;

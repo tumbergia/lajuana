@@ -139,6 +139,18 @@ class NotificationArrivalCopy {
 String notificationStatusLabel(String raw) {
   final token = raw.trim();
   if (token.isEmpty) return token;
+  final lower = token.toLowerCase();
+  switch (lower) {
+    case 'pending':
+      return 'Pendiente';
+    case 'approved':
+      return 'Aprobada';
+    case 'rejected':
+      return 'Rechazada';
+    case 'cancelled':
+    case 'canceled':
+      return 'Cancelada';
+  }
   final parsed = parseReservationStatus(token);
   if (parsed != ReservationStatus.unknown) {
     return reservationStatusLabel(parsed);

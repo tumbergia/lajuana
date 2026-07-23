@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
@@ -39,7 +40,10 @@ class ReservationLogsSectionController extends ChangeNotifier {
       state = ReservationLogsLoadState.loaded;
     } catch (error) {
       state = ReservationLogsLoadState.error;
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo cargar la bitácora.',
+      );
     }
     notifyListeners();
   }
@@ -48,7 +52,10 @@ class ReservationLogsSectionController extends ChangeNotifier {
     try {
       return await _repository.getReservationLogNote(logId);
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo cargar la nota.',
+      );
       notifyListeners();
       return null;
     }
@@ -70,7 +77,10 @@ class ReservationLogsSectionController extends ChangeNotifier {
         contentType: contentType,
       );
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo subir la foto.',
+      );
       notifyListeners();
       return null;
     }
@@ -86,7 +96,10 @@ class ReservationLogsSectionController extends ChangeNotifier {
         photoIndex: photoIndex,
       );
     } catch (error) {
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo descargar la foto.',
+      );
       notifyListeners();
       return null;
     }
@@ -111,7 +124,10 @@ class ReservationLogsSectionController extends ChangeNotifier {
       return true;
     } catch (error) {
       state = ReservationLogsLoadState.error;
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo crear la nota.',
+      );
       notifyListeners();
       return false;
     }
@@ -137,7 +153,10 @@ class ReservationLogsSectionController extends ChangeNotifier {
       return true;
     } catch (error) {
       state = ReservationLogsLoadState.error;
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo actualizar la nota.',
+      );
       notifyListeners();
       return false;
     }
@@ -155,7 +174,10 @@ class ReservationLogsSectionController extends ChangeNotifier {
       return true;
     } catch (error) {
       state = ReservationLogsLoadState.error;
-      errorMessage = error.toString();
+      errorMessage = userFacingError(
+        error,
+        fallback: 'No se pudo eliminar la entrada.',
+      );
       notifyListeners();
       return false;
     }

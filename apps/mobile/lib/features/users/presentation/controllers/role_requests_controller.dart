@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/users/domain/user_models.dart';
 import 'package:mobile/features/users/infrastructure/remote/users_api_client.dart';
 import 'package:mobile/features/users/infrastructure/remote/users_api_error.dart';
@@ -43,11 +44,17 @@ class RoleRequestsController extends ChangeNotifier {
           : RoleRequestsLoadState.success;
       _notify();
     } on UsersApiFailure catch (e) {
-      errorMessage = e.message;
+      errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar las solicitudes.',
+      );
       state = RoleRequestsLoadState.error;
       _notify();
-    } catch (_) {
-      errorMessage = 'No se pudieron cargar las solicitudes.';
+    } catch (e) {
+      errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudieron cargar las solicitudes.',
+      );
       state = RoleRequestsLoadState.error;
       _notify();
     }
@@ -60,10 +67,16 @@ class RoleRequestsController extends ChangeNotifier {
       myRequest = await _api.getMyRoleRequest();
       _notify();
     } on UsersApiFailure catch (e) {
-      errorMessage = e.message;
+      errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudo consultar tu solicitud.',
+      );
       _notify();
-    } catch (_) {
-      errorMessage = 'No se pudo consultar tu solicitud.';
+    } catch (e) {
+      errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudo consultar tu solicitud.',
+      );
       _notify();
     }
   }
@@ -76,7 +89,10 @@ class RoleRequestsController extends ChangeNotifier {
       myRequest = await _api.createMyRoleRequest(requestedRole);
       return myRequest!;
     } on UsersApiFailure catch (e) {
-      errorMessage = e.message;
+      errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudo enviar la solicitud.',
+      );
       rethrow;
     } finally {
       submitting = false;
@@ -103,7 +119,10 @@ class RoleRequestsController extends ChangeNotifier {
       await refreshPending();
       return decided;
     } on UsersApiFailure catch (e) {
-      errorMessage = e.message;
+      errorMessage = userFacingError(
+        e,
+        fallback: 'No se pudo resolver la solicitud.',
+      );
       rethrow;
     } finally {
       submitting = false;

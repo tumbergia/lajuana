@@ -24,7 +24,7 @@ String reservationProviderStatusLabel(String status) {
     'contacted' => 'Contactado',
     'confirmed' => 'Confirmado',
     'cancelled' => 'Cancelado',
-    _ => status,
+    _ => 'Estado desconocido',
   };
 }
 

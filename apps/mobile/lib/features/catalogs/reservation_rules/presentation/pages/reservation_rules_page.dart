@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 
+import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
@@ -133,7 +134,10 @@ class _ReservationRulesPageState extends State<ReservationRulesPage>
       showAppToast(context, message: 'Reglas de reserva actualizadas.');
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = userFacingError(
+          e,
+          fallback: 'No se pudieron guardar las reglas de reserva.',
+        );
       });
     } finally {
       if (mounted) {
