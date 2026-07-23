@@ -5,19 +5,22 @@
 /// AUTO-GENERATED from OpenAPI schema `AiRouteUpdateSchema`.
 
 class AiRouteUpdate {
+
   final int position;
   final String? service;
   final String? model;
   final String? apiKey;
   final bool? clearApiKey;
 
-  const AiRouteUpdate({
+  const AiRouteUpdate(
+    {
     required this.position,
     this.service,
     this.model,
     this.apiKey,
     this.clearApiKey,
-  });
+    }
+  );
 
   factory AiRouteUpdate.fromJson(Map<String, dynamic> json) {
     return AiRouteUpdate(
@@ -36,4 +39,5 @@ class AiRouteUpdate {
     'api_key': apiKey,
     'clear_api_key': clearApiKey,
   };
+
 }

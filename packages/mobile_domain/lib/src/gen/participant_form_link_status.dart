@@ -8,7 +8,8 @@ enum ParticipantFormLinkStatus {
   ACTIVE("active"),
   EXPIRED("expired"),
   REVOKED("revoked"),
-  COMPLETED("completed");
+  COMPLETED("completed"),
+;
 
   final String value;
   const ParticipantFormLinkStatus(this.value);
@@ -19,10 +20,9 @@ extension ParticipantFormLinkStatusX on ParticipantFormLinkStatus {
 }
 
 extension ParticipantFormLinkStatusParse on String {
-  ParticipantFormLinkStatus toParticipantFormLinkStatus() =>
-      ParticipantFormLinkStatus.values.firstWhere(
-        (e) => e.value == this,
-        orElse: () =>
-            throw ArgumentError('Unknown ParticipantFormLinkStatus: ${this}'),
-      );
+  ParticipantFormLinkStatus toParticipantFormLinkStatus() => ParticipantFormLinkStatus.values.firstWhere(
+    (e) => e.value == this,
+    orElse: () => throw ArgumentError('Unknown ParticipantFormLinkStatus: ${this}'),
+  );
 }
+

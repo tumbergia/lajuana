@@ -10,7 +10,8 @@ enum ServiceLogEventType {
   CHECKPOINT("checkpoint"),
   CLOSURE("closure"),
   INCIDENT("incident"),
-  NOTE("note");
+  NOTE("note"),
+;
 
   final String value;
   const ServiceLogEventType(this.value);
@@ -21,10 +22,9 @@ extension ServiceLogEventTypeX on ServiceLogEventType {
 }
 
 extension ServiceLogEventTypeParse on String {
-  ServiceLogEventType toServiceLogEventType() =>
-      ServiceLogEventType.values.firstWhere(
-        (e) => e.value == this,
-        orElse: () =>
-            throw ArgumentError('Unknown ServiceLogEventType: ${this}'),
-      );
+  ServiceLogEventType toServiceLogEventType() => ServiceLogEventType.values.firstWhere(
+    (e) => e.value == this,
+    orElse: () => throw ArgumentError('Unknown ServiceLogEventType: ${this}'),
+  );
 }
+

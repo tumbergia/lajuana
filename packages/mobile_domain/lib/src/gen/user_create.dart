@@ -7,17 +7,20 @@
 import 'user_role.dart';
 
 class UserCreate {
+
   final String email;
   final String fullName;
   final String password;
   final UserRole? role;
 
-  const UserCreate({
+  const UserCreate(
+    {
     required this.email,
     required this.fullName,
     required this.password,
     this.role,
-  });
+    }
+  );
 
   factory UserCreate.fromJson(Map<String, dynamic> json) {
     return UserCreate(
@@ -34,4 +37,5 @@ class UserCreate {
     'password': password,
     'role': role?.toJson(),
   };
+
 }

@@ -7,17 +7,20 @@
 import 'user.dart';
 
 class Token {
+
   final String accessToken;
   final String? refreshToken;
   final String? tokenType;
   final User user;
 
-  const Token({
+  const Token(
+    {
     required this.accessToken,
     this.refreshToken,
     this.tokenType,
     required this.user,
-  });
+    }
+  );
 
   factory Token.fromJson(Map<String, dynamic> json) {
     return Token(
@@ -34,4 +37,5 @@ class Token {
     'token_type': tokenType,
     'user': user,
   };
+
 }

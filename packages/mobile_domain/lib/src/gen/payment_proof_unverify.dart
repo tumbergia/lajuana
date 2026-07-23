@@ -5,10 +5,16 @@
 /// AUTO-GENERATED from OpenAPI schema `PaymentProofUnverifySchema`.
 
 class PaymentProofUnverify {
+
   final String confirmationToken;
   final String? note;
 
-  const PaymentProofUnverify({required this.confirmationToken, this.note});
+  const PaymentProofUnverify(
+    {
+    required this.confirmationToken,
+    this.note,
+    }
+  );
 
   factory PaymentProofUnverify.fromJson(Map<String, dynamic> json) {
     return PaymentProofUnverify(
@@ -21,4 +27,5 @@ class PaymentProofUnverify {
     'confirmation_token': confirmationToken,
     'note': note,
   };
+
 }

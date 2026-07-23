@@ -5,19 +5,22 @@
 /// AUTO-GENERATED from OpenAPI schema `FileInitUploadRequestSchema`.
 
 class FileInitUpload {
+
   final String context;
   final String filename;
   final String mimeType;
   final int sizeBytes;
   final String sha256Hash;
 
-  const FileInitUpload({
+  const FileInitUpload(
+    {
     required this.context,
     required this.filename,
     required this.mimeType,
     required this.sizeBytes,
     required this.sha256Hash,
-  });
+    }
+  );
 
   factory FileInitUpload.fromJson(Map<String, dynamic> json) {
     return FileInitUpload(
@@ -36,4 +39,5 @@ class FileInitUpload {
     'size_bytes': sizeBytes,
     'sha256_hash': sha256Hash,
   };
+
 }

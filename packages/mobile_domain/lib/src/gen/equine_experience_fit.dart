@@ -10,7 +10,8 @@ enum EquineExperienceFit {
   ADVANCED("advanced"),
   ALL("all"),
   STAFF_ONLY("staff_only"),
-  NOT_ASSIGNABLE("not_assignable");
+  NOT_ASSIGNABLE("not_assignable"),
+;
 
   final String value;
   const EquineExperienceFit(this.value);
@@ -21,10 +22,9 @@ extension EquineExperienceFitX on EquineExperienceFit {
 }
 
 extension EquineExperienceFitParse on String {
-  EquineExperienceFit toEquineExperienceFit() =>
-      EquineExperienceFit.values.firstWhere(
-        (e) => e.value == this,
-        orElse: () =>
-            throw ArgumentError('Unknown EquineExperienceFit: ${this}'),
-      );
+  EquineExperienceFit toEquineExperienceFit() => EquineExperienceFit.values.firstWhere(
+    (e) => e.value == this,
+    orElse: () => throw ArgumentError('Unknown EquineExperienceFit: ${this}'),
+  );
 }
+

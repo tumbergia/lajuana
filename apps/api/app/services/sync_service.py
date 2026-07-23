@@ -16,7 +16,8 @@ Architecture
                ├── ExperienceSyncHandler  (experience, schedule)
                ├── ReservationSyncHandler (reservation, participant, …)
                ├── ResourceSyncHandler    (provider, policy)
-               └── ConfigSyncHandler      (reservation_rules)
+               ├── ConfigSyncHandler      (reservation_rules)
+               └── NotificationSyncHandler (notification_mutation)
 """
 
 from datetime import UTC, datetime
@@ -53,6 +54,7 @@ from app.services.sync_change_recorder import entity_to_response_dict
 from app.services.sync_handlers import (
     ConfigSyncHandler,
     ExperienceSyncHandler,
+    NotificationSyncHandler,
     ReservationSyncHandler,
     ResourceSyncHandler,
 )
@@ -87,6 +89,10 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("saddle", "update"): Permission.SADDLE_UPDATE,
     ("saddle", "delete"): Permission.SADDLE_DELETE,
     ("saddle", "restore"): Permission.SADDLE_DELETE,
+    ("notification_mutation", "mark_read"): Permission.NOTIFICATION_READ,
+    ("notification_mutation", "mark_all_read"): Permission.NOTIFICATION_READ,
+    ("notification_mutation", "delete"): Permission.NOTIFICATION_READ,
+    ("notification_mutation", "clear_inbox"): Permission.NOTIFICATION_READ,
 }
 
 
@@ -157,12 +163,14 @@ class SyncOperationExecutor:
         reservation_handler: ReservationSyncHandler,
         resource_handler: ResourceSyncHandler,
         config_handler: ConfigSyncHandler,
+        notification_handler: NotificationSyncHandler,
     ) -> None:
         self._handlers = [
             experience_handler,
             reservation_handler,
             resource_handler,
             config_handler,
+            notification_handler,
         ]
 
     async def execute(
@@ -284,6 +292,7 @@ class SyncService:
             saddle_service=saddle_service,
         )
         self._config_handler = ConfigSyncHandler(config_service=config_service)
+        self._notification_handler = NotificationSyncHandler()
 
         # Keep references needed by build_bootstrap (read operations)
         self._experience_service = experience_service
@@ -296,6 +305,7 @@ class SyncService:
             reservation_handler=self._reservation_handler,
             resource_handler=self._resource_handler,
             config_handler=self._config_handler,
+            notification_handler=self._notification_handler,
         )
 
     async def build_bootstrap(self, *, current_user: UserDocument) -> dict:

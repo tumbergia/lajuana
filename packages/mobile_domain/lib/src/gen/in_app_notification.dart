@@ -5,6 +5,7 @@
 /// AUTO-GENERATED from OpenAPI schema `InAppNotificationResponseSchema`.
 
 class InAppNotification {
+
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -18,7 +19,8 @@ class InAppNotification {
   final String eventType;
   final String? contactPhone;
 
-  const InAppNotification({
+  const InAppNotification(
+    {
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -31,7 +33,8 @@ class InAppNotification {
     required this.read,
     required this.eventType,
     this.contactPhone,
-  });
+    }
+  );
 
   factory InAppNotification.fromJson(Map<String, dynamic> json) {
     return InAppNotification(
@@ -64,4 +67,5 @@ class InAppNotification {
     'event_type': eventType,
     'contact_phone': contactPhone,
   };
+
 }

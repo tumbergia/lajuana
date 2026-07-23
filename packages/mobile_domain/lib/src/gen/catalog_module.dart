@@ -10,6 +10,7 @@ import 'module_category.dart';
 import 'visualization_type.dart';
 
 class CatalogModule {
+
   final String id;
   final ModuleCategory category;
   final String title;
@@ -23,7 +24,8 @@ class CatalogModule {
   final bool? blocked;
   final String? blockedReason;
 
-  const CatalogModule({
+  const CatalogModule(
+    {
     required this.id,
     required this.category,
     required this.title,
@@ -36,7 +38,8 @@ class CatalogModule {
     this.alwaysShowWhenActive,
     this.blocked,
     this.blockedReason,
-  });
+    }
+  );
 
   factory CatalogModule.fromJson(Map<String, dynamic> json) {
     return CatalogModule(
@@ -44,14 +47,11 @@ class CatalogModule {
       category: (json['category'] as String).toModuleCategory(),
       title: json['title'] as String,
       description: json['description'] as String,
-      recommendedVisualization: (json['recommended_visualization'] as String)
-          .toVisualizationType(),
+      recommendedVisualization: (json['recommended_visualization'] as String).toVisualizationType(),
       supportedRanges: (json['supported_ranges'] as List<dynamic>)
-          .map((e) => (e as String).toDateRangePreset())
-          .toList(),
+        .map((e) => (e as String).toDateRangePreset()).toList(),
       allowedSizes: (json['allowed_sizes'] as List<dynamic>)
-          .map((e) => (e as String).toCatalogModuleSize())
-          .toList(),
+        .map((e) => (e as String).toCatalogModuleSize()).toList(),
       requiredPermission: json['required_permission'] as String,
       homeConfigurable: json['home_configurable'] as bool?,
       alwaysShowWhenActive: json['always_show_when_active'] as bool?,
@@ -74,4 +74,5 @@ class CatalogModule {
     'blocked': blocked,
     'blocked_reason': blockedReason,
   };
+
 }

@@ -7,7 +7,8 @@
 enum CatalogModuleSize {
   COMPACT("compact"),
   STANDARD("standard"),
-  WIDE("wide");
+  WIDE("wide"),
+;
 
   final String value;
   const CatalogModuleSize(this.value);
@@ -18,9 +19,9 @@ extension CatalogModuleSizeX on CatalogModuleSize {
 }
 
 extension CatalogModuleSizeParse on String {
-  CatalogModuleSize toCatalogModuleSize() =>
-      CatalogModuleSize.values.firstWhere(
-        (e) => e.value == this,
-        orElse: () => throw ArgumentError('Unknown CatalogModuleSize: ${this}'),
-      );
+  CatalogModuleSize toCatalogModuleSize() => CatalogModuleSize.values.firstWhere(
+    (e) => e.value == this,
+    orElse: () => throw ArgumentError('Unknown CatalogModuleSize: ${this}'),
+  );
 }
+

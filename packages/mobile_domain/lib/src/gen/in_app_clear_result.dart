@@ -5,13 +5,23 @@
 /// AUTO-GENERATED from OpenAPI schema `InAppClearResultSchema`.
 
 class InAppClearResult {
+
   final int clearedCount;
 
-  const InAppClearResult({required this.clearedCount});
+  const InAppClearResult(
+    {
+    required this.clearedCount,
+    }
+  );
 
   factory InAppClearResult.fromJson(Map<String, dynamic> json) {
-    return InAppClearResult(clearedCount: json['cleared_count'] as int);
+    return InAppClearResult(
+      clearedCount: json['cleared_count'] as int,
+    );
   }
 
-  Map<String, dynamic> toJson() => {'cleared_count': clearedCount};
+  Map<String, dynamic> toJson() => {
+    'cleared_count': clearedCount,
+  };
+
 }

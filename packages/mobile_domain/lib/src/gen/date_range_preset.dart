@@ -9,7 +9,8 @@ enum DateRangePreset {
   LAST_30_DAYS("last_30_days"),
   LAST_3_MONTHS("last_3_months"),
   THIS_YEAR("this_year"),
-  CUSTOM("custom");
+  CUSTOM("custom"),
+;
 
   final String value;
   const DateRangePreset(this.value);
@@ -25,3 +26,4 @@ extension DateRangePresetParse on String {
     orElse: () => throw ArgumentError('Unknown DateRangePreset: ${this}'),
   );
 }
+

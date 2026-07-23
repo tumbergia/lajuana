@@ -7,7 +7,8 @@
 enum UserRole {
   ADMIN("admin"),
   GUIDE("guide"),
-  UNASSIGNED("unassigned");
+  UNASSIGNED("unassigned"),
+;
 
   final String value;
   const UserRole(this.value);
@@ -23,3 +24,4 @@ extension UserRoleParse on String {
     orElse: () => throw ArgumentError('Unknown UserRole: ${this}'),
   );
 }
+

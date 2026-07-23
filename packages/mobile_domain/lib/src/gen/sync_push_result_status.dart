@@ -7,7 +7,8 @@
 enum SyncPushResultStatus {
   APPLIED("applied"),
   CONFLICT("conflict"),
-  REJECTED("rejected");
+  REJECTED("rejected"),
+;
 
   final String value;
   const SyncPushResultStatus(this.value);
@@ -18,10 +19,9 @@ extension SyncPushResultStatusX on SyncPushResultStatus {
 }
 
 extension SyncPushResultStatusParse on String {
-  SyncPushResultStatus toSyncPushResultStatus() =>
-      SyncPushResultStatus.values.firstWhere(
-        (e) => e.value == this,
-        orElse: () =>
-            throw ArgumentError('Unknown SyncPushResultStatus: ${this}'),
-      );
+  SyncPushResultStatus toSyncPushResultStatus() => SyncPushResultStatus.values.firstWhere(
+    (e) => e.value == this,
+    orElse: () => throw ArgumentError('Unknown SyncPushResultStatus: ${this}'),
+  );
 }
+

@@ -5,10 +5,16 @@
 /// AUTO-GENERATED from OpenAPI schema `PaymentProofApproveSchema`.
 
 class PaymentProofApprove {
+
   final String confirmationToken;
   final String? note;
 
-  const PaymentProofApprove({required this.confirmationToken, this.note});
+  const PaymentProofApprove(
+    {
+    required this.confirmationToken,
+    this.note,
+    }
+  );
 
   factory PaymentProofApprove.fromJson(Map<String, dynamic> json) {
     return PaymentProofApprove(
@@ -21,4 +27,5 @@ class PaymentProofApprove {
     'confirmation_token': confirmationToken,
     'note': note,
   };
+
 }

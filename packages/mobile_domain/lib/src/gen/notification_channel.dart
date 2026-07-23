@@ -7,7 +7,8 @@
 enum NotificationChannel {
   EMAIL("email"),
   IN_APP("in_app"),
-  WHATSAPP("whatsapp");
+  WHATSAPP("whatsapp"),
+;
 
   final String value;
   const NotificationChannel(this.value);
@@ -18,10 +19,9 @@ extension NotificationChannelX on NotificationChannel {
 }
 
 extension NotificationChannelParse on String {
-  NotificationChannel toNotificationChannel() =>
-      NotificationChannel.values.firstWhere(
-        (e) => e.value == this,
-        orElse: () =>
-            throw ArgumentError('Unknown NotificationChannel: ${this}'),
-      );
+  NotificationChannel toNotificationChannel() => NotificationChannel.values.firstWhere(
+    (e) => e.value == this,
+    orElse: () => throw ArgumentError('Unknown NotificationChannel: ${this}'),
+  );
 }
+

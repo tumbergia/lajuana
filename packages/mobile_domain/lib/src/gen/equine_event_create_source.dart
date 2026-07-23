@@ -8,7 +8,8 @@ enum EquineEventCreateSource {
   MOBILE_APP("mobile_app"),
   ADMIN_APP("admin_app"),
   SYSTEM("system"),
-  AI_TOOL("ai_tool");
+  AI_TOOL("ai_tool"),
+;
 
   final String value;
   const EquineEventCreateSource(this.value);
@@ -19,10 +20,9 @@ extension EquineEventCreateSourceX on EquineEventCreateSource {
 }
 
 extension EquineEventCreateSourceParse on String {
-  EquineEventCreateSource toEquineEventCreateSource() =>
-      EquineEventCreateSource.values.firstWhere(
-        (e) => e.value == this,
-        orElse: () =>
-            throw ArgumentError('Unknown EquineEventCreateSource: ${this}'),
-      );
+  EquineEventCreateSource toEquineEventCreateSource() => EquineEventCreateSource.values.firstWhere(
+    (e) => e.value == this,
+    orElse: () => throw ArgumentError('Unknown EquineEventCreateSource: ${this}'),
+  );
 }
+

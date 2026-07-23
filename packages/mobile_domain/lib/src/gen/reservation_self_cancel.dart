@@ -5,13 +5,16 @@
 /// AUTO-GENERATED from OpenAPI schema `ReservationSelfCancelSchema`.
 
 class ReservationSelfCancel {
+
   final String reservationCode;
   final String holderPhone;
 
-  const ReservationSelfCancel({
+  const ReservationSelfCancel(
+    {
     required this.reservationCode,
     required this.holderPhone,
-  });
+    }
+  );
 
   factory ReservationSelfCancel.fromJson(Map<String, dynamic> json) {
     return ReservationSelfCancel(
@@ -24,4 +27,5 @@ class ReservationSelfCancel {
     'reservation_code': reservationCode,
     'holder_phone': holderPhone,
   };
+
 }

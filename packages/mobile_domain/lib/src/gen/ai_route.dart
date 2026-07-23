@@ -5,17 +5,20 @@
 /// AUTO-GENERATED from OpenAPI schema `AiRouteSchema`.
 
 class AiRoute {
+
   final int position;
   final String? service;
   final String? model;
   final bool? credentialConfigured;
 
-  const AiRoute({
+  const AiRoute(
+    {
     required this.position,
     this.service,
     this.model,
     this.credentialConfigured,
-  });
+    }
+  );
 
   factory AiRoute.fromJson(Map<String, dynamic> json) {
     return AiRoute(
@@ -32,4 +35,5 @@ class AiRoute {
     'model': model,
     'credential_configured': credentialConfigured,
   };
+
 }

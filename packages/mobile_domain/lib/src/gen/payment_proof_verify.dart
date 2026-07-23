@@ -5,17 +5,20 @@
 /// AUTO-GENERATED from OpenAPI schema `PaymentProofVerifySchema`.
 
 class PaymentProofVerify {
+
   final String confirmationToken;
   final String? amount;
   final String? reference;
   final String? note;
 
-  const PaymentProofVerify({
+  const PaymentProofVerify(
+    {
     required this.confirmationToken,
     this.amount,
     this.reference,
     this.note,
-  });
+    }
+  );
 
   factory PaymentProofVerify.fromJson(Map<String, dynamic> json) {
     return PaymentProofVerify(
@@ -32,4 +35,5 @@ class PaymentProofVerify {
     'reference': reference,
     'note': note,
   };
+
 }

@@ -5,17 +5,20 @@
 /// AUTO-GENERATED from OpenAPI schema `EmergencyContactSchema`.
 
 class EmergencyContact {
+
   final String name;
   final String phone;
   final String? relationship;
   final String? country;
 
-  const EmergencyContact({
+  const EmergencyContact(
+    {
     required this.name,
     required this.phone,
     this.relationship,
     this.country,
-  });
+    }
+  );
 
   factory EmergencyContact.fromJson(Map<String, dynamic> json) {
     return EmergencyContact(
@@ -32,4 +35,5 @@ class EmergencyContact {
     'relationship': relationship,
     'country': country,
   };
+
 }

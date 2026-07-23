@@ -8,7 +8,8 @@ enum EquineSpecies {
   MULE("mule"),
   DONKEY("donkey"),
   HORSE("horse"),
-  UNKNOWN("unknown");
+  UNKNOWN("unknown"),
+;
 
   final String value;
   const EquineSpecies(this.value);
@@ -24,3 +25,4 @@ extension EquineSpeciesParse on String {
     orElse: () => throw ArgumentError('Unknown EquineSpecies: ${this}'),
   );
 }
+

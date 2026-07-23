@@ -5,13 +5,16 @@
 /// AUTO-GENERATED from OpenAPI schema `PaymentProofRejectSchema`.
 
 class PaymentProofReject {
+
   final String confirmationToken;
   final String reason;
 
-  const PaymentProofReject({
+  const PaymentProofReject(
+    {
     required this.confirmationToken,
     required this.reason,
-  });
+    }
+  );
 
   factory PaymentProofReject.fromJson(Map<String, dynamic> json) {
     return PaymentProofReject(
@@ -24,4 +27,5 @@ class PaymentProofReject {
     'confirmation_token': confirmationToken,
     'reason': reason,
   };
+
 }

@@ -7,6 +7,7 @@
 import 'user_role.dart';
 
 class User {
+
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -17,7 +18,8 @@ class User {
   final UserRole role;
   final bool isActive;
 
-  const User({
+  const User(
+    {
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -27,7 +29,8 @@ class User {
     required this.fullName,
     required this.role,
     required this.isActive,
-  });
+    }
+  );
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -54,4 +57,5 @@ class User {
     'role': role.toJson(),
     'is_active': isActive,
   };
+
 }

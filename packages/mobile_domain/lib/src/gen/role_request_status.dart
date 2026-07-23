@@ -8,7 +8,8 @@ enum RoleRequestStatus {
   PENDING("pending"),
   APPROVED("approved"),
   REJECTED("rejected"),
-  CANCELLED("cancelled");
+  CANCELLED("cancelled"),
+;
 
   final String value;
   const RoleRequestStatus(this.value);
@@ -19,9 +20,9 @@ extension RoleRequestStatusX on RoleRequestStatus {
 }
 
 extension RoleRequestStatusParse on String {
-  RoleRequestStatus toRoleRequestStatus() =>
-      RoleRequestStatus.values.firstWhere(
-        (e) => e.value == this,
-        orElse: () => throw ArgumentError('Unknown RoleRequestStatus: ${this}'),
-      );
+  RoleRequestStatus toRoleRequestStatus() => RoleRequestStatus.values.firstWhere(
+    (e) => e.value == this,
+    orElse: () => throw ArgumentError('Unknown RoleRequestStatus: ${this}'),
+  );
 }
+

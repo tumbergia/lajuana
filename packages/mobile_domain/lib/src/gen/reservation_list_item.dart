@@ -9,6 +9,7 @@ import 'payment_status.dart';
 import 'reservation_status.dart';
 
 class ReservationListItem {
+
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -35,7 +36,8 @@ class ReservationListItem {
   final int? assignmentsPending;
   final List<String>? assignmentBlockingReasons;
 
-  const ReservationListItem({
+  const ReservationListItem(
+    {
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -61,7 +63,8 @@ class ReservationListItem {
     this.assignmentsTotal,
     this.assignmentsPending,
     this.assignmentBlockingReasons,
-  });
+    }
+  );
 
   factory ReservationListItem.fromJson(Map<String, dynamic> json) {
     return ReservationListItem(
@@ -84,17 +87,13 @@ class ReservationListItem {
       scheduledDate: json['scheduled_date'] as String?,
       expectedParticipantsCount: json['expected_participants_count'] as String?,
       participantsCompletedCount: json['participants_completed_count'] as int?,
-      participantFormStatus: json['participant_form_status'] != null
-          ? (json['participant_form_status'] as String)
-                .toParticipantFormStatus()
-          : null,
+      participantFormStatus: json['participant_form_status'] != null ? (json['participant_form_status'] as String).toParticipantFormStatus() : null,
       channel: json['channel'] as String?,
       assignmentStatus: json['assignment_status'] as String?,
       assignmentsTotal: json['assignments_total'] as int?,
       assignmentsPending: json['assignments_pending'] as int?,
-      assignmentBlockingReasons:
-          (json['assignment_blocking_reasons'] as List<dynamic>?)
-              ?.cast<String>(),
+      assignmentBlockingReasons: (json['assignment_blocking_reasons'] as List<dynamic>?)
+        ?.cast<String>(),
     );
   }
 
@@ -125,4 +124,5 @@ class ReservationListItem {
     'assignments_pending': assignmentsPending,
     'assignment_blocking_reasons': assignmentBlockingReasons,
   };
+
 }

@@ -7,6 +7,7 @@
 import 'participant_form_link_status.dart';
 
 class ParticipantFormLinkStatusResponse {
+
   final String id;
   final String reservationId;
   final ParticipantFormLinkStatus status;
@@ -17,7 +18,8 @@ class ParticipantFormLinkStatusResponse {
   final DateTime createdAt;
   final String? revokedAt;
 
-  const ParticipantFormLinkStatusResponse({
+  const ParticipantFormLinkStatusResponse(
+    {
     required this.id,
     required this.reservationId,
     required this.status,
@@ -27,11 +29,10 @@ class ParticipantFormLinkStatusResponse {
     required this.completedParticipants,
     required this.createdAt,
     this.revokedAt,
-  });
+    }
+  );
 
-  factory ParticipantFormLinkStatusResponse.fromJson(
-    Map<String, dynamic> json,
-  ) {
+  factory ParticipantFormLinkStatusResponse.fromJson(Map<String, dynamic> json) {
     return ParticipantFormLinkStatusResponse(
       id: json['id'] as String,
       reservationId: json['reservation_id'] as String,
@@ -56,4 +57,5 @@ class ParticipantFormLinkStatusResponse {
     'created_at': createdAt.toIso8601String(),
     'revoked_at': revokedAt,
   };
+
 }

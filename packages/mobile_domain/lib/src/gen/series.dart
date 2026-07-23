@@ -7,12 +7,20 @@
 import 'series_point.dart';
 
 class Series {
+
   final String id;
   final String label;
   final String? unit;
   final List<SeriesPoint>? points;
 
-  const Series({required this.id, required this.label, this.unit, this.points});
+  const Series(
+    {
+    required this.id,
+    required this.label,
+    this.unit,
+    this.points,
+    }
+  );
 
   factory Series.fromJson(Map<String, dynamic> json) {
     return Series(
@@ -20,8 +28,7 @@ class Series {
       label: json['label'] as String,
       unit: json['unit'] as String?,
       points: (json['points'] as List<dynamic>?)
-          ?.map((e) => SeriesPoint.fromJson(e as Map<String, dynamic>))
-          .toList(),
+        ?.map((e) => SeriesPoint.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
 
@@ -31,4 +38,5 @@ class Series {
     'unit': unit,
     'points': points?.map((e) => e.toJson()).toList(),
   };
+
 }

@@ -5,20 +5,23 @@
 /// AUTO-GENERATED from OpenAPI schema `AnalyticsPreferencesUpdateSchema`.
 
 class AnalyticsPreferencesUpdate {
+
   final List<String>? selectedModuleIds;
   final String? moduleOrder;
   final String? defaultRange;
 
-  const AnalyticsPreferencesUpdate({
+  const AnalyticsPreferencesUpdate(
+    {
     this.selectedModuleIds,
     this.moduleOrder,
     this.defaultRange,
-  });
+    }
+  );
 
   factory AnalyticsPreferencesUpdate.fromJson(Map<String, dynamic> json) {
     return AnalyticsPreferencesUpdate(
       selectedModuleIds: (json['selected_module_ids'] as List<dynamic>?)
-          ?.cast<String>(),
+        ?.cast<String>(),
       moduleOrder: json['module_order'] as String?,
       defaultRange: json['default_range'] as String?,
     );
@@ -29,4 +32,5 @@ class AnalyticsPreferencesUpdate {
     'module_order': moduleOrder,
     'default_range': defaultRange,
   };
+
 }

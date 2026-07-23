@@ -5,10 +5,16 @@
 /// AUTO-GENERATED from OpenAPI schema `UserLoginSchema`.
 
 class UserLogin {
+
   final String email;
   final String password;
 
-  const UserLogin({required this.email, required this.password});
+  const UserLogin(
+    {
+    required this.email,
+    required this.password,
+    }
+  );
 
   factory UserLogin.fromJson(Map<String, dynamic> json) {
     return UserLogin(
@@ -17,5 +23,9 @@ class UserLogin {
     );
   }
 
-  Map<String, dynamic> toJson() => {'email': email, 'password': password};
+  Map<String, dynamic> toJson() => {
+    'email': email,
+    'password': password,
+  };
+
 }

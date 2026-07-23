@@ -5,13 +5,23 @@
 /// AUTO-GENERATED from OpenAPI schema `Body_uploadLogPhoto`.
 
 class Body_uploadLogPhoto {
+
   final String file;
 
-  const Body_uploadLogPhoto({required this.file});
+  const Body_uploadLogPhoto(
+    {
+    required this.file,
+    }
+  );
 
   factory Body_uploadLogPhoto.fromJson(Map<String, dynamic> json) {
-    return Body_uploadLogPhoto(file: json['file'] as String);
+    return Body_uploadLogPhoto(
+      file: json['file'] as String,
+    );
   }
 
-  Map<String, dynamic> toJson() => {'file': file};
+  Map<String, dynamic> toJson() => {
+    'file': file,
+  };
+
 }

@@ -7,6 +7,7 @@
 import 'assignment_status.dart';
 
 class AssignmentCreate {
+
   final String reservationId;
   final String participantId;
   final String equineId;
@@ -14,14 +15,16 @@ class AssignmentCreate {
   final AssignmentStatus? status;
   final String? notes;
 
-  const AssignmentCreate({
+  const AssignmentCreate(
+    {
     required this.reservationId,
     required this.participantId,
     required this.equineId,
     this.saddleId,
     this.status,
     this.notes,
-  });
+    }
+  );
 
   factory AssignmentCreate.fromJson(Map<String, dynamic> json) {
     return AssignmentCreate(
@@ -29,9 +32,7 @@ class AssignmentCreate {
       participantId: json['participant_id'] as String,
       equineId: json['equine_id'] as String,
       saddleId: json['saddle_id'] as String?,
-      status: json['status'] != null
-          ? (json['status'] as String).toAssignmentStatus()
-          : null,
+      status: json['status'] != null ? (json['status'] as String).toAssignmentStatus() : null,
       notes: json['notes'] as String?,
     );
   }
@@ -44,4 +45,5 @@ class AssignmentCreate {
     'status': status?.toJson(),
     'notes': notes,
   };
+
 }

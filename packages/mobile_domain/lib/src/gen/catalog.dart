@@ -7,21 +7,23 @@
 import 'catalog_module.dart';
 
 class Catalog {
+
   final List<CatalogModule> modules;
   final int? schemaVersion;
   final DateTime generatedAt;
 
-  const Catalog({
+  const Catalog(
+    {
     required this.modules,
     this.schemaVersion,
     required this.generatedAt,
-  });
+    }
+  );
 
   factory Catalog.fromJson(Map<String, dynamic> json) {
     return Catalog(
       modules: (json['modules'] as List<dynamic>)
-          .map((e) => CatalogModule.fromJson(e as Map<String, dynamic>))
-          .toList(),
+        .map((e) => CatalogModule.fromJson(e as Map<String, dynamic>)).toList(),
       schemaVersion: json['schema_version'] as int?,
       generatedAt: DateTime.parse(json['generated_at'] as String),
     );
@@ -32,4 +34,5 @@ class Catalog {
     'schema_version': schemaVersion,
     'generated_at': generatedAt.toIso8601String(),
   };
+
 }

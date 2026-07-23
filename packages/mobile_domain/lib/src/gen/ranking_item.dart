@@ -5,6 +5,7 @@
 /// AUTO-GENERATED from OpenAPI schema `RankingItem`.
 
 class RankingItem {
+
   final int rank;
   final String key;
   final String label;
@@ -15,7 +16,8 @@ class RankingItem {
   final String? countryCode;
   final String? countryName;
 
-  const RankingItem({
+  const RankingItem(
+    {
     required this.rank,
     required this.key,
     required this.label,
@@ -25,7 +27,8 @@ class RankingItem {
     this.sharePercentage,
     this.countryCode,
     this.countryName,
-  });
+    }
+  );
 
   factory RankingItem.fromJson(Map<String, dynamic> json) {
     return RankingItem(
@@ -52,4 +55,5 @@ class RankingItem {
     'country_code': countryCode,
     'country_name': countryName,
   };
+
 }

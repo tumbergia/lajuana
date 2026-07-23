@@ -5,17 +5,20 @@
 /// AUTO-GENERATED from OpenAPI schema `AssignmentBoardSummarySchema`.
 
 class AssignmentBoardSummary {
+
   final int? participantsTotal;
   final int? assignedTotal;
   final int? pendingTotal;
   final int? blockingTotal;
 
-  const AssignmentBoardSummary({
+  const AssignmentBoardSummary(
+    {
     this.participantsTotal,
     this.assignedTotal,
     this.pendingTotal,
     this.blockingTotal,
-  });
+    }
+  );
 
   factory AssignmentBoardSummary.fromJson(Map<String, dynamic> json) {
     return AssignmentBoardSummary(
@@ -32,4 +35,5 @@ class AssignmentBoardSummary {
     'pending_total': pendingTotal,
     'blocking_total': blockingTotal,
   };
+
 }

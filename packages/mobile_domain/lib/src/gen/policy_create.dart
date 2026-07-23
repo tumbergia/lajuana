@@ -5,6 +5,7 @@
 /// AUTO-GENERATED from OpenAPI schema `PolicyCreateSchema`.
 
 class PolicyCreate {
+
   final String reservationId;
   final String? providerId;
   final String policyNumber;
@@ -12,14 +13,16 @@ class PolicyCreate {
   final String? expiresAt;
   final String? notes;
 
-  const PolicyCreate({
+  const PolicyCreate(
+    {
     required this.reservationId,
     this.providerId,
     required this.policyNumber,
     this.issuedAt,
     this.expiresAt,
     this.notes,
-  });
+    }
+  );
 
   factory PolicyCreate.fromJson(Map<String, dynamic> json) {
     return PolicyCreate(
@@ -40,4 +43,5 @@ class PolicyCreate {
     'expires_at': expiresAt,
     'notes': notes,
   };
+
 }

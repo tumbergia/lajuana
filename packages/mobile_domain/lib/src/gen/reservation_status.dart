@@ -13,7 +13,8 @@ enum ReservationStatus {
   PRE_RESERVED("pre_reserved"),
   CANCELLED("cancelled"),
   COMPLETED("completed"),
-  EXPIRED("expired");
+  EXPIRED("expired"),
+;
 
   final String value;
   const ReservationStatus(this.value);
@@ -24,9 +25,9 @@ extension ReservationStatusX on ReservationStatus {
 }
 
 extension ReservationStatusParse on String {
-  ReservationStatus toReservationStatus() =>
-      ReservationStatus.values.firstWhere(
-        (e) => e.value == this,
-        orElse: () => throw ArgumentError('Unknown ReservationStatus: ${this}'),
-      );
+  ReservationStatus toReservationStatus() => ReservationStatus.values.firstWhere(
+    (e) => e.value == this,
+    orElse: () => throw ArgumentError('Unknown ReservationStatus: ${this}'),
+  );
 }
+

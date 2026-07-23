@@ -14,6 +14,7 @@ import 'series.dart';
 import 'visualization_type.dart';
 
 class AnalyticsModule {
+
   final String id;
   final ModuleCategory category;
   final String title;
@@ -34,7 +35,8 @@ class AnalyticsModule {
   final String? emptyMessage;
   final String? blockedReason;
 
-  const AnalyticsModule({
+  const AnalyticsModule(
+    {
     required this.id,
     required this.category,
     required this.title,
@@ -54,7 +56,8 @@ class AnalyticsModule {
     required this.freshness,
     this.emptyMessage,
     this.blockedReason,
-  });
+    }
+  );
 
   factory AnalyticsModule.fromJson(Map<String, dynamic> json) {
     return AnalyticsModule(
@@ -67,19 +70,15 @@ class AnalyticsModule {
       primaryValue: json['primary_value'] as String?,
       comparison: json['comparison'] as String?,
       series: (json['series'] as List<dynamic>?)
-          ?.map((e) => Series.fromJson(e as Map<String, dynamic>))
-          .toList(),
+        ?.map((e) => Series.fromJson(e as Map<String, dynamic>)).toList(),
       ranking: (json['ranking'] as List<dynamic>?)
-          ?.map((e) => RankingItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
+        ?.map((e) => RankingItem.fromJson(e as Map<String, dynamic>)).toList(),
       breakdown: (json['breakdown'] as List<dynamic>?)
-          ?.map((e) => BreakdownItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      status: json['status'] != null
-          ? (json['status'] as String).toModuleStatus()
-          : null,
+        ?.map((e) => BreakdownItem.fromJson(e as Map<String, dynamic>)).toList(),
+      status: json['status'] != null ? (json['status'] as String).toModuleStatus() : null,
       insightText: json['insight_text'] as String?,
-      analysis: (json['analysis'] as List<dynamic>?)?.cast<String>(),
+      analysis: (json['analysis'] as List<dynamic>?)
+        ?.cast<String>(),
       action: json['action'] as String?,
       generatedAt: DateTime.parse(json['generated_at'] as String),
       freshness: Freshness.fromJson(json['freshness'] as Map<String, dynamic>),
@@ -109,4 +108,5 @@ class AnalyticsModule {
     'empty_message': emptyMessage,
     'blocked_reason': blockedReason,
   };
+
 }

@@ -13,7 +13,8 @@ enum ProviderType {
   GUIDE_ALLY("guide_ally"),
   PARK_OR_ACCESS("park_or_access"),
   INSURANCE("insurance"),
-  OTHER("other");
+  OTHER("other"),
+;
 
   final String value;
   const ProviderType(this.value);
@@ -29,3 +30,4 @@ extension ProviderTypeParse on String {
     orElse: () => throw ArgumentError('Unknown ProviderType: ${this}'),
   );
 }
+

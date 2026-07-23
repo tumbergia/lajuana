@@ -10,6 +10,7 @@ import 'equine_sex.dart';
 import 'equine_species.dart';
 
 class EquineListItem {
+
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -39,7 +40,8 @@ class EquineListItem {
   final String? availabilityReasons;
   final String? blockReason;
 
-  const EquineListItem({
+  const EquineListItem(
+    {
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -68,7 +70,8 @@ class EquineListItem {
     this.restUntil,
     this.availabilityReasons,
     this.blockReason,
-  });
+    }
+  );
 
   factory EquineListItem.fromJson(Map<String, dynamic> json) {
     return EquineListItem(
@@ -80,9 +83,7 @@ class EquineListItem {
       name: json['name'] as String,
       inventoryNumber: json['inventory_number'] as String,
       species: (json['species'] as String).toEquineSpecies(),
-      locationStatus: json['location_status'] != null
-          ? (json['location_status'] as String).toEquineLocationStatus()
-          : null,
+      locationStatus: json['location_status'] != null ? (json['location_status'] as String).toEquineLocationStatus() : null,
       locationNotes: json['location_notes'] as String?,
       breed: json['breed'] as String,
       sex: (json['sex'] as String).toEquineSex(),
@@ -92,8 +93,7 @@ class EquineListItem {
       heightM: json['height_m'] as String,
       isActive: json['is_active'] as bool,
       isAvailable: json['is_available'] as bool,
-      operationalStatus: (json['operational_status'] as String)
-          .toEquineOperationalStatus(),
+      operationalStatus: (json['operational_status'] as String).toEquineOperationalStatus(),
       approximateAgeYears: json['approximate_age_years'] as String?,
       maxRiderWeightKg: json['max_rider_weight_kg'] as String,
       experienceFit: json['experience_fit'] as String,
@@ -136,4 +136,5 @@ class EquineListItem {
     'availability_reasons': availabilityReasons,
     'block_reason': blockReason,
   };
+
 }

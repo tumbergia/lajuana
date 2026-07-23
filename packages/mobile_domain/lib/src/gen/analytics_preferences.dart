@@ -7,29 +7,31 @@
 import 'date_range_preset.dart';
 
 class AnalyticsPreferences {
+
   final int? schemaVersion;
   final List<String>? selectedModuleIds;
   final List<String>? moduleOrder;
   final DateRangePreset? defaultRange;
   final String? updatedAt;
 
-  const AnalyticsPreferences({
+  const AnalyticsPreferences(
+    {
     this.schemaVersion,
     this.selectedModuleIds,
     this.moduleOrder,
     this.defaultRange,
     this.updatedAt,
-  });
+    }
+  );
 
   factory AnalyticsPreferences.fromJson(Map<String, dynamic> json) {
     return AnalyticsPreferences(
       schemaVersion: json['schema_version'] as int?,
       selectedModuleIds: (json['selected_module_ids'] as List<dynamic>?)
-          ?.cast<String>(),
-      moduleOrder: (json['module_order'] as List<dynamic>?)?.cast<String>(),
-      defaultRange: json['default_range'] != null
-          ? (json['default_range'] as String).toDateRangePreset()
-          : null,
+        ?.cast<String>(),
+      moduleOrder: (json['module_order'] as List<dynamic>?)
+        ?.cast<String>(),
+      defaultRange: json['default_range'] != null ? (json['default_range'] as String).toDateRangePreset() : null,
       updatedAt: json['updated_at'] as String?,
     );
   }
@@ -41,4 +43,5 @@ class AnalyticsPreferences {
     'default_range': defaultRange?.toJson(),
     'updated_at': updatedAt,
   };
+
 }

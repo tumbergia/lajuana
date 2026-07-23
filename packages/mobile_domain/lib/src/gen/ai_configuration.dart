@@ -8,6 +8,7 @@ import 'ai_configuration_provider_mode.dart';
 import 'ai_route.dart';
 
 class AiConfiguration {
+
   final bool enabled;
   final String source;
   final AiConfigurationProviderMode? providerMode;
@@ -17,7 +18,8 @@ class AiConfiguration {
   final int? version;
   final String? updatedAt;
 
-  const AiConfiguration({
+  const AiConfiguration(
+    {
     required this.enabled,
     required this.source,
     this.providerMode,
@@ -26,19 +28,18 @@ class AiConfiguration {
     this.envProvider,
     this.version,
     this.updatedAt,
-  });
+    }
+  );
 
   factory AiConfiguration.fromJson(Map<String, dynamic> json) {
     return AiConfiguration(
       enabled: json['enabled'] as bool,
       source: json['source'] as String,
-      providerMode: json['provider_mode'] != null
-          ? (json['provider_mode'] as String).toAiConfigurationProviderMode()
-          : null,
-      mutedPhones: (json['muted_phones'] as List<dynamic>?)?.cast<String>(),
+      providerMode: json['provider_mode'] != null ? (json['provider_mode'] as String).toAiConfigurationProviderMode() : null,
+      mutedPhones: (json['muted_phones'] as List<dynamic>?)
+        ?.cast<String>(),
       routes: (json['routes'] as List<dynamic>)
-          .map((e) => AiRoute.fromJson(e as Map<String, dynamic>))
-          .toList(),
+        .map((e) => AiRoute.fromJson(e as Map<String, dynamic>)).toList(),
       envProvider: json['env_provider'] as String?,
       version: json['version'] as int?,
       updatedAt: json['updated_at'] as String?,
@@ -55,4 +56,5 @@ class AiConfiguration {
     'version': version,
     'updated_at': updatedAt,
   };
+
 }

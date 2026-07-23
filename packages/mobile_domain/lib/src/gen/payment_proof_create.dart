@@ -5,19 +5,22 @@
 /// AUTO-GENERATED from OpenAPI schema `PaymentProofCreateSchema`.
 
 class PaymentProofCreate {
+
   final String filename;
   final String contentType;
   final int sizeBytes;
   final String sha256;
   final String storageKey;
 
-  const PaymentProofCreate({
+  const PaymentProofCreate(
+    {
     required this.filename,
     required this.contentType,
     required this.sizeBytes,
     required this.sha256,
     required this.storageKey,
-  });
+    }
+  );
 
   factory PaymentProofCreate.fromJson(Map<String, dynamic> json) {
     return PaymentProofCreate(
@@ -36,4 +39,5 @@ class PaymentProofCreate {
     'sha256': sha256,
     'storage_key': storageKey,
   };
+
 }

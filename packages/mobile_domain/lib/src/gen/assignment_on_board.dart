@@ -5,6 +5,7 @@
 /// AUTO-GENERATED from OpenAPI schema `AssignmentOnBoardSchema`.
 
 class AssignmentOnBoard {
+
   final String? assignmentId;
   final String? equineId;
   final String? equineName;
@@ -13,7 +14,8 @@ class AssignmentOnBoard {
   final String? status;
   final List<String>? warnings;
 
-  const AssignmentOnBoard({
+  const AssignmentOnBoard(
+    {
     this.assignmentId,
     this.equineId,
     this.equineName,
@@ -21,7 +23,8 @@ class AssignmentOnBoard {
     this.saddleLabel,
     this.status,
     this.warnings,
-  });
+    }
+  );
 
   factory AssignmentOnBoard.fromJson(Map<String, dynamic> json) {
     return AssignmentOnBoard(
@@ -31,7 +34,8 @@ class AssignmentOnBoard {
       saddleId: json['saddle_id'] as String?,
       saddleLabel: json['saddle_label'] as String?,
       status: json['status'] as String?,
-      warnings: (json['warnings'] as List<dynamic>?)?.cast<String>(),
+      warnings: (json['warnings'] as List<dynamic>?)
+        ?.cast<String>(),
     );
   }
 
@@ -44,4 +48,5 @@ class AssignmentOnBoard {
     'status': status,
     'warnings': warnings,
   };
+
 }

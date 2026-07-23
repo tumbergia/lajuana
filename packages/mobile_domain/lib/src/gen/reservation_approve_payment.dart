@@ -5,13 +5,23 @@
 /// AUTO-GENERATED from OpenAPI schema `ReservationApprovePaymentSchema`.
 
 class ReservationApprovePayment {
+
   final String? note;
 
-  const ReservationApprovePayment({this.note});
+  const ReservationApprovePayment(
+    {
+    this.note,
+    }
+  );
 
   factory ReservationApprovePayment.fromJson(Map<String, dynamic> json) {
-    return ReservationApprovePayment(note: json['note'] as String?);
+    return ReservationApprovePayment(
+      note: json['note'] as String?,
+    );
   }
 
-  Map<String, dynamic> toJson() => {'note': note};
+  Map<String, dynamic> toJson() => {
+    'note': note,
+  };
+
 }

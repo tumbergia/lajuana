@@ -5,15 +5,18 @@
 /// AUTO-GENERATED from OpenAPI schema `ExperienceDurationSchema`.
 
 class ExperienceDuration {
+
   final int activityMinutes;
   final int routeMinutes;
   final String? displayText;
 
-  const ExperienceDuration({
+  const ExperienceDuration(
+    {
     required this.activityMinutes,
     required this.routeMinutes,
     this.displayText,
-  });
+    }
+  );
 
   factory ExperienceDuration.fromJson(Map<String, dynamic> json) {
     return ExperienceDuration(
@@ -28,4 +31,5 @@ class ExperienceDuration {
     'route_minutes': routeMinutes,
     'display_text': displayText,
   };
+
 }

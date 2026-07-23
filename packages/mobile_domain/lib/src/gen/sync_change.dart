@@ -7,19 +7,22 @@
 import 'sync_change_change_type.dart';
 
 class SyncChange {
+
   final SyncChangeChangeType changeType;
   final String entityId;
   final int version;
   final DateTime updatedAt;
   final String payload;
 
-  const SyncChange({
+  const SyncChange(
+    {
     required this.changeType,
     required this.entityId,
     required this.version,
     required this.updatedAt,
     required this.payload,
-  });
+    }
+  );
 
   factory SyncChange.fromJson(Map<String, dynamic> json) {
     return SyncChange(
@@ -38,4 +41,5 @@ class SyncChange {
     'updated_at': updatedAt.toIso8601String(),
     'payload': payload,
   };
+
 }

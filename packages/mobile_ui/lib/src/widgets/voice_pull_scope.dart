@@ -16,7 +16,9 @@ class VoicePullScope extends StatefulWidget {
     required this.enabled,
     required this.onTriggered,
     this.displacement = 48,
-    this.triggerDistance = 110,
+    /// Zona muerta antes de mostrar el círculo (overscroll accidental no lo revela).
+    this.activationDistance = 80,
+    this.triggerDistance = 100,
     this.pointerZoneHeight = 96,
   });
 
@@ -24,6 +26,9 @@ class VoicePullScope extends StatefulWidget {
   final bool enabled;
   final Future<void> Function() onTriggered;
   final double displacement;
+
+  /// Distancia de pull antes de que aparezca el indicador.
+  final double activationDistance;
   final double triggerDistance;
   final double pointerZoneHeight;
 
@@ -249,12 +254,21 @@ class _VoicePullScopeState extends State<VoicePullScope>
     return _dragOffset;
   }
 
+  /// Pull visible tras la zona muerta; 0 hasta [activationDistance].
+  double get _visibleDrag =>
+      math.max(0.0, _effectiveDrag - widget.activationDistance);
+
+  double get _pullRange => math.max(
+    1.0,
+    widget.triggerDistance - widget.activationDistance,
+  );
+
   @override
   Widget build(BuildContext context) {
     if (!widget.enabled) return widget.child;
 
-    final progress = (_effectiveDrag / widget.triggerDistance).clamp(0.0, 1.0);
-    final showIndicator = _effectiveDrag > 0 || _isTriggering;
+    final progress = (_visibleDrag / _pullRange).clamp(0.0, 1.0);
+    final showIndicator = _visibleDrag > 0 || _isTriggering;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -281,7 +295,7 @@ class _VoicePullScopeState extends State<VoicePullScope>
           Positioned(
             left: 0,
             right: 0,
-            bottom: widget.displacement - (_effectiveDrag * 0.35),
+            bottom: widget.displacement - (_visibleDrag * 0.35),
             child: IgnorePointer(
               child: Center(
                 child: _VoicePullIndicator(
@@ -302,50 +316,42 @@ class _VoicePullIndicator extends StatelessWidget {
   final double progress;
   final bool armed;
 
+  /// Misma geometría/elevation que [RefreshProgressIndicator], con mic en vez de flecha.
+  static const double _indicatorSize = 41;
+  static const double _strokeWidth = 2.5;
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final size = 36.0 + (progress * 8);
+    final theme = Theme.of(context);
+    final indicatorTheme = ProgressIndicatorTheme.of(context);
+    final backgroundColor =
+        indicatorTheme.refreshBackgroundColor ?? theme.canvasColor;
+    final color = indicatorTheme.color ?? theme.colorScheme.primary;
+    final value = armed ? null : progress.clamp(0.0, 1.0);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white : scheme.primary,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? Colors.white : scheme.primary).withValues(
-              alpha: 0.12 * progress,
-            ),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+    return Padding(
+      padding: const EdgeInsets.all(4),
+      child: SizedBox.square(
+        dimension: _indicatorSize,
+        child: Material(
+          type: MaterialType.circle,
+          color: backgroundColor,
+          elevation: 2,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: CircularProgressIndicator(
+                  value: value,
+                  strokeWidth: _strokeWidth,
+                  color: color,
+                ),
+              ),
+              Icon(Icons.mic_rounded, size: 16, color: color),
+            ],
           ),
-        ],
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: size - 6,
-            height: size - 6,
-            child: CircularProgressIndicator(
-              value: armed ? null : progress,
-              strokeWidth: 2.4,
-              color: isDark ? const Color(0xFF131313) : scheme.onPrimary,
-              backgroundColor:
-                  (isDark ? const Color(0xFF131313) : scheme.onPrimary)
-                      .withValues(alpha: 0.18),
-            ),
-          ),
-          Icon(
-            Icons.mic_rounded,
-            size: 16 + (progress * 2),
-            color: isDark ? const Color(0xFF131313) : scheme.onPrimary,
-          ),
-        ],
+        ),
       ),
     );
   }

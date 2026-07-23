@@ -5,6 +5,7 @@
 /// AUTO-GENERATED from OpenAPI schema `ReservationUpdateSchema`.
 
 class ReservationUpdate {
+
   final String? participantCount;
   final String? holderName;
   final String? holderEmail;
@@ -12,14 +13,16 @@ class ReservationUpdate {
   final String? quotedTotalAmount;
   final String? assistantDisabled;
 
-  const ReservationUpdate({
+  const ReservationUpdate(
+    {
     this.participantCount,
     this.holderName,
     this.holderEmail,
     this.holderPhone,
     this.quotedTotalAmount,
     this.assistantDisabled,
-  });
+    }
+  );
 
   factory ReservationUpdate.fromJson(Map<String, dynamic> json) {
     return ReservationUpdate(
@@ -40,4 +43,5 @@ class ReservationUpdate {
     'quoted_total_amount': quotedTotalAmount,
     'assistant_disabled': assistantDisabled,
   };
+
 }

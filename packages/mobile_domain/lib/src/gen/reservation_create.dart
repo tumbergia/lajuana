@@ -7,6 +7,7 @@
 import 'channel.dart';
 
 class ReservationCreate {
+
   final String experienceId;
   final String? requestedDate;
   final int participantCount;
@@ -15,7 +16,8 @@ class ReservationCreate {
   final String? holderEmail;
   final String? holderPhone;
 
-  const ReservationCreate({
+  const ReservationCreate(
+    {
     required this.experienceId,
     this.requestedDate,
     required this.participantCount,
@@ -23,7 +25,8 @@ class ReservationCreate {
     this.holderName,
     this.holderEmail,
     this.holderPhone,
-  });
+    }
+  );
 
   factory ReservationCreate.fromJson(Map<String, dynamic> json) {
     return ReservationCreate(
@@ -46,4 +49,5 @@ class ReservationCreate {
     'holder_email': holderEmail,
     'holder_phone': holderPhone,
   };
+
 }

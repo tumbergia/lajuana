@@ -8,6 +8,7 @@ import 'reservation_timeline_entry_source.dart';
 import 'service_log_photo.dart';
 
 class ReservationTimelineEntry {
+
   final String id;
   final ReservationTimelineEntrySource source;
   final String kind;
@@ -23,7 +24,8 @@ class ReservationTimelineEntry {
   final List<ServiceLogPhoto>? photos;
   final int? photosTotal;
 
-  const ReservationTimelineEntry({
+  const ReservationTimelineEntry(
+    {
     required this.id,
     required this.source,
     required this.kind,
@@ -38,7 +40,8 @@ class ReservationTimelineEntry {
     this.serviceLogId,
     this.photos,
     this.photosTotal,
-  });
+    }
+  );
 
   factory ReservationTimelineEntry.fromJson(Map<String, dynamic> json) {
     return ReservationTimelineEntry(
@@ -55,8 +58,7 @@ class ReservationTimelineEntry {
       relatedParticipantId: json['related_participant_id'] as String?,
       serviceLogId: json['service_log_id'] as String?,
       photos: (json['photos'] as List<dynamic>?)
-          ?.map((e) => ServiceLogPhoto.fromJson(e as Map<String, dynamic>))
-          .toList(),
+        ?.map((e) => ServiceLogPhoto.fromJson(e as Map<String, dynamic>)).toList(),
       photosTotal: json['photos_total'] as int?,
     );
   }
@@ -77,4 +79,5 @@ class ReservationTimelineEntry {
     'photos': photos?.map((e) => e.toJson()).toList(),
     'photos_total': photosTotal,
   };
+
 }

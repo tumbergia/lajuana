@@ -8,6 +8,7 @@ import 'notification_channel.dart';
 import 'notification_status.dart';
 
 class NotificationOutbox {
+
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -27,7 +28,8 @@ class NotificationOutbox {
   final String lastError;
   final String providerMessageId;
 
-  const NotificationOutbox({
+  const NotificationOutbox(
+    {
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -46,7 +48,8 @@ class NotificationOutbox {
     required this.attemptCount,
     required this.lastError,
     required this.providerMessageId,
-  });
+    }
+  );
 
   factory NotificationOutbox.fromJson(Map<String, dynamic> json) {
     return NotificationOutbox(
@@ -91,4 +94,5 @@ class NotificationOutbox {
     'last_error': lastError,
     'provider_message_id': providerMessageId,
   };
+
 }

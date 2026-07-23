@@ -5,6 +5,7 @@
 /// AUTO-GENERATED from OpenAPI schema `EmergencyCatalogContactSchema`.
 
 class EmergencyCatalogContact {
+
   final String code;
   final String name;
   final String description;
@@ -13,7 +14,8 @@ class EmergencyCatalogContact {
   final bool isPrimary;
   final bool isNational;
 
-  const EmergencyCatalogContact({
+  const EmergencyCatalogContact(
+    {
     required this.code,
     required this.name,
     required this.description,
@@ -21,7 +23,8 @@ class EmergencyCatalogContact {
     required this.category,
     required this.isPrimary,
     required this.isNational,
-  });
+    }
+  );
 
   factory EmergencyCatalogContact.fromJson(Map<String, dynamic> json) {
     return EmergencyCatalogContact(
@@ -44,4 +47,5 @@ class EmergencyCatalogContact {
     'is_primary': isPrimary,
     'is_national': isNational,
   };
+
 }

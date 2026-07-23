@@ -5,19 +5,22 @@
 /// AUTO-GENERATED from OpenAPI schema `PaymentProofUpdateSchema`.
 
 class PaymentProofUpdate {
+
   final String? reservationId;
   final String? filename;
   final String? contentType;
   final String? sizeBytes;
   final String? sha256;
 
-  const PaymentProofUpdate({
+  const PaymentProofUpdate(
+    {
     this.reservationId,
     this.filename,
     this.contentType,
     this.sizeBytes,
     this.sha256,
-  });
+    }
+  );
 
   factory PaymentProofUpdate.fromJson(Map<String, dynamic> json) {
     return PaymentProofUpdate(
@@ -36,4 +39,5 @@ class PaymentProofUpdate {
     'size_bytes': sizeBytes,
     'sha256': sha256,
   };
+
 }

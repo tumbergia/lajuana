@@ -47,6 +47,9 @@ class SyncPushOperationSchema(BaseModel):
         "transition_status",
         "confirm_reservation",
         "cancel_reservation",
+        "mark_read",
+        "mark_all_read",
+        "clear_inbox",
     ]
     base_version: int | None = None
     idempotency_key: str

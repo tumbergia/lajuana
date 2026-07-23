@@ -7,26 +7,27 @@
 import 'reservation_provider_status.dart';
 
 class ReservationProviderCreate {
+
   final String providerId;
   final String? serviceLabel;
   final String? notes;
   final ReservationProviderStatus? status;
 
-  const ReservationProviderCreate({
+  const ReservationProviderCreate(
+    {
     required this.providerId,
     this.serviceLabel,
     this.notes,
     this.status,
-  });
+    }
+  );
 
   factory ReservationProviderCreate.fromJson(Map<String, dynamic> json) {
     return ReservationProviderCreate(
       providerId: json['provider_id'] as String,
       serviceLabel: json['service_label'] as String?,
       notes: json['notes'] as String?,
-      status: json['status'] != null
-          ? (json['status'] as String).toReservationProviderStatus()
-          : null,
+      status: json['status'] != null ? (json['status'] as String).toReservationProviderStatus() : null,
     );
   }
 
@@ -36,4 +37,5 @@ class ReservationProviderCreate {
     'notes': notes,
     'status': status?.toJson(),
   };
+
 }

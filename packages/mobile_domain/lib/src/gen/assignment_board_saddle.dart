@@ -5,17 +5,20 @@
 /// AUTO-GENERATED from OpenAPI schema `AssignmentBoardSaddleSchema`.
 
 class AssignmentBoardSaddle {
+
   final String id;
   final String code;
   final String? name;
   final String? blockReason;
 
-  const AssignmentBoardSaddle({
+  const AssignmentBoardSaddle(
+    {
     required this.id,
     required this.code,
     this.name,
     this.blockReason,
-  });
+    }
+  );
 
   factory AssignmentBoardSaddle.fromJson(Map<String, dynamic> json) {
     return AssignmentBoardSaddle(
@@ -32,4 +35,5 @@ class AssignmentBoardSaddle {
     'name': name,
     'block_reason': blockReason,
   };
+
 }

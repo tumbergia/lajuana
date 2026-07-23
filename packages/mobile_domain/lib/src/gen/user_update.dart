@@ -5,11 +5,18 @@
 /// AUTO-GENERATED from OpenAPI schema `UserUpdateSchema`.
 
 class UserUpdate {
+
   final String? fullName;
   final String? role;
   final String? isActive;
 
-  const UserUpdate({this.fullName, this.role, this.isActive});
+  const UserUpdate(
+    {
+    this.fullName,
+    this.role,
+    this.isActive,
+    }
+  );
 
   factory UserUpdate.fromJson(Map<String, dynamic> json) {
     return UserUpdate(
@@ -24,4 +31,5 @@ class UserUpdate {
     'role': role,
     'is_active': isActive,
   };
+
 }

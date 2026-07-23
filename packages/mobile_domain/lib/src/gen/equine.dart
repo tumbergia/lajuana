@@ -10,6 +10,7 @@ import 'equine_sex.dart';
 import 'equine_species.dart';
 
 class Equine {
+
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -53,7 +54,8 @@ class Equine {
   final String sourceRowNumber;
   final String sourceUpdatedAtLabel;
 
-  const Equine({
+  const Equine(
+    {
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -96,7 +98,8 @@ class Equine {
     required this.sourceSheet,
     required this.sourceRowNumber,
     required this.sourceUpdatedAtLabel,
-  });
+    }
+  );
 
   factory Equine.fromJson(Map<String, dynamic> json) {
     return Equine(
@@ -108,8 +111,7 @@ class Equine {
       name: json['name'] as String,
       inventoryNumber: json['inventory_number'] as String,
       species: (json['species'] as String).toEquineSpecies(),
-      locationStatus: (json['location_status'] as String)
-          .toEquineLocationStatus(),
+      locationStatus: (json['location_status'] as String).toEquineLocationStatus(),
       locationNotes: json['location_notes'] as String,
       breed: json['breed'] as String,
       sex: (json['sex'] as String).toEquineSex(),
@@ -130,8 +132,7 @@ class Equine {
       lastHeightAt: json['last_height_at'] as String,
       isActive: json['is_active'] as bool,
       isAvailable: json['is_available'] as bool,
-      operationalStatus: (json['operational_status'] as String)
-          .toEquineOperationalStatus(),
+      operationalStatus: (json['operational_status'] as String).toEquineOperationalStatus(),
       availabilityNotes: json['availability_notes'] as String,
       availabilityReasons: json['availability_reasons'] as String,
       restUntil: json['rest_until'] as String,
@@ -191,4 +192,5 @@ class Equine {
     'source_row_number': sourceRowNumber,
     'source_updated_at_label': sourceUpdatedAtLabel,
   };
+
 }

@@ -9,7 +9,8 @@ enum AssignmentStatus {
   CONFIRMED("confirmed"),
   FINAL("final"),
   REPLACED("replaced"),
-  CANCELLED("cancelled");
+  CANCELLED("cancelled"),
+;
 
   final String value;
   const AssignmentStatus(this.value);
@@ -25,3 +26,4 @@ extension AssignmentStatusParse on String {
     orElse: () => throw ArgumentError('Unknown AssignmentStatus: ${this}'),
   );
 }
+

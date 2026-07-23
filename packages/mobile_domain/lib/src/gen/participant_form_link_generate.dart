@@ -5,9 +5,14 @@
 /// AUTO-GENERATED from OpenAPI schema `ParticipantFormLinkGenerateRequest`.
 
 class ParticipantFormLinkGenerate {
+
   final int expectedParticipantsCount;
 
-  const ParticipantFormLinkGenerate({required this.expectedParticipantsCount});
+  const ParticipantFormLinkGenerate(
+    {
+    required this.expectedParticipantsCount,
+    }
+  );
 
   factory ParticipantFormLinkGenerate.fromJson(Map<String, dynamic> json) {
     return ParticipantFormLinkGenerate(
@@ -18,4 +23,5 @@ class ParticipantFormLinkGenerate {
   Map<String, dynamic> toJson() => {
     'expected_participants_count': expectedParticipantsCount,
   };
+
 }

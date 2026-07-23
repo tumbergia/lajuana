@@ -5,6 +5,7 @@
 /// AUTO-GENERATED from OpenAPI schema `ServiceLogUpdateSchema`.
 
 class ServiceLogUpdate {
+
   final String? eventType;
   final String? happenedAt;
   final String? checkpointName;
@@ -13,7 +14,8 @@ class ServiceLogUpdate {
   final String? relatedEquineId;
   final String? photos;
 
-  const ServiceLogUpdate({
+  const ServiceLogUpdate(
+    {
     this.eventType,
     this.happenedAt,
     this.checkpointName,
@@ -21,7 +23,8 @@ class ServiceLogUpdate {
     this.relatedParticipantId,
     this.relatedEquineId,
     this.photos,
-  });
+    }
+  );
 
   factory ServiceLogUpdate.fromJson(Map<String, dynamic> json) {
     return ServiceLogUpdate(
@@ -44,4 +47,5 @@ class ServiceLogUpdate {
     'related_equine_id': relatedEquineId,
     'photos': photos,
   };
+
 }

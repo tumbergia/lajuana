@@ -8,6 +8,7 @@ import 'provider_type.dart';
 import 'reservation_provider_status.dart';
 
 class ReservationProviderTabItem {
+
   final String reservationProviderId;
   final String reservationId;
   final String providerId;
@@ -28,7 +29,8 @@ class ReservationProviderTabItem {
   final String scheduledDate;
   final int participantsCount;
 
-  const ReservationProviderTabItem({
+  const ReservationProviderTabItem(
+    {
     required this.reservationProviderId,
     required this.reservationId,
     required this.providerId,
@@ -48,7 +50,8 @@ class ReservationProviderTabItem {
     required this.experienceName,
     required this.scheduledDate,
     required this.participantsCount,
-  });
+    }
+  );
 
   factory ReservationProviderTabItem.fromJson(Map<String, dynamic> json) {
     return ReservationProviderTabItem(
@@ -95,4 +98,5 @@ class ReservationProviderTabItem {
     'scheduled_date': scheduledDate,
     'participants_count': participantsCount,
   };
+
 }

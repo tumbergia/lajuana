@@ -5,6 +5,7 @@
 /// AUTO-GENERATED from OpenAPI schema `ParticipantUpdateSchema`.
 
 class ParticipantUpdate {
+
   final String? firstName;
   final String? lastName;
   final String? email;
@@ -25,7 +26,8 @@ class ParticipantUpdate {
   final String? acceptedRiskRelease;
   final String? riskReleaseTextVersion;
 
-  const ParticipantUpdate({
+  const ParticipantUpdate(
+    {
     this.firstName,
     this.lastName,
     this.email,
@@ -45,7 +47,8 @@ class ParticipantUpdate {
     this.acceptedMediaUsage,
     this.acceptedRiskRelease,
     this.riskReleaseTextVersion,
-  });
+    }
+  );
 
   factory ParticipantUpdate.fromJson(Map<String, dynamic> json) {
     return ParticipantUpdate(
@@ -92,4 +95,5 @@ class ParticipantUpdate {
     'accepted_risk_release': acceptedRiskRelease,
     'risk_release_text_version': riskReleaseTextVersion,
   };
+
 }

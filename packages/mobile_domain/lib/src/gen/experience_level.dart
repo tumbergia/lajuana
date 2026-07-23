@@ -7,7 +7,8 @@
 enum ExperienceLevel {
   BASIC("basic"),
   INTERMEDIATE("intermediate"),
-  ADVANCED("advanced");
+  ADVANCED("advanced"),
+;
 
   final String value;
   const ExperienceLevel(this.value);
@@ -23,3 +24,4 @@ extension ExperienceLevelParse on String {
     orElse: () => throw ArgumentError('Unknown ExperienceLevel: ${this}'),
   );
 }
+

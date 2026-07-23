@@ -5,19 +5,22 @@
 /// AUTO-GENERATED from OpenAPI schema `AssignmentBoardEquineSchema`.
 
 class AssignmentBoardEquine {
+
   final String id;
   final String name;
   final String? maxRiderWeightKg;
   final String? imageBase64;
   final String? blockReason;
 
-  const AssignmentBoardEquine({
+  const AssignmentBoardEquine(
+    {
     required this.id,
     required this.name,
     this.maxRiderWeightKg,
     this.imageBase64,
     this.blockReason,
-  });
+    }
+  );
 
   factory AssignmentBoardEquine.fromJson(Map<String, dynamic> json) {
     return AssignmentBoardEquine(
@@ -36,4 +39,5 @@ class AssignmentBoardEquine {
     'image_base64': imageBase64,
     'block_reason': blockReason,
   };
+
 }

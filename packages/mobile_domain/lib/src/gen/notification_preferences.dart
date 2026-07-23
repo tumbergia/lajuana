@@ -5,21 +5,23 @@
 /// AUTO-GENERATED from OpenAPI schema `NotificationPreferencesSchema`.
 
 class NotificationPreferences {
+
   final Map<String, bool>? preferences;
 
-  const NotificationPreferences({this.preferences});
+  const NotificationPreferences(
+    {
+    this.preferences,
+    }
+  );
 
   factory NotificationPreferences.fromJson(Map<String, dynamic> json) {
     return NotificationPreferences(
-      preferences: json['preferences'] != null
-          ? Map<String, bool>.from(
-              (json['preferences'] as Map).map(
-                (key, value) => MapEntry(key.toString(), value == true),
-              ),
-            )
-          : null,
+      preferences: json['preferences'] != null ? Map<String, bool>.from((json['preferences'] as Map).map((key, value) => MapEntry(key.toString(), value == true),)) : null,
     );
   }
 
-  Map<String, dynamic> toJson() => {'preferences': preferences};
+  Map<String, dynamic> toJson() => {
+    'preferences': preferences,
+  };
+
 }

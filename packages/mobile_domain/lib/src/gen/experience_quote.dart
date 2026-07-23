@@ -5,13 +5,23 @@
 /// AUTO-GENERATED from OpenAPI schema `ExperienceQuoteRequestSchema`.
 
 class ExperienceQuote {
+
   final int participantCount;
 
-  const ExperienceQuote({required this.participantCount});
+  const ExperienceQuote(
+    {
+    required this.participantCount,
+    }
+  );
 
   factory ExperienceQuote.fromJson(Map<String, dynamic> json) {
-    return ExperienceQuote(participantCount: json['participant_count'] as int);
+    return ExperienceQuote(
+      participantCount: json['participant_count'] as int,
+    );
   }
 
-  Map<String, dynamic> toJson() => {'participant_count': participantCount};
+  Map<String, dynamic> toJson() => {
+    'participant_count': participantCount,
+  };
+
 }

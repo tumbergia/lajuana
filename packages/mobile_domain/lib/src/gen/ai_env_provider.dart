@@ -5,19 +5,22 @@
 /// AUTO-GENERATED from OpenAPI schema `AiEnvProviderSchema`.
 
 class AiEnvProvider {
+
   final bool available;
   final String? provider;
   final String? model;
   final List<String>? fallbackModels;
   final int? keysConfigured;
 
-  const AiEnvProvider({
+  const AiEnvProvider(
+    {
     required this.available,
     this.provider,
     this.model,
     this.fallbackModels,
     this.keysConfigured,
-  });
+    }
+  );
 
   factory AiEnvProvider.fromJson(Map<String, dynamic> json) {
     return AiEnvProvider(
@@ -25,7 +28,7 @@ class AiEnvProvider {
       provider: json['provider'] as String?,
       model: json['model'] as String?,
       fallbackModels: (json['fallback_models'] as List<dynamic>?)
-          ?.cast<String>(),
+        ?.cast<String>(),
       keysConfigured: json['keys_configured'] as int?,
     );
   }
@@ -37,4 +40,5 @@ class AiEnvProvider {
     'fallback_models': fallbackModels,
     'keys_configured': keysConfigured,
   };
+
 }

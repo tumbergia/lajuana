@@ -10,6 +10,7 @@ import 'assignment_board_saddle.dart';
 import 'assignment_board_summary.dart';
 
 class AssignmentBoard {
+
   final String reservationId;
   final String reservationStatus;
   final String? scheduledDate;
@@ -18,7 +19,8 @@ class AssignmentBoard {
   final List<AssignmentBoardSaddle>? availableSaddles;
   final AssignmentBoardSummary? summary;
 
-  const AssignmentBoard({
+  const AssignmentBoard(
+    {
     required this.reservationId,
     required this.reservationStatus,
     this.scheduledDate,
@@ -26,7 +28,8 @@ class AssignmentBoard {
     this.availableEquines,
     this.availableSaddles,
     this.summary,
-  });
+    }
+  );
 
   factory AssignmentBoard.fromJson(Map<String, dynamic> json) {
     return AssignmentBoard(
@@ -34,26 +37,12 @@ class AssignmentBoard {
       reservationStatus: json['reservation_status'] as String,
       scheduledDate: json['scheduled_date'] as String?,
       participants: (json['participants'] as List<dynamic>?)
-          ?.map(
-            (e) =>
-                AssignmentBoardParticipant.fromJson(e as Map<String, dynamic>),
-          )
-          .toList(),
+        ?.map((e) => AssignmentBoardParticipant.fromJson(e as Map<String, dynamic>)).toList(),
       availableEquines: (json['available_equines'] as List<dynamic>?)
-          ?.map(
-            (e) => AssignmentBoardEquine.fromJson(e as Map<String, dynamic>),
-          )
-          .toList(),
+        ?.map((e) => AssignmentBoardEquine.fromJson(e as Map<String, dynamic>)).toList(),
       availableSaddles: (json['available_saddles'] as List<dynamic>?)
-          ?.map(
-            (e) => AssignmentBoardSaddle.fromJson(e as Map<String, dynamic>),
-          )
-          .toList(),
-      summary: json['summary'] != null
-          ? AssignmentBoardSummary.fromJson(
-              json['summary'] as Map<String, dynamic>,
-            )
-          : null,
+        ?.map((e) => AssignmentBoardSaddle.fromJson(e as Map<String, dynamic>)).toList(),
+      summary: json['summary'] != null ? AssignmentBoardSummary.fromJson(json['summary'] as Map<String, dynamic>) : null,
     );
   }
 
@@ -66,4 +55,5 @@ class AssignmentBoard {
     'available_saddles': availableSaddles?.map((e) => e.toJson()).toList(),
     'summary': summary,
   };
+
 }

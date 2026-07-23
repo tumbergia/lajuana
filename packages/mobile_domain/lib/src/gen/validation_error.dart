@@ -5,23 +5,27 @@
 /// AUTO-GENERATED from OpenAPI schema `ValidationError`.
 
 class ValidationError {
+
   final List<String> loc;
   final String msg;
   final String type;
   final String? input;
   final Map<String, dynamic>? ctx;
 
-  const ValidationError({
+  const ValidationError(
+    {
     required this.loc,
     required this.msg,
     required this.type,
     this.input,
     this.ctx,
-  });
+    }
+  );
 
   factory ValidationError.fromJson(Map<String, dynamic> json) {
     return ValidationError(
-      loc: (json['loc'] as List<dynamic>).cast<String>(),
+      loc: (json['loc'] as List<dynamic>)
+        .cast<String>(),
       msg: json['msg'] as String,
       type: json['type'] as String,
       input: json['input'] as String?,
@@ -36,4 +40,5 @@ class ValidationError {
     'input': input,
     'ctx': ctx,
   };
+
 }

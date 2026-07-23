@@ -7,7 +7,8 @@
 enum EquineSex {
   FEMALE("female"),
   MALE("male"),
-  UNKNOWN("unknown");
+  UNKNOWN("unknown"),
+;
 
   final String value;
   const EquineSex(this.value);
@@ -23,3 +24,4 @@ extension EquineSexParse on String {
     orElse: () => throw ArgumentError('Unknown EquineSex: ${this}'),
   );
 }
+

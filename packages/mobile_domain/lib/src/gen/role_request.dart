@@ -8,6 +8,7 @@ import 'role_request_status.dart';
 import 'user_role.dart';
 
 class RoleRequest {
+
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -24,7 +25,8 @@ class RoleRequest {
   final String? decidedAt;
   final String? note;
 
-  const RoleRequest({
+  const RoleRequest(
+    {
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -40,7 +42,8 @@ class RoleRequest {
     this.decidedBy,
     this.decidedAt,
     this.note,
-  });
+    }
+  );
 
   factory RoleRequest.fromJson(Map<String, dynamic> json) {
     return RoleRequest(
@@ -79,4 +82,5 @@ class RoleRequest {
     'decided_at': decidedAt,
     'note': note,
   };
+
 }

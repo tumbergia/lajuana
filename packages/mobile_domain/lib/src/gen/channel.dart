@@ -8,7 +8,8 @@ enum Channel {
   FACEBOOK("facebook"),
   INSTAGRAM("instagram"),
   WHATSAPP("whatsapp"),
-  EMAIL("email");
+  EMAIL("email"),
+;
 
   final String value;
   const Channel(this.value);
@@ -24,3 +25,4 @@ extension ChannelParse on String {
     orElse: () => throw ArgumentError('Unknown Channel: ${this}'),
   );
 }
+

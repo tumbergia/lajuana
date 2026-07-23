@@ -7,19 +7,24 @@
 import 'validation_error.dart';
 
 class HTTPValidationError {
+
   final List<ValidationError>? detail;
 
-  const HTTPValidationError({this.detail});
+  const HTTPValidationError(
+    {
+    this.detail,
+    }
+  );
 
   factory HTTPValidationError.fromJson(Map<String, dynamic> json) {
     return HTTPValidationError(
       detail: (json['detail'] as List<dynamic>?)
-          ?.map((e) => ValidationError.fromJson(e as Map<String, dynamic>))
-          .toList(),
+        ?.map((e) => ValidationError.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'detail': detail?.map((e) => e.toJson()).toList(),
   };
+
 }
