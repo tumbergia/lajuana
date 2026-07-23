@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:mobile_ui/src/voice/voice_context.dart';
 import 'package:mobile_ui/src/voice/voice_route.dart';
+import 'package:mobile_ui/src/widgets/app_equine_icon.dart';
 
 enum AppNavItem { none, inicio, reservas, equinos, experiencias, mas }
 
@@ -144,7 +144,6 @@ class _AppBottomNavState extends State<AppBottomNav>
                       item: item,
                       current: widget.current,
                       label: _labelFor(item),
-                      icon: _iconFor(item),
                       onTap: _handleTap,
                       onHoldStart: _onLongPressStart,
                       onHoldEnd: _onLongPressEnd,
@@ -171,23 +170,12 @@ class _AppBottomNavState extends State<AppBottomNav>
     };
   }
 
-  IconData _iconFor(AppNavItem item) {
-    return switch (item) {
-      AppNavItem.inicio => Icons.grid_view_rounded,
-      AppNavItem.reservas => Icons.calendar_today_rounded,
-      AppNavItem.equinos => Symbols.chess_knight,
-      AppNavItem.experiencias => Icons.explore_rounded,
-      AppNavItem.mas => Icons.menu_rounded,
-      AppNavItem.none => Icons.circle,
-    };
-  }
 }
 
 class _NavButton extends StatelessWidget {
   final AppNavItem item;
   final AppNavItem current;
   final String label;
-  final IconData icon;
   final ValueChanged<AppNavItem>? onTap;
   final ValueChanged<AppNavItem>? onHoldStart;
   final VoidCallback? onHoldEnd;
@@ -198,13 +186,34 @@ class _NavButton extends StatelessWidget {
     required this.item,
     required this.current,
     required this.label,
-    required this.icon,
     required this.onTap,
     required this.onHoldStart,
     required this.onHoldEnd,
     required this.pressed,
     required this.launchingVoice,
   });
+
+  Widget _buildIcon({
+    required double size,
+    required Color color,
+    required bool voiceMode,
+  }) {
+    if (voiceMode) {
+      return Icon(Icons.mic_rounded, size: size, color: color);
+    }
+    if (item == AppNavItem.equinos) {
+      return AppEquineIcon(size: size, color: color);
+    }
+    final icon = switch (item) {
+      AppNavItem.inicio => Icons.grid_view_rounded,
+      AppNavItem.reservas => Icons.calendar_today_rounded,
+      AppNavItem.equinos => Icons.circle, // unreachable; handled above
+      AppNavItem.experiencias => Icons.explore_rounded,
+      AppNavItem.mas => Icons.menu_rounded,
+      AppNavItem.none => Icons.circle,
+    };
+    return Icon(icon, size: size, color: color);
+  }
 
   bool get isActive => item == current;
 
@@ -310,15 +319,17 @@ class _NavButton extends StatelessWidget {
                           ),
                         );
                       },
-                      child: Icon(
-                        voiceMode ? Icons.mic_rounded : icon,
+                      child: KeyedSubtree(
                         key: ValueKey('${item.name}-$voiceMode'),
-                        size: voiceMode ? 20 : 18,
-                        color: voiceMode
-                            ? (isDark
-                                  ? const Color(0xFF131313)
-                                  : theme.colorScheme.onPrimary)
-                            : fg,
+                        child: _buildIcon(
+                          size: voiceMode ? 20 : 18,
+                          color: voiceMode
+                              ? (isDark
+                                    ? const Color(0xFF131313)
+                                    : theme.colorScheme.onPrimary)
+                              : fg,
+                          voiceMode: voiceMode,
+                        ),
                       ),
                     ),
                     if (!voiceMode) ...[

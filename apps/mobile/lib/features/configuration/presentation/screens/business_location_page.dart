@@ -12,6 +12,7 @@ import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
+import 'package:mobile_ui/src/widgets/app_equine_icon.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
@@ -565,7 +566,7 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
   }
 }
 
-/// Pin con [Symbols.chess_knight] (mismo de la pestaña Equinos).
+/// Pin con [AppEquineIcon] (mismo de la pestaña Equinos).
 /// La punta inferior cae exactamente sobre la coordenada del mapa.
 class _MapPin extends StatelessWidget {
   const _MapPin({required this.color});
@@ -591,11 +592,11 @@ class _MapPin extends StatelessWidget {
             height: _head,
             child: DecoratedBox(
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              child: Icon(
-                Symbols.chess_knight,
-                size: 20,
-                color: Colors.white,
-                fill: 1,
+              child: const Center(
+                child: AppEquineIcon(
+                  size: 20,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),

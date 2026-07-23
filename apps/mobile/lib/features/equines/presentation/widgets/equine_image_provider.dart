@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:mobile_ui/src/widgets/app_equine_icon.dart';
 
-/// Displays an equine image from base64 with a chess knight fallback.
+/// Displays an equine image from base64 with the brand horse mark as fallback.
 class EquineImageProvider extends StatelessWidget {
   const EquineImageProvider({
     super.key,
@@ -45,8 +45,7 @@ class EquineImageProvider extends StatelessWidget {
         width: width,
         color: scheme.surfaceContainerHigh,
         alignment: Alignment.center,
-        child: Icon(
-          Symbols.chess_knight,
+        child: AppEquineIcon(
           size: 48,
           color: scheme.onSurfaceVariant,
         ),

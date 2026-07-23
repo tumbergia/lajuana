@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
-
 import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
+import 'package:mobile_ui/src/widgets/app_equine_icon.dart';
 import 'app_assignment_card.dart';
 
 class AppAssignmentListItem extends StatelessWidget {
@@ -548,8 +547,7 @@ class _EquineThumb extends StatelessWidget {
         color: scheme.surfaceContainerHigh,
         child: image != null
             ? Image(image: image!, fit: BoxFit.cover)
-            : Icon(
-                Symbols.chess_knight,
+            : AppEquineIcon(
                 size: 24,
                 color: scheme.onSurfaceVariant,
               ),
