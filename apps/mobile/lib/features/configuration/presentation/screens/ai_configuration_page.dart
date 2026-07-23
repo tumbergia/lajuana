@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/configuration/domain/la_juana_configuration.dart';
 import 'package:mobile/features/configuration/infrastructure/configuration_api_client.dart';
+import 'package:mobile/features/configuration/presentation/screens/ai_model_catalog_page.dart';
 import 'package:mobile/features/providers/presentation/utils/phone_country.dart';
 import 'package:mobile/features/providers/presentation/widgets/provider_phone_field.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservations_api_error.dart';
@@ -240,6 +241,41 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
     }
   }
 
+  Future<void> _openModelCatalog() async {
+    if (_busyProviderMode || _editingModels) return;
+    final selection = await Navigator.of(context).push<AiModelSelection>(
+      MaterialPageRoute(
+        builder: (_) => AiModelCatalogPage(module: widget.module),
+      ),
+    );
+    if (selection == null || !mounted) return;
+
+    final previousEnabled = _enabled;
+    final alreadyOpenRouter =
+        _services[0] == 'openrouter' && _configured[0];
+    setState(() {
+      _providerMode = 'manual';
+      _services[0] = 'openrouter';
+      _models[0].text = selection.modelId;
+      _keys[0].clear();
+      // Si ya había clave de OpenRouter en esta ruta, se reutiliza;
+      // si venía de otro servicio, hay que pegar una nueva.
+      if (!alreadyOpenRouter) {
+        _configured[0] = false;
+        _enabled = false;
+      }
+      _editingModels = true;
+    });
+    showAppToast(
+      context,
+      message: alreadyOpenRouter
+          ? '${selection.displayName} listo. Guarda para aplicarlo.'
+          : previousEnabled && !_enabled
+          ? '${selection.displayName} listo. Pega tu API key de OpenRouter y guarda.'
+          : '${selection.displayName} seleccionado. Confirma la API key de OpenRouter y guarda.',
+    );
+  }
+
   void _applySnapshot(AiConfiguration value) {
     _enabled = value.enabled;
     _version = value.version;
@@ -303,6 +339,17 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
       if (_services[i] != null && _models[i].text.trim().isEmpty) {
         setState(() {
           _error = 'El modelo ${i + 1} necesita un nombre de modelo.';
+        });
+        return;
+      }
+      if (_services[i] != null &&
+          _models[i].text.trim().isNotEmpty &&
+          !_configured[i] &&
+          _keys[i].text.isEmpty) {
+        setState(() {
+          _error =
+              'El modelo ${i + 1} necesita una clave de acceso '
+              '(${_serviceLabels[_services[i]!] ?? _services[i]}).';
         });
         return;
       }
@@ -643,8 +690,10 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
           AppTextField(
             controller: _keys[i],
             label: _configured[i]
-                ? 'Clave guardada · escribe para reemplazar'
-                : 'Clave de acceso',
+                ? 'API key guardada · escribe para reemplazar'
+                : (_services[i] == 'openrouter'
+                      ? 'API key de OpenRouter'
+                      : 'API key del servicio'),
             inputKind: AppTextInputKind.password,
             obscureText: true,
           ),
@@ -684,6 +733,15 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
         'o configurar los tuyos.',
       ),
       const SizedBox(height: 10),
+      AppEntityRowCard(
+        title: 'Precios y modelos',
+        subtitle:
+            'Compara costos e inteligencia y elige un modelo para el asistente',
+        leading: _leadingIcon(Symbols.payments),
+        trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+        onTap: _busyProviderMode || _editingModels ? null : _openModelCatalog,
+      ),
+      const SizedBox(height: 8),
       AppEntityRowCard(
         title: 'Recomendados',
         subtitle: _envModelSubtitle(),
