@@ -1,7 +1,6 @@
 """One-time: notify admins about existing PAYMENT_RECEIVED reservations."""
 
 import asyncio
-from datetime import UTC, datetime
 
 from app.common.enums import NotificationChannel, NotificationEventType, ReservationStatus, UserRole
 from app.core.db import init_db

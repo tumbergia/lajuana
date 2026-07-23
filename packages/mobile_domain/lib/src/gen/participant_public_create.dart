@@ -7,11 +7,10 @@
 import 'experience_level.dart';
 
 class ParticipantPublicCreate {
-
   final String firstName;
   final String lastName;
   final String? email;
-  final DateTime birthDate;  // date-only (no time)
+  final DateTime birthDate; // date-only (no time)
   final String documentType;
   final String documentNumber;
   final String phone;
@@ -36,8 +35,7 @@ class ParticipantPublicCreate {
   final bool acceptedRiskRelease;
   final String? riskReleaseTextVersion;
 
-  const ParticipantPublicCreate(
-    {
+  const ParticipantPublicCreate({
     required this.firstName,
     required this.lastName,
     this.email,
@@ -65,8 +63,7 @@ class ParticipantPublicCreate {
     this.acceptedMediaUsage,
     required this.acceptedRiskRelease,
     this.riskReleaseTextVersion,
-    }
-  );
+  });
 
   factory ParticipantPublicCreate.fromJson(Map<String, dynamic> json) {
     return ParticipantPublicCreate(
@@ -91,7 +88,8 @@ class ParticipantPublicCreate {
       diet: json['diet'] as String?,
       emergencyContactName: json['emergency_contact_name'] as String,
       emergencyContactPhone: json['emergency_contact_phone'] as String,
-      emergencyContactRelationship: json['emergency_contact_relationship'] as String?,
+      emergencyContactRelationship:
+          json['emergency_contact_relationship'] as String?,
       emergencyContactCountry: json['emergency_contact_country'] as String?,
       acceptedDataProcessing: json['accepted_data_processing'] as bool,
       acceptedMediaUsage: json['accepted_media_usage'] as String?,
@@ -129,5 +127,4 @@ class ParticipantPublicCreate {
     'accepted_risk_release': acceptedRiskRelease,
     'risk_release_text_version': riskReleaseTextVersion,
   };
-
 }

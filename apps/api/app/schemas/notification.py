@@ -92,11 +92,7 @@ class NotificationPreferencesSchema(BaseModel):
     @classmethod
     def from_user_prefs(cls, prefs: dict[str, bool] | None) -> "NotificationPreferencesSchema":
         stored = prefs or {}
-        return cls(
-            preferences={
-                key: stored.get(key, True) for key in NOTIFICATION_PREFERENCE_KEYS
-            }
-        )
+        return cls(preferences={key: stored.get(key, True) for key in NOTIFICATION_PREFERENCE_KEYS})
 
 
 class NotificationPreferencesUpdateSchema(BaseModel):

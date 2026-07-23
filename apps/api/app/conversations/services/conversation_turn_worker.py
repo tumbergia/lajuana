@@ -151,12 +151,12 @@ class ConversationTurnWorker:
                         "wa_message_id": event.wa_message_id,
                         "media_id": event.media_id,
                         "message_type": event.message_type,
-                        "mime_type": (
-                            (event.raw_payload or {}).get(event.message_type) or {}
-                        ).get("mime_type", "application/pdf"),
-                        "filename": (
-                            (event.raw_payload or {}).get(event.message_type) or {}
-                        ).get("filename"),
+                        "mime_type": ((event.raw_payload or {}).get(event.message_type) or {}).get(
+                            "mime_type", "application/pdf"
+                        ),
+                        "filename": ((event.raw_payload or {}).get(event.message_type) or {}).get(
+                            "filename"
+                        ),
                         "caption": event.caption,
                         "from_phone": normalized_phone,
                     }
@@ -316,7 +316,10 @@ class ConversationTurnWorker:
 
             events.sort(key=lambda e: e.received_at or datetime(2020, 1, 1, tzinfo=UTC))
 
-            types = [f"{e.message_type}(transcription={bool(e.transcription) if hasattr(e,'transcription') else 'N/A'})" for e in events]
+            types = [
+                f"{e.message_type}(transcription={bool(e.transcription) if hasattr(e, 'transcription') else 'N/A'})"
+                for e in events
+            ]
             logger.info(
                 "[conversation_id=%s] Processing buffer | events=%s | count=%d",
                 conversation_id,
@@ -358,10 +361,7 @@ class ConversationTurnWorker:
                     await Container.get_instance().notification_service.enqueue_admin_in_app(
                         event_type=NotificationEventType.WHATSAPP_MESSAGE_UNATTENDED,
                         title="WhatsApp sin asistente",
-                        body=(
-                            f"{buffer_doc.normalized_phone}: "
-                            f"{preview or '(mensaje sin texto)'}"
-                        ),
+                        body=(f"{buffer_doc.normalized_phone}: {preview or '(mensaje sin texto)'}"),
                         dedup_suffix=str(turn.id),
                         contact_phone=buffer_doc.normalized_phone,
                     )

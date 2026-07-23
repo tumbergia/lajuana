@@ -48,11 +48,13 @@ class ExperiencesTabController extends ChangeNotifier {
         : _allItems.where((e) => e.isActive);
     final q = _searchQuery.trim().toLowerCase();
     if (q.isEmpty) return byStatus.toList(growable: false);
-    return byStatus.where((e) {
-      return e.name.toLowerCase().contains(q) ||
-          e.slug.toLowerCase().contains(q) ||
-          (e.subtitle?.toLowerCase() ?? '').contains(q);
-    }).toList(growable: false);
+    return byStatus
+        .where((e) {
+          return e.name.toLowerCase().contains(q) ||
+              e.slug.toLowerCase().contains(q) ||
+              (e.subtitle?.toLowerCase() ?? '').contains(q);
+        })
+        .toList(growable: false);
   }
 
   void setSearchQuery(String value) {

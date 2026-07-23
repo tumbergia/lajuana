@@ -116,7 +116,10 @@ class ProviderPhoneFieldState extends State<ProviderPhoneField> {
               borderSide: BorderSide(color: scheme.primary, width: 1.2),
             ),
             border: outlineBorder,
-            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 0,
+              minHeight: 0,
+            ),
             prefixIcon: _CountryPrefix(
               country: _selectedCountry,
               onTap: _pickCountry,
@@ -129,10 +132,7 @@ class ProviderPhoneFieldState extends State<ProviderPhoneField> {
 }
 
 class _CountryPrefix extends StatelessWidget {
-  const _CountryPrefix({
-    required this.country,
-    required this.onTap,
-  });
+  const _CountryPrefix({required this.country, required this.onTap});
 
   final PhoneCountry country;
   final VoidCallback onTap;
@@ -256,9 +256,9 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
             const SizedBox(height: 16),
             Text(
               'Seleccionar pais',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             AppTextField(
@@ -287,8 +287,9 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                     trailing: Text(
                       country.displayCode,
                       style: TextStyle(
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         color: selected ? scheme.primary : scheme.onSurface,
                       ),
                     ),

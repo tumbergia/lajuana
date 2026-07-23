@@ -86,7 +86,9 @@ void main() {
   test('repository clearInbox and deleteOne hit DELETE endpoints', () async {
     final paths = <String>[];
     final client = MockClient((request) async {
-      paths.add('${request.method} ${request.url.path}${request.url.query.isEmpty ? '' : '?${request.url.query}'}');
+      paths.add(
+        '${request.method} ${request.url.path}${request.url.query.isEmpty ? '' : '?${request.url.query}'}',
+      );
       return http.Response(
         jsonEncode({'cleared_count': 2}),
         200,

@@ -13,14 +13,11 @@ void main() {
 
       expect(content.headline, 'Ana Pérez · 4 participantes');
       expect(content.compactFacts, 'RES-TEST');
-      expect(
-        content.keyFacts.map((f) => '${f.label}:${f.value}'),
-        [
-          'Titular:Ana Pérez',
-          'Código:RES-TEST',
-          'Participantes:4 participantes',
-        ],
-      );
+      expect(content.keyFacts.map((f) => '${f.label}:${f.value}'), [
+        'Titular:Ana Pérez',
+        'Código:RES-TEST',
+        'Participantes:4 participantes',
+      ]);
     });
 
     test('parses reservation_confirmed template body', () {
@@ -88,10 +85,7 @@ void main() {
 
       expect(content.headline, 'Comprobante de Ana Pérez');
       expect(content.paymentProofId, '507f1f77bcf86cd799439011');
-      expect(
-        content.keyFacts.any((f) => f.label == 'Archivo'),
-        isFalse,
-      );
+      expect(content.keyFacts.any((f) => f.label == 'Archivo'), isFalse);
       expect(content.compactFacts, contains('RES-TEST'));
     });
 
@@ -155,10 +149,10 @@ void main() {
 
       expect(content.headline, 'Cancelación');
       expect(content.isQuotedMessage, isTrue);
-      expect(
-        content.keyFacts.map((f) => '${f.label}:${f.value}'),
-        ['Teléfono:+573001112233', 'Error:boom'],
-      );
+      expect(content.keyFacts.map((f) => '${f.label}:${f.value}'), [
+        'Teléfono:+573001112233',
+        'Error:boom',
+      ]);
     });
 
     test('parses configuration_changed', () {
@@ -282,26 +276,17 @@ void main() {
     test('treats naive timestamps as UTC so west timezones are correct', () {
       // 2 hours earlier in UTC, stored without Z (common API serialization).
       final created = DateTime(2026, 7, 13, 21, 0, 0);
-      expect(
-        formatRelativeTime(created, now: now),
-        'Hace 2 h',
-      );
+      expect(formatRelativeTime(created, now: now), 'Hace 2 h');
     });
 
     test('formats minutes for recent UTC timestamps', () {
       final created = DateTime.utc(2026, 7, 13, 22, 40, 0);
-      expect(
-        formatRelativeTime(created, now: now),
-        'Hace 20 min',
-      );
+      expect(formatRelativeTime(created, now: now), 'Hace 20 min');
     });
 
     test('shows moment ago only under one minute', () {
       final created = DateTime.utc(2026, 7, 13, 22, 59, 30);
-      expect(
-        formatRelativeTime(created, now: now),
-        'Hace un momento',
-      );
+      expect(formatRelativeTime(created, now: now), 'Hace un momento');
     });
   });
 }

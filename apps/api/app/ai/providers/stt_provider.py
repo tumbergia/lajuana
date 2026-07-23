@@ -6,7 +6,6 @@ from faster_whisper import WhisperModel
 from app.core.config import settings
 from app.core.logging import logger
 
-
 _MODEL: WhisperModel | None = None
 
 

@@ -9,10 +9,7 @@ import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_logs_section_controller.dart';
 
 class _FakeTimelineRepository implements ReservationsRepository {
-  _FakeTimelineRepository({
-    this.timeline = const [],
-    this.throwOnLoad = false,
-  });
+  _FakeTimelineRepository({this.timeline = const [], this.throwOnLoad = false});
 
   List<ReservationTimelineEntry> timeline;
   bool throwOnLoad;

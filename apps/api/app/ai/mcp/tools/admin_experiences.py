@@ -14,13 +14,13 @@ from app.ai.mcp.tool_contracts import (
     ToolBlockingReason,
 )
 from app.core.errors import ApiError
-from app.documents import ExperienceDocument
 from app.schemas.experience import ExperienceCreateSchema, ExperienceUpdateSchema
 from app.services.experience_service import ExperienceService
 
 
 def _get_service() -> ExperienceService:
     from app.core.di import Container
+
     return Container.get_instance().experience_service
 
 
@@ -40,11 +40,7 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
     output: AdminCreateExperienceOutput | None = None
 
     try:
-        filtered = {
-            k: v
-            for k, v in kwargs.items()
-            if k in ExperienceCreateSchema.model_fields
-        }
+        filtered = {k: v for k, v in kwargs.items() if k in ExperienceCreateSchema.model_fields}
         payload = ExperienceCreateSchema.model_validate(filtered)
         doc = await _get_service().create(payload)
 
@@ -85,7 +81,9 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_experience",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -160,7 +158,9 @@ async def admin_update_experience(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_experience",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -227,7 +227,9 @@ async def admin_list_experiences_admin(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_list_experiences_admin",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -331,7 +333,9 @@ async def admin_deactivate_experience(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_deactivate_experience",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,

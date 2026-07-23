@@ -11,7 +11,9 @@ void main() {
   });
 
   test('caches and reads dashboard snapshot by cache key', () async {
-    final local = AnalyticsLocalDataSource(database: AnalyticsDatabase.instance);
+    final local = AnalyticsLocalDataSource(
+      database: AnalyticsDatabase.instance,
+    );
     const key = 'user1|sv=2|range=last_30_days|cmp=true|mods=a,b';
     await local.cacheSnapshot(
       cacheKey: key,

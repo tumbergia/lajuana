@@ -152,8 +152,9 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
   Future<void> _downloadPng() async {
     setState(() => _busyPng = true);
     try {
-      final boundary = _chartKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _chartKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) {
         throw StateError('chart boundary missing');
       }
@@ -217,9 +218,9 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
               SizedBox(height: tokens.spaceXl),
               Text(
                 module.title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               SizedBox(height: tokens.spaceXs),
               Text(
@@ -227,16 +228,16 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
                     ? module.period.dateRangeLabel
                     : module.period.label,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
               if (description.isNotEmpty) ...[
                 SizedBox(height: tokens.spaceMd),
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
               if (module.primaryValue != null) ...[
@@ -246,9 +247,7 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
                   children: [
                     Text(
                       module.primaryValue!.formatted,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
+                      style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontWeight: FontWeight.w900,
                             color: accent,
@@ -260,8 +259,8 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
                       child: Text(
                         module.primaryValue!.unit,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -314,9 +313,9 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
               SizedBox(height: tokens.spaceLg),
               Text(
                 'Desglose',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
               SizedBox(height: tokens.spaceMd),
               _DetailTable(
@@ -328,17 +327,17 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
               SizedBox(height: tokens.spaceXl),
               Text(
                 'Descargar',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
               SizedBox(height: tokens.spaceSm),
               Text(
                 'Excel incluye la gráfica nativa, la tabla, parámetros y el análisis. '
                 'PNG captura la gráfica tal como se ve aquí.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
               SizedBox(height: tokens.spaceMd),
               AppButton(
@@ -367,9 +366,9 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
     final tokens = Theme.of(context).appTokens;
     final scheme = Theme.of(context).colorScheme;
     final params = indicatorParameterRows(module);
-    final analysis = buildIndicatorAnalysis(module)
-        .where((line) => line != module.insightText?.trim())
-        .toList();
+    final analysis = buildIndicatorAnalysis(
+      module,
+    ).where((line) => line != module.insightText?.trim()).toList();
     final widgets = <Widget>[];
 
     if (params.isNotEmpty) {
@@ -377,9 +376,9 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
       widgets.add(
         Text(
           'Parámetros',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
         ),
       );
       widgets.add(SizedBox(height: tokens.spaceMd));
@@ -392,8 +391,7 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
           child: Column(
             children: [
               for (var i = 0; i < params.length; i++) ...[
-                if (i > 0)
-                  Divider(height: 1, color: scheme.outlineVariant),
+                if (i > 0) Divider(height: 1, color: scheme.outlineVariant),
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: tokens.spaceMd,
@@ -404,16 +402,15 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
                       Expanded(
                         child: Text(
                           params[i].key,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ),
                       Text(
                         params[i].value,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
@@ -430,9 +427,9 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
       widgets.add(
         Text(
           'Análisis',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
         ),
       );
       widgets.add(SizedBox(height: tokens.spaceMd));
@@ -443,9 +440,9 @@ class _IndicatorDetailSheetState extends State<IndicatorDetailSheet> {
             child: Text(
               paragraph,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.45,
-                    color: scheme.onSurface,
-                  ),
+                height: 1.45,
+                color: scheme.onSurface,
+              ),
             ),
           ),
         );
@@ -504,10 +501,7 @@ class _DetailChart extends StatelessWidget {
           AppChartPoint(
             label: item.countryName ?? item.label,
             value: item.rawValue,
-            color: countryFlagColor(
-              item.countryCode,
-              fallback: scheme.outline,
-            ),
+            color: countryFlagColor(item.countryCode, fallback: scheme.outline),
           ),
       ];
       return AppDonutChart(
@@ -589,8 +583,9 @@ class _DetailChart extends StatelessWidget {
           style: Theme.of(context).textTheme.bodyMedium,
         );
       }
-      final maxV =
-          items.map((e) => e.rawValue).fold<double>(1, (a, b) => a > b ? a : b);
+      final maxV = items
+          .map((e) => e.rawValue)
+          .fold<double>(1, (a, b) => a > b ? a : b);
       final isOccupancy = module.id == 'occupancy';
       return Column(
         children: [
@@ -606,8 +601,9 @@ class _DetailChart extends StatelessWidget {
               color: isOccupancy
                   ? _occupancyColor(tokens, items[i].sharePercentage)
                   : (module.id == 'top_experiences'
-                      ? _experiencesPalette[i % _experiencesPalette.length]
-                      : tokens.seriesPalette[i % tokens.seriesPalette.length]),
+                        ? _experiencesPalette[i % _experiencesPalette.length]
+                        : tokens.seriesPalette[i %
+                              tokens.seriesPalette.length]),
             ),
           ],
         ],
@@ -683,24 +679,24 @@ class _SheetBarRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             Text(
               valueText,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             if (share != null) ...[
               SizedBox(width: tokens.spaceSm),
               Text(
                 '${share!.toStringAsFixed(0)}%',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ],
           ],
@@ -762,8 +758,8 @@ class _DetailTable extends StatelessWidget {
       decoration: BoxDecoration(
         color: highlighted
             ? (isLight
-                ? scheme.surfaceContainerHighest
-                : swatch.withValues(alpha: 0.16))
+                  ? scheme.surfaceContainerHighest
+                  : swatch.withValues(alpha: 0.16))
             : Colors.transparent,
         borderRadius: tokens.radiusMd,
       ),
@@ -791,8 +787,8 @@ class _DetailTable extends StatelessWidget {
                   Text(
                     '${p.raw % 1 == 0 ? p.raw.toInt() : p.raw} ${p.unit.isNotEmpty ? p.unit : series.unit}',
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -835,8 +831,8 @@ class _DetailTable extends StatelessWidget {
                   Text(
                     module.breakdown[i].formattedValue,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   if (module.breakdown[i].sharePercentage != null) ...[
                     SizedBox(width: tokens.spaceSm),
@@ -846,8 +842,8 @@ class _DetailTable extends StatelessWidget {
                         '${module.breakdown[i].sharePercentage!.toStringAsFixed(0)}%',
                         textAlign: TextAlign.end,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -877,22 +873,21 @@ class _DetailTable extends StatelessWidget {
                     child: Text(
                       '#${module.ranking[i].rank}',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   Expanded(
                     child: Text(
-                      module.ranking[i].countryName ??
-                          module.ranking[i].label,
+                      module.ranking[i].countryName ?? module.ranking[i].label,
                     ),
                   ),
                   Text(
                     module.ranking[i].formattedValue,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   if (module.ranking[i].sharePercentage != null) ...[
                     SizedBox(width: tokens.spaceSm),
@@ -902,8 +897,8 @@ class _DetailTable extends StatelessWidget {
                         '${module.ranking[i].sharePercentage!.toStringAsFixed(0)}%',
                         textAlign: TextAlign.end,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -916,9 +911,9 @@ class _DetailTable extends StatelessWidget {
 
     return Text(
       'Sin filas tabulares.',
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
     );
   }
 }

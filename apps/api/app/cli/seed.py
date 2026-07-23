@@ -12,7 +12,6 @@ Legacy scripts (python -m scripts.seed_*) continue to work independently.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import importlib
 import logging
 
@@ -35,6 +34,7 @@ def list_seeds() -> list[tuple[str, str]]:
 
 
 # ── Bootstrap all seeds ─────────────────────────────────────────────────────
+
 
 def _bootstrap():
     """Register all known seed types."""
@@ -69,6 +69,7 @@ _bootstrap()
 
 
 # ── CLI helper ───────────────────────────────────────────────────────────────
+
 
 def add_arguments(parser: argparse.ArgumentParser) -> None:
     """Attach seed subcommand arguments to *parser*."""

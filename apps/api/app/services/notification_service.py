@@ -74,9 +74,7 @@ class NotificationService:
         contact_phone: str | None = None,
     ) -> NotificationOutboxDocument:
         reservation_key = reservation_id or "none"
-        dedup_key = (
-            f"{event_type.value}:{reservation_key}:{recipient_type}:{recipient_identifier}:{channel.value}"
-        )
+        dedup_key = f"{event_type.value}:{reservation_key}:{recipient_type}:{recipient_identifier}:{channel.value}"
         if dedup_suffix:
             dedup_key += f":{dedup_suffix}"
 
@@ -364,9 +362,7 @@ class NotificationService:
         entry.status = NotificationStatus.PENDING
         await entry.save()
 
-    async def _notify_whatsapp_delivery_failed(
-        self, entry: NotificationOutboxDocument
-    ) -> None:
+    async def _notify_whatsapp_delivery_failed(self, entry: NotificationOutboxDocument) -> None:
         preview = (entry.subject or entry.event_type or "mensaje").strip()
         phone = entry.recipient_identifier or "desconocido"
         await self.enqueue_admin_in_app(

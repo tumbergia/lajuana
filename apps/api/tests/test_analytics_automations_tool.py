@@ -90,14 +90,19 @@ async def _run_returns_summary(monkeypatch: pytest.MonkeyPatch) -> None:
     class FakeAggregateQuery:
         def __init__(self, data):
             self._data = data
+
         async def to_list(self):
             return self._data
 
     def fake_aggregate(pipeline):
         status_amounts: dict[str, int] = {}
         for r in reservations:
-            s = r.status.value if hasattr(r.status, 'value') else str(r.status)
-            amt = int(r.quoted_total_amount) if hasattr(r, 'quoted_total_amount') and r.quoted_total_amount else 0
+            s = r.status.value if hasattr(r.status, "value") else str(r.status)
+            amt = (
+                int(r.quoted_total_amount)
+                if hasattr(r, "quoted_total_amount") and r.quoted_total_amount
+                else 0
+            )
             status_amounts[s] = status_amounts.get(s, 0) + amt
         # Series pipeline groups by date with "total"; status pipeline uses "total_amount".
         is_series = any(
@@ -106,12 +111,18 @@ async def _run_returns_summary(monkeypatch: pytest.MonkeyPatch) -> None:
             for stage in pipeline
         )
         if is_series:
-            results = [
-                {"_id": "2026-07-01", "total": status_amounts.get("confirmed", 0)}
-            ]
+            results = [{"_id": "2026-07-01", "total": status_amounts.get("confirmed", 0)}]
         else:
             results = [
-                {"_id": s, "count": sum(1 for r in reservations if (r.status.value if hasattr(r.status, 'value') else str(r.status)) == s), "total_amount": status_amounts[s]}
+                {
+                    "_id": s,
+                    "count": sum(
+                        1
+                        for r in reservations
+                        if (r.status.value if hasattr(r.status, "value") else str(r.status)) == s
+                    ),
+                    "total_amount": status_amounts[s],
+                }
                 for s in status_amounts
             ]
         return results
@@ -165,12 +176,16 @@ async def _run_returns_funnel(monkeypatch: pytest.MonkeyPatch) -> None:
     class FakeAggregateQuery:
         def __init__(self, data):
             self._data = data
+
         async def to_list(self):
             return self._data
 
     def fake_aggregate(pipeline):
         from collections import Counter
-        status_counts: Counter = Counter(r.status.value if hasattr(r.status, 'value') else str(r.status) for r in reservations)
+
+        status_counts: Counter = Counter(
+            r.status.value if hasattr(r.status, "value") else str(r.status) for r in reservations
+        )
         return [{"_id": s, "count": c} for s, c in status_counts.items()]
 
     async def fake_aggregate_async(pipeline):
@@ -234,15 +249,17 @@ async def _run_returns_channel_performance(monkeypatch: pytest.MonkeyPatch) -> N
     class FakeAggregateQuery:
         def __init__(self, data):
             self._data = data
+
         async def to_list(self):
             return self._data
 
     def fake_aggregate(pipeline):
         from collections import Counter
+
         channel_counts: Counter = Counter()
         channel_confirmed: Counter = Counter()
         for r in reservations:
-            ch = r.channel.value if hasattr(r.channel, 'value') else str(r.channel)
+            ch = r.channel.value if hasattr(r.channel, "value") else str(r.channel)
             channel_counts[ch] += 1
             if r.status in (ReservationStatus.CONFIRMED, ReservationStatus.COMPLETED):
                 channel_confirmed[ch] += 1

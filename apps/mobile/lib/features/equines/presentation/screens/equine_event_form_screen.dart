@@ -75,13 +75,9 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
     );
     if (time == null) return;
 
-    widget.controller.setHappenedAt(DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    ));
+    widget.controller.setHappenedAt(
+      DateTime(date.year, date.month, date.day, time.hour, time.minute),
+    );
   }
 
   Future<void> _pickRestUntil() async {
@@ -126,7 +122,8 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
     if (created == null) {
       showAppToast(
         context,
-        message: widget.controller.saveError ?? 'No se pudo guardar el registro.',
+        message:
+            widget.controller.saveError ?? 'No se pudo guardar el registro.',
         isError: true,
       );
       return;
@@ -150,9 +147,9 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
       appBar: AppBar(
         title: Text(
           'Nuevo registro',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -164,9 +161,9 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
         children: [
           Text(
             widget.equineName,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 20),
           AppSectionHeader(
@@ -182,10 +179,7 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
             ),
             items: equineEventTypeOptions.entries
                 .map(
-                  (e) => DropdownMenuItem(
-                    value: e.key,
-                    child: Text(e.value),
-                  ),
+                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                 )
                 .toList(growable: false),
             onChanged: isSaving
@@ -227,19 +221,12 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
               border: OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem<String>(
-                child: Text('Sin severidad'),
-              ),
+              const DropdownMenuItem<String>(child: Text('Sin severidad')),
               ...equineEventSeverityOptions.entries.map(
-                (e) => DropdownMenuItem(
-                  value: e.key,
-                  child: Text(e.value),
-                ),
+                (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
               ),
             ],
-            onChanged: isSaving
-                ? null
-                : (value) => c.setSeverity(value),
+            onChanged: isSaving ? null : (value) => c.setSeverity(value),
           ),
           if (c.showWeightField) ...[
             const SizedBox(height: 20),
@@ -294,7 +281,9 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Afecta disponibilidad'),
-              subtitle: const Text('El equino no podrá asignarse mientras aplique'),
+              subtitle: const Text(
+                'El equino no podrá asignarse mientras aplique',
+              ),
               value: c.affectsAvailability,
               onChanged: isSaving ? null : c.setAffectsAvailability,
             ),
@@ -351,10 +340,12 @@ class _EquineEventFormScreenState extends State<EquineEventFormScreen> {
 
   String _formatDateTime(DateTime dt) {
     final local = dt.toLocal();
-    final d = '${local.day.toString().padLeft(2, '0')}/'
+    final d =
+        '${local.day.toString().padLeft(2, '0')}/'
         '${local.month.toString().padLeft(2, '0')}/'
         '${local.year}';
-    final t = '${local.hour.toString().padLeft(2, '0')}:'
+    final t =
+        '${local.hour.toString().padLeft(2, '0')}:'
         '${local.minute.toString().padLeft(2, '0')}';
     return '$d $t';
   }

@@ -14,7 +14,7 @@ IMPORTANT: mock functions assigned to SimpleNamespace attributes receive NO self
 from __future__ import annotations
 
 import asyncio
-from datetime import date
+from datetime import date, timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -28,7 +28,7 @@ def _reservation(**overrides: object) -> SimpleNamespace:
         id="660000000000000000000001",
         code="RES-001",
         status=ReservationStatus.PAYMENT_RECEIVED,
-        requested_date=date(2026, 7, 15),
+        requested_date=date.today() + timedelta(days=30),
         experience_id="660000000000000000000020",
         holder_name="Test",
         holder_phone="+573001234567",
@@ -152,9 +152,7 @@ class TestConcurrentConfirm:
                 f"Expected 1 success, got {len(successes)}. "
                 f"Failures: {[(type(f).__name__, str(f)) for f in failures]}"
             )
-            assert len(failures) == 4, (
-                f"Expected 4 failures, got {len(failures)}"
-            )
+            assert len(failures) == 4, f"Expected 4 failures, got {len(failures)}"
             failure = failures[0]
             assert isinstance(failure, ApiError), (
                 f"Expected ApiError, got {type(failure).__name__}: {failure}"
@@ -173,9 +171,7 @@ class TestConcurrentConfirm:
         ]
 
         async def run() -> None:
-            async def _mock_get_reservation(
-                _self: object, rid: str, **kwargs: object
-            ) -> object:
+            async def _mock_get_reservation(_self: object, rid: str, **kwargs: object) -> object:
                 obj = _reservation(id=rid)
                 obj.save = _mock_save  # type: ignore[assignment]
                 return obj
@@ -204,9 +200,7 @@ class TestConcurrentConfirm:
             ) -> None:
                 reservation.status = target
                 if target == ReservationStatus.CONFIRMED and reservation.requested_date:
-                    confirmed_dates[reservation.requested_date.isoformat()] = str(
-                        reservation.id
-                    )
+                    confirmed_dates[reservation.requested_date.isoformat()] = str(reservation.id)
 
             monkeypatch.setattr(
                 "app.services.reservation_service.ReservationService.ensure_date_available",

@@ -73,7 +73,9 @@ async def migrate() -> None:
                 logger.info(
                     "[DRY-RUN] Reservation %s: would set participant_ids=%s "
                     "(found %d participants)",
-                    rid, p_ids, len(p_ids),
+                    rid,
+                    p_ids,
+                    len(p_ids),
                 )
                 fixed += 1
                 continue
@@ -85,13 +87,17 @@ async def migrate() -> None:
             fixed += 1
             logger.info(
                 "Migrated reservation %s: set %d participant_ids",
-                rid, len(p_ids),
+                rid,
+                len(p_ids),
             )
 
         mode = "DRY-RUN" if DRY_RUN else "RUN"
         logger.info(
             "[%s] Done. Processed %d reservations: %d fixed, %d skipped (no participants)",
-            mode, total, fixed, skipped,
+            mode,
+            total,
+            fixed,
+            skipped,
         )
 
     except Exception:

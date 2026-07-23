@@ -43,15 +43,21 @@ class ExperienceSyncHandler:
             return await self.experience_service.create(schema)
         if op_type == "update":
             require_remote_id(operation)
-            await ensure_base_version(ExperienceDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                ExperienceDocument, operation.entity_remote_id, operation.base_version
+            )
             schema = ExperienceUpdateSchema(**operation.payload)
             return await self.experience_service.update(operation.entity_remote_id, schema)
         if op_type == "delete":
             require_remote_id(operation)
-            await ensure_base_version(ExperienceDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                ExperienceDocument, operation.entity_remote_id, operation.base_version
+            )
             return await self.experience_service.deactivate(operation.entity_remote_id)
         if op_type == "purge":
             require_remote_id(operation)
-            await ensure_base_version(ExperienceDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                ExperienceDocument, operation.entity_remote_id, operation.base_version
+            )
             return await self.experience_service.purge(operation.entity_remote_id)
         return None

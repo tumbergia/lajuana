@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.schemas.analytics import LeadsPreferencesSchema, LeadItem
+from app.schemas.analytics import LeadItem, LeadsPreferencesSchema
 from app.services.analytics_service import HOME_INELIGIBLE_IDS, _lead
 
 

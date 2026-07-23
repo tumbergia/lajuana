@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from app.common.enums import Permission, ROLE_PERMISSIONS, UserRole
+from app.common.enums import ROLE_PERMISSIONS, Permission, UserRole
 from app.schemas.analytics_v2 import (
     ANALYTICS_SCHEMA_VERSION,
     CatalogModule,
@@ -241,7 +241,7 @@ class AnalyticsCatalogService:
         return CatalogResponse(
             modules=modules,
             schema_version=ANALYTICS_SCHEMA_VERSION,
-            generated_at=datetime.now(timezone.utc),
+            generated_at=datetime.now(UTC),
         )
 
     def allowed_module_ids(self, role: UserRole) -> set[str]:

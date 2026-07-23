@@ -8,7 +8,7 @@ import 'package:mobile/features/providers/infrastructure/local/providers_databas
 /// Acceso a la tabla local de providers.
 class ProvidersLocalDataSource {
   ProvidersLocalDataSource({required ProvidersDatabase database})
-      : _db = database;
+    : _db = database;
 
   final ProvidersDatabase _db;
 
@@ -48,7 +48,10 @@ class ProvidersLocalDataSource {
     await batch.commit(noResult: true);
   }
 
-  Future<void> upsert(ProviderListItem item, {String syncStatus = 'synced'}) async {
+  Future<void> upsert(
+    ProviderListItem item, {
+    String syncStatus = 'synced',
+  }) async {
     final db = await _db.database;
     await db.insert(
       'providers_local',
@@ -57,7 +60,11 @@ class ProvidersLocalDataSource {
     );
   }
 
-  Future<void> markSynced(String localId, {String? remoteId, int? version}) async {
+  Future<void> markSynced(
+    String localId, {
+    String? remoteId,
+    int? version,
+  }) async {
     final db = await _db.database;
     final values = <String, dynamic>{
       'sync_status': 'synced',
@@ -73,14 +80,15 @@ class ProvidersLocalDataSource {
     );
   }
 
-  Future<void> markFailed(String localId, String status, {String? error}) async {
+  Future<void> markFailed(
+    String localId,
+    String status, {
+    String? error,
+  }) async {
     final db = await _db.database;
     await db.update(
       'providers_local',
-      {
-        'sync_status': status,
-        'sync_error': error,
-      },
+      {'sync_status': status, 'sync_error': error},
       where: 'id = ?',
       whereArgs: [localId],
     );
@@ -106,8 +114,8 @@ class ProvidersLocalDataSource {
       status: row['status'] as String? ?? 'active',
       serviceCategories: serviceCategoriesRaw != null
           ? (jsonDecode(serviceCategoriesRaw) as List<dynamic>)
-              .map((e) => e as String)
-              .toList(growable: false)
+                .map((e) => e as String)
+                .toList(growable: false)
           : const [],
       contactName: row['contact_name'] as String?,
       email: row['email'] as String?,
@@ -117,7 +125,10 @@ class ProvidersLocalDataSource {
     );
   }
 
-  Map<String, dynamic> _itemToRow(ProviderListItem item, {required String syncStatus}) {
+  Map<String, dynamic> _itemToRow(
+    ProviderListItem item, {
+    required String syncStatus,
+  }) {
     return {
       'id': item.id,
       'remote_id': item.id,

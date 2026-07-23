@@ -44,7 +44,10 @@ class ParticipantFormLinkService:
                 code=ErrorCode.RESERVATION_NOT_FOUND,
                 message="Reserva no encontrada.",
             )
-        if reservation.status not in (ReservationStatus.CONFIRMED, ReservationStatus.PAYMENT_RECEIVED):
+        if reservation.status not in (
+            ReservationStatus.CONFIRMED,
+            ReservationStatus.PAYMENT_RECEIVED,
+        ):
             raise ApiError(
                 status_code=409,
                 code=ErrorCode.FORM_LINK_RESERVATION_NOT_CONFIRMED,
@@ -76,9 +79,7 @@ class ParticipantFormLinkService:
 
     async def validate_token(self, raw_token: str) -> ParticipantFormLinkDocument:
         hashed = self._hash_token(raw_token)
-        doc = await ParticipantFormLinkDocument.find_one(
-            {"token_hash": hashed}
-        )
+        doc = await ParticipantFormLinkDocument.find_one({"token_hash": hashed})
         if doc is None:
             raise ApiError(
                 status_code=404,
@@ -121,13 +122,9 @@ class ParticipantFormLinkService:
             sort=[("created_at", -1)],
         )
 
-    async def get_public_status(
-        self, raw_token: str
-    ) -> dict:
+    async def get_public_status(self, raw_token: str) -> dict:
         hashed = self._hash_token(raw_token)
-        doc = await ParticipantFormLinkDocument.find_one(
-            {"token_hash": hashed}
-        )
+        doc = await ParticipantFormLinkDocument.find_one({"token_hash": hashed})
         if doc is None:
             raise ApiError(
                 status_code=404,
@@ -154,9 +151,7 @@ class ParticipantFormLinkService:
             ),
             "completed_count": doc.used_count,
             "expected_count": doc.max_participants,
-            "is_complete": (
-                doc.used_count >= doc.max_participants
-            ),
+            "is_complete": (doc.used_count >= doc.max_participants),
             "link_status": doc.status,
         }
 
@@ -186,9 +181,7 @@ class ParticipantFormLinkService:
             doc.completed_at = _utc_now()
         await doc.save()
 
-    async def update_reservation_completion(
-        self, reservation_id: PydanticObjectId
-    ) -> None:
+    async def update_reservation_completion(self, reservation_id: PydanticObjectId) -> None:
         reservation = await ReservationDocument.get(reservation_id)
         if reservation is None:
             return

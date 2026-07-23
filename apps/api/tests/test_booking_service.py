@@ -18,7 +18,6 @@ import pytest
 from app.common.enums import ReservationStatus
 from app.core.errors import ApiError
 from app.services.booking_service import BookingService
-from app.services.reservation_service import ReservationService
 
 
 class FakeReservationService:
@@ -110,9 +109,7 @@ class TestBookingService:
 
         asyncio.run(run())
 
-    def test_date_is_available_returns_true(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_date_is_available_returns_true(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """date_is_available should return True when no active reservation exists."""
         fake = FakeReservationService()
         svc = BookingService(reservation_service=fake)  # type: ignore[arg-type]
@@ -123,9 +120,7 @@ class TestBookingService:
 
         asyncio.run(run())
 
-    def test_date_is_available_returns_false(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_date_is_available_returns_false(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """date_is_available should return False when an active reservation exists."""
 
         class FakeReservationServiceBusy:
@@ -197,6 +192,7 @@ class TestBookingService:
             # The schema validation should catch this before reaching the service
             # but we verify the error path anyway
             from pydantic import ValidationError
+
             from app.schemas.reservation import ReservationCreateSchema
 
             with pytest.raises(ValidationError):

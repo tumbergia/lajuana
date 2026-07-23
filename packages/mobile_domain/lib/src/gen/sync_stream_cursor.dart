@@ -5,16 +5,10 @@
 /// AUTO-GENERATED from OpenAPI schema `SyncStreamCursorSchema`.
 
 class SyncStreamCursor {
-
   final String name;
   final String? cursor;
 
-  const SyncStreamCursor(
-    {
-    required this.name,
-    this.cursor,
-    }
-  );
+  const SyncStreamCursor({required this.name, this.cursor});
 
   factory SyncStreamCursor.fromJson(Map<String, dynamic> json) {
     return SyncStreamCursor(
@@ -23,9 +17,5 @@ class SyncStreamCursor {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'cursor': cursor,
-  };
-
+  Map<String, dynamic> toJson() => {'name': name, 'cursor': cursor};
 }

@@ -5,18 +5,11 @@
 /// AUTO-GENERATED from OpenAPI schema `AssignmentReplaceSchema`.
 
 class AssignmentReplace {
-
   final String equineId;
   final String? saddleId;
   final String? notes;
 
-  const AssignmentReplace(
-    {
-    required this.equineId,
-    this.saddleId,
-    this.notes,
-    }
-  );
+  const AssignmentReplace({required this.equineId, this.saddleId, this.notes});
 
   factory AssignmentReplace.fromJson(Map<String, dynamic> json) {
     return AssignmentReplace(
@@ -31,5 +24,4 @@ class AssignmentReplace {
     'saddle_id': saddleId,
     'notes': notes,
   };
-
 }

@@ -167,19 +167,20 @@ class _ReservationCreatePageState extends State<ReservationCreatePage> {
         return;
       }
 
-      final detail =
-          await widget.reservationsModule.repository.createReservation(
-        ReservationCreate(
-          experienceId: _experienceApiId(experience),
-          participantCount: participants,
-          channel: _channel!,
-          requestedDate:
-              _requestedDate == null ? null : _formatDate(_requestedDate!),
-          holderName: _nullableText(_holderNameCtrl.text),
-          holderEmail: _nullableText(_holderEmailCtrl.text),
-          holderPhone: _holderPhone,
-        ),
-      );
+      final detail = await widget.reservationsModule.repository
+          .createReservation(
+            ReservationCreate(
+              experienceId: _experienceApiId(experience),
+              participantCount: participants,
+              channel: _channel!,
+              requestedDate: _requestedDate == null
+                  ? null
+                  : _formatDate(_requestedDate!),
+              holderName: _nullableText(_holderNameCtrl.text),
+              holderEmail: _nullableText(_holderEmailCtrl.text),
+              holderPhone: _holderPhone,
+            ),
+          );
 
       if (!mounted) return;
       showAppToast(context, message: 'Reserva creada correctamente');
@@ -212,9 +213,9 @@ class _ReservationCreatePageState extends State<ReservationCreatePage> {
       appBar: AppBar(
         title: Text(
           'Nueva reserva',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
@@ -244,8 +245,8 @@ class _ReservationCreatePageState extends State<ReservationCreatePage> {
                 Text(
                   _experiencesError!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 AppButton(
@@ -257,8 +258,8 @@ class _ReservationCreatePageState extends State<ReservationCreatePage> {
                 Text(
                   'No hay experiencias disponibles.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 )
               else
                 DropdownButtonFormField<String>(
@@ -304,10 +305,10 @@ class _ReservationCreatePageState extends State<ReservationCreatePage> {
                         ? 'Sin fecha'
                         : _formatDate(_requestedDate!),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: _requestedDate == null
-                              ? Theme.of(context).colorScheme.onSurfaceVariant
-                              : null,
-                        ),
+                      color: _requestedDate == null
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : null,
+                    ),
                   ),
                 ),
               ),
@@ -316,8 +317,9 @@ class _ReservationCreatePageState extends State<ReservationCreatePage> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: TextButton(
-                    onPressed:
-                        _saving ? null : () => setState(() => _requestedDate = null),
+                    onPressed: _saving
+                        ? null
+                        : () => setState(() => _requestedDate = null),
                     child: const Text('Quitar fecha'),
                   ),
                 ),
@@ -413,9 +415,9 @@ class _FormBlock extends StatelessWidget {
           Text(
             title.toUpperCase(),
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.7,
-                ),
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.7,
+            ),
           ),
           const SizedBox(height: 10),
           ...children,

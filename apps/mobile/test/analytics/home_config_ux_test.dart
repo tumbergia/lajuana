@@ -51,7 +51,7 @@ void main() {
             {'raw': 3, 'label': 'b'},
             {'raw': 2, 'label': 'c'},
           ],
-        }
+        },
       ],
       'ranking': [
         {
@@ -94,7 +94,11 @@ void main() {
 
   testWidgets('line visualization uses TrendInsightCard', (tester) async {
     await tester.pumpWidget(
-      wrap(InsightModuleCard(module: module(id: 'reservation_trend', visualization: 'line'))),
+      wrap(
+        InsightModuleCard(
+          module: module(id: 'reservation_trend', visualization: 'line'),
+        ),
+      ),
     );
     expect(find.byType(TrendInsightCard), findsOneWidget);
     expect(find.byType(DonutInsightCard), findsNothing);
@@ -102,14 +106,24 @@ void main() {
 
   testWidgets('donut visualization uses DonutInsightCard', (tester) async {
     await tester.pumpWidget(
-      wrap(InsightModuleCard(module: module(id: 'reservation_status', visualization: 'donut'))),
+      wrap(
+        InsightModuleCard(
+          module: module(id: 'reservation_status', visualization: 'donut'),
+        ),
+      ),
     );
     expect(find.byType(DonutInsightCard), findsOneWidget);
   });
 
-  testWidgets('progress visualization uses ProgressInsightCard', (tester) async {
+  testWidgets('progress visualization uses ProgressInsightCard', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      wrap(InsightModuleCard(module: module(id: 'occupancy', visualization: 'progress'))),
+      wrap(
+        InsightModuleCard(
+          module: module(id: 'occupancy', visualization: 'progress'),
+        ),
+      ),
     );
     expect(find.byType(ProgressInsightCard), findsOneWidget);
     expect(find.byType(RankingInsightCard), findsNothing);
@@ -133,7 +147,11 @@ void main() {
 
   testWidgets('ranking visualization uses RankingInsightCard', (tester) async {
     await tester.pumpWidget(
-      wrap(InsightModuleCard(module: module(id: 'top_experiences', visualization: 'ranking'))),
+      wrap(
+        InsightModuleCard(
+          module: module(id: 'top_experiences', visualization: 'ranking'),
+        ),
+      ),
     );
     expect(find.byType(RankingInsightCard), findsOneWidget);
   });
@@ -153,31 +171,33 @@ void main() {
     expect(find.byType(CountryRankingCard), findsOneWidget);
   });
 
-  testWidgets('AppCard with LayoutBuilder child lays out without IntrinsicHeight crash',
-      (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.dark(),
-        home: Scaffold(
-          body: AppCard(
-            accentColor: Colors.teal,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SizedBox(
-                  height: 120,
-                  width: constraints.maxWidth,
-                  child: const ColoredBox(color: Colors.blue),
-                );
-              },
+  testWidgets(
+    'AppCard with LayoutBuilder child lays out without IntrinsicHeight crash',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark(),
+          home: Scaffold(
+            body: AppCard(
+              accentColor: Colors.teal,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SizedBox(
+                    height: 120,
+                    width: constraints.maxWidth,
+                    child: const ColoredBox(color: Colors.blue),
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.byType(AppCard), findsOneWidget);
-  });
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.byType(AppCard), findsOneWidget);
+    },
+  );
 
   test('preferences defaultRange copyWith preserves modules', () {
     const prefs = AnalyticsPreferences(

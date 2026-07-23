@@ -44,11 +44,13 @@ void main() {
       controller.descripcion = 'A test';
       controller.duracionExperienciaMinutos = 60;
       controller.duracionRecorridoMinutos = 30;
-      controller.agregarTarifa(ExperiencePricingTierDraft(
-        minParticipants: 1,
-        maxParticipants: 5,
-        pricePerPerson: 50000,
-      ));
+      controller.agregarTarifa(
+        ExperiencePricingTierDraft(
+          minParticipants: 1,
+          maxParticipants: 5,
+          pricePerPerson: 50000,
+        ),
+      );
       final error = controller.validar();
       expect(error, isNull);
     });
@@ -96,16 +98,20 @@ void main() {
       controller.descripcion = 'A test';
       controller.duracionExperienciaMinutos = 60;
       controller.duracionRecorridoMinutos = 30;
-      controller.agregarTarifa(ExperiencePricingTierDraft(
-        minParticipants: 1,
-        maxParticipants: 5,
-        pricePerPerson: 50000,
-      ));
-      controller.agregarTarifa(ExperiencePricingTierDraft(
-        minParticipants: 3,
-        maxParticipants: 10,
-        pricePerPerson: 40000,
-      ));
+      controller.agregarTarifa(
+        ExperiencePricingTierDraft(
+          minParticipants: 1,
+          maxParticipants: 5,
+          pricePerPerson: 50000,
+        ),
+      );
+      controller.agregarTarifa(
+        ExperiencePricingTierDraft(
+          minParticipants: 3,
+          maxParticipants: 10,
+          pricePerPerson: 40000,
+        ),
+      );
       final error = controller.validar();
       expect(error, contains('superponerse'));
     });
@@ -116,11 +122,13 @@ void main() {
       controller.descripcion = 'A test';
       controller.duracionExperienciaMinutos = 60;
       controller.duracionRecorridoMinutos = 30;
-      controller.agregarTarifa(ExperiencePricingTierDraft(
-        minParticipants: 1,
-        maxParticipants: 5,
-        pricePerPerson: 50000,
-      ));
+      controller.agregarTarifa(
+        ExperiencePricingTierDraft(
+          minParticipants: 1,
+          maxParticipants: 5,
+          pricePerPerson: 50000,
+        ),
+      );
       final error = controller.validar();
       expect(error, isNull);
     });
@@ -131,11 +139,13 @@ void main() {
       controller.descripcion = 'Una experiencia increíble';
       controller.duracionExperienciaMinutos = 120;
       controller.duracionRecorridoMinutos = 60;
-      controller.agregarTarifa(ExperiencePricingTierDraft(
-        minParticipants: 1,
-        maxParticipants: 5,
-        pricePerPerson: 80000,
-      ));
+      controller.agregarTarifa(
+        ExperiencePricingTierDraft(
+          minParticipants: 1,
+          maxParticipants: 5,
+          pricePerPerson: 80000,
+        ),
+      );
       controller.agregarIncluye('Guía certificado');
       controller.agregarIncluye('Equipo de seguridad');
 
@@ -171,26 +181,32 @@ void main() {
     });
 
     test('agregarTarifa adds pricing tier', () {
-      controller.agregarTarifa(ExperiencePricingTierDraft(
-        minParticipants: 1,
-        maxParticipants: 10,
-        pricePerPerson: 50000,
-      ));
+      controller.agregarTarifa(
+        ExperiencePricingTierDraft(
+          minParticipants: 1,
+          maxParticipants: 10,
+          pricePerPerson: 50000,
+        ),
+      );
       expect(controller.tarifas.length, 1);
       expect(controller.tarifas.first.pricePerPerson, 50000);
     });
 
     test('eliminarTarifa removes pricing tier by index', () {
-      controller.agregarTarifa(ExperiencePricingTierDraft(
-        minParticipants: 1,
-        maxParticipants: 5,
-        pricePerPerson: 50000,
-      ));
-      controller.agregarTarifa(ExperiencePricingTierDraft(
-        minParticipants: 6,
-        maxParticipants: 10,
-        pricePerPerson: 40000,
-      ));
+      controller.agregarTarifa(
+        ExperiencePricingTierDraft(
+          minParticipants: 1,
+          maxParticipants: 5,
+          pricePerPerson: 50000,
+        ),
+      );
+      controller.agregarTarifa(
+        ExperiencePricingTierDraft(
+          minParticipants: 6,
+          maxParticipants: 10,
+          pricePerPerson: 40000,
+        ),
+      );
       expect(controller.tarifas.length, 2);
 
       controller.eliminarTarifa(0);
@@ -295,11 +311,13 @@ void main() {
       controller.moneda = 'COP';
       controller.tarifasNetas = true;
       controller.notasTarifa = 'Nota test';
-      controller.agregarTarifa(ExperiencePricingTierDraft(
-        minParticipants: 1,
-        maxParticipants: 10,
-        pricePerPerson: 50000,
-      ));
+      controller.agregarTarifa(
+        ExperiencePricingTierDraft(
+          minParticipants: 1,
+          maxParticipants: 10,
+          pricePerPerson: 50000,
+        ),
+      );
 
       final pricing = controller.buildPricing();
       expect(pricing.currency, 'COP');

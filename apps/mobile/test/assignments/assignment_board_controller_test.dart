@@ -22,7 +22,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
   bool _failObservation = false;
 
   _FakeAssignmentsRepository(this._board, {AssignmentBoard? cachedBoard})
-      : _cachedBoard = cachedBoard;
+    : _cachedBoard = cachedBoard;
 
   /// Make the next call to [getBoard] throw.
   void failGetBoard() => _failGetBoard = true;
@@ -46,8 +46,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
     required String equineId,
     String? saddleId,
     String? notes,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<Assignment> getById(String id) => throw UnimplementedError();
@@ -58,8 +57,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
     String? equineId,
     String? saddleId,
     String? notes,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<Assignment> finalize(String id) => throw UnimplementedError();
@@ -91,8 +89,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
     required String equineId,
     String? saddleId,
     String? notes,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<AssignmentBoard> getBoard(String reservationId) async {
@@ -130,10 +127,7 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
   }
 
   @override
-  Future<void> finalizeAll({
-    required String reservationId,
-    String? notes,
-  }) =>
+  Future<void> finalizeAll({required String reservationId, String? notes}) =>
       throw UnimplementedError();
 
   @override
@@ -312,11 +306,12 @@ void main() {
       expect(repo.getBoardCallCount, 1);
     });
 
-    test('falls back to cachedBoard when API fails and cache exists',
-        () async {
+    test('falls back to cachedBoard when API fails and cache exists', () async {
       final cachedBoard = _createSampleBoard();
-      final offlineRepo =
-          _FakeAssignmentsRepository(sampleBoard, cachedBoard: cachedBoard);
+      final offlineRepo = _FakeAssignmentsRepository(
+        sampleBoard,
+        cachedBoard: cachedBoard,
+      );
       offlineRepo.failGetBoard();
 
       final controller = AssignmentBoardController(
@@ -414,8 +409,9 @@ void main() {
 
       expect(controller.hasPendingChanges, isTrue);
       // Local board should reflect the new assignment
-      final participant = controller.board!.participants
-          .firstWhere((p) => p.participantId == 'p2');
+      final participant = controller.board!.participants.firstWhere(
+        (p) => p.participantId == 'p2',
+      );
       expect(participant.assignment, isNotNull);
       expect(participant.assignment!.equineId, 'e2');
       expect(participant.assignment!.saddleId, 's1');
@@ -455,15 +451,12 @@ void main() {
 
       expect(controller.hasPendingChanges, isFalse);
 
-      controller.update(
-        assignmentId: 'a1',
-        equineId: 'e2',
-        saddleId: 's1',
-      );
+      controller.update(assignmentId: 'a1', equineId: 'e2', saddleId: 's1');
 
       expect(controller.hasPendingChanges, isTrue);
-      final participant = controller.board!.participants
-          .firstWhere((p) => p.participantId == 'p1');
+      final participant = controller.board!.participants.firstWhere(
+        (p) => p.participantId == 'p1',
+      );
       expect(participant.assignment!.equineId, 'e2');
       expect(participant.assignment!.saddleId, 's1');
       expect(participant.assignment!.status, AssignmentStatus.draft);
@@ -486,40 +479,40 @@ void main() {
 
       expect(controller.hasPendingChanges, isTrue);
       // Participant p1 should have lost its assignment in the local board
-      final participant = controller.board!.participants
-          .firstWhere((p) => p.participantId == 'p1');
+      final participant = controller.board!.participants.firstWhere(
+        (p) => p.participantId == 'p1',
+      );
       expect(participant.assignment, isNull);
     });
   });
 
   group('replace', () {
-    test('marks old assignment for removal and creates a new pending one',
-        () async {
-      final controller = AssignmentBoardController(
-        repository: repo,
-        isAdmin: true,
-        networkStatus: const NetworkStatus(
-          linkType: LinkType.wifi,
-          backendReachability: BackendReachability.reachable,
-        ),
-      );
-      await controller.load(reservationId: 'r1');
+    test(
+      'marks old assignment for removal and creates a new pending one',
+      () async {
+        final controller = AssignmentBoardController(
+          repository: repo,
+          isAdmin: true,
+          networkStatus: const NetworkStatus(
+            linkType: LinkType.wifi,
+            backendReachability: BackendReachability.reachable,
+          ),
+        );
+        await controller.load(reservationId: 'r1');
 
-      controller.replace(
-        assignmentId: 'a1',
-        equineId: 'e2',
-        saddleId: 's1',
-      );
+        controller.replace(assignmentId: 'a1', equineId: 'e2', saddleId: 's1');
 
-      expect(controller.hasPendingChanges, isTrue);
-      // Old assignment marked for removal, new one shown in local board
-      final participant = controller.board!.participants
-          .firstWhere((p) => p.participantId == 'p1');
-      expect(participant.assignment, isNotNull);
-      expect(participant.assignment!.equineId, 'e2');
-      expect(participant.assignment!.saddleId, 's1');
-      expect(participant.assignment!.status, AssignmentStatus.draft);
-    });
+        expect(controller.hasPendingChanges, isTrue);
+        // Old assignment marked for removal, new one shown in local board
+        final participant = controller.board!.participants.firstWhere(
+          (p) => p.participantId == 'p1',
+        );
+        expect(participant.assignment, isNotNull);
+        expect(participant.assignment!.equineId, 'e2');
+        expect(participant.assignment!.saddleId, 's1');
+        expect(participant.assignment!.status, AssignmentStatus.draft);
+      },
+    );
   });
 
   group('removePending', () {
@@ -542,8 +535,9 @@ void main() {
       controller.removePending('p2');
 
       expect(controller.hasPendingChanges, isFalse);
-      final participant = controller.board!.participants
-          .firstWhere((p) => p.participantId == 'p2');
+      final participant = controller.board!.participants.firstWhere(
+        (p) => p.participantId == 'p2',
+      );
       expect(participant.assignment, isNull);
     });
   });

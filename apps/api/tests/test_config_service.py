@@ -170,9 +170,7 @@ class TestConfigPaymentInstructions:
 
         asyncio.run(run())
 
-    def test_partial_update_preserves_unset_fields(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_partial_update_preserves_unset_fields(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.documents.app_config_document import PaymentInstructionsConfig
         from app.schemas.config import PaymentInstructionsUpdateSchema
         from app.services.config_service import ConfigService
@@ -212,9 +210,7 @@ class TestConfigPaymentInstructions:
 
 
 class TestConfigBusinessLocation:
-    def test_partial_update_preserves_unset_fields(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_partial_update_preserves_unset_fields(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.documents.app_config_document import BusinessLocationConfig
         from app.schemas.config import BusinessLocationUpdateSchema
         from app.services.config_service import ConfigService

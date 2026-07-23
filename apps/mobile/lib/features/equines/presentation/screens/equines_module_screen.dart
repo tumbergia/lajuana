@@ -371,10 +371,11 @@ class _EquinesModuleScreenState extends State<EquinesModuleScreen>
                                           EquineFormSheet(existing: detail),
                                     );
                                 if (result != null && mounted) {
-                                  final success = await _controller.updateEquine(
-                                    _controller.selectedEquineId!,
-                                    result,
-                                  );
+                                  final success = await _controller
+                                      .updateEquine(
+                                        _controller.selectedEquineId!,
+                                        result,
+                                      );
                                   if (success && mounted) {
                                     showAppToast(
                                       context,

@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from types import SimpleNamespace
 
 import pytest
 
-from app.common.enums import Permission, UserRole
+from app.common.enums import UserRole
 from app.schemas.analytics_v2 import (
     ANALYTICS_SCHEMA_VERSION,
     AnalyticsModule,
@@ -22,7 +22,6 @@ from app.schemas.analytics_v2 import (
     ModuleStatus,
     Period,
     PrimaryValue,
-    RankingItem,
     Series,
     SeriesPoint,
     ValueType,
@@ -46,7 +45,6 @@ from app.services.analytics_query_service import (
     resolve_period,
 )
 from app.services.analytics_service import HOME_INELIGIBLE_IDS, _lead
-
 
 # ── formulas / comparison ────────────────────────────────────────────────
 
@@ -101,9 +99,7 @@ def test_service_date_bounds_are_bson_encodable() -> None:
     """Raw Motor aggregates cannot encode datetime.date — use naive datetime."""
     from bson import encode
 
-    start, end = AnalyticsQueryService._service_date_bounds(
-        date(2026, 7, 14), date(2026, 8, 13)
-    )
+    start, end = AnalyticsQueryService._service_date_bounds(date(2026, 7, 14), date(2026, 8, 13))
     assert isinstance(start, datetime)
     assert isinstance(end, datetime)
     encode({"requested_date": {"$gte": start, "$lte": end}})
@@ -112,7 +108,6 @@ def test_service_date_bounds_are_bson_encodable() -> None:
 
 
 def test_experience_capacity_prefers_standard_then_tiers() -> None:
-    from types import SimpleNamespace
 
     assert AnalyticsQueryService._experience_capacity(None) is None
     assert (
@@ -201,9 +196,10 @@ def test_catalog_filters_payment_for_guide() -> None:
 
 def test_defaults_by_role() -> None:
     catalog = AnalyticsCatalogService()
-    assert catalog.defaults_for_role(UserRole.ADMIN) == [
-        m for m in ADMIN_DEFAULT_MODULES if m in catalog.allowed_module_ids(UserRole.ADMIN)
-    ][:4]
+    assert (
+        catalog.defaults_for_role(UserRole.ADMIN)
+        == [m for m in ADMIN_DEFAULT_MODULES if m in catalog.allowed_module_ids(UserRole.ADMIN)][:4]
+    )
     guide_defaults = catalog.defaults_for_role(UserRole.GUIDE)
     assert len(guide_defaults) <= 4
     for mid in guide_defaults:
@@ -326,7 +322,7 @@ def test_lead_helper_sets_home_eligible_from_blacklist() -> None:
 
 
 def _sample_dashboard() -> DashboardResponse:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     period = Period(
         start=date(2026, 6, 15),
         end=date(2026, 7, 14),
@@ -489,9 +485,7 @@ def test_rich_analysis_for_donut_and_line() -> None:
 
 def test_export_includes_parameters_section() -> None:
     svc = AnalyticsExportService()
-    data, _ = svc.export_dashboard(
-        _sample_dashboard(), generated_by="Ana", include_logo=False
-    )
+    data, _ = svc.export_dashboard(_sample_dashboard(), generated_by="Ana", include_logo=False)
     from io import BytesIO
 
     from openpyxl import load_workbook
@@ -506,17 +500,15 @@ def test_export_includes_parameters_section() -> None:
 
 def test_export_continues_without_logo() -> None:
     svc = AnalyticsExportService()
-    data, _ = svc.export_dashboard(
-        _sample_dashboard(), generated_by="Guía", include_logo=True
-    )
+    data, _ = svc.export_dashboard(_sample_dashboard(), generated_by="Guía", include_logo=True)
     assert len(data) > 1000
     assert AnalyticsExportService.visible_sheet_names(data)[0] == "Resumen"
 
 
 def test_freshness_label_business_language() -> None:
-    now = datetime(2026, 7, 14, 12, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 7, 14, 12, 0, tzinfo=UTC)
     assert freshness_label(now, now=now) == "Actualizado ahora"
-    earlier = datetime(2026, 7, 14, 11, 52, tzinfo=timezone.utc)
+    earlier = datetime(2026, 7, 14, 11, 52, tzinfo=UTC)
     assert "minuto" in freshness_label(earlier, now=now)
 
 

@@ -43,7 +43,9 @@ class ConversationScheduler:
                         )
                         processed = await self._worker.process_due_buffers(limit=25)
                         if processed:
-                            logger.info("[scheduler] Processed %d buffer(s) | iteration=%d", processed, tick)
+                            logger.info(
+                                "[scheduler] Processed %d buffer(s) | iteration=%d", processed, tick
+                            )
                     elif tick % 15 == 0:
                         logger.info(
                             "[scheduler] Heartbeat | iteration=%d | no due buffers",

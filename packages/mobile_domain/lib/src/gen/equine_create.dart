@@ -10,7 +10,6 @@ import 'equine_sex.dart';
 import 'equine_species.dart';
 
 class EquineCreate {
-
   final String name;
   final String? inventoryNumber;
   final EquineSpecies? species;
@@ -49,8 +48,7 @@ class EquineCreate {
   final String? sourceRowNumber;
   final String? sourceUpdatedAtLabel;
 
-  const EquineCreate(
-    {
+  const EquineCreate({
     required this.name,
     this.inventoryNumber,
     this.species,
@@ -88,15 +86,18 @@ class EquineCreate {
     this.sourceSheet,
     this.sourceRowNumber,
     this.sourceUpdatedAtLabel,
-    }
-  );
+  });
 
   factory EquineCreate.fromJson(Map<String, dynamic> json) {
     return EquineCreate(
       name: json['name'] as String,
       inventoryNumber: json['inventory_number'] as String?,
-      species: json['species'] != null ? (json['species'] as String).toEquineSpecies() : null,
-      locationStatus: json['location_status'] != null ? (json['location_status'] as String).toEquineLocationStatus() : null,
+      species: json['species'] != null
+          ? (json['species'] as String).toEquineSpecies()
+          : null,
+      locationStatus: json['location_status'] != null
+          ? (json['location_status'] as String).toEquineLocationStatus()
+          : null,
       locationNotes: json['location_notes'] as String?,
       breed: json['breed'] as String?,
       sex: json['sex'] != null ? (json['sex'] as String).toEquineSex() : null,
@@ -117,7 +118,9 @@ class EquineCreate {
       lastHeightAt: json['last_height_at'] as String?,
       isActive: json['is_active'] as bool?,
       isAvailable: json['is_available'] as bool?,
-      operationalStatus: json['operational_status'] != null ? (json['operational_status'] as String).toEquineOperationalStatus() : null,
+      operationalStatus: json['operational_status'] != null
+          ? (json['operational_status'] as String).toEquineOperationalStatus()
+          : null,
       availabilityNotes: json['availability_notes'] as String?,
       availabilityReasons: json['availability_reasons'] as String?,
       restUntil: json['rest_until'] as String?,
@@ -172,5 +175,4 @@ class EquineCreate {
     'source_row_number': sourceRowNumber,
     'source_updated_at_label': sourceUpdatedAtLabel,
   };
-
 }

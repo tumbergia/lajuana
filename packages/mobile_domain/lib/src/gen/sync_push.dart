@@ -7,24 +7,19 @@
 import 'sync_push_operation.dart';
 
 class SyncPush {
-
   final List<SyncPushOperation> operations;
 
-  const SyncPush(
-    {
-    required this.operations,
-    }
-  );
+  const SyncPush({required this.operations});
 
   factory SyncPush.fromJson(Map<String, dynamic> json) {
     return SyncPush(
-      operations: (json['operations'] as List<dynamic>?)
-        ?.map((e) => SyncPushOperation.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      operations: (json['operations'] as List<dynamic>)
+          .map((e) => SyncPushOperation.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'operations': operations,
+    'operations': operations.map((e) => e.toJson()).toList(),
   };
-
 }

@@ -21,12 +21,15 @@ class AppLineChart extends StatelessWidget {
   final String semanticSummary;
   final double? height;
   final String unit;
+
   /// Stronger area fill + thicker stroke for home hero modules.
   final bool hero;
+
   /// Analytics interval bounds — drive the independent X-axis labels
   /// and the time scale for dated spots.
   final DateTime? periodStart;
   final DateTime? periodEnd;
+
   /// e.g. `last_30_days` / `custom` — controls X-tick density.
   final String? periodPreset;
 
@@ -58,32 +61,34 @@ class AppLineChart extends StatelessWidget {
     );
     final points = seeded.points;
     if (points.isEmpty) {
-      return AppChartEmptyState(message: 'Todavía no hay datos para este periodo.');
+      return AppChartEmptyState(
+        message: 'Todavía no hay datos para este periodo.',
+      );
     }
 
     final color = series.color ?? tokens.seriesPalette.first;
-    final dataMax =
-        points.map((p) => p.value).fold<double>(0, (a, b) => a > b ? a : b);
+    final dataMax = points
+        .map((p) => p.value)
+        .fold<double>(0, (a, b) => a > b ? a : b);
     final axisBounds = chartNiceAxisBounds(dataMax);
     final chartMaxY = axisBounds.maxY;
     final yInterval = axisBounds.interval;
     final leftReserved = chartLeftAxisReservedSize(
       context: context,
       maxY: chartMaxY,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
     );
     final anim = chartAnimationOf(context);
 
     final pointDates = [for (final p in points) parseChartAxisDate(p.label)];
     final pointsAreDated = pointDates.every((d) => d != null);
 
-    final axisStart = periodStart ??
-        (pointsAreDated ? pointDates.first : null);
-    final axisEnd = periodEnd ??
-        (pointsAreDated ? pointDates.last : null);
-    final useTimeAxis = pointsAreDated &&
+    final axisStart = periodStart ?? (pointsAreDated ? pointDates.first : null);
+    final axisEnd = periodEnd ?? (pointsAreDated ? pointDates.last : null);
+    final useTimeAxis =
+        pointsAreDated &&
         axisStart != null &&
         axisEnd != null &&
         !axisEnd.isBefore(axisStart);
@@ -93,10 +98,7 @@ class AppLineChart extends StatelessWidget {
     final spots = <FlSpot>[
       if (useTimeAxis)
         for (var i = 0; i < points.length; i++)
-          FlSpot(
-            _timeFrac(pointDates[i]!, axisStart, axisEnd),
-            points[i].value,
-          )
+          FlSpot(_timeFrac(pointDates[i]!, axisStart, axisEnd), points[i].value)
       else
         for (var i = 0; i < points.length; i++)
           FlSpot(i.toDouble(), points[i].value),
@@ -111,9 +113,7 @@ class AppLineChart extends StatelessWidget {
     );
     final tickAxisXs = [
       for (final t in xTicks)
-        useTimeAxis
-            ? t.frac
-            : t.frac * (points.length - 1).clamp(1, 9999),
+        useTimeAxis ? t.frac : t.frac * (points.length - 1).clamp(1, 9999),
     ];
     // Grow by [xAxisLabelBandExtra] so the taller label band does not steal
     // plot pixels. Subtract [_chartPadTop] so plot+labels fit inside the
@@ -121,18 +121,20 @@ class AppLineChart extends StatelessWidget {
     final totalHeight =
         (height ?? tokens.chartHeightStandard) + xAxisLabelBandExtra;
     final innerHeight = totalHeight - _chartPadTop;
-    final plotHeight =
-        (innerHeight - _xAxisLabelHeight).clamp(80.0, innerHeight);
+    final plotHeight = (innerHeight - _xAxisLabelHeight).clamp(
+      80.0,
+      innerHeight,
+    );
     final labelFontSize = xTicks.length >= 10
         ? 7.0
         : xTicks.length >= 5
-            ? 8.0
-            : 10.0;
+        ? 8.0
+        : 10.0;
     final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: scheme.onSurfaceVariant,
-          fontSize: labelFontSize,
-          height: 1,
-        );
+      color: scheme.onSurfaceVariant,
+      fontSize: labelFontSize,
+      height: 1,
+    );
 
     return Semantics(
       label: semanticSummary,
@@ -156,10 +158,8 @@ class AppLineChart extends StatelessWidget {
                       show: true,
                       drawVerticalLine: false,
                       horizontalInterval: yInterval,
-                      getDrawingHorizontalLine: (_) => FlLine(
-                        color: tokens.gridColor,
-                        strokeWidth: 1,
-                      ),
+                      getDrawingHorizontalLine: (_) =>
+                          FlLine(color: tokens.gridColor, strokeWidth: 1),
                     ),
                     // Vertical guides at each X-axis tick — same frac as labels.
                     extraLinesData: ExtraLinesData(
@@ -206,12 +206,7 @@ class AppLineChart extends StatelessWidget {
                           return [
                             for (final t in touched)
                               LineTooltipItem(
-                                '${_tooltipLabel(
-                                  points,
-                                  pointDates,
-                                  pointsAreDated,
-                                  _nearestSpotIndex(spots, t.x),
-                                )}\n'
+                                '${_tooltipLabel(points, pointDates, pointsAreDated, _nearestSpotIndex(spots, t.x))}\n'
                                 '${_fmt(t.y)}${unit.isEmpty ? '' : ' $unit'}',
                                 TextStyle(
                                   color: tokens.tooltipForeground,
@@ -235,11 +230,12 @@ class AppLineChart extends StatelessWidget {
                           show: points.length <= 14,
                           getDotPainter: (_, __, ___, ____) =>
                               FlDotCirclePainter(
-                            radius:
-                                hero ? tokens.dotSize + 0.5 : tokens.dotSize,
-                            color: color,
-                            strokeWidth: 0,
-                          ),
+                                radius: hero
+                                    ? tokens.dotSize + 0.5
+                                    : tokens.dotSize,
+                                color: color,
+                                strokeWidth: 0,
+                              ),
                         ),
                         belowBarData: BarAreaData(
                           show: true,
@@ -291,8 +287,11 @@ class AppLineChart extends StatelessWidget {
     if (periodStart == null) {
       return (points: points, didSeed: false);
     }
-    final startDay =
-        DateTime(periodStart.year, periodStart.month, periodStart.day);
+    final startDay = DateTime(
+      periodStart.year,
+      periodStart.month,
+      periodStart.day,
+    );
     final startLabel =
         '${startDay.year}-'
         '${startDay.month.toString().padLeft(2, '0')}-'
@@ -306,8 +305,7 @@ class AppLineChart extends StatelessWidget {
 
     final firstDate = parseChartAxisDate(points.first.label);
     if (firstDate == null) return (points: points, didSeed: false);
-    final firstDay =
-        DateTime(firstDate.year, firstDate.month, firstDate.day);
+    final firstDay = DateTime(firstDate.year, firstDate.month, firstDate.day);
     if (firstDay.isAfter(startDay)) {
       return (points: [baseline, ...points], didSeed: true);
     }
@@ -364,19 +362,13 @@ class AppLineChart extends StatelessWidget {
       return [_XTick(label: points.first.label, frac: 0.5)];
     }
     final step = (points.length / 4).ceil().clamp(1, points.length);
-    final indices = <int>[
-      for (var i = 0; i < points.length; i += step) i,
-    ];
+    final indices = <int>[for (var i = 0; i < points.length; i += step) i];
     if (indices.last != points.length - 1) {
       indices.add(points.length - 1);
     }
     final last = (points.length - 1).clamp(1, points.length);
     return [
-      for (final i in indices)
-        _XTick(
-          label: points[i].label,
-          frac: i / last,
-        ),
+      for (final i in indices) _XTick(label: points[i].label, frac: i / last),
     ];
   }
 
@@ -401,6 +393,7 @@ class _XTick {
   const _XTick({required this.label, required this.frac});
 
   final String label;
+
   /// Position along the plot width in [0, 1].
   final double frac;
 }

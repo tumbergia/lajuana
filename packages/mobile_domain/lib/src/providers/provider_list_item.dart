@@ -40,7 +40,8 @@ class ProviderListItem {
       slug: json['slug'] as String? ?? '',
       type: json['type'] as String? ?? 'other',
       status: json['status'] as String? ?? 'active',
-      serviceCategories: (json['service_categories'] as List<dynamic>?)
+      serviceCategories:
+          (json['service_categories'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList(growable: false) ??
           const [],

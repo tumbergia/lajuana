@@ -7,14 +7,9 @@
 import 'reservation_status.dart';
 
 class ReservationStatusTransition {
-
   final ReservationStatus targetStatus;
 
-  const ReservationStatusTransition(
-    {
-    required this.targetStatus,
-    }
-  );
+  const ReservationStatusTransition({required this.targetStatus});
 
   factory ReservationStatusTransition.fromJson(Map<String, dynamic> json) {
     return ReservationStatusTransition(
@@ -22,8 +17,5 @@ class ReservationStatusTransition {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'target_status': targetStatus.toJson(),
-  };
-
+  Map<String, dynamic> toJson() => {'target_status': targetStatus.toJson()};
 }

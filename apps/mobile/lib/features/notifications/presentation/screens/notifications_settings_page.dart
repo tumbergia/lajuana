@@ -151,17 +151,17 @@ class _NotificationsSettingsPageState extends State<NotificationsSettingsPage> {
                     widget.isAdmin || _guidePreferenceKeys.contains(entry.key),
               )
               .map((entry) {
-            final enabled = prefs[entry.key] ?? true;
-            return Padding(
-              padding: EdgeInsets.only(bottom: tokens.spaceSm),
-              child: AppSwitchRow(
-                title: entry.value,
-                value: enabled,
-                onChanged: (value) =>
-                    controller.setPreference(entry.key, value),
-              ),
-            );
-          }),
+                final enabled = prefs[entry.key] ?? true;
+                return Padding(
+                  padding: EdgeInsets.only(bottom: tokens.spaceSm),
+                  child: AppSwitchRow(
+                    title: entry.value,
+                    value: enabled,
+                    onChanged: (value) =>
+                        controller.setPreference(entry.key, value),
+                  ),
+                );
+              }),
       ],
     );
 

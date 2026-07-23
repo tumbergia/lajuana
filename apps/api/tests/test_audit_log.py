@@ -110,12 +110,13 @@ def test_audit_metadata_union_validates() -> None:
     variants: list[AuditMetadata] = [
         AssignmentMetadata(assignment_id="x"),
         ReplacementMetadata(replaced_by="y"),
-        NotificationMetadata(
-            recipient_phone="p", template_key="t", status="s"
-        ),
+        NotificationMetadata(recipient_phone="p", template_key="t", status="s"),
     ]
     assert len(variants) == 3
-    assert all(isinstance(v, (AssignmentMetadata, ReplacementMetadata, NotificationMetadata)) for v in variants)
+    assert all(
+        isinstance(v, (AssignmentMetadata, ReplacementMetadata, NotificationMetadata))
+        for v in variants
+    )
 
 
 def test_parse_audit_metadata_tolerates_empty_dict() -> None:

@@ -17,8 +17,8 @@ class EquineRepositoryImpl implements EquineRepository {
   EquineRepositoryImpl({
     required EquinesApiClient apiClient,
     required EquinesDatabase database,
-  })  : _api = apiClient,
-        _db = database;
+  }) : _api = apiClient,
+       _db = database;
 
   final EquinesApiClient _api;
   final EquinesDatabase _db;
@@ -33,7 +33,9 @@ class EquineRepositoryImpl implements EquineRepository {
         operationalStatus: operationalStatus,
         includeDeleted: includeDeleted,
       );
-      final domains = dtos.map(EquineMapper.dtoToDomain).toList(growable: false);
+      final domains = dtos
+          .map(EquineMapper.dtoToDomain)
+          .toList(growable: false);
 
       // Cachear en background (no bloquear respuesta).
       _cacheList(domains).ignore();
@@ -43,8 +45,9 @@ class EquineRepositoryImpl implements EquineRepository {
       // Fallback a cache local si API falla.
       final cached = await _db.getAll();
       if (cached.isEmpty) rethrow;
-      final records =
-          cached.map(EquineLocalRecord.fromMap).toList(growable: false);
+      final records = cached
+          .map(EquineLocalRecord.fromMap)
+          .toList(growable: false);
       return records
           .map((r) => EquineMapper.dtoToDomain(_recordToDto(r)))
           .toList(growable: false);
@@ -79,7 +82,10 @@ class EquineRepositoryImpl implements EquineRepository {
   }
 
   @override
-  Future<Equine> updateEquine(String equineId, Map<String, dynamic> data) async {
+  Future<Equine> updateEquine(
+    String equineId,
+    Map<String, dynamic> data,
+  ) async {
     final dto = await _api.updateEquine(equineId, data);
     final equine = EquineMapper.dtoToDomain(dto);
     // Invalidar solo el equino actualizado en cache.
@@ -91,7 +97,9 @@ class EquineRepositoryImpl implements EquineRepository {
   @override
   Future<List<EquineTimelineEntry>> getEquineTimeline(String equineId) async {
     final dtos = await _api.getEquineTimeline(equineId);
-    return dtos.map(EquineMapper.timelineEntryDtoToDomain).toList(growable: false);
+    return dtos
+        .map(EquineMapper.timelineEntryDtoToDomain)
+        .toList(growable: false);
   }
 
   @override
@@ -175,7 +183,8 @@ class EquineRepositoryImpl implements EquineRepository {
       'gait': detail.gait,
       'is_available': detail.isAvailable ? 1 : 0,
       'availability_notes': detail.availabilityNotes,
-      'operational_status': detail.operationalStatus == EquineOperationalStatus.inService
+      'operational_status':
+          detail.operationalStatus == EquineOperationalStatus.inService
           ? 'in_service'
           : detail.operationalStatus.name,
       'max_rider_weight_kg': detail.maxRiderWeightKg,

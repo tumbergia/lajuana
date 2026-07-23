@@ -5,22 +5,19 @@
 /// AUTO-GENERATED from OpenAPI schema `ServiceLogPhotoSchema`.
 
 class ServiceLogPhoto {
-
   final int index;
   final String storageKey;
   final String filename;
   final String contentType;
   final int? sizeBytes;
 
-  const ServiceLogPhoto(
-    {
+  const ServiceLogPhoto({
     required this.index,
     required this.storageKey,
     required this.filename,
     required this.contentType,
     this.sizeBytes,
-    }
-  );
+  });
 
   factory ServiceLogPhoto.fromJson(Map<String, dynamic> json) {
     return ServiceLogPhoto(
@@ -39,5 +36,4 @@ class ServiceLogPhoto {
     'content_type': contentType,
     'size_bytes': sizeBytes,
   };
-
 }

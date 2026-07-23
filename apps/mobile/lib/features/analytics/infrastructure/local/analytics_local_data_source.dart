@@ -6,7 +6,7 @@ import 'analytics_database.dart';
 
 class AnalyticsLocalDataSource {
   AnalyticsLocalDataSource({AnalyticsDatabase? database})
-      : _db = database ?? AnalyticsDatabase.instance;
+    : _db = database ?? AnalyticsDatabase.instance;
 
   final AnalyticsDatabase _db;
 
@@ -16,16 +16,12 @@ class AnalyticsLocalDataSource {
     required int schemaVersion,
   }) async {
     final db = await _db.database;
-    await db.insert(
-      'dashboard_snapshot_cache',
-      {
-        'cache_key': cacheKey,
-        'payload_json': jsonEncode(payload),
-        'cached_at': DateTime.now().toIso8601String(),
-        'schema_version': schemaVersion,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('dashboard_snapshot_cache', {
+      'cache_key': cacheKey,
+      'payload_json': jsonEncode(payload),
+      'cached_at': DateTime.now().toIso8601String(),
+      'schema_version': schemaVersion,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<({Map<String, dynamic> payload, DateTime cachedAt})?> getSnapshot(
@@ -45,8 +41,8 @@ class AnalyticsLocalDataSource {
     if (version != expectedSchemaVersion) return null;
     final decoded = jsonDecode(row['payload_json'] as String);
     if (decoded is! Map<String, dynamic>) return null;
-    final cachedAt = DateTime.tryParse(row['cached_at'] as String? ?? '') ??
-        DateTime.now();
+    final cachedAt =
+        DateTime.tryParse(row['cached_at'] as String? ?? '') ?? DateTime.now();
     return (payload: decoded, cachedAt: cachedAt);
   }
 }

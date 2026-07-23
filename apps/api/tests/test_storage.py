@@ -13,7 +13,6 @@ import pytest
 
 
 class TestLocalStorageAdapter:
-
     def test_store_base64_writes_file(self, monkeypatch: pytest.MonkeyPatch, tmp_path: str) -> None:
         """Base64 content → file created on disk at correct path."""
         from app.services.storage import LocalStorageAdapter
@@ -46,7 +45,9 @@ class TestLocalStorageAdapter:
 
         asyncio.run(run())
 
-    def test_read_bytes_returns_content(self, monkeypatch: pytest.MonkeyPatch, tmp_path: str) -> None:
+    def test_read_bytes_returns_content(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: str
+    ) -> None:
         """Existing file → content returned as bytes."""
         from app.services.storage import LocalStorageAdapter
 
@@ -69,7 +70,9 @@ class TestLocalStorageAdapter:
 
         asyncio.run(run())
 
-    def test_read_bytes_nonexistent_returns_none(self, monkeypatch: pytest.MonkeyPatch, tmp_path: str) -> None:
+    def test_read_bytes_nonexistent_returns_none(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: str
+    ) -> None:
         """Non-existent key → returns None."""
         from app.services.storage import LocalStorageAdapter
 

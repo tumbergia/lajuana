@@ -56,7 +56,7 @@ KNOWN_ENUMS = {
 # Schemas to skip (internal/utility types not useful as mobile models)
 SKIP_SCHEMAS = {
     "ApiErrorResponse", "ApiSuccessResponse", "PaginationMeta",
-    "ValidationError", "HttpError", "ErrorResponse",
+    "HttpError", "ErrorResponse",
     "BulkActionSchema", "BatchUpdateSchema", "BatchAssignmentItemSchema",
     "AdminAskRequest", "AskRequest", "AskResponse",
     "WhatsappWebhook", "WhatsappMessage",
@@ -95,6 +95,17 @@ def to_field_name(prop_name: str) -> str:
     return parts[0] + "".join(p.capitalize() for p in parts[1:])
 
 
+def to_pascal_case(name: str) -> str:
+    """Convert snake_case / mixed names to PascalCase."""
+    parts = re.split(r"[_\s-]+", name)
+    return "".join(p[:1].upper() + p[1:] for p in parts if p)
+
+
+def inline_enum_name(parent_class: str, prop_name: str) -> str:
+    """Unique Dart enum name for an inline property enum."""
+    return f"{parent_class}{to_pascal_case(prop_name)}"
+
+
 def resolve_ref(ref: str, spec: dict) -> dict:
     """Resolve a $ref like '#/components/schemas/EquineResponseSchema'."""
     if not ref:
@@ -127,6 +138,8 @@ def get_dart_type(
     schemas_in_scope: set[str],
     enum_names: set[str] | None = None,
     all_schema_names: set[str] | None = None,
+    parent_class: str | None = None,
+    inline_enums: dict[str, dict] | None = None,
 ) -> str:
     """Map an OpenAPI property schema to a Dart type string."""
     if enum_names is None:
@@ -151,7 +164,15 @@ def get_dart_type(
     fmt = prop_schema.get("format", "")
 
     if ptype == "string" and "enum" in prop_schema:
-        return to_dart_name(prop_name)  # Inline enum
+        enum_type = (
+            inline_enum_name(parent_class, prop_name)
+            if parent_class
+            else to_pascal_case(prop_name)
+        )
+        enum_names.add(enum_type)
+        if inline_enums is not None:
+            inline_enums[enum_type] = prop_schema
+        return enum_type
 
     if ptype == "string":
         if fmt in ("date-time", "datetime"):
@@ -173,7 +194,16 @@ def get_dart_type(
 
     if ptype == "array":
         items = prop_schema.get("items", {})
-        inner = get_dart_type(prop_name, items, spec, schemas_in_scope)
+        inner = get_dart_type(
+            prop_name,
+            items,
+            spec,
+            schemas_in_scope,
+            enum_names,
+            all_schema_names,
+            parent_class,
+            inline_enums,
+        )
         return f"List<{inner}>"
 
     if ptype == "object":
@@ -181,7 +211,14 @@ def get_dart_type(
             inner = "dynamic"
             if isinstance(prop_schema["additionalProperties"], dict):
                 inner = get_dart_type(
-                    prop_name, prop_schema["additionalProperties"], spec, schemas_in_scope
+                    prop_name,
+                    prop_schema["additionalProperties"],
+                    spec,
+                    schemas_in_scope,
+                    enum_names,
+                    all_schema_names,
+                    parent_class,
+                    inline_enums,
                 )
             return f"Map<String, {inner}>"
         return "Map<String, dynamic>"
@@ -222,7 +259,6 @@ def generate_enum(
     lines = [f"/// AUTO-GENERATED from OpenAPI schema `{schema_name}`.", ""]
     lines.append(f"enum {dart_name} {{")
     for enum_key, val in key_map.items():
-        lines.append(f"  @JsonValue('{val}')")
         lines.append(f"  {enum_key}({json.dumps(val)}),")
     lines.append(";")
     lines.append("")
@@ -252,12 +288,15 @@ def generate_model(
     schemas_in_scope: set[str],
     enum_names: set[str] | None = None,
     all_schema_names: set[str] | None = None,
+    inline_enums: dict[str, dict] | None = None,
 ) -> Optional[str]:
     """Generate a Dart model class from an OpenAPI schema."""
     if enum_names is None:
         enum_names = find_enum_schemas(spec)
     if all_schema_names is None:
         all_schema_names = set(spec.get("components", {}).get("schemas", {}).keys())
+    if inline_enums is None:
+        inline_enums = {}
 
     if schema.get("type") == "string" and "enum" in schema:
         return generate_enum(schema_name, schema, spec, all_schema_names)
@@ -272,24 +311,34 @@ def generate_model(
     if not properties:
         return None
 
+    def _dtype(pname: str, pschema: dict) -> str:
+        return get_dart_type(
+            pname,
+            pschema,
+            spec,
+            schemas_in_scope,
+            enum_names,
+            all_schema_names,
+            dart_name,
+            inline_enums,
+        )
+
     # Track which other generated files this model depends on
     needed_imports: set[str] = set()
-    # All generated class names (both enums and models) in this run
-    all_generated: set[str] = schemas_in_scope | enum_names
 
     lines = [f"/// AUTO-GENERATED from OpenAPI schema `{schema_name}`.", ""]
 
     # ── Fields (first pass to collect imports) ──
     for pname, pschema in properties.items():
-        dtype = get_dart_type(pname, pschema, spec, schemas_in_scope, enum_names)
+        dtype = _dtype(pname, pschema)
         # Extract base type name (strip List<>, trailing ?)
         base = dtype
         if base.startswith("List<"):
             base = base[5:-1]
         if base.endswith("?"):
             base = base[:-1]
-        # If base type is another generated model (and not self), add import
-        if base in all_generated and base != dart_name:
+        # If base type is another generated model/enum (and not self), add import
+        if base != dart_name and (base in schemas_in_scope or base in enum_names):
             needed_imports.add(base)
 
     # Add imports for referenced generated files
@@ -305,7 +354,7 @@ def generate_model(
     # ── Fields ──
     for pname, pschema in properties.items():
         fname = to_field_name(pname)
-        dtype = get_dart_type(pname, pschema, spec, schemas_in_scope, enum_names)
+        dtype = _dtype(pname, pschema)
         req = is_required(pname, required_list)
 
         # Add comment for special types
@@ -328,7 +377,7 @@ def generate_model(
     lines.append("    {")
     for pname, pschema in properties.items():
         fname = to_field_name(pname)
-        dtype = get_dart_type(pname, pschema, spec, schemas_in_scope, enum_names)
+        dtype = _dtype(pname, pschema)
         req = is_required(pname, required_list)
         if req:
             lines.append(f"    required this.{fname},")
@@ -344,7 +393,7 @@ def generate_model(
     for pname, pschema in properties.items():
         fname = to_field_name(pname)
         req = is_required(pname, required_list)
-        dtype = get_dart_type(pname, pschema, spec, schemas_in_scope, enum_names)
+        dtype = _dtype(pname, pschema)
         json_key = pname
 
         if dtype == "String":
@@ -374,15 +423,32 @@ def generate_model(
                 lines.append(f"      {fname}: json['{json_key}'] != null ? DateTime.parse(json['{json_key}'] as String) : null,")
         elif dtype.startswith("List<"):
             inner = dtype[5:-1]  # Extract inner type
-            lines.append(f"      {fname}: (json['{json_key}'] as List<dynamic>?)")
-            if inner == "String":
-                lines.append(f"        ?.cast<String>()" + ("," if not req else " ?? [],"))
-            elif inner == "int":
-                lines.append(f"        ?.cast<int>()" + ("," if not req else " ?? [],"))
-            elif inner == "double":
-                lines.append(f"        ?.map((e) => (e as num).toDouble()).toList()" + ("," if not req else " ?? [],"))
+            if req:
+                lines.append(f"      {fname}: (json['{json_key}'] as List<dynamic>)")
             else:
-                lines.append(f"        ?.map((e) => {inner}.fromJson(e as Map<String, dynamic>)).toList()" + ("," if not req else " ?? [],"))
+                lines.append(f"      {fname}: (json['{json_key}'] as List<dynamic>?)")
+            if inner == "String":
+                lines.append("        .cast<String>()," if req else "        ?.cast<String>(),")
+            elif inner == "int":
+                lines.append("        .cast<int>()," if req else "        ?.cast<int>(),")
+            elif inner == "double":
+                lines.append(
+                    "        .map((e) => (e as num).toDouble()).toList(),"
+                    if req
+                    else "        ?.map((e) => (e as num).toDouble()).toList(),"
+                )
+            elif inner in enum_names:
+                lines.append(
+                    f"        .map((e) => (e as String).to{inner}()).toList(),"
+                    if req
+                    else f"        ?.map((e) => (e as String).to{inner}()).toList(),"
+                )
+            else:
+                lines.append(
+                    f"        .map((e) => {inner}.fromJson(e as Map<String, dynamic>)).toList(),"
+                    if req
+                    else f"        ?.map((e) => {inner}.fromJson(e as Map<String, dynamic>)).toList(),"
+                )
         elif dtype == "Map<String, dynamic>":
             lines.append(f"      {fname}: json['{json_key}'] { 'as Map<String, dynamic>' if req else 'as Map<String, dynamic>?' },")
         elif dtype.startswith("Map<String, ") and dtype.endswith(">"):
@@ -436,7 +502,7 @@ def generate_model(
     lines.append(f"  Map<String, dynamic> toJson() => {{")
     for pname, pschema in properties.items():
         fname = to_field_name(pname)
-        dtype = get_dart_type(pname, pschema, spec, schemas_in_scope, enum_names)
+        dtype = _dtype(pname, pschema)
         req = is_required(pname, required_list)
         json_key = pname
 
@@ -454,9 +520,15 @@ def generate_model(
         elif dtype.startswith("List<"):
             inner = dtype[5:-1]
             if inner in enum_names:
-                lines.append(f"    '{json_key}': {fname}?.map((e) => e.toJson()).toList(),")
-            elif inner not in ("String", "int", "double", "bool", "dynamic") and "fromJson" in str(pschema.get("items", {})):
-                lines.append(f"    '{json_key}': {fname}?.map((e) => e.toJson()).toList(),")
+                if req:
+                    lines.append(f"    '{json_key}': {fname}.map((e) => e.toJson()).toList(),")
+                else:
+                    lines.append(f"    '{json_key}': {fname}?.map((e) => e.toJson()).toList(),")
+            elif inner not in ("String", "int", "double", "bool", "dynamic"):
+                if req:
+                    lines.append(f"    '{json_key}': {fname}.map((e) => e.toJson()).toList(),")
+                else:
+                    lines.append(f"    '{json_key}': {fname}?.map((e) => e.toJson()).toList(),")
             else:
                 lines.append(f"    '{json_key}': {fname},")
         elif dtype.endswith("?"):
@@ -545,6 +617,8 @@ def openapi_to_dart():
     generated_enums: list[str] = []
     generated_classes: list[str] = []
     used_dart_names: dict[str, str] = {}  # dart_name → original schema name
+    inline_enums: dict[str, dict] = {}
+    enum_names = find_enum_schemas(spec)
 
     for name, schema in sorted(schemas.items()):
         dart_name = to_dart_name(name, all_schema_names)
@@ -575,7 +649,15 @@ def openapi_to_dart():
 
         used_dart_names[dart_name] = name
 
-        result = generate_model(name, schema, spec, in_scope, all_schema_names=all_schema_names)
+        result = generate_model(
+            name,
+            schema,
+            spec,
+            in_scope,
+            enum_names=enum_names,
+            all_schema_names=all_schema_names,
+            inline_enums=inline_enums,
+        )
         if result is None:
             continue
 
@@ -589,8 +671,6 @@ def openapi_to_dart():
             f.write("// GENERATED CODE -- DO NOT EDIT MANUALLY\n")
             f.write("// Generated from OpenAPI spec\n")
             f.write("\n")
-            if is_enum:
-                f.write("import 'package:json_annotation/json_annotation.dart';\n\n")
             f.write(result)
             f.write("\n")
 
@@ -600,6 +680,26 @@ def openapi_to_dart():
             generated_classes.append(dart_name)
         generated_files.append(file_name)
         print(f"  [OK] {file_name} -> {dart_name}")
+
+    # Emit inline property enums discovered while generating models
+    for enum_type, enum_schema in sorted(inline_enums.items()):
+        if enum_type in used_dart_names:
+            continue
+        used_dart_names[enum_type] = enum_type
+        result = generate_enum(enum_type, enum_schema, spec, all_schema_names)
+        file_name = snake_to_dart_file(enum_type) + ".dart"
+        file_path = out_dir / file_name
+        with open(file_path, "w") as f:
+            f.write("// ignore_for_file: public_member_api_docs, constant_identifier_names\n")
+            f.write("// GENERATED CODE -- DO NOT EDIT MANUALLY\n")
+            f.write("// Generated from OpenAPI spec\n")
+            f.write("\n")
+            f.write(result)
+            f.write("\n")
+        generated_enums.append(enum_type)
+        generated_files.append(file_name)
+        print(f"  [OK] {file_name} -> {enum_type} (inline)")
+        in_scope.add(enum_type)
 
     # Generate barrel file (deduplicated)
     barrel_path = out_dir / "gen.dart"

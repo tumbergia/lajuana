@@ -3,17 +3,12 @@ import 'package:flutter/foundation.dart';
 import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 
-enum ReservationProvidersLoadState {
-  initial,
-  loading,
-  loaded,
-  error,
-  saving,
-}
+enum ReservationProvidersLoadState { initial, loading, loaded, error, saving }
 
 class ReservationProvidersSectionController extends ChangeNotifier {
-  ReservationProvidersSectionController({required ReservationsRepository repository})
-      : _repository = repository;
+  ReservationProvidersSectionController({
+    required ReservationsRepository repository,
+  }) : _repository = repository;
 
   final ReservationsRepository _repository;
 
@@ -92,7 +87,10 @@ class ReservationProvidersSectionController extends ChangeNotifier {
       );
       items = [
         for (final item in items)
-          if (item.reservationProviderId == reservationProviderId) updated else item,
+          if (item.reservationProviderId == reservationProviderId)
+            updated
+          else
+            item,
       ];
       state = ReservationProvidersLoadState.loaded;
       notifyListeners();

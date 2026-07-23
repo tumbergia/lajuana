@@ -68,7 +68,9 @@ def test_files_init_upload_contract(monkeypatch) -> None:
             "expires_at": datetime.now(UTC).isoformat(),
         }
 
-    monkeypatch.setattr(Container.get_instance().file_upload_service, "init_upload", fake_init_upload)
+    monkeypatch.setattr(
+        Container.get_instance().file_upload_service, "init_upload", fake_init_upload
+    )
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.post(
         "/api/v1/files/init-upload",
@@ -104,8 +106,12 @@ def test_sync_executor_rejects_catalog_write_for_guide() -> None:
         },
     )
     from app.services.sync_handlers import (
-        ConfigSyncHandler, ExperienceSyncHandler, ReservationSyncHandler, ResourceSyncHandler,
+        ConfigSyncHandler,
+        ExperienceSyncHandler,
+        ReservationSyncHandler,
+        ResourceSyncHandler,
     )
+
     _c = Container.get_instance()
     executor = SyncOperationExecutor(
         experience_handler=ExperienceSyncHandler(
@@ -146,8 +152,12 @@ def test_sync_executor_rejects_saddle_write_for_guide() -> None:
         payload={"code": "M-99"},
     )
     from app.services.sync_handlers import (
-        ConfigSyncHandler, ExperienceSyncHandler, ReservationSyncHandler, ResourceSyncHandler,
+        ConfigSyncHandler,
+        ExperienceSyncHandler,
+        ReservationSyncHandler,
+        ResourceSyncHandler,
     )
+
     _c = Container.get_instance()
     executor = SyncOperationExecutor(
         experience_handler=ExperienceSyncHandler(
@@ -167,9 +177,7 @@ def test_sync_executor_rejects_saddle_write_for_guide() -> None:
         ),
         config_handler=ConfigSyncHandler(config_service=_c.config_service),
     )
-    result = asyncio.run(
-        executor.execute(current_user=_guide_user(), operation=operation)
-    )
+    result = asyncio.run(executor.execute(current_user=_guide_user(), operation=operation))
     assert result.status == "rejected"
     assert result.error is not None
     assert result.error.code == "auth.forbidden"
@@ -195,37 +203,61 @@ def test_resource_handler_routes_saddle_operations() -> None:
         return SimpleNamespace(id=saddle_id)
 
     fake_saddle = SimpleNamespace(
-        create=_create, soft_delete=_soft_delete, restore=_restore,
+        create=_create,
+        soft_delete=_soft_delete,
+        restore=_restore,
     )
     handler = ResourceSyncHandler(
-        provider_service=None, policy_service=None, saddle_service=fake_saddle,
+        provider_service=None,
+        policy_service=None,
+        saddle_service=fake_saddle,
     )
 
     create_op = SyncPushOperationSchema(
-        operation_id="op-c", entity_type="saddle", entity_local_id="l1",
-        operation_type="create", idempotency_key="i-c", payload={"code": "M-1"},
+        operation_id="op-c",
+        entity_type="saddle",
+        entity_local_id="l1",
+        operation_type="create",
+        idempotency_key="i-c",
+        payload={"code": "M-1"},
     )
     doc = asyncio.run(
-        handler.handle(entity="saddle", op_type="create", operation=create_op, current_user=_admin_user())
+        handler.handle(
+            entity="saddle", op_type="create", operation=create_op, current_user=_admin_user()
+        )
     )
     assert doc is created
     assert calls["create"].code == "M-1"
 
     delete_op = SyncPushOperationSchema(
-        operation_id="op-d", entity_type="saddle", entity_local_id="l1",
-        entity_remote_id="s1", operation_type="delete", idempotency_key="i-d", payload={},
+        operation_id="op-d",
+        entity_type="saddle",
+        entity_local_id="l1",
+        entity_remote_id="s1",
+        operation_type="delete",
+        idempotency_key="i-d",
+        payload={},
     )
     asyncio.run(
-        handler.handle(entity="saddle", op_type="delete", operation=delete_op, current_user=_admin_user())
+        handler.handle(
+            entity="saddle", op_type="delete", operation=delete_op, current_user=_admin_user()
+        )
     )
     assert calls["delete"] == "s1"
 
     restore_op = SyncPushOperationSchema(
-        operation_id="op-r", entity_type="saddle", entity_local_id="l1",
-        entity_remote_id="s1", operation_type="restore", idempotency_key="i-r", payload={},
+        operation_id="op-r",
+        entity_type="saddle",
+        entity_local_id="l1",
+        entity_remote_id="s1",
+        operation_type="restore",
+        idempotency_key="i-r",
+        payload={},
     )
     asyncio.run(
-        handler.handle(entity="saddle", op_type="restore", operation=restore_op, current_user=_admin_user())
+        handler.handle(
+            entity="saddle", op_type="restore", operation=restore_op, current_user=_admin_user()
+        )
     )
     assert calls["restore"] == "s1"
 
@@ -270,11 +302,18 @@ def test_reservation_handler_routes_assignment_delete() -> None:
     )
 
     delete_op = SyncPushOperationSchema(
-        operation_id="op-ad", entity_type="assignment", entity_local_id="l1",
-        entity_remote_id="a1", operation_type="delete", idempotency_key="i-ad", payload={},
+        operation_id="op-ad",
+        entity_type="assignment",
+        entity_local_id="l1",
+        entity_remote_id="a1",
+        operation_type="delete",
+        idempotency_key="i-ad",
+        payload={},
     )
     doc = asyncio.run(
-        handler.handle(entity="assignment", op_type="delete", operation=delete_op, current_user=_admin_user())
+        handler.handle(
+            entity="assignment", op_type="delete", operation=delete_op, current_user=_admin_user()
+        )
     )
     assert doc is removed
     assert calls["remove"][0] == "a1"

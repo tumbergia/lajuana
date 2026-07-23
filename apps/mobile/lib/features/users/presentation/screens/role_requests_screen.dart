@@ -134,8 +134,7 @@ class _RoleRequestsScreenState extends State<RoleRequestsScreen>
           child: AppEmptyState(
             icon: Symbols.inbox,
             title: 'Sin solicitudes pendientes',
-            message:
-                'Cuando alguien sin rol pida acceso, aparecerá aquí.',
+            message: 'Cuando alguien sin rol pida acceso, aparecerá aquí.',
           ),
         );
       case RoleRequestsLoadState.refreshing:
@@ -166,10 +165,7 @@ class _RoleRequestsScreenState extends State<RoleRequestsScreen>
 }
 
 class _DecisionResult {
-  const _DecisionResult({
-    required this.action,
-    this.assignedRole,
-  });
+  const _DecisionResult({required this.action, this.assignedRole});
 
   final String action;
   final String? assignedRole;
@@ -245,10 +241,7 @@ class _RoleDecisionSheetState extends State<_RoleDecisionSheet> {
             onPressed: () {
               Navigator.pop(
                 context,
-                _DecisionResult(
-                  action: 'approve',
-                  assignedRole: _assignedRole,
-                ),
+                _DecisionResult(action: 'approve', assignedRole: _assignedRole),
               );
             },
           ),
@@ -258,10 +251,7 @@ class _RoleDecisionSheetState extends State<_RoleDecisionSheet> {
             variant: AppButtonVariant.secondary,
             expanded: true,
             onPressed: () {
-              Navigator.pop(
-                context,
-                const _DecisionResult(action: 'reject'),
-              );
+              Navigator.pop(context, const _DecisionResult(action: 'reject'));
             },
           ),
         ],

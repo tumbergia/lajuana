@@ -32,10 +32,7 @@ class NotificationsModule {
       outbox: outbox,
     );
     final controller = NotificationsController(repository: repository);
-    return NotificationsModule(
-      repository: repository,
-      controller: controller,
-    );
+    return NotificationsModule(repository: repository, controller: controller);
   }
 
   void dispose() {

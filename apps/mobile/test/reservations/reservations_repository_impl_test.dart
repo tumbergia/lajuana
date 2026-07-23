@@ -8,6 +8,7 @@ import 'package:mobile/features/reservations/infrastructure/remote/reservation_d
 import 'package:mobile/features/reservations/infrastructure/remote/reservations_api_client.dart';
 import 'package:mobile/features/reservations/infrastructure/repositories/reservations_repository_impl.dart';
 import 'package:mobile/features/reservations/infrastructure/sync/reservations_sync_coordinator.dart';
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/gen/reservation_rules.dart' as gen;
 
 /// Coordinador con un cliente que nunca se invoca en estos tests (solo se
@@ -49,11 +50,14 @@ class _FakeApiClient implements ReservationsApiClient {
       throw UnimplementedError('not used in this test');
 
   @override
+  Future<ReservationDetailDto> createReservation(ReservationCreate payload) =>
+      throw UnimplementedError();
+
+  @override
   Future<ReservationDetailDto> updateReservation({
     required String reservationId,
     bool? assistantDisabled,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) =>
@@ -63,55 +67,53 @@ class _FakeApiClient implements ReservationsApiClient {
   Future<ReservationDetailDto> approvePaymentProof({
     required String paymentProofId,
     String? note,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
+
+  @override
+  Future<ReservationDetailDto> approvePaymentWithoutProof({
+    required String reservationId,
+    String? note,
+  }) => throw UnimplementedError();
 
   @override
   Future<ReservationDetailDto> rejectPaymentProof({
     required String paymentProofId,
     required String reason,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<ReservationDetailDto> unverifyPaymentProof({
     required String paymentProofId,
     String? note,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<ReservationDetailDto> unrejectPaymentProof({
     required String paymentProofId,
     String? note,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<ReservationDetailDto> confirmReservation({
     required String reservationId,
     String? notes,
     String? startTime,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<ReservationDetailDto> cancelReservation({
     required String reservationId,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<ReservationDetailDto> deleteReservation({
     required String reservationId,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   @override
   Future<ReservationDetailDto> restoreReservation({
     required String reservationId,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<gen.ReservationRules> getReservationRules() async {
@@ -121,8 +123,42 @@ class _FakeApiClient implements ReservationsApiClient {
   @override
   Future<List<ReservationTimelineEntryDto>> getReservationTimeline(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
+
+  @override
+  Future<List<ReservationProviderItemDto>> getReservationProviders(
+    String reservationId,
+  ) async => const [];
+
+  @override
+  Future<List<ProviderCatalogItemDto>> listProviders({
+    String? query,
+    bool isActive = true,
+  }) async => const [];
+
+  @override
+  Future<ReservationProviderItemDto> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  }) => throw UnimplementedError();
+
+  @override
+  Future<ReservationProviderItemDto> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+  }) async {}
 
   @override
   Future<void> createLogNote({
@@ -189,7 +225,11 @@ class _FakeLocalDataSource implements ReservationsLocalDataSource {
   }
 
   @override
-  Future<void> cacheDetail(String id, Map<String, dynamic> detail, String? updatedAt) async {}
+  Future<void> cacheDetail(
+    String id,
+    Map<String, dynamic> detail,
+    String? updatedAt,
+  ) async {}
 
   @override
   Future<CachedReservationDetailRecord?> getCachedDetail(String id) async =>
@@ -214,13 +254,13 @@ class _FakeLocalDataSource implements ReservationsLocalDataSource {
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 Map<String, dynamic> _samplePayload() => {
-      'id': 'test-id-1',
-      'code': 'RES-001',
-      'status': 'confirmed',
-      'participant_count': 2,
-      'experience_name': 'Cabalgata Básica',
-      'holder_name': 'Juan Pérez',
-    };
+  'id': 'test-id-1',
+  'code': 'RES-001',
+  'status': 'confirmed',
+  'participant_count': 2,
+  'experience_name': 'Cabalgata Básica',
+  'holder_name': 'Juan Pérez',
+};
 
 ReservationListItemDto _sampleDto({String? id}) {
   return ReservationListItemDto(
@@ -285,17 +325,16 @@ void main() {
         syncCoordinator: _fakeSyncCoordinator(local),
       );
 
-      expect(
-        () => repo.listReservations(),
-        throwsA(isA<Exception>()),
-      );
+      expect(() => repo.listReservations(), throwsA(isA<Exception>()));
     });
 
     test('caches API results for offline fallback', () async {
-      final api = _FakeApiClient(items: [
-        _sampleDto(id: 'a'),
-        _sampleDto(id: 'b'),
-      ]);
+      final api = _FakeApiClient(
+        items: [
+          _sampleDto(id: 'a'),
+          _sampleDto(id: 'b'),
+        ],
+      );
       final local = _FakeLocalDataSource();
       final repo = ReservationsRepositoryImpl(
         apiClient: api,

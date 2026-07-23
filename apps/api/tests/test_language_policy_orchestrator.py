@@ -70,13 +70,11 @@ class CapturingPlanner:
         return self._plan
 
 
-def _setup(monkeypatch: pytest.MonkeyPatch, session_lang: str = "es", override: str | None = None) -> CapturingPlanner:  # noqa: E501
-    monkeypatch.setattr(
-        "app.ai.assistant.orchestrator.ConversationTurnDocument", _FindableTurn
-    )
-    monkeypatch.setattr(
-        "app.ai.assistant.orchestrator.ToolCallLogDocument", _FakeLog
-    )
+def _setup(
+    monkeypatch: pytest.MonkeyPatch, session_lang: str = "es", override: str | None = None
+) -> CapturingPlanner:  # noqa: E501
+    monkeypatch.setattr("app.ai.assistant.orchestrator.ConversationTurnDocument", _FindableTurn)
+    monkeypatch.setattr("app.ai.assistant.orchestrator.ToolCallLogDocument", _FakeLog)
 
     async def fake_load_session(self: Any, **_: Any) -> Any:
         async def noop_save() -> None:
@@ -130,6 +128,7 @@ def test_bot_keeps_spanish_across_several_english_turns(monkeypatch: pytest.Monk
             return await orch.ask(
                 AskRequest(message=_msg, channel="whatsapp", conversation_id="demo-lang-2")
             )
+
         asyncio.run(run())
     assert planner.captured_language == "es"
 

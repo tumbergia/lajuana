@@ -5,20 +5,17 @@
 /// AUTO-GENERATED from OpenAPI schema `ReservationAvailabilityResponseSchema`.
 
 class ReservationAvailability {
-
-  final DateTime date;  // date-only (no time)
+  final DateTime date; // date-only (no time)
   final bool available;
   final String? blockingReservationId;
   final String? reason;
 
-  const ReservationAvailability(
-    {
+  const ReservationAvailability({
     required this.date,
     required this.available,
     this.blockingReservationId,
     this.reason,
-    }
-  );
+  });
 
   factory ReservationAvailability.fromJson(Map<String, dynamic> json) {
     return ReservationAvailability(
@@ -35,5 +32,4 @@ class ReservationAvailability {
     'blocking_reservation_id': blockingReservationId,
     'reason': reason,
   };
-
 }

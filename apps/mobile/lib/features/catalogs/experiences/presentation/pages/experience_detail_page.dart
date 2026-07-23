@@ -133,9 +133,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
                           icon: experience.isActive
                               ? Icons.check_circle_rounded
                               : Icons.cancel_rounded,
-                          title: experience.isActive
-                              ? 'Activa'
-                              : 'Inactiva',
+                          title: experience.isActive ? 'Activa' : 'Inactiva',
                           subtitle: experience.isActive
                               ? 'Disponible para reservas'
                               : 'Desactivada del catalogo',
@@ -231,8 +229,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
                             _infoRow(
                               icon: Icons.inventory_2_rounded,
                               title: 'Capacidad base',
-                              subtitle:
-                                  '${experience.baseCapacity}',
+                              subtitle: '${experience.baseCapacity}',
                             ),
                           _spacer(),
                         ],
@@ -276,8 +273,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
                           _infoRow(
                             icon: Icons.checklist_rounded,
                             title: 'Incluye',
-                            subtitle:
-                                experience.inclusions!.items.join(', '),
+                            subtitle: experience.inclusions!.items.join(', '),
                           ),
                           if (experience.inclusions!.displayText != null &&
                               experience.inclusions!.displayText!.isNotEmpty)
@@ -430,10 +426,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: imageWidget,
-      ),
+      child: AspectRatio(aspectRatio: 16 / 9, child: imageWidget),
     );
   }
 

@@ -44,13 +44,20 @@ class NotificationsApiClient {
       params.add('before_id=$beforeId');
     }
     if (unreadOnly) params.add('unread_only=true');
-    final decoded = await _request('GET', '/notifications/in-app?${params.join('&')}');
+    final decoded = await _request(
+      'GET',
+      '/notifications/in-app?${params.join('&')}',
+    );
     if (decoded is! List) {
-      throw const NotificationsApiFailure('Payload inválido de notificaciones.');
+      throw const NotificationsApiFailure(
+        'Payload inválido de notificaciones.',
+      );
     }
     return decoded
         .whereType<Map>()
-        .map((item) => InAppNotification.fromJson(Map<String, dynamic>.from(item)))
+        .map(
+          (item) => InAppNotification.fromJson(Map<String, dynamic>.from(item)),
+        )
         .toList();
   }
 
@@ -59,7 +66,9 @@ class NotificationsApiClient {
     if (decoded is! Map) {
       throw const NotificationsApiFailure('Payload inválido de unread-count.');
     }
-    return InAppUnreadCount.fromJson(Map<String, dynamic>.from(decoded)).unreadCount;
+    return InAppUnreadCount.fromJson(
+      Map<String, dynamic>.from(decoded),
+    ).unreadCount;
   }
 
   Future<InAppNotification> markRead(String notificationId) async {
@@ -85,8 +94,9 @@ class NotificationsApiClient {
     if (decoded is! Map) {
       throw const NotificationsApiFailure('Payload inválido al eliminar.');
     }
-    return InAppClearResult.fromJson(Map<String, dynamic>.from(decoded))
-        .clearedCount;
+    return InAppClearResult.fromJson(
+      Map<String, dynamic>.from(decoded),
+    ).clearedCount;
   }
 
   Future<int> clearInbox({bool readOnly = false}) async {
@@ -95,8 +105,9 @@ class NotificationsApiClient {
     if (decoded is! Map) {
       throw const NotificationsApiFailure('Payload inválido al limpiar.');
     }
-    return InAppClearResult.fromJson(Map<String, dynamic>.from(decoded))
-        .clearedCount;
+    return InAppClearResult.fromJson(
+      Map<String, dynamic>.from(decoded),
+    ).clearedCount;
   }
 
   Future<NotificationPreferences> getPreferences() async {
@@ -110,14 +121,18 @@ class NotificationsApiClient {
   Future<NotificationPreferences> updatePreferences(
     Map<String, bool> preferences,
   ) async {
-    final body = NotificationPreferencesUpdate(preferences: preferences).toJson();
+    final body = NotificationPreferencesUpdate(
+      preferences: preferences,
+    ).toJson();
     final decoded = await _request(
       'PUT',
       '/notifications/preferences',
       body: body,
     );
     if (decoded is! Map) {
-      throw const NotificationsApiFailure('Payload inválido al guardar preferencias.');
+      throw const NotificationsApiFailure(
+        'Payload inválido al guardar preferencias.',
+      );
     }
     return NotificationPreferences.fromJson(Map<String, dynamic>.from(decoded));
   }
@@ -131,10 +146,7 @@ class NotificationsApiClient {
     await _request(
       'POST',
       '/whatsapp/send',
-      body: {
-        'to_phone': phone,
-        'message': message,
-      },
+      body: {'to_phone': phone, 'message': message},
     );
   }
 
@@ -157,9 +169,9 @@ class NotificationsApiClient {
       late final http.Response response;
       switch (method) {
         case 'GET':
-          response = await _http.get(uri, headers: headers).timeout(
-            const Duration(seconds: 15),
-          );
+          response = await _http
+              .get(uri, headers: headers)
+              .timeout(const Duration(seconds: 15));
         case 'POST':
           response = await _http
               .post(

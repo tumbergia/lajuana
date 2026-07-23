@@ -202,9 +202,7 @@ def test_set_status_emits_reservation_change(
         svc = Container.get_instance().reservation_service
         monkeypatch.setattr(svc, "get", _mock_get)
 
-        await svc.set_status(
-            "660000000000000000000001", ReservationStatus.PRE_RESERVED
-        )
+        await svc.set_status("660000000000000000000001", ReservationStatus.PRE_RESERVED)
 
         assert len(_capture_sync_changes) == 1
         assert _capture_sync_changes[0]["entity_type"] == "reservation"

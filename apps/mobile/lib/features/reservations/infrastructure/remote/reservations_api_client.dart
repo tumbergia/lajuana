@@ -39,10 +39,7 @@ class ReservationsApiClient {
     final path = params.isEmpty
         ? '/reservations'
         : '/reservations?${params.join('&')}';
-    final response = await _authorizedRequest(
-      method: 'GET',
-      path: path,
-    );
+    final response = await _authorizedRequest(method: 'GET', path: path);
     final decoded = jsonDecode(response.body);
     if (decoded is! List) {
       throw ReservationsApiFailure(
@@ -65,9 +62,7 @@ class ReservationsApiClient {
         .toList(growable: false);
   }
 
-  Future<ReservationDetailDto> getReservationById(
-    String reservationId,
-  ) async {
+  Future<ReservationDetailDto> getReservationById(String reservationId) async {
     final response = await _authorizedRequest(
       method: 'GET',
       path: '/reservations/$reservationId',
@@ -142,9 +137,7 @@ class ReservationsApiClient {
     final response = await _authorizedRequest(
       method: 'POST',
       path: '/reservations/$reservationId/approve-payment',
-      body: {
-        if (note != null) 'note': note,
-      },
+      body: {if (note != null) 'note': note},
     );
     final data = _decodeBody(response.body);
     return ReservationDetailDto.fromJson(data);
@@ -195,10 +188,7 @@ class ReservationsApiClient {
     final response = await _authorizedRequest(
       method: 'POST',
       path: '/payment-proofs/$paymentProofId/reject',
-      body: {
-        'confirmation_token': 'REJECT_PAYMENT',
-        'reason': reason,
-      },
+      body: {'confirmation_token': 'REJECT_PAYMENT', 'reason': reason},
     );
     final data = _decodeBody(response.body);
     return ReservationDetailDto.fromJson(data);
@@ -264,7 +254,8 @@ class ReservationsApiClient {
   Future<gen.ReservationRules> getReservationRules() async {
     final response = await _authorizedRequest(
       method: 'GET',
-      path: '/config/reservation-rules',  // backend: /api/v1/config/reservation-rules
+      path:
+          '/config/reservation-rules', // backend: /api/v1/config/reservation-rules
     );
     final data = _decodeBody(response.body);
     return gen.ReservationRules.fromJson(data);
@@ -314,9 +305,11 @@ class ReservationsApiClient {
       );
     }
     return decoded
-        .map((item) => ReservationProviderItemDto.fromJson(
-              Map<String, dynamic>.from(item as Map),
-            ))
+        .map(
+          (item) => ReservationProviderItemDto.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -341,9 +334,11 @@ class ReservationsApiClient {
       );
     }
     return decoded
-        .map((item) => ProviderCatalogItemDto.fromJson(
-              Map<String, dynamic>.from(item as Map),
-            ))
+        .map(
+          (item) => ProviderCatalogItemDto.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
         .toList(growable: false);
   }
 
@@ -426,10 +421,7 @@ class ReservationsApiClient {
     await _authorizedRequest(
       method: 'PATCH',
       path: '/logs/$logId',
-      body: {
-        'notes': notes,
-        if (photos != null) 'photos': photos,
-      },
+      body: {'notes': notes, if (photos != null) 'photos': photos},
     );
   }
 
@@ -516,10 +508,7 @@ class ReservationsApiClient {
   }
 
   Future<void> deleteLogEntry(String logId) async {
-    await _authorizedRequest(
-      method: 'DELETE',
-      path: '/logs/$logId',
-    );
+    await _authorizedRequest(method: 'DELETE', path: '/logs/$logId');
   }
 
   Future<http.Response> _authorizedRequest({

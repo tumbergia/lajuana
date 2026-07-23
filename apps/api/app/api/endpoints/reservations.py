@@ -1,6 +1,7 @@
 from datetime import date
 from typing import Annotated
 
+from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.api.deps import (
@@ -15,7 +16,7 @@ from app.api.docs import ENDPOINT_DOCS, endpoint_description, endpoint_responses
 from app.common.enums import PaymentStatus, Permission
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
-from app.documents import ReservationDocument, UserDocument
+from app.documents import ExperienceDocument, ReservationDocument, UserDocument
 from app.schemas.participant import (
     ParticipantCreateSchema,
     ParticipantResponseSchema,
@@ -45,16 +46,13 @@ from app.services import (
     ReservationProviderService,
     ReservationService,
 )
-from app.services.reservation_timeline_service import ReservationTimelineService
-from beanie import PydanticObjectId
-
-from app.documents import ExperienceDocument
 from app.services.mappers import (
     participant_to_response,
     payment_proof_to_response,
     reservation_to_list_item,
     reservation_to_response,
 )
+from app.services.reservation_timeline_service import ReservationTimelineService
 
 router = APIRouter(prefix="/reservations", tags=["Reservas"])
 
@@ -110,7 +108,9 @@ async def list_reservations(
         UserDocument,
         Depends(require_permissions(Permission.RESERVATION_READ)),
     ],
-    include_deleted: bool = Query(default=False, description="Incluir reservas borradas logicamente"),
+    include_deleted: bool = Query(
+        default=False, description="Incluir reservas borradas logicamente"
+    ),
     assistant_disabled: bool | None = Query(
         default=None,
         description="Filtrar por asistente desactivado en la reserva",
@@ -140,10 +140,7 @@ async def list_reservations(
     # Batch-resolve experience names.
     exp_ids = list({str(d.experience_id) for d in docs})
     exp_criteria = {"_id": {"$in": [PydanticObjectId(eid) for eid in exp_ids]}}
-    experiences = {
-        str(e.id): e.name
-        for e in await ExperienceDocument.find(exp_criteria).to_list()
-    }
+    experiences = {str(e.id): e.name for e in await ExperienceDocument.find(exp_criteria).to_list()}
 
     items: list[ReservationListItemSchema] = []
     for doc in docs:
@@ -460,10 +457,12 @@ async def self_cancel_reservation(
     payload: ReservationSelfCancelSchema,
     reservation_service: ReservationService = Depends(get_reservation_service),
 ) -> ReservationResponseSchema:
-    reservation = await ReservationDocument.find_one({
-        "code": payload.reservation_code,
-        "holder_phone": payload.holder_phone,
-    })
+    reservation = await ReservationDocument.find_one(
+        {
+            "code": payload.reservation_code,
+            "holder_phone": payload.holder_phone,
+        }
+    )
     if reservation is None:
         raise ApiError(
             status_code=404,
@@ -522,6 +521,3 @@ async def create_participant(
 ) -> ParticipantResponseSchema:
     doc = await participant_service.create(reservation_id, payload)
     return participant_to_response(doc)
-
-
-

@@ -2,18 +2,12 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `ExperienceCategory`.
 
 enum ExperienceCategory {
-  @JsonValue('route')
   ROUTE("route"),
-  @JsonValue('experience')
   EXPERIENCE("experience"),
-  @JsonValue('private')
-  PRIVATE("private"),
-;
+  PRIVATE("private");
 
   final String value;
   const ExperienceCategory(this.value);
@@ -24,9 +18,10 @@ extension ExperienceCategoryX on ExperienceCategory {
 }
 
 extension ExperienceCategoryParse on String {
-  ExperienceCategory toExperienceCategory() => ExperienceCategory.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown ExperienceCategory: ${this}'),
-  );
+  ExperienceCategory toExperienceCategory() =>
+      ExperienceCategory.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown ExperienceCategory: ${this}'),
+      );
 }
-

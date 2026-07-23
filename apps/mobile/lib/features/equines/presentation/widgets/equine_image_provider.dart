@@ -45,7 +45,11 @@ class EquineImageProvider extends StatelessWidget {
         width: width,
         color: scheme.surfaceContainerHigh,
         alignment: Alignment.center,
-        child: Icon(Symbols.chess_knight, size: 48, color: scheme.onSurfaceVariant),
+        child: Icon(
+          Symbols.chess_knight,
+          size: 48,
+          color: scheme.onSurfaceVariant,
+        ),
       ),
     );
   }

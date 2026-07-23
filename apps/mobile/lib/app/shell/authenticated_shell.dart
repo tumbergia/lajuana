@@ -128,7 +128,9 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
     }
     WidgetsBinding.instance.addObserver(this);
     // Carga el conteo de ítems que quedaron en cola de sesiones previas.
-    unawaited(widget.outbox?.refreshCachedPendingCount() ?? Future<void>.value());
+    unawaited(
+      widget.outbox?.refreshCachedPendingCount() ?? Future<void>.value(),
+    );
     // Vacía cualquier cola pendiente al arrancar y arranca el reintento
     // periódico para que la sincronización sea automática y transparente.
     // Solo si hay fuentes de sincronización (evita timers ociosos en tests).
@@ -333,7 +335,8 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
         return AnalyticsHomeScreen(
           analyticsApiClient: widget.analyticsApiClient,
           userDisplayName: widget.authController.currentUser?.fullName,
-          userKey: widget.authController.currentUser?.remoteId ??
+          userKey:
+              widget.authController.currentUser?.remoteId ??
               widget.authController.currentUser?.email ??
               'default',
           reservationsModule: widget.reservationsModule,
@@ -492,8 +495,7 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
             // 3. Sin historial de tabs: doble-tap para salir de la app.
             final now = DateTime.now();
             if (_lastBackPress != null &&
-                now.difference(_lastBackPress!) <
-                    const Duration(seconds: 2)) {
+                now.difference(_lastBackPress!) < const Duration(seconds: 2)) {
               SystemNavigator.pop();
               return;
             }
@@ -508,105 +510,104 @@ class _AuthenticatedShellState extends State<AuthenticatedShell>
               );
           },
           child: Stack(
-          children: [
-            Scaffold(
-              appBar: AppTopBar(
-                logoAssetPath: 'assets/branding/lajuana-banner.svg',
-                // Un solo ícono para "no hay conexión completa con el
-                // servidor": sin enlace de red O sesión sin poder verificarse
-                // (isOfflineRestricted, que en la práctica siempre implica que
-                // el backend no respondió). Antes eran dos indicadores
-                // separados (ícono + banner "Sesión local") — se unifican
-                // para no confundir al usuario con dos avisos distintos.
-                showOfflineIndicator:
-                    widget.authController.networkStatus.linkType ==
-                        LinkType.offline ||
-                    widget.authController.isOfflineRestricted,
-                onOfflineTap: () => showAppTopToast(
-                  context,
-                  message: widget.authController.networkStatus.linkType ==
-                          LinkType.offline
-                      ? 'Sin Wi‑Fi ni datos. El modo local sigue disponible si aplica.'
-                      : 'Sin conexión con el servidor. Sesión local: acciones críticas están bloqueadas.',
-                  icon: Icons.wifi_off_rounded,
-                ),
-                showNotificationDot: unread > 0,
-                onNotificationsTap: widget.notificationsModule == null
-                    ? null
-                    : () => _openNotificationsInbox(),
-              ),
-              body: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ShellStatusRegion(
-                    controller: widget.authController,
+            children: [
+              Scaffold(
+                appBar: AppTopBar(
+                  logoAssetPath: 'assets/branding/lajuana-banner.svg',
+                  // Un solo ícono para "no hay conexión completa con el
+                  // servidor": sin enlace de red O sesión sin poder verificarse
+                  // (isOfflineRestricted, que en la práctica siempre implica que
+                  // el backend no respondió). Antes eran dos indicadores
+                  // separados (ícono + banner "Sesión local") — se unifican
+                  // para no confundir al usuario con dos avisos distintos.
+                  showOfflineIndicator:
+                      widget.authController.networkStatus.linkType ==
+                          LinkType.offline ||
+                      widget.authController.isOfflineRestricted,
+                  onOfflineTap: () => showAppTopToast(
+                    context,
+                    message:
+                        widget.authController.networkStatus.linkType ==
+                            LinkType.offline
+                        ? 'Sin Wi‑Fi ni datos. El modo local sigue disponible si aplica.'
+                        : 'Sin conexión con el servidor. Sesión local: acciones críticas están bloqueadas.',
+                    icon: Icons.wifi_off_rounded,
                   ),
-                  Expanded(
-                    child: _isUnassigned
-                        ? _buildUnassignedBody()
-                        : VoicePullScope(
-                            enabled: _isAdminVoiceEnabled,
-                            displacement:
-                                MediaQuery.of(context).padding.bottom + 72,
-                            onTriggered: _openAdminVoiceSheet,
-                            child: RefreshScope(
-                              onAfterRefresh: _maybeSync,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  for (final tab in _visitedTabs)
-                                    Offstage(
-                                      offstage: _shellNav.currentTab != tab,
-                                      child: TickerMode(
-                                        enabled: _shellNav.currentTab == tab,
-                                        child: Navigator(
-                                          key: _navigatorKeys[tab],
-                                          onGenerateRoute: (settings) {
-                                            return MaterialPageRoute<void>(
-                                              builder: (ctx) => _tabRoot(tab),
-                                              settings: settings,
-                                            );
-                                          },
+                  showNotificationDot: unread > 0,
+                  onNotificationsTap: widget.notificationsModule == null
+                      ? null
+                      : () => _openNotificationsInbox(),
+                ),
+                body: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ShellStatusRegion(controller: widget.authController),
+                    Expanded(
+                      child: _isUnassigned
+                          ? _buildUnassignedBody()
+                          : VoicePullScope(
+                              enabled: _isAdminVoiceEnabled,
+                              displacement:
+                                  MediaQuery.of(context).padding.bottom + 72,
+                              onTriggered: _openAdminVoiceSheet,
+                              child: RefreshScope(
+                                onAfterRefresh: _maybeSync,
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    for (final tab in _visitedTabs)
+                                      Offstage(
+                                        offstage: _shellNav.currentTab != tab,
+                                        child: TickerMode(
+                                          enabled: _shellNav.currentTab == tab,
+                                          child: Navigator(
+                                            key: _navigatorKeys[tab],
+                                            onGenerateRoute: (settings) {
+                                              return MaterialPageRoute<void>(
+                                                builder: (ctx) => _tabRoot(tab),
+                                                settings: settings,
+                                              );
+                                            },
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                  ),
-                ],
-              ),
-              bottomNavigationBar: _isUnassigned
-                  ? null
-                  : AppBottomNav(
-                      current: _shellNav.currentTab,
-                      visibleItems: _visibleNavItems,
-                      onTap: _onBottomNavTap,
-                      onVoiceLongPress: _isAdminVoiceEnabled
-                          ? (_, _) => _openAdminVoiceSheet()
-                          : null,
                     ),
-            ),
-            if (showHeadsUp && notificationsController != null)
-              NotificationHeadsUp(
-                key: ValueKey(
-                  'arrival-${notificationsController.pendingArrivalId}-'
-                  '${notificationsController.pendingArrivalCount}',
+                  ],
                 ),
-                title: notificationsController.pendingArrivalTitle!,
-                body: notificationsController.pendingArrivalBody,
-                eventType: notificationsController.pendingArrivalEventType,
-                count: notificationsController.pendingArrivalCount,
-                onTap: () => _openNotificationsInbox(
-                  openNotificationId:
-                      notificationsController.pendingArrivalId,
-                ),
-                onDismiss: notificationsController.dismissArrivalBanner,
+                bottomNavigationBar: _isUnassigned
+                    ? null
+                    : AppBottomNav(
+                        current: _shellNav.currentTab,
+                        visibleItems: _visibleNavItems,
+                        onTap: _onBottomNavTap,
+                        onVoiceLongPress: _isAdminVoiceEnabled
+                            ? (_, _) => _openAdminVoiceSheet()
+                            : null,
+                      ),
               ),
-            if (showReconnectOverlay)
-              const Positioned.fill(child: SessionLoadingView()),
-          ],
+              if (showHeadsUp && notificationsController != null)
+                NotificationHeadsUp(
+                  key: ValueKey(
+                    'arrival-${notificationsController.pendingArrivalId}-'
+                    '${notificationsController.pendingArrivalCount}',
+                  ),
+                  title: notificationsController.pendingArrivalTitle!,
+                  body: notificationsController.pendingArrivalBody,
+                  eventType: notificationsController.pendingArrivalEventType,
+                  count: notificationsController.pendingArrivalCount,
+                  onTap: () => _openNotificationsInbox(
+                    openNotificationId:
+                        notificationsController.pendingArrivalId,
+                  ),
+                  onDismiss: notificationsController.dismissArrivalBanner,
+                ),
+              if (showReconnectOverlay)
+                const Positioned.fill(child: SessionLoadingView()),
+            ],
           ),
         );
       },

@@ -203,7 +203,9 @@ class TestListAndCount:
             fake_cursor = MagicMock()
             fake_cursor.skip.return_value = fake_cursor
             fake_cursor.limit.return_value = fake_cursor
-            fake_cursor.to_list = AsyncMock(return_value=[FakeDoc(id="a", deleted_at=datetime.now(UTC))])
+            fake_cursor.to_list = AsyncMock(
+                return_value=[FakeDoc(id="a", deleted_at=datetime.now(UTC))]
+            )
             FakeDoc.find = MagicMock(return_value=fake_cursor)  # type: ignore[assignment]
             svc = ConcreteService()
             result = await svc.list(include_deleted=True)

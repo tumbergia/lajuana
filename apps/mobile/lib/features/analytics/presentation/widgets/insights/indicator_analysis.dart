@@ -43,9 +43,7 @@ List<String> buildIndicatorAnalysis(AnalyticsModule module) {
   } else if (cmp?.percentageDelta != null) {
     final d = cmp!.percentageDelta!;
     final sign = d > 0 ? '+' : '';
-    lines.add(
-      'Respecto al periodo anterior: variación de $sign${_fmt(d)}%.',
-    );
+    lines.add('Respecto al periodo anterior: variación de $sign${_fmt(d)}%.');
   }
 
   lines.add(
@@ -108,8 +106,7 @@ List<({String key, String value})> indicatorParameterRows(
   }
 
   if (module.breakdown.isNotEmpty) {
-    final total =
-        module.breakdown.fold<double>(0, (s, i) => s + i.rawValue);
+    final total = module.breakdown.fold<double>(0, (s, i) => s + i.rawValue);
     rows.add((key: 'Categorías', value: '${module.breakdown.length}'));
     rows.add((key: 'Total del desglose', value: _fmt(total)));
     final top = module.breakdown.reduce(
@@ -125,18 +122,19 @@ List<({String key, String value})> indicatorParameterRows(
         ..sort((a, b) => b.rawValue.compareTo(a.rawValue));
       final top2 =
           ordered.take(2).fold<double>(0, (s, i) => s + i.rawValue) /
-              total *
-              100;
+          total *
+          100;
       rows.add((key: 'Peso de los 2 líderes', value: '${_fmt(top2)}%'));
-      final hhi = module.breakdown
+      final hhi =
+          module.breakdown
               .map((i) => i.rawValue / total)
               .fold<double>(0, (s, p) => s + p * p) *
           10000;
       final conc = hhi >= 2500
           ? 'alta'
           : hhi >= 1500
-              ? 'moderada'
-              : 'dispersa';
+          ? 'moderada'
+          : 'dispersa';
       rows.add((key: 'Concentración', value: conc));
     }
 
@@ -204,12 +202,10 @@ List<({String key, String value})> indicatorParameterRows(
       ));
     }
     if (module.ranking.length >= 3) {
-      final total =
-          module.ranking.fold<double>(0, (s, i) => s + i.rawValue);
+      final total = module.ranking.fold<double>(0, (s, i) => s + i.rawValue);
       if (total > 0) {
-        final top3 = module.ranking
-                .take(3)
-                .fold<double>(0, (s, i) => s + i.rawValue) /
+        final top3 =
+            module.ranking.take(3).fold<double>(0, (s, i) => s + i.rawValue) /
             total *
             100;
         rows.add((key: 'Peso del top 3', value: '${_fmt(top3)}%'));
@@ -223,8 +219,7 @@ List<({String key, String value})> indicatorParameterRows(
       if (shares.isNotEmpty) {
         rows.add((
           key: 'Ocupación media',
-          value:
-              '${_fmt(shares.reduce((a, b) => a + b) / shares.length)}%',
+          value: '${_fmt(shares.reduce((a, b) => a + b) / shares.length)}%',
         ));
         rows.add((
           key: 'Salidas <25%',

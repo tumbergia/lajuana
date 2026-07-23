@@ -241,11 +241,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         color: scheme.surfaceContainerHighest,
         borderRadius: tokens.radiusMd,
       ),
-      child: Icon(
-        icon,
-        size: 22,
-        color: scheme.onSurfaceVariant,
-      ),
+      child: Icon(icon, size: 22, color: scheme.onSurfaceVariant),
     );
   }
 
@@ -254,10 +250,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppSectionHeader(
-          eyebrow: 'Más',
-          title: 'Opciones adicionales',
-        ),
+        const AppSectionHeader(eyebrow: 'Más', title: 'Opciones adicionales'),
         const SizedBox(height: 20),
         AppEntityRowCard(
           title: 'Perfil',

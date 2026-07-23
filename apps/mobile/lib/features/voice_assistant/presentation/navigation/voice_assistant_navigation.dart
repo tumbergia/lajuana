@@ -159,7 +159,9 @@ class VoiceAssistantNavigation {
 
     if (repository != null) {
       try {
-        saddle = saddle_mapper.listItemToRecord(await repository.getSaddleById(saddleId));
+        saddle = saddle_mapper.listItemToRecord(
+          await repository.getSaddleById(saddleId),
+        );
       } catch (_) {
         saddle = null;
       }
@@ -201,16 +203,16 @@ class VoiceAssistantNavigation {
               const SizedBox(height: 12),
               Text(
                 saddle.code,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
                 saddle.name,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 8),
               AppBadge(

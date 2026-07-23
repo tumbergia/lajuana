@@ -11,13 +11,13 @@ from app.ai.mcp.tool_contracts import (
     SuggestAlternativeDatesOutput,
     ToolBlockingReason,
 )
+from app.core.di import Container
 from app.documents.experience_document import ExperienceDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.services.experience_catalog_resolver import (
     ExperienceCatalogResolver,
     ExperienceResolutionStatus,
 )
-from app.core.di import Container
 
 
 def _safe_str(value: Any) -> str | None:

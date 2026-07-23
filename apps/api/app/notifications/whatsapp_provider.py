@@ -57,4 +57,5 @@ class WhatsAppNotificationProvider(NotificationProvider):
 
     async def validate_config(self) -> bool:
         from app.core.config import settings
+
         return bool(settings.whatsapp_access_token and settings.whatsapp_phone_number_id)

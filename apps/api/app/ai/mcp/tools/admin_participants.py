@@ -167,7 +167,9 @@ async def admin_update_participant(
             tool_name="admin_update_participant",
             input={
                 "participant_id": participant_id,
-                **{k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+                **{
+                    k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+                },
             },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",

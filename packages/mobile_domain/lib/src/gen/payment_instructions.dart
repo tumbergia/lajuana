@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `PaymentInstructionsSchema`.
 
 class PaymentInstructions {
-
   final bool manualTransferEnabled;
   final String accountBank;
   final String accountType;
@@ -18,8 +17,7 @@ class PaymentInstructions {
   final double boldSurchargePercent;
   final String boldNote;
 
-  const PaymentInstructions(
-    {
+  const PaymentInstructions({
     required this.manualTransferEnabled,
     required this.accountBank,
     required this.accountType,
@@ -31,8 +29,7 @@ class PaymentInstructions {
     this.boldCheckoutUrl,
     required this.boldSurchargePercent,
     required this.boldNote,
-    }
-  );
+  });
 
   factory PaymentInstructions.fromJson(Map<String, dynamic> json) {
     return PaymentInstructions(
@@ -63,5 +60,4 @@ class PaymentInstructions {
     'bold_surcharge_percent': boldSurchargePercent,
     'bold_note': boldNote,
   };
-
 }

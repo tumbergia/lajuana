@@ -2,18 +2,12 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `UserRole`.
 
 enum UserRole {
-  @JsonValue('admin')
   ADMIN("admin"),
-  @JsonValue('guide')
   GUIDE("guide"),
-  @JsonValue('unassigned')
-  UNASSIGNED("unassigned"),
-;
+  UNASSIGNED("unassigned");
 
   final String value;
   const UserRole(this.value);
@@ -29,4 +23,3 @@ extension UserRoleParse on String {
     orElse: () => throw ArgumentError('Unknown UserRole: ${this}'),
   );
 }
-

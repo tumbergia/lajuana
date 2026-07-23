@@ -60,7 +60,11 @@ class ProviderService(BaseService[ProviderDocument, ProviderCreateSchema, Provid
                 score = 80
             elif name.startswith(normalized_query) or slug.startswith(normalized_query):
                 score = 78
-            elif normalized_query in name or normalized_query in slug or normalized_query in contact_name:
+            elif (
+                normalized_query in name
+                or normalized_query in slug
+                or normalized_query in contact_name
+            ):
                 score = 64
             elif location_label and normalized_query in location_label:
                 score = 60

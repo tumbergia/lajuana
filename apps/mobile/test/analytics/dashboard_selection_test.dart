@@ -56,7 +56,10 @@ void main() {
     expect(ids, containsAll(catalog));
     expect(ids.length, catalog.length);
     // Pinned appear before the rest of catalog (after action_center).
-    expect(ids.indexOf('confirmed_value_trend'), lessThan(ids.indexOf('occupancy')));
+    expect(
+      ids.indexOf('confirmed_value_trend'),
+      lessThan(ids.indexOf('occupancy')),
+    );
     expect(ids.indexOf('top_countries'), lessThan(ids.indexOf('occupancy')));
   });
 
@@ -89,7 +92,7 @@ void main() {
               {'raw': 1, 'label': 'a'},
               {'raw': 2, 'label': 'b'},
             ],
-          }
+          },
         ],
       }),
     );
@@ -137,7 +140,7 @@ void main() {
               {'raw': 1, 'label': 'a'},
               {'raw': 2, 'label': 'b'},
             ],
-          }
+          },
         ],
       }),
     );
@@ -160,11 +163,7 @@ void main() {
       'title': 'T',
       'description': 'd',
       'visualization': 'kpi',
-      'period': {
-        'start': '2026-01-01',
-        'end': '2026-01-31',
-        'label': 'Enero',
-      },
+      'period': {'start': '2026-01-01', 'end': '2026-01-31', 'label': 'Enero'},
       'status': 'ok',
       'primary_value': {
         'raw': 1,

@@ -25,7 +25,6 @@ Usage:
 from __future__ import annotations
 
 import os
-from typing import Any
 
 # Prevent real DB connection during tests
 os.environ.setdefault("APP_SKIP_DB_INIT", "true")

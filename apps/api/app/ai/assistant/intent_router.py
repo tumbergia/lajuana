@@ -409,7 +409,9 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
 
     if _matches_any(msg_lower, _ADMIN_DEACTIVATE_PROVIDER):
         provider_id = _extract_object_id(msg_lower, "provider_id")
-        provider_reference = None if provider_id else _extract_admin_entity_reference(msg_lower, ["proveedor"])
+        provider_reference = (
+            None if provider_id else _extract_admin_entity_reference(msg_lower, ["proveedor"])
+        )
         plan_args = ToolArgs(provider_id=provider_id) if provider_id else ToolArgs()
         if provider_reference:
             plan_args.q = provider_reference  # type: ignore[attr-defined]
@@ -424,7 +426,9 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
 
     if _matches_any(msg_lower, _ADMIN_DEACTIVATE_EQUINE):
         equine_id = _extract_object_id(msg_lower, "equine_id")
-        equine_reference = None if equine_id else _extract_admin_entity_reference(msg_lower, ["equino", "mula"])
+        equine_reference = (
+            None if equine_id else _extract_admin_entity_reference(msg_lower, ["equino", "mula"])
+        )
         plan_args = ToolArgs(equine_id=equine_id) if equine_id else ToolArgs()
         if equine_reference:
             plan_args.q = equine_reference  # type: ignore[attr-defined]
@@ -439,7 +443,9 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
 
     if _matches_any(msg_lower, _ADMIN_DEACTIVATE_SADDLE):
         saddle_id = _extract_object_id(msg_lower, "saddle_id")
-        saddle_reference = None if saddle_id else _extract_admin_entity_reference(msg_lower, ["silla", "montura"])
+        saddle_reference = (
+            None if saddle_id else _extract_admin_entity_reference(msg_lower, ["silla", "montura"])
+        )
         plan_args = ToolArgs(saddle_id=saddle_id) if saddle_id else ToolArgs()
         if saddle_reference:
             plan_args.q = saddle_reference  # type: ignore[attr-defined]
@@ -454,7 +460,9 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
 
     if _matches_any(msg_lower, _ADMIN_DEACTIVATE_EXPERIENCE):
         experience_id = _extract_object_id(msg_lower, "experience_id")
-        experience_reference = None if experience_id else _extract_admin_entity_reference(msg_lower, ["experiencia"])
+        experience_reference = (
+            None if experience_id else _extract_admin_entity_reference(msg_lower, ["experiencia"])
+        )
         plan_args = ToolArgs(experience_id=experience_id) if experience_id else ToolArgs()
         if experience_reference:
             plan_args.q = experience_reference  # type: ignore[attr-defined]

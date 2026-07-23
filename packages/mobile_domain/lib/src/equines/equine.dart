@@ -52,7 +52,9 @@ class Equine {
       inventoryNumber: int.tryParse(source.inventoryNumber),
       species: source.species.value,
       locationStatus: source.locationStatus.value,
-      locationNotes: source.locationNotes.isNotEmpty ? source.locationNotes : null,
+      locationNotes: source.locationNotes.isNotEmpty
+          ? source.locationNotes
+          : null,
       breed: source.breed.isNotEmpty ? source.breed : null,
       sex: source.sex.value,
       coatColor: source.coatColor.isNotEmpty ? source.coatColor : null,
@@ -64,7 +66,9 @@ class Equine {
       birthDateIsApproximate: source.birthDateIsApproximate,
       birthDateRaw: source.birthDateRaw.isNotEmpty ? source.birthDateRaw : null,
       birthPlace: source.birthPlace.isNotEmpty ? source.birthPlace : null,
-      registryNumber: source.registryNumber.isNotEmpty ? source.registryNumber : null,
+      registryNumber: source.registryNumber.isNotEmpty
+          ? source.registryNumber
+          : null,
       microchip: source.microchip.isNotEmpty ? source.microchip : null,
       sireName: source.sireName.isNotEmpty ? source.sireName : null,
       damName: source.damName.isNotEmpty ? source.damName : null,
@@ -74,12 +78,15 @@ class Equine {
       lastHeightAt: source.lastHeightAt.isNotEmpty ? source.lastHeightAt : null,
       isActive: source.isActive,
       isAvailable: source.isAvailable,
-      operationalStatus:
-          EquineOperationalStatus.fromApi(source.operationalStatus.value),
-      availabilityNotes:
-          source.availabilityNotes.isNotEmpty ? source.availabilityNotes : null,
-      availabilityReasons:
-          source.availabilityReasons.isNotEmpty ? source.availabilityReasons : null,
+      operationalStatus: EquineOperationalStatus.fromApi(
+        source.operationalStatus.value,
+      ),
+      availabilityNotes: source.availabilityNotes.isNotEmpty
+          ? source.availabilityNotes
+          : null,
+      availabilityReasons: source.availabilityReasons.isNotEmpty
+          ? source.availabilityReasons
+          : null,
       restUntil: source.restUntil.isNotEmpty
           ? DateTime.tryParse(source.restUntil)
           : null,

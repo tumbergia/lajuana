@@ -2,18 +2,12 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `ExperienceLevel`.
 
 enum ExperienceLevel {
-  @JsonValue('basic')
   BASIC("basic"),
-  @JsonValue('intermediate')
   INTERMEDIATE("intermediate"),
-  @JsonValue('advanced')
-  ADVANCED("advanced"),
-;
+  ADVANCED("advanced");
 
   final String value;
   const ExperienceLevel(this.value);
@@ -29,4 +23,3 @@ extension ExperienceLevelParse on String {
     orElse: () => throw ArgumentError('Unknown ExperienceLevel: ${this}'),
   );
 }
-

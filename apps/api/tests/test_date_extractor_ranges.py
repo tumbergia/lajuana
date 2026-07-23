@@ -46,7 +46,5 @@ def test_extract_desde_month_rolls_back_if_future() -> None:
     fixed = date(2026, 1, 10)
     with patch("app.ai.assistant.date_extractor.now_colombia") as mock_now:
         mock_now.return_value.date.return_value = fixed
-        result = extract_date_range_from_message(
-            "ingresos desde el 14 de febrero hasta hoy"
-        )
+        result = extract_date_range_from_message("ingresos desde el 14 de febrero hasta hoy")
     assert result == ("2025-02-14", "2026-01-10")

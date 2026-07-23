@@ -771,7 +771,12 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
             403: "Sin permisos.",
             404: "Comprobante o archivo no existe.",
         },
-        "error_codes": ["auth.unauthorized", "auth.forbidden", "payment_proof.not_found", "payment_proof.file_not_found"],
+        "error_codes": [
+            "auth.unauthorized",
+            "auth.forbidden",
+            "payment_proof.not_found",
+            "payment_proof.file_not_found",
+        ],
         "service_docstring": "Descarga el archivo binario de un comprobante de pago desde S3/local.",
     },
     "payment_proofs_update": {
@@ -833,7 +838,7 @@ ENDPOINT_DOCS: dict[str, EndpointDoc] = {
         "error_codes": ["auth.unauthorized", "auth.forbidden", "participant.not_found"],
         "service_docstring": "Obtiene participante por id.",
     },
-	"participants_update": {
+    "participants_update": {
         "summary": "Actualizar participante",
         "description": "Actualiza participante y recalcula completitud.",
         "permissions": ["participant.update"],
@@ -1780,7 +1785,8 @@ ENDPOINT_ROUTE_MAP: dict[str, tuple[str, str]] = {
     "saddles_update": ("PATCH", "/api/v1/saddles/{saddle_id}"),
     "saddles_delete": ("DELETE", "/api/v1/saddles/{saddle_id}"),
     "saddles_available_for_reservation": (
-        "GET", "/api/v1/saddles/available-for-reservation/{reservation_id}",
+        "GET",
+        "/api/v1/saddles/available-for-reservation/{reservation_id}",
     ),
     "assignments_create": ("POST", "/api/v1/assignments"),
     "assignments_get": ("GET", "/api/v1/assignments/{assignment_id}"),

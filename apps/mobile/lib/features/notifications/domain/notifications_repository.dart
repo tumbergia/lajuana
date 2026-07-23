@@ -44,17 +44,14 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
     required NotificationsApiClient apiClient,
     OutboxRepository? outbox,
     NotificationsDatabase? database,
-  })  : _api = apiClient,
-        _outbox = outbox,
-        _local = database != null
-            ? NotificationsLocalDataSource(database: database)
-            : null {
+  }) : _api = apiClient,
+       _outbox = outbox,
+       _local = database != null
+           ? NotificationsLocalDataSource(database: database)
+           : null {
     _outbox?.registerHandler(
       _entityType,
-      OutboxEntityHandler(
-        onApplied: _onApplied,
-        onFailed: _onFailed,
-      ),
+      OutboxEntityHandler(onApplied: _onApplied, onFailed: _onFailed),
     );
   }
 

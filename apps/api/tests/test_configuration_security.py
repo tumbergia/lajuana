@@ -24,7 +24,12 @@ async def test_public_ask_never_trusts_admin_channel(monkeypatch: pytest.MonkeyP
             captured = request
             return SimpleNamespace()
 
+    class FakeGate:
+        async def evaluate(self):
+            return SimpleNamespace(allowed=True)
+
     monkeypatch.setattr(ask_endpoint, "AssistantOrchestrator", FakeOrchestrator)
+    monkeypatch.setattr(ask_endpoint, "AssistantGate", FakeGate)
     await ask_endpoint.ask(AskRequest(message="hola", channel="admin_api"))
     assert captured.channel == "test"
 

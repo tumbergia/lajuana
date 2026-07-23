@@ -14,97 +14,95 @@ class NotificationVisuals {
   final IconData icon;
 }
 
-NotificationVisuals notificationVisuals(
-  String eventType, {
-  String body = '',
-}) {
+NotificationVisuals notificationVisuals(String eventType, {String body = ''}) {
   final looksCancelled = body.toLowerCase().contains('cancel');
   return switch (eventType) {
     'reservation_cancelled' => const NotificationVisuals(
-        label: 'Cancelación',
-        tone: AppBadgeTone.danger,
-        icon: Symbols.event_busy,
-      ),
-    'reservation_status_changed' when looksCancelled => const NotificationVisuals(
+      label: 'Cancelación',
+      tone: AppBadgeTone.danger,
+      icon: Symbols.event_busy,
+    ),
+    'reservation_status_changed' when looksCancelled =>
+      const NotificationVisuals(
         label: 'Cancelación',
         tone: AppBadgeTone.danger,
         icon: Symbols.event_busy,
       ),
     'reservation_created' => const NotificationVisuals(
-        label: 'Nueva reserva',
-        tone: AppBadgeTone.primary,
-        icon: Symbols.event,
-      ),
+      label: 'Nueva reserva',
+      tone: AppBadgeTone.primary,
+      icon: Symbols.event,
+    ),
     'reservation_confirmed' => const NotificationVisuals(
-        label: 'Confirmada',
-        tone: AppBadgeTone.primary,
-        icon: Symbols.event,
-      ),
+      label: 'Confirmada',
+      tone: AppBadgeTone.primary,
+      icon: Symbols.event,
+    ),
     'reservation_status_changed' => const NotificationVisuals(
-        label: 'Cambio de estado',
-        tone: AppBadgeTone.primary,
-        icon: Symbols.event,
-      ),
+      label: 'Cambio de estado',
+      tone: AppBadgeTone.primary,
+      icon: Symbols.event,
+    ),
     'reservation_updated' => const NotificationVisuals(
-        label: 'Actualizada',
-        tone: AppBadgeTone.primary,
-        icon: Symbols.event,
-      ),
+      label: 'Actualizada',
+      tone: AppBadgeTone.primary,
+      icon: Symbols.event,
+    ),
     'payment_proof_registered' => const NotificationVisuals(
-        label: 'Pago',
-        tone: AppBadgeTone.warning,
-        icon: Symbols.receipt_long,
-      ),
+      label: 'Pago',
+      tone: AppBadgeTone.warning,
+      icon: Symbols.receipt_long,
+    ),
     'participant_form_completed' => const NotificationVisuals(
-        label: 'Participante',
-        tone: AppBadgeTone.success,
-        icon: Symbols.person_check,
-      ),
+      label: 'Participante',
+      tone: AppBadgeTone.success,
+      icon: Symbols.person_check,
+    ),
     'human_review_requested' => const NotificationVisuals(
-        label: 'Atención humana',
-        tone: AppBadgeTone.primary,
-        icon: Symbols.support_agent,
-      ),
+      label: 'Atención humana',
+      tone: AppBadgeTone.primary,
+      icon: Symbols.support_agent,
+    ),
     'whatsapp_message_unattended' => const NotificationVisuals(
-        label: 'WhatsApp',
-        tone: AppBadgeTone.primary,
-        icon: Symbols.chat,
-      ),
+      label: 'WhatsApp',
+      tone: AppBadgeTone.primary,
+      icon: Symbols.chat,
+    ),
     'whatsapp_delivery_failed' => const NotificationVisuals(
-        label: 'Fallo WhatsApp',
-        tone: AppBadgeTone.danger,
-        icon: Symbols.error,
-      ),
+      label: 'Fallo WhatsApp',
+      tone: AppBadgeTone.danger,
+      icon: Symbols.error,
+    ),
     'configuration_changed' => const NotificationVisuals(
-        label: 'Configuración',
-        tone: AppBadgeTone.neutral,
-        icon: Symbols.settings,
-      ),
+      label: 'Configuración',
+      tone: AppBadgeTone.neutral,
+      icon: Symbols.settings,
+    ),
     'assignment_changed' => const NotificationVisuals(
-        label: 'Asignaciones',
-        tone: AppBadgeTone.primary,
-        icon: Symbols.assignment,
-      ),
+      label: 'Asignaciones',
+      tone: AppBadgeTone.primary,
+      icon: Symbols.assignment,
+    ),
     'tomorrow_services_summary' => const NotificationVisuals(
-        label: 'Reservas mañana',
-        tone: AppBadgeTone.warning,
-        icon: Symbols.wb_sunny,
-      ),
+      label: 'Reservas mañana',
+      tone: AppBadgeTone.warning,
+      icon: Symbols.wb_sunny,
+    ),
     'role_request_created' => const NotificationVisuals(
-        label: 'Solicitud de rol',
-        tone: AppBadgeTone.warning,
-        icon: Symbols.badge,
-      ),
+      label: 'Solicitud de rol',
+      tone: AppBadgeTone.warning,
+      icon: Symbols.badge,
+    ),
     'role_request_decided' => const NotificationVisuals(
-        label: 'Rol resuelto',
-        tone: AppBadgeTone.primary,
-        icon: Symbols.verified_user,
-      ),
+      label: 'Rol resuelto',
+      tone: AppBadgeTone.primary,
+      icon: Symbols.verified_user,
+    ),
     _ => const NotificationVisuals(
-        label: 'Notificación',
-        tone: AppBadgeTone.neutral,
-        icon: Symbols.notifications,
-      ),
+      label: 'Notificación',
+      tone: AppBadgeTone.neutral,
+      icon: Symbols.notifications,
+    ),
   };
 }
 
@@ -145,10 +143,7 @@ String whatsappDigits(String? phone) {
 }
 
 /// Prefer explicit contactPhone; fall back to phone prefix in body ("+57…: msg").
-String? resolveNotificationPhone({
-  String? contactPhone,
-  String body = '',
-}) {
+String? resolveNotificationPhone({String? contactPhone, String body = ''}) {
   if (whatsappDigits(contactPhone).isNotEmpty) return contactPhone!.trim();
   final match = RegExp(r'^(\+?\d[\d\s\-]{6,})\s*:').firstMatch(body.trim());
   final candidate = match?.group(1)?.trim();
@@ -176,4 +171,3 @@ bool isWhatsAppPrimaryEvent(String eventType) {
   final colors = appBadgeToneColors(context, tone);
   return (background: colors.background, foreground: colors.foreground);
 }
-

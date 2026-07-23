@@ -6,9 +6,11 @@ import 'app_text_theme.dart';
 import 'theme_extensions.dart';
 
 abstract final class AppTheme {
-  static ThemeData light() => _themeData(AppColors.lightColorScheme, Brightness.light);
+  static ThemeData light() =>
+      _themeData(AppColors.lightColorScheme, Brightness.light);
 
-  static ThemeData dark() => _themeData(AppColors.darkColorScheme, Brightness.dark);
+  static ThemeData dark() =>
+      _themeData(AppColors.darkColorScheme, Brightness.dark);
 
   static ThemeData _themeData(ColorScheme scheme, Brightness brightness) {
     final textTheme = AppTextThemes.baseTextTheme(scheme.onSurface);
@@ -48,9 +50,7 @@ abstract final class AppTheme {
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
           foregroundColor: scheme.onSurface,
-          shape: const RoundedRectangleBorder(
-            borderRadius: AppRadii.radiusLg,
-          ),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadii.radiusLg),
         ),
       ),
       cardTheme: CardThemeData(

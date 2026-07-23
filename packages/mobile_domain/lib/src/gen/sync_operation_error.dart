@@ -5,18 +5,15 @@
 /// AUTO-GENERATED from OpenAPI schema `SyncOperationErrorSchema`.
 
 class SyncOperationError {
-
   final String code;
   final String message;
   final String? details;
 
-  const SyncOperationError(
-    {
+  const SyncOperationError({
     required this.code,
     required this.message,
     this.details,
-    }
-  );
+  });
 
   factory SyncOperationError.fromJson(Map<String, dynamic> json) {
     return SyncOperationError(
@@ -31,5 +28,4 @@ class SyncOperationError {
     'message': message,
     'details': details,
   };
-
 }

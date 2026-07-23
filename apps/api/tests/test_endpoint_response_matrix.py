@@ -9,9 +9,9 @@ os.environ["APP_SKIP_DB_INIT"] = "true"
 
 from app.api.business_errors import ENDPOINT_BUSINESS_CASES
 from app.api.deps import get_current_user
-from app.core.di import Container
 from app.common.enums import UserRole
 from app.common.labels import ErrorCode
+from app.core.di import Container
 from app.core.errors import ApiError
 from app.main import app
 
@@ -140,11 +140,15 @@ PROTECTED_ENDPOINTS = [
     ),
     ("get", f"/api/v1/logs/{FAKE_ID}", None),
     ("patch", f"/api/v1/logs/{FAKE_ID}", {"notes": "Actualizacion de bitacora"}),
-    ("post", "/api/v1/providers", {
-        "name": "Hospedaje Sierra",
-        "slug": "hospedaje-sierra",
-        "type": "lodging",
-    }),
+    (
+        "post",
+        "/api/v1/providers",
+        {
+            "name": "Hospedaje Sierra",
+            "slug": "hospedaje-sierra",
+            "type": "lodging",
+        },
+    ),
     ("get", "/api/v1/providers", None),
     ("get", f"/api/v1/providers/{FAKE_ID}", None),
     ("patch", f"/api/v1/providers/{FAKE_ID}", {"contact_name": "Carlos"}),

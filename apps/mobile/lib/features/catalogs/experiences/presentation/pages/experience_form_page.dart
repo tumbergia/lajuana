@@ -293,7 +293,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           hintText:
                               'Describe de forma clara que hara el cliente.',
                           maxLines: 3,
-                          prefixIcon: const Icon(Icons.description_rounded, size: 20),
+                          prefixIcon: const Icon(
+                            Icons.description_rounded,
+                            size: 20,
+                          ),
                           onChanged: _controller.actualizarDescripcion,
                         ),
                         const SizedBox(height: 10),
@@ -318,7 +321,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionExperienciaCtrl,
                                     label: 'Duracion experiencia (minutos)',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.schedule_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.schedule_rounded,
+                                      size: 20,
+                                    ),
                                     onChanged: (value) => _controller
                                         .actualizarDuracionExperiencia(
                                           int.tryParse(value.trim()),
@@ -329,7 +335,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionRecorridoCtrl,
                                     label: 'Duracion recorrido (minutos)',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.timer_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.timer_rounded,
+                                      size: 20,
+                                    ),
                                     onChanged: (value) =>
                                         _controller.actualizarDuracionRecorrido(
                                           int.tryParse(value.trim()),
@@ -345,7 +354,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionExperienciaCtrl,
                                     label: 'Duracion experiencia (minutos)',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.schedule_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.schedule_rounded,
+                                      size: 20,
+                                    ),
                                     onChanged: (value) => _controller
                                         .actualizarDuracionExperiencia(
                                           int.tryParse(value.trim()),
@@ -358,7 +370,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _duracionRecorridoCtrl,
                                     label: 'Duracion recorrido (minutos)',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.timer_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.timer_rounded,
+                                      size: 20,
+                                    ),
                                     onChanged: (value) =>
                                         _controller.actualizarDuracionRecorrido(
                                           int.tryParse(value.trim()),
@@ -376,7 +391,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           hintText:
                               'Ej: Actividad 5 horas aprox. Recorrido 2 horas aprox.',
                           maxLines: 2,
-                          prefixIcon: const Icon(Icons.text_fields_rounded, size: 20),
+                          prefixIcon: const Icon(
+                            Icons.text_fields_rounded,
+                            size: 20,
+                          ),
                           onChanged: _controller.actualizarTextoDuracionVisible,
                         ),
                       ],
@@ -388,7 +406,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _terrenoCtrl,
                           label: 'Terreno',
                           hintText: 'Ej: Camino destapado entre bosque de pino',
-                          prefixIcon: const Icon(Icons.terrain_rounded, size: 20),
+                          prefixIcon: const Icon(
+                            Icons.terrain_rounded,
+                            size: 20,
+                          ),
                           onChanged: _controller.actualizarTerreno,
                         ),
                         const SizedBox(height: 10),
@@ -396,7 +417,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _distanciaCtrl,
                           label: 'Distancia en kilometros (opcional)',
                           inputKind: AppTextInputKind.decimal,
-                          prefixIcon: const Icon(Icons.straighten_rounded, size: 20),
+                          prefixIcon: const Icon(
+                            Icons.straighten_rounded,
+                            size: 20,
+                          ),
                           onChanged: (value) =>
                               _controller.actualizarDistanciaKm(
                                 double.tryParse(
@@ -432,7 +456,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _monedaCtrl,
                           label: null,
                           hintText: 'COP',
-                          prefixIcon: const Icon(Icons.attach_money_rounded, size: 20),
+                          prefixIcon: const Icon(
+                            Icons.attach_money_rounded,
+                            size: 20,
+                          ),
                           onChanged: _controller.actualizarMoneda,
                         ),
                         const SizedBox(height: 10),
@@ -446,7 +473,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _notasTarifaCtrl,
                           label: 'Notas de tarifa (opcional)',
                           maxLines: 2,
-                          prefixIcon: const Icon(Icons.receipt_rounded, size: 20),
+                          prefixIcon: const Icon(
+                            Icons.receipt_rounded,
+                            size: 20,
+                          ),
                           onChanged: _controller.actualizarNotasTarifa,
                         ),
                         const SizedBox(height: 10),
@@ -460,21 +490,30 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMinCtrl,
                                     label: 'Personas desde',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.person_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.person_rounded,
+                                      size: 20,
+                                    ),
                                   ),
                                   const SizedBox(height: 10),
                                   AppTextField(
                                     controller: _tarifaMaxCtrl,
                                     label: 'Personas hasta',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.group_add_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.group_add_rounded,
+                                      size: 20,
+                                    ),
                                   ),
                                   const SizedBox(height: 10),
                                   AppTextField(
                                     controller: _tarifaValorCtrl,
                                     label: 'Valor por persona',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.payments_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.payments_rounded,
+                                      size: 20,
+                                    ),
                                   ),
                                 ],
                               );
@@ -486,7 +525,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMinCtrl,
                                     label: 'Personas desde',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.person_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.person_rounded,
+                                      size: 20,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -495,7 +537,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaMaxCtrl,
                                     label: 'Personas hasta',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.group_add_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.group_add_rounded,
+                                      size: 20,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -504,7 +549,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                                     controller: _tarifaValorCtrl,
                                     label: 'Valor por persona',
                                     inputKind: AppTextInputKind.integer,
-                                    prefixIcon: const Icon(Icons.payments_rounded, size: 20),
+                                    prefixIcon: const Icon(
+                                      Icons.payments_rounded,
+                                      size: 20,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -552,7 +600,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _incluyeInputCtrl,
                           label: 'Nuevo item incluido',
                           hintText: 'Ej: Almuerzo tradicional campesino',
-                          prefixIcon: const Icon(Icons.playlist_add_rounded, size: 20),
+                          prefixIcon: const Icon(
+                            Icons.playlist_add_rounded,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(height: 10),
                         AppButton(
@@ -584,7 +635,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           controller: _incluyeTextoCtrl,
                           label: 'Texto visible de incluye (opcional)',
                           maxLines: 2,
-                          prefixIcon: const Icon(Icons.text_fields_rounded, size: 20),
+                          prefixIcon: const Icon(
+                            Icons.text_fields_rounded,
+                            size: 20,
+                          ),
                           onChanged: _controller.actualizarTextoIncluyeVisible,
                         ),
                       ],
@@ -679,7 +733,8 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                 color: Theme.of(context).colorScheme.outlineVariant,
               ),
             ),
-            child: _controller.imageBase64 != null &&
+            child:
+                _controller.imageBase64 != null &&
                     _controller.imageBase64!.isNotEmpty
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(7),
@@ -695,10 +750,9 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                           top: 8,
                           right: 8,
                           child: Material(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surface
-                                .withValues(alpha: 0.85),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surface.withValues(alpha: 0.85),
                             borderRadius: BorderRadius.circular(20),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(20),
@@ -707,10 +761,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                               },
                               child: const Padding(
                                 padding: EdgeInsets.all(6),
-                                child: Icon(
-                                  Icons.close_rounded,
-                                  size: 18,
-                                ),
+                                child: Icon(Icons.close_rounded, size: 18),
                               ),
                             ),
                           ),
@@ -785,7 +836,9 @@ class _TarifaEditSheetState extends State<_TarifaEditSheet> {
     final max = int.tryParse(_maxCtrl.text.trim());
     final val = int.tryParse(_valCtrl.text.trim());
     if (min != null && max != null && val != null) {
-      Navigator.of(context).pop(<String, int>{'min': min, 'max': max, 'val': val});
+      Navigator.of(
+        context,
+      ).pop(<String, int>{'min': min, 'max': max, 'val': val});
       return;
     }
     showAppToast(
@@ -800,7 +853,9 @@ class _TarifaEditSheetState extends State<_TarifaEditSheet> {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: EdgeInsets.only(
-        left: 24, right: 24, top: 20,
+        left: 24,
+        right: 24,
+        top: 20,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
       child: Column(
@@ -808,14 +863,20 @@ class _TarifaEditSheetState extends State<_TarifaEditSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40, height: 4,
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
               color: scheme.onSurfaceVariant.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 16),
-          Text('Editar tarifa', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+          Text(
+            'Editar tarifa',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 16),
           AppTextField(
             controller: _minCtrl,
@@ -835,11 +896,21 @@ class _TarifaEditSheetState extends State<_TarifaEditSheet> {
             inputKind: AppTextInputKind.integer,
           ),
           const SizedBox(height: 16),
-          Row(children: [
-            Expanded(child: AppButton(label: 'Cancelar', variant: AppButtonVariant.ghost, onPressed: () => Navigator.of(context).pop())),
-            const SizedBox(width: 10),
-            Expanded(child: AppButton(label: 'Guardar', onPressed: _guardar)),
-          ]),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Cancelar',
+                  variant: AppButtonVariant.ghost,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: AppButton(label: 'Guardar', onPressed: _guardar),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -1041,11 +1112,7 @@ class _ActionButtons extends StatelessWidget {
         if (!isWide) {
           return Column(
             children: [
-              AppButton(
-                label: saveLabel,
-                expanded: true,
-                onPressed: onGuardar,
-              ),
+              AppButton(label: saveLabel, expanded: true, onPressed: onGuardar),
               const SizedBox(height: 10),
               AppButton(
                 label: 'Cancelar',

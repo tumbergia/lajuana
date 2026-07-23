@@ -2,20 +2,13 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `Channel`.
 
 enum Channel {
-  @JsonValue('facebook')
   FACEBOOK("facebook"),
-  @JsonValue('instagram')
   INSTAGRAM("instagram"),
-  @JsonValue('whatsapp')
   WHATSAPP("whatsapp"),
-  @JsonValue('email')
-  EMAIL("email"),
-;
+  EMAIL("email");
 
   final String value;
   const Channel(this.value);
@@ -31,4 +24,3 @@ extension ChannelParse on String {
     orElse: () => throw ArgumentError('Unknown Channel: ${this}'),
   );
 }
-

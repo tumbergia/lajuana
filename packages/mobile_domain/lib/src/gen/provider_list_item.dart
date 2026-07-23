@@ -8,7 +8,6 @@ import 'provider_status.dart';
 import 'provider_type.dart';
 
 class ProviderListItem {
-
   final String id;
   final String name;
   final String slug;
@@ -21,8 +20,7 @@ class ProviderListItem {
   final String locationLabel;
   final bool isActive;
 
-  const ProviderListItem(
-    {
+  const ProviderListItem({
     required this.id,
     required this.name,
     required this.slug,
@@ -34,8 +32,7 @@ class ProviderListItem {
     required this.whatsappPhone,
     required this.locationLabel,
     required this.isActive,
-    }
-  );
+  });
 
   factory ProviderListItem.fromJson(Map<String, dynamic> json) {
     return ProviderListItem(
@@ -44,8 +41,8 @@ class ProviderListItem {
       slug: json['slug'] as String,
       type: (json['type'] as String).toProviderType(),
       status: (json['status'] as String).toProviderStatus(),
-      serviceCategories: (json['service_categories'] as List<dynamic>?)
-        ?.cast<String>() ?? [],
+      serviceCategories: (json['service_categories'] as List<dynamic>)
+          .cast<String>(),
       contactName: json['contact_name'] as String,
       email: json['email'] as String,
       whatsappPhone: json['whatsapp_phone'] as String,
@@ -67,5 +64,4 @@ class ProviderListItem {
     'location_label': locationLabel,
     'is_active': isActive,
   };
-
 }

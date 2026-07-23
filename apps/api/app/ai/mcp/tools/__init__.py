@@ -10,31 +10,16 @@ from app.ai.mcp.tools.admin_assignments import (
     admin_get_assignment_board,
     admin_update_assignment,
 )
-from app.ai.mcp.tools.admin_equine_events import (
-    admin_create_equine_event,
-    admin_list_equine_events,
-    admin_update_equine_event,
-)
-from app.ai.mcp.tools.admin_providers import (
-    admin_create_provider,
-    admin_deactivate_provider,
-    admin_get_provider,
-    admin_list_providers,
-    admin_update_provider,
-)
-from app.ai.mcp.tools.admin_saddles import (
-    admin_create_saddle,
-    admin_deactivate_saddle,
-    admin_get_saddle,
-    admin_list_available_saddles_for_reservation,
-    admin_list_saddles,
-    admin_update_saddle,
-)
 from app.ai.mcp.tools.admin_config import (
     admin_get_emergency_contacts,
     admin_get_payment_instructions,
     admin_get_system_config,
     admin_update_reservation_rules,
+)
+from app.ai.mcp.tools.admin_equine_events import (
+    admin_create_equine_event,
+    admin_list_equine_events,
+    admin_update_equine_event,
 )
 from app.ai.mcp.tools.admin_equines import (
     admin_create_equine,
@@ -60,6 +45,13 @@ from app.ai.mcp.tools.admin_payment_proofs import (
     admin_unreject_payment_proof,
     admin_unverify_payment_proof,
 )
+from app.ai.mcp.tools.admin_providers import (
+    admin_create_provider,
+    admin_deactivate_provider,
+    admin_get_provider,
+    admin_list_providers,
+    admin_update_provider,
+)
 from app.ai.mcp.tools.admin_reservations import (
     admin_cancel_reservation,
     admin_confirm_reservation,
@@ -67,6 +59,14 @@ from app.ai.mcp.tools.admin_reservations import (
     admin_list_reservations,
 )
 from app.ai.mcp.tools.admin_reviews import admin_list_human_review_requests
+from app.ai.mcp.tools.admin_saddles import (
+    admin_create_saddle,
+    admin_deactivate_saddle,
+    admin_get_saddle,
+    admin_list_available_saddles_for_reservation,
+    admin_list_saddles,
+    admin_update_saddle,
+)
 from app.ai.mcp.tools.admin_users import (
     admin_create_user,
     admin_deactivate_user,
@@ -118,7 +118,6 @@ from app.ai.mcp.tools.schedules import list_available_schedules, suggest_alterna
 
 # ── Real implementations for previously stubbed tools ────────
 async def get_experience_detail(**kwargs: Any) -> dict[str, Any]:
-    import re
     import time
     import unicodedata
 
@@ -137,7 +136,29 @@ async def get_experience_detail(**kwargs: Any) -> dict[str, Any]:
         cleaned = nfkd.encode("ascii", "ignore").decode("ascii").lower().strip()
         return cleaned.rstrip(",.!?;:.\n\r ")
 
-    _STOPWORDS = {"el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "en", "para", "por", "a", "y", "e", "o", "que", "con", "su", "al"}
+    _STOPWORDS = {
+        "el",
+        "la",
+        "los",
+        "las",
+        "un",
+        "una",
+        "unos",
+        "unas",
+        "de",
+        "del",
+        "en",
+        "para",
+        "por",
+        "a",
+        "y",
+        "e",
+        "o",
+        "que",
+        "con",
+        "su",
+        "al",
+    }
 
     def _match_query(exp_name: str, query: str) -> bool:
         exp_normalized = _normalize(exp_name)

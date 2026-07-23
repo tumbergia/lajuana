@@ -5,18 +5,15 @@
 /// AUTO-GENERATED from OpenAPI schema `RegisterRequest`.
 
 class Register {
-
   final String email;
   final String fullName;
   final String password;
 
-  const Register(
-    {
+  const Register({
     required this.email,
     required this.fullName,
     required this.password,
-    }
-  );
+  });
 
   factory Register.fromJson(Map<String, dynamic> json) {
     return Register(
@@ -31,5 +28,4 @@ class Register {
     'full_name': fullName,
     'password': password,
   };
-
 }

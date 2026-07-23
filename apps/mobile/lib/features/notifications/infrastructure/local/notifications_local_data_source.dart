@@ -7,7 +7,7 @@ import 'package:mobile/features/notifications/infrastructure/local/notifications
 /// Acceso local a la tabla de notificaciones.
 class NotificationsLocalDataSource {
   NotificationsLocalDataSource({required NotificationsDatabase database})
-      : _db = database;
+    : _db = database;
 
   final NotificationsDatabase _db;
 
@@ -23,7 +23,9 @@ class NotificationsLocalDataSource {
       where.add('read = 0');
     }
     if (beforeId != null) {
-      where.add('created_at < (SELECT created_at FROM notifications_local WHERE id = ?)');
+      where.add(
+        'created_at < (SELECT created_at FROM notifications_local WHERE id = ?)',
+      );
       whereArgs.add(beforeId);
     }
     final rows = await db.query(
@@ -47,8 +49,11 @@ class NotificationsLocalDataSource {
     final db = await _db.database;
     final batch = db.batch();
     for (final n in notifications) {
-      batch.insert('notifications_local', _notificationToRow(n),
-          conflictAlgorithm: ConflictAlgorithm.replace);
+      batch.insert(
+        'notifications_local',
+        _notificationToRow(n),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
     await batch.commit(noResult: true);
   }
@@ -73,11 +78,10 @@ class NotificationsLocalDataSource {
 
   Future<void> markAllRead() async {
     final db = await _db.database;
-    await db.update(
-      'notifications_local',
-      {'read': 1, 'sync_status': 'pending'},
-      where: 'read = 0 AND deleted_at IS NULL',
-    );
+    await db.update('notifications_local', {
+      'read': 1,
+      'sync_status': 'pending',
+    }, where: 'read = 0 AND deleted_at IS NULL');
   }
 
   Future<void> markDeleted(String notificationId) async {
@@ -96,23 +100,15 @@ class NotificationsLocalDataSource {
   Future<void> clearAll({bool readOnly = false}) async {
     final db = await _db.database;
     if (readOnly) {
-      await db.update(
-        'notifications_local',
-        {
-          'deleted_at': DateTime.now().toUtc().toIso8601String(),
-          'sync_status': 'pending',
-        },
-        where: 'read = 1',
-      );
+      await db.update('notifications_local', {
+        'deleted_at': DateTime.now().toUtc().toIso8601String(),
+        'sync_status': 'pending',
+      }, where: 'read = 1');
     } else {
-      await db.update(
-        'notifications_local',
-        {
-          'deleted_at': DateTime.now().toUtc().toIso8601String(),
-          'sync_status': 'pending',
-        },
-        where: 'deleted_at IS NULL',
-      );
+      await db.update('notifications_local', {
+        'deleted_at': DateTime.now().toUtc().toIso8601String(),
+        'sync_status': 'pending',
+      }, where: 'deleted_at IS NULL');
     }
   }
 
@@ -161,8 +157,12 @@ class NotificationsLocalDataSource {
       read: (row['read'] as int? ?? 0) == 1,
       eventType: row['event_type'] as String? ?? '',
       contactPhone: row['contact_phone'] as String?,
-      createdAt: DateTime.tryParse(row['created_at'] as String? ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(row['updated_at'] as String? ?? '') ?? DateTime.now(),
+      createdAt:
+          DateTime.tryParse(row['created_at'] as String? ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(row['updated_at'] as String? ?? '') ??
+          DateTime.now(),
       deletedAt: row['deleted_at'] as String?,
     );
   }

@@ -19,11 +19,7 @@ void main() {
             'secondary_label': '8 confirmadas',
             'color': '25D366',
           },
-          {
-            'label': 'Instagram',
-            'value': 5,
-            'color': 'E1306C',
-          },
+          {'label': 'Instagram', 'value': 5, 'color': 'E1306C'},
         ],
         'series': [],
       });
@@ -50,7 +46,7 @@ void main() {
               {'label': '2026-02-14', 'value': 100000},
               {'label': '2026-03-01', 'value': 250000},
             ],
-          }
+          },
         ],
       });
 
@@ -120,7 +116,7 @@ void main() {
               {'label': '2026-03-01', 'value': 250000},
               {'label': '2026-04-01', 'value': 180000},
             ],
-          }
+          },
         ],
       });
 

@@ -58,7 +58,8 @@ class _AppChartLoadingSkeletonState extends State<AppChartLoadingSkeleton>
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).analyticsTokens;
     final scheme = Theme.of(context).colorScheme;
-    final height = widget.height ??
+    final height =
+        widget.height ??
         (widget.variant == ChartSkeletonVariant.sparkline
             ? tokens.chartHeightCompact
             : tokens.chartHeightStandard);
@@ -91,8 +92,8 @@ class _AppChartLoadingSkeletonState extends State<AppChartLoadingSkeleton>
               Text(
                 widget.label,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ],
           );

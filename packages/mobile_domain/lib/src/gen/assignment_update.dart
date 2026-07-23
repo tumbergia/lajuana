@@ -5,20 +5,17 @@
 /// AUTO-GENERATED from OpenAPI schema `AssignmentUpdateSchema`.
 
 class AssignmentUpdate {
-
   final String? equineId;
   final String? saddleId;
   final String? status;
   final String? notes;
 
-  const AssignmentUpdate(
-    {
+  const AssignmentUpdate({
     this.equineId,
     this.saddleId,
     this.status,
     this.notes,
-    }
-  );
+  });
 
   factory AssignmentUpdate.fromJson(Map<String, dynamic> json) {
     return AssignmentUpdate(
@@ -35,5 +32,4 @@ class AssignmentUpdate {
     'status': status,
     'notes': notes,
   };
-
 }

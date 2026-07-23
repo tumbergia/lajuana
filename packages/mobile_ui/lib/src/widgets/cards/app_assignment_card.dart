@@ -152,14 +152,14 @@ class AppAssignmentCard extends StatelessWidget {
                             label: isChild
                                 ? 'Menor de edad'
                                 : isSenior
-                                    ? 'Adulto mayor'
-                                    : flag,
+                                ? 'Adulto mayor'
+                                : flag,
                             tone: AppBadgeTone.warning,
                             icon: isChild
                                 ? Icons.child_care_outlined
                                 : isSenior
-                                    ? Icons.elderly_outlined
-                                    : Icons.warning_amber_rounded,
+                                ? Icons.elderly_outlined
+                                : Icons.warning_amber_rounded,
                             uppercase: false,
                           );
                         }).toList(),
@@ -199,7 +199,9 @@ class AppAssignmentCard extends StatelessWidget {
                       accent: accent,
                       icon: Icons.pets_rounded,
                       image: equine.image,
-                      tags: [if (equine.statusLabel != null) equine.statusLabel!],
+                      tags: [
+                        if (equine.statusLabel != null) equine.statusLabel!,
+                      ],
                     ),
                     if (validationMessage != null) ...[
                       const SizedBox(height: 14),
@@ -209,7 +211,9 @@ class AppAssignmentCard extends StatelessWidget {
                       ),
                     ],
                     const SizedBox(height: 16),
-                    Divider(color: scheme.outlineVariant.withValues(alpha: 0.35)),
+                    Divider(
+                      color: scheme.outlineVariant.withValues(alpha: 0.35),
+                    ),
                     const SizedBox(height: 14),
                     Row(
                       children: [
@@ -324,11 +328,7 @@ class AppAssignmentCard extends StatelessWidget {
 // ── Header info tile ──
 
 class _HeaderInfo extends StatelessWidget {
-  const _HeaderInfo({
-    required this.title,
-    required this.value,
-    this.icon,
-  });
+  const _HeaderInfo({required this.title, required this.value, this.icon});
 
   final String title;
   final String value;

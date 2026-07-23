@@ -61,28 +61,28 @@ class VoiceChartCard extends StatelessWidget {
 
     return switch (spec.type) {
       VoiceChartType.donut => AppDonutChart(
-          points: _toPoints(spec.points),
-          semanticSummary: summary,
-          centerLabel: _donutCenterLabel(),
-          height: height,
-        ),
+        points: _toPoints(spec.points),
+        semanticSummary: summary,
+        centerLabel: _donutCenterLabel(),
+        height: height,
+      ),
       VoiceChartType.line => AppLineChart(
-          series: _toSeries(
-            spec.series.isNotEmpty
-                ? spec.series.first
-                : VoiceChartSeries(label: spec.title, points: spec.points),
-          ),
-          semanticSummary: summary,
-          height: height,
-          unit: unit,
+        series: _toSeries(
+          spec.series.isNotEmpty
+              ? spec.series.first
+              : VoiceChartSeries(label: spec.title, points: spec.points),
         ),
+        semanticSummary: summary,
+        height: height,
+        unit: unit,
+      ),
       VoiceChartType.progress || VoiceChartType.bar => AppBarChart(
-          points: _toPoints(spec.points),
-          semanticSummary: summary,
-          height: height,
-          unit: unit,
-          horizontal: spec.points.length > 6,
-        ),
+        points: _toPoints(spec.points),
+        semanticSummary: summary,
+        height: height,
+        unit: unit,
+        horizontal: spec.points.length > 6,
+      ),
     };
   }
 
@@ -135,12 +135,14 @@ class VoiceChartCard extends StatelessWidget {
 
   String _formatValue(double value) {
     return switch (spec.valueType) {
-      VoiceChartValueType.currency =>
-        voiceMoneyCop(value.round()).replaceFirst('Desde ', ''),
+      VoiceChartValueType.currency => voiceMoneyCop(
+        value.round(),
+      ).replaceFirst('Desde ', ''),
       VoiceChartValueType.percent => '${value.toStringAsFixed(1)}%',
-      VoiceChartValueType.count => value == value.roundToDouble()
-          ? value.toInt().toString()
-          : value.toStringAsFixed(1),
+      VoiceChartValueType.count =>
+        value == value.roundToDouble()
+            ? value.toInt().toString()
+            : value.toStringAsFixed(1),
     };
   }
 }

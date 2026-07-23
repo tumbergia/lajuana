@@ -28,10 +28,26 @@ const Color _mapPinRedDark = Color(0xFFFF2D20);
 /// Invierte tiles claras → dark map con carreteras y líneas bien visibles.
 /// Misma matriz que [darkModeTilesContainerBuilder] de flutter_map.
 const ColorFilter _darkMapFromLightTilesFilter = ColorFilter.matrix(<double>[
-  0.574, -1.43, -0.144, 0, 255,
-  -0.426, -0.43, -0.144, 0, 255,
-  -0.426, -1.43, 0.856, 0, 255,
-  0, 0, 0, 1, 0,
+  0.574,
+  -1.43,
+  -0.144,
+  0,
+  255,
+  -0.426,
+  -0.43,
+  -0.144,
+  0,
+  255,
+  -0.426,
+  -1.43,
+  0.856,
+  0,
+  255,
+  0,
+  0,
+  0,
+  1,
+  0,
 ]);
 
 class BusinessLocationPage extends StatefulWidget {
@@ -138,10 +154,7 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
         width: 22,
         height: 22,
         fit: BoxFit.contain,
-        colorFilter: ColorFilter.mode(
-          scheme.onSurfaceVariant,
-          BlendMode.srcIn,
-        ),
+        colorFilter: ColorFilter.mode(scheme.onSurfaceVariant, BlendMode.srcIn),
       ),
     );
   }
@@ -286,10 +299,7 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
 
   Future<void> _openMaps() async {
     if (mapsUrl.isEmpty) return;
-    await launchUrl(
-      Uri.parse(mapsUrl),
-      mode: LaunchMode.externalApplication,
-    );
+    await launchUrl(Uri.parse(mapsUrl), mode: LaunchMode.externalApplication);
   }
 
   Future<void> _save() async {
@@ -441,10 +451,7 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
                           label: 'Nombre del lugar',
                         ),
                         const SizedBox(height: 10),
-                        AppTextField(
-                          controller: address,
-                          label: 'Dirección',
-                        ),
+                        AppTextField(controller: address, label: 'Dirección'),
                         const SizedBox(height: 10),
                         AppTextField(
                           controller: municipality,
@@ -485,8 +492,7 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
                                 child: _MapsRedButton(
                                   label: 'Abrir Maps',
                                   icon: Icons.map_rounded,
-                                  onPressed:
-                                      mapsUrl.isEmpty ? null : _openMaps,
+                                  onPressed: mapsUrl.isEmpty ? null : _openMaps,
                                 ),
                               ),
                             ],
@@ -521,8 +527,7 @@ class _BusinessLocationPageState extends State<BusinessLocationPage>
                                 child: _MapsRedButton(
                                   label: 'Abrir Maps',
                                   icon: Icons.map_rounded,
-                                  onPressed:
-                                      mapsUrl.isEmpty ? null : _openMaps,
+                                  onPressed: mapsUrl.isEmpty ? null : _openMaps,
                                 ),
                               ),
                             ],
@@ -585,10 +590,7 @@ class _MapPin extends StatelessWidget {
             width: _head,
             height: _head,
             child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               child: Icon(
                 Symbols.chess_knight,
                 size: 20,
@@ -680,20 +682,20 @@ class _MapsRedButtonState extends State<_MapsRedButton> {
         child: InkWell(
           borderRadius: radius,
           onTap: widget.onPressed,
-          onTapDown:
-              isDisabled ? null : (_) => setState(() => _pressed = true),
-          onTapUp:
-              isDisabled ? null : (_) => setState(() => _pressed = false),
-          onTapCancel:
-              isDisabled ? null : () => setState(() => _pressed = false),
+          onTapDown: isDisabled ? null : (_) => setState(() => _pressed = true),
+          onTapUp: isDisabled ? null : (_) => setState(() => _pressed = false),
+          onTapCancel: isDisabled
+              ? null
+              : () => setState(() => _pressed = false),
           splashColor: Colors.white.withValues(alpha: 0.12),
           highlightColor: Colors.white.withValues(alpha: 0.06),
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: tokens.spaceLg),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize:
-                  widget.expanded ? MainAxisSize.max : MainAxisSize.min,
+              mainAxisSize: widget.expanded
+                  ? MainAxisSize.max
+                  : MainAxisSize.min,
               children: [
                 Icon(
                   widget.icon,

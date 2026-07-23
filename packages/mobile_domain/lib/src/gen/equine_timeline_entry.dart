@@ -4,10 +4,11 @@
 
 /// AUTO-GENERATED from OpenAPI schema `EquineTimelineEntrySchema`.
 
-class EquineTimelineEntry {
+import 'equine_timeline_entry_source.dart';
 
+class EquineTimelineEntry {
   final String id;
-  final source source;
+  final EquineTimelineEntrySource source;
   final String eventType;
   final DateTime happenedAt;
   final String title;
@@ -17,9 +18,17 @@ class EquineTimelineEntry {
   final String? notes;
   final String? severity;
   final bool? affectsAvailability;
+  final String? measuredWeightKg;
+  final String? measuredHeightM;
+  final String? nextDueAt;
+  final String? performedBy;
+  final String? medicationName;
+  final String? dosage;
+  final String? labResultSummary;
+  final String? resultingOperationalStatus;
+  final String? restUntil;
 
-  const EquineTimelineEntry(
-    {
+  const EquineTimelineEntry({
     required this.id,
     required this.source,
     required this.eventType,
@@ -31,13 +40,21 @@ class EquineTimelineEntry {
     this.notes,
     this.severity,
     this.affectsAvailability,
-    }
-  );
+    this.measuredWeightKg,
+    this.measuredHeightM,
+    this.nextDueAt,
+    this.performedBy,
+    this.medicationName,
+    this.dosage,
+    this.labResultSummary,
+    this.resultingOperationalStatus,
+    this.restUntil,
+  });
 
   factory EquineTimelineEntry.fromJson(Map<String, dynamic> json) {
     return EquineTimelineEntry(
       id: json['id'] as String,
-      source: source.fromJson(json['source'] as Map<String, dynamic>),
+      source: (json['source'] as String).toEquineTimelineEntrySource(),
       eventType: json['event_type'] as String,
       happenedAt: DateTime.parse(json['happened_at'] as String),
       title: json['title'] as String,
@@ -47,12 +64,22 @@ class EquineTimelineEntry {
       notes: json['notes'] as String?,
       severity: json['severity'] as String?,
       affectsAvailability: json['affects_availability'] as bool?,
+      measuredWeightKg: json['measured_weight_kg'] as String?,
+      measuredHeightM: json['measured_height_m'] as String?,
+      nextDueAt: json['next_due_at'] as String?,
+      performedBy: json['performed_by'] as String?,
+      medicationName: json['medication_name'] as String?,
+      dosage: json['dosage'] as String?,
+      labResultSummary: json['lab_result_summary'] as String?,
+      resultingOperationalStatus:
+          json['resulting_operational_status'] as String?,
+      restUntil: json['rest_until'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'source': source,
+    'source': source.toJson(),
     'event_type': eventType,
     'happened_at': happenedAt.toIso8601String(),
     'title': title,
@@ -62,6 +89,14 @@ class EquineTimelineEntry {
     'notes': notes,
     'severity': severity,
     'affects_availability': affectsAvailability,
+    'measured_weight_kg': measuredWeightKg,
+    'measured_height_m': measuredHeightM,
+    'next_due_at': nextDueAt,
+    'performed_by': performedBy,
+    'medication_name': medicationName,
+    'dosage': dosage,
+    'lab_result_summary': labResultSummary,
+    'resulting_operational_status': resultingOperationalStatus,
+    'rest_until': restUntil,
   };
-
 }

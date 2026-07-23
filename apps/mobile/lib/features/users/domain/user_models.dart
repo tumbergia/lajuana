@@ -63,7 +63,9 @@ class RoleRequestRecord {
       status: (json['status'] as String?) ?? 'pending',
       decidedRole: json['decided_role'] as String?,
       decidedBy: json['decided_by'] as String?,
-      decidedAt: decidedAtRaw is String ? DateTime.tryParse(decidedAtRaw) : null,
+      decidedAt: decidedAtRaw is String
+          ? DateTime.tryParse(decidedAtRaw)
+          : null,
       note: json['note'] as String?,
     );
   }

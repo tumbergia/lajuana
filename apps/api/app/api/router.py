@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.endpoints.admin_ask import router as admin_ask_router
+from app.api.endpoints.analytics import router as analytics_router
 from app.api.endpoints.ask import router as ask_router
 from app.api.endpoints.assignments import router as assignments_router
 from app.api.endpoints.auth import router as auth_router
@@ -11,7 +12,6 @@ from app.api.endpoints.equine_events import nested_router as equine_events_neste
 from app.api.endpoints.equines import router as equines_router
 from app.api.endpoints.experiences import router as experiences_router
 from app.api.endpoints.files import router as files_router
-from app.api.endpoints.analytics import router as analytics_router
 from app.api.endpoints.health import router as health_router
 from app.api.endpoints.logs import router as logs_router
 from app.api.endpoints.notifications import router as notifications_router

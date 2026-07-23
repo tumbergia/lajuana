@@ -13,10 +13,10 @@ class UsersApiClient {
     required Future<String?> Function() readAccessToken,
     required Future<bool> Function() refreshSession,
     http.Client? httpClient,
-  })  : _baseUrl = baseUrl,
-        _readAccessToken = readAccessToken,
-        _refreshSession = refreshSession,
-        _http = httpClient ?? http.Client();
+  }) : _baseUrl = baseUrl,
+       _readAccessToken = readAccessToken,
+       _refreshSession = refreshSession,
+       _http = httpClient ?? http.Client();
 
   final String _baseUrl;
   final Future<String?> Function() _readAccessToken;
@@ -88,10 +88,7 @@ class UsersApiClient {
     String status = 'pending',
     int limit = 200,
   }) async {
-    final query = <String, String>{
-      'status': status,
-      'limit': '$limit',
-    };
+    final query = <String, String>{'status': status, 'limit': '$limit'};
     final response = await _authorizedRequest(
       method: 'GET',
       path: '/role-requests?${Uri(queryParameters: query).query}',
@@ -105,8 +102,9 @@ class UsersApiClient {
     }
     return decoded
         .map(
-          (item) =>
-              RoleRequestRecord.fromJson(Map<String, dynamic>.from(item as Map)),
+          (item) => RoleRequestRecord.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
         )
         .toList(growable: false);
   }
@@ -215,9 +213,7 @@ class UsersApiClient {
     };
   }
 
-  Future<http.Response> _execute(
-    Future<http.Response> Function() block,
-  ) async {
+  Future<http.Response> _execute(Future<http.Response> Function() block) async {
     try {
       return await block().timeout(const Duration(seconds: 12));
     } on TimeoutException {

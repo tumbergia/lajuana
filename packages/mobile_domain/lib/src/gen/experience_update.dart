@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `ExperienceUpdateSchema`.
 
 class ExperienceUpdate {
-
   final String? name;
   final String? subtitle;
   final String? description;
@@ -27,8 +26,7 @@ class ExperienceUpdate {
   final String? aliases;
   final String? isActive;
 
-  const ExperienceUpdate(
-    {
+  const ExperienceUpdate({
     this.name,
     this.subtitle,
     this.description,
@@ -49,8 +47,7 @@ class ExperienceUpdate {
     this.tags,
     this.aliases,
     this.isActive,
-    }
-  );
+  });
 
   factory ExperienceUpdate.fromJson(Map<String, dynamic> json) {
     return ExperienceUpdate(
@@ -99,5 +96,4 @@ class ExperienceUpdate {
     'aliases': aliases,
     'is_active': isActive,
   };
-
 }

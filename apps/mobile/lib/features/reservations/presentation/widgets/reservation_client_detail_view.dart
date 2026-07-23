@@ -60,52 +60,63 @@ class _ClientDetailViewState extends State<ClientDetailView>
 
     final rows = <Widget>[];
     void addRow(String label, String? value) {
-      rows.add(Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 120,
-              child: Text(label,
+      rows.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 120,
+                child: Text(
+                  label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurfaceVariant)),
-            ),
-            Expanded(
-              child: Text(
-                (value != null && value.isNotEmpty) ? value : '\u2014',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: (value != null && value.isNotEmpty)
-                      ? scheme.onSurface
-                      : scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-            ),
-          ],
+              Expanded(
+                child: Text(
+                  (value != null && value.isNotEmpty) ? value : '\u2014',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: (value != null && value.isNotEmpty)
+                        ? scheme.onSurface
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ));
+      );
     }
 
     addRow('Nombre', detail.holderName);
     addRow('Email', detail.holderEmail);
     addRow('Telefono', detail.holderPhone);
     addRow('Codigo reserva', detail.code);
-    addRow('Valor cotizado', detail.quotedTotalAmount != null
-        ? '\$${detail.quotedTotalAmount!}'
-        : null);
+    addRow(
+      'Valor cotizado',
+      detail.quotedTotalAmount != null
+          ? '\$${detail.quotedTotalAmount!}'
+          : null,
+    );
     addRow('Fecha solicitada', detail.requestedDate);
     addRow('Estado de pago', paymentStatusLabel(detail.paymentStatus));
-    addRow('Participantes',
-        '${detail.participantsCompletedCount} / ${detail.expectedParticipantsCount ?? detail.participantCount}');
+    addRow(
+      'Participantes',
+      '${detail.participantsCompletedCount} / ${detail.expectedParticipantsCount ?? detail.participantCount}',
+    );
     if (detail.participantFormStatus != null) {
-      addRow('Estado formulario', formStatusLabel(detail.participantFormStatus!));
+      addRow(
+        'Estado formulario',
+        formStatusLabel(detail.participantFormStatus!),
+      );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(detail.holderName ?? 'Cliente'),
-      ),
+      appBar: AppBar(title: Text(detail.holderName ?? 'Cliente')),
       body: RefreshableViewport(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         child: Column(

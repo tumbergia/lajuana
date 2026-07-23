@@ -116,8 +116,7 @@ void main() {
 
     test('payment proof unknown status does not crash', () {
       final json = Map<String, dynamic>.from(baseJson);
-      final proofWithUnknownStatus =
-          Map<String, dynamic>.from(sampleProof);
+      final proofWithUnknownStatus = Map<String, dynamic>.from(sampleProof);
       proofWithUnknownStatus['status'] = 'unknown_status_123';
       json['payment_proofs'] = [proofWithUnknownStatus];
 

@@ -134,7 +134,6 @@ def get_saddle_service() -> object:
     return Container.get_instance().saddle_service
 
 
-
 def get_participant_service() -> object:
     return Container.get_instance().participant_service
 

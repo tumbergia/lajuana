@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `BusinessLocationUpdateSchema`.
 
 class BusinessLocationUpdate {
-
   final String? name;
   final String? address;
   final String? municipality;
@@ -13,16 +12,14 @@ class BusinessLocationUpdate {
   final double? latitude;
   final double? longitude;
 
-  const BusinessLocationUpdate(
-    {
+  const BusinessLocationUpdate({
     this.name,
     this.address,
     this.municipality,
     this.directions,
     this.latitude,
     this.longitude,
-    }
-  );
+  });
 
   factory BusinessLocationUpdate.fromJson(Map<String, dynamic> json) {
     return BusinessLocationUpdate(
@@ -43,5 +40,4 @@ class BusinessLocationUpdate {
     'latitude': latitude,
     'longitude': longitude,
   };
-
 }

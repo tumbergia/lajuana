@@ -36,7 +36,7 @@ void main() {
               {'raw': 3, 'label': '2026-07-01', 'unit': 'reservas'},
               {'raw': 5, 'label': '2026-07-02', 'unit': 'reservas'},
             ],
-          }
+          },
         ],
         'status': 'ok',
         'insight_text': 'Las reservas aumentaron frente al periodo anterior.',
@@ -72,7 +72,7 @@ void main() {
             'share_percentage': 40.0,
             'country_code': 'US',
             'country_name': 'Estados Unidos',
-          }
+          },
         ],
         'status': 'ok',
         'insight_text':
@@ -105,13 +105,7 @@ void main() {
 
   group('AnalyticsPreferences', () {
     test('keeps all selected modules without a hard cap', () {
-      final ids = [
-        'a',
-        'b',
-        'c',
-        'd',
-        'e',
-      ];
+      final ids = ['a', 'b', 'c', 'd', 'e'];
       expect(ids.length, 5);
     });
 

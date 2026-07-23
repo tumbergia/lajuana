@@ -8,6 +8,7 @@ import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_input.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart';
+import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 
@@ -25,14 +26,14 @@ class FakeReservationsRepository implements ReservationsRepository {
   });
 
   FakeReservationsRepository.cacheOnly()
-      : returnEmpty = false,
-        cacheFails = false,
-        remoteFails = true;
+    : returnEmpty = false,
+      cacheFails = false,
+      remoteFails = true;
 
   FakeReservationsRepository.remoteFails()
-      : returnEmpty = false,
-        cacheFails = false,
-        remoteFails = true;
+    : returnEmpty = false,
+      cacheFails = false,
+      remoteFails = true;
 
   final bool returnEmpty;
   final bool cacheFails;
@@ -75,6 +76,7 @@ class FakeReservationsRepository implements ReservationsRepository {
     ReservationStatus? status,
     String? query,
     bool includeDeleted = false,
+    bool? assistantDisabled,
   }) async {
     listReservationsCallCount++;
     lastIncludeDeleted = includeDeleted;
@@ -111,7 +113,9 @@ class FakeReservationsRepository implements ReservationsRepository {
 
   @override
   Future<Uint8List> downloadPaymentProofFile(String paymentProofId) async {
-    throw UnimplementedError('downloadPaymentProofFile not implemented in fake');
+    throw UnimplementedError(
+      'downloadPaymentProofFile not implemented in fake',
+    );
   }
 
   @override
@@ -120,6 +124,16 @@ class FakeReservationsRepository implements ReservationsRepository {
     String? note,
   }) async {
     throw UnimplementedError('approvePaymentProof not implemented in fake');
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
+    String? note,
+  }) async {
+    throw UnimplementedError(
+      'approvePaymentWithoutProof not implemented in fake',
+    );
   }
 
   @override
@@ -146,10 +160,17 @@ class FakeReservationsRepository implements ReservationsRepository {
     throw UnimplementedError('unrejectPaymentProof not implemented in fake');
   }
 
-
   @override
   Future<ReservationDetail> createReservation(ReservationCreate payload) async {
     throw UnimplementedError();
+  }
+
+  @override
+  Future<ReservationDetail> updateReservation({
+    required String reservationId,
+    bool? assistantDisabled,
+  }) async {
+    throw UnimplementedError('updateReservation not implemented in fake');
   }
 
   @override
@@ -204,9 +225,7 @@ class FakeReservationsRepository implements ReservationsRepository {
   }) async {}
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {}
+  Future<void> deleteReservationLogEntry({required String logId}) async {}
 
   @override
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
@@ -235,4 +254,43 @@ class FakeReservationsRepository implements ReservationsRepository {
   }) async {
     return Uint8List(0);
   }
+
+  @override
+  Future<List<ReservationProviderItem>> getReservationProviders(
+    String reservationId,
+  ) async => const [];
+
+  @override
+  Future<List<ProviderCatalogItem>> listProviders({
+    String? query,
+    bool isActive = true,
+  }) async => const [];
+
+  @override
+  Future<ReservationProviderItem> createReservationProvider({
+    required String reservationId,
+    required String providerId,
+    String? serviceLabel,
+    String? notes,
+    String status = 'pending',
+  }) async => throw UnimplementedError(
+    'createReservationProvider not implemented in fake',
+  );
+
+  @override
+  Future<ReservationProviderItem> updateReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+    String? serviceLabel,
+    String? notes,
+    String? status,
+  }) async => throw UnimplementedError(
+    'updateReservationProvider not implemented in fake',
+  );
+
+  @override
+  Future<void> deleteReservationProvider({
+    required String reservationId,
+    required String reservationProviderId,
+  }) async {}
 }

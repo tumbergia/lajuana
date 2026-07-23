@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 import time
-from datetime import UTC, date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -45,7 +45,10 @@ FIELD_LABELS: dict[str, tuple[str, str]] = {
     "holder_name": ("¿cuál es tu nombre completo?", "what's your full name?"),
     "holder_email": ("¿cuál es tu correo electrónico?", "what's your email?"),
     "schedule_id": ("¿para qué fecha?", "what date?"),
-    "quote_snapshot": ("necesito primero consultar disponibilidad y precio", "I need to check availability and price first"),
+    "quote_snapshot": (
+        "necesito primero consultar disponibilidad y precio",
+        "I need to check availability and price first",
+    ),
     "conversation_id": None,
     "code": ("¿cuál es el código de tu reserva?", "what's your reservation code?"),
     "reservation_code": ("¿cuál es el código de tu reserva?", "what's your reservation code?"),
@@ -55,12 +58,28 @@ FIELD_LABELS: dict[str, tuple[str, str]] = {
 
 # Constants extracted for testability (W3.6, conv. #6: no lógica en métodos)
 CONFIRM_WORDS: set[str] = {
-    "sí", "si", "yes", "confirmar", "confirmo", "ok", "okay",
-    "dale", "adelante", "hazlo", "ejecutar",
+    "sí",
+    "si",
+    "yes",
+    "confirmar",
+    "confirmo",
+    "ok",
+    "okay",
+    "dale",
+    "adelante",
+    "hazlo",
+    "ejecutar",
 }
 CANCEL_WORDS: set[str] = {
-    "no", "cancelar", "cancelo", "nope", "abortar", "detener",
-    "deten", "no quiero", "olvídalo",
+    "no",
+    "cancelar",
+    "cancelo",
+    "nope",
+    "abortar",
+    "detener",
+    "deten",
+    "no quiero",
+    "olvídalo",
 }
 
 REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
@@ -81,7 +100,9 @@ REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
     "cancel_reservation": ["reservation_code", "holder_phone"],
     "update_reservation_date": ["reservation_code", "holder_phone", "new_date"],
     "update_reservation_participants": [
-        "reservation_code", "holder_phone", "new_participant_count",
+        "reservation_code",
+        "holder_phone",
+        "new_participant_count",
     ],
 }
 
@@ -149,9 +170,7 @@ def _extract_tool_result_message(tool_name: str | None, tool_output: dict) -> st
         "attach_payment_proof_to_reservation",
     }
     analytics_summary = (
-        _analytics_summary_response(tool_output)
-        if tool_name in ANALYTICS_LITERAL_TOOLS
-        else None
+        _analytics_summary_response(tool_output) if tool_name in ANALYTICS_LITERAL_TOOLS else None
     )
     blocking_message = _extract_blocking_reason_message(tool_output)
     if blocking_message:
@@ -173,7 +192,7 @@ def _humanize_tool_name(tool_name: str | None) -> str:
     text = tool_name
     for prefix in ("admin_", "guide_"):
         if text.startswith(prefix):
-            text = text[len(prefix):]
+            text = text[len(prefix) :]
             break
     replacements = {
         "deactivate": "desactivar",
@@ -503,6 +522,7 @@ class AssistantOrchestrator:
         if _pending_ts:
             try:
                 from datetime import timedelta
+
                 if isinstance(_pending_ts, str):
                     _pending_ts = datetime.fromisoformat(_pending_ts)
                 if (datetime.now(UTC) - _pending_ts) > timedelta(minutes=30):
@@ -564,7 +584,8 @@ class AssistantOrchestrator:
                 # Never expose holder_name/holder_email in planner context so the bot
                 # always asks for them explicitly on new reservations.
                 safe_slots = {
-                    k: v for k, v in session.slot_values.items()
+                    k: v
+                    for k, v in session.slot_values.items()
                     if k not in ("holder_name", "holder_email")
                 }
                 if safe_slots:
@@ -694,7 +715,9 @@ class AssistantOrchestrator:
                 else:
                     plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
                     plan.missing_fields = merge.still_missing
-                    plan.response = _build_missing_fields_response(merge.still_missing, session.language)
+                    plan.response = _build_missing_fields_response(
+                        merge.still_missing, session.language
+                    )
 
         if plan.action in {
             AssistantAction.FINAL_RESPONSE,
@@ -717,7 +740,7 @@ class AssistantOrchestrator:
             session.last_intent = plan.action.value
             session.last_trace_id = trace_id
             session.turn_count += 1
-            session.updated_at = datetime.now(timezone.utc)
+            session.updated_at = datetime.now(UTC)
             await session.save()
             return AskResponse(
                 trace_id=trace_id,
@@ -740,7 +763,7 @@ class AssistantOrchestrator:
             session.last_intent = plan.action.value
             session.last_trace_id = trace_id
             session.turn_count += 1
-            session.updated_at = datetime.now(timezone.utc)
+            session.updated_at = datetime.now(UTC)
             await session.save()
             return AskResponse(
                 trace_id=trace_id,
@@ -761,7 +784,7 @@ class AssistantOrchestrator:
             session.last_intent = "blocked_by_policy"
             session.last_trace_id = trace_id
             session.turn_count += 1
-            session.updated_at = datetime.now(timezone.utc)
+            session.updated_at = datetime.now(UTC)
             await session.save()
             return AskResponse(
                 trace_id=trace_id,
@@ -780,12 +803,14 @@ class AssistantOrchestrator:
                 tool_name=_humanize_tool_name(plan.tool_name),
             )
             session.slot_values["_pending_tool_name"] = plan.tool_name
-            session.slot_values["_pending_tool_args"] = plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
+            session.slot_values["_pending_tool_args"] = (
+                plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
+            )
             session.slot_values["_pending_tool_timestamp"] = datetime.now(UTC).isoformat()
             session.last_intent = "pending_confirmation"
             session.last_trace_id = trace_id
             session.turn_count += 1
-            session.updated_at = datetime.now(timezone.utc)
+            session.updated_at = datetime.now(UTC)
             await session.save()
             return AskResponse(
                 trace_id=trace_id,
@@ -800,8 +825,13 @@ class AssistantOrchestrator:
             "[conversation_id=%s] Executing tool | tool=%s | args=%s",
             conversation_id,
             plan.tool_name,
-            {k: v for k, v in (plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}).items()
-             if k not in ("quote_snapshot",)},
+            {
+                k: v
+                for k, v in (
+                    plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
+                ).items()
+                if k not in ("quote_snapshot",)
+            },
         )
 
         started = time.perf_counter()
@@ -852,14 +882,11 @@ class AssistantOrchestrator:
         # get_payment_instructions (medios de pago por WhatsApp) y
         # attach_payment_proof_to_reservation (confirmación de comprobante).
         deterministic_response = _extract_tool_result_message(plan.tool_name, tool_output)
-        if (
-            plan.tool_name in ANALYTICS_LITERAL_TOOLS
-            or plan.tool_name in {
-                "create_reservation_draft",
-                "get_payment_instructions",
-                "attach_payment_proof_to_reservation",
-            }
-        ):
+        if plan.tool_name in ANALYTICS_LITERAL_TOOLS or plan.tool_name in {
+            "create_reservation_draft",
+            "get_payment_instructions",
+            "attach_payment_proof_to_reservation",
+        }:
             response = deterministic_response
         else:
             try:
@@ -920,7 +947,7 @@ class AssistantOrchestrator:
         session.last_intent = plan.action.value if plan.action else "tool_executed"
         session.last_trace_id = trace_id
         session.turn_count += 1
-        session.updated_at = datetime.now(timezone.utc)
+        session.updated_at = datetime.now(UTC)
         await session.save()
 
         return AskResponse(
@@ -940,7 +967,7 @@ class AssistantOrchestrator:
             return True
         for phrase in CONFIRM_WORDS:
             words = phrase.split()
-            pattern = r'\b' + r'\s+'.join(re.escape(w) for w in words) + r'\b'
+            pattern = r"\b" + r"\s+".join(re.escape(w) for w in words) + r"\b"
             if re.search(pattern, msg_lower):
                 return True
         return False
@@ -952,7 +979,7 @@ class AssistantOrchestrator:
             return True
         for phrase in CANCEL_WORDS:
             words = phrase.split()
-            pattern = r'\b' + r'\s+'.join(re.escape(w) for w in words) + r'\b'
+            pattern = r"\b" + r"\s+".join(re.escape(w) for w in words) + r"\b"
             if re.search(pattern, msg_lower):
                 return True
         return False
@@ -1002,7 +1029,7 @@ class AssistantOrchestrator:
         session.last_intent = "tool_executed_after_confirmation"
         session.last_trace_id = trace_id
         session.turn_count += 1
-        session.updated_at = datetime.now(timezone.utc)
+        session.updated_at = datetime.now(UTC)
         await session.save()
 
         return AskResponse(

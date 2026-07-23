@@ -10,11 +10,9 @@ import pytest
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.documents.provider_document import ProviderStatus, ProviderType
-from app.documents.reservation_provider_document import ReservationProviderStatus
 
 
 class TestReservationProviderService:
-
     def test_create_rejects_inactive_provider(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.services.reservation_provider_service import ReservationProviderService
 

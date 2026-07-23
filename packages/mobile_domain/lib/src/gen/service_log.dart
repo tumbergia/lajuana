@@ -8,7 +8,6 @@ import 'service_log_event_type.dart';
 import 'service_log_photo.dart';
 
 class ServiceLog {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -24,8 +23,7 @@ class ServiceLog {
   final String? createdBy;
   final List<ServiceLogPhoto>? photos;
 
-  const ServiceLog(
-    {
+  const ServiceLog({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -40,8 +38,7 @@ class ServiceLog {
     required this.relatedEquineId,
     this.createdBy,
     this.photos,
-    }
-  );
+  });
 
   factory ServiceLog.fromJson(Map<String, dynamic> json) {
     return ServiceLog(
@@ -59,7 +56,8 @@ class ServiceLog {
       relatedEquineId: json['related_equine_id'] as String,
       createdBy: json['created_by'] as String?,
       photos: (json['photos'] as List<dynamic>?)
-        ?.map((e) => ServiceLogPhoto.fromJson(e as Map<String, dynamic>)).toList(),
+          ?.map((e) => ServiceLogPhoto.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -77,7 +75,6 @@ class ServiceLog {
     'related_participant_id': relatedParticipantId,
     'related_equine_id': relatedEquineId,
     'created_by': createdBy,
-    'photos': photos,
+    'photos': photos?.map((e) => e.toJson()).toList(),
   };
-
 }

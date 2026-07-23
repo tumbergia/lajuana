@@ -114,17 +114,13 @@ class EquinesDatabase {
     required String payloadJson,
   }) async {
     final db = await database;
-    await db.insert(
-      'equine_event_sync_queue',
-      {
-        'operation_id': operationId,
-        'equine_id': equineId,
-        'payload_json': payloadJson,
-        'status': 'pending',
-        'created_at': DateTime.now().toUtc().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('equine_event_sync_queue', {
+      'operation_id': operationId,
+      'equine_id': equineId,
+      'payload_json': payloadJson,
+      'status': 'pending',
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<Map<String, Object?>>> getPendingEquineEvents({
@@ -172,10 +168,7 @@ class EquinesDatabase {
     final db = await database;
     await db.update(
       'equine_event_sync_queue',
-      {
-        'status': 'error',
-        'error_message': errorMessage,
-      },
+      {'status': 'error', 'error_message': errorMessage},
       where: 'operation_id = ?',
       whereArgs: [operationId],
     );
@@ -223,25 +216,17 @@ class EquinesDatabase {
 
   Future<void> deleteById(String id) async {
     final db = await database;
-    await db.delete(
-      'equines_cache',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('equines_cache', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> upsertSyncMeta(String key, String value) async {
     final db = await database;
     final now = DateTime.now().toUtc().toIso8601String();
-    await db.insert(
-      'equine_sync_meta',
-      {
-        'key': key,
-        'value': value,
-        'updated_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('equine_sync_meta', {
+      'key': key,
+      'value': value,
+      'updated_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<String?> getSyncMeta(String key) async {
@@ -258,10 +243,7 @@ class EquinesDatabase {
   }
 
   Future<void> setLastSyncedAt(DateTime dt) async {
-    await upsertSyncMeta(
-      'last_synced_at',
-      dt.toUtc().toIso8601String(),
-    );
+    await upsertSyncMeta('last_synced_at', dt.toUtc().toIso8601String());
   }
 
   Future<DateTime?> getLastSyncedAt() async {

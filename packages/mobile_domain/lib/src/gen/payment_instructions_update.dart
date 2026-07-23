@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `PaymentInstructionsUpdateSchema`.
 
 class PaymentInstructionsUpdate {
-
   final bool? manualTransferEnabled;
   final String? accountBank;
   final String? accountType;
@@ -18,8 +17,7 @@ class PaymentInstructionsUpdate {
   final double? boldSurchargePercent;
   final String? boldNote;
 
-  const PaymentInstructionsUpdate(
-    {
+  const PaymentInstructionsUpdate({
     this.manualTransferEnabled,
     this.accountBank,
     this.accountType,
@@ -31,8 +29,7 @@ class PaymentInstructionsUpdate {
     this.boldCheckoutUrl,
     this.boldSurchargePercent,
     this.boldNote,
-    }
-  );
+  });
 
   factory PaymentInstructionsUpdate.fromJson(Map<String, dynamic> json) {
     return PaymentInstructionsUpdate(
@@ -45,7 +42,8 @@ class PaymentInstructionsUpdate {
       transferNote: json['transfer_note'] as String?,
       boldEnabled: json['bold_enabled'] as bool?,
       boldCheckoutUrl: json['bold_checkout_url'] as String?,
-      boldSurchargePercent: (json['bold_surcharge_percent'] as num?)?.toDouble(),
+      boldSurchargePercent: (json['bold_surcharge_percent'] as num?)
+          ?.toDouble(),
       boldNote: json['bold_note'] as String?,
     );
   }
@@ -63,5 +61,4 @@ class PaymentInstructionsUpdate {
     'bold_surcharge_percent': boldSurchargePercent,
     'bold_note': boldNote,
   };
-
 }

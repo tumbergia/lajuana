@@ -16,13 +16,13 @@ from app.ai.mcp.tool_contracts import (
     ToolBlockingReason,
 )
 from app.core.errors import ApiError
-from app.documents import EquineDocument
 from app.schemas.equine import EquineCreateSchema, EquineUpdateSchema
 from app.services.equine_service import EquineService
 
 
 def _get_service() -> EquineService:
     from app.core.di import Container
+
     return Container.get_instance().equine_service
 
 
@@ -119,7 +119,9 @@ async def admin_get_equine(
             found=True,
             equine_id=str(doc.id),
             name=doc.name,
-            approximate_birth_date=doc.approximate_birth_date.isoformat() if doc.approximate_birth_date else None,
+            approximate_birth_date=doc.approximate_birth_date.isoformat()
+            if doc.approximate_birth_date
+            else None,
             approximate_age_years=doc.approximate_age_years,
             weight_kg=str(doc.weight_kg) if doc.weight_kg else None,
             sex=doc.sex,
@@ -177,11 +179,7 @@ async def admin_create_equine(
     output: AdminCreateEquineOutput | None = None
 
     try:
-        filtered = {
-            k: v
-            for k, v in kwargs.items()
-            if k in EquineCreateSchema.model_fields
-        }
+        filtered = {k: v for k, v in kwargs.items() if k in EquineCreateSchema.model_fields}
         payload = EquineCreateSchema.model_validate(filtered)
         doc = await _get_service().create(payload)
 
@@ -222,7 +220,9 @@ async def admin_create_equine(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_equine",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -289,7 +289,9 @@ async def admin_update_equine(
             tool_name="admin_update_equine",
             input={
                 "equine_id": equine_id,
-                **{k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+                **{
+                    k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+                },
             },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",

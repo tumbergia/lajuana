@@ -47,8 +47,9 @@ class _ProviderFormSheetState extends State<ProviderFormSheet> {
     _tariffCtrl = TextEditingController(text: existing?.tariffNotes ?? '');
     _sourceCtrl = TextEditingController(text: existing?.sourceNotes ?? '');
     _capacityCtrl = TextEditingController(text: existing?.capacityNotes ?? '');
-    _operationalCtrl =
-        TextEditingController(text: existing?.operationalNotes ?? '');
+    _operationalCtrl = TextEditingController(
+      text: existing?.operationalNotes ?? '',
+    );
     _type = existing?.type ?? 'other';
     _status = existing?.status ?? 'active';
     final existingPhone = existing?.whatsappPhone;
@@ -136,8 +137,12 @@ class _ProviderFormSheetState extends State<ProviderFormSheet> {
             ),
             const SizedBox(height: 16),
             AppSectionHeader(
-              eyebrow: widget.isEditing ? 'Editar proveedor' : 'Nuevo proveedor',
-              title: widget.isEditing ? 'Actualizar datos' : 'Registrar proveedor',
+              eyebrow: widget.isEditing
+                  ? 'Editar proveedor'
+                  : 'Nuevo proveedor',
+              title: widget.isEditing
+                  ? 'Actualizar datos'
+                  : 'Registrar proveedor',
               variant: AppSectionHeaderVariant.compact,
             ),
             const SizedBox(height: 20),
@@ -244,7 +249,9 @@ class _ProviderFormSheetState extends State<ProviderFormSheet> {
             ),
             const SizedBox(height: 20),
             AppButton(
-              label: widget.isEditing ? 'Guardar cambios' : 'Registrar proveedor',
+              label: widget.isEditing
+                  ? 'Guardar cambios'
+                  : 'Registrar proveedor',
               icon: widget.isEditing ? Icons.save_rounded : Icons.add,
               expanded: true,
               onPressed: _canSubmit ? _submit : null,

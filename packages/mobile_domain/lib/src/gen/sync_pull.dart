@@ -7,24 +7,19 @@
 import 'sync_stream_cursor.dart';
 
 class SyncPull {
-
   final List<SyncStreamCursor> streams;
 
-  const SyncPull(
-    {
-    required this.streams,
-    }
-  );
+  const SyncPull({required this.streams});
 
   factory SyncPull.fromJson(Map<String, dynamic> json) {
     return SyncPull(
-      streams: (json['streams'] as List<dynamic>?)
-        ?.map((e) => SyncStreamCursor.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      streams: (json['streams'] as List<dynamic>)
+          .map((e) => SyncStreamCursor.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'streams': streams,
+    'streams': streams.map((e) => e.toJson()).toList(),
   };
-
 }

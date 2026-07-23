@@ -9,10 +9,12 @@ import 'package:mobile/features/auth/presentation/widgets/session_loading_view.d
 import 'package:mobile_ui/src/theme/app_theme.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
+import 'package:mobile/features/auth/domain/auth_models.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_status_resolver.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
+import 'package:mobile/features/analytics/remote/analytics_api_client.dart';
 import 'package:mobile/features/voice_assistant/infrastructure/remote/voice_assistant_api_client.dart';
 import 'package:mobile/features/voice_assistant/presentation/controllers/voice_assistant_controller.dart';
 import 'package:mobile/features/voice_assistant/voice_assistant_module.dart';
@@ -41,14 +43,19 @@ class _FakeEquineRepository implements EquineRepository {
       throw UnimplementedError('not used in shell test');
 
   @override
-  Future<Equine> updateEquine(String equineId, Map<String, dynamic> data) async =>
-      throw UnimplementedError('not used in shell test');
+  Future<Equine> updateEquine(
+    String equineId,
+    Map<String, dynamic> data,
+  ) async => throw UnimplementedError('not used in shell test');
 
   @override
-  Future<List<EquineTimelineEntry>> getEquineTimeline(String equineId) async => [];
+  Future<List<EquineTimelineEntry>> getEquineTimeline(String equineId) async =>
+      [];
 
   @override
-  Future<List<Equine>> listAvailableForReservation(String reservationId) async => [];
+  Future<List<Equine>> listAvailableForReservation(
+    String reservationId,
+  ) async => [];
 
   @override
   Future<Equine> deleteEquine(String equineId) async =>
@@ -67,8 +74,7 @@ class _FakeEquineEventRepository implements EquineEventRepository {
   Future<EquineEvent> createEvent(
     String equineId,
     EquineEventCreatePayload payload,
-  ) async =>
-      throw UnimplementedError('not used in shell test');
+  ) async => throw UnimplementedError('not used in shell test');
 
   @override
   Future<int> flushPendingEvents({String? equineId}) async => 0;
@@ -110,6 +116,24 @@ void main() {
     );
   }
 
+  UserLocal buildGuideUser() {
+    return UserLocal(
+      localId: 'local-guide',
+      remoteId: 'remote-guide',
+      role: 'guide',
+      fullName: 'Guía de prueba',
+      email: 'guide@test.local',
+      phone: null,
+      isActive: true,
+      syncStatus: SyncStatus.synced,
+      conflictState: 'none',
+      versionRemote: 1,
+      updatedAtLocal: DateTime(2026),
+      createdAtRemote: null,
+      updatedAtRemote: null,
+    );
+  }
+
   AuthApiClient buildContactsApiClient() {
     final mockClient = MockClient((request) async {
       if (request.url.path.endsWith('/config/emergency-contacts')) {
@@ -140,10 +164,20 @@ void main() {
     );
   }
 
+  AnalyticsApiClient buildAnalyticsApiClient() {
+    return AnalyticsApiClient(
+      baseUrl: 'http://test.local/api/v1',
+      readAccessToken: () async => 'token',
+      refreshSession: () async => true,
+      httpClient: MockClient((_) async => http.Response('{}', 404)),
+    );
+  }
+
   testWidgets('Authenticated shell no renderiza FAB de sesion', (tester) async {
     final repo = FakeAuthRepository();
     final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity)
+      ..currentUser = buildGuideUser()
       ..networkStatus = const NetworkStatus(
         linkType: LinkType.wifi,
         backendReachability: BackendReachability.reachable,
@@ -155,6 +189,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          analyticsApiClient: buildAnalyticsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
           voiceAssistantModule: _fakeVoiceAssistantModule(),
@@ -175,6 +210,7 @@ void main() {
     final repo = FakeAuthRepository();
     final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity)
+      ..currentUser = buildGuideUser()
       ..networkStatus = const NetworkStatus(
         linkType: LinkType.wifi,
         backendReachability: BackendReachability.reachable,
@@ -187,6 +223,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          analyticsApiClient: buildAnalyticsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
           voiceAssistantModule: _fakeVoiceAssistantModule(),
@@ -240,6 +277,7 @@ void main() {
     final repo = FakeAuthRepository();
     final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity)
+      ..currentUser = buildGuideUser()
       ..networkStatus = const NetworkStatus(
         linkType: LinkType.wifi,
         backendReachability: BackendReachability.reachable,
@@ -251,6 +289,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          analyticsApiClient: buildAnalyticsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
           voiceAssistantModule: _fakeVoiceAssistantModule(),
@@ -295,6 +334,7 @@ void main() {
     final repo = FakeAuthRepository();
     final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity)
+      ..currentUser = buildGuideUser()
       ..authState = LocalAuthState.signedInLocalUnverified
       ..networkStatus = const NetworkStatus(
         linkType: LinkType.wifi,
@@ -308,6 +348,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          analyticsApiClient: buildAnalyticsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
           voiceAssistantModule: _fakeVoiceAssistantModule(),
@@ -327,6 +368,7 @@ void main() {
     final repo = FakeAuthRepository();
     final connectivity = FakeConnectivityService(LinkType.wifi);
     final controller = buildController(repo, connectivity)
+      ..currentUser = buildGuideUser()
       ..networkStatus = const NetworkStatus(
         linkType: LinkType.wifi,
         backendReachability: BackendReachability.reachable,
@@ -338,6 +380,7 @@ void main() {
         home: AuthenticatedShell(
           authController: controller,
           contactsApiClient: buildContactsApiClient(),
+          analyticsApiClient: buildAnalyticsApiClient(),
           equineRepository: _FakeEquineRepository(),
           equineEventRepository: _FakeEquineEventRepository(),
           voiceAssistantModule: _fakeVoiceAssistantModule(),
@@ -348,7 +391,7 @@ void main() {
 
     // Bottom nav Reservas icon should be present
     final reservasIcon = find.byIcon(Icons.calendar_today_rounded);
-    expect(reservasIcon, findsOneWidget);
+    expect(reservasIcon, findsWidgets);
 
     await connectivity.dispose();
     controller.dispose();

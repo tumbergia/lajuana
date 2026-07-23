@@ -19,9 +19,7 @@ async def download_and_transcribe(media_id: str) -> str:
     async with httpx.AsyncClient(timeout=30) as client:
         headers = {"Authorization": f"Bearer {settings.whatsapp_access_token}"}
 
-        media_url = (
-            f"https://graph.facebook.com/{settings.whatsapp_api_version}/{media_id}/"
-        )
+        media_url = f"https://graph.facebook.com/{settings.whatsapp_api_version}/{media_id}/"
         media_resp = await client.get(media_url, headers=headers)
         media_resp.raise_for_status()
         media_info = media_resp.json()

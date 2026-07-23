@@ -78,8 +78,7 @@ async def list_equine_events(
         await service.count_for_equine(equine_id, filters),
     )
     return [
-        equine_event_to_response(item)
-        for item in await service.list_for_equine(equine_id, filters)
+        equine_event_to_response(item) for item in await service.list_for_equine(equine_id, filters)
     ]
 
 

@@ -7,7 +7,6 @@
 import 'participant_form_link_status.dart';
 
 class ParticipantFormPublicStatus {
-
   final String reservationCode;
   final String experienceName;
   final String? requestedDate;
@@ -16,8 +15,7 @@ class ParticipantFormPublicStatus {
   final bool isComplete;
   final ParticipantFormLinkStatus linkStatus;
 
-  const ParticipantFormPublicStatus(
-    {
+  const ParticipantFormPublicStatus({
     required this.reservationCode,
     required this.experienceName,
     this.requestedDate,
@@ -25,8 +23,7 @@ class ParticipantFormPublicStatus {
     required this.expectedCount,
     required this.isComplete,
     required this.linkStatus,
-    }
-  );
+  });
 
   factory ParticipantFormPublicStatus.fromJson(Map<String, dynamic> json) {
     return ParticipantFormPublicStatus(
@@ -49,5 +46,4 @@ class ParticipantFormPublicStatus {
     'is_complete': isComplete,
     'link_status': linkStatus.toJson(),
   };
-
 }

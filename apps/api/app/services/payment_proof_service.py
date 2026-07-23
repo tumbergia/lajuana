@@ -73,9 +73,7 @@ class PaymentProofService:
                 code=ErrorCode.PAYMENT_PROOF_INVALID_CONTENT_TYPE,
                 message="El tipo de contenido no esta permitido.",
             )
-        upload = await FileUploadDocument.find_one(
-            {"storage_key": payload.storage_key}
-        )
+        upload = await FileUploadDocument.find_one({"storage_key": payload.storage_key})
         if upload is None or upload.status != "ready":
             raise ApiError(
                 status_code=409,
@@ -275,6 +273,7 @@ class PaymentProofService:
         try:
             from app.core.config import settings
             from app.core.di import Container
+
             experience = await ExperienceDocument.get(reservation.experience_id)
             notif = Container.get_instance().notification_service
             if not reservation.form_url:
@@ -284,9 +283,7 @@ class PaymentProofService:
                     expected_participants_count=reservation.participant_count,
                     created_by=actor_id,
                 )
-                reservation.form_url = (
-                    f"{settings.participant_form_base_url}/?token={raw_token}"
-                )
+                reservation.form_url = f"{settings.participant_form_base_url}/?token={raw_token}"
                 await reservation.save()
             await notif.enqueue_payment_approved_form(
                 reservation=reservation,
@@ -355,6 +352,7 @@ class PaymentProofService:
         try:
             from app.core.config import settings
             from app.core.di import Container
+
             experience = await ExperienceDocument.get(reservation.experience_id)
             experience_name = experience.name if experience else ""
             notif = Container.get_instance().notification_service
@@ -366,9 +364,7 @@ class PaymentProofService:
                     expected_participants_count=reservation.participant_count,
                     created_by=actor_id,
                 )
-                reservation.form_url = (
-                    f"{settings.participant_form_base_url}/?token={raw_token}"
-                )
+                reservation.form_url = f"{settings.participant_form_base_url}/?token={raw_token}"
                 await reservation.save()
 
             await notif.enqueue_payment_approved_form(
@@ -387,8 +383,18 @@ class PaymentProofService:
     def _format_date_es(d: datetime.date) -> str:
         days = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
         months = [
-            "enero", "febrero", "marzo", "abril", "mayo", "junio",
-            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+            "enero",
+            "febrero",
+            "marzo",
+            "abril",
+            "mayo",
+            "junio",
+            "julio",
+            "agosto",
+            "septiembre",
+            "octubre",
+            "noviembre",
+            "diciembre",
         ]
         return f"{days[d.weekday()]} {d.day} de {months[d.month - 1]} de {d.year}"
 
@@ -446,6 +452,7 @@ class PaymentProofService:
         # Enqueue WhatsApp with rejection reason (via outbox)
         try:
             from app.core.di import Container
+
             experience = await ExperienceDocument.get(reservation.experience_id)
             notif = Container.get_instance().notification_service
             await notif.enqueue_payment_rejected(
@@ -800,9 +807,7 @@ class PaymentProofService:
 
         await download_and_store(proof_id)
 
-    def _on_background_download_done(
-        self, task: asyncio.Task[None], proof_id: str
-    ) -> None:
+    def _on_background_download_done(self, task: asyncio.Task[None], proof_id: str) -> None:
         try:
             exc = task.exception()
             if exc:

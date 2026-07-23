@@ -598,7 +598,8 @@ class CatalogsRepository {
 
     final leftover = await db.query(
       'sync_queue',
-      where: "entity_type = 'experience' AND entity_local_id = ? AND operation_type = 'purge'",
+      where:
+          "entity_type = 'experience' AND entity_local_id = ? AND operation_type = 'purge'",
       whereArgs: [id],
       limit: 1,
     );

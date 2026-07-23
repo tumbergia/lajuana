@@ -15,10 +15,10 @@ class EquinesApiClient {
     required Future<String?> Function() readAccessToken,
     required Future<bool> Function() refreshSession,
     http.Client? httpClient,
-  })  : _baseUrl = baseUrl,
-        _readAccessToken = readAccessToken,
-        _refreshSession = refreshSession,
-        _http = httpClient ?? http.Client();
+  }) : _baseUrl = baseUrl,
+       _readAccessToken = readAccessToken,
+       _refreshSession = refreshSession,
+       _http = httpClient ?? http.Client();
 
   final String _baseUrl;
   final Future<String?> Function() _readAccessToken;
@@ -40,8 +40,9 @@ class EquinesApiClient {
     if (includeDeleted) {
       queryParams['include_deleted'] = 'true';
     }
-    final queryString =
-        queryParams.isEmpty ? '' : '?${Uri(queryParameters: queryParams).query}';
+    final queryString = queryParams.isEmpty
+        ? ''
+        : '?${Uri(queryParameters: queryParams).query}';
     final response = await _authorizedRequest(
       method: 'GET',
       path: '/equines/list$queryString',
@@ -84,7 +85,10 @@ class EquinesApiClient {
     return EquineDto.fromJson(_decodeBody(response.body));
   }
 
-  Future<EquineDto> updateEquine(String equineId, Map<String, dynamic> data) async {
+  Future<EquineDto> updateEquine(
+    String equineId,
+    Map<String, dynamic> data,
+  ) async {
     final response = await _authorizedRequest(
       method: 'PATCH',
       path: '/equines/$equineId',
@@ -105,7 +109,9 @@ class EquinesApiClient {
     return EquineEventDto.fromJson(_decodeBody(response.body));
   }
 
-  Future<List<EquineTimelineEntryDto>> getEquineTimeline(String equineId) async {
+  Future<List<EquineTimelineEntryDto>> getEquineTimeline(
+    String equineId,
+  ) async {
     final response = await _authorizedRequest(
       method: 'GET',
       path: '/equines/$equineId/timeline',
@@ -125,7 +131,9 @@ class EquinesApiClient {
               message: 'Payload inválido en timeline de equino.',
             );
           }
-          return EquineTimelineEntryDto.fromJson(Map<String, dynamic>.from(item));
+          return EquineTimelineEntryDto.fromJson(
+            Map<String, dynamic>.from(item),
+          );
         })
         .toList(growable: false);
   }
@@ -146,7 +154,9 @@ class EquinesApiClient {
     return EquineDto.fromJson(_decodeBody(response.body));
   }
 
-  Future<List<EquineDto>> listAvailableForReservation(String reservationId) async {
+  Future<List<EquineDto>> listAvailableForReservation(
+    String reservationId,
+  ) async {
     final response = await _authorizedRequest(
       method: 'GET',
       path: '/equines/available-for-reservation/$reservationId',
@@ -227,8 +237,7 @@ class EquinesApiClient {
     };
   }
 
-  Future<http.Response> _execute(
-      Future<http.Response> Function() block) async {
+  Future<http.Response> _execute(Future<http.Response> Function() block) async {
     try {
       return await block().timeout(const Duration(seconds: 12));
     } on TimeoutException {

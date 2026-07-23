@@ -222,7 +222,7 @@ class ToolPolicyEngine:
 
     def _autocorrect_tool_name(self, tool_name: str, allowed: set[str]) -> str:
         """Autocorrege typos en el nombre de la tool usando difflib.
-        
+
         Solo autocorrige si:
         1. La tool original no existe en ningún conjunto (typo real)
         2. La corrección está en el set de tools permitidas
@@ -230,12 +230,12 @@ class ToolPolicyEngine:
         """
         if tool_name in allowed:
             return tool_name
-        
+
         # No autocorregir si la tool existe en CRITICAL_TOOLS
         all_known = self.CLIENT_TOOLS | self.GUIDE_TOOLS | self.ADMIN_TOOLS | self.CRITICAL_TOOLS
         if tool_name in all_known:
             return tool_name  # Es una tool conocida, no un typo
-        
+
         # Solo autocorregir si la tool original parece un typo (no está en ningún set conocido)
         matches = difflib.get_close_matches(tool_name, allowed, n=1, cutoff=0.75)
         if matches:
@@ -307,7 +307,14 @@ class ToolPolicyEngine:
                 )
 
         if plan.tool_name == "admin_update_reservation_rules":
-            if not any(k in args for k in ("min_days_in_advance", "require_payment_proof_for_confirmation", "reservation_draft_ttl_minutes")):
+            if not any(
+                k in args
+                for k in (
+                    "min_days_in_advance",
+                    "require_payment_proof_for_confirmation",
+                    "reservation_draft_ttl_minutes",
+                )
+            ):
                 return ToolPolicyDecision(
                     allowed=False,
                     reason="missing_required_arguments:min_days_in_advance_or_require_payment_proof_or_ttl",

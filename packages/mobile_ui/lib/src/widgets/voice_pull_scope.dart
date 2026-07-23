@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -120,8 +121,10 @@ class _VoicePullScopeState extends State<VoicePullScope>
         return false;
       }
 
-      final overscrollPastBottom =
-          math.max(0.0, metrics.pixels - metrics.maxScrollExtent);
+      final overscrollPastBottom = math.max(
+        0.0,
+        metrics.pixels - metrics.maxScrollExtent,
+      );
       final delta = notification.scrollDelta ?? 0;
 
       var nextOffset = _dragOffset;
@@ -223,8 +226,7 @@ class _VoicePullScopeState extends State<VoicePullScope>
   Future<void> _triggerVoice() async {
     if (_isTriggering) return;
     final last = _lastTriggeredAt;
-    if (last != null &&
-        DateTime.now().difference(last) < _triggerCooldown) {
+    if (last != null && DateTime.now().difference(last) < _triggerCooldown) {
       _animateReset();
       return;
     }
@@ -295,10 +297,7 @@ class _VoicePullScopeState extends State<VoicePullScope>
 }
 
 class _VoicePullIndicator extends StatelessWidget {
-  const _VoicePullIndicator({
-    required this.progress,
-    required this.armed,
-  });
+  const _VoicePullIndicator({required this.progress, required this.armed});
 
   final double progress;
   final bool armed;
@@ -318,8 +317,9 @@ class _VoicePullIndicator extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: (isDark ? Colors.white : scheme.primary)
-                .withValues(alpha: 0.12 * progress),
+            color: (isDark ? Colors.white : scheme.primary).withValues(
+              alpha: 0.12 * progress,
+            ),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -335,8 +335,9 @@ class _VoicePullIndicator extends StatelessWidget {
               value: armed ? null : progress,
               strokeWidth: 2.4,
               color: isDark ? const Color(0xFF131313) : scheme.onPrimary,
-              backgroundColor: (isDark ? const Color(0xFF131313) : scheme.onPrimary)
-                  .withValues(alpha: 0.18),
+              backgroundColor:
+                  (isDark ? const Color(0xFF131313) : scheme.onPrimary)
+                      .withValues(alpha: 0.18),
             ),
           ),
           Icon(

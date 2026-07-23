@@ -145,11 +145,7 @@ void main() {
 
   group('listExperiences', () {
     test('returns only active experiences', () async {
-      await insertExperience(
-        id: 'exp-active',
-        name: 'Activa',
-        slug: 'activa',
-      );
+      await insertExperience(id: 'exp-active', name: 'Activa', slug: 'activa');
       await insertExperience(
         id: 'exp-inactive',
         name: 'Inactiva',
@@ -164,11 +160,7 @@ void main() {
     });
 
     test('includeInactive returns active and inactive experiences', () async {
-      await insertExperience(
-        id: 'exp-active',
-        name: 'Activa',
-        slug: 'activa',
-      );
+      await insertExperience(id: 'exp-active', name: 'Activa', slug: 'activa');
       await insertExperience(
         id: 'exp-inactive',
         name: 'Inactiva',
@@ -211,27 +203,57 @@ void main() {
       );
     }
 
-    test('bootstrapea el set completo aunque ya exista cursor + 1 fila',
-        () async {
-      // Estado "incompleto": cursor de experiences + 1 fila, SIN marcador de
-      // bootstrap (lo que dejaba el pull global del dashboard).
-      await db.insert('sync_cursors', {'stream': 'experiences', 'cursor': 'c0'});
-      await insertExperience(id: 'exp-solo', name: 'La unica', slug: 'la-unica');
+    test(
+      'bootstrapea el set completo aunque ya exista cursor + 1 fila',
+      () async {
+        // Estado "incompleto": cursor de experiences + 1 fila, SIN marcador de
+        // bootstrap (lo que dejaba el pull global del dashboard).
+        await db.insert('sync_cursors', {
+          'stream': 'experiences',
+          'cursor': 'c0',
+        });
+        await insertExperience(
+          id: 'exp-solo',
+          name: 'La unica',
+          slug: 'la-unica',
+        );
 
-      final repo = repoWithBootstrap([
-        {'id': 'r1', 'name': 'Uno', 'slug': 'uno', 'description': 'd', 'level': 'basic', 'is_active': true},
-        {'id': 'r2', 'name': 'Dos', 'slug': 'dos', 'description': 'd', 'level': 'basic', 'is_active': true},
-        {'id': 'r3', 'name': 'Tres', 'slug': 'tres', 'description': 'd', 'level': 'basic', 'is_active': true},
-      ]);
+        final repo = repoWithBootstrap([
+          {
+            'id': 'r1',
+            'name': 'Uno',
+            'slug': 'uno',
+            'description': 'd',
+            'level': 'basic',
+            'is_active': true,
+          },
+          {
+            'id': 'r2',
+            'name': 'Dos',
+            'slug': 'dos',
+            'description': 'd',
+            'level': 'basic',
+            'is_active': true,
+          },
+          {
+            'id': 'r3',
+            'name': 'Tres',
+            'slug': 'tres',
+            'description': 'd',
+            'level': 'basic',
+            'is_active': true,
+          },
+        ]);
 
-      await repo.refreshExperiencesFromServer();
+        await repo.refreshExperiencesFromServer();
 
-      final items = await repo.listExperiences(includeInactive: true);
-      expect(
-        items.map((e) => e.remoteId),
-        containsAll(<String>['r1', 'r2', 'r3']),
-      );
-    });
+        final items = await repo.listExperiences(includeInactive: true);
+        expect(
+          items.map((e) => e.remoteId),
+          containsAll(<String>['r1', 'r2', 'r3']),
+        );
+      },
+    );
   });
 
   group('updateExperience', () {

@@ -17,10 +17,10 @@ Every handler exposes the same interface::
         ...
 """
 
+from app.services.sync_handlers.config_handler import ConfigSyncHandler
 from app.services.sync_handlers.experience_handler import ExperienceSyncHandler
 from app.services.sync_handlers.reservation_handler import ReservationSyncHandler
 from app.services.sync_handlers.resource_handler import ResourceSyncHandler
-from app.services.sync_handlers.config_handler import ConfigSyncHandler
 
 __all__ = [
     "ConfigSyncHandler",

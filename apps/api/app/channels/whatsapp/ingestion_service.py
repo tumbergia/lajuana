@@ -4,8 +4,8 @@ from uuid import uuid4
 from app.ai.assistant.orchestrator import AssistantOrchestrator
 from app.ai.language.messages import t
 from app.channels.whatsapp.normalizer import build_conversation_id
-from app.channels.whatsapp.parser import ParsedMessage, parse_whatsapp_payload
 from app.channels.whatsapp.outbound_service import WhatsAppOutboundService
+from app.channels.whatsapp.parser import ParsedMessage, parse_whatsapp_payload
 from app.conversations.documents import WhatsAppInboundEventDocument
 from app.conversations.services.conversation_resolver import ConversationResolver
 from app.conversations.services.message_buffer_service import MessageBufferService
@@ -14,7 +14,6 @@ from app.documents.conversation_session_document import ConversationSessionDocum
 from app.documents.conversation_turn_document import ConversationTurnDocument
 from app.schemas.ask import AskRequest
 from app.services.audio_transcription_service import download_and_transcribe
-
 
 _SUPPORTED_DOCUMENT_MIMES = {"application/pdf"}
 

@@ -25,8 +25,9 @@ class AppSparkline extends StatelessWidget {
     if (values.isEmpty) {
       return SizedBox(height: h);
     }
-    final limited =
-        values.length > 12 ? values.sublist(values.length - 12) : values;
+    final limited = values.length > 12
+        ? values.sublist(values.length - 12)
+        : values;
     final c = color ?? tokens.seriesPalette.first;
     final spots = [
       for (var i = 0; i < limited.length; i++) FlSpot(i.toDouble(), limited[i]),

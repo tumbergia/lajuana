@@ -62,8 +62,10 @@ class TestPaymentProofVerify:
         async def run() -> None:
             async def _mock_payment_proof_get(_: str) -> object:
                 return proof
+
             async def _mock_reservation_get(_: str) -> object:
                 return reservation
+
             monkeypatch.setattr(
                 "app.services.payment_proof_service.PaymentProofDocument.get",
                 _mock_payment_proof_get,
@@ -107,8 +109,10 @@ class TestPaymentProofVerify:
         async def run() -> None:
             async def _mock_payment_proof_get(_: str) -> object:
                 return proof
+
             async def _mock_reservation_get(_: str) -> object:
                 return reservation
+
             monkeypatch.setattr(
                 "app.services.payment_proof_service.PaymentProofDocument.get",
                 _mock_payment_proof_get,
@@ -139,6 +143,7 @@ class TestPaymentProofVerify:
         async def run() -> None:
             async def _mock_proof_get_none(_: str) -> None:
                 return None
+
             monkeypatch.setattr(
                 "app.services.payment_proof_service.PaymentProofDocument.get",
                 _mock_proof_get_none,
@@ -170,8 +175,10 @@ class TestPaymentProofReject:
         async def run() -> None:
             async def _mock_payment_proof_get(_: str) -> object:
                 return proof
+
             async def _mock_reservation_get(_: str) -> object:
                 return reservation
+
             monkeypatch.setattr(
                 "app.services.payment_proof_service.PaymentProofDocument.get",
                 _mock_payment_proof_get,
@@ -191,7 +198,9 @@ class TestPaymentProofReject:
 
             from app.schemas.payment_proof import PaymentProofRejectSchema
 
-            payload = PaymentProofRejectSchema(confirmation_token="REJECT_PAYMENT", reason="Documento ilegible")
+            payload = PaymentProofRejectSchema(
+                confirmation_token="REJECT_PAYMENT", reason="Documento ilegible"
+            )
             from app.common.enums import UserRole
             from app.services.payment_proof_service import PaymentProofService
 
@@ -223,8 +232,10 @@ class TestPaymentProofReject:
         async def run() -> None:
             async def _mock_payment_proof_get(_: str) -> object:
                 return proof
+
             async def _mock_reservation_get(_: str) -> object:
                 return reservation
+
             monkeypatch.setattr(
                 "app.services.payment_proof_service.PaymentProofDocument.get",
                 _mock_payment_proof_get,
@@ -236,7 +247,9 @@ class TestPaymentProofReject:
 
             from app.schemas.payment_proof import PaymentProofRejectSchema
 
-            payload = PaymentProofRejectSchema(confirmation_token="REJECT_PAYMENT", reason="Duplicado")
+            payload = PaymentProofRejectSchema(
+                confirmation_token="REJECT_PAYMENT", reason="Duplicado"
+            )
             from app.common.enums import UserRole
             from app.services.payment_proof_service import PaymentProofService
 

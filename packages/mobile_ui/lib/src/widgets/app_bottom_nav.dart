@@ -25,7 +25,7 @@ class AppBottomNav extends StatefulWidget {
   final AppNavItem current;
   final ValueChanged<AppNavItem>? onTap;
   final Future<void> Function(BuildContext context, VoiceContext voiceContext)?
-      onVoiceLongPress;
+  onVoiceLongPress;
 
   /// Tabs to render. Defaults to the full admin set.
   final List<AppNavItem> visibleItems;

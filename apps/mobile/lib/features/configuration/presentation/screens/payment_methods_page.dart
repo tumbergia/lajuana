@@ -71,8 +71,9 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
     super.dispose();
   }
 
-  String _friendlyError(Object e) =>
-      e is ConfigurationApiFailure ? e.message : 'No se pudo cargar la configuración.';
+  String _friendlyError(Object e) => e is ConfigurationApiFailure
+      ? e.message
+      : 'No se pudo cargar la configuración.';
 
   void _apply(PaymentConfiguration v) {
     bank.text = v.bank;
@@ -263,7 +264,8 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
                           title: 'Consignación bancaria',
                           subtitle: manual
                               ? [
-                                  if (bank.text.trim().isNotEmpty) bank.text.trim(),
+                                  if (bank.text.trim().isNotEmpty)
+                                    bank.text.trim(),
                                   if (number.text.trim().isNotEmpty)
                                     number.text.trim(),
                                   if (holder.text.trim().isNotEmpty)

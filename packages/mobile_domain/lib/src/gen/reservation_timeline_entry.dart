@@ -4,12 +4,12 @@
 
 /// AUTO-GENERATED from OpenAPI schema `ReservationTimelineEntrySchema`.
 
+import 'reservation_timeline_entry_source.dart';
 import 'service_log_photo.dart';
 
 class ReservationTimelineEntry {
-
   final String id;
-  final source source;
+  final ReservationTimelineEntrySource source;
   final String kind;
   final DateTime happenedAt;
   final String title;
@@ -23,8 +23,7 @@ class ReservationTimelineEntry {
   final List<ServiceLogPhoto>? photos;
   final int? photosTotal;
 
-  const ReservationTimelineEntry(
-    {
+  const ReservationTimelineEntry({
     required this.id,
     required this.source,
     required this.kind,
@@ -39,13 +38,12 @@ class ReservationTimelineEntry {
     this.serviceLogId,
     this.photos,
     this.photosTotal,
-    }
-  );
+  });
 
   factory ReservationTimelineEntry.fromJson(Map<String, dynamic> json) {
     return ReservationTimelineEntry(
       id: json['id'] as String,
-      source: source.fromJson(json['source'] as Map<String, dynamic>),
+      source: (json['source'] as String).toReservationTimelineEntrySource(),
       kind: json['kind'] as String,
       happenedAt: DateTime.parse(json['happened_at'] as String),
       title: json['title'] as String,
@@ -57,14 +55,15 @@ class ReservationTimelineEntry {
       relatedParticipantId: json['related_participant_id'] as String?,
       serviceLogId: json['service_log_id'] as String?,
       photos: (json['photos'] as List<dynamic>?)
-        ?.map((e) => ServiceLogPhoto.fromJson(e as Map<String, dynamic>)).toList(),
+          ?.map((e) => ServiceLogPhoto.fromJson(e as Map<String, dynamic>))
+          .toList(),
       photosTotal: json['photos_total'] as int?,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'source': source,
+    'source': source.toJson(),
     'kind': kind,
     'happened_at': happenedAt.toIso8601String(),
     'title': title,
@@ -75,8 +74,7 @@ class ReservationTimelineEntry {
     'deletable': deletable,
     'related_participant_id': relatedParticipantId,
     'service_log_id': serviceLogId,
-    'photos': photos,
+    'photos': photos?.map((e) => e.toJson()).toList(),
     'photos_total': photosTotal,
   };
-
 }

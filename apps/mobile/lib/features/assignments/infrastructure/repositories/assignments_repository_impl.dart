@@ -13,8 +13,8 @@ class AssignmentsRepositoryImpl implements AssignmentsRepository {
   AssignmentsRepositoryImpl({
     required AssignmentsApiClient api,
     AssignmentsLocalDataSource? local,
-  })  : _api = api,
-        _local = local ?? AssignmentsLocalDataSource();
+  }) : _api = api,
+       _local = local ?? AssignmentsLocalDataSource();
 
   @override
   Future<Assignment> create({
@@ -169,7 +169,8 @@ class AssignmentsRepositoryImpl implements AssignmentsRepository {
       'reservation_id': reservationId,
       'event_type': 'note',
       'notes': notes,
-      if (relatedParticipantId != null) 'related_participant_id': relatedParticipantId,
+      if (relatedParticipantId != null)
+        'related_participant_id': relatedParticipantId,
       if (relatedEquineId != null) 'related_equine_id': relatedEquineId,
     });
   }

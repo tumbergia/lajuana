@@ -53,7 +53,9 @@ async def list_providers(
     q: str | None = None,
     service_category: str | None = None,
     is_active: bool | None = None,
-    include_deleted: bool = Query(default=False, description="Incluir proveedores borrados logicamente"),
+    include_deleted: bool = Query(
+        default=False, description="Incluir proveedores borrados logicamente"
+    ),
     limit: int = Query(default=200, ge=1, le=1000),
     skip: int = Query(default=0, ge=0),
     service: ProviderService = Depends(get_provider_service),

@@ -27,41 +27,35 @@ Future<void> showRejectDialog(
       return AlertDialog(
         backgroundColor: scheme.surfaceContainerHigh,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: tokens.radiusXl,
-        ),
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+        shape: RoundedRectangleBorder(borderRadius: tokens.radiusXl),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
         contentPadding: EdgeInsets.zero,
         content: Form(
           key: formKey,
           child: Padding(
             padding: EdgeInsets.all(tokens.spaceXl),
-              child: SizedBox(
+            child: SizedBox(
               height: 320,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.cancel_rounded,
-                      size: 48, color: AppColors.danger),
+                  Icon(Icons.cancel_rounded, size: 48, color: AppColors.danger),
                   SizedBox(height: tokens.spaceLg),
                   Text(
                     'Rechazar comprobante',
                     textAlign: TextAlign.center,
-                    style: Theme.of(ctx)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   SizedBox(height: tokens.spaceSm),
                   Text(
                     'Indica el motivo del rechazo',
                     textAlign: TextAlign.center,
-                    style: Theme.of(ctx)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: scheme.onSurfaceVariant),
+                    style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                   SizedBox(height: tokens.spaceLg),
                   AppTextField(

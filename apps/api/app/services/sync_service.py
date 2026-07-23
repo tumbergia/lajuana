@@ -120,17 +120,21 @@ async def _entity_to_response_dict(entity_type: str, doc) -> dict:
 async def _latest_stream_cursors() -> dict[str, str]:
     """Return the latest cursor for every tracked change stream."""
     streams = (
-        "reservations", "participants", "payment_proofs", "assignments",
-        "logs", "experiences", "config", "equines",
-        "providers", "policies", "saddles",
+        "reservations",
+        "participants",
+        "payment_proofs",
+        "assignments",
+        "logs",
+        "experiences",
+        "config",
+        "equines",
+        "providers",
+        "policies",
+        "saddles",
     )
     cursors: dict[str, str] = {}
     for stream in streams:
-        latest = (
-            await SyncChangeDocument.find({"stream": stream})
-            .sort("-id")
-            .first_or_none()
-        )
+        latest = await SyncChangeDocument.find({"stream": stream}).sort("-id").first_or_none()
         cursors[stream] = str(latest.id) if latest else ""
     return cursors
 
@@ -211,9 +215,7 @@ class SyncOperationExecutor:
                 },
             )
 
-    async def _execute_doc(
-        self, *, current_user: UserDocument, operation: SyncPushOperationSchema
-    ):
+    async def _execute_doc(self, *, current_user: UserDocument, operation: SyncPushOperationSchema):
         entity = operation.entity_type
         op_type = operation.operation_type
 
@@ -221,7 +223,10 @@ class SyncOperationExecutor:
         # returns a document, others return None.
         for handler in self._handlers:
             doc = await handler.handle(
-                entity=entity, op_type=op_type, operation=operation, current_user=current_user,
+                entity=entity,
+                op_type=op_type,
+                operation=operation,
+                current_user=current_user,
             )
             if doc is not None:
                 return doc

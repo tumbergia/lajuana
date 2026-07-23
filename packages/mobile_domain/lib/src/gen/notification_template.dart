@@ -7,7 +7,6 @@
 import 'notification_channel.dart';
 
 class NotificationTemplate {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -21,8 +20,7 @@ class NotificationTemplate {
   final List<String> variablesAllowed;
   final bool isActive;
 
-  const NotificationTemplate(
-    {
+  const NotificationTemplate({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -35,8 +33,7 @@ class NotificationTemplate {
     required this.body,
     required this.variablesAllowed,
     required this.isActive,
-    }
-  );
+  });
 
   factory NotificationTemplate.fromJson(Map<String, dynamic> json) {
     return NotificationTemplate(
@@ -50,8 +47,8 @@ class NotificationTemplate {
       language: json['language'] as String,
       subject: json['subject'] as String,
       body: json['body'] as String,
-      variablesAllowed: (json['variables_allowed'] as List<dynamic>?)
-        ?.cast<String>() ?? [],
+      variablesAllowed: (json['variables_allowed'] as List<dynamic>)
+          .cast<String>(),
       isActive: json['is_active'] as bool,
     );
   }
@@ -70,5 +67,4 @@ class NotificationTemplate {
     'variables_allowed': variablesAllowed,
     'is_active': isActive,
   };
-
 }
