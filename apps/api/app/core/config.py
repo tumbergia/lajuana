@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     app_env: str = "local"
     app_debug: bool = True
-    cors_allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:8080,https://formulario-la-juana.vercel.app"
+    cors_allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:8080,https://form.lajuanacolombia.com"
     cors_allow_origin_regex: str = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
     cors_allow_credentials: bool = False
 
@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     whatsapp_api_version: str = "v23.0"
     whatsapp_send_enabled: bool = False
 
-    participant_form_base_url: str = "https://formulario-la-juana.vercel.app"
+    participant_form_base_url: str = "https://form.lajuanacolombia.com"
     participant_form_token_expiry_days: int = 14
     participant_form_token_secret: str = "change-me"
 
