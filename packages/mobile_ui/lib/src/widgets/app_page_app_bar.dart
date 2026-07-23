@@ -52,7 +52,8 @@ class AppPageAppBar extends StatelessWidget implements PreferredSizeWidget {
     final foreground =
         theme.appBarTheme.foregroundColor ?? theme.colorScheme.onSurface;
     final canPop = ModalRoute.of(context)?.canPop ?? false;
-    final showBack = leading != null ||
+    final showBack =
+        leading != null ||
         (automaticallyImplyLeading && (onBack != null || canPop));
 
     // Square back control (36×36) + left inset, so the icon sits centered in
@@ -67,7 +68,8 @@ class AppPageAppBar extends StatelessWidget implements PreferredSizeWidget {
       scrolledUnderElevation: 0,
       titleSpacing: showBack ? tokens.spaceSm : tokens.spaceXl,
       leadingWidth: showBack ? backLeadingWidth : 0,
-      leading: leading ??
+      leading:
+          leading ??
           (showBack
               ? Padding(
                   padding: EdgeInsets.only(left: tokens.spaceXl),
@@ -77,8 +79,9 @@ class AppPageAppBar extends StatelessWidget implements PreferredSizeWidget {
                       width: backSize,
                       height: backSize,
                       child: IconButton(
-                        tooltip: MaterialLocalizations.of(context)
-                            .backButtonTooltip,
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).backButtonTooltip,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints.tightFor(
                           width: backSize,

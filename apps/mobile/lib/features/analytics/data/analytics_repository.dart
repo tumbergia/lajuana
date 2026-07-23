@@ -7,8 +7,8 @@ class AnalyticsRepository {
     required AnalyticsApiClient apiClient,
     AnalyticsLocalDataSource? local,
     this.userKey = 'default',
-  })  : _api = apiClient,
-        _local = local ?? AnalyticsLocalDataSource();
+  }) : _api = apiClient,
+       _local = local ?? AnalyticsLocalDataSource();
 
   final AnalyticsApiClient _api;
   final AnalyticsLocalDataSource _local;

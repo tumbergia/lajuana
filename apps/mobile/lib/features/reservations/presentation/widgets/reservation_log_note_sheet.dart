@@ -13,15 +13,11 @@ import 'package:mobile/features/reservations/presentation/controllers/reservatio
 const _maxPhotosPerNote = 10;
 
 class _PendingPhoto {
-  _PendingPhoto.existing({
-    required this.input,
-    this.previewBytes,
-  }) : localFile = null;
+  _PendingPhoto.existing({required this.input, this.previewBytes})
+    : localFile = null;
 
-  _PendingPhoto.local({
-    required this.localFile,
-    required this.previewBytes,
-  }) : input = null;
+  _PendingPhoto.local({required this.localFile, required this.previewBytes})
+    : input = null;
 
   final ReservationLogPhotoInput? input;
   final XFile? localFile;
@@ -101,9 +97,7 @@ class _ReservationLogNoteSheetState extends State<ReservationLogNoteSheet> {
 
       for (final image in selected) {
         final bytes = await image.readAsBytes();
-        _photos.add(
-          _PendingPhoto.local(localFile: image, previewBytes: bytes),
-        );
+        _photos.add(_PendingPhoto.local(localFile: image, previewBytes: bytes));
       }
       setState(() => _error = null);
     } catch (error) {
@@ -177,9 +171,9 @@ class _ReservationLogNoteSheetState extends State<ReservationLogNoteSheet> {
     try {
       final photos = await _resolvePhotoInputs();
       if (!mounted) return;
-      Navigator.of(context).pop(
-        ReservationLogNoteSheetResult(text: text, photos: photos),
-      );
+      Navigator.of(
+        context,
+      ).pop(ReservationLogNoteSheetResult(text: text, photos: photos));
     } catch (error) {
       setState(() {
         _saving = false;
@@ -206,9 +200,9 @@ class _ReservationLogNoteSheetState extends State<ReservationLogNoteSheet> {
         children: [
           Text(
             widget.isEditing ? 'Editar nota' : 'Agregar nota',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 16),
           AppTextField(
@@ -266,9 +260,9 @@ class _ReservationLogNoteSheetState extends State<ReservationLogNoteSheet> {
                               )
                             : Icon(
                                 Icons.image_outlined,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                       ),
                       Positioned(
@@ -282,8 +276,7 @@ class _ReservationLogNoteSheetState extends State<ReservationLogNoteSheet> {
                             minHeight: 24,
                           ),
                           icon: const Icon(Icons.close, size: 16),
-                          onPressed:
-                              _saving ? null : () => _removePhoto(index),
+                          onPressed: _saving ? null : () => _removePhoto(index),
                         ),
                       ),
                     ],

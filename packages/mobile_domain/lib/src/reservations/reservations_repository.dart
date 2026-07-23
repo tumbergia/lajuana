@@ -90,19 +90,13 @@ abstract class ReservationsRepository {
 
   /// Cancels a reservation (online-only, admin-only).
   /// Returns the full updated reservation detail.
-  Future<ReservationDetail> cancelReservation({
-    required String reservationId,
-  });
+  Future<ReservationDetail> cancelReservation({required String reservationId});
 
   /// Soft-deletes a reservation (sets deleted_at).
-  Future<ReservationDetail> deleteReservation({
-    required String reservationId,
-  });
+  Future<ReservationDetail> deleteReservation({required String reservationId});
 
   /// Restores a soft-deleted reservation.
-  Future<ReservationDetail> restoreReservation({
-    required String reservationId,
-  });
+  Future<ReservationDetail> restoreReservation({required String reservationId});
 
   /// Bitácora unificada de la reserva (más reciente primero).
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
@@ -124,9 +118,7 @@ abstract class ReservationsRepository {
   });
 
   /// Elimina una entrada de bitácora (soft delete).
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  });
+  Future<void> deleteReservationLogEntry({required String logId});
 
   /// Obtiene una nota manual con todas sus fotos (para edición).
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId);

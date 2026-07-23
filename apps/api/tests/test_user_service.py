@@ -167,6 +167,7 @@ class TestUserServiceGet:
 
     def test_get_user_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Getting a non-existent user should raise ApiError 404."""
+
         async def _mock_get(_: str) -> None:
             return None
 
@@ -192,10 +193,10 @@ class FakeFindQuery:
     def __init__(self, items: list) -> None:
         self._items = items
 
-    def skip(self, n: int) -> "FakeFindQuery":
+    def skip(self, n: int) -> FakeFindQuery:
         return self
 
-    def limit(self, n: int) -> "FakeFindQuery":
+    def limit(self, n: int) -> FakeFindQuery:
         return self
 
     async def to_list(self) -> list:
@@ -377,6 +378,7 @@ class TestUserServiceUpdate:
 
     def test_update_user_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Updating a non-existent user should raise ApiError 404."""
+
         async def _mock_get(_: str) -> None:
             return None
 
@@ -447,6 +449,7 @@ class TestUserServiceSoftDelete:
 
     def test_soft_delete_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Soft-deleting a non-existent user should raise ApiError 404."""
+
         async def _mock_get(_: str) -> None:
             return None
 

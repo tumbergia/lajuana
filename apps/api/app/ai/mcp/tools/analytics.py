@@ -195,13 +195,15 @@ async def admin_get_sales_summary(
         status_pipeline: list[dict] = []
         if created_filter:
             status_pipeline.append({"$match": {"created_at": created_filter}})
-        status_pipeline.append({
-            "$group": {
-                "_id": "$status",
-                "count": {"$sum": 1},
-                "total_amount": {"$sum": {"$ifNull": ["$quoted_total_amount", 0]}},
+        status_pipeline.append(
+            {
+                "$group": {
+                    "_id": "$status",
+                    "count": {"$sum": 1},
+                    "total_amount": {"$sum": {"$ifNull": ["$quoted_total_amount", 0]}},
+                }
             }
-        })
+        )
         results = await _aggregate(status_pipeline)
 
         total = sum(r["count"] for r in results)
@@ -416,21 +418,23 @@ async def admin_get_channel_performance(
         pipeline: list[dict] = []
         if created_filter:
             pipeline.append({"$match": {"created_at": created_filter}})
-        pipeline.append({
-            "$group": {
-                "_id": "$channel",
-                "count": {"$sum": 1},
-                "confirmed": {
-                    "$sum": {
-                        "$cond": [
-                            {"$in": ["$status", ["confirmed", "completed"]]},
-                            1,
-                            0,
-                        ]
-                    }
-                },
+        pipeline.append(
+            {
+                "$group": {
+                    "_id": "$channel",
+                    "count": {"$sum": 1},
+                    "confirmed": {
+                        "$sum": {
+                            "$cond": [
+                                {"$in": ["$status", ["confirmed", "completed"]]},
+                                1,
+                                0,
+                            ]
+                        }
+                    },
+                }
             }
-        })
+        )
         results = await _aggregate(pipeline)
 
         channels = [
@@ -558,8 +562,12 @@ async def admin_get_occupancy_report(
                     date=r_date.isoformat() if r_date else "",
                     experience_name=experience_name,
                     capacity_total=participant_count,
-                    reserved=participant_count if reservation.status == ReservationStatus.CONFIRMED else 0,
-                    available=0 if reservation.status == ReservationStatus.CONFIRMED else participant_count,
+                    reserved=participant_count
+                    if reservation.status == ReservationStatus.CONFIRMED
+                    else 0,
+                    available=0
+                    if reservation.status == ReservationStatus.CONFIRMED
+                    else participant_count,
                     occupancy_pct=round(pct, 1),
                 )
             )
@@ -580,9 +588,7 @@ async def admin_get_occupancy_report(
             ToolChartPoint(
                 label=name,
                 value=round(
-                    (vals["reserved"] / vals["capacity"] * 100)
-                    if vals["capacity"] > 0
-                    else 0.0,
+                    (vals["reserved"] / vals["capacity"] * 100) if vals["capacity"] > 0 else 0.0,
                     1,
                 ),
                 secondary_label=f"{int(vals['reserved'])}/{int(vals['capacity'])}",
@@ -669,10 +675,7 @@ async def admin_get_equine_workload_report(
                 {"equine_id": equine.id, "is_active": True}
             ).to_list()
             # Excluir canceladas y reemplazadas del cómputo de carga
-            assignments = [
-                a for a in all_assignments
-                if a.status not in ("cancelled", "replaced")
-            ]
+            assignments = [a for a in all_assignments if a.status not in ("cancelled", "replaced")]
 
             count_in_range = 0
             for a in assignments:

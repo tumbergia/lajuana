@@ -88,7 +88,10 @@ void main() {
       expect(controller.items, isNotEmpty);
       expect(controller.error, isNull);
       expect(catalogsRepo.refreshExperiencesCallCount, 1);
-      expect(experienceRepo.listCallCount, 1); // list() called once during refresh
+      expect(
+        experienceRepo.listCallCount,
+        1,
+      ); // list() called once during refresh
     });
 
     test('guards against double refresh', () async {

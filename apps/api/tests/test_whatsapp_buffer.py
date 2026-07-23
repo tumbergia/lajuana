@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
@@ -166,7 +166,7 @@ async def test_buffer_appends(monkeypatch: pytest.MonkeyPatch) -> None:
         status="scheduled",
         first_message_at=now,
         last_message_at=now,
-        scheduled_for=now,
+        scheduled_for=now + timedelta(seconds=4),
         version=1,
     )
 

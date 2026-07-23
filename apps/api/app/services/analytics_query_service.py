@@ -7,7 +7,7 @@ import hashlib
 import json
 import logging
 import time
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from bson.decimal128 import Decimal128
@@ -15,8 +15,6 @@ from bson.decimal128 import Decimal128
 from app.common.collections import Collections
 from app.common.enums import (
     AssignmentStatus,
-    Permission,
-    ROLE_PERMISSIONS,
     ReservationStatus,
     UserRole,
 )
@@ -37,7 +35,6 @@ from app.schemas.analytics_v2 import (
     ANALYTICS_SCHEMA_VERSION,
     AnalyticsModule,
     BreakdownItem,
-    Comparison,
     DashboardQuery,
     DashboardResponse,
     DateRangePreset,
@@ -239,11 +236,7 @@ class AnalyticsQueryService:
         requested = query.module_ids or list(allowed)
         module_ids = [m for m in requested if m in allowed]
         # Auto-include action_center only on full dashboards (no explicit filter).
-        if (
-            not explicit
-            and "action_center" in allowed
-            and "action_center" not in module_ids
-        ):
+        if not explicit and "action_center" in allowed and "action_center" not in module_ids:
             module_ids = ["action_center", *module_ids]
 
         key = self._cache_key(role=role, query=query, module_ids=module_ids, period=period)
@@ -252,7 +245,7 @@ class AnalyticsQueryService:
         if not force_refresh and cached and (now_mono - cached["t"]) < TTL_SECONDS:
             return DashboardResponse(**cached["response"])
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         fresh = Freshness(
             generated_at=now,
             label=freshness_label(now, now=now),
@@ -282,7 +275,9 @@ class AnalyticsQueryService:
             fn = builders.get(mid)
             if fn:
                 ids_to_build.append(mid)
-                tasks.append(fn(period=period, previous=previous, query=query, now=now, freshness=fresh))
+                tasks.append(
+                    fn(period=period, previous=previous, query=query, now=now, freshness=fresh)
+                )
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
         modules: list[AnalyticsModule] = []
@@ -311,10 +306,7 @@ class AnalyticsQueryService:
             else:
                 modules.append(result)
 
-        modules = [
-            m.model_copy(update={"analysis": build_rich_analysis(m)})
-            for m in modules
-        ]
+        modules = [m.model_copy(update={"analysis": build_rich_analysis(m)}) for m in modules]
 
         response = DashboardResponse(
             modules=modules,
@@ -331,7 +323,7 @@ class AnalyticsQueryService:
     def _dt_bounds(self, period: Period) -> tuple[datetime, datetime]:
         start = datetime.combine(period.start, datetime.min.time(), tzinfo=APP_TIMEZONE)
         end = datetime.combine(period.end, datetime.max.time(), tzinfo=APP_TIMEZONE)
-        return start.astimezone(timezone.utc), end.astimezone(timezone.utc)
+        return start.astimezone(UTC), end.astimezone(UTC)
 
     @staticmethod
     def _service_date_bounds(start: date, end: date) -> tuple[datetime, datetime]:
@@ -514,9 +506,7 @@ class AnalyticsQueryService:
             status=status,
             insight_text=insight,
             action=(
-                ModuleAction(label="Ver reservas", target="reservations")
-                if total > 0
-                else None
+                ModuleAction(label="Ver reservas", target="reservations") if total > 0 else None
             ),
             generated_at=now,
             freshness=freshness,
@@ -603,7 +593,9 @@ class AnalyticsQueryService:
                 value_type=ValueType.COUNT,
             ),
             comparison=comparison,
-            series=[Series(id="reservations", label="Reservas nuevas", unit="reservas", points=points)],
+            series=[
+                Series(id="reservations", label="Reservas nuevas", unit="reservas", points=points)
+            ],
             status=status if total == 0 else ModuleStatus.OK,
             insight_text=insight,
             action=ModuleAction(label="Ver reservas", target="reservations"),
@@ -761,7 +753,13 @@ class AnalyticsQueryService:
         # Prefer requested_date when present for "service period"; fallback created_at filter already applied
         pipeline_total = [
             {"$match": match},
-            {"$group": {"_id": None, "total": {"$sum": "$quoted_total_amount"}, "count": {"$sum": 1}}},
+            {
+                "$group": {
+                    "_id": None,
+                    "total": {"$sum": "$quoted_total_amount"},
+                    "count": {"$sum": 1},
+                }
+            },
         ]
         total_raw = await self._aggregate(ReservationDocument, pipeline_total)
         total = _to_num(total_raw[0]["total"]) if total_raw else 0.0
@@ -920,9 +918,7 @@ class AnalyticsQueryService:
             generated_at=now,
             freshness=freshness,
             empty_message="No hay comprobantes pendientes por revisar.",
-            blocked_reason=(
-                "Ingreso cobrado bloqueado: los comprobantes no registran montos."
-            ),
+            blocked_reason=("Ingreso cobrado bloqueado: los comprobantes no registran montos."),
         )
 
     async def _module_top_experiences(
@@ -980,8 +976,7 @@ class AnalyticsQueryService:
             )
             # Simpler insight:
             insight = (
-                f"{top.label} concentra {int(top.raw_value)} de {int(total)} "
-                f"reservas confirmadas."
+                f"{top.label} concentra {int(top.raw_value)} de {int(total)} reservas confirmadas."
             )
             status = ModuleStatus.OK
             primary = float(total)
@@ -1253,8 +1248,7 @@ class AnalyticsQueryService:
             status = ModuleStatus.DEGRADED
         else:
             insight = (
-                "Aún no hay suficientes participantes registrados "
-                "para mostrar países principales."
+                "Aún no hay suficientes participantes registrados para mostrar países principales."
             )
             status = ModuleStatus.EMPTY
 
@@ -1278,8 +1272,7 @@ class AnalyticsQueryService:
             generated_at=now,
             freshness=freshness,
             empty_message=(
-                "Aún no hay suficientes participantes registrados "
-                "para mostrar países principales."
+                "Aún no hay suficientes participantes registrados para mostrar países principales."
             ),
         )
 

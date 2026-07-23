@@ -53,7 +53,7 @@ class ServiceLogCreate {
     'notes': notes,
     'related_participant_id': relatedParticipantId,
     'related_equine_id': relatedEquineId,
-    'photos': photos,
+    'photos': photos?.map((e) => e.toJson()).toList(),
   };
 
 }

@@ -42,7 +42,8 @@ class ReservationParticipantDetail {
     String? ecName;
     String? ecPhone;
     String? ecRelation;
-    if (source.emergencyContact != null && source.emergencyContact!.isNotEmpty) {
+    if (source.emergencyContact != null &&
+        source.emergencyContact!.isNotEmpty) {
       try {
         final ec = jsonDecode(source.emergencyContact!);
         if (ec is Map<String, dynamic>) {
@@ -67,19 +68,25 @@ class ReservationParticipantDetail {
       weightKg: source.weightKg.isNotEmpty ? source.weightKg : null,
       experienceLevel: source.experienceLevel,
       documentType: source.documentType.isNotEmpty ? source.documentType : null,
-      documentNumber: source.documentNumber.isNotEmpty ? source.documentNumber : null,
+      documentNumber: source.documentNumber.isNotEmpty
+          ? source.documentNumber
+          : null,
       phone: source.phone.isNotEmpty ? source.phone : null,
       country: source.country.isNotEmpty ? source.country : null,
       city: source.city.isNotEmpty ? source.city : null,
       bloodType: source.bloodType.isNotEmpty ? source.bloodType : null,
-      epsOrTravelInsurance:
-          source.epsOrTravelInsurance.isNotEmpty ? source.epsOrTravelInsurance : null,
-      dietaryRestrictions:
-          source.dietaryRestrictions.isNotEmpty ? source.dietaryRestrictions : null,
-      healthConditions:
-          source.healthConditions.isNotEmpty ? source.healthConditions : null,
-      sensoryDisabilities:
-          source.sensoryDisabilities.isNotEmpty ? source.sensoryDisabilities : null,
+      epsOrTravelInsurance: source.epsOrTravelInsurance.isNotEmpty
+          ? source.epsOrTravelInsurance
+          : null,
+      dietaryRestrictions: source.dietaryRestrictions.isNotEmpty
+          ? source.dietaryRestrictions
+          : null,
+      healthConditions: source.healthConditions.isNotEmpty
+          ? source.healthConditions
+          : null,
+      sensoryDisabilities: source.sensoryDisabilities.isNotEmpty
+          ? source.sensoryDisabilities
+          : null,
       emergencyContactName: ecName,
       emergencyContactPhone: ecPhone,
       emergencyContactRelationship: ecRelation,
@@ -90,7 +97,7 @@ class ReservationParticipantDetail {
     );
   }
 
-  /// Parse 'true'/'false' String → bool? 
+  /// Parse 'true'/'false' String → bool?
   static bool? _parseBool(String value) {
     if (value == 'true') return true;
     if (value == 'false') return false;

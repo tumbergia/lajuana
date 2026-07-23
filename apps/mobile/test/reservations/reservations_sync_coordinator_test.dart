@@ -25,8 +25,7 @@ class _FakeSyncOutboxClient implements SyncOutboxClient {
   @override
   Future<Map<String, dynamic>> postSyncPush({
     required Map<String, dynamic> body,
-  }) async =>
-      const {};
+  }) async => const {};
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -179,8 +178,7 @@ void main() {
         '2026-07-01T00:00:00Z',
       );
 
-      final updated = _reservationPayload(id: 'r1')
-        ..['status'] = 'cancelled';
+      final updated = _reservationPayload(id: 'r1')..['status'] = 'cancelled';
       api.pullResponse = {
         'streams': [
           {
@@ -201,140 +199,154 @@ void main() {
       expect(detail!.payload['status'], 'cancelled');
     });
 
-    test('participants: agrega uno nuevo dentro de la reserva cacheada', () async {
-      await localDataSource.cacheDetail(
-        'r1',
-        _reservationPayload(id: 'r1'),
-        '2026-07-01T00:00:00Z',
-      );
+    test(
+      'participants: agrega uno nuevo dentro de la reserva cacheada',
+      () async {
+        await localDataSource.cacheDetail(
+          'r1',
+          _reservationPayload(id: 'r1'),
+          '2026-07-01T00:00:00Z',
+        );
 
-      final participant = {
-        'id': 'p1',
-        'reservation_id': 'r1',
-        'first_name': 'Ana',
-      };
-      api.pullResponse = {
-        'streams': [
-          {'name': 'reservations', 'next_cursor': '', 'changes': []},
-          {
-            'name': 'participants',
-            'next_cursor': 'c2',
-            'changes': [
-              {'change_type': 'upsert', 'payload': participant},
-            ],
-          },
-          {'name': 'payment_proofs', 'next_cursor': '', 'changes': []},
-        ],
-      };
-
-      await coordinator.pullChanges();
-
-      final detail = await localDataSource.getCachedDetail('r1');
-      final participants = detail!.payload['participants'] as List;
-      expect(participants, hasLength(1));
-      expect(participants.first['id'], 'p1');
-      expect(await localDataSource.getSyncCursor('participants'), 'c2');
-    });
-
-    test('participants: actualiza uno existente por id (no lo duplica)', () async {
-      await localDataSource.cacheDetail(
-        'r1',
-        _reservationPayload(
-          id: 'r1',
-          participants: [
-            {'id': 'p1', 'reservation_id': 'r1', 'first_name': 'Ana'},
+        final participant = {
+          'id': 'p1',
+          'reservation_id': 'r1',
+          'first_name': 'Ana',
+        };
+        api.pullResponse = {
+          'streams': [
+            {'name': 'reservations', 'next_cursor': '', 'changes': []},
+            {
+              'name': 'participants',
+              'next_cursor': 'c2',
+              'changes': [
+                {'change_type': 'upsert', 'payload': participant},
+              ],
+            },
+            {'name': 'payment_proofs', 'next_cursor': '', 'changes': []},
           ],
-        ),
-        '2026-07-01T00:00:00Z',
-      );
+        };
 
-      final updatedParticipant = {
-        'id': 'p1',
-        'reservation_id': 'r1',
-        'first_name': 'Ana María',
-      };
-      api.pullResponse = {
-        'streams': [
-          {'name': 'reservations', 'next_cursor': '', 'changes': []},
-          {
-            'name': 'participants',
-            'next_cursor': 'c2',
-            'changes': [
-              {'change_type': 'upsert', 'payload': updatedParticipant},
+        await coordinator.pullChanges();
+
+        final detail = await localDataSource.getCachedDetail('r1');
+        final participants = detail!.payload['participants'] as List;
+        expect(participants, hasLength(1));
+        expect(participants.first['id'], 'p1');
+        expect(await localDataSource.getSyncCursor('participants'), 'c2');
+      },
+    );
+
+    test(
+      'participants: actualiza uno existente por id (no lo duplica)',
+      () async {
+        await localDataSource.cacheDetail(
+          'r1',
+          _reservationPayload(
+            id: 'r1',
+            participants: [
+              {'id': 'p1', 'reservation_id': 'r1', 'first_name': 'Ana'},
             ],
-          },
-          {'name': 'payment_proofs', 'next_cursor': '', 'changes': []},
-        ],
-      };
+          ),
+          '2026-07-01T00:00:00Z',
+        );
 
-      await coordinator.pullChanges();
+        final updatedParticipant = {
+          'id': 'p1',
+          'reservation_id': 'r1',
+          'first_name': 'Ana María',
+        };
+        api.pullResponse = {
+          'streams': [
+            {'name': 'reservations', 'next_cursor': '', 'changes': []},
+            {
+              'name': 'participants',
+              'next_cursor': 'c2',
+              'changes': [
+                {'change_type': 'upsert', 'payload': updatedParticipant},
+              ],
+            },
+            {'name': 'payment_proofs', 'next_cursor': '', 'changes': []},
+          ],
+        };
 
-      final detail = await localDataSource.getCachedDetail('r1');
-      final participants = detail!.payload['participants'] as List;
-      expect(participants, hasLength(1));
-      expect(participants.first['first_name'], 'Ana María');
-    });
+        await coordinator.pullChanges();
 
-    test('participants: sin reserva padre cacheada, descarta sin crashear', () async {
-      final orphan = {
-        'id': 'p1',
-        'reservation_id': 'unknown-reservation',
-        'first_name': 'Ana',
-      };
-      api.pullResponse = {
-        'streams': [
-          {'name': 'reservations', 'next_cursor': '', 'changes': []},
-          {
-            'name': 'participants',
-            'next_cursor': 'c2',
-            'changes': [
-              {'change_type': 'upsert', 'payload': orphan},
-            ],
-          },
-          {'name': 'payment_proofs', 'next_cursor': '', 'changes': []},
-        ],
-      };
+        final detail = await localDataSource.getCachedDetail('r1');
+        final participants = detail!.payload['participants'] as List;
+        expect(participants, hasLength(1));
+        expect(participants.first['first_name'], 'Ana María');
+      },
+    );
 
-      await coordinator.pullChanges();
+    test(
+      'participants: sin reserva padre cacheada, descarta sin crashear',
+      () async {
+        final orphan = {
+          'id': 'p1',
+          'reservation_id': 'unknown-reservation',
+          'first_name': 'Ana',
+        };
+        api.pullResponse = {
+          'streams': [
+            {'name': 'reservations', 'next_cursor': '', 'changes': []},
+            {
+              'name': 'participants',
+              'next_cursor': 'c2',
+              'changes': [
+                {'change_type': 'upsert', 'payload': orphan},
+              ],
+            },
+            {'name': 'payment_proofs', 'next_cursor': '', 'changes': []},
+          ],
+        };
 
-      final detail = await localDataSource.getCachedDetail('unknown-reservation');
-      expect(detail, isNull);
-      // El cursor avanza igual — no queda reintentando para siempre.
-      expect(await localDataSource.getSyncCursor('participants'), 'c2');
-    });
+        await coordinator.pullChanges();
 
-    test('payment_proofs: agrega uno nuevo dentro de la reserva cacheada', () async {
-      await localDataSource.cacheDetail(
-        'r1',
-        _reservationPayload(id: 'r1'),
-        '2026-07-01T00:00:00Z',
-      );
+        final detail = await localDataSource.getCachedDetail(
+          'unknown-reservation',
+        );
+        expect(detail, isNull);
+        // El cursor avanza igual — no queda reintentando para siempre.
+        expect(await localDataSource.getSyncCursor('participants'), 'c2');
+      },
+    );
 
-      final proof = {
-        'id': 'pp1',
-        'reservation_id': 'r1',
-        'status': 'received',
-      };
-      api.pullResponse = {
-        'streams': [
-          {'name': 'reservations', 'next_cursor': '', 'changes': []},
-          {'name': 'participants', 'next_cursor': '', 'changes': []},
-          {
-            'name': 'payment_proofs',
-            'next_cursor': 'c3',
-            'changes': [
-              {'change_type': 'upsert', 'payload': proof},
-            ],
-          },
-        ],
-      };
+    test(
+      'payment_proofs: agrega uno nuevo dentro de la reserva cacheada',
+      () async {
+        await localDataSource.cacheDetail(
+          'r1',
+          _reservationPayload(id: 'r1'),
+          '2026-07-01T00:00:00Z',
+        );
 
-      await coordinator.pullChanges();
+        final proof = {
+          'id': 'pp1',
+          'reservation_id': 'r1',
+          'status': 'received',
+        };
+        api.pullResponse = {
+          'streams': [
+            {'name': 'reservations', 'next_cursor': '', 'changes': []},
+            {'name': 'participants', 'next_cursor': '', 'changes': []},
+            {
+              'name': 'payment_proofs',
+              'next_cursor': 'c3',
+              'changes': [
+                {'change_type': 'upsert', 'payload': proof},
+              ],
+            },
+          ],
+        };
 
-      final detail = await localDataSource.getCachedDetail('r1');
-      final proofs = detail!.payload['payment_proofs'] as List;
-      expect(proofs, hasLength(1));
-      expect(proofs.first['id'], 'pp1');
-    });
+        await coordinator.pullChanges();
+
+        final detail = await localDataSource.getCachedDetail('r1');
+        final proofs = detail!.payload['payment_proofs'] as List;
+        expect(proofs, hasLength(1));
+        expect(proofs.first['id'], 'pp1');
+      },
+    );
   });
 }

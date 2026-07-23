@@ -6,7 +6,7 @@ import 'package:mobile_ui/src/widgets/app_bottom_nav.dart';
 /// visitados y notificación a listeners.
 class ShellNavigationController extends ChangeNotifier {
   ShellNavigationController({AppNavItem initialTab = AppNavItem.inicio})
-      : _current = initialTab;
+    : _current = initialTab;
 
   AppNavItem _current;
 

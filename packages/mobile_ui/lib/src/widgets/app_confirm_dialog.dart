@@ -133,9 +133,7 @@ class AppConfirmDialog extends StatelessWidget {
     return AlertDialog(
       backgroundColor: scheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: tokens.radiusXl,
-      ),
+      shape: RoundedRectangleBorder(borderRadius: tokens.radiusXl),
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       contentPadding: EdgeInsets.zero,
       content: Padding(

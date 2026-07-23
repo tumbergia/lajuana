@@ -169,44 +169,41 @@ class _ActionPendingListScreenState extends State<ActionPendingListScreen> {
       body: _loading
           ? const AppCenteredLoader()
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(tokens.spaceLg),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, textAlign: TextAlign.center),
-                        SizedBox(height: tokens.spaceMd),
-                        AppButton(
-                          label: 'Reintentar',
-                          onPressed: _loadReservations,
-                          variant: AppButtonVariant.secondary,
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: EdgeInsets.all(tokens.spaceLg),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    SizedBox(height: tokens.spaceMd),
+                    AppButton(
+                      label: 'Reintentar',
+                      onPressed: _loadReservations,
+                      variant: AppButtonVariant.secondary,
                     ),
-                  ),
-                )
-              : _reservations.isEmpty
-                  ? const Center(
-                      child: Text('No hay elementos en este momento.'),
-                    )
-                  : ListView.separated(
-                      padding: EdgeInsets.all(tokens.spaceLg),
-                      itemCount: _reservations.length,
-                      separatorBuilder: (_, _) =>
-                          SizedBox(height: tokens.spaceSm),
-                      itemBuilder: (context, i) {
-                        final r = _reservations[i];
-                        return ReservationRowCard(
-                          reservation: r,
-                          subtitle: r.experienceName ?? r.equineName,
-                          highlightIfPending: true,
-                          openDetailsOnTap: true,
-                          showRequestedDate: true,
-                          onOpenDetail: () => _openReservation(r),
-                        );
-                      },
-                    ),
+                  ],
+                ),
+              ),
+            )
+          : _reservations.isEmpty
+          ? const Center(child: Text('No hay elementos en este momento.'))
+          : ListView.separated(
+              padding: EdgeInsets.all(tokens.spaceLg),
+              itemCount: _reservations.length,
+              separatorBuilder: (_, _) => SizedBox(height: tokens.spaceSm),
+              itemBuilder: (context, i) {
+                final r = _reservations[i];
+                return ReservationRowCard(
+                  reservation: r,
+                  subtitle: r.experienceName ?? r.equineName,
+                  highlightIfPending: true,
+                  openDetailsOnTap: true,
+                  showRequestedDate: true,
+                  onOpenDetail: () => _openReservation(r),
+                );
+              },
+            ),
     );
   }
 }

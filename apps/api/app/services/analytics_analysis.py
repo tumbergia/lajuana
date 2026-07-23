@@ -156,8 +156,7 @@ def _empty_or_error(mod: AnalyticsModule) -> list[str] | None:
         ]
     if mod.status == ModuleStatus.ERROR:
         return [
-            mod.insight_text
-            or "No pudimos actualizar esta información en este momento.",
+            mod.insight_text or "No pudimos actualizar esta información en este momento.",
             "Reintenta en unos segundos; el resto de indicadores sigue disponible.",
         ]
     return None
@@ -177,16 +176,9 @@ def _paras_action_center(mod: AnalyticsModule) -> list[str]:
             "La operación está al día. Sigue monitoreando al abrir la jornada.",
         ]
     top = bd["ordered"][0] if bd else None  # type: ignore[index]
-    lead = (
-        f"La cola principal es «{top.label}» con {_fmt(top.raw_value)} ítems."
-        if top
-        else ""
-    )
+    lead = f"La cola principal es «{top.label}» con {_fmt(top.raw_value)} ítems." if top else ""
     return [
-        (
-            f"Hay {total} pendientes que requieren atención en {_period_clause(mod)}. "
-            f"{lead}"
-        ).strip(),
+        (f"Hay {total} pendientes que requieren atención en {_period_clause(mod)}. {lead}").strip(),
         (
             "Prioriza primero lo que bloquea ingresos o salidas (pagos por verificar "
             "y participantes incompletos); después atiende cuidados equinos y "
@@ -287,9 +279,7 @@ def _paras_reservation_status(mod: AnalyticsModule) -> list[str]:
     for k in ("pending_payment", "payment_received"):
         if k in by_key:
             risk += by_key[k].raw_value  # type: ignore[index]
-    p2 = (
-        f"Los dos estados líderes concentran {_fmt(float(bd['top2_share']))}% del total."
-    )
+    p2 = f"Los dos estados líderes concentran {_fmt(float(bd['top2_share']))}% del total."
     if risk > 0 and float(bd["total"]) > 0:
         p2 += (
             f" Hay {_fmt(risk)} reservas aún en cobro o verificación "
@@ -337,14 +327,11 @@ def _paras_reservation_origins(mod: AnalyticsModule) -> list[str]:
         p2 += "La captación está repartida entre varios orígenes."
     weak = [i for i in bd["ordered"] if i.raw_value > 0]  # type: ignore[union-attr]
     weak_label = weak[-1].label if len(weak) >= 2 else None
-    rec = (
-        f"Conviene doblar apuesta donde ya conviertes («{top.label}»). "
-        + (
-            f"Prueba un impulso corto en «{weak_label}» o mejora "
-            "el mensaje ahí para no depender de un solo canal."
-            if weak_label and weak_label != top.label
-            else "Documenta el origen en cada reserva nueva para afinar el mix."
-        )
+    rec = f"Conviene doblar apuesta donde ya conviertes («{top.label}»). " + (
+        f"Prueba un impulso corto en «{weak_label}» o mejora "
+        "el mensaje ahí para no depender de un solo canal."
+        if weak_label and weak_label != top.label
+        else "Documenta el origen en cada reserva nueva para afinar el mix."
     )
     return [p1, p2, rec]
 
@@ -358,7 +345,9 @@ def _paras_payment_status(mod: AnalyticsModule) -> list[str]:
         ]
     by_key = bd["by_key"]  # type: ignore[assignment]
     open_review = sum(
-        by_key[k].raw_value for k in ("pending", "received") if k in by_key  # type: ignore[index]
+        by_key[k].raw_value
+        for k in ("pending", "received")
+        if k in by_key  # type: ignore[index]
     )
     verified = by_key["verified"].raw_value if "verified" in by_key else 0  # type: ignore[index]
     total = float(bd["total"])
@@ -397,10 +386,7 @@ def _paras_top_experiences(mod: AnalyticsModule) -> list[str]:
     p2 = f"El top muestra {rk['n']} experiencias; promedio {_fmt(float(rk['avg']))} {rk['unit']}."
     second = rk["second"]
     if second is not None:
-        p2 += (
-            f" La brecha con «{second.label}» es de {_fmt(float(rk['gap']))} "
-            f"{rk['unit']}."
-        )
+        p2 += f" La brecha con «{second.label}» es de {_fmt(float(rk['gap']))} {rk['unit']}."
     if float(rk["top3_share"]) >= 70 and int(rk["n"]) >= 3:
         p2 += f" El top 3 concentra {_fmt(float(rk['top3_share']))}% de lo mostrado."
     rec = (
@@ -418,11 +404,7 @@ def _paras_occupancy(mod: AnalyticsModule) -> list[str]:
             "No hay salidas próximas con cupo para medir ocupación.",
             "Sin salidas programadas no hay presión de cupo. Publica próximas fechas si quieres llenar capacidad.",
         ]
-    shares = [
-        r.share_percentage
-        for r in mod.ranking
-        if r.share_percentage is not None
-    ]
+    shares = [r.share_percentage for r in mod.ranking if r.share_percentage is not None]
     avg_occ = sum(shares) / len(shares) if shares else 0.0
     low = sum(1 for s in shares if s < 25)
     mid = sum(1 for s in shares if 25 <= s < 75)
@@ -456,20 +438,11 @@ def _paras_top_countries(mod: AnalyticsModule) -> list[str]:
     top = rk["top"]  # type: ignore[assignment]
     p1 = (
         f"El país líder es «{top.label}» con {top.formatted_value}"
-        + (
-            f" ({_fmt(top.share_percentage)}%)"
-            if top.share_percentage is not None
-            else ""
-        )
+        + (f" ({_fmt(top.share_percentage)}%)" if top.share_percentage is not None else "")
         + f" en {_period_clause(mod)}."
     )
-    p2 = (
-        f"El top incluye {rk['n']} países distintos"
-        + (
-            f"; el top 3 concentra {_fmt(float(rk['top3_share']))}%."
-            if int(rk["n"]) >= 3
-            else "."
-        )
+    p2 = f"El top incluye {rk['n']} países distintos" + (
+        f"; el top 3 concentra {_fmt(float(rk['top3_share']))}%." if int(rk["n"]) >= 3 else "."
     )
     rec = (
         "El mix de países marca idioma, moneda percibida y canales. "
@@ -615,15 +588,11 @@ def _paras_generic(mod: AnalyticsModule) -> list[str]:
     bd = _breakdown_stats(mod)
     if bd:
         parts.append(
-            f"El líder del desglose es «{bd['top'].label}» "
-            f"con {_fmt(float(bd['top_share']))}%."
+            f"El líder del desglose es «{bd['top'].label}» con {_fmt(float(bd['top_share']))}%."
         )
     rk = _ranking_stats(mod)
     if rk:
-        parts.append(
-            f"En el ranking lidera «{rk['top'].label}» "
-            f"({rk['top'].formatted_value})."
-        )
+        parts.append(f"En el ranking lidera «{rk['top'].label}» ({rk['top'].formatted_value}).")
     parts.append(
         "Usa este indicador junto con ocupación, pagos y disponibilidad "
         "equina. Define una acción concreta para la próxima semana "
@@ -675,12 +644,12 @@ def analysis_parameter_rows(mod: AnalyticsModule) -> list[tuple[str, str]]:
     """Key/value snapshot for export and detail sheet — plain language labels."""
     rows: list[tuple[str, str]] = []
     if mod.primary_value:
-        rows.append(
-            ("Valor", f"{mod.primary_value.formatted} {mod.primary_value.unit}".strip())
-        )
+        rows.append(("Valor", f"{mod.primary_value.formatted} {mod.primary_value.unit}".strip()))
     if mod.comparison and mod.comparison.percentage_delta is not None:
         sign = "+" if mod.comparison.percentage_delta > 0 else ""
-        rows.append(("Cambio vs periodo anterior", f"{sign}{_fmt(mod.comparison.percentage_delta)}%"))
+        rows.append(
+            ("Cambio vs periodo anterior", f"{sign}{_fmt(mod.comparison.percentage_delta)}%")
+        )
     if mod.comparison and mod.comparison.absolute_formatted:
         rows.append(("Cambio absoluto", mod.comparison.absolute_formatted))
 
@@ -698,7 +667,12 @@ def analysis_parameter_rows(mod: AnalyticsModule) -> list[tuple[str, str]]:
             a1 = sum(vals[:mid]) / mid
             a2 = sum(vals[mid:]) / (len(vals) - mid)
             if a1:
-                rows.append(("2ª mitad vs 1ª", f"{'+' if a2 >= a1 else ''}{_fmt((a2 - a1) / abs(a1) * 100)}%"))
+                rows.append(
+                    (
+                        "2ª mitad vs 1ª",
+                        f"{'+' if a2 >= a1 else ''}{_fmt((a2 - a1) / abs(a1) * 100)}%",
+                    )
+                )
 
     if mod.breakdown:
         total = sum(i.raw_value for i in mod.breakdown) or 0.0
@@ -724,16 +698,12 @@ def analysis_parameter_rows(mod: AnalyticsModule) -> list[tuple[str, str]]:
         by_key = {i.key: i for i in mod.breakdown}
         if mod.id == "reservation_origins":
             social = sum(
-                by_key[k].raw_value
-                for k in ("whatsapp", "facebook", "instagram")
-                if k in by_key
+                by_key[k].raw_value for k in ("whatsapp", "facebook", "instagram") if k in by_key
             )
             if total:
                 rows.append(("Redes (WA+FB+IG)", f"{_fmt(social)} ({_fmt(social / total * 100)}%)"))
         elif mod.id == "payment_status":
-            open_review = sum(
-                by_key[k].raw_value for k in ("pending", "received") if k in by_key
-            )
+            open_review = sum(by_key[k].raw_value for k in ("pending", "received") if k in by_key)
             verified = by_key["verified"].raw_value if "verified" in by_key else 0
             rows.append(("Por revisar", _fmt(open_review)))
             if total:
@@ -744,7 +714,9 @@ def analysis_parameter_rows(mod: AnalyticsModule) -> list[tuple[str, str]]:
         elif mod.id == "equine_availability":
             available = by_key["available"].raw_value if "available" in by_key else 0
             if total:
-                rows.append(("Disponibles", f"{_fmt(available)} ({_fmt(available / total * 100)}%)"))
+                rows.append(
+                    ("Disponibles", f"{_fmt(available)} ({_fmt(available / total * 100)}%)")
+                )
         elif mod.id in ("action_center", "equine_care_alerts"):
             rows.append(("Ítems abiertos", _fmt(total)))
 

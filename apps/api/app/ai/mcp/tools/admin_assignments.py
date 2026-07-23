@@ -23,6 +23,7 @@ from app.services.assignment_service import AssignmentService
 
 def _get_service() -> AssignmentService:
     from app.core.di import Container
+
     return Container.get_instance().assignment_service
 
 
@@ -157,7 +158,9 @@ async def admin_create_assignment(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_assignment",
-            input_data={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input_data={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,
@@ -212,7 +215,10 @@ async def admin_update_assignment(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_assignment",
-            input_data={"assignment_id": assignment_id, **{k: v for k, v in kwargs.items() if k in AssignmentUpdateSchema.model_fields}},
+            input_data={
+                "assignment_id": assignment_id,
+                **{k: v for k, v in kwargs.items() if k in AssignmentUpdateSchema.model_fields},
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,

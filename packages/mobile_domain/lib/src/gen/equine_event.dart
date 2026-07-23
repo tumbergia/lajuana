@@ -4,6 +4,7 @@
 
 /// AUTO-GENERATED from OpenAPI schema `EquineEventResponseSchema`.
 
+import 'equine_event_source.dart';
 import 'equine_event_type.dart';
 
 class EquineEvent {
@@ -32,7 +33,7 @@ class EquineEvent {
   final bool? affectsAvailability;
   final String? resultingOperationalStatus;
   final String? restUntil;
-  final source? source;
+  final EquineEventSource? source;
 
   const EquineEvent(
     {
@@ -90,7 +91,7 @@ class EquineEvent {
       affectsAvailability: json['affects_availability'] as bool?,
       resultingOperationalStatus: json['resulting_operational_status'] as String?,
       restUntil: json['rest_until'] as String?,
-      source: json['source'] != null ? source.fromJson(json['source'] as Map<String, dynamic>) : null,
+      source: json['source'] != null ? (json['source'] as String).toEquineEventSource() : null,
     );
   }
 
@@ -119,7 +120,7 @@ class EquineEvent {
     'affects_availability': affectsAvailability,
     'resulting_operational_status': resultingOperationalStatus,
     'rest_until': restUntil,
-    'source': source,
+    'source': source?.toJson(),
   };
 
 }

@@ -2,18 +2,12 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `ProviderStatus`.
 
 enum ProviderStatus {
-  @JsonValue('active')
   ACTIVE("active"),
-  @JsonValue('inactive')
   INACTIVE("inactive"),
-  @JsonValue('needs_review')
   NEEDS_REVIEW("needs_review"),
-  @JsonValue('blocked')
   BLOCKED("blocked"),
 ;
 

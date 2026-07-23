@@ -2,16 +2,11 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `EquineLocationStatus`.
 
 enum EquineLocationStatus {
-  @JsonValue('la_juana')
   LA_JUANA("la_juana"),
-  @JsonValue('other')
   OTHER("other"),
-  @JsonValue('unknown')
   UNKNOWN("unknown"),
 ;
 

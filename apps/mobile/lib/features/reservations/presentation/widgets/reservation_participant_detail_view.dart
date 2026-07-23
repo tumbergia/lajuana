@@ -38,7 +38,9 @@ class _ParticipantDetailViewState extends State<ParticipantDetailView>
               padding: const EdgeInsets.only(right: 12),
               child: AppBadge(
                 label: p.isCompleted ? 'Completo' : 'Incompleto',
-                tone: p.isCompleted ? AppBadgeTone.success : AppBadgeTone.warning,
+                tone: p.isCompleted
+                    ? AppBadgeTone.success
+                    : AppBadgeTone.warning,
                 uppercase: false,
               ),
             ),
@@ -53,27 +55,43 @@ class _ParticipantDetailViewState extends State<ParticipantDetailView>
             _sectionHeader(context, 'INFORMACION PERSONAL'),
             _fieldRow(context, 'Nombre', p.firstName),
             _fieldRow(context, 'Apellido', p.lastName),
-            _fieldRow(context, 'Nacimiento', p.birthDate != null
-                ? '${p.birthDate}${p.ageYears != null ? ' (${p.ageYears} años)' : ''}'
-                : null),
+            _fieldRow(
+              context,
+              'Nacimiento',
+              p.birthDate != null
+                  ? '${p.birthDate}${p.ageYears != null ? ' (${p.ageYears} años)' : ''}'
+                  : null,
+            ),
             _fieldRow(context, 'Documento', _docLabel(p)),
             _fieldRow(context, 'Teléfono', p.phone),
             _fieldRow(context, 'País', p.country),
             _fieldRow(context, 'Ciudad', p.city),
             const SizedBox(height: 16),
             _sectionHeader(context, 'FISICO'),
-            _fieldRow(context, 'Altura', p.heightCm != null ? '${p.heightCm} cm' : null),
-            _fieldRow(context, 'Peso', p.weightKg != null ? '${p.weightKg} kg' : null),
+            _fieldRow(
+              context,
+              'Altura',
+              p.heightCm != null ? '${p.heightCm} cm' : null,
+            ),
+            _fieldRow(
+              context,
+              'Peso',
+              p.weightKg != null ? '${p.weightKg} kg' : null,
+            ),
             _fieldRow(context, 'Experiencia', _expLabel(p.experienceLevel)),
             const SizedBox(height: 16),
-            _sectionHeader(context, 'SALUD',
-                alertTone: p.hasMedicalAlert ? AppBadgeTone.danger : null),
+            _sectionHeader(
+              context,
+              'SALUD',
+              alertTone: p.hasMedicalAlert ? AppBadgeTone.danger : null,
+            ),
             if (p.hasMedicalAlert)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: AppStatusBanner(
                   title: 'Alerta médica',
-                  message: p.healthConditions ?? p.sensoryDisabilities ?? '\u2014',
+                  message:
+                      p.healthConditions ?? p.sensoryDisabilities ?? '\u2014',
                   tone: AppStatusBannerTone.danger,
                   icon: Icons.medical_services_outlined,
                 ),
@@ -111,7 +129,11 @@ class _ParticipantDetailViewState extends State<ParticipantDetailView>
     );
   }
 
-  Widget _sectionHeader(BuildContext context, String title, {AppBadgeTone? alertTone}) {
+  Widget _sectionHeader(
+    BuildContext context,
+    String title, {
+    AppBadgeTone? alertTone,
+  }) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -129,8 +151,11 @@ class _ParticipantDetailViewState extends State<ParticipantDetailView>
           ),
           if (alertTone != null) ...[
             const SizedBox(width: 8),
-            Icon(Icons.warning_amber_rounded, size: 16,
-                color: appBadgeToneColors(context, alertTone).foreground),
+            Icon(
+              Icons.warning_amber_rounded,
+              size: 16,
+              color: appBadgeToneColors(context, alertTone).foreground,
+            ),
           ],
         ],
       ),
@@ -147,16 +172,21 @@ class _ParticipantDetailViewState extends State<ParticipantDetailView>
         children: [
           SizedBox(
             width: 120,
-            child: Text(label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurfaceVariant)),
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
           Expanded(
             child: Text(
               hasValue ? value : '\u2014',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: hasValue ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant,
+                color: hasValue
+                    ? theme.colorScheme.onSurface
+                    : theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
@@ -174,18 +204,26 @@ class _ParticipantDetailViewState extends State<ParticipantDetailView>
         children: [
           SizedBox(
             width: 160,
-            child: Text(label,
-                style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurfaceVariant)),
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
-          Icon(ok ? Icons.check_circle_rounded : Icons.cancel_outlined,
-              size: 20,
-              color: ok ? theme.colorScheme.primary : theme.colorScheme.error),
+          Icon(
+            ok ? Icons.check_circle_rounded : Icons.cancel_outlined,
+            size: 20,
+            color: ok ? theme.colorScheme.primary : theme.colorScheme.error,
+          ),
           const SizedBox(width: 6),
-          Text(ok ? 'Aceptado' : 'No aceptado',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                  color: ok ? theme.colorScheme.primary : theme.colorScheme.error)),
+          Text(
+            ok ? 'Aceptado' : 'No aceptado',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: ok ? theme.colorScheme.primary : theme.colorScheme.error,
+            ),
+          ),
         ],
       ),
     );

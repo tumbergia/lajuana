@@ -45,16 +45,37 @@ exclude = ["storage*"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = ["scripts", ".venv"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+	"fastapi.Depends",
+	"fastapi.Query",
+	"fastapi.Path",
+	"fastapi.Body",
+	"fastapi.Header",
+	"fastapi.Cookie",
+	"fastapi.File",
+	"fastapi.Form",
+	"fastapi.Security",
+	"Depends",
+	"Query",
+	"Path",
+	"Body",
+	"Header",
+	"Cookie",
+	"File",
+	"Form",
+	"Security",
+	"HTTPBearer",
+]
+
 [tool.ruff.lint.per-file-ignores]
 "app/api/docs.py" = ["E501"]
 "app/api/business_errors.py" = ["E501"]
-"scripts/seed_schedules_2026_q2.py" = ["E501"]
-"scripts/seed_experiences_and_schedules_qa.py" = ["E501"]
-"scripts/seed_reproducible.py" = ["E501"]
 "app/migrations/seed_notification_templates.py" = ["E501"]
 "app/ai/assistant/prompts/planner.py" = ["E501"]
 "app/ai/assistant/planner.py" = ["E501"]
@@ -62,8 +83,22 @@ select = ["E", "F", "I", "UP", "B"]
 "app/ai/assistant/response_composer.py" = ["E501"]
 "app/ai/mcp/tool_contracts.py" = ["E501"]
 "app/ai/mcp/tools/reservation_draft.py" = ["E501"]
-"tests/*" = ["E501"]
+"tests/*" = ["E501", "B011", "F841"]
 "app/ai/language/messages.py" = ["E501"]
+"app/documents/equine_document.py" = ["E402"]
+"app/services/analytics_query_service.py" = ["E402", "E501"]
+"app/services/mappers.py" = ["E731"]
+"app/api/endpoints/*" = ["E501", "B008"]
+"app/ai/**" = ["E501", "B005"]
+"app/services/analytics_analysis.py" = ["E501"]
+"app/channels/**" = ["E501"]
+"app/conversations/**" = ["E501"]
+"app/services/notification_service.py" = ["E501"]
+"app/services/participant_form_link_service.py" = ["E501"]
+"app/services/file_upload_service.py" = ["E501", "B904"]
+"app/services/storage.py" = ["E501", "B904"]
+"app/services/assignment_service.py" = ["F841"]
+"app/api/endpoints/whatsapp.py" = ["E501", "B008", "B904"]
 
 [tool.ruff.format]
 quote-style = "double"

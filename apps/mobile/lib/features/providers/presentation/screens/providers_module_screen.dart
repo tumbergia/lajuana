@@ -113,7 +113,11 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
         }
       } catch (e) {
         if (mounted) {
-          showAppToast(context, message: 'Error al registrar el proveedor', isError: true);
+          showAppToast(
+            context,
+            message: 'Error al registrar el proveedor',
+            isError: true,
+          );
         }
       }
     }
@@ -159,7 +163,11 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
         }
       } catch (e) {
         if (mounted) {
-          showAppToast(context, message: 'Error al actualizar el proveedor', isError: true);
+          showAppToast(
+            context,
+            message: 'Error al actualizar el proveedor',
+            isError: true,
+          );
         }
       }
     }
@@ -195,7 +203,11 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
         }
       } catch (e) {
         if (mounted) {
-          showAppToast(context, message: 'Error al desactivar el proveedor', isError: true);
+          showAppToast(
+            context,
+            message: 'Error al desactivar el proveedor',
+            isError: true,
+          );
         }
       }
     }
@@ -210,7 +222,11 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
       }
     } catch (e) {
       if (mounted) {
-        showAppToast(context, message: 'Error al reactivar el proveedor', isError: true);
+        showAppToast(
+          context,
+          message: 'Error al reactivar el proveedor',
+          isError: true,
+        );
       }
     }
   }
@@ -227,10 +243,12 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
           return listItemToRecord(full);
         },
         onEdit: widget.canManage ? () => _openEditSheet(provider) : null,
-        onDeactivate:
-            widget.canManage ? () => _confirmDeactivateProvider(provider) : null,
-        onReactivate:
-            widget.canManage ? () => _confirmReactivateProvider(provider) : null,
+        onDeactivate: widget.canManage
+            ? () => _confirmDeactivateProvider(provider)
+            : null,
+        onReactivate: widget.canManage
+            ? () => _confirmReactivateProvider(provider)
+            : null,
       ),
     );
   }
@@ -244,10 +262,7 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppSectionHeader(
-            eyebrow: 'Gestion',
-            title: 'Proveedores',
-          ),
+          const AppSectionHeader(eyebrow: 'Gestion', title: 'Proveedores'),
           const SizedBox(height: 20),
           Expanded(child: body),
         ],
@@ -349,8 +364,8 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
             Text(
               'No hay proveedores con ese filtro',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -380,8 +395,8 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
                   ? 'Registra el primer proveedor usando el boton de arriba'
                   : 'Aun no hay proveedores en el catalogo',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -419,8 +434,8 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
         Text(
           'No hay proveedores',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -428,8 +443,8 @@ class _ProvidersModuleScreenState extends State<ProvidersModuleScreen>
               ? 'Registra un nuevo proveedor usando el boton de abajo'
               : 'Aun no hay proveedores en el catalogo',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           textAlign: TextAlign.center,
         ),
         if (widget.canManage) ...[

@@ -161,8 +161,7 @@ void main() {
       var decideCalls = 0;
       var listCalls = 0;
       final client = buildClient((request) async {
-        if (request.method == 'POST' &&
-            request.url.path.endsWith('/decide')) {
+        if (request.method == 'POST' && request.url.path.endsWith('/decide')) {
           decideCalls += 1;
           expect(request.body, contains('"action":"approve"'));
           expect(request.body, contains('"assigned_role":"admin"'));

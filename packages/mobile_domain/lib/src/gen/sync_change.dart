@@ -4,9 +4,11 @@
 
 /// AUTO-GENERATED from OpenAPI schema `SyncChangeSchema`.
 
+import 'sync_change_change_type.dart';
+
 class SyncChange {
 
-  final change_type changeType;
+  final SyncChangeChangeType changeType;
   final String entityId;
   final int version;
   final DateTime updatedAt;
@@ -24,7 +26,7 @@ class SyncChange {
 
   factory SyncChange.fromJson(Map<String, dynamic> json) {
     return SyncChange(
-      changeType: change_type.fromJson(json['change_type'] as Map<String, dynamic>),
+      changeType: (json['change_type'] as String).toSyncChangeChangeType(),
       entityId: json['entity_id'] as String,
       version: json['version'] as int,
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -33,7 +35,7 @@ class SyncChange {
   }
 
   Map<String, dynamic> toJson() => {
-    'change_type': changeType,
+    'change_type': changeType.toJson(),
     'entity_id': entityId,
     'version': version,
     'updated_at': updatedAt.toIso8601String(),

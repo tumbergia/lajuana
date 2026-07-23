@@ -30,84 +30,83 @@ class _FakeEquineEventRepository implements EquineEventRepository {
 }
 
 void main() {
-  testWidgets('AdminVoiceSheet hides input when answered and shows structured rows',
-      (tester) async {
-    final controller = VoiceAssistantController(
-      apiClient: VoiceAssistantApiClient(
-        baseUrl: 'http://localhost:8000/api/v1',
-        readAccessToken: () async => 'token',
-        refreshSession: () async => false,
-        httpClient: MockClient((_) => Completer<http.Response>().future),
-      ),
-    );
+  testWidgets(
+    'AdminVoiceSheet hides input when answered and shows structured rows',
+    (tester) async {
+      final controller = VoiceAssistantController(
+        apiClient: VoiceAssistantApiClient(
+          baseUrl: 'http://localhost:8000/api/v1',
+          readAccessToken: () async => 'token',
+          refreshSession: () async => false,
+          httpClient: MockClient((_) => Completer<http.Response>().future),
+        ),
+      );
 
-    final navigation = VoiceAssistantNavigation(
-      authController: AuthController(
-        authRepository: FakeAuthRepository(),
-        networkStatusResolver: NetworkStatusResolver(
-          connectivityService: FakeConnectivityService(LinkType.wifi),
-          backendReachabilityService: FakeBackendReachabilityService(
-            BackendReachability.reachable,
+      final navigation = VoiceAssistantNavigation(
+        authController: AuthController(
+          authRepository: FakeAuthRepository(),
+          networkStatusResolver: NetworkStatusResolver(
+            connectivityService: FakeConnectivityService(LinkType.wifi),
+            backendReachabilityService: FakeBackendReachabilityService(
+              BackendReachability.reachable,
+            ),
           ),
         ),
-      ),
-      equineRepository: _FakeEquineRepository(),
-      equineEventRepository: _FakeEquineEventRepository(),
-    );
+        equineRepository: _FakeEquineRepository(),
+        equineEventRepository: _FakeEquineEventRepository(),
+      );
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.dark(),
-        home: Builder(
-          builder: (hostContext) {
-            return AdminVoiceSheet(
-              controller: controller,
-              hostContext: hostContext,
-              navigation: navigation,
-              onClose: () {},
-            );
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark(),
+          home: Builder(
+            builder: (hostContext) {
+              return AdminVoiceSheet(
+                controller: controller,
+                hostContext: hostContext,
+                navigation: navigation,
+                onClose: () {},
+              );
+            },
+          ),
         ),
-      ),
-    );
+      );
 
-    await tester.pump();
+      await tester.pump();
 
-    controller.phase = VoicePhase.answered;
-    controller.result = AssistantAskResult(
-      traceId: 't1',
-      action: 'tool_call',
-      toolName: 'admin_list_reservations',
-      response: 'Se ha encontrado 1 reserva payment_received',
-      toolOutput: {
-        'total': 1,
-        'reservations': [
-          {
-            'reservation_id': 'abc',
-            'code': 'R-1',
-            'status': 'payment_received',
-            'experience_name': 'Cabalgata Basica',
-            'holder_name': 'Juan',
-            'requested_date': '2026-07-05',
-            'participant_count': 1,
-            'payment_status': 'received',
-            'experience_id': 'exp',
-          },
-        ],
-      },
-    );
-    controller.notifyListeners();
-    await tester.pumpAndSettle();
+      controller.phase = VoicePhase.answered;
+      controller.result = AssistantAskResult(
+        traceId: 't1',
+        action: 'tool_call',
+        toolName: 'admin_list_reservations',
+        response: 'Se ha encontrado 1 reserva payment_received',
+        toolOutput: {
+          'total': 1,
+          'reservations': [
+            {
+              'reservation_id': 'abc',
+              'code': 'R-1',
+              'status': 'payment_received',
+              'experience_name': 'Cabalgata Basica',
+              'holder_name': 'Juan',
+              'requested_date': '2026-07-05',
+              'participant_count': 1,
+              'payment_status': 'received',
+              'experience_id': 'exp',
+            },
+          ],
+        },
+      );
+      controller.notifyListeners();
+      await tester.pumpAndSettle();
 
-    expect(find.byType(AppTextField), findsNothing);
-    expect(find.text('1 reserva encontrado.'), findsOneWidget);
-    expect(find.text('CABALGATA BASICA'), findsOneWidget);
-    expect(find.text('Pago recibido'), findsOneWidget);
-    expect(
-      find.textContaining('payment_received'),
-      findsNothing,
-    );
+      expect(find.byType(AppTextField), findsNothing);
+      expect(find.text('1 reserva encontrado.'), findsOneWidget);
+      expect(find.text('CABALGATA BASICA'), findsOneWidget);
+      expect(find.text('Pago recibido'), findsOneWidget);
+      expect(find.textContaining('payment_received'), findsNothing);
 
-    controller.dispose();
-  });
+      controller.dispose();
+    },
+  );
 }

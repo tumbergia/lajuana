@@ -27,7 +27,7 @@ enum VoiceProcessingStage { analyzing, planning, executing }
 
 class VoiceAssistantController extends ChangeNotifier {
   VoiceAssistantController({required VoiceAssistantApiClient apiClient})
-      : _apiClient = apiClient;
+    : _apiClient = apiClient;
 
   final VoiceAssistantApiClient _apiClient;
   final SpeechToText _speech = SpeechToText();
@@ -58,10 +58,10 @@ class VoiceAssistantController extends ChangeNotifier {
   bool get isListening => _isListening;
 
   String get processingStatusLabel => switch (processingStage) {
-        VoiceProcessingStage.analyzing => 'Analizando instrucción…',
-        VoiceProcessingStage.planning => 'Planificando acción…',
-        VoiceProcessingStage.executing => 'Ejecutando herramienta…',
-      };
+    VoiceProcessingStage.analyzing => 'Analizando instrucción…',
+    VoiceProcessingStage.planning => 'Planificando acción…',
+    VoiceProcessingStage.executing => 'Ejecutando herramienta…',
+  };
 
   Future<void> beginSession() async {
     conversationId ??=
@@ -238,8 +238,8 @@ class VoiceAssistantController extends ChangeNotifier {
       final nextStage = elapsed.inMilliseconds < 1200
           ? VoiceProcessingStage.analyzing
           : elapsed.inMilliseconds < 3500
-              ? VoiceProcessingStage.planning
-              : VoiceProcessingStage.executing;
+          ? VoiceProcessingStage.planning
+          : VoiceProcessingStage.executing;
 
       if (nextStage != processingStage) {
         processingStage = nextStage;

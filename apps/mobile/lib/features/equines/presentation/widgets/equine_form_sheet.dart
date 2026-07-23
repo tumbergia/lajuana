@@ -173,30 +173,24 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
                                         fit: BoxFit.cover,
                                       )
                                     : Container(
-                                        color:
-                                            scheme.surfaceContainerHigh,
+                                        color: scheme.surfaceContainerHigh,
                                         child: Column(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
                                             Icon(
-                                              Symbols
-                                                  .add_photo_alternate,
+                                              Symbols.add_photo_alternate,
                                               size: 36,
-                                              color: scheme
-                                                  .onSurfaceVariant,
+                                              color: scheme.onSurfaceVariant,
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
                                               'Tocar para\nagregar foto',
-                                              textAlign:
-                                                  TextAlign.center,
+                                              textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                color: scheme
-                                                    .onSurfaceVariant,
+                                                color: scheme.onSurfaceVariant,
                                                 fontSize: 10,
-                                                fontWeight:
-                                                    FontWeight.w500,
+                                                fontWeight: FontWeight.w500,
                                                 height: 1.3,
                                               ),
                                             ),
@@ -212,11 +206,9 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
                                 child: Container(
                                   width: double.infinity,
                                   height: double.infinity,
-                                  color: Colors.black
-                                      .withValues(alpha: 0.35),
+                                  color: Colors.black.withValues(alpha: 0.35),
                                   child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       const Icon(
                                         Symbols.camera_alt_rounded,
@@ -259,12 +251,8 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _isEditing
-                                ? widget.existing!.name
-                                : 'Nuevo equino',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
+                            _isEditing ? widget.existing!.name : 'Nuevo equino',
+                            style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
                                   color: _isEditing
                                       ? scheme.onSurface
@@ -278,9 +266,7 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
                                 padding: const EdgeInsets.only(bottom: 2),
                                 child: Text(
                                   _headerInventoryNumber!,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
+                                  style: Theme.of(context).textTheme.labelSmall
                                       ?.copyWith(
                                         color: scheme.onSurfaceVariant,
                                         letterSpacing: 1.5,
@@ -292,20 +278,14 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
                                 padding: const EdgeInsets.only(bottom: 1),
                                 child: Text(
                                   _existingSpecies,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
                             if (_existingBreed != null)
                               Text(
                                 _existingBreed!,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: scheme.onSurfaceVariant,
-                                    ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
                               ),
                           ],
                         ],
@@ -325,7 +305,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               controller: _nameController,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Icon(Symbols.badge_rounded, size: 18, color: scheme.onSurfaceVariant),
+                child: Icon(
+                  Symbols.badge_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -336,7 +320,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               inputKind: AppTextInputKind.integer,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Icon(Symbols.tag_rounded, size: 18, color: scheme.onSurfaceVariant),
+                child: Icon(
+                  Symbols.tag_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -364,7 +352,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               controller: _breedController,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Icon(Symbols.category_rounded, size: 18, color: scheme.onSurfaceVariant),
+                child: Icon(
+                  Symbols.category_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -387,7 +379,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               controller: _coatColorController,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Icon(Symbols.palette_rounded, size: 18, color: scheme.onSurfaceVariant),
+                child: Icon(
+                  Symbols.palette_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -397,7 +393,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               controller: _gaitController,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Icon(Symbols.directions_walk_rounded, size: 18, color: scheme.onSurfaceVariant),
+                child: Icon(
+                  Symbols.directions_walk_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -412,7 +412,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               inputKind: AppTextInputKind.decimal,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Icon(Symbols.weight_rounded, size: 18, color: scheme.onSurfaceVariant),
+                child: Icon(
+                  Symbols.weight_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -423,7 +427,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               inputKind: AppTextInputKind.decimal,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Icon(Symbols.height_rounded, size: 18, color: scheme.onSurfaceVariant),
+                child: Icon(
+                  Symbols.height_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -434,7 +442,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               inputKind: AppTextInputKind.decimal,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Icon(Symbols.fitness_center_rounded, size: 18, color: scheme.onSurfaceVariant),
+                child: Icon(
+                  Symbols.fitness_center_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -446,10 +458,12 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               label: 'Estado operativo',
               value: _status,
               items: EquineOperationalStatus.values
-                  .map((s) => DropdownMenuItem(
-                        value: s,
-                        child: Text(equineStatusLabel(s)),
-                      ))
+                  .map(
+                    (s) => DropdownMenuItem(
+                      value: s,
+                      child: Text(equineStatusLabel(s)),
+                    ),
+                  )
                   .toList(),
               onChanged: (v) {
                 if (v != null) setState(() => _status = v);
@@ -459,15 +473,19 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Symbols.check_circle_rounded, size: 14, color: scheme.onSurfaceVariant),
+                Icon(
+                  Symbols.check_circle_rounded,
+                  size: 14,
+                  color: scheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'DISPONIBLE',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.8,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.8,
+                  ),
                 ),
                 const Spacer(),
                 Switch(
@@ -484,7 +502,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               maxLines: 3,
               prefixIcon: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Icon(Symbols.notes_rounded, size: 18, color: scheme.onSurfaceVariant),
+                child: Icon(
+                  Symbols.notes_rounded,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -501,10 +523,7 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: AppButton(
-                    label: 'Guardar',
-                    onPressed: _onSave,
-                  ),
+                  child: AppButton(label: 'Guardar', onPressed: _onSave),
                 ),
               ],
             ),
@@ -521,7 +540,11 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
     return Row(
       children: [
         if (icon != null) ...[
-          Icon(icon, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+          Icon(
+            icon,
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 8),
         ],
         Expanded(
@@ -555,10 +578,10 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
             Text(
               label.toUpperCase(),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.8,
-                  ),
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.8,
+              ),
             ),
           ],
         ),
@@ -577,9 +600,9 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
               isExpanded: true,
               items: items,
               onChanged: onChanged,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurface,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurface),
               dropdownColor: scheme.surfaceContainerLow,
             ),
           ),
@@ -630,7 +653,9 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
     // cuando el backend exponga el endpoint de creación/edición.
     Navigator.of(context).pop(<String, dynamic>{
       'name': name,
-      'inventory_number': InputValidation.parseInteger(_inventoryNumberController.text),
+      'inventory_number': InputValidation.parseInteger(
+        _inventoryNumberController.text,
+      ),
       'species': _species,
       'breed': _breedController.text.trim().nullIfEmpty,
       'sex': _sex,
@@ -638,8 +663,9 @@ class _EquineFormSheetState extends State<EquineFormSheet> {
       'gait': _gaitController.text.trim().nullIfEmpty,
       'weight_kg': InputValidation.parseDecimal(_weightController.text),
       'height_m': InputValidation.parseDecimal(_heightController.text),
-      'max_rider_weight_kg':
-          InputValidation.parseDecimal(_maxRiderWeightController.text),
+      'max_rider_weight_kg': InputValidation.parseDecimal(
+        _maxRiderWeightController.text,
+      ),
       'operational_status': _status == EquineOperationalStatus.inService
           ? 'in_service'
           : _status.name,

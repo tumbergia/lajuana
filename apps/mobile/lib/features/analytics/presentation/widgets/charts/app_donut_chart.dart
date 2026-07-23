@@ -83,26 +83,22 @@ class AppDonutChart extends StatelessWidget {
                       sections: [
                         for (var i = 0; i < points.length; i++)
                           PieChartSectionData(
-                            value:
-                                points[i].value <= 0 ? 0.001 : points[i].value,
+                            value: points[i].value <= 0
+                                ? 0.001
+                                : points[i].value,
                             title: points[i].value > 0 && total > 0
                                 ? '${((points[i].value / total) * 100).round()}%'
                                 : '',
                             color: _colorFor(context, i),
                             radius: sectionR,
-                            borderSide: _colorFor(context, i)
-                                        .computeLuminance() >
-                                    0.85
+                            borderSide:
+                                _colorFor(context, i).computeLuminance() > 0.85
                                 ? BorderSide(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outline
+                                    color: Theme.of(context).colorScheme.outline
                                         .withValues(alpha: 0.55),
                                   )
                                 : BorderSide.none,
-                            titleStyle: Theme.of(context)
-                                .textTheme
-                                .labelSmall
+                            titleStyle: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: _labelOn(_colorFor(context, i)),
                                   fontWeight: FontWeight.w700,
@@ -117,10 +113,8 @@ class AppDonutChart extends StatelessWidget {
                       child: Text(
                         centerLabel!,
                         textAlign: TextAlign.center,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                 ],

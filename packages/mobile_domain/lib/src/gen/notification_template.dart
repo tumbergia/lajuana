@@ -50,8 +50,8 @@ class NotificationTemplate {
       language: json['language'] as String,
       subject: json['subject'] as String,
       body: json['body'] as String,
-      variablesAllowed: (json['variables_allowed'] as List<dynamic>?)
-        ?.cast<String>() ?? [],
+      variablesAllowed: (json['variables_allowed'] as List<dynamic>)
+        .cast<String>(),
       isActive: json['is_active'] as bool,
     );
   }

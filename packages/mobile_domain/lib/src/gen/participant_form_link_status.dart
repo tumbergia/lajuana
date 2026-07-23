@@ -2,18 +2,12 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `ParticipantFormLinkStatus`.
 
 enum ParticipantFormLinkStatus {
-  @JsonValue('active')
   ACTIVE("active"),
-  @JsonValue('expired')
   EXPIRED("expired"),
-  @JsonValue('revoked')
   REVOKED("revoked"),
-  @JsonValue('completed')
   COMPLETED("completed"),
 ;
 

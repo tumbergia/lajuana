@@ -27,8 +27,8 @@ class ConfigurationSummary {
       reservationRulesConfigured: json['reservation_rules_configured'] as bool,
       aiEnabled: json['ai_enabled'] as bool,
       aiSource: json['ai_source'] as String,
-      paymentMethodsEnabled: (json['payment_methods_enabled'] as List<dynamic>?)
-        ?.cast<String>() ?? [],
+      paymentMethodsEnabled: (json['payment_methods_enabled'] as List<dynamic>)
+        .cast<String>(),
       locationConfigured: json['location_configured'] as bool,
     );
   }

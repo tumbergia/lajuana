@@ -152,8 +152,11 @@ def test_decide_accumulates_streak_and_does_not_change_until_threshold() -> None
 
     # Mensaje 1 en inglés
     lang, streak, streak_lang = decide_language(
-        session_language=session_language, language_override=override,
-        streak=streak, streak_lang=streak_lang, current_detection="en",
+        session_language=session_language,
+        language_override=override,
+        streak=streak,
+        streak_lang=streak_lang,
+        current_detection="en",
     )
     assert lang == "es"
     assert streak == 1
@@ -161,8 +164,11 @@ def test_decide_accumulates_streak_and_does_not_change_until_threshold() -> None
 
     # Mensaje 2 en inglés
     lang, streak, streak_lang = decide_language(
-        session_language=session_language, language_override=override,
-        streak=streak, streak_lang=streak_lang, current_detection="en",
+        session_language=session_language,
+        language_override=override,
+        streak=streak,
+        streak_lang=streak_lang,
+        current_detection="en",
     )
     assert lang == "es"
     assert streak == 2
@@ -170,8 +176,11 @@ def test_decide_accumulates_streak_and_does_not_change_until_threshold() -> None
 
     # Mensaje 3 en inglés → cambia al umbral
     lang, streak, streak_lang = decide_language(
-        session_language=session_language, language_override=override,
-        streak=streak, streak_lang=streak_lang, current_detection="en",
+        session_language=session_language,
+        language_override=override,
+        streak=streak,
+        streak_lang=streak_lang,
+        current_detection="en",
     )
     assert lang == "en"
     assert streak == 0  # se reinicia tras cambio

@@ -29,9 +29,7 @@ def test_record_change_unknown_entity_is_noop(monkeypatch) -> None:
             return self
 
     monkeypatch.setattr(rec, "SyncChangeDocument", _FakeChange)
-    asyncio.run(
-        rec.record_change(entity_type="not_a_real_entity", doc=SimpleNamespace(id="x"))
-    )
+    asyncio.run(rec.record_change(entity_type="not_a_real_entity", doc=SimpleNamespace(id="x")))
     assert inserted == []
 
 
@@ -70,9 +68,7 @@ def test_record_change_swallows_errors(monkeypatch) -> None:
 
     monkeypatch.setattr(rec, "_build_payload", _boom)
     # No debe lanzar.
-    asyncio.run(
-        rec.record_change(entity_type="experience", doc=SimpleNamespace(id="e1"))
-    )
+    asyncio.run(rec.record_change(entity_type="experience", doc=SimpleNamespace(id="e1")))
 
 
 def test_config_payload_shape() -> None:

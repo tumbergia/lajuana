@@ -19,15 +19,12 @@ class EquineEventRepositoryImpl implements EquineEventRepository {
     required EquinesApiClient apiClient,
     required EquinesDatabase database,
     required OutboxRepository outbox,
-  })  : _api = apiClient,
-        _db = database,
-        _outbox = outbox {
+  }) : _api = apiClient,
+       _db = database,
+       _outbox = outbox {
     _outbox.registerHandler(
       _entityType,
-      OutboxEntityHandler(
-        onApplied: _onApplied,
-        onFailed: _onFailed,
-      ),
+      OutboxEntityHandler(onApplied: _onApplied, onFailed: _onFailed),
     );
     _migrateLegacyQueue();
   }
@@ -151,41 +148,46 @@ class EquineEventRepositoryImpl implements EquineEventRepository {
   Future<List<EquineEvent>> listPendingEvents(String equineId) async {
     final items = await _outbox.listQueueItems();
     return items
-        .where((row) =>
-            row['entity_type'] == _entityType &&
-            _payloadContainsEquineId(
-              row['payload_json'] as String? ?? '{}',
-              equineId,
-            ))
+        .where(
+          (row) =>
+              row['entity_type'] == _entityType &&
+              _payloadContainsEquineId(
+                row['payload_json'] as String? ?? '{}',
+                equineId,
+              ),
+        )
         .map((row) {
-      final payload = jsonDecode(row['payload_json'] as String? ?? '{}')
-          as Map<String, dynamic>;
-      return EquineEvent(
-        id: row['entity_local_id'] as String? ?? '',
-        equineId: equineId,
-        eventType: payload['event_type'] as String? ?? 'note',
-        happenedAt:
-            DateTime.tryParse(payload['happened_at'] as String? ?? '')
-                    ?.toUtc() ??
+          final payload =
+              jsonDecode(row['payload_json'] as String? ?? '{}')
+                  as Map<String, dynamic>;
+          return EquineEvent(
+            id: row['entity_local_id'] as String? ?? '',
+            equineId: equineId,
+            eventType: payload['event_type'] as String? ?? 'note',
+            happenedAt:
+                DateTime.tryParse(
+                  payload['happened_at'] as String? ?? '',
+                )?.toUtc() ??
                 DateTime.now().toUtc(),
-        title: payload['title'] as String? ?? 'Evento pendiente',
-        description: payload['description'] as String?,
-        severity: payload['severity'] as String?,
-        measuredWeightKg: _parseWeight(payload['measured_weight_kg']),
-        nextDueAt: payload['next_due_at'] != null
-            ? DateTime.tryParse(payload['next_due_at'] as String)?.toUtc()
-            : null,
-        performedBy: payload['performed_by'] as String?,
-        affectsAvailability:
-            payload['affects_availability'] as bool? ?? false,
-        resultingOperationalStatus:
-            payload['resulting_operational_status'] as String?,
-        restUntil: payload['rest_until'] != null
-            ? DateTime.tryParse(payload['rest_until'] as String)?.toUtc()
-            : null,
-        syncPending: true,
-      );
-    }).toList(growable: false);
+            title: payload['title'] as String? ?? 'Evento pendiente',
+            description: payload['description'] as String?,
+            severity: payload['severity'] as String?,
+            measuredWeightKg: _parseWeight(payload['measured_weight_kg']),
+            nextDueAt: payload['next_due_at'] != null
+                ? DateTime.tryParse(payload['next_due_at'] as String)?.toUtc()
+                : null,
+            performedBy: payload['performed_by'] as String?,
+            affectsAvailability:
+                payload['affects_availability'] as bool? ?? false,
+            resultingOperationalStatus:
+                payload['resulting_operational_status'] as String?,
+            restUntil: payload['rest_until'] != null
+                ? DateTime.tryParse(payload['rest_until'] as String)?.toUtc()
+                : null,
+            syncPending: true,
+          );
+        })
+        .toList(growable: false);
   }
 
   bool _payloadContainsEquineId(String payloadJson, String equineId) {
@@ -212,8 +214,8 @@ class EquineEventRepositoryImpl implements EquineEventRepository {
       id: dto.id,
       equineId: dto.equineId,
       eventType: dto.eventType,
-      happenedAt: DateTime.tryParse(dto.happenedAt)?.toUtc() ??
-          DateTime.now().toUtc(),
+      happenedAt:
+          DateTime.tryParse(dto.happenedAt)?.toUtc() ?? DateTime.now().toUtc(),
       title: dto.title,
       description: dto.description,
       severity: dto.severity,

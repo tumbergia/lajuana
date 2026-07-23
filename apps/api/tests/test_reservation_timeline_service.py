@@ -39,9 +39,9 @@ def _fake_query(items: list[object]) -> SimpleNamespace:
 
 
 class TestReservationTimelineService:
-
     def test_timeline_merges_sources_sorted_desc(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import reservation_timeline_service as mod
 
@@ -114,7 +114,8 @@ class TestReservationTimelineService:
         asyncio.run(run())
 
     def test_timeline_excludes_assignment_audit_actions(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import reservation_timeline_service as mod
 
@@ -175,9 +176,9 @@ class TestReservationTimelineService:
 
 
 class TestServiceLogPermissions:
-
     def test_guide_cannot_delete_automatic_log(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         doc = SimpleNamespace(
             id="log_001",
@@ -200,7 +201,8 @@ class TestServiceLogPermissions:
         asyncio.run(run())
 
     def test_guide_can_update_manual_note(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         doc = SimpleNamespace(
             id="log_001",

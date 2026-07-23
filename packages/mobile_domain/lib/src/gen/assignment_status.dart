@@ -2,20 +2,13 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `AssignmentStatus`.
 
 enum AssignmentStatus {
-  @JsonValue('draft')
   DRAFT("draft"),
-  @JsonValue('confirmed')
   CONFIRMED("confirmed"),
-  @JsonValue('final')
   FINAL("final"),
-  @JsonValue('replaced')
   REPLACED("replaced"),
-  @JsonValue('cancelled')
   CANCELLED("cancelled"),
 ;
 

@@ -19,15 +19,12 @@ class SaddlesRepositoryImpl implements SaddlesRepository {
     required SaddlesApiClient apiClient,
     required OutboxRepository outbox,
     SaddlesDatabase? database,
-  })  : _apiClient = apiClient,
-        _outbox = outbox,
-        _database = database ?? SaddlesDatabase.instance {
+  }) : _apiClient = apiClient,
+       _outbox = outbox,
+       _database = database ?? SaddlesDatabase.instance {
     _outbox.registerHandler(
       _entityType,
-      OutboxEntityHandler(
-        onApplied: _onApplied,
-        onFailed: _onFailed,
-      ),
+      OutboxEntityHandler(onApplied: _onApplied, onFailed: _onFailed),
     );
   }
 
@@ -39,7 +36,9 @@ class SaddlesRepositoryImpl implements SaddlesRepository {
   final Random _random = Random();
 
   @override
-  Future<List<SaddleListItem>> listSaddles({bool includeDeleted = false}) async {
+  Future<List<SaddleListItem>> listSaddles({
+    bool includeDeleted = false,
+  }) async {
     try {
       final items = await _apiClient.listSaddles(includeDeleted: true);
       await _replaceSyncedCache(items);
@@ -283,16 +282,22 @@ class SaddlesRepositoryImpl implements SaddlesRepository {
           limit: 1,
         );
         if (pending.isNotEmpty) continue;
-        await txn.insert('saddles_local', _syncedRow(item),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.insert(
+          'saddles_local',
+          _syncedRow(item),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
     });
   }
 
   Future<void> _upsertSynced(SaddleListItem item) async {
     final db = await _database.database;
-    await db.insert('saddles_local', _syncedRow(item),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'saddles_local',
+      _syncedRow(item),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Map<String, Object?> _syncedRow(SaddleListItem item) {
@@ -311,7 +316,9 @@ class SaddlesRepositoryImpl implements SaddlesRepository {
     };
   }
 
-  Future<List<SaddleListItem>> _readLocal({required bool includeDeleted}) async {
+  Future<List<SaddleListItem>> _readLocal({
+    required bool includeDeleted,
+  }) async {
     final db = await _database.database;
     final rows = await db.query(
       'saddles_local',

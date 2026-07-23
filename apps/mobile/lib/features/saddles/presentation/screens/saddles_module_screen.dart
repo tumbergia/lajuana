@@ -49,7 +49,8 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
   @override
   void initState() {
     super.initState();
-    _repository = widget.saddlesModule?.repository ?? FallbackSaddlesRepository();
+    _repository =
+        widget.saddlesModule?.repository ?? FallbackSaddlesRepository();
     if (widget.saddlesModule != null) {
       _listController = widget.saddlesModule!.listController;
       _ownsListController = false;
@@ -102,7 +103,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         }
       } catch (e) {
         if (mounted) {
-          showAppToast(context, message: 'Error al registrar la silla', isError: true);
+          showAppToast(
+            context,
+            message: 'Error al registrar la silla',
+            isError: true,
+          );
         }
       }
     }
@@ -130,7 +135,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         }
       } catch (e) {
         if (mounted) {
-          showAppToast(context, message: 'Error al actualizar la silla', isError: true);
+          showAppToast(
+            context,
+            message: 'Error al actualizar la silla',
+            isError: true,
+          );
         }
       }
     }
@@ -166,7 +175,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         }
       } catch (e) {
         if (mounted) {
-          showAppToast(context, message: 'Error al eliminar la silla', isError: true);
+          showAppToast(
+            context,
+            message: 'Error al eliminar la silla',
+            isError: true,
+          );
         }
       }
     }
@@ -181,7 +194,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
       }
     } catch (e) {
       if (mounted) {
-        showAppToast(context, message: 'Error al restaurar la silla', isError: true);
+        showAppToast(
+          context,
+          message: 'Error al restaurar la silla',
+          isError: true,
+        );
       }
     }
   }
@@ -217,16 +234,16 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
               const SizedBox(height: 12),
               Text(
                 saddle.code,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
                 saddle.name,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 8),
               AppBadge(
@@ -239,8 +256,8 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
                 Text(
                   saddle.notes!,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -311,10 +328,7 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSectionHeader(
-            eyebrow: 'Gestion',
-            title: 'Sillas',
-          ),
+          AppSectionHeader(eyebrow: 'Gestion', title: 'Sillas'),
           const SizedBox(height: 20),
           Expanded(child: body),
         ],
@@ -383,13 +397,19 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
           },
           items: [
             const AppSegmentedFilterItem(label: 'Activas', value: 'active'),
-            const AppSegmentedFilterItem(label: 'Disponibles', value: 'available'),
+            const AppSegmentedFilterItem(
+              label: 'Disponibles',
+              value: 'available',
+            ),
             const AppSegmentedFilterItem(
               label: 'No disponibles',
               value: 'unavailable',
             ),
             if (widget.canManage)
-              const AppSegmentedFilterItem(label: 'Eliminadas', value: 'deleted'),
+              const AppSegmentedFilterItem(
+                label: 'Eliminadas',
+                value: 'deleted',
+              ),
           ],
         ),
         if (widget.canManage) ...[
@@ -432,15 +452,17 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off_rounded,
-                size: 40,
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.search_off_rounded,
+              size: 40,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 8),
             Text(
               'No hay sillas con ese filtro',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -454,18 +476,22 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.airline_seat_legroom_extra,
-                size: 48,
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            Icon(
+              Symbols.airline_seat_legroom_extra,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 12),
-            Text('No hay sillas registradas',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'No hay sillas registradas',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 4),
             Text(
               'Registra la primera silla usando el boton de arriba',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -512,8 +538,8 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
           Text(
             'No hay sillas',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -521,8 +547,8 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
                 ? 'Registra una nueva silla usando el boton de abajo'
                 : 'Aun no hay sillas en el inventario',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           if (widget.canManage) ...[

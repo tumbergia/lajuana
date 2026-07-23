@@ -40,10 +40,7 @@ class AppSwitchRow extends StatelessWidget {
         onTap: _enabled ? _toggle : null,
         trailing: ExcludeSemantics(
           child: IgnorePointer(
-            child: AppSwitch(
-              value: value,
-              onChanged: onChanged,
-            ),
+            child: AppSwitch(value: value, onChanged: onChanged),
           ),
         ),
       ),

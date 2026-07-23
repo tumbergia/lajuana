@@ -22,6 +22,7 @@ from app.services.provider_service import ProviderService
 
 def _get_service() -> ProviderService:
     from app.core.di import Container
+
     return Container.get_instance().provider_service
 
 
@@ -112,7 +113,12 @@ async def admin_list_providers(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_list_providers",
-            input_data={"q": q, "provider_type": provider_type, "is_active": is_active, "limit": limit},
+            input_data={
+                "q": q,
+                "provider_type": provider_type,
+                "is_active": is_active,
+                "limit": limit,
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,
@@ -228,7 +234,9 @@ async def admin_create_provider(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_provider",
-            input_data={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input_data={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,
@@ -284,7 +292,10 @@ async def admin_update_provider(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_provider",
-            input_data={"provider_id": provider_id, **{k: v for k, v in kwargs.items() if k in ProviderUpdateSchema.model_fields}},
+            input_data={
+                "provider_id": provider_id,
+                **{k: v for k, v in kwargs.items() if k in ProviderUpdateSchema.model_fields},
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,

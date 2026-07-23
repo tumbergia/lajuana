@@ -39,7 +39,7 @@ class ExperiencePricing {
     'currency': currency,
     'prices_are_net': pricesAreNet,
     'pricing_notes': pricingNotes,
-    'tiers': tiers,
+    'tiers': tiers?.map((e) => e.toJson()).toList(),
     'require_contiguous_tiers': requireContiguousTiers,
   };
 

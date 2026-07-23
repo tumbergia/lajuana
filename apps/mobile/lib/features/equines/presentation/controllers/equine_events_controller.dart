@@ -9,7 +9,7 @@ enum EquineEventSaveState { idle, saving, success, error }
 
 class EquineEventsController extends ChangeNotifier {
   EquineEventsController({required EquineEventRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final EquineEventRepository _repository;
 

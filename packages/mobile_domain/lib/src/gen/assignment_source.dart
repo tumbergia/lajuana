@@ -2,16 +2,11 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `AssignmentSource`.
 
 enum AssignmentSource {
-  @JsonValue('manual_admin')
   MANUAL_ADMIN("manual_admin"),
-  @JsonValue('manual_guide')
   MANUAL_GUIDE("manual_guide"),
-  @JsonValue('system_suggested')
   SYSTEM_SUGGESTED("system_suggested"),
 ;
 

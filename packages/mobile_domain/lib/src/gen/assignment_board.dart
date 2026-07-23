@@ -50,9 +50,9 @@ class AssignmentBoard {
     'reservation_id': reservationId,
     'reservation_status': reservationStatus,
     'scheduled_date': scheduledDate,
-    'participants': participants,
-    'available_equines': availableEquines,
-    'available_saddles': availableSaddles,
+    'participants': participants?.map((e) => e.toJson()).toList(),
+    'available_equines': availableEquines?.map((e) => e.toJson()).toList(),
+    'available_saddles': availableSaddles?.map((e) => e.toJson()).toList(),
     'summary': summary,
   };
 

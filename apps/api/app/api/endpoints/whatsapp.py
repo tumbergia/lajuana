@@ -8,7 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
-from app.api.deps import get_current_user, get_whatsapp_ingestion_service, get_whatsapp_outbound_service
+from app.api.deps import (
+    get_current_user,
+    get_whatsapp_ingestion_service,
+    get_whatsapp_outbound_service,
+)
 from app.channels.whatsapp.ingestion_service import WhatsAppIngestionService
 from app.channels.whatsapp.normalizer import build_conversation_id, normalize_phone
 from app.channels.whatsapp.outbound_service import WhatsAppOutboundService

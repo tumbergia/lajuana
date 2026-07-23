@@ -82,7 +82,10 @@ class _FakeNotificationsRepository implements NotificationsRepository {
   Future<int> deleteOne(String notificationId) async {
     deleteOneCalls += 1;
     final before = items.length;
-    items = [for (final item in items) if (item.id != notificationId) item];
+    items = [
+      for (final item in items)
+        if (item.id != notificationId) item,
+    ];
     unread = items.where((item) => !item.read).length;
     return before - items.length;
   }
@@ -93,7 +96,10 @@ class _FakeNotificationsRepository implements NotificationsRepository {
     lastClearReadOnly = readOnly;
     final before = items.length;
     if (readOnly) {
-      items = [for (final item in items) if (!item.read) item];
+      items = [
+        for (final item in items)
+          if (!item.read) item,
+      ];
     } else {
       items = [];
       unread = 0;
@@ -263,28 +269,34 @@ void main() {
   test('setPreference updates preferences map', () async {
     await controller.loadPreferences();
     await controller.setPreference('reservation_created', false);
-    expect(controller.preferences?.preferences?['reservation_created'], isFalse);
+    expect(
+      controller.preferences?.preferences?['reservation_created'],
+      isFalse,
+    );
   });
 
-  test('refreshQuietly sets arrival banner when unread grows while hidden', () async {
-    repository.items = [];
-    repository.unread = 0;
-    await controller.loadInitial();
-    expect(controller.hasArrivalBanner, isFalse);
+  test(
+    'refreshQuietly sets arrival banner when unread grows while hidden',
+    () async {
+      repository.items = [];
+      repository.unread = 0;
+      await controller.loadInitial();
+      expect(controller.hasArrivalBanner, isFalse);
 
-    repository.items = [
-      _item(id: '1', title: 'Nueva reserva'),
-      _item(id: '2', title: 'Otro'),
-    ];
-    repository.unread = 2;
-    await controller.refreshQuietly();
+      repository.items = [
+        _item(id: '1', title: 'Nueva reserva'),
+        _item(id: '2', title: 'Otro'),
+      ];
+      repository.unread = 2;
+      await controller.refreshQuietly();
 
-    expect(controller.hasArrivalBanner, isTrue);
-    expect(controller.pendingArrivalCount, 2);
-    // Parsed headline (same as inbox / push), not the raw API title.
-    expect(controller.pendingArrivalTitle, 'Cuerpo');
-    expect(controller.pendingArrivalId, '1');
-  });
+      expect(controller.hasArrivalBanner, isTrue);
+      expect(controller.pendingArrivalCount, 2);
+      // Parsed headline (same as inbox / push), not the raw API title.
+      expect(controller.pendingArrivalTitle, 'Cuerpo');
+      expect(controller.pendingArrivalId, '1');
+    },
+  );
 
   test('first quiet refresh seeds baseline without arrival spam', () async {
     repository.items = [
@@ -300,10 +312,7 @@ void main() {
     expect(controller.hasArrivalBanner, isFalse);
     expect(controller.pendingArrivalCount, 0);
 
-    repository.items = [
-      _item(id: '3', title: 'Nueva'),
-      ...repository.items,
-    ];
+    repository.items = [_item(id: '3', title: 'Nueva'), ...repository.items];
     repository.unread = 3;
     await controller.refreshQuietly();
 
@@ -337,42 +346,48 @@ void main() {
     expect(controller.pendingArrivalTitle, 'Cotizado → Confirmada');
   });
 
-  test('refreshQuietly does not set arrival banner when list is visible', () async {
-    repository.items = [];
-    repository.unread = 0;
-    await controller.loadInitial();
-    controller.setListVisible(true);
-    await Future<void>.delayed(Duration.zero);
-    await controller.refreshQuietly(forceList: true);
+  test(
+    'refreshQuietly does not set arrival banner when list is visible',
+    () async {
+      repository.items = [];
+      repository.unread = 0;
+      await controller.loadInitial();
+      controller.setListVisible(true);
+      await Future<void>.delayed(Duration.zero);
+      await controller.refreshQuietly(forceList: true);
 
-    repository.items = [_item(id: '1', title: 'Nueva')];
-    repository.unread = 1;
-    await controller.refreshQuietly();
+      repository.items = [_item(id: '1', title: 'Nueva')];
+      repository.unread = 1;
+      await controller.refreshQuietly();
 
-    expect(controller.hasArrivalBanner, isFalse);
-  });
+      expect(controller.hasArrivalBanner, isFalse);
+    },
+  );
 
-  test('dismissArrivalBanner and setListVisible clear arrival signal', () async {
-    repository.items = [];
-    repository.unread = 0;
-    await controller.loadInitial();
-    repository.items = [_item(id: '1', title: 'Hola')];
-    repository.unread = 1;
-    await controller.refreshQuietly();
-    expect(controller.hasArrivalBanner, isTrue);
+  test(
+    'dismissArrivalBanner and setListVisible clear arrival signal',
+    () async {
+      repository.items = [];
+      repository.unread = 0;
+      await controller.loadInitial();
+      repository.items = [_item(id: '1', title: 'Hola')];
+      repository.unread = 1;
+      await controller.refreshQuietly();
+      expect(controller.hasArrivalBanner, isTrue);
 
-    controller.dismissArrivalBanner();
-    expect(controller.hasArrivalBanner, isFalse);
-    expect(controller.pendingArrivalCount, 0);
-    expect(controller.pendingArrivalTitle, isNull);
-    expect(controller.pendingArrivalId, isNull);
+      controller.dismissArrivalBanner();
+      expect(controller.hasArrivalBanner, isFalse);
+      expect(controller.pendingArrivalCount, 0);
+      expect(controller.pendingArrivalTitle, isNull);
+      expect(controller.pendingArrivalId, isNull);
 
-    repository.items = [_item(id: '2', title: 'Otra')];
-    repository.unread = 2;
-    await controller.refreshQuietly();
-    expect(controller.hasArrivalBanner, isTrue);
+      repository.items = [_item(id: '2', title: 'Otra')];
+      repository.unread = 2;
+      await controller.refreshQuietly();
+      expect(controller.hasArrivalBanner, isTrue);
 
-    controller.setListVisible(true);
-    expect(controller.hasArrivalBanner, isFalse);
-  });
+      controller.setListVisible(true);
+      expect(controller.hasArrivalBanner, isFalse);
+    },
+  );
 }

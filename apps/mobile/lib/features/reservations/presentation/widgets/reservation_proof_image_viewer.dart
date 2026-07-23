@@ -165,8 +165,11 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 48,
-                  color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(_error!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
@@ -199,8 +202,11 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.broken_image_outlined, size: 48,
-                      color: theme.colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.broken_image_outlined,
+                    size: 48,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 16),
                   const Text('No se pudo renderizar la imagen.'),
                 ],
@@ -214,11 +220,8 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
     if (_isPdf && _bytes != null) {
       return PdfViewer.data(
         _bytes!,
-        sourceName: widget.proof.filename ??
-            'proof-${widget.proof.id}.pdf',
-        params: const PdfViewerParams(
-          margin: 8,
-        ),
+        sourceName: widget.proof.filename ?? 'proof-${widget.proof.id}.pdf',
+        params: const PdfViewerParams(margin: 8),
       );
     }
 
@@ -229,8 +232,11 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.description_outlined, size: 48,
-                color: theme.colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.description_outlined,
+              size: 48,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 16),
             Text(
               'Vista previa no disponible para ${widget.proof.contentType ?? 'este tipo de archivo'}.',

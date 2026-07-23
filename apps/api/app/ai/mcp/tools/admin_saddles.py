@@ -24,6 +24,7 @@ from app.services.saddle_service import SaddleService
 
 def _get_service() -> SaddleService:
     from app.core.di import Container
+
     return Container.get_instance().saddle_service
 
 
@@ -210,7 +211,9 @@ async def admin_create_saddle(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_saddle",
-            input_data={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input_data={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,
@@ -266,7 +269,10 @@ async def admin_update_saddle(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_saddle",
-            input_data={"saddle_id": saddle_id, **{k: v for k, v in kwargs.items() if k in SaddleUpdateSchema.model_fields}},
+            input_data={
+                "saddle_id": saddle_id,
+                **{k: v for k, v in kwargs.items() if k in SaddleUpdateSchema.model_fields},
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,
@@ -392,7 +398,8 @@ async def admin_list_available_saddles_for_reservation(
 
     try:
         pairs = await _get_service().list_available_for_reservation(
-            reservation_id, limit=limit,
+            reservation_id,
+            limit=limit,
         )
         items = [
             AdminListAvailableSaddlesItem(

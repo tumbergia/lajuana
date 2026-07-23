@@ -279,6 +279,34 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "assignment.equine_id distinto al equino del evento",
         "detail_keys": ("assignment_id", "equine_id"),
     },
+    "B400-039": {
+        "http_status": 400,
+        "code": ErrorCode.ROLE_REQUEST_INVALID_ROLE,
+        "name": "Rol solicitado invalido",
+        "trigger": "solicitud o aprobacion usa un rol no asignable",
+        "detail_keys": (),
+    },
+    "B400-040": {
+        "http_status": 400,
+        "code": ErrorCode.ROLE_REQUEST_INVALID_ACTION,
+        "name": "Accion de solicitud invalida",
+        "trigger": "la decision no es approve ni reject",
+        "detail_keys": (),
+    },
+    "B400-041": {
+        "http_status": 400,
+        "code": ErrorCode.LOG_PHOTO_INVALID_TYPE,
+        "name": "Foto de bitacora invalida",
+        "trigger": "archivo no es una imagen permitida o esta vacio",
+        "detail_keys": (),
+    },
+    "B400-042": {
+        "http_status": 400,
+        "code": ErrorCode.LOG_PHOTO_LIMIT,
+        "name": "Limite de fotos excedido",
+        "trigger": "foto supera el tamano maximo permitido",
+        "detail_keys": (),
+    },
     "B404-001": {
         "http_status": 404,
         "code": ErrorCode.USER_NOT_FOUND,
@@ -552,6 +580,20 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "equine_event objetivo no existe",
         "detail_keys": ("event_id",),
     },
+    "B404-017": {
+        "http_status": 404,
+        "code": ErrorCode.ROLE_REQUEST_NOT_FOUND,
+        "name": "Solicitud de rol no existe",
+        "trigger": "solicitud de rol objetivo no existe o fue eliminada",
+        "detail_keys": ("request_id",),
+    },
+    "B404-018": {
+        "http_status": 404,
+        "code": ErrorCode.LOG_PHOTO_NOT_FOUND,
+        "name": "Foto de bitacora no existe",
+        "trigger": "foto no existe o no pertenece al evento de bitacora",
+        "detail_keys": ("log_id", "photo_index"),
+    },
     "B409-024": {
         "http_status": 409,
         "code": ErrorCode.ASSIGNMENT_RESERVATION_NOT_CONFIRMED,
@@ -615,6 +657,27 @@ BUSINESS_ERROR_CASES: dict[str, BusinessErrorCase] = {
         "trigger": "intento de purge con reservas asociadas",
         "detail_keys": ("experience_id", "reservation_count"),
     },
+    "B409-033": {
+        "http_status": 409,
+        "code": ErrorCode.ROLE_REQUEST_NOT_ALLOWED,
+        "name": "Solicitud de rol no permitida",
+        "trigger": "usuario con rol operativo intenta solicitar otro rol",
+        "detail_keys": (),
+    },
+    "B409-034": {
+        "http_status": 409,
+        "code": ErrorCode.ROLE_REQUEST_ALREADY_PENDING,
+        "name": "Solicitud de rol pendiente existente",
+        "trigger": "usuario ya tiene una solicitud pendiente",
+        "detail_keys": (),
+    },
+    "B409-035": {
+        "http_status": 409,
+        "code": ErrorCode.ROLE_REQUEST_NOT_PENDING,
+        "name": "Solicitud de rol ya resuelta",
+        "trigger": "se intenta decidir una solicitud que no esta pendiente",
+        "detail_keys": ("request_id",),
+    },
 }
 
 
@@ -653,6 +716,26 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_400": (),
         "cases_404": ("B404-001",),
         "cases_409": ("B409-016",),
+    },
+    ("POST", "/api/v1/role-requests"): {
+        "cases_400": ("B400-039",),
+        "cases_404": (),
+        "cases_409": ("B409-033", "B409-034"),
+    },
+    ("GET", "/api/v1/role-requests/me"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/role-requests"): {
+        "cases_400": (),
+        "cases_404": (),
+        "cases_409": (),
+    },
+    ("POST", "/api/v1/role-requests/{request_id}/decide"): {
+        "cases_400": ("B400-039", "B400-040"),
+        "cases_404": ("B404-017", "B404-001"),
+        "cases_409": ("B409-035",),
     },
     ("POST", "/api/v1/experiences"): {
         "cases_400": ("B400-003", "B400-004"),
@@ -718,6 +801,11 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
     },
     ("GET", "/api/v1/reservations"): {"cases_400": (), "cases_404": (), "cases_409": ()},
     ("GET", "/api/v1/reservations/{reservation_id}"): {
+        "cases_400": (),
+        "cases_404": ("B404-004",),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/reservations/{reservation_id}/timeline"): {
         "cases_400": (),
         "cases_404": ("B404-004",),
         "cases_409": (),
@@ -788,9 +876,9 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_409": ("B409-008",),
     },
     ("POST", "/api/v1/reservations/{reservation_id}/participant-form-link"): {
-        "cases_400": ("B400-033",),
+        "cases_400": (),
         "cases_404": ("B404-004",),
-        "cases_409": (),
+        "cases_409": ("B409-020",),
     },
     ("GET", "/api/v1/participants/{participant_id}"): {
         "cases_400": (),
@@ -935,9 +1023,7 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
     ("POST", "/api/v1/assignments/{assignment_id}/finalize"): {
         "cases_400": (),
         "cases_404": ("B404-009",),
-        "cases_409": (
-            "B409-024",
-        ),
+        "cases_409": ("B409-024",),
     },
     ("POST", "/api/v1/assignments/{assignment_id}/unfinalize"): {
         "cases_400": (),
@@ -969,6 +1055,11 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_404": ("B404-004",),
         "cases_409": (),
     },
+    ("GET", "/api/v1/logs"): {
+        "cases_400": (),
+        "cases_404": ("B404-004",),
+        "cases_409": (),
+    },
     ("GET", "/api/v1/logs/{log_id}"): {
         "cases_400": (),
         "cases_404": ("B404-010",),
@@ -977,6 +1068,21 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
     ("PATCH", "/api/v1/logs/{log_id}"): {
         "cases_400": ("B400-029", "B400-030"),
         "cases_404": ("B404-010",),
+        "cases_409": (),
+    },
+    ("DELETE", "/api/v1/logs/{log_id}"): {
+        "cases_400": (),
+        "cases_404": ("B404-010",),
+        "cases_409": (),
+    },
+    ("POST", "/api/v1/logs/photos/upload"): {
+        "cases_400": ("B400-041", "B400-042"),
+        "cases_404": ("B404-004",),
+        "cases_409": (),
+    },
+    ("GET", "/api/v1/logs/{log_id}/photos/{photo_index}/download"): {
+        "cases_400": (),
+        "cases_404": ("B404-010", "B404-018"),
         "cases_409": (),
     },
     ("POST", "/api/v1/providers"): {"cases_400": (), "cases_404": (), "cases_409": ()},
@@ -1070,11 +1176,6 @@ ENDPOINT_BUSINESS_CASES: dict[tuple[str, str], EndpointBusinessCases] = {
         "cases_400": (),
         "cases_404": (),
         "cases_409": (),
-    },
-    ("POST", "/api/v1/reservations/{reservation_id}/participant-form-link"): {
-        "cases_400": (),
-        "cases_404": ("B404-004",),
-        "cases_409": ("B409-020",),
     },
     ("POST", "/api/v1/reservations/{reservation_id}/participant-form-link/revoke"): {
         "cases_400": (),

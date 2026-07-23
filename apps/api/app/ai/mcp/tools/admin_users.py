@@ -20,6 +20,7 @@ from app.services.user_service import UserService
 
 def _get_service() -> UserService:
     from app.core.di import Container
+
     return Container.get_instance().user_service
 
 
@@ -85,11 +86,7 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
     output: AdminCreateUserOutput | None = None
 
     try:
-        filtered = {
-            k: v
-            for k, v in kwargs.items()
-            if k in UserCreateSchema.model_fields
-        }
+        filtered = {k: v for k, v in kwargs.items() if k in UserCreateSchema.model_fields}
         payload = UserCreateSchema.model_validate(filtered)
         doc = await _get_service().create_user(payload)
 
@@ -131,7 +128,9 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_user",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -162,9 +161,7 @@ async def admin_update_user(**kwargs: Any) -> dict[str, Any]:
             return output.model_dump(mode="json")
 
         filtered = {
-            k: v
-            for k, v in kwargs.items()
-            if k in UserUpdateSchema.model_fields and v is not None
+            k: v for k, v in kwargs.items() if k in UserUpdateSchema.model_fields and v is not None
         }
         payload = UserUpdateSchema.model_validate(filtered)
         doc = await _get_service().update_user(user_id, payload)
@@ -207,7 +204,9 @@ async def admin_update_user(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_user",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -324,7 +323,9 @@ async def admin_deactivate_user(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_deactivate_user",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,

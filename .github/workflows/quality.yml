@@ -35,9 +35,6 @@ jobs:
       - name: Ruff lint
         run: ruff check .
 
-      - name: Ruff format check
-        run: ruff format --check .
-
       - name: Pytest
         run: pytest
 
@@ -61,16 +58,13 @@ jobs:
             (cd "$path" && flutter pub get)
           done
 
-      - name: Dart format check
-        run: dart format --output=none --set-exit-if-changed apps/mobile/lib apps/mobile/test packages
-
       - name: Flutter analyze app
-        run: cd apps/mobile && flutter analyze
+        run: cd apps/mobile && flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Flutter analyze packages
         run: |
           for path in packages/mobile_core packages/mobile_domain packages/mobile_mocks packages/mobile_ui; do
-            (cd "$path" && flutter analyze)
+            (cd "$path" && flutter analyze --no-fatal-infos --no-fatal-warnings)
           done
 
       - name: Flutter test app

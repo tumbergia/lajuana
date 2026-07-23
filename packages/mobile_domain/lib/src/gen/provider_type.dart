@@ -2,28 +2,17 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `ProviderType`.
 
 enum ProviderType {
-  @JsonValue('lodging')
   LODGING("lodging"),
-  @JsonValue('food')
   FOOD("food"),
-  @JsonValue('transport_people')
   TRANSPORT_PEOPLE("transport_people"),
-  @JsonValue('equine_transport')
   EQUINE_TRANSPORT("equine_transport"),
-  @JsonValue('experience_ally')
   EXPERIENCE_ALLY("experience_ally"),
-  @JsonValue('guide_ally')
   GUIDE_ALLY("guide_ally"),
-  @JsonValue('park_or_access')
   PARK_OR_ACCESS("park_or_access"),
-  @JsonValue('insurance')
   INSURANCE("insurance"),
-  @JsonValue('other')
   OTHER("other"),
 ;
 

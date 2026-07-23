@@ -4,6 +4,8 @@
 
 /// AUTO-GENERATED from OpenAPI schema `HTTPValidationError`.
 
+import 'validation_error.dart';
+
 class HTTPValidationError {
 
   final List<ValidationError>? detail;
@@ -22,7 +24,7 @@ class HTTPValidationError {
   }
 
   Map<String, dynamic> toJson() => {
-    'detail': detail,
+    'detail': detail?.map((e) => e.toJson()).toList(),
   };
 
 }

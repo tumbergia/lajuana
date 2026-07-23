@@ -52,7 +52,9 @@ class SaddleService(BaseService[SaddleDocument, SaddleCreateSchema, SaddleUpdate
                 score = 92
             elif normalized_query in name_tokens:
                 score = 88
-            elif code.startswith(normalized_query) or any(token.startswith(normalized_query) for token in name_tokens):
+            elif code.startswith(normalized_query) or any(
+                token.startswith(normalized_query) for token in name_tokens
+            ):
                 score = 80
             elif normalized_query in code or (name and normalized_query in name):
                 score = 64
@@ -139,9 +141,7 @@ class SaddleService(BaseService[SaddleDocument, SaddleCreateSchema, SaddleUpdate
         my_assignments = await AssignmentDocument.find(
             {"reservation_id": PydanticObjectId(reservation_id), "is_active": True},
         ).to_list()
-        my_assigned_saddle_ids = {
-            str(a.saddle_id) for a in my_assignments if a.saddle_id
-        }
+        my_assigned_saddle_ids = {str(a.saddle_id) for a in my_assignments if a.saddle_id}
 
         all_saddles = await SaddleDocument.find({}).skip(skip).limit(limit).to_list()
 

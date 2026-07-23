@@ -55,8 +55,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
   }
 
   bool get _isGuide {
-    final role =
-        widget.authController?.currentUser?.role.trim().toLowerCase();
+    final role = widget.authController?.currentUser?.role.trim().toLowerCase();
     return role == 'guide';
   }
 
@@ -181,10 +180,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppSectionHeader(
-                  eyebrow: 'Gestion',
-                  title: 'Reservas',
-                ),
+                AppSectionHeader(eyebrow: 'Gestion', title: 'Reservas'),
                 const SizedBox(height: 20),
 
                 // Search + calendar row
@@ -202,9 +198,9 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                       height: 44,
                       width: 44,
                       child: Material(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerLow,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(2),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(2),
@@ -242,8 +238,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                 ],
 
                 // Offline banner
-                if (state ==
-                    ReservationsLoadState.offlineFromCache) ...[
+                if (state == ReservationsLoadState.offlineFromCache) ...[
                   const SizedBox(height: 12),
                   AppStatusBanner(
                     title: 'Sin conexion',
@@ -322,8 +317,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                 const Icon(Icons.error_outline_rounded, size: 48),
                 const SizedBox(height: 16),
                 Text(
-                  _listController.errorMessage ??
-                      'Error al cargar reservas.',
+                  _listController.errorMessage ?? 'Error al cargar reservas.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -354,29 +348,25 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
     }
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, i) {
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-              24,
-              0,
-              24,
-              i < items.length - 1 ? 10 : 24,
-            ),
-            child: ReservationRowCard(
-              reservation: items[i],
-              subtitle:
-                  items[i].experienceName ?? items[i].equineName,
-              highlightIfPending: items[i].status == 'pendientes',
-              openDetailsOnTap: true,
-              showRequestedDate: true,
-              onOpenDetail: () =>
-                  _openReservationDetail(items[i].id ?? items[i].code),
-            ),
-          );
-        },
-        childCount: items.length,
-      ),
+      delegate: SliverChildBuilderDelegate((context, i) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            0,
+            24,
+            i < items.length - 1 ? 10 : 24,
+          ),
+          child: ReservationRowCard(
+            reservation: items[i],
+            subtitle: items[i].experienceName ?? items[i].equineName,
+            highlightIfPending: items[i].status == 'pendientes',
+            openDetailsOnTap: true,
+            showRequestedDate: true,
+            onOpenDetail: () =>
+                _openReservationDetail(items[i].id ?? items[i].code),
+          ),
+        );
+      }, childCount: items.length),
     );
   }
 
@@ -391,13 +381,13 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48,
-              color: Theme.of(context).colorScheme.onSurfaceVariant),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium,
+          Icon(
+            icon,
+            size: 48,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
+          const SizedBox(height: 16),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
             message,

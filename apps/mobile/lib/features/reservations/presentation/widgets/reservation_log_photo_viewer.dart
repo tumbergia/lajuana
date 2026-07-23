@@ -106,10 +106,7 @@ class _ReservationLogPhotoViewerState extends State<ReservationLogPhotoViewer> {
     try {
       await saveFile(bytes, _currentPhoto.filename, _currentPhoto.contentType);
       if (!mounted) return;
-      showAppToast(
-        context,
-        message: 'Descargado: ${_currentPhoto.filename}',
-      );
+      showAppToast(context, message: 'Descargado: ${_currentPhoto.filename}');
     } catch (error) {
       if (!mounted) return;
       showAppToast(
@@ -174,8 +171,8 @@ class _ReservationLogPhotoViewerState extends State<ReservationLogPhotoViewer> {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ],
@@ -446,12 +443,7 @@ class _LogPhotoPageState extends State<_LogPhotoPage> {
       return InteractiveViewer(
         minScale: 0.5,
         maxScale: 5,
-        child: Center(
-          child: Image.memory(
-            _bytes!,
-            fit: BoxFit.contain,
-          ),
-        ),
+        child: Center(child: Image.memory(_bytes!, fit: BoxFit.contain)),
       );
     }
 

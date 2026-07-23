@@ -30,7 +30,8 @@ class AppScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).appTokens;
     final content = Padding(
-      padding: padding ??
+      padding:
+          padding ??
           EdgeInsets.fromLTRB(
             tokens.spaceLg,
             tokens.spaceLg,

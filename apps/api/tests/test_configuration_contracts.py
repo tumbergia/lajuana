@@ -81,7 +81,9 @@ def test_planner_requires_live_config_for_payment_proof_questions() -> None:
 
     assert "comprobante o recibo es obligatorio" in PLANNER_SYSTEM_PROMPT
     assert "usa get_public_business_rules" in PLANNER_SYSTEM_PROMPT
-    assert "nunca afirmes que el pago se refleja automáticamente" in TOOL_RESULT_RESPONSE_SYSTEM_PROMPT
+    assert (
+        "nunca afirmes que el pago se refleja automáticamente" in TOOL_RESULT_RESPONSE_SYSTEM_PROMPT
+    )
 
 
 def test_payment_requires_one_enabled_method() -> None:

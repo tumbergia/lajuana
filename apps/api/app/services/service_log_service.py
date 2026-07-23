@@ -25,7 +25,9 @@ ALLOWED_PHOTO_CONTENT_TYPES = frozenset(
 )
 
 
-class ServiceLogService(BaseService[ServiceLogDocument, ServiceLogCreateSchema, ServiceLogUpdateSchema]):
+class ServiceLogService(
+    BaseService[ServiceLogDocument, ServiceLogCreateSchema, ServiceLogUpdateSchema]
+):
     document_class = ServiceLogDocument
     not_found_code = ErrorCode.LOG_NOT_FOUND
     not_found_message = "Log no encontrado."
@@ -191,12 +193,18 @@ class ServiceLogService(BaseService[ServiceLogDocument, ServiceLogCreateSchema, 
                 code=ErrorCode.RESERVATION_NOT_FOUND,
                 message="Reserva no encontrada.",
             )
-        return await ServiceLogDocument.find(
-            {
-                "reservation_id": reservation.id,
-                "deleted_at": None,
-            },
-        ).sort([("happened_at", -1)]).skip(skip).limit(limit).to_list()
+        return (
+            await ServiceLogDocument.find(
+                {
+                    "reservation_id": reservation.id,
+                    "deleted_at": None,
+                },
+            )
+            .sort([("happened_at", -1)])
+            .skip(skip)
+            .limit(limit)
+            .to_list()
+        )
 
     async def create(
         self,

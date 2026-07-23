@@ -2,18 +2,12 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `PaymentStatus`.
 
 enum PaymentStatus {
-  @JsonValue('pending')
   PENDING("pending"),
-  @JsonValue('received')
   RECEIVED("received"),
-  @JsonValue('verified')
   VERIFIED("verified"),
-  @JsonValue('rejected')
   REJECTED("rejected"),
 ;
 

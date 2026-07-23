@@ -227,9 +227,7 @@ def extract_date_range_from_message(message: str) -> tuple[str, str] | None:
 
     # Bare "hoy" / "mañana" only when they are the whole time reference
     # (not part of "desde X hasta hoy").
-    if re.search(r"\bhoy\b", normalized) and not re.search(
-        r"\b(desde|hasta)\b", normalized
-    ):
+    if re.search(r"\bhoy\b", normalized) and not re.search(r"\b(desde|hasta)\b", normalized):
         if not extract_date_from_message(normalized):
             iso = today.isoformat()
             return iso, iso

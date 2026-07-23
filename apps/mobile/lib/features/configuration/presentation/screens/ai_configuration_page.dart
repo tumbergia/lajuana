@@ -5,6 +5,7 @@ import 'package:mobile/app/errors/user_facing_error.dart';
 import 'package:mobile/features/configuration/configuration_module.dart';
 import 'package:mobile/features/configuration/domain/la_juana_configuration.dart';
 import 'package:mobile/features/configuration/infrastructure/configuration_api_client.dart';
+import 'package:mobile/features/configuration/presentation/screens/ai_model_catalog_page.dart';
 import 'package:mobile/features/providers/presentation/utils/phone_country.dart';
 import 'package:mobile/features/providers/presentation/widgets/provider_phone_field.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservations_api_error.dart';
@@ -59,6 +60,7 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
   String? _busyMuteRemovePhone;
   bool _busyReservationDisable = false;
   String? _busyReservationEnableId;
+
   /// `env` = recomendado desde servidor; `manual` = modelos digitados.
   String _providerMode = 'env';
   AiEnvProvider _envProvider = const AiEnvProvider(available: false);
@@ -171,11 +173,11 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
   }
 
   bool get _hasManualModelReady => List.generate(3, (i) => i).any(
-        (i) =>
-            _services[i] != null &&
-            _models[i].text.trim().isNotEmpty &&
-            _configured[i],
-      );
+    (i) =>
+        _services[i] != null &&
+        _models[i].text.trim().isNotEmpty &&
+        _configured[i],
+  );
 
   bool get _canEnableAssistant {
     if (_usesEnv) return _envProvider.available;
@@ -188,8 +190,9 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
     final previousEnabled = _enabled;
     // Si pasas a personalizado sin modelos listos y el asistente está on,
     // se apaga para dejar configurar; no se bloquea el cambio de modo.
-    final nextEnabled =
-        mode == 'manual' && !_hasManualModelReady ? false : _enabled;
+    final nextEnabled = mode == 'manual' && !_hasManualModelReady
+        ? false
+        : _enabled;
     setState(() {
       _providerMode = mode;
       _enabled = nextEnabled;
@@ -214,10 +217,7 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
         if (keepEditing) _editingModels = true;
       });
       if (mode == 'env') {
-        showAppToast(
-          context,
-          message: 'Usando modelos recomendados.',
-        );
+        showAppToast(context, message: 'Usando modelos recomendados.');
       } else if (keepEditing) {
         showAppToast(
           context,
@@ -241,6 +241,41 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
         await _load();
       }
     }
+  }
+
+  Future<void> _openModelCatalog() async {
+    if (_busyProviderMode || _editingModels) return;
+    final selection = await Navigator.of(context).push<AiModelSelection>(
+      MaterialPageRoute(
+        builder: (_) => AiModelCatalogPage(module: widget.module),
+      ),
+    );
+    if (selection == null || !mounted) return;
+
+    final previousEnabled = _enabled;
+    final alreadyOpenRouter =
+        _services[0] == 'openrouter' && _configured[0];
+    setState(() {
+      _providerMode = 'manual';
+      _services[0] = 'openrouter';
+      _models[0].text = selection.modelId;
+      _keys[0].clear();
+      // Si ya había clave de OpenRouter en esta ruta, se reutiliza;
+      // si venía de otro servicio, hay que pegar una nueva.
+      if (!alreadyOpenRouter) {
+        _configured[0] = false;
+        _enabled = false;
+      }
+      _editingModels = true;
+    });
+    showAppToast(
+      context,
+      message: alreadyOpenRouter
+          ? '${selection.displayName} listo. Guarda para aplicarlo.'
+          : previousEnabled && !_enabled
+          ? '${selection.displayName} listo. Pega tu API key de OpenRouter y guarda.'
+          : '${selection.displayName} seleccionado. Confirma la API key de OpenRouter y guarda.',
+    );
   }
 
   void _applySnapshot(AiConfiguration value) {
@@ -268,16 +303,14 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
   }
 
   List<Map<String, dynamic>> _routesPayload() => List.generate(
-        3,
-        (i) => {
-          'position': i + 1,
-          'service': _services[i],
-          'model': _models[i].text.trim().isEmpty
-              ? null
-              : _models[i].text.trim(),
-          if (_keys[i].text.isNotEmpty) 'api_key': _keys[i].text,
-        },
-      );
+    3,
+    (i) => {
+      'position': i + 1,
+      'service': _services[i],
+      'model': _models[i].text.trim().isEmpty ? null : _models[i].text.trim(),
+      if (_keys[i].text.isNotEmpty) 'api_key': _keys[i].text,
+    },
+  );
 
   Future<AiConfiguration> _persistAi({
     required bool enabled,
@@ -308,6 +341,17 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
       if (_services[i] != null && _models[i].text.trim().isEmpty) {
         setState(() {
           _error = 'El modelo ${i + 1} necesita un nombre de modelo.';
+        });
+        return;
+      }
+      if (_services[i] != null &&
+          _models[i].text.trim().isNotEmpty &&
+          !_configured[i] &&
+          _keys[i].text.isEmpty) {
+        setState(() {
+          _error =
+              'El modelo ${i + 1} necesita una clave de acceso '
+              '(${_serviceLabels[_services[i]!] ?? _services[i]}).';
         });
         return;
       }
@@ -399,10 +443,7 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
     next.add(e164);
     setState(() => _busyMuteAdd = true);
     try {
-      final value = await _persistAi(
-        enabled: _enabled,
-        mutedPhones: next,
-      );
+      final value = await _persistAi(enabled: _enabled, mutedPhones: next);
       if (!mounted) return;
       setState(() {
         _applySnapshot(value);
@@ -423,10 +464,7 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
     final next = List<String>.from(_mutedPhones)..remove(phone);
     setState(() => _busyMuteRemovePhone = phone);
     try {
-      final value = await _persistAi(
-        enabled: _enabled,
-        mutedPhones: next,
-      );
+      final value = await _persistAi(enabled: _enabled, mutedPhones: next);
       if (!mounted) return;
       setState(() {
         _applySnapshot(value);
@@ -533,8 +571,8 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
     return Text(
       text,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
     );
   }
 
@@ -643,25 +681,21 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
             hintText: 'Selecciona un servicio',
             items: _serviceLabels.entries
                 .map(
-                  (e) => DropdownMenuItem(
-                    value: e.key,
-                    child: Text(e.value),
-                  ),
+                  (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                 )
                 .toList(),
             onChanged: (v) => setState(() => _services[i] = v),
           ),
           const SizedBox(height: 10),
-          AppTextField(
-            controller: _models[i],
-            label: 'Nombre del modelo',
-          ),
+          AppTextField(controller: _models[i], label: 'Nombre del modelo'),
           const SizedBox(height: 10),
           AppTextField(
             controller: _keys[i],
             label: _configured[i]
-                ? 'Clave guardada · escribe para reemplazar'
-                : 'Clave de acceso',
+                ? 'API key guardada · escribe para reemplazar'
+                : (_services[i] == 'openrouter'
+                      ? 'API key de OpenRouter'
+                      : 'API key del servicio'),
             inputKind: AppTextInputKind.password,
             obscureText: true,
           ),
@@ -701,6 +735,15 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
         'o configurar los tuyos.',
       ),
       const SizedBox(height: 10),
+      AppEntityRowCard(
+        title: 'Precios y modelos',
+        subtitle:
+            'Compara costos e inteligencia y elige un modelo para el asistente',
+        leading: _leadingIcon(Symbols.payments),
+        trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+        onTap: _busyProviderMode || _editingModels ? null : _openModelCatalog,
+      ),
+      const SizedBox(height: 8),
       AppEntityRowCard(
         title: 'Recomendados',
         subtitle: _envModelSubtitle(),
@@ -806,8 +849,10 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
                     icon: const Icon(Icons.close_rounded, size: 20),
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints.tightFor(width: 32, height: 32),
+                    constraints: const BoxConstraints.tightFor(
+                      width: 32,
+                      height: 32,
+                    ),
                     onPressed: _busyMuteRemovePhone != null
                         ? null
                         : () => _removeMutedPhone(phone),
@@ -835,8 +880,8 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
     if (_selectableReservations.isEmpty) {
       showAppToast(
         context,
-        message: _reservationsError ??
-            'No hay reservas disponibles para silenciar.',
+        message:
+            _reservationsError ?? 'No hay reservas disponibles para silenciar.',
       );
       return;
     }
@@ -898,8 +943,10 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
                     icon: const Icon(Icons.close_rounded, size: 20),
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints.tightFor(width: 32, height: 32),
+                    constraints: const BoxConstraints.tightFor(
+                      width: 32,
+                      height: 32,
+                    ),
                     onPressed: _busyReservationEnableId != null
                         ? null
                         : () => _enableReservation(item),
@@ -912,8 +959,8 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
         title: selected?.code ?? 'Elegir reserva',
         subtitle: selected == null
             ? (_selectableReservations.isEmpty
-                ? 'No hay reservas disponibles'
-                : '${_selectableReservations.length} disponibles · toca para elegir')
+                  ? 'No hay reservas disponibles'
+                  : '${_selectableReservations.length} disponibles · toca para elegir')
             : _reservationCardSubtitle(selected),
         leading: selected == null
             ? _leadingIcon(Symbols.search)
@@ -924,10 +971,12 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
       ),
       const SizedBox(height: 8),
       AppButton(
-        label:
-            _busyReservationDisable ? 'Desactivando...' : 'Desactivar asistente',
+        label: _busyReservationDisable
+            ? 'Desactivando...'
+            : 'Desactivar asistente',
         expanded: true,
-        onPressed: _reservationsRepo == null ||
+        onPressed:
+            _reservationsRepo == null ||
                 _busyReservationDisable ||
                 selected == null
             ? null
@@ -1024,10 +1073,7 @@ class _SquarePowerToggle extends StatelessWidget {
       decoration: BoxDecoration(
         color: fill,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: isOn ? onColor : offColor,
-          width: 1.5,
-        ),
+        border: Border.all(color: isOn ? onColor : offColor, width: 1.5),
         boxShadow: isOn
             ? [
                 BoxShadow(
@@ -1038,11 +1084,7 @@ class _SquarePowerToggle extends StatelessWidget {
               ]
             : const [],
       ),
-      child: Icon(
-        Icons.power_settings_new_rounded,
-        size: 18,
-        color: iconColor,
-      ),
+      child: Icon(Icons.power_settings_new_rounded, size: 18, color: iconColor),
     );
   }
 }
@@ -1099,15 +1141,17 @@ class _ReservationPickerSheetState extends State<_ReservationPickerSheet> {
         _filtered = widget.reservations;
         return;
       }
-      _filtered = widget.reservations.where((item) {
-        final haystack = [
-          item.code,
-          item.holderName ?? '',
-          item.holderPhone ?? '',
-          item.experienceName ?? '',
-        ].join(' ').toLowerCase();
-        return haystack.contains(q);
-      }).toList(growable: false);
+      _filtered = widget.reservations
+          .where((item) {
+            final haystack = [
+              item.code,
+              item.holderName ?? '',
+              item.holderPhone ?? '',
+              item.experienceName ?? '',
+            ].join(' ').toLowerCase();
+            return haystack.contains(q);
+          })
+          .toList(growable: false);
     });
   }
 
@@ -1141,9 +1185,9 @@ class _ReservationPickerSheetState extends State<_ReservationPickerSheet> {
             const SizedBox(height: 16),
             Text(
               'Seleccionar reserva',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             AppSearchField(
@@ -1157,8 +1201,8 @@ class _ReservationPickerSheetState extends State<_ReservationPickerSheet> {
                       child: Text(
                         'No hay coincidencias',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     )
                   : ListView.separated(
@@ -1171,7 +1215,8 @@ class _ReservationPickerSheetState extends State<_ReservationPickerSheet> {
                           title: item.code,
                           subtitle: widget.subtitleBuilder(item),
                           selected: selected,
-                          leading: (item.requestedDate == null ||
+                          leading:
+                              (item.requestedDate == null ||
                                   item.requestedDate!.isEmpty)
                               ? Container(
                                   width: 48,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 _WRITE_LOCK = threading.Lock()
@@ -31,7 +31,7 @@ def log_token_usage(
     Cada llamada a Gemini genera una línea con timestamp, modelo,
     sufijo de API key, tokens y contexto de conversación.
     """
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
     line = (
         f"[{timestamp}] model={model} api_key=****{api_key_suffix} "
         f"prompt_tokens={prompt_tokens} completion_tokens={completion_tokens} "

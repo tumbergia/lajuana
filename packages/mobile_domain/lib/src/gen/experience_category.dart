@@ -2,16 +2,11 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `ExperienceCategory`.
 
 enum ExperienceCategory {
-  @JsonValue('route')
   ROUTE("route"),
-  @JsonValue('experience')
   EXPERIENCE("experience"),
-  @JsonValue('private')
   PRIVATE("private"),
 ;
 

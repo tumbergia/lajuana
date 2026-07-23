@@ -82,10 +82,7 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (widget.leading != null) ...[
-            Align(
-              alignment: Alignment.center,
-              child: widget.leading!,
-            ),
+            Align(alignment: Alignment.center, child: widget.leading!),
             SizedBox(width: tokens.spaceMd),
           ],
           Expanded(
@@ -105,20 +102,14 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
                 ),
                 if (widget.subtitle.isNotEmpty) ...[
                   SizedBox(height: tokens.spaceXs),
-                  Text(
-                    widget.subtitle.toUpperCase(),
-                    style: subtitleStyle,
-                  ),
+                  Text(widget.subtitle.toUpperCase(), style: subtitleStyle),
                 ],
               ],
             ),
           ),
           if (widget.trailing != null) ...[
             SizedBox(width: tokens.spaceMd),
-            Align(
-              alignment: Alignment.center,
-              child: widget.trailing!,
-            ),
+            Align(alignment: Alignment.center, child: widget.trailing!),
           ],
         ],
       ),
@@ -156,11 +147,7 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
     return Material(
       color: Colors.transparent,
       borderRadius: radius,
-      child: InkWell(
-        borderRadius: radius,
-        onTap: widget.onTap,
-        child: content,
-      ),
+      child: InkWell(borderRadius: radius, onTap: widget.onTap, child: content),
     );
   }
 }

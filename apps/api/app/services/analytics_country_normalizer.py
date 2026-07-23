@@ -588,9 +588,9 @@ class AnalyticsCountryNormalizer:
             resolved=False,
         )
 
-    def normalize_many(self, values: list[str | None]) -> tuple[
-        list[CountryNormalizationResult], NormalizationReport
-    ]:
+    def normalize_many(
+        self, values: list[str | None]
+    ) -> tuple[list[CountryNormalizationResult], NormalizationReport]:
         report = NormalizationReport()
         results: list[CountryNormalizationResult] = []
         for value in values:

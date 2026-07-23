@@ -173,9 +173,7 @@ void main() {
         availableEquines: const [
           AvailableEquine(id: 'e-1', name: 'Pegaso', maxRiderWeightKg: 80),
         ],
-        availableSaddles: const [
-          AvailableSaddle(id: 's-1', code: 'S-01'),
-        ],
+        availableSaddles: const [AvailableSaddle(id: 's-1', code: 'S-01')],
         summary: const BoardSummary(
           participantsTotal: 1,
           assignedTotal: 1,
@@ -230,9 +228,7 @@ void main() {
         availableEquines: const [
           AvailableEquine(id: 'e-1', name: 'Pegaso', maxRiderWeightKg: 80),
         ],
-        availableSaddles: const [
-          AvailableSaddle(id: 's-1', code: 'S-01'),
-        ],
+        availableSaddles: const [AvailableSaddle(id: 's-1', code: 'S-01')],
         summary: const BoardSummary(
           participantsTotal: 1,
           assignedTotal: 1,
@@ -268,9 +264,7 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('Oculta botones de acción cuando no aplican', (
-    tester,
-  ) async {
+  testWidgets('Oculta botones de acción cuando no aplican', (tester) async {
     final fakeRepo = _FakeAssignmentsRepository(
       board: AssignmentBoard(
         reservationId: 'res-1',
@@ -287,9 +281,7 @@ void main() {
         availableEquines: const [
           AvailableEquine(id: 'e-1', name: 'Pegaso', maxRiderWeightKg: 80),
         ],
-        availableSaddles: const [
-          AvailableSaddle(id: 's-1', code: 'S-01'),
-        ],
+        availableSaddles: const [AvailableSaddle(id: 's-1', code: 'S-01')],
         summary: const BoardSummary(
           participantsTotal: 1,
           assignedTotal: 0,
@@ -343,9 +335,7 @@ void main() {
     controller.dispose();
   });
 
-  testWidgets('Reviente finalizaciones desde botón general', (
-    tester,
-  ) async {
+  testWidgets('Reviente finalizaciones desde botón general', (tester) async {
     final fakeRepo = _FakeAssignmentsRepository(
       board: AssignmentBoard(
         reservationId: 'res-1',
@@ -370,9 +360,7 @@ void main() {
         availableEquines: const [
           AvailableEquine(id: 'e-1', name: 'Relampago', maxRiderWeightKg: 80),
         ],
-        availableSaddles: const [
-          AvailableSaddle(id: 's-1', code: 'S-01'),
-        ],
+        availableSaddles: const [AvailableSaddle(id: 's-1', code: 'S-01')],
         summary: const BoardSummary(
           participantsTotal: 1,
           assignedTotal: 1,
@@ -493,7 +481,9 @@ class _FakeAssignmentsRepository implements AssignmentsRepository {
       assignedByUserId: null,
       finalizedByUserId: status == AssignmentStatus.final_ ? 'u-1' : null,
       assignedAt: DateTime(2026, 1, 1),
-      finalizedAt: status == AssignmentStatus.final_ ? DateTime(2026, 1, 1) : null,
+      finalizedAt: status == AssignmentStatus.final_
+          ? DateTime(2026, 1, 1)
+          : null,
       createdAt: DateTime(2026, 1, 1),
       updatedAt: DateTime(2026, 1, 1),
     );

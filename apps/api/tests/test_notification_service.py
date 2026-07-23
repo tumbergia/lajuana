@@ -9,7 +9,9 @@ from app.notifications.renderer import render_subject, render_template
 
 
 def test_render_template() -> None:
-    result = render_template("Hola {{name}}, tu código es {{code}}", {"name": "Juan", "code": "ABC"})
+    result = render_template(
+        "Hola {{name}}, tu código es {{code}}", {"name": "Juan", "code": "ABC"}
+    )
     assert result == "Hola Juan, tu código es ABC"
 
 
@@ -39,7 +41,9 @@ class _FakeProvider:
 
         self.sent.append(entry)
         if self.should_fail:
-            return SendResult(success=False, error_code="test_error", error_detail="Simulated failure")
+            return SendResult(
+                success=False, error_code="test_error", error_detail="Simulated failure"
+            )
         return SendResult(success=True, provider_message_id="fake-msg-id")
 
     async def validate_config(self) -> bool:
@@ -324,10 +328,12 @@ def test_process_pending_batch_calls_send(monkeypatch: pytest.MonkeyPatch) -> No
             return self
 
         async def to_list(self) -> list[object]:
-            return [_FakeDoc(
-                channel=NotificationChannel.EMAIL,
-                status=NotificationStatus.PENDING,
-            )]
+            return [
+                _FakeDoc(
+                    channel=NotificationChannel.EMAIL,
+                    status=NotificationStatus.PENDING,
+                )
+            ]
 
     monkeypatch.setattr(
         "app.services.notification_service.NotificationOutboxDocument.find",

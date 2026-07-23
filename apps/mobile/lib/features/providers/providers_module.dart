@@ -8,10 +8,7 @@ import 'infrastructure/repositories/providers_repository_impl.dart';
 import 'presentation/controllers/providers_list_controller.dart';
 
 class ProvidersModule {
-  ProvidersModule({
-    required this.repository,
-    required this.listController,
-  });
+  ProvidersModule({required this.repository, required this.listController});
 
   final ProvidersRepository repository;
   final ProvidersListController listController;

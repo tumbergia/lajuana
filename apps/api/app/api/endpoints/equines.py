@@ -52,7 +52,9 @@ async def list_equines(
     operational_status: EquineOperationalStatus | None = None,
     is_active: bool | None = None,
     is_available: bool | None = None,
-    include_deleted: bool = Query(default=False, description="Incluir equinos borrados logicamente"),
+    include_deleted: bool = Query(
+        default=False, description="Incluir equinos borrados logicamente"
+    ),
     limit: int = Query(default=200, ge=1, le=1000),
     skip: int = Query(default=0, ge=0),
     service: EquineService = Depends(get_equine_service),
@@ -91,7 +93,9 @@ async def list_equine_items(
     operational_status: EquineOperationalStatus | None = Query(default=None),
     is_active: bool | None = Query(default=None),
     is_available: bool | None = Query(default=None),
-    include_deleted: bool = Query(default=False, description="Incluir equinos borrados logicamente"),
+    include_deleted: bool = Query(
+        default=False, description="Incluir equinos borrados logicamente"
+    ),
     limit: int = Query(default=200, ge=1, le=1000),
     skip: int = Query(default=0, ge=0),
     service: EquineService = Depends(get_equine_service),
@@ -176,7 +180,9 @@ async def list_available_for_reservation(
     service: EquineService = Depends(get_equine_service),
 ) -> list[EquineListItemSchema]:
     items = await service.list_available_for_reservation(
-        reservation_id, limit=limit, skip=skip,
+        reservation_id,
+        limit=limit,
+        skip=skip,
     )
     response.headers["X-Total-Count"] = str(len(items))
     result: list[EquineListItemSchema] = []

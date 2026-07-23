@@ -14,7 +14,8 @@ import 'package:mobile/features/reservations/infrastructure/remote/reservation_d
 
 /// Maps a DTO participant to a domain participant detail.
 ReservationParticipantDetail _participantDtoToDetail(
-    ReservationParticipantDto dto) {
+  ReservationParticipantDto dto,
+) {
   // Rough age computation from birth_date string.
   int? ageYears;
   if (dto.birthDate != null && dto.birthDate!.length >= 10) {
@@ -59,7 +60,8 @@ ReservationParticipantDetail _participantDtoToDetail(
 
 /// Maps a DTO payment proof to a domain payment proof detail.
 ReservationPaymentProofDetail _paymentProofDtoToDetail(
-    ReservationPaymentProofDto dto) {
+  ReservationPaymentProofDto dto,
+) {
   return ReservationPaymentProofDetail(
     id: dto.id,
     reservationId: dto.reservationId,
@@ -143,39 +145,52 @@ AppBadgeTone paymentStatusToBadgeTone(String? paymentStatus) {
 }
 
 /// Derives a timeline from reservation state fields when no real timeline exists.
-List<ReservationTimelineEvent> deriveFallbackTimeline(ReservationDetail detail) {
+List<ReservationTimelineEvent> deriveFallbackTimeline(
+  ReservationDetail detail,
+) {
   final events = <ReservationTimelineEvent>[];
 
   if (detail.requestedDate != null) {
-    events.add(ReservationTimelineEvent(
-      date: detail.requestedDate,
-      title: 'Fecha solicitada',
-      type: 'completed',
-    ));
+    events.add(
+      ReservationTimelineEvent(
+        date: detail.requestedDate,
+        title: 'Fecha solicitada',
+        type: 'completed',
+      ),
+    );
   }
 
-  if (detail.paymentStatus == 'verified' || detail.paymentStatus == 'received') {
-    events.add(ReservationTimelineEvent(
-      title: 'Pago registrado',
-      description: 'Estado: ${detail.paymentStatus}',
-      type: 'completed',
-    ));
+  if (detail.paymentStatus == 'verified' ||
+      detail.paymentStatus == 'received') {
+    events.add(
+      ReservationTimelineEvent(
+        title: 'Pago registrado',
+        description: 'Estado: ${detail.paymentStatus}',
+        type: 'completed',
+      ),
+    );
   }
 
-  if (detail.status == ReservationStatus.confirmed && detail.confirmedAt != null) {
-    events.add(ReservationTimelineEvent(
-      date: detail.confirmedAt,
-      title: 'Reserva confirmada',
-      type: 'active',
-    ));
+  if (detail.status == ReservationStatus.confirmed &&
+      detail.confirmedAt != null) {
+    events.add(
+      ReservationTimelineEvent(
+        date: detail.confirmedAt,
+        title: 'Reserva confirmada',
+        type: 'active',
+      ),
+    );
   }
 
-  if (detail.status == ReservationStatus.completed && detail.completedAt != null) {
-    events.add(ReservationTimelineEvent(
-      date: detail.completedAt,
-      title: 'Reserva completada',
-      type: 'completed',
-    ));
+  if (detail.status == ReservationStatus.completed &&
+      detail.completedAt != null) {
+    events.add(
+      ReservationTimelineEvent(
+        date: detail.completedAt,
+        title: 'Reserva completada',
+        type: 'completed',
+      ),
+    );
   }
 
   return events;
@@ -356,8 +371,18 @@ String formatTimelineDate(DateTime dateTime) {
   final local = dateTime.toLocal();
   final day = local.day.toString().padLeft(2, '0');
   const months = [
-    'ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN',
-    'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC',
+    'ENE',
+    'FEB',
+    'MAR',
+    'ABR',
+    'MAY',
+    'JUN',
+    'JUL',
+    'AGO',
+    'SEP',
+    'OCT',
+    'NOV',
+    'DIC',
   ];
   final month = months[local.month - 1];
   final year = local.year;

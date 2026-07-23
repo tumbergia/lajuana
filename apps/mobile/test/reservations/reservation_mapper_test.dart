@@ -66,10 +66,7 @@ void main() {
             'eps_or_travel_insurance': null,
             'health_conditions': null,
             'sensory_disabilities': null,
-            'emergency_contact': {
-              'name': 'Contacto',
-              'phone': '3200000001',
-            },
+            'emergency_contact': {'name': 'Contacto', 'phone': '3200000001'},
             'accepted_data_processing': true,
             'accepted_media_usage': true,
             'accepted_risk_release': true,
@@ -111,10 +108,7 @@ void main() {
             'dietary_restrictions': 'Sin gluten',
             'health_conditions': 'Asma',
             'sensory_disabilities': null,
-            'emergency_contact': {
-              'name': 'Contacto',
-              'phone': '3200000002',
-            },
+            'emergency_contact': {'name': 'Contacto', 'phone': '3200000002'},
             'accepted_data_processing': true,
             'accepted_media_usage': false,
             'accepted_risk_release': true,
@@ -194,10 +188,7 @@ void main() {
             'dietary_restrictions': null,
             'health_conditions': null,
             'sensory_disabilities': null,
-            'emergency_contact': {
-              'name': 'Contacto',
-              'phone': '3200000003',
-            },
+            'emergency_contact': {'name': 'Contacto', 'phone': '3200000003'},
             'accepted_data_processing': true,
             'accepted_media_usage': null,
             'accepted_risk_release': true,
@@ -210,10 +201,11 @@ void main() {
 
       // Fallback timeline should still derive from state fields
       expect(detail.timeline, isNotEmpty);
-      expect(detail.timeline.any((e) => e.title == 'Fecha solicitada'),
-          isTrue);
+      expect(detail.timeline.any((e) => e.title == 'Fecha solicitada'), isTrue);
       expect(
-          detail.timeline.any((e) => e.title == 'Reserva confirmada'), isTrue);
+        detail.timeline.any((e) => e.title == 'Reserva confirmada'),
+        isTrue,
+      );
     });
 
     test('timelineEntryNodeType maps kinds', () {

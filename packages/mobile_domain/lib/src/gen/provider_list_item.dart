@@ -44,8 +44,8 @@ class ProviderListItem {
       slug: json['slug'] as String,
       type: (json['type'] as String).toProviderType(),
       status: (json['status'] as String).toProviderStatus(),
-      serviceCategories: (json['service_categories'] as List<dynamic>?)
-        ?.cast<String>() ?? [],
+      serviceCategories: (json['service_categories'] as List<dynamic>)
+        .cast<String>(),
       contactName: json['contact_name'] as String,
       email: json['email'] as String,
       whatsappPhone: json['whatsapp_phone'] as String,

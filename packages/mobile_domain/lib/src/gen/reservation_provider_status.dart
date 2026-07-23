@@ -2,18 +2,12 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `ReservationProviderStatus`.
 
 enum ReservationProviderStatus {
-  @JsonValue('pending')
   PENDING("pending"),
-  @JsonValue('contacted')
   CONTACTED("contacted"),
-  @JsonValue('confirmed')
   CONFIRMED("confirmed"),
-  @JsonValue('cancelled')
   CANCELLED("cancelled"),
 ;
 

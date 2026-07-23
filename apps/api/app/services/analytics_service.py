@@ -6,12 +6,9 @@ so existing mobile clients keep working during migration.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
 from app.common.enums import UserRole
 from app.documents import UserDocument
 from app.schemas.analytics_v2 import (
-    AnalyticsModule,
     AnalyticsPreferencesSchema,
     AnalyticsPreferencesUpdateSchema,
     AnalyticsResponse,
@@ -21,7 +18,6 @@ from app.schemas.analytics_v2 import (
     DateRangePreset,
     LeadCategory,
     LeadItem,
-    LeadsPreferencesSchema,
     ModuleStatus,
 )
 from app.services.analytics_catalog_service import AnalyticsCatalogService
@@ -78,9 +74,7 @@ def _lead(
     home_priority: int | None = None,
 ) -> LeadItem:
     eligible = home_eligible if home_eligible is not None else id not in HOME_INELIGIBLE_IDS
-    priority = (
-        home_priority if home_priority is not None else HOME_PRIORITY_BY_ID.get(id, 1)
-    )
+    priority = home_priority if home_priority is not None else HOME_PRIORITY_BY_ID.get(id, 1)
     return LeadItem(
         id=id,
         category=category,
@@ -128,9 +122,7 @@ class AnalyticsService:
     def __init__(self) -> None:
         self.catalog = AnalyticsCatalogService()
         self.countries = AnalyticsCountryNormalizer()
-        self.query = AnalyticsQueryService(
-            catalog=self.catalog, country_normalizer=self.countries
-        )
+        self.query = AnalyticsQueryService(catalog=self.catalog, country_normalizer=self.countries)
         self.preferences = AnalyticsPreferencesService(catalog=self.catalog)
         self.export = AnalyticsExportService()
 
@@ -200,9 +192,7 @@ class AnalyticsService:
         by_cat: dict[str, list[LeadItem]] = {}
         order = 0
         for mod in dashboard.modules:
-            cat_key = (
-                mod.category.value if hasattr(mod.category, "value") else str(mod.category)
-            )
+            cat_key = mod.category.value if hasattr(mod.category, "value") else str(mod.category)
             legacy_id, legacy_name, legacy_icon = _CATEGORY_META.get(
                 cat_key, (cat_key, cat_key, "insights")
             )
@@ -234,9 +224,7 @@ class AnalyticsService:
         categories: list[LeadCategory] = []
         seen: set[str] = set()
         for mod in dashboard.modules:
-            cat_key = (
-                mod.category.value if hasattr(mod.category, "value") else str(mod.category)
-            )
+            cat_key = mod.category.value if hasattr(mod.category, "value") else str(mod.category)
             legacy_id, legacy_name, legacy_icon = _CATEGORY_META.get(
                 cat_key, (cat_key, cat_key, "insights")
             )

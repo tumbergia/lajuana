@@ -11,7 +11,6 @@ import time
 
 from app.core.config import settings
 from app.migrations import registry
-from app.migrations.base import Migration
 from app.migrations.versions import MIGRATIONS
 
 logger = logging.getLogger(__name__)

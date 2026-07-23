@@ -18,13 +18,13 @@ class SyncPull {
 
   factory SyncPull.fromJson(Map<String, dynamic> json) {
     return SyncPull(
-      streams: (json['streams'] as List<dynamic>?)
-        ?.map((e) => SyncStreamCursor.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      streams: (json['streams'] as List<dynamic>)
+        .map((e) => SyncStreamCursor.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'streams': streams,
+    'streams': streams.map((e) => e.toJson()).toList(),
   };
 
 }

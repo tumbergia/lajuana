@@ -2,16 +2,11 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `ExperienceStatus`.
 
 enum ExperienceStatus {
-  @JsonValue('draft')
   DRAFT("draft"),
-  @JsonValue('published')
   PUBLISHED("published"),
-  @JsonValue('archived')
   ARCHIVED("archived"),
 ;
 

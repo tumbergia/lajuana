@@ -66,37 +66,73 @@ class NotificationContent {
       contactPhone: contactPhone,
       body: trimmedBody,
     );
-    final looksCancelled = trimmedBody.toLowerCase().contains('cancel') ||
+    final looksCancelled =
+        trimmedBody.toLowerCase().contains('cancel') ||
         trimmedTitle.toLowerCase().contains('cancel');
 
     return switch (eventType) {
-      'reservation_created' =>
-        _reservationCreated(trimmedBody, trimmedTitle, phone),
-      'reservation_confirmed' =>
-        _reservationConfirmed(trimmedBody, trimmedTitle, phone),
-      'reservation_cancelled' =>
-        _reservationCancelled(trimmedBody, trimmedTitle, phone),
-      'reservation_status_changed' when looksCancelled =>
-        _reservationCancelled(trimmedBody, trimmedTitle, phone),
-      'reservation_status_changed' =>
-        _reservationStatusChanged(trimmedBody, trimmedTitle, phone),
-      'reservation_updated' =>
-        _reservationUpdated(trimmedBody, trimmedTitle, phone),
-      'payment_proof_registered' =>
-        _paymentProof(trimmedBody, trimmedTitle, phone),
-      'participant_form_completed' =>
-        _participantForm(trimmedBody, trimmedTitle, phone),
+      'reservation_created' => _reservationCreated(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
+      'reservation_confirmed' => _reservationConfirmed(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
+      'reservation_cancelled' => _reservationCancelled(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
+      'reservation_status_changed' when looksCancelled => _reservationCancelled(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
+      'reservation_status_changed' => _reservationStatusChanged(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
+      'reservation_updated' => _reservationUpdated(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
+      'payment_proof_registered' => _paymentProof(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
+      'participant_form_completed' => _participantForm(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
       'human_review_requested' || 'whatsapp_message_unattended' =>
         _whatsAppMessage(trimmedBody, trimmedTitle, phone),
-      'whatsapp_delivery_failed' =>
-        _whatsAppDeliveryFailed(trimmedBody, trimmedTitle, phone),
-      'configuration_changed' => _configurationChanged(trimmedBody, trimmedTitle),
-      'assignment_changed' =>
-        _assignmentChanged(trimmedBody, trimmedTitle, phone),
-      'tomorrow_services_summary' =>
-        _tomorrowSummary(trimmedBody, trimmedTitle),
-      'role_request_created' || 'role_request_decided' =>
-        _roleRequest(trimmedBody, trimmedTitle),
+      'whatsapp_delivery_failed' => _whatsAppDeliveryFailed(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
+      'configuration_changed' => _configurationChanged(
+        trimmedBody,
+        trimmedTitle,
+      ),
+      'assignment_changed' => _assignmentChanged(
+        trimmedBody,
+        trimmedTitle,
+        phone,
+      ),
+      'tomorrow_services_summary' => _tomorrowSummary(
+        trimmedBody,
+        trimmedTitle,
+      ),
+      'role_request_created' ||
+      'role_request_decided' => _roleRequest(trimmedBody, trimmedTitle),
       _ => _fallback(trimmedBody, trimmedTitle),
     };
   }
@@ -104,10 +140,7 @@ class NotificationContent {
 
 /// Copy shared by in-app heads-up toast and local/system push notifications.
 class NotificationArrivalCopy {
-  const NotificationArrivalCopy({
-    required this.label,
-    required this.headline,
-  });
+  const NotificationArrivalCopy({required this.label, required this.headline});
 
   /// Top line ("La Juana" or "N notificaciones"), same as heads-up.
   final String label;
@@ -185,9 +218,7 @@ TomorrowReservationLine? parseTomorrowReservationLine(String line) {
   final reservationId = match.group(2)?.trim();
   final holder = match.group(3)!.trim();
   final count = match.group(4)?.trim();
-  final subtitle = count == null
-      ? holder
-      : '$holder · $count participantes';
+  final subtitle = count == null ? holder : '$holder · $count participantes';
   return TomorrowReservationLine(
     code: code,
     subtitle: subtitle,
@@ -195,15 +226,9 @@ TomorrowReservationLine? parseTomorrowReservationLine(String line) {
   );
 }
 
-List<NotificationFact> _withPhone(
-  List<NotificationFact> facts,
-  String? phone,
-) {
+List<NotificationFact> _withPhone(List<NotificationFact> facts, String? phone) {
   if (phone == null || phone.trim().isEmpty) return facts;
-  return [
-    ...facts,
-    NotificationFact(label: 'Teléfono', value: phone.trim()),
-  ];
+  return [...facts, NotificationFact(label: 'Teléfono', value: phone.trim())];
 }
 
 String _humanizeSnake(String raw) {
@@ -251,17 +276,11 @@ NotificationContent _reservationCreated(
     final count = match.group(3)!.trim();
     return NotificationContent(
       headline: '$holder · $count participantes',
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Titular', value: holder),
-          NotificationFact(label: 'Código', value: code),
-          NotificationFact(
-            label: 'Participantes',
-            value: '$count participantes',
-          ),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Titular', value: holder),
+        NotificationFact(label: 'Código', value: code),
+        NotificationFact(label: 'Participantes', value: '$count participantes'),
+      ], phone),
     );
   }
   return _holderCodeFallback(body, title, defaultHeadline: title, phone: phone);
@@ -282,16 +301,10 @@ NotificationContent _reservationConfirmed(
     final count = template.group(2)!.trim();
     return NotificationContent(
       headline: 'Confirmada · $count participantes',
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Código', value: code),
-          NotificationFact(
-            label: 'Participantes',
-            value: '$count participantes',
-          ),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Código', value: code),
+        NotificationFact(label: 'Participantes', value: '$count participantes'),
+      ], phone),
     );
   }
   // Sample-style: "{holder} — {code} confirmada…"
@@ -299,13 +312,10 @@ NotificationContent _reservationConfirmed(
   if (holderCode != null) {
     return NotificationContent(
       headline: '${holderCode.holder} · confirmada',
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Titular', value: holderCode.holder),
-          NotificationFact(label: 'Código', value: holderCode.code),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Titular', value: holderCode.holder),
+        NotificationFact(label: 'Código', value: holderCode.code),
+      ], phone),
     );
   }
   return NotificationContent(
@@ -330,27 +340,21 @@ NotificationContent _reservationCancelled(
     final previous = notificationStatusLabel(match.group(3)!.trim());
     return NotificationContent(
       headline: '$holder · cancelada',
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Titular', value: holder),
-          NotificationFact(label: 'Código', value: code),
-          NotificationFact(label: 'Estado anterior', value: previous),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Titular', value: holder),
+        NotificationFact(label: 'Código', value: code),
+        NotificationFact(label: 'Estado anterior', value: previous),
+      ], phone),
     );
   }
   final holderCode = _splitHolderCode(body);
   if (holderCode != null) {
     return NotificationContent(
       headline: '${holderCode.holder} · cancelada',
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Titular', value: holderCode.holder),
-          NotificationFact(label: 'Código', value: holderCode.code),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Titular', value: holderCode.holder),
+        NotificationFact(label: 'Código', value: holderCode.code),
+      ], phone),
     );
   }
   return NotificationContent(
@@ -375,14 +379,11 @@ NotificationContent _reservationStatusChanged(
     final next = notificationStatusLabel(match.group(4)!.trim());
     return NotificationContent(
       headline: '$prev → $next',
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Titular', value: holder),
-          NotificationFact(label: 'Código', value: code),
-          NotificationFact(label: 'Cambio', value: '$prev → $next'),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Titular', value: holder),
+        NotificationFact(label: 'Código', value: code),
+        NotificationFact(label: 'Cambio', value: '$prev → $next'),
+      ], phone),
     );
   }
   return _holderCodeFallback(body, title, defaultHeadline: title, phone: phone);
@@ -402,27 +403,20 @@ NotificationContent _reservationUpdated(
     final code = match.group(2)!.trim();
     final fields = _humanizeFieldList(match.group(3)!.trim());
     return NotificationContent(
-      headline:
-          fields.isNotEmpty ? 'Se actualizó: $fields' : 'Reserva actualizada',
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Titular', value: holder),
-          NotificationFact(label: 'Código', value: code),
-          if (fields.isNotEmpty)
-            NotificationFact(label: 'Campos', value: fields),
-        ],
-        phone,
-      ),
+      headline: fields.isNotEmpty
+          ? 'Se actualizó: $fields'
+          : 'Reserva actualizada',
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Titular', value: holder),
+        NotificationFact(label: 'Código', value: code),
+        if (fields.isNotEmpty) NotificationFact(label: 'Campos', value: fields),
+      ], phone),
     );
   }
   return _holderCodeFallback(body, title, defaultHeadline: title, phone: phone);
 }
 
-NotificationContent _paymentProof(
-  String body,
-  String title,
-  String? phone,
-) {
+NotificationContent _paymentProof(String body, String title, String? phone) {
   // "{holder} — {code}: {filename}" or "{holder} — {code}: {filename}|{proofId}"
   final match = RegExp(
     r'^(.+?)\s*[—–-]\s*([^:]+):\s*(.+)\s*$',
@@ -444,13 +438,10 @@ NotificationContent _paymentProof(
     return NotificationContent(
       headline: 'Comprobante de $holder',
       paymentProofId: proofId,
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Titular', value: holder),
-          NotificationFact(label: 'Código', value: code),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Titular', value: holder),
+        NotificationFact(label: 'Código', value: code),
+      ], phone),
     );
   }
   return NotificationContent(
@@ -459,11 +450,7 @@ NotificationContent _paymentProof(
   );
 }
 
-NotificationContent _participantForm(
-  String body,
-  String title,
-  String? phone,
-) {
+NotificationContent _participantForm(String body, String title, String? phone) {
   // "{name} — reserva {code}"
   final match = RegExp(
     r'^(.+?)\s*[—–-]\s*reserva\s+(\S+)\s*$',
@@ -490,14 +477,12 @@ NotificationContent _participantForm(
   );
 }
 
-NotificationContent _whatsAppMessage(
-  String body,
-  String title,
-  String? phone,
-) {
+NotificationContent _whatsAppMessage(String body, String title, String? phone) {
   String message = body;
-  final colon = RegExp(r'^(\+?\d[\d\s\-]{6,})\s*:\s*(.*)$', dotAll: true)
-      .firstMatch(body);
+  final colon = RegExp(
+    r'^(\+?\d[\d\s\-]{6,})\s*:\s*(.*)$',
+    dotAll: true,
+  ).firstMatch(body);
   if (colon != null) {
     message = (colon.group(2) ?? '').trim();
   }
@@ -570,9 +555,7 @@ NotificationContent _configurationChanged(String body, String title) {
       ],
     );
   }
-  return NotificationContent(
-    headline: body.isNotEmpty ? body : title,
-  );
+  return NotificationContent(headline: body.isNotEmpty ? body : title);
 }
 
 NotificationContent _roleRequest(String body, String title) {
@@ -600,14 +583,11 @@ NotificationContent _assignmentChanged(
     final code = withHolder.group(3)!.trim();
     return NotificationContent(
       headline: 'Asignación $action · $holder',
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Acción', value: action),
-          NotificationFact(label: 'Titular', value: holder),
-          NotificationFact(label: 'Código', value: code),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Acción', value: action),
+        NotificationFact(label: 'Titular', value: holder),
+        NotificationFact(label: 'Código', value: code),
+      ], phone),
     );
   }
   // Legacy: "Asignación {action} — reserva {code}"
@@ -620,13 +600,10 @@ NotificationContent _assignmentChanged(
     final code = match.group(2)!.trim();
     return NotificationContent(
       headline: 'Asignación $action · $code',
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Acción', value: action),
-          NotificationFact(label: 'Código', value: code),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Acción', value: action),
+        NotificationFact(label: 'Código', value: code),
+      ], phone),
     );
   }
   return NotificationContent(
@@ -662,9 +639,7 @@ NotificationContent _tomorrowSummary(String body, String title) {
 }
 
 NotificationContent _fallback(String body, String title) {
-  return NotificationContent(
-    headline: body.isNotEmpty ? body : title,
-  );
+  return NotificationContent(headline: body.isNotEmpty ? body : title);
 }
 
 NotificationContent _holderCodeFallback(
@@ -679,24 +654,21 @@ NotificationContent _holderCodeFallback(
     final labeledRest = rest == null || rest.isEmpty
         ? null
         : (rest.contains('→')
-            ? rest
-                .split('→')
-                .map((part) => notificationStatusLabel(part.trim()))
-                .join(' → ')
-            : _humanizeFieldList(rest));
+              ? rest
+                    .split('→')
+                    .map((part) => notificationStatusLabel(part.trim()))
+                    .join(' → ')
+              : _humanizeFieldList(rest));
     return NotificationContent(
       headline: labeledRest != null && labeledRest.isNotEmpty
           ? '${holderCode.holder} · $labeledRest'
           : holderCode.holder,
-      keyFacts: _withPhone(
-        [
-          NotificationFact(label: 'Titular', value: holderCode.holder),
-          NotificationFact(label: 'Código', value: holderCode.code),
-          if (labeledRest != null && labeledRest.isNotEmpty)
-            NotificationFact(label: 'Detalle', value: labeledRest),
-        ],
-        phone,
-      ),
+      keyFacts: _withPhone([
+        NotificationFact(label: 'Titular', value: holderCode.holder),
+        NotificationFact(label: 'Código', value: holderCode.code),
+        if (labeledRest != null && labeledRest.isNotEmpty)
+          NotificationFact(label: 'Detalle', value: labeledRest),
+      ], phone),
     );
   }
   return NotificationContent(
@@ -706,11 +678,7 @@ NotificationContent _holderCodeFallback(
 }
 
 class _HolderCodeParts {
-  const _HolderCodeParts({
-    required this.holder,
-    required this.code,
-    this.rest,
-  });
+  const _HolderCodeParts({required this.holder, required this.code, this.rest});
 
   final String holder;
   final String code;
@@ -729,9 +697,7 @@ _HolderCodeParts? _splitHolderCode(String body) {
       rest: withColon.group(3)!.trim(),
     );
   }
-  final plain = RegExp(
-    r'^(.+?)\s*[—–-]\s*(\S+)(?:\s+(.*))?$',
-  ).firstMatch(body);
+  final plain = RegExp(r'^(.+?)\s*[—–-]\s*(\S+)(?:\s+(.*))?$').firstMatch(body);
   if (plain != null) {
     final rest = plain.group(3)?.trim();
     return _HolderCodeParts(

@@ -2,24 +2,15 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `NotificationStatus`.
 
 enum NotificationStatus {
-  @JsonValue('pending')
   PENDING("pending"),
-  @JsonValue('scheduled')
   SCHEDULED("scheduled"),
-  @JsonValue('sending')
   SENDING("sending"),
-  @JsonValue('sent')
   SENT("sent"),
-  @JsonValue('failed')
   FAILED("failed"),
-  @JsonValue('cancelled')
   CANCELLED("cancelled"),
-  @JsonValue('skipped')
   SKIPPED("skipped"),
 ;
 

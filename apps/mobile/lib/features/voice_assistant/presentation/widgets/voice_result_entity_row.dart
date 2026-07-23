@@ -32,18 +32,11 @@ class VoiceResultEntityRow extends StatelessWidget {
         leading: leading,
         badge: statusLabel == null
             ? null
-            : AppBadge(
-                label: statusLabel!,
-                tone: statusTone,
-                uppercase: false,
-              ),
+            : AppBadge(label: statusLabel!, tone: statusTone, uppercase: false),
         onTap: onTap,
         trailing: onTap == null
             ? null
-            : Icon(
-                Icons.chevron_right_rounded,
-                color: scheme.onSurfaceVariant,
-              ),
+            : Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
       ),
     );
   }

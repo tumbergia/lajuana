@@ -27,13 +27,12 @@ async def generate_participant_form_link(**kwargs: Any) -> dict[str, Any]:
 
     try:
         filtered = {
-            k: v
-            for k, v in kwargs.items()
-            if k in GenerateParticipantFormLinkInput.model_fields
+            k: v for k, v in kwargs.items() if k in GenerateParticipantFormLinkInput.model_fields
         }
         payload = GenerateParticipantFormLinkInput.model_validate(filtered)
 
         from app.core.di import Container
+
         service = Container.get_instance().participant_form_link_service
         # Get the reservation to know expected participants count
         reservation = await ReservationDocument.get(payload.reservation_id)
@@ -118,9 +117,7 @@ async def get_participant_form_status(**kwargs: Any) -> dict[str, Any]:
 
     try:
         filtered = {
-            k: v
-            for k, v in kwargs.items()
-            if k in GetParticipantFormStatusInput.model_fields
+            k: v for k, v in kwargs.items() if k in GetParticipantFormStatusInput.model_fields
         }
         payload = GetParticipantFormStatusInput.model_validate(filtered)
 

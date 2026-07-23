@@ -47,7 +47,11 @@ class ExperienceService:
         for experience in experiences:
             name = _normalize_lookup_text(experience.name)
             slug = _normalize_lookup_text(experience.slug)
-            aliases = [_normalize_lookup_text(alias) for alias in getattr(experience, "aliases", []) if alias]
+            aliases = [
+                _normalize_lookup_text(alias)
+                for alias in getattr(experience, "aliases", [])
+                if alias
+            ]
             name_tokens = [token for token in name.split(" ") if token]
             alias_tokens = [token for alias in aliases for token in alias.split(" ") if token]
             score = 0
@@ -64,7 +68,11 @@ class ExperienceService:
                 score = 80
             elif any(alias.startswith(normalized_query) for alias in aliases):
                 score = 80
-            elif normalized_query in name or normalized_query in slug or any(normalized_query in alias for alias in aliases):
+            elif (
+                normalized_query in name
+                or normalized_query in slug
+                or any(normalized_query in alias for alias in aliases)
+            ):
                 score = 64
 
             if score == 0:
@@ -319,7 +327,12 @@ class ExperienceService:
     ) -> list[ExperienceDocument]:
         if is_active is None:
             return await ExperienceDocument.find_all().skip(skip).limit(limit).to_list()
-        return await ExperienceDocument.find({"is_active": is_active}).skip(skip).limit(limit).to_list()
+        return (
+            await ExperienceDocument.find({"is_active": is_active})
+            .skip(skip)
+            .limit(limit)
+            .to_list()
+        )
 
     async def count(self, is_active: bool | None = None) -> int:
         if is_active is None:
@@ -382,23 +395,17 @@ class ExperienceService:
                 status_code=409,
                 code=ErrorCode.EXPERIENCE_STILL_ACTIVE,
                 message=(
-                    "La experiencia debe estar desactivada antes de "
-                    "eliminarla definitivamente."
+                    "La experiencia debe estar desactivada antes de eliminarla definitivamente."
                 ),
                 details={"experience_id": experience_id},
             )
 
-        reservation_count = await ReservationDocument.find(
-            {"experience_id": doc.id}
-        ).count()
+        reservation_count = await ReservationDocument.find({"experience_id": doc.id}).count()
         if reservation_count > 0:
             raise ApiError(
                 status_code=409,
                 code=ErrorCode.EXPERIENCE_HAS_RESERVATIONS,
-                message=(
-                    "No se puede eliminar la experiencia porque tiene "
-                    "reservas asociadas."
-                ),
+                message=("No se puede eliminar la experiencia porque tiene reservas asociadas."),
                 details={
                     "experience_id": experience_id,
                     "reservation_count": reservation_count,

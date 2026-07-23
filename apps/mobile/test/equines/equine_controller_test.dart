@@ -45,7 +45,10 @@ class FakeEquineRepository implements EquineRepository {
   }
 
   @override
-  Future<Equine> updateEquine(String equineId, Map<String, dynamic> data) async {
+  Future<Equine> updateEquine(
+    String equineId,
+    Map<String, dynamic> data,
+  ) async {
     throw UnimplementedError('Not needed for controller tests');
   }
 
@@ -120,9 +123,7 @@ void main() {
 
   group('loadEquines', () {
     test('transitions to loading then success', () async {
-      repo.equines = [
-        _equine(id: '1', name: 'Pegaso'),
-      ];
+      repo.equines = [_equine(id: '1', name: 'Pegaso')];
 
       final states = <EquinesLoadState>[];
       controller.addListener(() {
@@ -163,10 +164,30 @@ void main() {
   group('metrics', () {
     test('computes metrics correctly', () async {
       repo.equines = [
-        _equine(id: '1', name: 'A', status: EquineOperationalStatus.available, isAvailable: true),
-        _equine(id: '2', name: 'B', status: EquineOperationalStatus.available, isAvailable: true),
-        _equine(id: '3', name: 'C', status: EquineOperationalStatus.resting, isAvailable: false),
-        _equine(id: '4', name: 'D', status: EquineOperationalStatus.injured, isAvailable: false),
+        _equine(
+          id: '1',
+          name: 'A',
+          status: EquineOperationalStatus.available,
+          isAvailable: true,
+        ),
+        _equine(
+          id: '2',
+          name: 'B',
+          status: EquineOperationalStatus.available,
+          isAvailable: true,
+        ),
+        _equine(
+          id: '3',
+          name: 'C',
+          status: EquineOperationalStatus.resting,
+          isAvailable: false,
+        ),
+        _equine(
+          id: '4',
+          name: 'D',
+          status: EquineOperationalStatus.injured,
+          isAvailable: false,
+        ),
       ];
       await controller.loadEquines();
       final m = controller.metrics;

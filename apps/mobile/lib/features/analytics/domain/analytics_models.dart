@@ -55,9 +55,7 @@ class AnalyticsPeriod {
     }
     if (from == null) return _formatDay(to!);
     if (to == null) return _formatDay(from);
-    if (from.year == to.year &&
-        from.month == to.month &&
-        from.day == to.day) {
+    if (from.year == to.year && from.month == to.month && from.day == to.day) {
       return _formatDay(from);
     }
     return '${_formatDay(from)} – ${_formatDay(to)}';
@@ -340,6 +338,7 @@ class AnalyticsModule {
   final List<BreakdownItem> breakdown;
   final String status;
   final String? insightText;
+
   /// Conversational paragraphs from the API (3–4). Empty → local fallback.
   final List<String> analysis;
   final ModuleAction? action;
@@ -413,10 +412,10 @@ class AnalyticsPreferences {
   }
 
   Map<String, dynamic> toJson() => {
-        'selected_module_ids': selectedModuleIds,
-        'module_order': moduleOrder,
-        'default_range': defaultRange,
-      };
+    'selected_module_ids': selectedModuleIds,
+    'module_order': moduleOrder,
+    'default_range': defaultRange,
+  };
 
   final List<String> selectedModuleIds;
   final List<String> moduleOrder;

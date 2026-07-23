@@ -303,19 +303,12 @@ class ConfigService:
                 message="La configuración cambió en otro dispositivo.",
             )
         existing_ai = config.ai_configuration
-        existing = {
-            r.position: r
-            for r in (existing_ai.routes if existing_ai else [])
-        }
+        existing = {r.position: r for r in (existing_ai.routes if existing_ai else [])}
         provider_mode = (
-            payload.provider_mode
-            or (existing_ai.provider_mode if existing_ai else None)
-            or "env"
+            payload.provider_mode or (existing_ai.provider_mode if existing_ai else None) or "env"
         )
         if payload.routes is None:
-            routes = [
-                existing.get(i) or AiRouteConfig(position=i) for i in range(1, 4)
-            ]
+            routes = [existing.get(i) or AiRouteConfig(position=i) for i in range(1, 4)]
         else:
             routes = []
             for incoming in sorted(payload.routes, key=lambda item: item.position):
@@ -348,11 +341,7 @@ class ConfigService:
                         ),
                     )
             else:
-                complete = [
-                    r
-                    for r in routes
-                    if r.service and r.model and r.encrypted_api_key
-                ]
+                complete = [r for r in routes if r.service and r.model and r.encrypted_api_key]
                 if not complete:
                     raise ApiError(
                         status_code=422,

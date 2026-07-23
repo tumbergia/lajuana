@@ -5,7 +5,6 @@ import 'package:mobile/features/analytics/domain/analytics_models.dart';
 import 'package:mobile/features/analytics/presentation/controllers/dashboard_controller.dart';
 import 'package:mobile/features/analytics/presentation/widgets/insights/analytics_state_views.dart';
 
-
 IconData _leadIconFor(String name) {
   switch (name) {
     case 'receipt_long':
@@ -338,12 +337,12 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
                       Expanded(
                         child: Text(
                           'CAMBIOS SIN GUARDAR',
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: scheme.onPrimaryContainer,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.6,
-                                  ),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(
+                                color: scheme.onPrimaryContainer,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.6,
+                              ),
                         ),
                       ),
                       Material(
@@ -361,9 +360,7 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
                               child: Center(
                                 child: Text(
                                   'DESCARTAR',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelLarge
+                                  style: Theme.of(context).textTheme.labelLarge
                                       ?.copyWith(
                                         color: scheme.onInverseSurface,
                                         fontWeight: FontWeight.w800,
@@ -435,8 +432,7 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
     if (catalog.isEmpty) {
       return AnalyticsEmptyView(
         title: 'Sin indicadores disponibles',
-        message:
-            'No hay módulos configurables para tu rol en este momento.',
+        message: 'No hay módulos configurables para tu rol en este momento.',
         icon: Icons.tune_rounded,
       );
     }
@@ -478,13 +474,11 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
         ),
         SizedBox(height: tokens.spaceLg),
         Text(
-          _draft.isEmpty
-              ? 'FIJADOS: ninguno'
-              : 'FIJADOS: ${_draft.length}',
+          _draft.isEmpty ? 'FIJADOS: ninguno' : 'FIJADOS: ${_draft.length}',
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.6,
-              ),
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+          ),
         ),
         if (_localError != null) ...[
           SizedBox(height: tokens.spaceSm),
@@ -500,9 +494,9 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
           Text(
             'ORDEN EN INICIO',
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                ),
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+            ),
           ),
           SizedBox(height: tokens.spaceSm),
           ReorderableListView.builder(
@@ -562,8 +556,11 @@ class _ConfigureAnalyticsScreenState extends State<ConfigureAnalyticsScreen> {
                     ),
                   ),
                   trailing: IconButton(
-                    icon: Icon(Icons.push_pin_rounded,
-                        color: chip.background, size: 20),
+                    icon: Icon(
+                      Icons.push_pin_rounded,
+                      color: chip.background,
+                      size: 20,
+                    ),
                     tooltip: 'Quitar fijado',
                     onPressed: () => _togglePin(id),
                   ),
@@ -681,11 +678,10 @@ class _ConfigureCategorySectionState extends State<_ConfigureCategorySection> {
                               SizedBox(width: tokens.spaceMd),
                               Expanded(
                                 child: Text(
-                                  analyticsCategoryLabel(widget.categoryId)
-                                      .toUpperCase(),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall
+                                  analyticsCategoryLabel(
+                                    widget.categoryId,
+                                  ).toUpperCase(),
+                                  style: Theme.of(context).textTheme.titleSmall
                                       ?.copyWith(
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 0.6,
@@ -728,14 +724,14 @@ class _ConfigureCategorySectionState extends State<_ConfigureCategorySection> {
                           children: [
                             for (final mod in widget.modules)
                               Padding(
-                                padding:
-                                    EdgeInsets.only(bottom: tokens.spaceSm),
+                                padding: EdgeInsets.only(
+                                  bottom: tokens.spaceSm,
+                                ),
                                 child: _ModuleConfigRow(
                                   module: mod,
                                   accent: accent,
                                   pinned: widget.pinnedIds.contains(mod.id),
-                                  onTogglePin: () =>
-                                      widget.onTogglePin(mod.id),
+                                  onTogglePin: () => widget.onTogglePin(mod.id),
                                 ),
                               ),
                           ],
@@ -787,15 +783,8 @@ class _ModuleConfigRow extends StatelessWidget {
       leading: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(
-          color: accent,
-          borderRadius: tokens.radiusMd,
-        ),
-        child: Icon(
-          analyticsModuleIcon(module.id),
-          size: 22,
-          color: iconFg,
-        ),
+        decoration: BoxDecoration(color: accent, borderRadius: tokens.radiusMd),
+        child: Icon(analyticsModuleIcon(module.id), size: 22, color: iconFg),
       ),
       trailing: IconButton(
         icon: Icon(

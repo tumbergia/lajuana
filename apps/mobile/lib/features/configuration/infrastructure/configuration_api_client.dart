@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:mobile/features/configuration/domain/ai_model_catalog.dart';
 import 'package:mobile/features/configuration/domain/la_juana_configuration.dart';
 
 class ConfigurationApiFailure implements Exception {
@@ -55,6 +56,8 @@ class ConfigurationApiClient {
       AiConfiguration.fromJson(
         await _request('PATCH', '/config/ai', body: body),
       );
+  Future<AiModelCatalog> getModelCatalog() async =>
+      AiModelCatalog.fromJson(await _request('GET', '/config/ai/models'));
   Future<PaymentConfiguration> getPayments() async =>
       PaymentConfiguration.fromJson(
         await _request('GET', '/config/payment-methods'),

@@ -1,5 +1,5 @@
 import os
-from datetime import UTC, datetime, date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
@@ -8,7 +8,13 @@ from fastapi.testclient import TestClient
 os.environ["APP_SKIP_DB_INIT"] = "true"
 
 from app.api.deps import get_current_user
-from app.common.enums import Channel, ParticipantFormStatus, PaymentStatus, ReservationStatus, UserRole
+from app.common.enums import (
+    Channel,
+    ParticipantFormStatus,
+    PaymentStatus,
+    ReservationStatus,
+    UserRole,
+)
 from app.common.labels import ErrorCode
 from app.core.di import Container
 from app.main import app
@@ -158,7 +164,9 @@ def test_verify_payment_proof_endpoint_returns_verified_status(monkeypatch) -> N
         captured["actor_role"] = actor_role
         return _proof_doc(PaymentStatus.VERIFIED)
 
-    monkeypatch.setattr(Container.get_instance().payment_proof_service, "verify_payment", fake_verify)
+    monkeypatch.setattr(
+        Container.get_instance().payment_proof_service, "verify_payment", fake_verify
+    )
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.post(
         "/api/v1/payment-proofs/660000000000000000000501/verify",
@@ -193,9 +201,13 @@ def test_reject_payment_proof_endpoint_returns_reservation_response(monkeypatch)
     async def fake_to_response(_: object) -> dict:
         return _reservation_response_data()
 
-    monkeypatch.setattr(Container.get_instance().payment_proof_service, "reject_payment", fake_reject)
+    monkeypatch.setattr(
+        Container.get_instance().payment_proof_service, "reject_payment", fake_reject
+    )
     monkeypatch.setattr("app.api.endpoints.payment_proofs.ReservationDocument.get", fake_get)
-    monkeypatch.setattr("app.api.endpoints.payment_proofs.reservation_to_response", fake_to_response)
+    monkeypatch.setattr(
+        "app.api.endpoints.payment_proofs.reservation_to_response", fake_to_response
+    )
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.post(
         "/api/v1/payment-proofs/660000000000000000000501/reject",
@@ -232,9 +244,13 @@ def test_approve_payment_proof_endpoint_returns_reservation_response(monkeypatch
     async def fake_to_response(_: object) -> dict:
         return _reservation_response_data()
 
-    monkeypatch.setattr(Container.get_instance().payment_proof_service, "approve_payment", fake_approve)
+    monkeypatch.setattr(
+        Container.get_instance().payment_proof_service, "approve_payment", fake_approve
+    )
     monkeypatch.setattr("app.api.endpoints.payment_proofs.ReservationDocument.get", fake_get)
-    monkeypatch.setattr("app.api.endpoints.payment_proofs.reservation_to_response", fake_to_response)
+    monkeypatch.setattr(
+        "app.api.endpoints.payment_proofs.reservation_to_response", fake_to_response
+    )
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.post(
         "/api/v1/payment-proofs/660000000000000000000501/approve",
@@ -305,7 +321,9 @@ def test_download_with_file_data_returns_bytes(monkeypatch) -> None:
     async def fake_download(_: str) -> tuple[str, bytes | None]:
         return "image/png", b"fake-png-bytes"
 
-    monkeypatch.setattr(Container.get_instance().payment_proof_service, "get_download", fake_download)
+    monkeypatch.setattr(
+        Container.get_instance().payment_proof_service, "get_download", fake_download
+    )
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.get(
         "/api/v1/payment-proofs/660000000000000000000501/download",
@@ -323,7 +341,9 @@ def test_download_pending_whatsapp_proof_returns_202(monkeypatch) -> None:
     async def fake_download(_: str) -> tuple[str, bytes | None]:
         return "pending", None
 
-    monkeypatch.setattr(Container.get_instance().payment_proof_service, "get_download", fake_download)
+    monkeypatch.setattr(
+        Container.get_instance().payment_proof_service, "get_download", fake_download
+    )
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.get(
         "/api/v1/payment-proofs/660000000000000000000501/download",
@@ -348,7 +368,9 @@ def test_download_file_not_found_returns_404(monkeypatch) -> None:
             details={"storage_key": "missing/file.pdf"},
         )
 
-    monkeypatch.setattr(Container.get_instance().payment_proof_service, "get_download", fake_download)
+    monkeypatch.setattr(
+        Container.get_instance().payment_proof_service, "get_download", fake_download
+    )
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.get(
         "/api/v1/payment-proofs/660000000000000000000501/download",

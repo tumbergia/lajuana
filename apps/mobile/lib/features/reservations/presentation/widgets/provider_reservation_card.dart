@@ -7,11 +7,7 @@ import 'package:mobile_domain/src/reservations/reservation_provider_item.dart';
 import 'package:mobile/features/reservations/presentation/widgets/provider_contact_actions.dart';
 
 class ProviderReservationCard extends StatelessWidget {
-  const ProviderReservationCard({
-    super.key,
-    required this.item,
-    this.onTap,
-  });
+  const ProviderReservationCard({super.key, required this.item, this.onTap});
 
   final ReservationProviderItem item;
   final VoidCallback? onTap;

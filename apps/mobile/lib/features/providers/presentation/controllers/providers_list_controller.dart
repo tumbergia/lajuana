@@ -118,13 +118,9 @@ class ProvidersListController extends ChangeNotifier {
     var result = _allItems;
 
     if (includeInactive) {
-      result = result
-          .where((item) => item.isInactive)
-          .toList(growable: false);
+      result = result.where((item) => item.isInactive).toList(growable: false);
     } else {
-      result = result
-          .where((item) => !item.isInactive)
-          .toList(growable: false);
+      result = result.where((item) => !item.isInactive).toList(growable: false);
     }
 
     if (searchQuery.trim().isNotEmpty) {

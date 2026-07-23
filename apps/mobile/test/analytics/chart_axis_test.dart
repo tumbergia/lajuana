@@ -25,10 +25,10 @@ void main() {
         end: DateTime(2026, 7, 14),
         preset: 'last_30_days',
       );
-      expect(
-        ticks.map(formatChartAxisDate).toList(),
-        ['15-06-2026', '14-07-2026'],
-      );
+      expect(ticks.map(formatChartAxisDate).toList(), [
+        '15-06-2026',
+        '14-07-2026',
+      ]);
     });
 
     test('corto (≤14 días) also uses only start and end', () {
@@ -36,10 +36,10 @@ void main() {
         start: DateTime(2026, 7, 1),
         end: DateTime(2026, 7, 14),
       );
-      expect(
-        ticks.map(formatChartAxisDate).toList(),
-        ['01-07-2026', '14-07-2026'],
-      );
+      expect(ticks.map(formatChartAxisDate).toList(), [
+        '01-07-2026',
+        '14-07-2026',
+      ]);
     });
 
     test('custom medio (≤45 días) usa ticks semanales', () {
@@ -62,10 +62,12 @@ void main() {
       expect(ticks.first, DateTime(2026, 4, 16));
       expect(ticks.last, DateTime(2026, 7, 14));
       expect(ticks.length, 4);
-      expect(
-        ticks.map(formatChartAxisDate).toList(),
-        ['16-04-2026', '16-05-2026', '16-06-2026', '14-07-2026'],
-      );
+      expect(ticks.map(formatChartAxisDate).toList(), [
+        '16-04-2026',
+        '16-05-2026',
+        '16-06-2026',
+        '14-07-2026',
+      ]);
     });
 
     test('anual (~12 meses) produces about 13 monthly ticks', () {

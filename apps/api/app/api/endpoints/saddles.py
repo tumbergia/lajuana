@@ -57,9 +57,7 @@ async def list_saddles(
     response.headers["X-Total-Count"] = str(total)
     return [
         saddle_to_response(item)
-        for item in await service.list(
-            limit=limit, skip=skip, include_deleted=include_deleted
-        )
+        for item in await service.list(limit=limit, skip=skip, include_deleted=include_deleted)
     ]
 
 
@@ -84,7 +82,9 @@ async def list_available_saddles_for_reservation(
     service: SaddleService = Depends(get_saddle_service),
 ) -> list[SaddleListItemSchema]:
     items = await service.list_available_for_reservation(
-        reservation_id, limit=limit, skip=skip,
+        reservation_id,
+        limit=limit,
+        skip=skip,
     )
     response.headers["X-Total-Count"] = str(len(items))
     result: list[SaddleListItemSchema] = []

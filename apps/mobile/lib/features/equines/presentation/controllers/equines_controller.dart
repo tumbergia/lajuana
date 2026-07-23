@@ -14,7 +14,7 @@ enum EquinesLoadState { idle, loading, success, error, empty }
 
 class EquinesController extends ChangeNotifier {
   EquinesController({required EquineRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final EquineRepository _repository;
 
@@ -45,11 +45,13 @@ class EquinesController extends ChangeNotifier {
 
   EquineMetrics get metrics {
     final total = _allEquines.length;
-    if (total == 0) return const EquineMetrics(total: 0, available: 0, blocked: 0);
+    if (total == 0)
+      return const EquineMetrics(total: 0, available: 0, blocked: 0);
     var available = 0;
     var blocked = 0;
     for (final e in _allEquines) {
-      if (e.isAvailable && e.operationalStatus == EquineOperationalStatus.available) {
+      if (e.isAvailable &&
+          e.operationalStatus == EquineOperationalStatus.available) {
         available++;
       } else if (e.operationalStatus == EquineOperationalStatus.unavailable ||
           e.operationalStatus == EquineOperationalStatus.injured ||
@@ -131,9 +133,7 @@ class EquinesController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final equines = await _repository.listEquines(
-        includeDeleted: true,
-      );
+      final equines = await _repository.listEquines(includeDeleted: true);
       if (equines.isEmpty) {
         _allEquines = const [];
         _allRecords = const [];
@@ -143,8 +143,9 @@ class EquinesController extends ChangeNotifier {
         _loadState = EquinesLoadState.empty;
       } else {
         _allEquines = equines;
-        _allRecords =
-            equines.map(EquineMapper.domainToRecord).toList(growable: false);
+        _allRecords = equines
+            .map(EquineMapper.domainToRecord)
+            .toList(growable: false);
         _applyFilter();
         _loadState = EquinesLoadState.success;
         // Auto-select first equine — detail se deriva de memoria, sin request.
@@ -252,38 +253,50 @@ class EquinesController extends ChangeNotifier {
         _records = _allRecords;
       case EquinesSubroute.disponibilidad:
         _records = _allRecords
-            .where((r) =>
-                r.statusTone == AppBadgeTone.success ||
-                r.statusTone == AppBadgeTone.primary)
+            .where(
+              (r) =>
+                  r.statusTone == AppBadgeTone.success ||
+                  r.statusTone == AppBadgeTone.primary,
+            )
             .toList(growable: false);
       case EquinesSubroute.cuidado:
         _records = _allRecords
-            .where((r) =>
-                r.statusTone == AppBadgeTone.warning ||
-                r.statusTone == AppBadgeTone.danger)
+            .where(
+              (r) =>
+                  r.statusTone == AppBadgeTone.warning ||
+                  r.statusTone == AppBadgeTone.danger,
+            )
             .toList(growable: false);
     }
     // Luego aplica filtro según _filterMode.
     if (_filterMode == 'deleted') {
-      _records = _records.where((r) {
-        final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
-        return equine?.isActive == false;
-      }).toList(growable: false);
+      _records = _records
+          .where((r) {
+            final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
+            return equine?.isActive == false;
+          })
+          .toList(growable: false);
     } else {
-      _records = _records.where((r) {
-        final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
-        return equine?.isActive != false;
-      }).toList(growable: false);
+      _records = _records
+          .where((r) {
+            final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
+            return equine?.isActive != false;
+          })
+          .toList(growable: false);
 
       if (_filterMode != null) {
-        final targetStatus = EquineOperationalStatus.values.where(
-          (e) => e.name == _filterMode,
-        ).firstOrNull;
+        final targetStatus = EquineOperationalStatus.values
+            .where((e) => e.name == _filterMode)
+            .firstOrNull;
         if (targetStatus != null) {
-          _records = _records.where((r) {
-            final equine = _allEquines.where((e) => e.id == r.id).firstOrNull;
-            return equine?.operationalStatus == targetStatus;
-          }).toList(growable: false);
+          _records = _records
+              .where((r) {
+                final equine = _allEquines
+                    .where((e) => e.id == r.id)
+                    .firstOrNull;
+                return equine?.operationalStatus == targetStatus;
+              })
+              .toList(growable: false);
         }
       }
     }

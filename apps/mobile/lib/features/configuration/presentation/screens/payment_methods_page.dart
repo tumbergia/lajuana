@@ -266,7 +266,8 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage>
                           title: 'Consignación bancaria',
                           subtitle: manual
                               ? [
-                                  if (bank.text.trim().isNotEmpty) bank.text.trim(),
+                                  if (bank.text.trim().isNotEmpty)
+                                    bank.text.trim(),
                                   if (number.text.trim().isNotEmpty)
                                     number.text.trim(),
                                   if (holder.text.trim().isNotEmpty)

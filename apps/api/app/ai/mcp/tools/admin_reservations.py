@@ -191,7 +191,9 @@ async def admin_get_reservation_detail(
             experience_name=exp_name or None,
             requested_date=doc.requested_date.isoformat() if doc.requested_date else None,
             quoted_total_amount=str(doc.quoted_total_amount) if doc.quoted_total_amount else None,
-            participant_form_status=str(doc.participant_form_status.value) if doc.participant_form_status else None,
+            participant_form_status=str(doc.participant_form_status.value)
+            if doc.participant_form_status
+            else None,
             form_url=doc.form_url,
             confirmed_at=doc.confirmed_at.isoformat() if doc.confirmed_at else None,
             cancelled_at=doc.cancelled_at.isoformat() if doc.cancelled_at else None,

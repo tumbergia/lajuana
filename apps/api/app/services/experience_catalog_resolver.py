@@ -242,11 +242,7 @@ class ExperienceCatalogResolver:
         except Exception:
             pass
 
-        docs = (
-            experiences
-            if experiences is not None
-            else await self._load_active()
-        )
+        docs = experiences if experiences is not None else await self._load_active()
 
         # 2. Exact match by slug (normalized)
         norm_text = _normalize(text)

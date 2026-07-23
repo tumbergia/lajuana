@@ -5,8 +5,6 @@ from pydantic import BaseModel
 
 from app.common.enums import AssignmentSource, AssignmentStatus
 from app.schemas.common import AuditMetadataSchema
-from app.schemas.equine import EquineListItemSchema
-from app.schemas.saddle import SaddleListItemSchema
 
 
 class AssignmentCreateSchema(BaseModel):
@@ -27,6 +25,7 @@ class AssignmentUpdateSchema(BaseModel):
 
 class AssignmentReplaceSchema(BaseModel):
     """Reemplaza una asignacion finalizada: desactiva la actual y crea una nueva."""
+
     equine_id: str
     saddle_id: str | None = None
     notes: str | None = None
@@ -88,6 +87,7 @@ class AssignmentBoardEquineSchema(BaseModel):
     """Versión minimalista de equino para el tablero de asignación.
     block_reason es None → asignable. Con texto → motivo de exclusión.
     """
+
     id: str
     name: str
     max_rider_weight_kg: Decimal | None = None
@@ -99,6 +99,7 @@ class AssignmentBoardSaddleSchema(BaseModel):
     """Versión minimalista de silla para el tablero de asignación.
     block_reason es None → asignable. Con texto → motivo de exclusión.
     """
+
     id: str
     code: str
     name: str | None = None
@@ -107,11 +108,13 @@ class AssignmentBoardSaddleSchema(BaseModel):
 
 class BulkActionSchema(BaseModel):
     """Request body for bulk finalize/unfinalize actions."""
+
     notes: str | None = None
 
 
 class BatchAssignmentItemSchema(BaseModel):
     """A single assignment in a batch update."""
+
     participant_id: str
     equine_id: str
     saddle_id: str | None = None
@@ -119,6 +122,7 @@ class BatchAssignmentItemSchema(BaseModel):
 
 class BatchUpdateSchema(BaseModel):
     """Request body for batch assignment update (local-first finalize)."""
+
     assignments: list[BatchAssignmentItemSchema] = []
     removals: list[str] = []
     notes: str | None = None

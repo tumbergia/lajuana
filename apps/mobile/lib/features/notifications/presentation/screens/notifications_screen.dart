@@ -35,8 +35,7 @@ ReservationDetailSubroute? reservationSubrouteForEvent(String eventType) {
     'reservation_confirmed' ||
     'reservation_status_changed' ||
     'reservation_updated' ||
-    'reservation_cancelled' =>
-      ReservationDetailSubroute.resumen,
+    'reservation_cancelled' => ReservationDetailSubroute.resumen,
     _ => null,
   };
 }
@@ -90,10 +89,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       widget.controller.setListVisible(true);
-      unawaited(widget.controller.loadInitial().then((_) {
-        if (!mounted) return;
-        _tryOpenPending();
-      }));
+      unawaited(
+        widget.controller.loadInitial().then((_) {
+          if (!mounted) return;
+          _tryOpenPending();
+        }),
+      );
     });
   }
 
@@ -157,8 +158,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     if (!mounted) return;
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (_) =>
-                            RoleRequestsScreen(module: usersModule),
+                        builder: (_) => RoleRequestsScreen(module: usersModule),
                       ),
                     );
                   });
@@ -332,8 +332,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     );
 
     try {
-      final detail =
-          await module.repository.getReservationById(reservationId);
+      final detail = await module.repository.getReservationById(reservationId);
       ReservationPaymentProofDetail? proof;
       final proofId = content.paymentProofId;
       if (proofId != null && proofId.isNotEmpty) {
@@ -351,8 +350,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       // Legacy notifications without proof id: try matching filename from body.
       if (proof == null ||
           (content.paymentProofId == null && detail.paymentProofs.length > 1)) {
-        final filenameMatch = RegExp(r':\s*([^|]+?)(?:\||$)')
-            .firstMatch(item.body.trim());
+        final filenameMatch = RegExp(
+          r':\s*([^|]+?)(?:\||$)',
+        ).firstMatch(item.body.trim());
         final filename = filenameMatch?.group(1)?.trim();
         if (filename != null && filename.isNotEmpty) {
           for (final candidate in detail.paymentProofs) {
@@ -366,19 +366,14 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
       if (!mounted) return;
       if (proof == null) {
-        await _openReservation(
-          reservationId,
-          ReservationDetailSubroute.pagos,
-        );
+        await _openReservation(reservationId, ReservationDetailSubroute.pagos);
         return;
       }
 
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => ProofImageViewer(
-            proof: proof!,
-            repository: module.repository,
-          ),
+          builder: (_) =>
+              ProofImageViewer(proof: proof!, repository: module.repository),
         ),
       );
     } catch (_) {
@@ -540,10 +535,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           );
         }
         final item = controller.items[showErrorBanner ? index - 1 : index];
-        return _NotificationRowCard(
-          item: item,
-          onTap: () => _openItem(item),
-        );
+        return _NotificationRowCard(item: item, onTap: () => _openItem(item));
       },
     );
   }
@@ -557,17 +549,15 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           children: [
             AppStatusBanner(
               title: 'Error al cargar',
-              message: controller.errorMessage ??
+              message:
+                  controller.errorMessage ??
                   'No se pudieron cargar las notificaciones.',
               tone: AppStatusBannerTone.danger,
               icon: Icons.error_outline_rounded,
               badgeLabel: 'Error',
             ),
             const SizedBox(height: 16),
-            AppButton(
-              label: 'Reintentar',
-              onPressed: controller.loadInitial,
-            ),
+            AppButton(label: 'Reintentar', onPressed: controller.loadInitial),
           ],
         ),
       ),
@@ -592,7 +582,7 @@ class _NotificationDetailSheet extends StatefulWidget {
   final String? contactPhone;
   final void Function(ReservationDetailSubroute subroute) onOpenReservation;
   final void Function({String? reservationId, String? code})
-      onOpenReservationTarget;
+  onOpenReservationTarget;
   final VoidCallback onOpenPaymentProof;
   final Future<void> Function(String message) onWhatsAppReply;
   final Future<bool> Function(String message) onSendDirectly;
@@ -614,8 +604,7 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
     super.initState();
     _replyController = TextEditingController();
     final hasPhone = whatsappDigits(widget.contactPhone).isNotEmpty;
-    _composingReply =
-        hasPhone && isWhatsAppPrimaryEvent(widget.item.eventType);
+    _composingReply = hasPhone && isWhatsAppPrimaryEvent(widget.item.eventType);
   }
 
   @override
@@ -637,14 +626,14 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
       contactPhone: widget.contactPhone,
     );
     final reservationId = item.reservationId;
-    final hasReservation =
-        reservationId != null && reservationId.isNotEmpty;
-    final primarySubroute = reservationSubrouteForEvent(item.eventType) ??
+    final hasReservation = reservationId != null && reservationId.isNotEmpty;
+    final primarySubroute =
+        reservationSubrouteForEvent(item.eventType) ??
         (hasReservation ? ReservationDetailSubroute.resumen : null);
     final hasWhatsApp = whatsappDigits(widget.contactPhone).isNotEmpty;
     final whatsappPrimary = isWhatsAppPrimaryEvent(item.eventType);
-    final showBitacora = hasReservation &&
-        primarySubroute != ReservationDetailSubroute.bitacora;
+    final showBitacora =
+        hasReservation && primarySubroute != ReservationDetailSubroute.bitacora;
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     final detailCards = <Widget>[];
@@ -669,35 +658,32 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
               value: parsed.subtitle,
               onTap: canOpen
                   ? () => widget.onOpenReservationTarget(
-                        reservationId: parsed.reservationId,
-                        code: parsed.code,
-                      )
+                      reservationId: parsed.reservationId,
+                      code: parsed.code,
+                    )
                   : null,
             ),
           );
         } else {
-          detailCards.add(
-            _DetailInfoCard(
-              label: 'Reserva',
-              value: line,
-            ),
-          );
+          detailCards.add(_DetailInfoCard(label: 'Reserva', value: line));
         }
       }
     }
 
     final isPaymentProof = item.eventType == 'payment_proof_registered';
-    final contextFacts = content.keyFacts.where((fact) {
-      if (fact.value.trim().isEmpty) return false;
-      if (fact.label == 'Reserva' && content.detailLines.isNotEmpty) {
-        return false;
-      }
-      if (fact.label == 'Servicio' && content.detailLines.isNotEmpty) {
-        return false;
-      }
-      if (fact.label == 'Archivo') return false;
-      return true;
-    }).toList(growable: false);
+    final contextFacts = content.keyFacts
+        .where((fact) {
+          if (fact.value.trim().isEmpty) return false;
+          if (fact.label == 'Reserva' && content.detailLines.isNotEmpty) {
+            return false;
+          }
+          if (fact.label == 'Servicio' && content.detailLines.isNotEmpty) {
+            return false;
+          }
+          if (fact.label == 'Archivo') return false;
+          return true;
+        })
+        .toList(growable: false);
 
     return SafeArea(
       child: Padding(
@@ -730,18 +716,14 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
                       children: [
                         Text(
                           item.title,
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '${visuals.label} · ${formatRelativeTime(item.createdAt)}',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ),
@@ -803,8 +785,7 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
                                   final msg = _replyController.text.trim();
                                   if (msg.isEmpty) return;
                                   setState(() => _sending = true);
-                                  final ok =
-                                      await widget.onSendDirectly(msg);
+                                  final ok = await widget.onSendDirectly(msg);
                                   setState(() => _sending = false);
                                   if (ok && mounted) {
                                     Navigator.of(context).pop();
@@ -844,8 +825,8 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
                 AppButton(
                   label: 'Ver pagos',
                   variant: AppButtonVariant.secondary,
-                  onPressed: () => widget
-                      .onOpenReservation(ReservationDetailSubroute.pagos),
+                  onPressed: () =>
+                      widget.onOpenReservation(ReservationDetailSubroute.pagos),
                 ),
                 const SizedBox(height: 8),
               ] else if (primarySubroute != null && hasReservation) ...[
@@ -872,8 +853,9 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
                   label: 'Ver bitácora',
                   variant: AppButtonVariant.secondary,
                   icon: Symbols.menu_book,
-                  onPressed: () => widget
-                      .onOpenReservation(ReservationDetailSubroute.bitacora),
+                  onPressed: () => widget.onOpenReservation(
+                    ReservationDetailSubroute.bitacora,
+                  ),
                 ),
                 const SizedBox(height: 8),
               ],
@@ -903,10 +885,7 @@ class _NotificationDetailSheetState extends State<_NotificationDetailSheet> {
 }
 
 class _DetailSection extends StatelessWidget {
-  const _DetailSection({
-    required this.title,
-    required this.children,
-  });
+  const _DetailSection({required this.title, required this.children});
 
   final String title;
   final List<Widget> children;
@@ -921,9 +900,9 @@ class _DetailSection extends StatelessWidget {
         Text(
           title.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                letterSpacing: 1.2,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            letterSpacing: 1.2,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 8),
         for (var i = 0; i < children.length; i++) ...[
@@ -976,19 +955,19 @@ class _DetailInfoCard extends StatelessWidget {
                     Text(
                       label.toUpperCase(),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       value,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            height: 1.3,
-                            color: scheme.onSurface,
-                          ),
+                        fontWeight: FontWeight.w700,
+                        height: 1.3,
+                        color: scheme.onSurface,
+                      ),
                     ),
                   ],
                 ),
@@ -1027,11 +1006,7 @@ class _NotificationsEmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Symbols.notifications,
-            size: 48,
-            color: scheme.onSurfaceVariant,
-          ),
+          Icon(Symbols.notifications, size: 48, color: scheme.onSurfaceVariant),
           const SizedBox(height: 16),
           Text(
             'Sin notificaciones',
@@ -1041,9 +1016,9 @@ class _NotificationsEmptyState extends StatelessWidget {
           Text(
             'Cuando haya actividad operativa aparecera aqui.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -1052,10 +1027,7 @@ class _NotificationsEmptyState extends StatelessWidget {
 }
 
 class _NotificationRowCard extends StatelessWidget {
-  const _NotificationRowCard({
-    required this.item,
-    required this.onTap,
-  });
+  const _NotificationRowCard({required this.item, required this.onTap});
 
   final InAppNotification item;
   final VoidCallback onTap;
@@ -1076,8 +1048,9 @@ class _NotificationRowCard extends StatelessWidget {
     final accent = unread
         ? toneColors.background
         : appBadgeToneTint(context, visuals.tone, alpha: 0.55);
-    final background =
-        unread ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow;
+    final background = unread
+        ? scheme.surfaceContainerHighest
+        : scheme.surfaceContainerLow;
     final compact = content.compactFacts;
 
     return Material(
@@ -1116,9 +1089,7 @@ class _NotificationRowCard extends StatelessWidget {
                           children: [
                             Text(
                               '${visuals.label} · ${formatRelativeTime(item.createdAt)}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
+                              style: Theme.of(context).textTheme.labelSmall
                                   ?.copyWith(
                                     color: scheme.onSurfaceVariant,
                                     fontWeight: FontWeight.w600,
@@ -1131,9 +1102,7 @@ class _NotificationRowCard extends StatelessWidget {
                                   : item.title,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     height: 1.25,
@@ -1146,9 +1115,7 @@ class _NotificationRowCard extends StatelessWidget {
                                 compact,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: scheme.onSurfaceVariant,
                                       fontWeight: FontWeight.w500,
@@ -1185,4 +1152,3 @@ class _NotificationRowCard extends StatelessWidget {
     );
   }
 }
-

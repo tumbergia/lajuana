@@ -51,7 +51,9 @@ class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdate
             name = _normalize_lookup_text(equine.name)
             registry_number = _normalize_lookup_text(equine.registry_number or "")
             microchip = _normalize_lookup_text(equine.microchip or "")
-            inventory_number = str(equine.inventory_number) if equine.inventory_number is not None else ""
+            inventory_number = (
+                str(equine.inventory_number) if equine.inventory_number is not None else ""
+            )
             tokens = [token for token in name.split(" ") if token]
             score = 0
 
@@ -221,9 +223,7 @@ class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdate
                     title=_timeline_title(log.event_type, log.checkpoint_name),
                     reservation_id=str(log.reservation_id),
                     participant_id=(
-                        str(log.related_participant_id)
-                        if log.related_participant_id
-                        else None
+                        str(log.related_participant_id) if log.related_participant_id else None
                     ),
                     notes=log.notes,
                 )
@@ -237,15 +237,9 @@ class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdate
                     event_type=event.event_type.value,
                     happened_at=event.happened_at,
                     title=event.title,
-                    reservation_id=(
-                        str(event.reservation_id) if event.reservation_id else None
-                    ),
-                    assignment_id=(
-                        str(event.assignment_id) if event.assignment_id else None
-                    ),
-                    participant_id=(
-                        str(event.participant_id) if event.participant_id else None
-                    ),
+                    reservation_id=(str(event.reservation_id) if event.reservation_id else None),
+                    assignment_id=(str(event.assignment_id) if event.assignment_id else None),
+                    participant_id=(str(event.participant_id) if event.participant_id else None),
                     notes=event.description,
                     severity=event.severity,
                     affects_availability=event.affects_availability,
@@ -256,9 +250,7 @@ class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdate
                     medication_name=event.medication_name,
                     dosage=event.dosage,
                     lab_result_summary=event.lab_result_summary,
-                    resulting_operational_status=(
-                        event.resulting_operational_status
-                    ),
+                    resulting_operational_status=(event.resulting_operational_status),
                     rest_until=event.rest_until,
                 )
             )
@@ -290,10 +282,17 @@ class EquineService(BaseService[EquineDocument, EquineCreateSchema, EquineUpdate
                 {
                     "_id": {"$ne": reservation.id},
                     "requested_date": reservation.requested_date,
-                    "status": {"$in": [s.value for s in ReservationStatus if s not in (
-                        ReservationStatus.CANCELLED,
-                        ReservationStatus.EXPIRED,
-                    )]},
+                    "status": {
+                        "$in": [
+                            s.value
+                            for s in ReservationStatus
+                            if s
+                            not in (
+                                ReservationStatus.CANCELLED,
+                                ReservationStatus.EXPIRED,
+                            )
+                        ]
+                    },
                 },
             ).to_list()
             same_date_ids = [r.id for r in same_date_reservations]

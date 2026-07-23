@@ -28,7 +28,6 @@ def _fake_provider(**overrides: object) -> SimpleNamespace:
 
 
 class TestPolicyServiceCreate:
-
     def test_create_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.schemas.policy import PolicyCreateSchema
         from app.services.policy_service import PolicyService
@@ -81,9 +80,7 @@ class TestPolicyServiceCreate:
 
         asyncio.run(run())
 
-    def test_create_reservation_not_found(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_create_reservation_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.schemas.policy import PolicyCreateSchema
         from app.services.policy_service import PolicyService
 
@@ -108,9 +105,7 @@ class TestPolicyServiceCreate:
 
         asyncio.run(run())
 
-    def test_create_provider_not_found(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_create_provider_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.schemas.policy import PolicyCreateSchema
         from app.services.policy_service import PolicyService
 
@@ -145,7 +140,6 @@ class TestPolicyServiceCreate:
 
 
 class TestPolicyServiceUpdate:
-
     def test_update_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.schemas.policy import PolicyUpdateSchema
         from app.services.policy_service import PolicyService

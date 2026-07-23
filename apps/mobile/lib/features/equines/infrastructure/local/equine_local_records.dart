@@ -207,7 +207,8 @@ class EquineLocalRecord {
       lastHeightAt: detail.lastHeightAt,
       isActive: detail.isActive ? 1 : 0,
       isAvailable: detail.isAvailable ? 1 : 0,
-      operationalStatus: detail.operationalStatus == EquineOperationalStatus.inService
+      operationalStatus:
+          detail.operationalStatus == EquineOperationalStatus.inService
           ? 'in_service'
           : detail.operationalStatus.name,
       availabilityNotes: detail.availabilityNotes,

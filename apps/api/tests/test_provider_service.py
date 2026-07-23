@@ -15,7 +15,6 @@ from app.core.errors import ApiError
 
 
 class TestProviderService:
-
     def test_delete_deactivates(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """ProviderService.delete sets is_active=False and saves."""
         from app.services.provider_service import ProviderService
@@ -150,9 +149,7 @@ class TestProviderService:
 
         asyncio.run(run())
 
-    def test_list_returns_active_providers(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_list_returns_active_providers(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """BaseService.list() returns documents from find().to_list()."""
         from app.services.provider_service import ProviderService
 

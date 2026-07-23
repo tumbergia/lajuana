@@ -25,11 +25,11 @@ class ExperiencesModuleScreen extends StatefulWidget {
   final AuthController authController;
   final bool showHeader;
 
-  bool get canEdit =>
-      authController.currentUser?.role == 'admin';
+  bool get canEdit => authController.currentUser?.role == 'admin';
 
   @override
-  State<ExperiencesModuleScreen> createState() => _ExperiencesModuleScreenState();
+  State<ExperiencesModuleScreen> createState() =>
+      _ExperiencesModuleScreenState();
 }
 
 class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
@@ -489,10 +489,7 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
     try {
       await widget.catalogsModule!.experiences.purge(experience.id);
       if (!mounted) return;
-      showAppToast(
-        context,
-        message: 'Experiencia eliminada definitivamente',
-      );
+      showAppToast(context, message: 'Experiencia eliminada definitivamente');
       await _controller.loadLocalThenRefresh(refreshServer: true);
     } catch (error) {
       if (!mounted) return;
@@ -503,7 +500,10 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
     }
   }
 
-  void _showExperienceActions(BuildContext context, CatalogExperience experience) {
+  void _showExperienceActions(
+    BuildContext context,
+    CatalogExperience experience,
+  ) {
     final scheme = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
@@ -528,20 +528,18 @@ class _ExperiencesModuleScreenState extends State<ExperiencesModuleScreen>
               const SizedBox(height: 16),
               Text(
                 experience.name,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w800),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
                 experience.description,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: 24),
               SizedBox(

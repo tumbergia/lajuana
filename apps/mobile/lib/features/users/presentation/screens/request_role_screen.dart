@@ -144,7 +144,7 @@ class _RequestRoleScreenState extends State<RequestRoleScreen> {
                               subtitle: request.status == 'approved'
                                   ? 'Rol asignado: ${displayUserRoleLabel(request.decidedRole)}'
                                   : (request.note ??
-                                      'Puedes volver a solicitar si lo necesitas.'),
+                                        'Puedes volver a solicitar si lo necesitas.'),
                               badge: AppBadge(
                                 label: request.status == 'approved'
                                     ? 'Aprobada'

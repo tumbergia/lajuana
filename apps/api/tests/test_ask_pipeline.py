@@ -413,7 +413,9 @@ def test_destructive_tool_requires_explicit_confirmation(monkeypatch: pytest.Mon
 
     async def run() -> Any:
         return await orch.ask(
-            AskRequest(message="cancela la reserva RES-001", channel="test", conversation_id="demo-010")
+            AskRequest(
+                message="cancela la reserva RES-001", channel="test", conversation_id="demo-010"
+            )
         )
 
     result = asyncio.run(run())
@@ -459,7 +461,9 @@ def test_confirmation_reply_executes_pending_tool_without_replanning(
 
     async def run_flow() -> tuple[Any, Any]:
         first = await orch.ask(
-            AskRequest(message="cancela la reserva RES-001", channel="test", conversation_id="demo-011")
+            AskRequest(
+                message="cancela la reserva RES-001", channel="test", conversation_id="demo-011"
+            )
         )
         second = await orch.ask(
             AskRequest(message="sí, hazlo", channel="test", conversation_id="demo-011")
@@ -534,7 +538,9 @@ def test_confirmation_reply_uses_blocking_reason_message(monkeypatch: pytest.Mon
     assert second_result.response == "No puedes desactivar tu propia cuenta."
 
 
-def test_admin_user_reference_is_resolved_before_confirmation(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_admin_user_reference_is_resolved_before_confirmation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _apply_mocks(monkeypatch)
 
     async def fake_resolve_user_reference(self: Any, reference: str) -> dict[str, Any]:

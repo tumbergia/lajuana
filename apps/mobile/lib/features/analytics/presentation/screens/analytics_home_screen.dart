@@ -180,11 +180,11 @@ class _AnalyticsHomeScreenState extends State<AnalyticsHomeScreen>
                             ctrl.customFrom!,
                             ctrl.customTo!,
                           ).toUpperCase(),
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.4,
-                                  ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
+                              ),
                         ),
                       ],
                     ],
@@ -238,216 +238,204 @@ class _AnalyticsHomeScreenState extends State<AnalyticsHomeScreen>
     return AnalyticsDownloadScope(
       controller: _controller,
       child: Padding(
-      padding: EdgeInsets.fromLTRB(
-        tokens.spaceXl,
-        tokens.spaceXl,
-        tokens.spaceXl,
-        tokens.spaceXl,
-      ),
-      child: ListenableBuilder(
-        listenable: _controller,
-        builder: (context, _) {
-          final analyzing = _isAnalyzing(_controller);
-          final fullError = _isFullError(_controller);
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Builder(
-                  builder: (context) {
-                    final scheme = Theme.of(context).colorScheme;
-                    final period = _periodCaption(_controller);
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        AppSectionHeader(
-                          eyebrow: 'Hola',
-                          title: _greetingName,
-                        ),
-                        if (period.isNotEmpty) ...[
-                          SizedBox(height: tokens.spaceSm),
-                          Text(
-                            period,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                          ),
-                        ],
-                      ],
-                    );
-                  },
-                ),
-              ),
-              SliverToBoxAdapter(child: SizedBox(height: tokens.spaceLg)),
-              SliverToBoxAdapter(
-                child: fullError
-                    ? AnalyticsErrorView(
-                        title: 'No pudimos cargar la analítica',
-                        message:
-                            _controller.error ?? 'Intenta nuevamente.',
-                        onRetry: () => _controller.load(
-                          forceRefresh: true,
-                          silent: false,
-                        ),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (_controller.error != null &&
-                              !fullError &&
-                              !_controller.isOffline) ...[
-                            AppStatusBanner(
-                              title: 'Error de sincronización',
-                              message: _controller.error!,
-                              tone: AppStatusBannerTone.danger,
-                              icon: Icons.error_outline_rounded,
-                              badgeLabel: 'Error',
-                              onTap: () => _controller.load(
-                                forceRefresh: true,
-                                silent: false,
-                              ),
-                            ),
-                            SizedBox(height: tokens.spaceMd),
-                          ],
-                          _buildRangeControls(_controller),
-                        ],
-                      ),
-              ),
-              if (analyzing)
-                SliverFillRemaining(
-                  hasScrollBody: false,
+        padding: EdgeInsets.fromLTRB(
+          tokens.spaceXl,
+          tokens.spaceXl,
+          tokens.spaceXl,
+          tokens.spaceXl,
+        ),
+        child: ListenableBuilder(
+          listenable: _controller,
+          builder: (context, _) {
+            final analyzing = _isAnalyzing(_controller);
+            final fullError = _isFullError(_controller);
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
                   child: Builder(
                     builder: (context) {
                       final scheme = Theme.of(context).colorScheme;
-                      return Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const AppCenteredLoader(fill: false),
-                            SizedBox(height: tokens.spaceLg),
-                            Text(
-                              'Analizando indicadores…',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
-                            ),
+                      final period = _periodCaption(_controller);
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppSectionHeader(
+                            eyebrow: 'Hola',
+                            title: _greetingName,
+                          ),
+                          if (period.isNotEmpty) ...[
                             SizedBox(height: tokens.spaceSm),
                             Text(
-                              'Un momento',
+                              period,
                               textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
-                        ),
+                        ],
                       );
                     },
                   ),
-                )
-              else if (!fullError) ...[
+                ),
+                SliverToBoxAdapter(child: SizedBox(height: tokens.spaceLg)),
                 SliverToBoxAdapter(
-                  child: ListenableBuilder(
-                    listenable: _controller.slotFor('action_center'),
-                    builder: (context, _) {
-                      final slot = _controller.slotFor('action_center');
-                      final mod = slot.module;
-                      if (!slot.loading && (mod == null || mod.isEmpty)) {
-                        return const SizedBox.shrink();
-                      }
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          top: tokens.spaceLg,
-                          bottom: tokens.spaceLg,
-                        ),
-                        child: InsightModuleTile(
-                          slot: slot,
-                          moduleId: 'action_center',
-                          catalog: _controller.catalog,
-                          compact: false,
+                  child: fullError
+                      ? AnalyticsErrorView(
+                          title: 'No pudimos cargar la analítica',
+                          message: _controller.error ?? 'Intenta nuevamente.',
                           onRetry: () => _controller.load(
                             forceRefresh: true,
                             silent: false,
                           ),
-                          onActionItemTap: _openActionItem,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Builder(
-                    builder: (context) {
-                      final ids = _controller.homeModuleIds;
-                      if (ids.isEmpty) {
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: tokens.spaceLg),
-                          child: AnalyticsEmptyView(
-                            title: 'Sin indicadores en Inicio',
-                            message:
-                                'Elige indicadores para ver gráficas aquí.',
-                            actionLabel: 'Configurar indicadores',
-                            onAction: _openConfigure,
-                          ),
-                        );
-                      }
-                      return Column(
-                        children: [
-                          for (var i = 0; i < ids.length; i++)
-                            Padding(
-                              padding:
-                                  EdgeInsets.only(bottom: tokens.spaceLg),
-                              child: InsightModuleTile(
-                                slot: _controller.slotFor(ids[i]),
-                                moduleId: ids[i],
-                                catalog: _controller.catalog,
-                                compact: i != 0,
-                                hero: i == 0,
-                                onRetry: () => _controller.load(
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_controller.error != null &&
+                                !fullError &&
+                                !_controller.isOffline) ...[
+                              AppStatusBanner(
+                                title: 'Error de sincronización',
+                                message: _controller.error!,
+                                tone: AppStatusBannerTone.danger,
+                                icon: Icons.error_outline_rounded,
+                                badgeLabel: 'Error',
+                                onTap: () => _controller.load(
                                   forceRefresh: true,
                                   silent: false,
                                 ),
                               ),
+                              SizedBox(height: tokens.spaceMd),
+                            ],
+                            _buildRangeControls(_controller),
+                          ],
+                        ),
+                ),
+                if (analyzing)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Builder(
+                      builder: (context) {
+                        final scheme = Theme.of(context).colorScheme;
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const AppCenteredLoader(fill: false),
+                              SizedBox(height: tokens.spaceLg),
+                              Text(
+                                'Analizando indicadores…',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                              SizedBox(height: tokens.spaceSm),
+                              Text(
+                                'Un momento',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                else if (!fullError) ...[
+                  SliverToBoxAdapter(
+                    child: ListenableBuilder(
+                      listenable: _controller.slotFor('action_center'),
+                      builder: (context, _) {
+                        final slot = _controller.slotFor('action_center');
+                        final mod = slot.module;
+                        if (!slot.loading && (mod == null || mod.isEmpty)) {
+                          return const SizedBox.shrink();
+                        }
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            top: tokens.spaceLg,
+                            bottom: tokens.spaceLg,
+                          ),
+                          child: InsightModuleTile(
+                            slot: slot,
+                            moduleId: 'action_center',
+                            catalog: _controller.catalog,
+                            compact: false,
+                            onRetry: () => _controller.load(
+                              forceRefresh: true,
+                              silent: false,
                             ),
-                        ],
-                      );
-                    },
+                            onActionItemTap: _openActionItem,
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-                SliverToBoxAdapter(
-                  child: Column(
-                    children: [
-                      AppButton(
-                        label: 'Ver analítica completa',
-                        onPressed: _openDashboard,
-                        expanded: true,
-                      ),
-                      SizedBox(height: tokens.spaceMd),
-                      AppButton(
-                        label: 'Configurar indicadores',
-                        variant: AppButtonVariant.secondary,
-                        onPressed: _openConfigure,
-                        expanded: true,
-                      ),
-                      SizedBox(height: tokens.spaceXl),
-                    ],
+                  SliverToBoxAdapter(
+                    child: Builder(
+                      builder: (context) {
+                        final ids = _controller.homeModuleIds;
+                        if (ids.isEmpty) {
+                          return Padding(
+                            padding: EdgeInsets.only(bottom: tokens.spaceLg),
+                            child: AnalyticsEmptyView(
+                              title: 'Sin indicadores en Inicio',
+                              message:
+                                  'Elige indicadores para ver gráficas aquí.',
+                              actionLabel: 'Configurar indicadores',
+                              onAction: _openConfigure,
+                            ),
+                          );
+                        }
+                        return Column(
+                          children: [
+                            for (var i = 0; i < ids.length; i++)
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: tokens.spaceLg,
+                                ),
+                                child: InsightModuleTile(
+                                  slot: _controller.slotFor(ids[i]),
+                                  moduleId: ids[i],
+                                  catalog: _controller.catalog,
+                                  compact: i != 0,
+                                  hero: i == 0,
+                                  onRetry: () => _controller.load(
+                                    forceRefresh: true,
+                                    silent: false,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
-                ),
+                  SliverToBoxAdapter(
+                    child: Column(
+                      children: [
+                        AppButton(
+                          label: 'Ver analítica completa',
+                          onPressed: _openDashboard,
+                          expanded: true,
+                        ),
+                        SizedBox(height: tokens.spaceMd),
+                        AppButton(
+                          label: 'Configurar indicadores',
+                          variant: AppButtonVariant.secondary,
+                          onPressed: _openConfigure,
+                          expanded: true,
+                        ),
+                        SizedBox(height: tokens.spaceXl),
+                      ],
+                    ),
+                  ),
+                ],
               ],
-            ],
-          );
-        },
-      ),
+            );
+          },
+        ),
       ),
     );
   }

@@ -77,7 +77,7 @@ class ServiceLog {
     'related_participant_id': relatedParticipantId,
     'related_equine_id': relatedEquineId,
     'created_by': createdBy,
-    'photos': photos,
+    'photos': photos?.map((e) => e.toJson()).toList(),
   };
 
 }

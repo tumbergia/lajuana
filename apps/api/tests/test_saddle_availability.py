@@ -37,10 +37,10 @@ class FakeFindQuery:
     def __init__(self, items: list) -> None:
         self._items = items
 
-    def skip(self, n: int) -> "FakeFindQuery":
+    def skip(self, n: int) -> FakeFindQuery:
         return self
 
-    def limit(self, n: int) -> "FakeFindQuery":
+    def limit(self, n: int) -> FakeFindQuery:
         return self
 
     async def to_list(self) -> list:
@@ -77,7 +77,8 @@ class TestSaddleAvailableForReservation:
         )
 
     def test_all_saddles_available_when_no_assignments(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """No assignments exist → all saddles returned with block_reason=None."""
         saddles = [
@@ -97,7 +98,8 @@ class TestSaddleAvailableForReservation:
         asyncio.run(run())
 
     def test_excludes_already_assigned_saddle(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Saddle already assigned to this reservation → blocked with reason."""
         saddle = make_fake_saddle(id=FAKE_ID, code="S-001", is_available=True)
@@ -121,7 +123,8 @@ class TestSaddleAvailableForReservation:
         asyncio.run(run())
 
     def test_excludes_unavailable_saddle(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Saddle with is_available=False → blocked."""
         saddle = make_fake_saddle(id=FAKE_ID, is_available=False)
@@ -139,10 +142,12 @@ class TestSaddleAvailableForReservation:
         asyncio.run(run())
 
     def test_excludes_deleted_saddle(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Saddle with deleted_at set → blocked."""
         from datetime import UTC, datetime
+
         saddle = make_fake_saddle(
             id=FAKE_ID,
             deleted_at=datetime.now(UTC),
@@ -161,7 +166,8 @@ class TestSaddleAvailableForReservation:
         asyncio.run(run())
 
     def test_mixed_availability(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Mix of available, assigned, and unavailable saddles."""
         available = make_fake_saddle(id=FAKE_ID, code="S-001", is_available=True)
@@ -183,9 +189,7 @@ class TestSaddleAvailableForReservation:
             results = await service.list_available_for_reservation(FAKE_ID)
             assert len(results) == 3
 
-            reasons_by_code: dict[str, str | None] = {
-                r[0].code: r[1] for r in results
-            }
+            reasons_by_code: dict[str, str | None] = {r[0].code: r[1] for r in results}
 
             # S-001: no assignments, available → None
             assert reasons_by_code["S-001"] is None
@@ -212,7 +216,8 @@ class TestSaddleAvailableForReservation:
         asyncio.run(run())
 
     def test_reservation_with_no_saddle_assignments(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Assignments exist but none have saddle_id → all saddles available."""
         saddles = [

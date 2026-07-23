@@ -150,9 +150,7 @@ class _NotificationHeadsUpState extends State<NotificationHeadsUp>
                               widget.count > 1
                                   ? '${widget.count} notificaciones'
                                   : 'La Juana',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelMedium
+                              style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(
                                     color: scheme.onSurfaceVariant,
                                     fontWeight: FontWeight.w600,
@@ -163,9 +161,7 @@ class _NotificationHeadsUpState extends State<NotificationHeadsUp>
                               widget.title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                           ],

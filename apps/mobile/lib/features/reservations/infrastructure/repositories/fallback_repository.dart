@@ -164,9 +164,7 @@ class FallbackRepository implements ReservationsRepository {
   }
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {
+  Future<void> deleteReservationLogEntry({required String logId}) async {
     throw Exception('ReservationsModule no inyectado');
   }
 

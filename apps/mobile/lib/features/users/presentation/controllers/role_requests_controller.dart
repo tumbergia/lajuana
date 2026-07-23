@@ -8,7 +8,8 @@ import 'package:mobile/features/users/infrastructure/remote/users_api_error.dart
 enum RoleRequestsLoadState { idle, loading, refreshing, success, empty, error }
 
 class RoleRequestsController extends ChangeNotifier {
-  RoleRequestsController({required UsersApiClient apiClient}) : _api = apiClient;
+  RoleRequestsController({required UsersApiClient apiClient})
+    : _api = apiClient;
 
   final UsersApiClient _api;
   bool _disposed = false;

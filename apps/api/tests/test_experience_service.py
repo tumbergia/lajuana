@@ -185,7 +185,9 @@ def test_resolve_experience_reference_unique_name_match(monkeypatch: pytest.Monk
     asyncio.run(run())
 
 
-def test_resolve_experience_reference_ambiguous_prefix_match(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_experience_reference_ambiguous_prefix_match(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class FakeExperience:
         def __init__(self, **kwargs: object) -> None:
             for key, value in kwargs.items():

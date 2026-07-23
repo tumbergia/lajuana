@@ -5,13 +5,7 @@ import 'package:mobile/features/analytics/data/analytics_repository.dart';
 import 'package:mobile/features/analytics/domain/analytics_models.dart';
 import 'package:mobile/features/analytics/remote/analytics_api_error.dart';
 
-enum DashboardLoadState {
-  initial,
-  loading,
-  loaded,
-  offlineFromCache,
-  error,
-}
+enum DashboardLoadState { initial, loading, loaded, offlineFromCache, error }
 
 /// Per-module slot. UI should treat [module] as the only visible payload —
 /// never paint a previous range while a blocking load is in flight.
@@ -104,7 +98,7 @@ class ModuleSlotNotifier extends ChangeNotifier {
 
 class DashboardController extends ChangeNotifier {
   DashboardController({required AnalyticsRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final AnalyticsRepository _repository;
 
@@ -117,10 +111,12 @@ class DashboardController extends ChangeNotifier {
   AnalyticsFreshness? _freshness;
   AnalyticsPeriod? _period;
   bool _fromCache = false;
+
   /// True only when the fallback came from a real connectivity failure
   /// (timeout / no socket), not from HTTP/server errors while online.
   bool _isOffline = false;
   bool _refreshing = false;
+
   /// Full-screen "Analizando…" until the in-flight load settles.
   bool _blockingUi = false;
   List<CatalogModule> _catalog = const [];
@@ -185,8 +181,7 @@ class DashboardController extends ChangeNotifier {
     return '';
   }
 
-  String? get _dateFromIso =>
-      hasCustomRange ? _isoDate(_customFrom!) : null;
+  String? get _dateFromIso => hasCustomRange ? _isoDate(_customFrom!) : null;
   String? get _dateToIso => hasCustomRange ? _isoDate(_customTo!) : null;
 
   static String _isoDate(DateTime d) =>
@@ -243,8 +238,9 @@ class DashboardController extends ChangeNotifier {
       _preferences = await _repository.getPreferences();
       // Solo presets del switcher (mensual/trimestral/anual); custom pide fechas.
       _range = switch (_preferences.defaultRange) {
-        'last_3_months' || 'this_year' || 'last_30_days' =>
-          _preferences.defaultRange,
+        'last_3_months' ||
+        'this_year' ||
+        'last_30_days' => _preferences.defaultRange,
         _ => 'last_30_days',
       };
     } catch (_) {
@@ -476,11 +472,12 @@ class DashboardController extends ChangeNotifier {
       selectedModuleIds: prefs.selectedModuleIds
           .where((id) => id != 'action_center')
           .toList(growable: false),
-      moduleOrder: (prefs.moduleOrder.isEmpty
-              ? prefs.selectedModuleIds
-              : prefs.moduleOrder)
-          .where((id) => id != 'action_center')
-          .toList(growable: false),
+      moduleOrder:
+          (prefs.moduleOrder.isEmpty
+                  ? prefs.selectedModuleIds
+                  : prefs.moduleOrder)
+              .where((id) => id != 'action_center')
+              .toList(growable: false),
     );
     _preferences = await _repository.savePreferences(cleaned);
     notifyListeners();
@@ -518,10 +515,7 @@ class DashboardController extends ChangeNotifier {
         dateTo: _dateToIso,
       );
 
-  void _applySnapshot(
-    DashboardSnapshot snapshot, {
-    List<String>? expectedIds,
-  }) {
+  void _applySnapshot(DashboardSnapshot snapshot, {List<String>? expectedIds}) {
     _period = snapshot.period;
     _freshness = snapshot.fromCache
         ? AnalyticsFreshness(

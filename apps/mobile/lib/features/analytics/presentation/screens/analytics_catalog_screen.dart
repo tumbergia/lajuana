@@ -26,7 +26,10 @@ class AnalyticsCatalogScreen extends StatelessWidget {
             title: mod.title,
             subtitle: mod.description,
             badge: mod.blocked
-                ? const AppBadge(label: 'No disponible', tone: AppBadgeTone.neutral)
+                ? const AppBadge(
+                    label: 'No disponible',
+                    tone: AppBadgeTone.neutral,
+                  )
                 : null,
           );
         },

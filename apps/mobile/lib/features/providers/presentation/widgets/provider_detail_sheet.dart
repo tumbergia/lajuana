@@ -102,15 +102,15 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
                       Text(
                         provider.name,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         provider.subtitle,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -128,9 +128,9 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
               if (_error != null) ...[
                 Text(
                   _error!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.error,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: scheme.error),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -233,19 +233,13 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
     }
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: AppEntityRowCard(
-        title: label,
-        subtitle: value,
-      ),
+      child: AppEntityRowCard(title: label, subtitle: value),
     );
   }
 }
 
 class _DetailSection extends StatelessWidget {
-  const _DetailSection({
-    required this.title,
-    required this.children,
-  });
+  const _DetailSection({required this.title, required this.children});
 
   final String title;
   final List<Widget?> children;
@@ -261,9 +255,9 @@ class _DetailSection extends StatelessWidget {
         Text(
           title.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                letterSpacing: 1.2,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            letterSpacing: 1.2,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 8),
         ...visible,

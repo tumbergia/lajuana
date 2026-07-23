@@ -11,7 +11,6 @@ from app.api.deps import (
 from app.common.enums import Permission
 from app.core.config import settings
 from app.documents import ExperienceDocument, ReservationDocument, UserDocument
-from app.services.notification_service import NotificationService
 from app.schemas.participant import (
     ParticipantNestedCreateSchema,
     ParticipantPublicCreateSchema,
@@ -31,6 +30,7 @@ from app.services.mappers import (
     participant_to_response,
     reservation_to_response,
 )
+from app.services.notification_service import NotificationService
 from app.services.participant_form_link_service import ParticipantFormLinkService
 
 router = APIRouter()
@@ -76,8 +76,7 @@ async def validate_participant_form_token(
     response_model=ParticipantFormTokenValidationResponse,
     summary="Validar token (formato Vercel)",
     description=(
-        "Alias compatible con el frontend desplegado en Vercel. "
-        "Valida el token del formulario."
+        "Alias compatible con el frontend desplegado en Vercel. Valida el token del formulario."
     ),
     operation_id="validateParticipantFormTokenVercel",
     tags=["Formulario de participantes"],
@@ -236,10 +235,7 @@ async def generate_participant_form_link(
         reservation_id=reservation_id,
         expected_participants_count=payload.expected_participants_count,
     )
-    form_url = (
-        f"{settings.participant_form_base_url}"
-        f"/?token={raw_token}"
-    )
+    form_url = f"{settings.participant_form_base_url}/?token={raw_token}"
     return ParticipantFormLinkGenerateResponse(
         id=str(doc.id),
         reservation_id=str(doc.reservation_id),
@@ -285,8 +281,8 @@ async def resend_participant_form_link(
 ) -> ReservationResponseSchema:
     reservation = await ReservationDocument.get(reservation_id)
     if reservation is None:
-        from app.core.errors import ApiError
         from app.common.labels import ErrorCode
+        from app.core.errors import ApiError
 
         raise ApiError(
             status_code=404,

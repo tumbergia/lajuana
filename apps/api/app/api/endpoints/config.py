@@ -9,6 +9,7 @@ from app.documents import UserDocument
 from app.schemas.config import (
     AiConfigurationSchema,
     AiConfigurationUpdateSchema,
+    AiModelCatalogSchema,
     BusinessLocationSchema,
     BusinessLocationUpdateSchema,
     ConfigurationSummarySchema,
@@ -19,6 +20,7 @@ from app.schemas.config import (
     ReservationRulesUpdateSchema,
 )
 from app.services import ConfigService
+from app.services.model_catalog_service import ModelCatalogService
 
 router = APIRouter(prefix="/config", tags=["Configuracion"])
 
@@ -94,6 +96,13 @@ async def update_ai_configuration(
     service: ConfigService = Depends(get_config_service),
 ) -> AiConfigurationSchema:
     return await service.update_ai_configuration(payload, actor_id=current_user.id)
+
+
+@router.get("/ai/models", response_model=AiModelCatalogSchema)
+async def get_ai_model_catalog(
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.CONFIG_READ))],
+) -> AiModelCatalogSchema:
+    return await ModelCatalogService().get_catalog()
 
 
 @router.get("/payment-methods", response_model=PaymentInstructionsSchema)

@@ -128,8 +128,8 @@ class ReservationProvidersTab extends StatelessWidget {
                                   providerId: selectedProviderId!,
                                   serviceLabel:
                                       serviceController.text.trim().isEmpty
-                                          ? null
-                                          : serviceController.text.trim(),
+                                      ? null
+                                      : serviceController.text.trim(),
                                   notes: notesController.text.trim().isEmpty
                                       ? null
                                       : notesController.text.trim(),
@@ -140,7 +140,8 @@ class ReservationProvidersTab extends StatelessWidget {
                                 } else {
                                   showAppToast(
                                     context,
-                                    message: controller.errorMessage ??
+                                    message:
+                                        controller.errorMessage ??
                                         'No se pudo asociar',
                                     isError: true,
                                   );
@@ -165,7 +166,9 @@ class ReservationProvidersTab extends StatelessWidget {
     BuildContext context,
     ReservationProviderItem item,
   ) async {
-    final serviceController = TextEditingController(text: item.serviceLabel ?? '');
+    final serviceController = TextEditingController(
+      text: item.serviceLabel ?? '',
+    );
     final notesController = TextEditingController(text: item.notes ?? '');
     var status = item.status;
 
@@ -213,10 +216,22 @@ class ReservationProvidersTab extends StatelessWidget {
                       border: OutlineInputBorder(),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'pending', child: Text('Pendiente')),
-                      DropdownMenuItem(value: 'contacted', child: Text('Contactado')),
-                      DropdownMenuItem(value: 'confirmed', child: Text('Confirmado')),
-                      DropdownMenuItem(value: 'cancelled', child: Text('Cancelado')),
+                      DropdownMenuItem(
+                        value: 'pending',
+                        child: Text('Pendiente'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'contacted',
+                        child: Text('Contactado'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'confirmed',
+                        child: Text('Confirmado'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'cancelled',
+                        child: Text('Cancelado'),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null) setSheetState(() => status = value);
@@ -312,13 +327,11 @@ class ReservationProvidersTab extends StatelessWidget {
                   expanded: true,
                   onPressed:
                       controller.state == ReservationProvidersLoadState.saving
-                          ? null
-                          : () => _showAddDialog(context),
+                      ? null
+                      : () => _showAddDialog(context),
                 ),
               if (isAdmin) const SizedBox(height: 16),
-              Expanded(
-                child: RefreshableViewport(child: emptyState),
-              ),
+              Expanded(child: RefreshableViewport(child: emptyState)),
             ],
           );
         }
@@ -333,8 +346,8 @@ class ReservationProvidersTab extends StatelessWidget {
                 expanded: true,
                 onPressed:
                     controller.state == ReservationProvidersLoadState.saving
-                        ? null
-                        : () => _showAddDialog(context),
+                    ? null
+                    : () => _showAddDialog(context),
               ),
             if (isAdmin) const SizedBox(height: 16),
             ...controller.items.map(

@@ -16,7 +16,6 @@ from app.core.errors import ApiError
 
 
 class TestServiceLogServiceCreate:
-
     def test_create_note_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Valid note log → ServiceLogDocument inserted."""
         from app.documents.service_log_document import ServiceLogEventType
@@ -63,9 +62,7 @@ class TestServiceLogServiceCreate:
 
         asyncio.run(run())
 
-    def test_create_reservation_not_found(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_create_reservation_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Missing reservation → ApiError 404."""
         from app.schemas.service_log import ServiceLogCreateSchema
         from app.services.service_log_service import ServiceLogService
@@ -123,9 +120,7 @@ class TestServiceLogServiceCreate:
 
         asyncio.run(run())
 
-    def test_create_checkpoint_success(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_create_checkpoint_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Checkpoint with valid name → ServiceLogDocument inserted."""
         from app.documents.service_log_document import ServiceLogEventType
         from app.schemas.service_log import ServiceLogCreateSchema

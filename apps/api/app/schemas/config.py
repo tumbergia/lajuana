@@ -171,3 +171,31 @@ class ConfigurationSummarySchema(BaseModel):
     ai_source: str
     payment_methods_enabled: list[str]
     location_configured: bool
+
+
+class AiModelItemSchema(BaseModel):
+    provider: str
+    model_id: str
+    display_name: str
+    intelligence: int = Field(ge=1, le=5)
+    speed: int = Field(default=3, ge=1, le=5)
+    recommended: bool = False
+    value_note: str = ""
+    brand_color: str = "#5B5B5B"
+    input_usd_per_million: str | None = None
+    output_usd_per_million: str | None = None
+    cached_input_usd_per_million: str | None = None
+    combined_usd_per_million: str | None = None
+    context_length: int | None = None
+    buy_key_url: str
+    source: Literal["openrouter", "litellm", "catalog"] | None = None
+    sort_order: int = 0
+
+
+class AiModelCatalogSchema(BaseModel):
+    fetched_at: datetime | None = None
+    stale: bool = False
+    warnings: list[str] = Field(default_factory=list)
+    items: list[AiModelItemSchema]
+    provider_buy_urls: dict[str, str] = Field(default_factory=dict)
+    provider_brand_colors: dict[str, str] = Field(default_factory=dict)

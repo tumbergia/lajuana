@@ -21,8 +21,9 @@ extension AppTextInputKindResolution on AppTextInputKind {
     AppTextInputKind.phone => TextInputType.phone,
     AppTextInputKind.url => TextInputType.url,
     AppTextInputKind.integer => TextInputType.number,
-    AppTextInputKind.decimal =>
-      const TextInputType.numberWithOptions(decimal: true),
+    AppTextInputKind.decimal => const TextInputType.numberWithOptions(
+      decimal: true,
+    ),
     AppTextInputKind.search => TextInputType.text,
   };
 

@@ -20,10 +20,7 @@ from app.core.errors import ApiError
 
 
 class TestFileUploadServiceInit:
-
-    def test_init_upload_returns_signed_url(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_init_upload_returns_signed_url(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Happy path: init_upload returns upload_id + presigned URL."""
         from app.schemas.file_upload import FileInitUploadRequestSchema
         from app.services.file_upload_service import FileUploadService
@@ -69,9 +66,7 @@ class TestFileUploadServiceInit:
 
         asyncio.run(run())
 
-    def test_init_upload_sets_correct_expiration(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_init_upload_sets_correct_expiration(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """init_upload uses configured expiration in presigned URL."""
         from app.schemas.file_upload import FileInitUploadRequestSchema
         from app.services.file_upload_service import FileUploadService
@@ -115,10 +110,7 @@ class TestFileUploadServiceInit:
 
 
 class TestFileUploadServiceComplete:
-
-    def test_complete_upload_not_found(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_complete_upload_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Complete with unknown upload_id → ApiError 404."""
         from app.services.file_upload_service import FileUploadService
 
@@ -141,17 +133,13 @@ class TestFileUploadServiceComplete:
 
             service = FileUploadService()
             with pytest.raises(ApiError) as exc:
-                await service.complete_upload(
-                    current_user=fake_user, upload_id="nonexistent"
-                )
+                await service.complete_upload(current_user=fake_user, upload_id="nonexistent")
             assert exc.value.status_code == 404
             assert exc.value.code == ErrorCode.FILE_UPLOAD_NOT_FOUND
 
         asyncio.run(run())
 
-    def test_complete_upload_expired(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_complete_upload_expired(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Complete with expired upload → ApiError 409."""
         from app.services.file_upload_service import FileUploadService
 
@@ -168,8 +156,10 @@ class TestFileUploadServiceComplete:
             filename="doc.pdf",
             context="payment_proofs",
         )
+
         async def _save() -> None:
             pass
+
         expired_doc.save = _save  # satisfy await doc.save()
 
         async def find_doc(*_args: object, **_kwargs: object) -> SimpleNamespace:
@@ -196,9 +186,7 @@ class TestFileUploadServiceComplete:
 
         asyncio.run(run())
 
-    def test_complete_upload_success(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_complete_upload_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Happy path: S3 object exists → status becomes 'ready'."""
         from app.services.file_upload_service import FileUploadService
 

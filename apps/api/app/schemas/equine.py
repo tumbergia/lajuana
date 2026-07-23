@@ -27,25 +27,25 @@ class EquineCreateSchema(BaseModel):
     location_notes: str | None = None
 
     # Datos zootécnicos / ficha
-    breed: str | None = None                 # RAZA real: Criolla, Lusitana, Criolla x Lusitana
+    breed: str | None = None  # RAZA real: Criolla, Lusitana, Criolla x Lusitana
     sex: EquineSex = EquineSex.UNKNOWN
-    coat_color: str | None = None            # COLOR
-    gait: str | None = None                  # PASO: Fino, Trocha, etc.
+    coat_color: str | None = None  # COLOR
+    gait: str | None = None  # PASO: Fino, Trocha, etc.
 
     # Nacimiento
     approximate_birth_date: date | None = None
     approximate_age_years: int | None = Field(default=None, ge=0)
     birth_date_is_approximate: bool = True
-    birth_date_raw: str | None = None        # Texto original del Excel: "Oct. 15 de 2008"
+    birth_date_raw: str | None = None  # Texto original del Excel: "Oct. 15 de 2008"
     birth_place: str | None = None
 
     # Identificación externa
-    registry_number: str | None = None       # # REGISTRO
-    microchip: str | None = None             # MICROCHIP
+    registry_number: str | None = None  # # REGISTRO
+    microchip: str | None = None  # MICROCHIP
 
     # Genealogía
-    sire_name: str | None = None             # PADRE
-    dam_name: str | None = None              # MADRE
+    sire_name: str | None = None  # PADRE
+    dam_name: str | None = None  # MADRE
 
     # Medidas actuales resumidas
     weight_kg: Decimal | None = Field(default=None, gt=0)

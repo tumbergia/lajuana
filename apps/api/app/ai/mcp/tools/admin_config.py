@@ -7,10 +7,10 @@ from typing import Any
 from uuid import uuid4
 
 from app.ai.mcp.tool_contracts import (
+    AdminEmergencyContactItem,
     AdminGetEmergencyContactsOutput,
     AdminGetPaymentInstructionsOutput,
     AdminGetSystemConfigOutput,
-    AdminEmergencyContactItem,
     AdminUpdateReservationRulesOutput,
     ToolBlockingReason,
 )
@@ -21,6 +21,7 @@ from app.services.config_service import ConfigService
 
 def _get_service() -> ConfigService:
     from app.core.di import Container
+
     return Container.get_instance().config_service
 
 
@@ -126,7 +127,9 @@ async def admin_update_reservation_rules(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_reservation_rules",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,

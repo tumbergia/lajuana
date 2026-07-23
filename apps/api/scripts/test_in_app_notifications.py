@@ -96,10 +96,7 @@ async def _authenticate(email: str, password: str) -> UserDocument:
 
 async def _load_fixtures() -> FixtureData:
     reservations = (
-        await ReservationDocument.find({"deleted_at": None})
-        .sort("-updated_at")
-        .limit(5)
-        .to_list()
+        await ReservationDocument.find({"deleted_at": None}).sort("-updated_at").limit(5).to_list()
     )
     payment_proof: PaymentProofDocument | None = None
     if reservations:
@@ -236,10 +233,7 @@ def _build_samples(fixtures: FixtureData) -> dict[str, SamplePayload]:
         ),
         NotificationEventType.WHATSAPP_DELIVERY_FAILED.value: SamplePayload(
             title="Fallo envío WhatsApp",
-            body=(
-                f"No se pudo enviar a {phone}: Recordatorio de mañana. "
-                "WhatsApp API timeout"
-            ),
+            body=(f"No se pudo enviar a {phone}: Recordatorio de mañana. WhatsApp API timeout"),
             reservation_id=rid,
             contact_phone=phone,
         ),
@@ -247,9 +241,7 @@ def _build_samples(fixtures: FixtureData) -> dict[str, SamplePayload]:
 
 
 async def _unread_count(user_id: object) -> int:
-    return await InAppNotificationDocument.find(
-        {"user_id": user_id, "read": False}
-    ).count()
+    return await InAppNotificationDocument.find({"user_id": user_id, "read": False}).count()
 
 
 async def main() -> None:
@@ -262,10 +254,7 @@ async def main() -> None:
     try:
         print(f"==> Auth DB {args.email}")
         user = await _authenticate(args.email, args.password)
-        print(
-            f"    OK user_id={user.id} role={user.role.value} "
-            f"active={user.is_active}"
-        )
+        print(f"    OK user_id={user.id} role={user.role.value} active={user.is_active}")
 
         fixtures = await _load_fixtures()
         print(

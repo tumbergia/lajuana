@@ -16,17 +16,14 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
     required ProvidersApiClient apiClient,
     required OutboxRepository outbox,
     ProvidersDatabase? database,
-  })  : _apiClient = apiClient,
-        _outbox = outbox,
-        _local = ProvidersLocalDataSource(
-          database: database ?? ProvidersDatabase.instance,
-        ) {
+  }) : _apiClient = apiClient,
+       _outbox = outbox,
+       _local = ProvidersLocalDataSource(
+         database: database ?? ProvidersDatabase.instance,
+       ) {
     _outbox.registerHandler(
       _entityType,
-      OutboxEntityHandler(
-        onApplied: _onApplied,
-        onFailed: _onFailed,
-      ),
+      OutboxEntityHandler(onApplied: _onApplied, onFailed: _onFailed),
     );
   }
 
@@ -162,7 +159,8 @@ class ProvidersRepositoryImpl implements ProvidersRepository {
       return item;
     }
 
-    final merged = _mergeItem(cached,
+    final merged = _mergeItem(
+      cached,
       name: name,
       type: type,
       status: status,

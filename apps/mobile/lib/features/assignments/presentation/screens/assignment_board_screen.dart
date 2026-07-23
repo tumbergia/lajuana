@@ -92,10 +92,7 @@ class _AssignmentBoardScreenState extends State<AssignmentBoardScreen> {
     final isLoading =
         ctrl.state == BoardLoadState.initial ||
         ctrl.state == BoardLoadState.loading;
-    return AppScaffold(
-      scrollable: !isLoading,
-      child: body,
-    );
+    return AppScaffold(scrollable: !isLoading, child: body);
   }
 
   Widget _buildBody(AssignmentBoardController ctrl) {
@@ -186,9 +183,11 @@ class _BoardContent extends StatelessWidget {
         .where((s) => !s.isAvailable)
         .toList();
 
-    final hasConfirmedAssignments = board.participants.any(
-      (p) => p.assignment?.status == AssignmentStatus.confirmed,
-    ) || ctrl.hasPendingChanges;
+    final hasConfirmedAssignments =
+        board.participants.any(
+          (p) => p.assignment?.status == AssignmentStatus.confirmed,
+        ) ||
+        ctrl.hasPendingChanges;
     final hasFinalizedAssignments = board.participants.any(
       (p) => p.assignment?.status == AssignmentStatus.final_,
     );
@@ -235,16 +234,18 @@ class _BoardContent extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: AppButton(
                 label: 'Finalizar asignaciones',
-                icon: ctrl.isFinalizing ? null : Icons.check_circle_outline_rounded,
+                icon: ctrl.isFinalizing
+                    ? null
+                    : Icons.check_circle_outline_rounded,
                 variant: AppButtonVariant.primary,
                 expanded: true,
                 onPressed: ctrl.isFinalizing
                     ? null
                     : () => showFinalizeAllConfirm(
-                          context,
-                          ctrl,
-                          observationController,
-                        ),
+                        context,
+                        ctrl,
+                        observationController,
+                      ),
               ),
             ),
           if (hasFinalizedAssignments)
@@ -256,10 +257,10 @@ class _BoardContent extends StatelessWidget {
               onPressed: ctrl.isRevertingFinalize
                   ? null
                   : () => showUnfinalizeAllConfirm(
-                        context,
-                        ctrl,
-                        observationController,
-                      ),
+                      context,
+                      ctrl,
+                      observationController,
+                    ),
             ),
           const SizedBox(height: 12),
         ],
@@ -335,10 +336,9 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             message,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: scheme.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -369,10 +369,9 @@ class _ErrorState extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: scheme.onSurfaceVariant),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 16),

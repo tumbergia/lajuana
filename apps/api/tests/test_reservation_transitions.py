@@ -1,5 +1,5 @@
 import asyncio
-from datetime import date
+from datetime import date, timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -251,7 +251,7 @@ class _FakeReservationConfirm:
         self.id = "660000000000000000000001"
         self.status = ReservationStatus.PAYMENT_RECEIVED
         self.experience_id = "660000000000000000000020"
-        self.requested_date = date.today()
+        self.requested_date = date.today() + timedelta(days=30)
         self.payment_status = payment_status
         self.payment_proof_ids = ["proof-1"]
         self.participant_count = 2
@@ -402,9 +402,10 @@ class TestNoShowTransition:
 
     def test_confirmed_to_completed_is_valid_transition(self) -> None:
         """CONFIRMED → COMPLETED should be in the allowed transitions."""
-        assert ReservationStatus.COMPLETED in ALLOWED_RESERVATION_TRANSITIONS[
-            ReservationStatus.CONFIRMED
-        ]
+        assert (
+            ReservationStatus.COMPLETED
+            in ALLOWED_RESERVATION_TRANSITIONS[ReservationStatus.CONFIRMED]
+        )
 
     def test_completed_is_terminal_no_outgoing(self) -> None:
         """COMPLETED should have no outgoing transitions (terminal state)."""
@@ -421,8 +422,6 @@ class TestNoShowTransition:
         # Build service with minimal mock deps
         async def _noop(*args: object, **kwargs: object) -> None:
             pass
-
-        from app.services.reservation_service import ReservationService
 
         svc = ReservationService(
             notification_service=SimpleNamespace(
@@ -445,13 +444,9 @@ class TestNoShowTransition:
             ReservationStatus.EXPIRED,
         ]:
             with pytest.raises(ApiError):
-                asyncio.run(
-                    svc.transition_status(reservation, target)
-                )
+                asyncio.run(svc.transition_status(reservation, target))
 
-    def test_set_status_to_completed_from_confirmed(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_set_status_to_completed_from_confirmed(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """set_status to COMPLETED should succeed from CONFIRMED."""
 
         async def _mock_save() -> None:
@@ -485,8 +480,6 @@ class TestNoShowTransition:
             # Mock _sync_day_lock_fields
             async def _mock_sync(*args: object, **kwargs: object) -> None:
                 pass
-
-            from app.services.reservation_service import ReservationService
 
             svc = ReservationService(
                 notification_service=SimpleNamespace(
@@ -537,8 +530,6 @@ class TestNoShowTransition:
             async def _mock_sync(*args: object, **kwargs: object) -> None:
                 pass
 
-            from app.services.reservation_service import ReservationService
-
             svc = ReservationService(
                 notification_service=SimpleNamespace(),
                 form_link_service=SimpleNamespace(),
@@ -586,8 +577,6 @@ class TestNoShowTransition:
 
             async def _mock_sync(*args: object, **kwargs: object) -> None:
                 pass
-
-            from app.services.reservation_service import ReservationService
 
             svc = ReservationService(
                 notification_service=SimpleNamespace(),

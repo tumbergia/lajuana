@@ -2,22 +2,14 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `ServiceLogEventType`.
 
 enum ServiceLogEventType {
-  @JsonValue('arrival')
   ARRIVAL("arrival"),
-  @JsonValue('departure')
   DEPARTURE("departure"),
-  @JsonValue('checkpoint')
   CHECKPOINT("checkpoint"),
-  @JsonValue('closure')
   CLOSURE("closure"),
-  @JsonValue('incident')
   INCIDENT("incident"),
-  @JsonValue('note')
   NOTE("note"),
 ;
 

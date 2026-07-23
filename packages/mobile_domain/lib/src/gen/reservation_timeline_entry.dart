@@ -4,12 +4,13 @@
 
 /// AUTO-GENERATED from OpenAPI schema `ReservationTimelineEntrySchema`.
 
+import 'reservation_timeline_entry_source.dart';
 import 'service_log_photo.dart';
 
 class ReservationTimelineEntry {
 
   final String id;
-  final source source;
+  final ReservationTimelineEntrySource source;
   final String kind;
   final DateTime happenedAt;
   final String title;
@@ -45,7 +46,7 @@ class ReservationTimelineEntry {
   factory ReservationTimelineEntry.fromJson(Map<String, dynamic> json) {
     return ReservationTimelineEntry(
       id: json['id'] as String,
-      source: source.fromJson(json['source'] as Map<String, dynamic>),
+      source: (json['source'] as String).toReservationTimelineEntrySource(),
       kind: json['kind'] as String,
       happenedAt: DateTime.parse(json['happened_at'] as String),
       title: json['title'] as String,
@@ -64,7 +65,7 @@ class ReservationTimelineEntry {
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'source': source,
+    'source': source.toJson(),
     'kind': kind,
     'happened_at': happenedAt.toIso8601String(),
     'title': title,
@@ -75,7 +76,7 @@ class ReservationTimelineEntry {
     'deletable': deletable,
     'related_participant_id': relatedParticipantId,
     'service_log_id': serviceLogId,
-    'photos': photos,
+    'photos': photos?.map((e) => e.toJson()).toList(),
     'photos_total': photosTotal,
   };
 

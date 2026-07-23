@@ -207,7 +207,10 @@ const Map<String, Color> kCountryFlagColors = {
 
 /// Returns the flag accent for [iso], or a neutral fallback for unknown /
 /// aggregated buckets (e.g. "Otros").
-Color countryFlagColor(String? iso, {Color fallback = const Color(0xFF9E9E9E)}) {
+Color countryFlagColor(
+  String? iso, {
+  Color fallback = const Color(0xFF9E9E9E),
+}) {
   if (iso == null || iso.isEmpty) return fallback;
   final key = iso.trim().toUpperCase();
   if (key == 'OTHERS' || key == 'UNKNOWN') return fallback;

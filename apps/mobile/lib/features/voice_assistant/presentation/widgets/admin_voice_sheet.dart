@@ -107,16 +107,19 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
         final scheme = theme.colorScheme;
         final isDark = theme.brightness == Brightness.dark;
         final visualizerColor = isDark ? Colors.white : scheme.primary;
-        final isAnsweredPhase = controller.phase == VoicePhase.answered ||
+        final isAnsweredPhase =
+            controller.phase == VoicePhase.answered ||
             controller.phase == VoicePhase.handoff;
         final structuredResult = _structuredResult(controller);
         final chartSpec = _chartSpec(controller);
-        final showManualInput = !isAnsweredPhase &&
+        final showManualInput =
+            !isAnsweredPhase &&
             (controller.allowsManualInput ||
                 !controller.speechSupported ||
                 controller.phase == VoicePhase.error ||
                 controller.phase == VoicePhase.needsInput);
-        final showVisualizer = controller.speechSupported &&
+        final showVisualizer =
+            controller.speechSupported &&
             !isAnsweredPhase &&
             (controller.phase == VoicePhase.listening ||
                 controller.phase == VoicePhase.processing ||
@@ -136,8 +139,10 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                   ? constraints.maxHeight
                   : fallbackMaxHeight;
               final chromeHeight = _chromeHeight(controller.phase);
-              final bodyMaxHeight =
-                  (maxHeight - chromeHeight).clamp(120.0, maxHeight);
+              final bodyMaxHeight = (maxHeight - chromeHeight).clamp(
+                120.0,
+                maxHeight,
+              );
 
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -208,8 +213,7 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                                   padding: const EdgeInsets.only(top: 8),
                                   child: Text(
                                     VoicePlatformSupport.unsupportedSpeechHint,
-                                    style:
-                                        theme.textTheme.labelSmall?.copyWith(
+                                    style: theme.textTheme.labelSmall?.copyWith(
                                       color: scheme.onSurfaceVariant,
                                     ),
                                   ),
@@ -219,7 +223,8 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                               const SizedBox(height: 24),
                               Center(
                                 child: AnimatedScale(
-                                  scale: controller.phase ==
+                                  scale:
+                                      controller.phase ==
                                               VoicePhase.listening ||
                                           controller.phase ==
                                               VoicePhase.processing
@@ -227,7 +232,8 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                                       : 0.96,
                                   duration: const Duration(milliseconds: 250),
                                   child: VoiceVisualizer(
-                                    isActive: controller.phase ==
+                                    isActive:
+                                        controller.phase ==
                                             VoicePhase.listening ||
                                         controller.phase ==
                                             VoicePhase.processing,
@@ -272,7 +278,10 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     return headerAndGaps + actionsHeight;
   }
 
-  Widget _buildActions(BuildContext context, VoiceAssistantController controller) {
+  Widget _buildActions(
+    BuildContext context,
+    VoiceAssistantController controller,
+  ) {
     switch (controller.phase) {
       case VoicePhase.answered:
       case VoicePhase.handoff:
@@ -301,7 +310,9 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
             AppButton(
               label: 'Confirmar',
               icon: Icons.check_rounded,
-              onPressed: controller.isProcessing ? null : controller.confirmPendingAction,
+              onPressed: controller.isProcessing
+                  ? null
+                  : controller.confirmPendingAction,
               expanded: true,
             ),
             const SizedBox(height: 12),
@@ -309,7 +320,9 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
               label: 'Cancelar acción',
               variant: AppButtonVariant.secondary,
               icon: Icons.close_rounded,
-              onPressed: controller.isProcessing ? null : controller.cancelPendingAction,
+              onPressed: controller.isProcessing
+                  ? null
+                  : controller.cancelPendingAction,
               expanded: true,
             ),
             const SizedBox(height: 12),
@@ -381,8 +394,8 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                 onTap: controller.isProcessing
                     ? null
                     : (controller.isListening
-                        ? controller.stopListening
-                        : controller.startListening),
+                          ? controller.stopListening
+                          : controller.startListening),
               ),
             ],
             const SizedBox(width: 12),
@@ -390,10 +403,9 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
               child: AppButton(
                 label: controller.isProcessing ? 'Procesando' : 'Enviar',
                 icon: Icons.send_rounded,
-                onPressed:
-                    controller.isProcessing || !controller.canSend
-                        ? null
-                        : controller.sendTranscript,
+                onPressed: controller.isProcessing || !controller.canSend
+                    ? null
+                    : controller.sendTranscript,
                 expanded: true,
               ),
             ),
@@ -415,7 +427,9 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     };
   }
 
-  VoiceStructuredResult? _structuredResult(VoiceAssistantController controller) {
+  VoiceStructuredResult? _structuredResult(
+    VoiceAssistantController controller,
+  ) {
     final result = controller.result;
     final navigation = widget.navigation;
     if (result == null || navigation == null) return null;
@@ -450,7 +464,8 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     VoiceAssistantController controller,
     VoiceStructuredResult? structuredResult,
   ) {
-    if (controller.errorMessage != null) return 'error:${controller.errorMessage}';
+    if (controller.errorMessage != null)
+      return 'error:${controller.errorMessage}';
     if (controller.phase == VoicePhase.processing) {
       return 'processing:${controller.processingStage.name}';
     }
@@ -528,10 +543,7 @@ class _VoiceCard extends StatelessWidget {
 }
 
 class _ToolChip extends StatelessWidget {
-  const _ToolChip({
-    required this.action,
-    required this.toolName,
-  });
+  const _ToolChip({required this.action, required this.toolName});
 
   final String action;
   final String toolName;
@@ -551,9 +563,9 @@ class _ToolChip extends StatelessWidget {
         child: Text(
           '$action · $toolName',
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                letterSpacing: 0.4,
-              ),
+            color: scheme.onSurfaceVariant,
+            letterSpacing: 0.4,
+          ),
         ),
       ),
     );

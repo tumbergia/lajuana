@@ -14,28 +14,23 @@ class PhoneCountry {
   String get flagEmoji {
     final code = iso.toUpperCase();
     if (code.length != 2) return '';
-    return String.fromCharCodes(
-      code.runes.map((rune) => rune + 127397),
-    );
+    return String.fromCharCodes(code.runes.map((rune) => rune + 127397));
   }
 
   String get displayCode => '+$dialCode';
 }
 
 class ParsedPhoneNumber {
-  const ParsedPhoneNumber({
-    required this.country,
-    required this.localNumber,
-  });
+  const ParsedPhoneNumber({required this.country, required this.localNumber});
 
   final PhoneCountry country;
   final String localNumber;
 }
 
 PhoneCountry get kDefaultPhoneCountry => kPhoneCountries.firstWhere(
-      (country) => country.iso == 'CO',
-      orElse: () => kPhoneCountries.first,
-    );
+  (country) => country.iso == 'CO',
+  orElse: () => kPhoneCountries.first,
+);
 
 // Sorted once by dial code length (longest first) for prefix matching.
 List<PhoneCountry> get kPhoneCountriesByDialCodeLength {

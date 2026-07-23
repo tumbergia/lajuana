@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from enum import StrEnum
-from typing import Any, Literal
 
 from pydantic import BaseModel, Field
-
 
 ANALYTICS_SCHEMA_VERSION = 2
 
@@ -259,7 +257,7 @@ class LeadsPreferencesSchema(BaseModel):
     excluded_lead_ids: list[str] = Field(default_factory=list)
 
     @classmethod
-    def from_user_prefs(cls, prefs: dict | None) -> "LeadsPreferencesSchema":
+    def from_user_prefs(cls, prefs: dict | None) -> LeadsPreferencesSchema:
         stored = prefs or {}
         pinned = list(stored.get("pinned_lead_ids") or [])
         excluded = list(stored.get("excluded_lead_ids") or [])
@@ -379,11 +377,10 @@ def build_comparison(
 
 
 def freshness_label(generated_at: datetime, *, now: datetime | None = None) -> str:
-    from datetime import timezone
 
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     if generated_at.tzinfo is None:
-        generated_at = generated_at.replace(tzinfo=timezone.utc)
+        generated_at = generated_at.replace(tzinfo=UTC)
     delta = now - generated_at
     seconds = max(0, int(delta.total_seconds()))
     if seconds < 60:

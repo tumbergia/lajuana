@@ -134,10 +134,8 @@ class _LaJuanaConfigurationPageState extends State<LaJuanaConfigurationPage> {
                   )
                 : null,
             trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-            onTap: () => _open(
-              context,
-              RoleRequestsScreen(module: widget.usersModule!),
-            ),
+            onTap: () =>
+                _open(context, RoleRequestsScreen(module: widget.usersModule!)),
           ),
           const SizedBox(height: 12),
         ],
@@ -174,7 +172,8 @@ class _LaJuanaConfigurationPageState extends State<LaJuanaConfigurationPage> {
           subtitle: 'Consignación bancaria y enlace Bold',
           leading: _leadingIcon(context, Symbols.payments),
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-          onTap: () => _open(context, PaymentMethodsPage(module: widget.module)),
+          onTap: () =>
+              _open(context, PaymentMethodsPage(module: widget.module)),
         ),
         const SizedBox(height: 12),
         AppEntityRowCard(
@@ -182,7 +181,8 @@ class _LaJuanaConfigurationPageState extends State<LaJuanaConfigurationPage> {
           subtitle: 'Dirección, indicaciones y punto en el mapa',
           leading: _leadingIcon(context, Symbols.location_on_rounded),
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-          onTap: () => _open(context, BusinessLocationPage(module: widget.module)),
+          onTap: () =>
+              _open(context, BusinessLocationPage(module: widget.module)),
         ),
       ],
     );

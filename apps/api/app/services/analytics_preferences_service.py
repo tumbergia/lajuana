@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.common.enums import UserRole
 from app.documents import UserDocument
@@ -78,7 +78,7 @@ class AnalyticsPreferencesService:
             selected_module_ids=order,
             module_order=order,
             default_range=default_range,
-            updated_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(UTC),
         )
         user.analytics_preferences = prefs.model_dump(mode="json")
         await user.save()
@@ -91,7 +91,7 @@ class AnalyticsPreferencesService:
             selected_module_ids=defaults,
             module_order=list(defaults),
             default_range=DateRangePreset.LAST_30_DAYS,
-            updated_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(UTC),
         )
 
     def _clean(self, stored: dict, role: UserRole) -> AnalyticsPreferencesSchema:

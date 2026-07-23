@@ -9,20 +9,19 @@ class AssignmentsLocalDataSource {
   final AssignmentsDatabase _db;
 
   AssignmentsLocalDataSource({AssignmentsDatabase? db})
-      : _db = db ?? AssignmentsDatabase.instance;
+    : _db = db ?? AssignmentsDatabase.instance;
 
   /// Save board payload to local cache.
-  Future<void> cacheBoard(String reservationId, Map<String, dynamic> payload) async {
+  Future<void> cacheBoard(
+    String reservationId,
+    Map<String, dynamic> payload,
+  ) async {
     final db = await _db.database;
-    await db.insert(
-      'assignment_board_cache',
-      {
-        'id': reservationId,
-        'payload_json': jsonEncode(payload),
-        'cached_at': DateTime.now().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('assignment_board_cache', {
+      'id': reservationId,
+      'payload_json': jsonEncode(payload),
+      'cached_at': DateTime.now().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Load cached board payload, or null if not found.
@@ -35,6 +34,7 @@ class AssignmentsLocalDataSource {
       limit: 1,
     );
     if (rows.isEmpty) return null;
-    return jsonDecode(rows.first['payload_json'] as String) as Map<String, dynamic>;
+    return jsonDecode(rows.first['payload_json'] as String)
+        as Map<String, dynamic>;
   }
 }

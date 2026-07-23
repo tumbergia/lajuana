@@ -15,8 +15,7 @@ import 'package:mobile/features/providers/presentation/utils/phone_country.dart'
 
 List<AppChartPoint> chartPointsFromSeries(AnalyticsSeries series) {
   return [
-    for (final p in series.points)
-      AppChartPoint(label: p.label, value: p.raw),
+    for (final p in series.points) AppChartPoint(label: p.label, value: p.raw),
   ];
 }
 
@@ -110,7 +109,11 @@ const List<Color> _experiencesVividPalette = [
   Color(0xFF7C4DFF), // vivid violet
 ];
 
-Color _rankingBarColor(AnalyticsModule module, AnalyticsVisualTokens tokens, int index) {
+Color _rankingBarColor(
+  AnalyticsModule module,
+  AnalyticsVisualTokens tokens,
+  int index,
+) {
   if (module.id == 'top_experiences') {
     return _experiencesVividPalette[index % _experiencesVividPalette.length];
   }
@@ -171,7 +174,8 @@ Widget _emptyCard(AnalyticsModule module, {required bool refreshing}) {
         accentColor: chromeAccentForModule(context, module),
         child: AppChartEmptyState(
           title: 'Sin datos',
-          message: module.emptyMessage ?? 'Todavía no hay datos para este periodo.',
+          message:
+              module.emptyMessage ?? 'Todavía no hay datos para este periodo.',
         ),
       );
     },
@@ -180,10 +184,7 @@ Widget _emptyCard(AnalyticsModule module, {required bool refreshing}) {
 
 /// Minimal tinted surface (no shared header/value skeleton).
 class _VizSurface extends StatelessWidget {
-  const _VizSurface({
-    required this.accent,
-    required this.child,
-  });
+  const _VizSurface({required this.accent, required this.child});
 
   final Color accent;
   final Widget child;
@@ -238,16 +239,16 @@ class KpiInsightCard extends StatelessWidget {
             Text(
               module.primaryValue!.formatted,
               style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: accent,
-                  ),
+                fontWeight: FontWeight.w800,
+                color: accent,
+              ),
             ),
           if (module.primaryValue != null)
             Text(
               module.primaryValue!.unit,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           SizedBox(height: Theme.of(context).appTokens.spaceSm),
           AppSparkline(
@@ -298,12 +299,13 @@ class TrendInsightCard extends StatelessWidget {
     final chartHeight = hero
         ? tokens.chartHeightWide + 24
         : compact
-            ? tokens.chartHeightStandard
-            : tokens.chartHeightWide;
+        ? tokens.chartHeightStandard
+        : tokens.chartHeightWide;
     final description = module.description.trim();
     final seriesLabel = series.label.trim();
     final showSeriesCaption =
-        seriesLabel.isNotEmpty && seriesLabel.toLowerCase() != module.title.toLowerCase();
+        seriesLabel.isNotEmpty &&
+        seriesLabel.toLowerCase() != module.title.toLowerCase();
 
     return _VizSurface(
       accent: accent,
@@ -316,9 +318,9 @@ class TrendInsightCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   module.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
               if (refreshing) const ChartRefreshingBadge(),
@@ -341,17 +343,17 @@ class TrendInsightCard extends StatelessWidget {
             SizedBox(height: appTokens.spaceXs),
             Text(
               description,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
           SizedBox(height: appTokens.spaceXs),
           Text(
             module.period.label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
           SizedBox(height: appTokens.spaceLg),
           if (module.primaryValue != null)
@@ -360,13 +362,14 @@ class TrendInsightCard extends StatelessWidget {
               children: [
                 Text(
                   module.primaryValue!.formatted,
-                  style: (hero
-                          ? Theme.of(context).textTheme.headlineLarge
-                          : Theme.of(context).textTheme.headlineMedium)
-                      ?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: accent,
-                  ),
+                  style:
+                      (hero
+                              ? Theme.of(context).textTheme.headlineLarge
+                              : Theme.of(context).textTheme.headlineMedium)
+                          ?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: accent,
+                          ),
                 ),
                 SizedBox(width: appTokens.spaceSm),
                 Padding(
@@ -374,22 +377,25 @@ class TrendInsightCard extends StatelessWidget {
                   child: Text(
                     module.primaryValue!.unit,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 const Spacer(),
                 if (module.comparison != null)
-                  _TrendDeltaChip(comparison: module.comparison!, tokens: tokens),
+                  _TrendDeltaChip(
+                    comparison: module.comparison!,
+                    tokens: tokens,
+                  ),
               ],
             ),
           if (module.comparison?.label != null) ...[
             SizedBox(height: appTokens.spaceXs),
             Text(
               module.comparison!.label!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
           SizedBox(height: appTokens.spaceLg),
@@ -397,10 +403,10 @@ class TrendInsightCard extends StatelessWidget {
             Text(
               seriesLabel.toUpperCase(),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                  ),
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.6,
+              ),
             ),
             SizedBox(height: appTokens.spaceSm),
           ],
@@ -461,10 +467,14 @@ class _TrendDeltaChip extends StatelessWidget {
     } else if (absFormatted != null && absFormatted.isNotEmpty) {
       final positive = absFormatted.startsWith('+');
       final negative = absFormatted.startsWith('-');
-      color = positive ? tokens.success : (negative ? tokens.danger : tokens.neutral);
+      color = positive
+          ? tokens.success
+          : (negative ? tokens.danger : tokens.neutral);
       icon = positive
           ? Icons.trending_up_rounded
-          : (negative ? Icons.trending_down_rounded : Icons.trending_flat_rounded);
+          : (negative
+                ? Icons.trending_down_rounded
+                : Icons.trending_flat_rounded);
       text = absFormatted;
     } else {
       return const SizedBox.shrink();
@@ -522,8 +532,8 @@ class _InsightCallout extends StatelessWidget {
             child: Text(
               text,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
         ],
@@ -558,8 +568,9 @@ class RankingInsightCard extends StatelessWidget {
       return _emptyCard(module, refreshing: refreshing);
     }
     final items = module.ranking.take(hero ? 6 : 5).toList();
-    final maxV =
-        items.map((e) => e.rawValue).fold<double>(1, (a, b) => a > b ? a : b);
+    final maxV = items
+        .map((e) => e.rawValue)
+        .fold<double>(1, (a, b) => a > b ? a : b);
     final description = module.description.trim();
     final accent = chromeAccentForModule(context, module);
 
@@ -574,9 +585,9 @@ class RankingInsightCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   module.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
               if (refreshing) const ChartRefreshingBadge(),
@@ -599,17 +610,17 @@ class RankingInsightCard extends StatelessWidget {
             SizedBox(height: appTokens.spaceXs),
             Text(
               description,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
           SizedBox(height: appTokens.spaceXs),
           Text(
             module.period.label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
           if (module.primaryValue != null) ...[
             SizedBox(height: appTokens.spaceLg),
@@ -619,9 +630,9 @@ class RankingInsightCard extends StatelessWidget {
                 Text(
                   module.primaryValue!.formatted,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: accent,
-                      ),
+                    fontWeight: FontWeight.w900,
+                    color: accent,
+                  ),
                 ),
                 SizedBox(width: appTokens.spaceSm),
                 Padding(
@@ -629,8 +640,8 @@ class RankingInsightCard extends StatelessWidget {
                   child: Text(
                     module.primaryValue!.unit,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -688,11 +699,7 @@ class ProgressInsightCard extends StatelessWidget {
     return raw.isNotEmpty ? raw : '${item.rawValue.toStringAsFixed(0)}/—';
   }
 
-  Color _barColor(
-    AnalyticsVisualTokens tokens,
-    RankingItem item,
-    int index,
-  ) {
+  Color _barColor(AnalyticsVisualTokens tokens, RankingItem item, int index) {
     if (_isOccupancy) return _occupancyRowColor(tokens, item);
     return tokens.seriesPalette[index % tokens.seriesPalette.length];
   }
@@ -726,8 +733,9 @@ class ProgressInsightCard extends StatelessWidget {
     if (module.isEmpty || items.isEmpty) {
       return _emptyCard(module, refreshing: refreshing);
     }
-    final maxV =
-        items.map((e) => e.rawValue).fold<double>(1, (a, b) => a > b ? a : b);
+    final maxV = items
+        .map((e) => e.rawValue)
+        .fold<double>(1, (a, b) => a > b ? a : b);
     final shown = items.take(hero ? 6 : 5).toList();
     final description = module.description.trim();
     final accent = chromeAccentForModule(context, module);
@@ -743,9 +751,9 @@ class ProgressInsightCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   module.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
               if (refreshing) const ChartRefreshingBadge(),
@@ -770,17 +778,17 @@ class ProgressInsightCard extends StatelessWidget {
               description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
           SizedBox(height: appTokens.spaceXs),
           Text(
             module.period.label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
           if (module.primaryValue != null) ...[
             SizedBox(height: appTokens.spaceLg),
@@ -810,11 +818,11 @@ class ProgressInsightCard extends StatelessWidget {
                   children: [
                     Text(
                       primaryFormatted,
-                      style:
-                          Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: accent,
-                              ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: accent,
+                          ),
                     ),
                     if (primaryUnit.isNotEmpty) ...[
                       SizedBox(width: appTokens.spaceSm),
@@ -822,10 +830,8 @@ class ProgressInsightCard extends StatelessWidget {
                         padding: const EdgeInsets.only(bottom: 6),
                         child: Text(
                           primaryUnit,
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
+                          style: Theme.of(context).textTheme.labelLarge
+                              ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ),
                     ],
@@ -894,23 +900,22 @@ class _MetricBarRow extends StatelessWidget {
                 label,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
             SizedBox(width: appTokens.spaceSm),
             Text(
               valueText,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             if (emphasizeShare) ...[
               SizedBox(width: appTokens.spaceXs),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: barColor.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(999),
@@ -931,19 +936,15 @@ class _MetricBarRow extends StatelessWidget {
               Text(
                 '${sharePercentage!.toStringAsFixed(0)}%',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ],
         ),
         SizedBox(height: appTokens.spaceXs + 2),
-        _TintedBar(
-          fraction: fraction,
-          color: barColor,
-          height: barHeight,
-        ),
+        _TintedBar(fraction: fraction, color: barColor, height: barHeight),
       ],
     );
   }
@@ -981,10 +982,7 @@ class _TintedBar extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      color.withValues(alpha: 0.82),
-                      color,
-                    ],
+                    colors: [color.withValues(alpha: 0.82), color],
                   ),
                 ),
               ),
@@ -1033,7 +1031,11 @@ class _CountryRankingCardState extends State<CountryRankingCard> {
     );
   }
 
-  void _selectSection(int index, List<RankingItem> items, {required bool hasMore}) {
+  void _selectSection(
+    int index,
+    List<RankingItem> items, {
+    required bool hasMore,
+  }) {
     if (index < 0 || index >= items.length) {
       _openInfo(context);
       return;
@@ -1060,7 +1062,8 @@ class _CountryRankingCardState extends State<CountryRankingCard> {
         refreshing: refreshing,
         accentColor: chromeAccentForModule(context, module),
         child: AppChartEmptyState(
-          message: module.emptyMessage ??
+          message:
+              module.emptyMessage ??
               'Aún no hay suficientes participantes registrados para mostrar países principales.',
           icon: Icons.public,
         ),
@@ -1104,10 +1107,8 @@ class _CountryRankingCardState extends State<CountryRankingCard> {
                     Expanded(
                       child: Text(
                         module.title,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                     if (refreshing) const ChartRefreshingBadge(),
@@ -1123,9 +1124,9 @@ class _CountryRankingCardState extends State<CountryRankingCard> {
           ),
           Text(
             module.period.label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
           SizedBox(height: appTokens.spaceMd),
           AppDonutChart(
@@ -1161,8 +1162,8 @@ class _CountryRankingCardState extends State<CountryRankingCard> {
                   child: Text(
                     'Mostrando top ${CountryRankingCard._visibleLimit} · toca para ver todos (${allItems.length})',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ),
@@ -1211,10 +1212,7 @@ class _CountryLegendRow extends StatelessWidget {
           Container(
             width: 10,
             height: 10,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           SizedBox(width: appTokens.spaceSm),
           _Flag(
@@ -1227,24 +1225,24 @@ class _CountryLegendRow extends StatelessWidget {
           Expanded(
             child: Text(
               item.countryName ?? item.label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           Text(
             item.formattedValue,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           if (share != null) ...[
             SizedBox(width: appTokens.spaceXs),
             Text(
               '${share.toStringAsFixed(0)}%',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
         ],
@@ -1264,12 +1262,7 @@ class _CountryLegendRow extends StatelessWidget {
 }
 
 class _Flag extends StatelessWidget {
-  const _Flag({
-    this.code,
-    this.name,
-    this.width = 36,
-    this.height = 26,
-  });
+  const _Flag({this.code, this.name, this.width = 36, this.height = 26});
 
   final String? code;
   final String? name;
@@ -1380,9 +1373,9 @@ class ActionCenterCard extends StatelessWidget {
                     Text(
                       item.formattedValue,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: scheme.onSurface,
-                          ),
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurface,
+                      ),
                     ),
                     if (onItemTap != null) ...[
                       SizedBox(width: tokensApp.spaceXs),
@@ -1478,8 +1471,8 @@ class _DonutInsightCardState extends State<DonutInsightCard> {
     final h = hero
         ? tokens.chartHeightWide
         : compact
-            ? tokens.chartHeightStandard * 0.85
-            : tokens.chartHeightStandard;
+        ? tokens.chartHeightStandard * 0.85
+        : tokens.chartHeightStandard;
 
     return _VizSurface(
       accent: accent,
@@ -1498,10 +1491,8 @@ class _DonutInsightCardState extends State<DonutInsightCard> {
                     Expanded(
                       child: Text(
                         module.title,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                     if (refreshing) const ChartRefreshingBadge(),
@@ -1517,9 +1508,9 @@ class _DonutInsightCardState extends State<DonutInsightCard> {
           ),
           Text(
             module.period.label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
           SizedBox(height: appTokens.spaceMd),
           Row(
@@ -1548,9 +1539,10 @@ class _DonutInsightCardState extends State<DonutInsightCard> {
                       if (i > 0) SizedBox(height: appTokens.spaceSm),
                       _BreakdownLegendRow(
                         item: items[i],
-                        color: points[i].color ??
-                            tokens.seriesPalette[
-                                i % tokens.seriesPalette.length],
+                        color:
+                            points[i].color ??
+                            tokens.seriesPalette[i %
+                                tokens.seriesPalette.length],
                         highlighted:
                             _focusKey != null && items[i].key == _focusKey,
                         onTap: () => _openInfo(context, focus: items[i]),
@@ -1592,8 +1584,8 @@ class _BreakdownLegendRow extends StatelessWidget {
     final valueText = item.formattedValue.isNotEmpty
         ? item.formattedValue
         : (item.rawValue == item.rawValue.roundToDouble()
-            ? item.rawValue.toInt().toString()
-            : item.rawValue.toStringAsFixed(1));
+              ? item.rawValue.toInt().toString()
+              : item.rawValue.toStringAsFixed(1));
     final isLight = color.computeLuminance() > 0.85;
     final swatchBorder = isLight
         ? Border.all(color: scheme.outline.withValues(alpha: 0.55))
@@ -1607,8 +1599,8 @@ class _BreakdownLegendRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: highlighted
             ? (isLight
-                ? scheme.surfaceContainerHighest
-                : color.withValues(alpha: 0.16))
+                  ? scheme.surfaceContainerHighest
+                  : color.withValues(alpha: 0.16))
             : Colors.transparent,
         borderRadius: appTokens.radiusMd,
       ),
@@ -1629,24 +1621,24 @@ class _BreakdownLegendRow extends StatelessWidget {
               item.label,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
           Text(
             valueText,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           if (share != null) ...[
             SizedBox(width: appTokens.spaceXs),
             Text(
               '${share.toStringAsFixed(0)}%',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ],
         ],
@@ -1694,25 +1686,25 @@ class _TitleRow extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               if (subtitleText.isNotEmpty) ...[
                 SizedBox(height: tokens.spaceXs),
                 Text(
                   subtitleText,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.35,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
                 ),
               ],
               Text(
                 period,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),

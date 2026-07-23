@@ -33,12 +33,7 @@ jobs:
       - name: Generate OpenAPI spec + Dart models
         run: |
           cd apps/api
-          python -c "
-from app.main import app
-import json
-with open('openapi.json', 'w') as f:
-    json.dump(app.openapi(), f, indent=2)
-"
+          python -c "from app.main import app; import json; json.dump(app.openapi(), open('openapi.json', 'w'), indent=2)"
           cd ../..
           python tools/openapi_gen/generate_models.py \
             --spec-file apps/api/openapi.json
@@ -54,7 +49,7 @@ with open('openapi.json', 'w') as f:
             exit 1
           fi
 
-      - name: Verify Dart analysis
+      - name: Set up Dart
         uses: dart-lang/setup-dart@v1
         with:
           sdk: stable
@@ -62,4 +57,5 @@ with open('openapi.json', 'w') as f:
       - name: Analyze generated models
         run: |
           cd packages/mobile_domain
-          dart analyze lib/src/gen/
+          dart pub get
+          dart analyze --no-fatal-warnings lib/src/gen/

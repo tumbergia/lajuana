@@ -29,10 +29,7 @@ class VoiceResultItem {
 }
 
 class VoiceStructuredResult {
-  const VoiceStructuredResult({
-    required this.summary,
-    required this.items,
-  });
+  const VoiceStructuredResult({required this.summary, required this.items});
 
   final String summary;
   final List<VoiceResultItem> items;
@@ -56,48 +53,47 @@ class VoiceResultPresenter {
 
     return switch (toolName) {
       'admin_list_reservations' => _reservations(
-          toolOutput,
-          navigation,
-          hostContext,
-          navigate,
-        ),
+        toolOutput,
+        navigation,
+        hostContext,
+        navigate,
+      ),
       'admin_list_equines' => _equines(
-          toolOutput,
-          navigation,
-          hostContext,
-          navigate,
-        ),
+        toolOutput,
+        navigation,
+        hostContext,
+        navigate,
+      ),
       'admin_list_providers' => _providers(
-          toolOutput,
-          navigation,
-          hostContext,
-          navigate,
-        ),
+        toolOutput,
+        navigation,
+        hostContext,
+        navigate,
+      ),
       'admin_list_saddles' => _saddles(
-          toolOutput,
-          navigation,
-          hostContext,
-          navigate,
-        ),
+        toolOutput,
+        navigation,
+        hostContext,
+        navigate,
+      ),
       'admin_list_experiences_admin' => _experiences(
-          toolOutput,
-          navigation,
-          hostContext,
-          navigate,
-        ),
+        toolOutput,
+        navigation,
+        hostContext,
+        navigate,
+      ),
       'admin_list_equine_events' => _equineEvents(
-          toolOutput,
-          navigation,
-          hostContext,
-          navigate,
-        ),
-      'admin_list_available_saddles_for_reservation' =>
-        _availableSaddles(
-          toolOutput,
-          navigation,
-          hostContext,
-          navigate,
-        ),
+        toolOutput,
+        navigation,
+        hostContext,
+        navigate,
+      ),
+      'admin_list_available_saddles_for_reservation' => _availableSaddles(
+        toolOutput,
+        navigation,
+        hostContext,
+        navigate,
+      ),
       'admin_list_users' => _users(toolOutput),
       'admin_list_human_review_requests' => _humanReviews(toolOutput),
       'admin_list_schedules_admin' => _schedules(toolOutput),
@@ -144,9 +140,8 @@ class VoiceResultPresenter {
           ),
           onTap: id == null
               ? null
-              : () => navigate(
-                    () => navigation.openReservation(hostContext, id),
-                  ),
+              : () =>
+                    navigate(() => navigation.openReservation(hostContext, id)),
         );
       }).toList(),
     );
@@ -219,16 +214,16 @@ class VoiceResultPresenter {
           onTap: id == null
               ? null
               : () => navigate(
-                    () => navigation.openProviderDetail(
-                      hostContext,
-                      providerId: id,
-                      name: name,
-                      slug: slug,
-                      type: type,
-                      status: status,
-                      isActive: isActive,
-                    ),
+                  () => navigation.openProviderDetail(
+                    hostContext,
+                    providerId: id,
+                    name: name,
+                    slug: slug,
+                    type: type,
+                    status: status,
+                    isActive: isActive,
                   ),
+                ),
         );
       }).toList(),
     );
@@ -262,14 +257,14 @@ class VoiceResultPresenter {
           onTap: id == null
               ? null
               : () => navigate(
-                    () => navigation.openSaddleDetail(
-                      hostContext,
-                      saddleId: id,
-                      fallbackCode: code,
-                      fallbackName: name,
-                      fallbackAvailable: isAvailable,
-                    ),
+                  () => navigation.openSaddleDetail(
+                    hostContext,
+                    saddleId: id,
+                    fallbackCode: code,
+                    fallbackName: name,
+                    fallbackAvailable: isAvailable,
                   ),
+                ),
         );
       }).toList(),
     );
@@ -294,8 +289,7 @@ class VoiceResultPresenter {
         final name = voiceString(item, 'name') ?? 'Experiencia';
         final status = voiceString(item, 'status');
         final price = item['starting_price'];
-        final priceLabel =
-            price is num ? voiceMoneyCop(price.toInt()) : null;
+        final priceLabel = price is num ? voiceMoneyCop(price.toInt()) : null;
         final isActive = item['is_active'] != false;
 
         final subtitleParts = <String>[
@@ -312,9 +306,8 @@ class VoiceResultPresenter {
           statusTone: isActive ? AppBadgeTone.primary : AppBadgeTone.neutral,
           onTap: id == null
               ? null
-              : () => navigate(
-                    () => navigation.openExperience(hostContext, id),
-                  ),
+              : () =>
+                    navigate(() => navigation.openExperience(hostContext, id)),
         );
       }).toList(),
     );
@@ -340,7 +333,9 @@ class VoiceResultPresenter {
       items: items.map((item) {
         final title = voiceString(item, 'title') ?? 'Evento';
         final eventType = voiceString(item, 'event_type');
-        final happenedAt = formatVoiceDateTime(voiceString(item, 'happened_at'));
+        final happenedAt = formatVoiceDateTime(
+          voiceString(item, 'happened_at'),
+        );
         final subtitleParts = <String>[
           voiceEquineEventTypeLabel(eventType),
           happenedAt,
@@ -352,12 +347,12 @@ class VoiceResultPresenter {
           onTap: equineId == null
               ? null
               : () => navigate(
-                    () => navigation.openEquineTimeline(
-                      hostContext,
-                      equineId: equineId,
-                      equineName: equineName,
-                    ),
+                  () => navigation.openEquineTimeline(
+                    hostContext,
+                    equineId: equineId,
+                    equineName: equineName,
                   ),
+                ),
         );
       }).toList(),
     );
@@ -400,8 +395,8 @@ class VoiceResultPresenter {
           statusTone: voiceAvailabilityTone(isAvailable),
           onTap: reservationId == null
               ? (saddleId == null
-                  ? null
-                  : () => navigate(
+                    ? null
+                    : () => navigate(
                         () => navigation.openSaddleDetail(
                           hostContext,
                           saddleId: saddleId,
@@ -411,12 +406,12 @@ class VoiceResultPresenter {
                         ),
                       ))
               : () => navigate(
-                    () => navigation.openReservation(
-                      hostContext,
-                      reservationId,
-                      initialSubroute: ReservationDetailSubroute.asignaciones,
-                    ),
+                  () => navigation.openReservation(
+                    hostContext,
+                    reservationId,
+                    initialSubroute: ReservationDetailSubroute.asignaciones,
                   ),
+                ),
         );
       }).toList(),
     );
@@ -494,8 +489,7 @@ class VoiceResultPresenter {
 
         final subtitleParts = <String>[
           if (time.isNotEmpty) time,
-          if (available is num && capacity is num)
-            '$available/$capacity cupos',
+          if (available is num && capacity is num) '$available/$capacity cupos',
         ];
 
         return VoiceResultItem(

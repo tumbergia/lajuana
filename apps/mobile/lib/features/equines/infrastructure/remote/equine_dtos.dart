@@ -116,8 +116,7 @@ class EquineDto {
       lastHeightAt: json['last_height_at'] as String?,
       isActive: json['is_active'] as bool? ?? true,
       isAvailable: json['is_available'] as bool? ?? true,
-      operationalStatus:
-          json['operational_status'] as String? ?? 'available',
+      operationalStatus: json['operational_status'] as String? ?? 'available',
       availabilityNotes: json['availability_notes'] as String?,
       availabilityReasons: json['availability_reasons'] as String?,
       restUntil: json['rest_until'] as String?,

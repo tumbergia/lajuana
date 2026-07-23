@@ -156,13 +156,11 @@ class _ReservationDetailShellScreenState
     _paymentProofsSectionController =
         ReservationPaymentProofsSectionController();
     _logsSectionController = ReservationLogsSectionController(
-      repository:
-          widget.reservationsModule?.repository ?? (_throwNoModule()),
+      repository: widget.reservationsModule?.repository ?? (_throwNoModule()),
     );
     _logsSectionController.addListener(_onLogsStateChanged);
     _providersSectionController = ReservationProvidersSectionController(
-      repository:
-          widget.reservationsModule?.repository ?? (_throwNoModule()),
+      repository: widget.reservationsModule?.repository ?? (_throwNoModule()),
     );
     _providersSectionController.addListener(_onProvidersStateChanged);
     _controller.addListener(_onStateChanged);
@@ -460,18 +458,15 @@ class _ReservationDetailShellScreenState
               detail.status != ReservationStatus.completed &&
               detail.status != ReservationStatus.expired) ...[
             AppButton(
-              label:
-                  _controller.confirmationState.isLoading
+              label: _controller.confirmationState.isLoading
                   ? 'Confirmando...'
                   : 'Confirmar reserva',
-              icon:
-                  _controller.confirmationState.isLoading
+              icon: _controller.confirmationState.isLoading
                   ? null
                   : Icons.check_circle_outline_rounded,
               variant: AppButtonVariant.primary,
               expanded: true,
-              onPressed:
-                  _controller.confirmationState.isLoading
+              onPressed: _controller.confirmationState.isLoading
                   ? null
                   : () => _showConfirmConfirmation(),
             ),
@@ -483,18 +478,15 @@ class _ReservationDetailShellScreenState
               detail.status != ReservationStatus.completed &&
               detail.status != ReservationStatus.expired) ...[
             AppButton(
-              label:
-                  _controller.cancellationState.isLoading
+              label: _controller.cancellationState.isLoading
                   ? 'Cancelando...'
                   : 'Cancelar reserva',
-              icon:
-                  _controller.cancellationState.isLoading
+              icon: _controller.cancellationState.isLoading
                   ? null
                   : Icons.cancel_outlined,
               variant: AppButtonVariant.danger,
               expanded: true,
-              onPressed:
-                  _controller.cancellationState.isLoading
+              onPressed: _controller.cancellationState.isLoading
                   ? null
                   : () => _showCancelConfirmation(),
             ),
@@ -504,29 +496,25 @@ class _ReservationDetailShellScreenState
           if (_isAdmin) ...[
             if (detail.deletedAt != null) ...[
               AppButton(
-                label:
-                    _controller.deleteState.isLoading
+                label: _controller.deleteState.isLoading
                     ? 'Restaurando...'
                     : 'Restaurar reserva',
                 icon: Icons.restore_from_trash_rounded,
                 variant: AppButtonVariant.secondary,
                 expanded: true,
-                onPressed:
-                    _controller.deleteState.isLoading
+                onPressed: _controller.deleteState.isLoading
                     ? null
                     : () => _showRestoreConfirmation(),
               ),
             ] else ...[
               AppButton(
-                label:
-                    _controller.deleteState.isLoading
+                label: _controller.deleteState.isLoading
                     ? 'Eliminando...'
                     : 'Eliminar reserva',
                 icon: Icons.delete_outline_rounded,
                 variant: AppButtonVariant.danger,
                 expanded: true,
-                onPressed:
-                    _controller.deleteState.isLoading
+                onPressed: _controller.deleteState.isLoading
                     ? null
                     : () => _showDeleteConfirmation(),
               ),
@@ -625,11 +613,7 @@ class _ReservationDetailShellScreenState
     if (narrow) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          registered,
-          const SizedBox(height: 8),
-          pendingCard,
-        ],
+        children: [registered, const SizedBox(height: 8), pendingCard],
       );
     }
     return Row(
@@ -761,17 +745,13 @@ class _ReservationDetailShellScreenState
             final tone = paymentProofStatusTone(proof.status);
             final proofIsActing = _controller.actingPaymentProofId == proof.id;
             final isApproving =
-                proofIsActing &&
-                _controller.approveProofState.isLoading;
+                proofIsActing && _controller.approveProofState.isLoading;
             final isRejecting =
-                proofIsActing &&
-                _controller.rejectProofState.isLoading;
+                proofIsActing && _controller.rejectProofState.isLoading;
             final isUnverifying =
-                proofIsActing &&
-                _controller.unverifyProofState.isLoading;
+                proofIsActing && _controller.unverifyProofState.isLoading;
             final isUnrejecting =
-                proofIsActing &&
-                _controller.unrejectProofState.isLoading;
+                proofIsActing && _controller.unrejectProofState.isLoading;
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Column(
@@ -954,9 +934,7 @@ class _ReservationDetailShellScreenState
             return AlertDialog(
               backgroundColor: scheme.surfaceContainerHigh,
               surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: tokens.radiusXl,
-              ),
+              shape: RoundedRectangleBorder(borderRadius: tokens.radiusXl),
               insetPadding: const EdgeInsets.symmetric(
                 horizontal: 24,
                 vertical: 40,
@@ -995,9 +973,7 @@ class _ReservationDetailShellScreenState
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerLow,
                         borderRadius: tokens.radiusMd,
-                        border: Border.all(
-                          color: scheme.outlineVariant,
-                        ),
+                        border: Border.all(color: scheme.outlineVariant),
                       ),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -1014,9 +990,9 @@ class _ReservationDetailShellScreenState
                             cancelText: 'Cancelar',
                             builder: (context, child) {
                               return MediaQuery(
-                                data: MediaQuery.of(context).copyWith(
-                                  alwaysUse24HourFormat: true,
-                                ),
+                                data: MediaQuery.of(
+                                  context,
+                                ).copyWith(alwaysUse24HourFormat: true),
                                 child: child!,
                               );
                             },
@@ -1045,15 +1021,15 @@ class _ReservationDetailShellScreenState
                                       'Hora de inicio',
                                       style: theme.textTheme.labelSmall
                                           ?.copyWith(
-                                        color: scheme.onSurfaceVariant,
-                                      ),
+                                            color: scheme.onSurfaceVariant,
+                                          ),
                                     ),
                                     Text(
                                       selectedTime.format(context),
                                       style: theme.textTheme.bodyLarge
                                           ?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -1087,35 +1063,39 @@ class _ReservationDetailShellScreenState
                             variant: AppButtonVariant.primary,
                             onPressed: () {
                               Navigator.of(ctx).pop();
-                              final hour =
-                                  selectedTime.hour.toString().padLeft(2, '0');
+                              final hour = selectedTime.hour.toString().padLeft(
+                                2,
+                                '0',
+                              );
                               final minute = selectedTime.minute
                                   .toString()
                                   .padLeft(2, '0');
                               final startTime = '$hour:$minute';
                               _controller
                                   .confirmReservation(
-                                isAdmin: _isAdmin,
-                                startTime: startTime,
-                              )
+                                    isAdmin: _isAdmin,
+                                    startTime: startTime,
+                                  )
                                   .whenComplete(() {
-                                if (!mounted) return;
-                                if (_controller.confirmationErrorCode != null) {
-                                  showAppToast(
-                                    context,
-                                    message: _controller
-                                            .confirmationErrorMessage ??
-                                        'Error al confirmar reserva',
-                                    isError: true,
-                                  );
-                                } else if (_controller.detail?.status ==
-                                    ReservationStatus.confirmed) {
-                                  showAppToast(
-                                    context,
-                                    message: 'Reserva confirmada',
-                                  );
-                                }
-                              });
+                                    if (!mounted) return;
+                                    if (_controller.confirmationErrorCode !=
+                                        null) {
+                                      showAppToast(
+                                        context,
+                                        message:
+                                            _controller
+                                                .confirmationErrorMessage ??
+                                            'Error al confirmar reserva',
+                                        isError: true,
+                                      );
+                                    } else if (_controller.detail?.status ==
+                                        ReservationStatus.confirmed) {
+                                      showAppToast(
+                                        context,
+                                        message: 'Reserva confirmada',
+                                      );
+                                    }
+                                  });
                             },
                             expanded: true,
                             height: 48,
@@ -1161,7 +1141,8 @@ class _ReservationDetailShellScreenState
                 if (_controller.cancellationErrorCode != null) {
                   showAppToast(
                     context,
-                    message: _controller.cancellationErrorMessage ??
+                    message:
+                        _controller.cancellationErrorMessage ??
                         'Error al cancelar reserva',
                     isError: true,
                   );
@@ -1195,7 +1176,8 @@ class _ReservationDetailShellScreenState
           if (_controller.deleteErrorCode != null) {
             showAppToast(
               context,
-              message: _controller.deleteErrorMessage ?? 'Error al eliminar reserva',
+              message:
+                  _controller.deleteErrorMessage ?? 'Error al eliminar reserva',
               isError: true,
             );
           } else {
@@ -1225,7 +1207,8 @@ class _ReservationDetailShellScreenState
           if (_controller.deleteErrorCode != null) {
             showAppToast(
               context,
-              message: _controller.deleteErrorMessage ??
+              message:
+                  _controller.deleteErrorMessage ??
                   'Error al restaurar reserva',
               isError: true,
             );
@@ -1238,15 +1221,15 @@ class _ReservationDetailShellScreenState
   }
 
   void _showClientDetail(ReservationDetail detail) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(
-      builder: (_) => ClientDetailView(
-        detail: detail,
-        repository: _repo,
-        reservationId: widget.reservationId,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ClientDetailView(
+          detail: detail,
+          repository: _repo,
+          reservationId: widget.reservationId,
+        ),
       ),
-    ));
+    );
   }
 
   Widget _buildAssignmentContent() {
@@ -1327,10 +1310,7 @@ class _ReservationDetailShellScreenState
                     title: entry.title,
                     description: description,
                     badge: entry.kind == 'note'
-                        ? AppBadge(
-                            label: 'Manual',
-                            tone: AppBadgeTone.primary,
-                          )
+                        ? AppBadge(label: 'Manual', tone: AppBadgeTone.primary)
                         : null,
                     highlightedContent: _buildTimelinePhotoPreview(entry),
                     footer: _buildTimelineActions(entry),
@@ -1373,13 +1353,11 @@ class _ReservationDetailShellScreenState
             onPressed: saving
                 ? null
                 : () => _showNoteSheet(
-                      logId: entry.serviceLogId,
-                      initialText: entry.description ?? '',
-                    ),
+                    logId: entry.serviceLogId,
+                    initialText: entry.description ?? '',
+                  ),
           ),
-        if (entry.editable &&
-            entry.deletable &&
-            entry.serviceLogId != null)
+        if (entry.editable && entry.deletable && entry.serviceLogId != null)
           const SizedBox(width: 12),
         if (entry.deletable && entry.serviceLogId != null)
           AppButton(
@@ -1401,10 +1379,7 @@ class _ReservationDetailShellScreenState
       logId: entry.serviceLogId!,
       controller: _logsSectionController,
       cache: _logPhotoCache,
-      onPhotoTap: (photo) => _openLogPhoto(
-        entry: entry,
-        photo: photo,
-      ),
+      onPhotoTap: (photo) => _openLogPhoto(entry: entry, photo: photo),
     );
   }
 
@@ -1443,10 +1418,7 @@ class _ReservationDetailShellScreenState
     );
   }
 
-  Future<void> _showNoteSheet({
-    String? logId,
-    String initialText = '',
-  }) async {
+  Future<void> _showNoteSheet({String? logId, String initialText = ''}) async {
     final isEditing = logId != null;
     var initialPhotos = const <ReservationTimelinePhoto>[];
 
@@ -1457,7 +1429,8 @@ class _ReservationDetailShellScreenState
         showAppToast(
           context,
           message:
-              _logsSectionController.errorMessage ?? 'No se pudo cargar la nota',
+              _logsSectionController.errorMessage ??
+              'No se pudo cargar la nota',
           isError: true,
         );
         return;
@@ -1498,7 +1471,8 @@ class _ReservationDetailShellScreenState
       context,
       message: ok
           ? (isEditing ? 'Nota actualizada' : 'Nota registrada')
-          : (_logsSectionController.errorMessage ?? 'No se pudo guardar la nota'),
+          : (_logsSectionController.errorMessage ??
+                'No se pudo guardar la nota'),
       isError: !ok,
     );
   }
@@ -1522,7 +1496,7 @@ class _ReservationDetailShellScreenState
           message: ok
               ? 'Entrada eliminada'
               : (_logsSectionController.errorMessage ??
-                  'No se pudo eliminar la entrada'),
+                    'No se pudo eliminar la entrada'),
           isError: !ok,
         );
       },

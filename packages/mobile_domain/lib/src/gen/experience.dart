@@ -94,10 +94,10 @@ class Experience {
       inclusions: json['inclusions'] as String,
       standardMaxParticipants: json['standard_max_participants'] as String,
       minParticipants: json['min_participants'] as String,
-      tags: (json['tags'] as List<dynamic>?)
-        ?.cast<String>() ?? [],
-      aliases: (json['aliases'] as List<dynamic>?)
-        ?.cast<String>() ?? [],
+      tags: (json['tags'] as List<dynamic>)
+        .cast<String>(),
+      aliases: (json['aliases'] as List<dynamic>)
+        .cast<String>(),
       isActive: json['is_active'] as bool,
     );
   }

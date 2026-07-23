@@ -9,18 +9,12 @@ import 'package:mobile_domain/src/reservations/reservation_log_photo_upload.dart
 import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
 import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 
-enum ReservationLogsLoadState {
-  initial,
-  loading,
-  loaded,
-  error,
-  saving,
-}
+enum ReservationLogsLoadState { initial, loading, loaded, error, saving }
 
 /// Estado de la subruta Bitácora en detalle de reserva.
 class ReservationLogsSectionController extends ChangeNotifier {
   ReservationLogsSectionController({required ReservationsRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final ReservationsRepository _repository;
 

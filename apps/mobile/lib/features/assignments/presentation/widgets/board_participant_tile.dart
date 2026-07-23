@@ -35,7 +35,8 @@ class BoardParticipantTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final assignment = participant.assignment;
     final hasBlockingIssues = participant.blockingReasons.isNotEmpty;
-    final isBusy = ctrl.isCreating ||
+    final isBusy =
+        ctrl.isCreating ||
         ctrl.isUpdating ||
         ctrl.isFinalizing ||
         ctrl.isRemoving ||
@@ -102,22 +103,39 @@ class BoardParticipantTile extends StatelessWidget {
           saddleLabel: assignment?.saddleLabel ?? '—',
           isFinalized: assignment?.status == AssignmentStatus.final_,
           onChangeEquine:
-              isAdmin && isOnline && !isBusy && assignment?.status != AssignmentStatus.final_
-                  ? () => _showEquinePicker(context)
-                  : null,
+              isAdmin &&
+                  isOnline &&
+                  !isBusy &&
+                  assignment?.status != AssignmentStatus.final_
+              ? () => _showEquinePicker(context)
+              : null,
           onChangeSaddle:
-              isAdmin && isOnline && !isBusy && assignment != null && assignment.status != AssignmentStatus.final_
-                  ? () => _showSaddlePicker(context)
-                  : null,
+              isAdmin &&
+                  isOnline &&
+                  !isBusy &&
+                  assignment != null &&
+                  assignment.status != AssignmentStatus.final_
+              ? () => _showSaddlePicker(context)
+              : null,
           onRemoveAssignment:
-              isAdmin && isOnline && !isBusy && assignment != null && assignment.status != AssignmentStatus.final_
-                  ? () => _showRemoveConfirm(context)
-                  : null,
+              isAdmin &&
+                  isOnline &&
+                  !isBusy &&
+                  assignment != null &&
+                  assignment.status != AssignmentStatus.final_
+              ? () => _showRemoveConfirm(context)
+              : null,
           onRemoveSaddle:
-              isAdmin && isOnline && !isBusy && assignment != null && assignment.status != AssignmentStatus.final_ && assignment.saddleId != null
-                  ? () => _showRemoveSaddleConfirm(context)
-                  : null,
-          onRevertFinalize: isAdmin &&
+              isAdmin &&
+                  isOnline &&
+                  !isBusy &&
+                  assignment != null &&
+                  assignment.status != AssignmentStatus.final_ &&
+                  assignment.saddleId != null
+              ? () => _showRemoveSaddleConfirm(context)
+              : null,
+          onRevertFinalize:
+              isAdmin &&
                   isOnline &&
                   !isBusy &&
                   assignment?.status == AssignmentStatus.final_ &&
@@ -180,22 +198,24 @@ class BoardParticipantTile extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed:
-                    selectedEquineId == null || ctrl.isCreating || ctrl.isUpdating
-                        ? null
-                        : () {
-                            Navigator.of(ctx).pop();
-                            if (isCreating) {
-                              ctrl.create(
-                                participantId: participant.participantId,
-                                equineId: selectedEquineId!,
-                              );
-                            } else {
-                              ctrl.update(
-                                assignmentId: participant.assignment!.assignmentId!,
-                                equineId: selectedEquineId!,
-                              );
-                            }
-                          },
+                    selectedEquineId == null ||
+                        ctrl.isCreating ||
+                        ctrl.isUpdating
+                    ? null
+                    : () {
+                        Navigator.of(ctx).pop();
+                        if (isCreating) {
+                          ctrl.create(
+                            participantId: participant.participantId,
+                            equineId: selectedEquineId!,
+                          );
+                        } else {
+                          ctrl.update(
+                            assignmentId: participant.assignment!.assignmentId!,
+                            equineId: selectedEquineId!,
+                          );
+                        }
+                      },
                 child: (ctrl.isCreating || ctrl.isUpdating)
                     ? const SizedBox(
                         width: 16,
@@ -355,20 +375,37 @@ class BoardParticipantTile extends StatelessWidget {
 
   bool _looksLikeImage(List<int> bytes) {
     if (bytes.length < 4) return false;
-    if (bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) return true;
+    if (bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47)
+      return true;
     if (bytes[0] == 0xFF && bytes[1] == 0xD8) return true;
     if (bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46) return true;
-    if (bytes.length >= 12 && bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46 && bytes[8] == 0x57 && bytes[9] == 0x45 && bytes[10] == 0x42 && bytes[11] == 0x50) return true;
+    if (bytes.length >= 12 &&
+        bytes[0] == 0x52 &&
+        bytes[1] == 0x49 &&
+        bytes[2] == 0x46 &&
+        bytes[3] == 0x46 &&
+        bytes[8] == 0x57 &&
+        bytes[9] == 0x45 &&
+        bytes[10] == 0x42 &&
+        bytes[11] == 0x50)
+      return true;
     return false;
   }
 
   String? _experienceLabel(String? level) {
     if (level == null) return null;
     switch (level) {
-      case 'basic': return 'Básico';
-      case 'intermediate': return 'Intermedio';
-      case 'advanced': return 'Avanzado';
-      default: return level;
+      case 'basic':
+        return 'Básico';
+      case 'intermediate':
+        return 'Intermedio';
+      case 'advanced':
+        return 'Avanzado';
+      default:
+        return level;
     }
   }
 }

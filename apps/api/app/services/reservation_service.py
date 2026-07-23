@@ -325,12 +325,7 @@ class ReservationService:
         if actor_role == UserRole.GUIDE:
             # Un guía solo ve reservas confirmadas, igual que en list().
             query = {"deleted_at": None, "status": ReservationStatus.CONFIRMED}
-        return (
-            await ReservationDocument.find(query)
-            .sort("-updated_at")
-            .limit(limit)
-            .to_list()
-        )
+        return await ReservationDocument.find(query).sort("-updated_at").limit(limit).to_list()
 
     async def count(
         self,
@@ -535,9 +530,7 @@ class ReservationService:
         )
         from app.core.config import settings
 
-        reservation.form_url = (
-            f"{settings.participant_form_base_url}/?token={raw_token}"
-        )
+        reservation.form_url = f"{settings.participant_form_base_url}/?token={raw_token}"
         await reservation.save()
         await record_change(entity_type="reservation", doc=reservation)
 
@@ -617,10 +610,7 @@ class ReservationService:
                 await self.notification_service.enqueue_admin_in_app(
                     event_type=NotificationEventType.RESERVATION_STATUS_CHANGED,
                     title="Estado de reserva actualizado",
-                    body=(
-                        f"{holder} — {code}: "
-                        f"{previous_status.value} → {target_status.value}"
-                    ),
+                    body=(f"{holder} — {code}: {previous_status.value} → {target_status.value}"),
                     reservation_id=str(reservation.id),
                     actor_user_id=str(actor_id) if actor_id else None,
                     dedup_suffix=f"{previous_status.value}->{target_status.value}",
@@ -703,9 +693,7 @@ class ReservationService:
         await record_change(entity_type="reservation", doc=doc)
         return doc
 
-    async def validate_participant_forms_completed(
-        self, reservation: ReservationDocument
-    ) -> None:
+    async def validate_participant_forms_completed(self, reservation: ReservationDocument) -> None:
         if reservation.participant_form_status != ParticipantFormStatus.COMPLETE:
             raise ApiError(
                 status_code=409,
@@ -755,6 +743,7 @@ class ReservationService:
         ).to_list()
 
         from collections import defaultdict
+
         per_res: dict[str, list[object]] = defaultdict(list)
         for a in all_assignments:
             per_res[str(a.reservation_id)].append(a)
@@ -782,7 +771,9 @@ class ReservationService:
             else:
                 incomplete = [p for p in res_participants if not getattr(p, "is_completed", False)]
                 no_weight = [p for p in res_participants if not getattr(p, "weight_kg", None)]
-                no_experience = [p for p in res_participants if not getattr(p, "experience_level", None)]
+                no_experience = [
+                    p for p in res_participants if not getattr(p, "experience_level", None)
+                ]
 
                 if incomplete:
                     blocking_reasons.append(

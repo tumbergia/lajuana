@@ -7,7 +7,11 @@ import 'package:flutter/foundation.dart';
 ///
 /// Uses [Directory.systemTemp] instead of [Directory.current] for
 /// cross-platform compatibility. Write is async to avoid blocking.
-Future<bool> saveFile(Uint8List bytes, String filename, String contentType) async {
+Future<bool> saveFile(
+  Uint8List bytes,
+  String filename,
+  String contentType,
+) async {
   try {
     final dir = Directory.systemTemp;
     final file = File('${dir.path}${Platform.pathSeparator}$filename');

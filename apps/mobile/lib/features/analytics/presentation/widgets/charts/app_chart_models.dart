@@ -21,11 +21,7 @@ class AppChartPoint {
 
 @immutable
 class AppChartSeries {
-  const AppChartSeries({
-    required this.label,
-    required this.points,
-    this.color,
-  });
+  const AppChartSeries({required this.label, required this.points, this.color});
 
   final String label;
   final List<AppChartPoint> points;
@@ -66,8 +62,8 @@ class AppChartEmptyState extends StatelessWidget {
                     title!,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   SizedBox(height: appTokens.spaceXs),
                 ],
@@ -75,8 +71,8 @@ class AppChartEmptyState extends StatelessWidget {
                   message,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -142,9 +138,9 @@ class AppChartTooltipBubble extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: DefaultTextStyle(
-        style: Theme.of(context).textTheme.labelMedium!.copyWith(
-              color: tokens.tooltipForeground,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelMedium!.copyWith(color: tokens.tooltipForeground),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -190,9 +186,7 @@ String chartAxisTickLabel(double value) {
 List<double> chartAxisTickSamples(double maxY) {
   if (maxY <= 0) return const [0];
   const steps = 6;
-  return [
-    for (var i = 0; i <= steps; i++) maxY * (i / steps),
-  ];
+  return [for (var i = 0; i <= steps; i++) maxY * (i / steps)];
 }
 
 /// Rounds a raw step into a "nice" 1/2/5×10ⁿ number so axis ticks land on
@@ -201,8 +195,9 @@ List<double> chartAxisTickSamples(double maxY) {
 double chartNiceInterval(double maxValue, {int targetTicks = 4}) {
   if (maxValue <= 0) return 1;
   final rawStep = maxValue / targetTicks;
-  final magnitude =
-      math.pow(10, (math.log(rawStep) / math.ln10).floor()).toDouble();
+  final magnitude = math
+      .pow(10, (math.log(rawStep) / math.ln10).floor())
+      .toDouble();
   final residual = rawStep / magnitude;
   double niceResidual;
   if (residual > 5) {
@@ -349,7 +344,8 @@ double chartLeftAxisReservedSize({
   required double maxY,
   TextStyle? style,
 }) {
-  final textStyle = style ??
+  final textStyle =
+      style ??
       Theme.of(context).textTheme.labelSmall ??
       const TextStyle(fontSize: 11);
   final scaler = MediaQuery.textScalerOf(context);
@@ -389,4 +385,3 @@ Widget chartLeftAxisTitle({
     ),
   );
 }
-

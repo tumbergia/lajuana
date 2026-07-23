@@ -5,8 +5,6 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 
-from beanie import PydanticObjectId
-
 from app.common.enums import UserRole
 from app.documents import (
     ParticipantDocument,
@@ -131,11 +129,7 @@ class ReservationTimelineService:
             .to_list(),
         )
 
-        actor_ids = {
-            log.actor_user_id
-            for log in audits
-            if log.actor_user_id is not None
-        }
+        actor_ids = {log.actor_user_id for log in audits if log.actor_user_id is not None}
         user_names: dict[str, str] = {}
         if actor_ids:
             users = await UserDocument.find(
@@ -169,9 +163,7 @@ class ReservationTimelineService:
                     editable=is_note,
                     deletable=is_note or is_admin,
                     related_participant_id=(
-                        str(log.related_participant_id)
-                        if log.related_participant_id
-                        else None
+                        str(log.related_participant_id) if log.related_participant_id else None
                     ),
                     service_log_id=str(log.id),
                     photos=photo_preview,
@@ -220,9 +212,7 @@ class ReservationTimelineService:
                 )
             )
 
-        if payment_proofs and not any(
-            e.kind == "payment_proof.registered" for e in entries
-        ):
+        if payment_proofs and not any(e.kind == "payment_proof.registered" for e in entries):
             first_proof = payment_proofs[0]
             _add(
                 ReservationTimelineEntrySchema(
@@ -251,8 +241,7 @@ class ReservationTimelineService:
             happened_at = participant.submitted_at or participant.updated_at
             kind = f"participant.registered:{pid}"
             if any(
-                e.kind.startswith("participant.registered")
-                and e.related_participant_id == pid
+                e.kind.startswith("participant.registered") and e.related_participant_id == pid
                 for e in entries
             ):
                 continue

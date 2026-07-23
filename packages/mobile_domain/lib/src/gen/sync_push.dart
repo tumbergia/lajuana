@@ -18,13 +18,13 @@ class SyncPush {
 
   factory SyncPush.fromJson(Map<String, dynamic> json) {
     return SyncPush(
-      operations: (json['operations'] as List<dynamic>?)
-        ?.map((e) => SyncPushOperation.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      operations: (json['operations'] as List<dynamic>)
+        .map((e) => SyncPushOperation.fromJson(e as Map<String, dynamic>)).toList(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'operations': operations,
+    'operations': operations.map((e) => e.toJson()).toList(),
   };
 
 }

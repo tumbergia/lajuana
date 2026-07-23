@@ -95,9 +95,7 @@ async def list_role_requests(
 async def decide_role_request(
     request_id: str,
     payload: RoleRequestDecisionSchema,
-    actor: Annotated[
-        UserDocument, Depends(require_permissions(Permission.ROLE_REQUEST_MANAGE))
-    ],
+    actor: Annotated[UserDocument, Depends(require_permissions(Permission.ROLE_REQUEST_MANAGE))],
     service: RoleRequestService = Depends(get_role_request_service),
 ) -> RoleRequestResponseSchema:
     doc = await service.decide(request_id, actor, payload)

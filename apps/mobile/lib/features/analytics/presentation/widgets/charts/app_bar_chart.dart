@@ -25,7 +25,9 @@ class AppBarChart extends StatelessWidget {
     final tokens = Theme.of(context).analyticsTokens;
     final scheme = Theme.of(context).colorScheme;
     if (points.isEmpty) {
-      return AppChartEmptyState(message: 'Todavía no hay datos para este periodo.');
+      return AppChartEmptyState(
+        message: 'Todavía no hay datos para este periodo.',
+      );
     }
 
     if (horizontal) {
@@ -36,14 +38,16 @@ class AppBarChart extends StatelessWidget {
       );
     }
 
-    final maxY = points.map((p) => p.value).fold<double>(0, (a, b) => a > b ? a : b);
+    final maxY = points
+        .map((p) => p.value)
+        .fold<double>(0, (a, b) => a > b ? a : b);
     final chartMaxY = maxY <= 0 ? 1.0 : maxY * 1.2;
     final leftReserved = chartLeftAxisReservedSize(
       context: context,
       maxY: chartMaxY,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
     );
     return Semantics(
       label: semanticSummary,
@@ -61,10 +65,12 @@ class AppBarChart extends StatelessWidget {
               ),
               borderData: FlBorderData(show: false),
               titlesData: FlTitlesData(
-                topTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles:
-                    const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
@@ -92,10 +98,8 @@ class AppBarChart extends StatelessWidget {
                           points[i].label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       );
                     },
@@ -159,7 +163,9 @@ class _HorizontalBars extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = Theme.of(context).analyticsTokens;
-    final maxV = points.map((p) => p.value).fold<double>(1, (a, b) => a > b ? a : b);
+    final maxV = points
+        .map((p) => p.value)
+        .fold<double>(1, (a, b) => a > b ? a : b);
     return Semantics(
       label: semanticSummary,
       child: Column(
@@ -189,7 +195,8 @@ class _HorizontalBars extends StatelessWidget {
   ) {
     final scheme = Theme.of(context).colorScheme;
     final fraction = (point.value / maxV).clamp(0.0, 1.0);
-    final valueLabel = point.secondaryLabel ??
+    final valueLabel =
+        point.secondaryLabel ??
         '${point.value == point.value.roundToDouble() ? point.value.toInt() : point.value.toStringAsFixed(1)}'
             '${unit.isEmpty ? '' : ' $unit'}';
     return Column(
@@ -202,17 +209,17 @@ class _HorizontalBars extends StatelessWidget {
                 point.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
             Text(
               valueLabel,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: scheme.onSurface,
-                  ),
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
+              ),
             ),
           ],
         ),
@@ -232,10 +239,7 @@ class _HorizontalBars extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          color.withValues(alpha: 0.82),
-                          color,
-                        ],
+                        colors: [color.withValues(alpha: 0.82), color],
                       ),
                     ),
                   ),

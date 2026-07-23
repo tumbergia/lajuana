@@ -37,6 +37,7 @@ class InsightCardShell extends StatelessWidget {
   final Color? accentColor;
   final bool refreshing;
   final bool chartFirst;
+
   /// Emphasized home layout: larger value type, more breathing room.
   final bool hero;
 
@@ -56,9 +57,9 @@ class InsightCardShell extends StatelessWidget {
               child: Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: hero ? 20 : null,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  fontSize: hero ? 20 : null,
+                ),
               ),
             ),
             if (refreshing) const ChartRefreshingBadge(),
@@ -82,9 +83,9 @@ class InsightCardShell extends StatelessWidget {
           Text(
             subtitleText,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.35,
-                ),
+              color: scheme.onSurfaceVariant,
+              height: 1.35,
+            ),
           ),
         ],
         if (periodLabel.isNotEmpty) ...[
@@ -92,9 +93,9 @@ class InsightCardShell extends StatelessWidget {
           Text(
             periodLabel,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ],
@@ -107,12 +108,11 @@ class InsightCardShell extends StatelessWidget {
             children: [
               Text(
                 primaryValue!.formatted,
-                style: (hero
-                        ? Theme.of(context).textTheme.headlineLarge
-                        : Theme.of(context).textTheme.headlineMedium)
-                    ?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+                style:
+                    (hero
+                            ? Theme.of(context).textTheme.headlineLarge
+                            : Theme.of(context).textTheme.headlineMedium)
+                        ?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(width: 8),
               Padding(
@@ -120,8 +120,8 @@ class InsightCardShell extends StatelessWidget {
                 child: Text(
                   primaryValue!.unit,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],
@@ -131,9 +131,9 @@ class InsightCardShell extends StatelessWidget {
         ? null
         : Text(
             comparisonLabel!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           );
 
     final insight = (insightText == null || insightText!.isEmpty)
@@ -157,10 +157,7 @@ class InsightCardShell extends StatelessWidget {
       if (chartFirst) ...[
         // Chart is the hero.
         child,
-        if (valueBlock != null) ...[
-          SizedBox(height: gap),
-          valueBlock,
-        ],
+        if (valueBlock != null) ...[SizedBox(height: gap), valueBlock],
         if (comparison != null) ...[
           SizedBox(height: tokens.spaceXs),
           comparison,
@@ -170,20 +167,11 @@ class InsightCardShell extends StatelessWidget {
           valueBlock,
           SizedBox(height: tokens.spaceXs),
         ],
-        if (comparison != null) ...[
-          comparison,
-          SizedBox(height: gap),
-        ],
+        if (comparison != null) ...[comparison, SizedBox(height: gap)],
         child,
       ],
-      if (insight != null) ...[
-        SizedBox(height: gap),
-        insight,
-      ],
-      if (action != null) ...[
-        SizedBox(height: gap),
-        action,
-      ],
+      if (insight != null) ...[SizedBox(height: gap), insight],
+      if (action != null) ...[SizedBox(height: gap), action],
     ];
 
     return AppCard(
@@ -218,9 +206,9 @@ class InsightCardLoadingShell extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: scheme.onSurface.withValues(alpha: 0.55),
-                ),
+              fontWeight: FontWeight.w800,
+              color: scheme.onSurface.withValues(alpha: 0.55),
+            ),
           ),
           SizedBox(height: tokens.spaceXs),
           Container(

@@ -18,7 +18,6 @@ from motor.motor_asyncio import AsyncIOMotorClient as AsyncMotorClient
 from app.core.config import settings
 from app.documents import PaymentProofDocument
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[3]  # C:\dev\lajuana
 
 # Mapa de storage_key → ruta local del archivo
@@ -42,9 +41,7 @@ async def main() -> None:
             print(f"[ERROR] Archivo local no encontrado: {local_path}")
             continue
 
-        proof = await PaymentProofDocument.find_one(
-            {"storage_key": storage_key, "file_data": None}
-        )
+        proof = await PaymentProofDocument.find_one({"storage_key": storage_key, "file_data": None})
         if proof is None:
             print(f"[SKIP] {storage_key}: no existe o ya tiene file_data")
             continue

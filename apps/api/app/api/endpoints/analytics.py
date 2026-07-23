@@ -88,9 +88,7 @@ async def get_dashboard(
     force_refresh: bool = False,
 ) -> DashboardResponse:
     query = _parse_query(date_from, date_to, range, comparison, module_ids, experience_id)
-    return await svc.get_dashboard(
-        role=current_user.role, query=query, force_refresh=force_refresh
-    )
+    return await svc.get_dashboard(role=current_user.role, query=query, force_refresh=force_refresh)
 
 
 @router.get(

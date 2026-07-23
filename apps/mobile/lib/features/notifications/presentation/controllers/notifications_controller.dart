@@ -89,7 +89,8 @@ class NotificationsController extends ChangeNotifier {
     try {
       final previousUnread = unreadCount;
       final nextUnread = await _repository.unreadCount();
-      final shouldReloadList = forceList ||
+      final shouldReloadList =
+          forceList ||
           _listVisible ||
           nextUnread != previousUnread ||
           (nextUnread > 0 && items.isEmpty) ||
@@ -130,7 +131,8 @@ class NotificationsController extends ChangeNotifier {
             NotificationBackgroundService.showLocal(
               title: arrival.label,
               body: arrival.headline,
-              id: pendingArrivalId?.hashCode ??
+              id:
+                  pendingArrivalId?.hashCode ??
                   DateTime.now().millisecondsSinceEpoch,
             ),
           );
@@ -250,8 +252,13 @@ class NotificationsController extends ChangeNotifier {
   Future<void> deleteOne(String notificationId) async {
     try {
       await _repository.deleteOne(notificationId);
-      final wasUnread = items.any((item) => item.id == notificationId && !item.read);
-      items = [for (final item in items) if (item.id != notificationId) item];
+      final wasUnread = items.any(
+        (item) => item.id == notificationId && !item.read,
+      );
+      items = [
+        for (final item in items)
+          if (item.id != notificationId) item,
+      ];
       if (wasUnread && unreadCount > 0) {
         unreadCount -= 1;
       }
@@ -270,7 +277,10 @@ class NotificationsController extends ChangeNotifier {
     try {
       await _repository.clearInbox(readOnly: readOnly);
       if (readOnly) {
-        items = [for (final item in items) if (!item.read) item];
+        items = [
+          for (final item in items)
+            if (!item.read) item,
+        ];
       } else {
         items = const [];
         unreadCount = 0;

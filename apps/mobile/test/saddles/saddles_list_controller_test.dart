@@ -93,19 +93,22 @@ void main() {
       expect(controller.errorCode, 'network.unavailable');
     });
 
-    test('shows offlineFromCache when refresh fails with cached data', () async {
-      await controller.loadInitial();
-      expect(controller.state, SaddlesLoadState.success);
-      expect(controller.items, isNotEmpty);
+    test(
+      'shows offlineFromCache when refresh fails with cached data',
+      () async {
+        await controller.loadInitial();
+        expect(controller.state, SaddlesLoadState.success);
+        expect(controller.items, isNotEmpty);
 
-      repository.throwOnList = true;
+        repository.throwOnList = true;
 
-      await controller.refresh();
+        await controller.refresh();
 
-      expect(controller.state, SaddlesLoadState.offlineFromCache);
-      // Items should still be available from cached data
-      expect(controller.items, isNotEmpty);
-    });
+        expect(controller.state, SaddlesLoadState.offlineFromCache);
+        // Items should still be available from cached data
+        expect(controller.items, isNotEmpty);
+      },
+    );
   });
 
   group('search', () {

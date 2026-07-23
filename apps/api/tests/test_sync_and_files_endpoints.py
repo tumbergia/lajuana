@@ -68,7 +68,9 @@ def test_files_init_upload_contract(monkeypatch) -> None:
             "expires_at": datetime.now(UTC).isoformat(),
         }
 
-    monkeypatch.setattr(Container.get_instance().file_upload_service, "init_upload", fake_init_upload)
+    monkeypatch.setattr(
+        Container.get_instance().file_upload_service, "init_upload", fake_init_upload
+    )
     app.dependency_overrides[get_current_user] = lambda: _admin_user()
     response = client.post(
         "/api/v1/files/init-upload",
@@ -104,8 +106,13 @@ def test_sync_executor_rejects_catalog_write_for_guide() -> None:
         },
     )
     from app.services.sync_handlers import (
-        ConfigSyncHandler, ExperienceSyncHandler, ReservationSyncHandler, ResourceSyncHandler,
+        ConfigSyncHandler,
+        ExperienceSyncHandler,
+        NotificationSyncHandler,
+        ReservationSyncHandler,
+        ResourceSyncHandler,
     )
+
     _c = Container.get_instance()
     executor = SyncOperationExecutor(
         experience_handler=ExperienceSyncHandler(
@@ -123,6 +130,7 @@ def test_sync_executor_rejects_catalog_write_for_guide() -> None:
             policy_service=_c.policy_service,
         ),
         config_handler=ConfigSyncHandler(config_service=_c.config_service),
+        notification_handler=NotificationSyncHandler(),
     )
     result = asyncio.run(
         executor.execute(
@@ -146,8 +154,13 @@ def test_sync_executor_rejects_saddle_write_for_guide() -> None:
         payload={"code": "M-99"},
     )
     from app.services.sync_handlers import (
-        ConfigSyncHandler, ExperienceSyncHandler, ReservationSyncHandler, ResourceSyncHandler,
+        ConfigSyncHandler,
+        ExperienceSyncHandler,
+        NotificationSyncHandler,
+        ReservationSyncHandler,
+        ResourceSyncHandler,
     )
+
     _c = Container.get_instance()
     executor = SyncOperationExecutor(
         experience_handler=ExperienceSyncHandler(
@@ -166,10 +179,9 @@ def test_sync_executor_rejects_saddle_write_for_guide() -> None:
             saddle_service=_c.saddle_service,
         ),
         config_handler=ConfigSyncHandler(config_service=_c.config_service),
+        notification_handler=NotificationSyncHandler(),
     )
-    result = asyncio.run(
-        executor.execute(current_user=_guide_user(), operation=operation)
-    )
+    result = asyncio.run(executor.execute(current_user=_guide_user(), operation=operation))
     assert result.status == "rejected"
     assert result.error is not None
     assert result.error.code == "auth.forbidden"
@@ -195,37 +207,61 @@ def test_resource_handler_routes_saddle_operations() -> None:
         return SimpleNamespace(id=saddle_id)
 
     fake_saddle = SimpleNamespace(
-        create=_create, soft_delete=_soft_delete, restore=_restore,
+        create=_create,
+        soft_delete=_soft_delete,
+        restore=_restore,
     )
     handler = ResourceSyncHandler(
-        provider_service=None, policy_service=None, saddle_service=fake_saddle,
+        provider_service=None,
+        policy_service=None,
+        saddle_service=fake_saddle,
     )
 
     create_op = SyncPushOperationSchema(
-        operation_id="op-c", entity_type="saddle", entity_local_id="l1",
-        operation_type="create", idempotency_key="i-c", payload={"code": "M-1"},
+        operation_id="op-c",
+        entity_type="saddle",
+        entity_local_id="l1",
+        operation_type="create",
+        idempotency_key="i-c",
+        payload={"code": "M-1"},
     )
     doc = asyncio.run(
-        handler.handle(entity="saddle", op_type="create", operation=create_op, current_user=_admin_user())
+        handler.handle(
+            entity="saddle", op_type="create", operation=create_op, current_user=_admin_user()
+        )
     )
     assert doc is created
     assert calls["create"].code == "M-1"
 
     delete_op = SyncPushOperationSchema(
-        operation_id="op-d", entity_type="saddle", entity_local_id="l1",
-        entity_remote_id="s1", operation_type="delete", idempotency_key="i-d", payload={},
+        operation_id="op-d",
+        entity_type="saddle",
+        entity_local_id="l1",
+        entity_remote_id="s1",
+        operation_type="delete",
+        idempotency_key="i-d",
+        payload={},
     )
     asyncio.run(
-        handler.handle(entity="saddle", op_type="delete", operation=delete_op, current_user=_admin_user())
+        handler.handle(
+            entity="saddle", op_type="delete", operation=delete_op, current_user=_admin_user()
+        )
     )
     assert calls["delete"] == "s1"
 
     restore_op = SyncPushOperationSchema(
-        operation_id="op-r", entity_type="saddle", entity_local_id="l1",
-        entity_remote_id="s1", operation_type="restore", idempotency_key="i-r", payload={},
+        operation_id="op-r",
+        entity_type="saddle",
+        entity_local_id="l1",
+        entity_remote_id="s1",
+        operation_type="restore",
+        idempotency_key="i-r",
+        payload={},
     )
     asyncio.run(
-        handler.handle(entity="saddle", op_type="restore", operation=restore_op, current_user=_admin_user())
+        handler.handle(
+            entity="saddle", op_type="restore", operation=restore_op, current_user=_admin_user()
+        )
     )
     assert calls["restore"] == "s1"
 
@@ -270,11 +306,124 @@ def test_reservation_handler_routes_assignment_delete() -> None:
     )
 
     delete_op = SyncPushOperationSchema(
-        operation_id="op-ad", entity_type="assignment", entity_local_id="l1",
-        entity_remote_id="a1", operation_type="delete", idempotency_key="i-ad", payload={},
+        operation_id="op-ad",
+        entity_type="assignment",
+        entity_local_id="l1",
+        entity_remote_id="a1",
+        operation_type="delete",
+        idempotency_key="i-ad",
+        payload={},
     )
     doc = asyncio.run(
-        handler.handle(entity="assignment", op_type="delete", operation=delete_op, current_user=_admin_user())
+        handler.handle(
+            entity="assignment", op_type="delete", operation=delete_op, current_user=_admin_user()
+        )
     )
     assert doc is removed
     assert calls["remove"][0] == "a1"
+
+
+def test_sync_push_accepts_notification_mutation_operation_types() -> None:
+    """Schema must accept mark_read / mark_all_read / clear_inbox from mobile outbox."""
+    for op_type in ("mark_read", "mark_all_read", "delete", "clear_inbox"):
+        op = SyncPushOperationSchema(
+            operation_id=f"op-{op_type}",
+            entity_type="notification_mutation",
+            entity_local_id="notif-1" if op_type not in ("mark_all_read", "clear_inbox") else "__all__",
+            operation_type=op_type,
+            idempotency_key=f"idem-{op_type}",
+            payload={"read_only": True} if op_type == "clear_inbox" else {},
+        )
+        assert op.operation_type == op_type
+
+
+def test_notification_handler_mark_read_and_clear(monkeypatch) -> None:
+    from datetime import UTC, datetime
+
+    from app.services.sync_handlers.notification_handler import NotificationSyncHandler
+
+    now = datetime.now(UTC)
+    user = _admin_user()
+    user.id = user.id  # already string-like SimpleNamespace
+
+    class _FakeDoc:
+        def __init__(self) -> None:
+            self.id = "notif-1"
+            self.user_id = user.id
+            self.read = False
+            self.read_at = None
+            self.deleted_at = None
+            self.version = 1
+            self.updated_at = now
+            self.title = "t"
+            self.body = "b"
+            self.event_type = "reservation_created"
+            self.reservation_id = None
+            self.contact_phone = None
+            self.created_at = now
+
+        async def save(self) -> None:
+            return None
+
+        def model_dump(self, mode: str = "json") -> dict:
+            return {"id": self.id, "read": self.read, "deleted_at": self.deleted_at}
+
+    doc = _FakeDoc()
+
+    async def _get(_id: str):
+        return doc if _id == "notif-1" else None
+
+    class _FindResult:
+        async def update_many(self, update: dict) -> SimpleNamespace:
+            return SimpleNamespace(modified_count=2)
+
+    def _find(_query: dict) -> _FindResult:
+        return _FindResult()
+
+    monkeypatch.setattr(
+        "app.services.sync_handlers.notification_handler.InAppNotificationDocument.get",
+        staticmethod(_get),
+    )
+    monkeypatch.setattr(
+        "app.services.sync_handlers.notification_handler.InAppNotificationDocument.find",
+        staticmethod(_find),
+    )
+
+    handler = NotificationSyncHandler()
+
+    mark_op = SyncPushOperationSchema(
+        operation_id="op-mr",
+        entity_type="notification_mutation",
+        entity_local_id="notif-1",
+        operation_type="mark_read",
+        idempotency_key="idem-mr",
+        payload={},
+    )
+    marked = asyncio.run(
+        handler.handle(
+            entity="notification_mutation",
+            op_type="mark_read",
+            operation=mark_op,
+            current_user=user,
+        )
+    )
+    assert marked.read is True
+    assert marked.read_at is not None
+
+    clear_op = SyncPushOperationSchema(
+        operation_id="op-cl",
+        entity_type="notification_mutation",
+        entity_local_id="__all__",
+        operation_type="clear_inbox",
+        idempotency_key="idem-cl",
+        payload={"read_only": False},
+    )
+    cleared = asyncio.run(
+        handler.handle(
+            entity="notification_mutation",
+            op_type="clear_inbox",
+            operation=clear_op,
+            current_user=user,
+        )
+    )
+    assert cleared.model_dump()["cleared_count"] == 2
