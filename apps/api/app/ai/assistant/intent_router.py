@@ -72,7 +72,7 @@ _ADMIN_LIST_RESERVATIONS = [
 ]
 
 _ADMIN_LIST_EQUINES = [
-    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(equinos?|mulas?)\b",
+    r"\b(lista(r|me|r)?|mu[eé]stra(r|me)?|dime|ver)\b.*\b(equinos?|mulas?)\b",
 ]
 
 _ADMIN_APPROVE_PAYMENT = [
@@ -140,11 +140,11 @@ _ADMIN_ASSIGNMENT_BOARD = [
 ]
 
 _ADMIN_LIST_PROVIDERS = [
-    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(proveedores?)\b",
+    r"\b(lista(r|me|r)?|mu[eé]stra(r|me)?|dime|ver)\b.*\b(proveedores?)\b",
 ]
 
 _ADMIN_LIST_SADDLES = [
-    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(sillas?|monturas?)\b",
+    r"\b(lista(r|me|r)?|mu[eé]stra(r|me)?|dime|ver)\b.*\b(sillas?|monturas?)\b",
 ]
 
 _ADMIN_SADDLES_AVAILABLE = [
@@ -174,6 +174,31 @@ _ADMIN_EMERGENCY_CONTACTS = [
 ]
 
 
+_ADMIN_LIST_USERS = [
+    r"\b(lista(r|me)?|mu[eé]stra(r|me)?|dime|ver|cu[aá]les)\b.*\b(usuarios?)\b",
+]
+
+_ADMIN_LIST_EXPERIENCES = [
+    r"\b(lista(r|me)?|mu[eé]stra(r|me)?|dime|ver|cu[aá]les)\b.*\b(experiencias?)\b",
+]
+
+_ADMIN_CREATE_USER = [
+    r"\b(crea(r)?|agrega(r)?|registra(r)?|alta)\b.*\b(usuario|cuenta)\b",
+]
+
+_ADMIN_CREATE_EXPERIENCE = [
+    r"\b(crea(r)?|agrega(r)?|registra(r)?)\b.*\b(experiencia)\b",
+]
+
+_ADMIN_CREATE_PROVIDER = [
+    r"\b(crea(r)?|agrega(r)?|registra(r)?)\b.*\b(proveedor)\b",
+]
+
+_ADMIN_CREATE_EQUINE = [
+    r"\b(crea(r)?|agrega(r)?|registra(r)?)\b.*\b(equino|mula)\b",
+]
+
+
 def _extract_reservation_code(text: str) -> str | None:
     m = re.search(r"\b([A-Z]{2,4}-?\d{4,})\b", text.upper())
     if m:
@@ -182,6 +207,20 @@ def _extract_reservation_code(text: str) -> str | None:
     if m:
         return m.group(2).upper()
     return None
+
+
+def _extract_named_label(text: str) -> str | None:
+    match = re.search(
+        r"\b(?:llamad[oa]|nombre(?:\s+es)?)\s+(.+)$",
+        text.strip(),
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    value = re.sub(r"\s+", " ", match.group(1)).strip(" .,!?:;")
+    value = re.split(r"\b(?:correo|email|mail)\b", value, maxsplit=1, flags=re.IGNORECASE)[0]
+    value = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "", value)
+    return value.strip(" .,!?:;") or None
 
 
 def _extract_object_id(text: str, field_name: str) -> str | None:
@@ -249,36 +288,72 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
     if date_str:
         args.requested_date = date_str
 
-    if _matches_any(msg_lower, _ADMIN_EMERGENCY_CONTACTS):
+    if _matches_any(msg_lower, _ADMIN_LIST_USERS):
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.92,
-            tool_name="admin_get_emergency_contacts",
-            arguments=ToolArgs(),
-            user_goal="El admin quiere ver contactos de emergencia.",
-            audit_summary="Intent admin: contactos de emergencia.",
+            tool_name="admin_list_users",
+            arguments=ToolArgs(limit=50),
+            user_goal="El admin quiere listar usuarios.",
+            audit_summary="Intent admin: listar usuarios.",
         )
 
-    if _matches_any(msg_lower, _ADMIN_FINALIZE_ALL_ASSIGNMENTS):
-        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+    if _matches_any(msg_lower, _ADMIN_LIST_EXPERIENCES):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.92,
+            tool_name="admin_list_experiences_admin",
+            arguments=ToolArgs(limit=50),
+            user_goal="El admin quiere listar experiencias.",
+            audit_summary="Intent admin: listar experiencias.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CREATE_USER):
+        email_match = re.search(
+            r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
+            msg_lower,
+        )
+        create_args = ToolArgs()
+        if email_match:
+            create_args.email = email_match.group(0)
+        named = _extract_named_label(msg_lower)
+        if named:
+            create_args.full_name = named
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.9,
-            tool_name="admin_finalize_all_assignments",
-            arguments=ToolArgs(reservation_id=reservation_id) if reservation_id else ToolArgs(),
-            user_goal="El admin quiere finalizar todas las asignaciones de una reserva.",
-            audit_summary="Intent admin: finalizar todas las asignaciones.",
+            tool_name="admin_create_user",
+            arguments=create_args,
+            user_goal="El admin quiere crear un usuario.",
+            audit_summary="Intent admin: crear usuario.",
         )
 
-    if _matches_any(msg_lower, _ADMIN_SADDLES_AVAILABLE):
-        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+    if _matches_any(msg_lower, _ADMIN_CREATE_EXPERIENCE):
+        create_args = ToolArgs()
+        named = _extract_named_label(msg_lower)
+        if named:
+            create_args.name = named
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.9,
-            tool_name="admin_list_available_saddles_for_reservation",
-            arguments=ToolArgs(reservation_id=reservation_id) if reservation_id else ToolArgs(),
-            user_goal="El admin quiere ver sillas disponibles para una reserva.",
-            audit_summary="Intent admin: sillas disponibles por reserva.",
+            tool_name="admin_create_experience",
+            arguments=create_args,
+            user_goal="El admin quiere crear una experiencia.",
+            audit_summary="Intent admin: crear experiencia.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CREATE_PROVIDER):
+        create_args = ToolArgs()
+        named = _extract_named_label(msg_lower)
+        if named:
+            create_args.name = named
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_create_provider",
+            arguments=create_args,
+            user_goal="El admin quiere crear un proveedor.",
+            audit_summary="Intent admin: crear proveedor.",
         )
 
     if _matches_any(msg_lower, _ADMIN_CREATE_EQUINE_EVENT):
@@ -312,6 +387,52 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
             arguments=ToolArgs(equine_id=equine_id) if equine_id else ToolArgs(),
             user_goal="El admin quiere ver eventos de un equino.",
             audit_summary="Intent admin: listar eventos equinos.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CREATE_EQUINE):
+        create_args = ToolArgs()
+        named = _extract_named_label(msg_lower)
+        if named:
+            create_args.name = named
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_create_equine",
+            arguments=create_args,
+            user_goal="El admin quiere crear un equino.",
+            audit_summary="Intent admin: crear equino.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_EMERGENCY_CONTACTS):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.92,
+            tool_name="admin_get_emergency_contacts",
+            arguments=ToolArgs(),
+            user_goal="El admin quiere ver contactos de emergencia.",
+            audit_summary="Intent admin: contactos de emergencia.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_FINALIZE_ALL_ASSIGNMENTS):
+        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_finalize_all_assignments",
+            arguments=ToolArgs(reservation_id=reservation_id) if reservation_id else ToolArgs(),
+            user_goal="El admin quiere finalizar todas las asignaciones de una reserva.",
+            audit_summary="Intent admin: finalizar todas las asignaciones.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_SADDLES_AVAILABLE):
+        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_list_available_saddles_for_reservation",
+            arguments=ToolArgs(reservation_id=reservation_id) if reservation_id else ToolArgs(),
+            user_goal="El admin quiere ver sillas disponibles para una reserva.",
+            audit_summary="Intent admin: sillas disponibles por reserva.",
         )
 
     saddle_id = _extract_object_id(msg_lower, "saddle_id")

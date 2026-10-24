@@ -13,7 +13,9 @@ from app.ai.mcp.tool_contracts import (
     AdminUpdateExperienceOutput,
     ToolBlockingReason,
 )
+from app.ai.mcp.tools.slug_utils import slugify, unique_slug
 from app.core.errors import ApiError
+from app.documents import ExperienceDocument
 from app.schemas.experience import ExperienceCreateSchema, ExperienceUpdateSchema
 from app.services.experience_service import ExperienceService
 
@@ -41,6 +43,8 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
 
     try:
         filtered = {k: v for k, v in kwargs.items() if k in ExperienceCreateSchema.model_fields}
+        if not filtered.get("slug") and filtered.get("name"):
+            filtered["slug"] = await unique_slug(ExperienceDocument, slugify(filtered["name"]))
         payload = ExperienceCreateSchema.model_validate(filtered)
         doc = await _get_service().create(payload)
 
@@ -58,6 +62,7 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
         output = AdminCreateExperienceOutput(
             created=False,
             trace_id=trace_id,
+            message=exc.message,
             blocking_reasons=[
                 ToolBlockingReason(code=exc.code, message=exc.message, details=exc.details or {})
             ],
@@ -69,6 +74,7 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
         output = AdminCreateExperienceOutput(
             created=False,
             trace_id=trace_id,
+            message=str(exc),
             blocking_reasons=[ToolBlockingReason(code=error_code, message=str(exc))],
         )
         return output.model_dump(mode="json")

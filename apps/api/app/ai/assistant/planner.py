@@ -1,5 +1,6 @@
 import inspect
 import time
+from typing import Any
 
 from app.ai.assistant.prompts.planner import (
     ADMIN_PLANNER_SYSTEM_PROMPT,
@@ -9,7 +10,7 @@ from app.ai.language.messages import build_language_instruction
 from app.ai.providers.factory import get_llm_provider
 from app.core.logging import logger
 from app.core.time import format_colombia_today_es, now_colombia
-from app.schemas.assistant_plan import AssistantPlan
+from app.schemas.assistant_plan import AssistantAction, AssistantPlan
 
 # Mapa de keywords → tools administrativas relevantes
 # Si el mensaje del usuario contiene alguna keyword, solo mostramos esa categoría
@@ -26,6 +27,54 @@ _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
         "admin_update_user",
         "admin_deactivate_user",
     ],
+    "personal": [
+        "admin_list_users",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_deactivate_user",
+    ],
+    "equipo": [
+        "admin_list_users",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_deactivate_user",
+    ],
+    "persona": [
+        "admin_list_users",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_deactivate_user",
+    ],
+    "guía": [
+        "admin_list_users",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_deactivate_user",
+    ],
+    "guia": [
+        "admin_list_users",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_deactivate_user",
+    ],
+    "guías": [
+        "admin_list_users",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_deactivate_user",
+    ],
+    "guias": [
+        "admin_list_users",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_deactivate_user",
+    ],
+    "admins": [
+        "admin_list_users",
+        "admin_create_user",
+        "admin_update_user",
+        "admin_deactivate_user",
+    ],
     "experiencia": [
         "admin_list_experiences_admin",
         "admin_create_experience",
@@ -33,6 +82,30 @@ _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
         "admin_deactivate_experience",
     ],
     "experiencias": [
+        "admin_list_experiences_admin",
+        "admin_create_experience",
+        "admin_update_experience",
+        "admin_deactivate_experience",
+    ],
+    "catálogo": [
+        "admin_list_experiences_admin",
+        "admin_create_experience",
+        "admin_update_experience",
+        "admin_deactivate_experience",
+    ],
+    "catalogo": [
+        "admin_list_experiences_admin",
+        "admin_create_experience",
+        "admin_update_experience",
+        "admin_deactivate_experience",
+    ],
+    "planes": [
+        "admin_list_experiences_admin",
+        "admin_create_experience",
+        "admin_update_experience",
+        "admin_deactivate_experience",
+    ],
+    "plan": [
         "admin_list_experiences_admin",
         "admin_create_experience",
         "admin_update_experience",
@@ -72,6 +145,15 @@ _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
         "admin_update_equine_availability",
     ],
     "mulas": [
+        "admin_list_equines",
+        "admin_get_equine",
+        "admin_create_equine",
+        "admin_update_equine",
+        "admin_deactivate_equine",
+        "admin_add_equine_health_event",
+        "admin_update_equine_availability",
+    ],
+    "inventario": [
         "admin_list_equines",
         "admin_get_equine",
         "admin_create_equine",
@@ -122,6 +204,9 @@ _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
     ],
     "ingresos": ["admin_get_sales_summary"],
     "ingreso": ["admin_get_sales_summary"],
+    "plata": ["admin_get_sales_summary"],
+    "conversión": ["admin_get_reservation_funnel"],
+    "conversion": ["admin_get_reservation_funnel"],
     "redes": ["admin_get_channel_performance"],
     "canal": ["admin_get_channel_performance"],
     "canales": ["admin_get_channel_performance"],
@@ -199,6 +284,20 @@ _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
         "admin_update_provider",
         "admin_deactivate_provider",
     ],
+    "aliado": [
+        "admin_list_providers",
+        "admin_get_provider",
+        "admin_create_provider",
+        "admin_update_provider",
+        "admin_deactivate_provider",
+    ],
+    "hospedaje": [
+        "admin_list_providers",
+        "admin_get_provider",
+        "admin_create_provider",
+        "admin_update_provider",
+        "admin_deactivate_provider",
+    ],
     "silla": [
         "admin_list_saddles",
         "admin_get_saddle",
@@ -208,6 +307,14 @@ _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
         "admin_list_available_saddles_for_reservation",
     ],
     "sillas": [
+        "admin_list_saddles",
+        "admin_get_saddle",
+        "admin_create_saddle",
+        "admin_update_saddle",
+        "admin_deactivate_saddle",
+        "admin_list_available_saddles_for_reservation",
+    ],
+    "bodega": [
         "admin_list_saddles",
         "admin_get_saddle",
         "admin_create_saddle",
@@ -273,11 +380,16 @@ _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
 # Descripciones breves de cada tool (categorizadas)
 _ADMIN_TOOL_DESCRIPTIONS: dict[str, str] = {
     "admin_list_users": "Listar usuarios",
-    "admin_create_user": "Crear usuario",
+    "admin_create_user": "Crear usuario (usa full_name y email; no pidas password)",
     "admin_update_user": "Actualizar usuario",
     "admin_deactivate_user": "Desactivar usuario",
     "admin_list_experiences_admin": "Listar experiencias",
-    "admin_create_experience": "Crear experiencia",
+    "admin_create_experience": (
+        "Crear experiencia (usa name, description, level, y duration_hours o "
+        "duration_days; el slug se genera solo y el precio se agrega después "
+        "con admin_update_experience). level debe ser uno de: basic, "
+        "intermediate, advanced"
+    ),
     "admin_update_experience": "Actualizar experiencia",
     "admin_deactivate_experience": "Desactivar experiencia",
     "admin_get_sales_summary": "Reporte ventas",
@@ -304,7 +416,7 @@ _ADMIN_TOOL_DESCRIPTIONS: dict[str, str] = {
     "admin_cancel_reservation": "Cancelar reserva",
     "admin_list_equines": "Listar equinos",
     "admin_get_equine": "Detalle equino",
-    "admin_create_equine": "Crear equino",
+    "admin_create_equine": "Crear equino (usa el campo name)",
     "admin_update_equine": "Actualizar equino",
     "admin_deactivate_equine": "Desactivar equino",
     "admin_get_participant": "Detalle participante",
@@ -313,7 +425,11 @@ _ADMIN_TOOL_DESCRIPTIONS: dict[str, str] = {
     "schedule_visit_anniversary_automation": "Aniversario",
     "admin_list_providers": "Listar proveedores",
     "admin_get_provider": "Detalle proveedor",
-    "admin_create_provider": "Crear proveedor",
+    "admin_create_provider": (
+        "Crear proveedor (usa los campos name y type; el slug se genera solo). "
+        "type debe ser uno de: lodging, food, transport_people, equine_transport, "
+        "experience_ally, guide_ally, park_or_access, insurance, other"
+    ),
     "admin_update_provider": "Actualizar proveedor",
     "admin_deactivate_provider": "Desactivar proveedor",
     "admin_list_saddles": "Listar sillas",
@@ -358,6 +474,74 @@ def _build_admin_tools_prompt(tools: list[str]) -> str:
         "Herramientas de escritura (crear/actualizar/desactivar) requieren confirmación implícita."
     )
     return "\n".join(lines)
+
+
+_ADMIN_TOOL_ALIASES = {
+    "admin_list_experiences": "admin_list_experiences_admin",
+    "list_experiences": "admin_list_experiences_admin",
+    "admin_list_experience": "admin_list_experiences_admin",
+    "admin_get_reservation_rules": "admin_get_system_config",
+    "admin_get_reservation_rule": "admin_get_system_config",
+    "admin_get_business_rules": "admin_get_system_config",
+}
+
+_PROVIDER_TYPE_ALIASES = {
+    "hospedaje": "lodging",
+    "alojamiento": "lodging",
+    "lodging": "lodging",
+    "comida": "food",
+    "alimentacion": "food",
+    "alimentación": "food",
+    "food": "food",
+}
+
+
+def _plan_arg(plan: AssistantPlan, key: str) -> Any:
+    if not plan.arguments:
+        return None
+    return getattr(plan.arguments, key, None)
+
+
+def normalize_admin_llm_plan(plan: AssistantPlan) -> AssistantPlan:
+    """Corrige tool names y huecos típicos de Gemini en canal admin."""
+    if plan.tool_name in _ADMIN_TOOL_ALIASES:
+        plan.tool_name = _ADMIN_TOOL_ALIASES[plan.tool_name]
+
+    if plan.tool_name == "admin_create_provider" and plan.arguments:
+        current_type = _plan_arg(plan, "type")
+        provider_type = _plan_arg(plan, "provider_type")
+        raw = current_type or provider_type
+        if isinstance(raw, str):
+            mapped = _PROVIDER_TYPE_ALIASES.get(raw.strip().lower())
+            if mapped:
+                plan.arguments.type = mapped
+
+    if plan.tool_name:
+        return plan
+
+    missing = set(plan.missing_fields or [])
+    full_name = _plan_arg(plan, "full_name")
+    email = _plan_arg(plan, "email")
+    name = _plan_arg(plan, "name")
+    description = _plan_arg(plan, "description")
+    provider_type = _plan_arg(plan, "type") or _plan_arg(plan, "provider_type")
+
+    experience_missing = missing & {"description", "level", "duration_hours", "duration_days"}
+    if experience_missing and not full_name and "email" not in missing:
+        plan.tool_name = "admin_create_experience"
+        return plan
+
+    if "email" in missing or (full_name and not email):
+        plan.tool_name = "admin_create_user"
+        return plan
+
+    if provider_type and name and not full_name:
+        plan.tool_name = "admin_create_provider"
+        return plan
+
+    if name and not full_name and not description:
+        plan.tool_name = "admin_create_equine"
+    return plan
 
 
 class GeminiPlanner:
@@ -444,6 +628,8 @@ class GeminiPlanner:
             temperature=0.1,
             telemetry_context={"channel": channel, "conversation_id": conversation_id},
         )
+        if channel == "admin_api":
+            result = normalize_admin_llm_plan(result)
 
         # Capturar tokens del último request
         self.last_token_usage = getattr(provider, "last_token_usage", None)

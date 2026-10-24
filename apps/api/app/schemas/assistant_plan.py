@@ -48,6 +48,15 @@ class ToolArgs(BaseModel):
     exclude_dates: list[str] | None = None
     search_days_before: int | None = None
     search_days_after: int | None = None
+    name: str | None = None
+    full_name: str | None = None
+    email: str | None = None
+    password: str | None = None
+    type: str | None = None
+    description: str | None = None
+    level: str | None = None
+    duration_hours: int | None = None
+    duration_days: int | None = None
     limit: int | None = None
     q: str | None = None
     provider_type: str | None = None

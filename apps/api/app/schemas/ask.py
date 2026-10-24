@@ -21,6 +21,13 @@ class AskResponse(BaseModel):
     planner_output: dict[str, Any] = Field(default_factory=dict)
     tool_output: dict[str, Any] = Field(default_factory=dict)
     response: str
+    needs_confirmation: bool = Field(
+        default=False,
+        description=(
+            "True solo cuando hay una escritura pendiente de sí/no. "
+            "Un ask_clarifying_question por campos faltantes debe ir en false."
+        ),
+    )
     token_usage: dict[str, int] | None = Field(
         default=None,
         description="Tokens consumidos: prompt_tokens, completion_tokens, total_tokens",

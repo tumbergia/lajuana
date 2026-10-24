@@ -117,7 +117,9 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
             (controller.allowsManualInput ||
                 !controller.speechSupported ||
                 controller.phase == VoicePhase.error ||
-                controller.phase == VoicePhase.needsInput);
+                controller.phase == VoicePhase.needsInput ||
+                controller.phase == VoicePhase.idle ||
+                controller.phase == VoicePhase.listening);
         final showVisualizer =
             controller.speechSupported &&
             !isAnsweredPhase &&
@@ -148,12 +150,39 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const AppSectionHeader(
-                    eyebrow: 'Asistente',
-                    title: 'Comando de voz',
-                    subtitle:
-                        'Di una instrucción de gestión y el asistente ejecutará la acción.',
-                    variant: AppSectionHeaderVariant.compact,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Expanded(
+                        child: AppSectionHeader(
+                          eyebrow: 'Asistente',
+                          title: 'Comando de voz',
+                          subtitle:
+                              'Di una instrucción de gestión y el asistente ejecutará la acción.',
+                          variant: AppSectionHeaderVariant.compact,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Nueva conversación',
+                        icon: Icon(
+                          Icons.add_comment_rounded,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        onPressed: controller.startNewConversation,
+                      ),
+                      IconButton(
+                        tooltip: controller.speechOutputEnabled
+                            ? 'Silenciar respuesta hablada'
+                            : 'Activar respuesta hablada',
+                        icon: Icon(
+                          controller.speechOutputEnabled
+                              ? Icons.volume_up_rounded
+                              : Icons.volume_off_rounded,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        onPressed: controller.toggleSpeechOutput,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   ConstrainedBox(

@@ -19,9 +19,12 @@ class ToolRegistry:
     async def call(
         self,
         tool_name: str,
+        /,
         conversation_id_for_log: str | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
+        # `tool_name` es posicional-only para que nunca colisione con un
+        # argumento de tool legítimo llamado "name" (p.ej. admin_create_equine).
         tool = self._tools.get(tool_name)
         if tool is None:
             raise RuntimeError(f"Unknown tool: {tool_name}")

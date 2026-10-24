@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 import time
 from typing import Any
 from uuid import uuid4
@@ -87,8 +88,16 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
 
     try:
         filtered = {k: v for k, v in kwargs.items() if k in UserCreateSchema.model_fields}
+        generated_password = None
+        if not filtered.get("password"):
+            generated_password = secrets.token_urlsafe(10)
+            filtered["password"] = generated_password
         payload = UserCreateSchema.model_validate(filtered)
         doc = await _get_service().create_user(payload)
+
+        message = f"Usuario '{doc.email}' creado exitosamente con rol {doc.role}."
+        if generated_password:
+            message += f" Contraseña temporal: {generated_password}. Pídele que la cambie al entrar."
 
         output = AdminCreateUserOutput(
             created=True,
@@ -96,7 +105,7 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
             user_id=str(doc.id),
             email=doc.email,
             role=str(doc.role),
-            message=f"Usuario '{doc.email}' creado exitosamente con rol {doc.role}.",
+            message=message,
         )
         return output.model_dump(mode="json")
 
@@ -105,6 +114,7 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
         output = AdminCreateUserOutput(
             created=False,
             trace_id=trace_id,
+            message=exc.message,
             blocking_reasons=[
                 ToolBlockingReason(code=exc.code, message=exc.message, details=exc.details or {})
             ],
@@ -116,6 +126,7 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
         output = AdminCreateUserOutput(
             created=False,
             trace_id=trace_id,
+            message=str(exc),
             blocking_reasons=[ToolBlockingReason(code=error_code, message=str(exc))],
         )
         return output.model_dump(mode="json")

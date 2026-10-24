@@ -267,6 +267,10 @@ class ToolPolicyEngine:
             "admin_reject_payment_proof": "payment_proof_id",
             "admin_unverify_payment_proof": "payment_proof_id",
             "admin_unreject_payment_proof": "payment_proof_id",
+            "admin_get_assignment_board": "reservation_id",
+            "admin_list_equine_events": "equine_id",
+            "admin_create_equine_event": "equine_id",
+            "admin_list_available_saddles_for_reservation": "reservation_id",
         }
         if plan.tool_name in id_required_tools:
             required_field = id_required_tools[plan.tool_name]
@@ -281,22 +285,30 @@ class ToolPolicyEngine:
             if not args.get("reservation_id") and not args.get("code"):
                 return ToolPolicyDecision(
                     allowed=False,
-                    reason="missing_required_arguments:reservation_id_or_code",
+                    reason="missing_required_arguments:code",
                 )
 
         # Tools que requieren datos de creación
         if plan.tool_name == "admin_create_experience":
-            if not args.get("name") or not args.get("slug"):
+            missing = [
+                f for f in ("name", "description", "level") if not args.get(f)
+            ]
+            if not args.get("duration_hours") and not args.get("duration_days"):
+                missing.append("duration_hours")
+            if missing:
                 return ToolPolicyDecision(
                     allowed=False,
-                    reason="missing_required_arguments:name,slug",
+                    reason=f"missing_required_arguments:{','.join(missing)}",
                 )
 
         if plan.tool_name == "admin_create_user":
-            if not args.get("email") or not args.get("password"):
+            missing = [
+                f for f in ("email", "full_name") if not args.get(f)
+            ]
+            if missing:
                 return ToolPolicyDecision(
                     allowed=False,
-                    reason="missing_required_arguments:email,password",
+                    reason=f"missing_required_arguments:{','.join(missing)}",
                 )
 
         if plan.tool_name == "admin_create_equine":
@@ -304,6 +316,20 @@ class ToolPolicyEngine:
                 return ToolPolicyDecision(
                     allowed=False,
                     reason="missing_required_arguments:name",
+                )
+
+        if plan.tool_name == "admin_create_provider":
+            if not args.get("name") or not args.get("type"):
+                return ToolPolicyDecision(
+                    allowed=False,
+                    reason="missing_required_arguments:name,type",
+                )
+
+        if plan.tool_name == "admin_create_saddle":
+            if not args.get("code"):
+                return ToolPolicyDecision(
+                    allowed=False,
+                    reason="missing_required_arguments:code",
                 )
 
         if plan.tool_name == "admin_update_reservation_rules":

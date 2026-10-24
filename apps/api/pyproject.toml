@@ -109,7 +109,8 @@ testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
 markers = [
-	"integration: Tests that require a real MongoDB.",
+	"integration: Tests that require a real MongoDB or a live external service.",
+	"llm: Tests that call a live Gemini/LLM API (needs GEMINI_API_KEY, not for CI).",
 ]
 
 [tool.mypy]

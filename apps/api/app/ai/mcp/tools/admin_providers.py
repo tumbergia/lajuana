@@ -15,7 +15,9 @@ from app.ai.mcp.tool_contracts import (
     AdminUpdateProviderOutput,
     ToolBlockingReason,
 )
+from app.ai.mcp.tools.slug_utils import slugify, unique_slug
 from app.core.errors import ApiError
+from app.documents import ProviderDocument
 from app.schemas.provider import ProviderCreateSchema, ProviderUpdateSchema
 from app.services.provider_service import ProviderService
 
@@ -198,6 +200,8 @@ async def admin_create_provider(
 
     try:
         filtered = {k: v for k, v in kwargs.items() if k in ProviderCreateSchema.model_fields}
+        if not filtered.get("slug") and filtered.get("name"):
+            filtered["slug"] = await unique_slug(ProviderDocument, slugify(filtered["name"]))
         payload = ProviderCreateSchema.model_validate(filtered)
         doc = await _get_service().create(payload)
         output = AdminCreateProviderOutput(

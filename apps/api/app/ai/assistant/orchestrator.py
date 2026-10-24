@@ -54,6 +54,24 @@ FIELD_LABELS: dict[str, tuple[str, str]] = {
     "reservation_code": ("¿cuál es el código de tu reserva?", "what's your reservation code?"),
     "new_date": ("¿cuál es la nueva fecha?", "what's the new date?"),
     "new_participant_count": ("¿cuántas personas serían ahora?", "how many people now?"),
+    "reservation_id": ("¿cuál es el código o ID de la reserva?", "what's the reservation code or ID?"),
+    "payment_proof_id": ("¿cuál es el ID del comprobante de pago?", "what's the payment proof ID?"),
+    "user_id": ("¿cuál es el ID del usuario?", "what's the user ID?"),
+    "equine_id": ("¿cuál es el ID o nombre del equino?", "what's the equine's ID or name?"),
+    "participant_id": ("¿cuál es el ID del participante?", "what's the participant ID?"),
+    "name": ("¿cuál es el nombre?", "what's the name?"),
+    "full_name": ("¿cuál es el nombre completo?", "what's the full name?"),
+    "slug": ("¿cuál sería el identificador corto (slug) para eso?", "what should the short identifier (slug) be?"),
+    "email": ("¿cuál es el correo electrónico?", "what's the email address?"),
+    "password": ("¿cuál sería la contraseña?", "what should the password be?"),
+    "type": ("¿qué tipo es?", "what type is it?"),
+    "description": ("¿cuál sería la descripción?", "what should the description be?"),
+    "level": ("¿qué nivel es (básico, intermedio o avanzado)?", "what level is it (basic, intermediate, or advanced)?"),
+    "duration_hours": ("¿cuánto dura, en horas o días?", "how long does it last, in hours or days?"),
+    "event_type": ("¿qué tipo de evento es?", "what type of event is it?"),
+    "title": ("¿cuál es el título del evento?", "what's the event title?"),
+    "provider_id": ("¿cuál es el proveedor?", "which provider is it?"),
+    "saddle_id": ("¿cuál es la silla?", "which saddle is it?"),
 }
 
 # Constants extracted for testability (W3.6, conv. #6: no lógica en métodos)
@@ -104,6 +122,26 @@ REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
         "holder_phone",
         "new_participant_count",
     ],
+    "admin_create_user": ["full_name", "email"],
+    "admin_create_experience": ["name", "description", "level", "duration_hours"],
+    "admin_create_provider": ["name", "type"],
+    "admin_create_equine": ["name"],
+    "admin_create_saddle": ["code"],
+    "admin_get_reservation_detail": ["code"],
+    "admin_confirm_reservation": ["reservation_id"],
+    "admin_cancel_reservation": ["reservation_id"],
+    "admin_approve_payment": ["payment_proof_id"],
+    "admin_reject_payment_proof": ["payment_proof_id"],
+    "admin_get_assignment_board": ["reservation_id"],
+    "admin_list_available_saddles_for_reservation": ["reservation_id"],
+    "admin_get_payment_proof": ["payment_proof_id"],
+    "admin_get_equine": ["equine_id"],
+    "admin_list_equine_events": ["equine_id"],
+    "admin_create_equine_event": ["equine_id"],
+    "admin_deactivate_user": ["user_id"],
+    "admin_deactivate_experience": ["experience_id"],
+    "admin_deactivate_equine": ["equine_id"],
+    "admin_deactivate_provider": ["provider_id"],
 }
 
 # Tools requiring user confirmation before execution
@@ -125,6 +163,57 @@ WRITE_TOOLS_REQUIRING_CONFIRMATION: set[str] = {
     "admin_deactivate_saddle",
     "admin_delete_assignment",
     "admin_finalize_all_assignments",
+    "admin_create_user",
+    "admin_create_experience",
+    "admin_create_provider",
+    "admin_create_equine",
+}
+
+_ACTIVE_TOOL_SLOT = "_active_tool_name"
+_EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+_DURATION_HOURS_RE = re.compile(
+    r"(\d+(?:[.,]\d+)?)\s*(?:h|hs|hora|horas)\b",
+    re.IGNORECASE,
+)
+_DURATION_DAYS_RE = re.compile(
+    r"(\d+(?:[.,]\d+)?)\s*(?:d[ií]a|d[ií]as)\b",
+    re.IGNORECASE,
+)
+_LEVEL_ALIASES = {
+    "basico": "basic",
+    "básico": "basic",
+    "basic": "basic",
+    "intermedio": "intermediate",
+    "intermediate": "intermediate",
+    "avanzado": "advanced",
+    "advanced": "advanced",
+}
+_PROVIDER_TYPE_ALIASES = {
+    "alojamiento": "lodging",
+    "hospedaje": "lodging",
+    "lodging": "lodging",
+    "comida": "food",
+    "alimentacion": "food",
+    "alimentación": "food",
+    "food": "food",
+    "transporte": "transport_people",
+    "transporte de gente": "transport_people",
+    "transport_people": "transport_people",
+    "transporte equino": "equine_transport",
+    "equine_transport": "equine_transport",
+    "experiencia": "experience_ally",
+    "aliado": "experience_ally",
+    "experience_ally": "experience_ally",
+    "guia": "guide_ally",
+    "guía": "guide_ally",
+    "guide_ally": "guide_ally",
+    "parque": "park_or_access",
+    "acceso": "park_or_access",
+    "park_or_access": "park_or_access",
+    "seguro": "insurance",
+    "insurance": "insurance",
+    "otro": "other",
+    "other": "other",
 }
 
 
@@ -335,13 +424,201 @@ def _build_missing_fields_response(missing: list[str], language: str = "es") -> 
     idx = 0 if language == "es" else 1
     labels = []
     for f in missing:
-        entry = FIELD_LABELS.get(f)
-        if entry is None:
-            continue
-        labels.append(entry[idx] if isinstance(entry, tuple) else entry)
+        if f in FIELD_LABELS:
+            entry = FIELD_LABELS[f]
+            if entry is None:
+                continue
+            labels.append(entry[idx] if isinstance(entry, tuple) else entry)
+        else:
+            labels.append(f.replace("_", " "))
     if not labels:
         return t("missing_fields_default", language)
     return t("missing_fields", language, fields=", ".join(labels))
+
+
+def _has_value(value: object) -> bool:
+    if value is None or value == "":
+        return False
+    if isinstance(value, (dict, list, tuple, set)) and len(value) == 0:
+        return False
+    return True
+
+
+def _parse_missing_fields_from_policy_reason(reason: str | None) -> list[str]:
+    """Extrae los campos de un reason tipo 'missing_required_arguments:a,b'."""
+    prefix = "missing_required_arguments:"
+    if not reason or not reason.startswith(prefix):
+        return []
+    return [f for f in reason[len(prefix) :].split(",") if f]
+
+
+def _strip_slot_fillers(message: str) -> str:
+    cleaned = message.strip()
+    cleaned = re.sub(
+        r"^(el|la|los|las|es|son|seria|sería|pues|entonces|ok|okay|vale)\s+",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(
+        r"^(el\s+)?(correo|email|nombre|descripcion|descripción|tipo|nivel|clave|"
+        r"contraseña|código|codigo|id)\s+"
+        r"(es|seria|sería|:)?\s*",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    return cleaned.strip(" .,:;")
+
+
+_RESERVATION_CODE_RE = re.compile(r"\b([A-Z]{2,4}-[A-Z0-9-]{4,})\b", flags=re.IGNORECASE)
+_ID_SLOT_FIELDS = (
+    "reservation_id",
+    "payment_proof_id",
+    "user_id",
+    "equine_id",
+    "experience_id",
+    "provider_id",
+    "saddle_id",
+    "participant_id",
+    "assignment_id",
+    "event_id",
+)
+
+
+def _extract_slot_updates(message: str, missing: list[str]) -> dict[str, Any]:
+    """Interpreta una respuesta corta de seguimiento (correo, nombre, nivel, etc.)."""
+    updates: dict[str, Any] = {}
+    if not message.strip() or not missing:
+        return updates
+
+    email_match = _EMAIL_RE.search(message)
+    if email_match and "email" in missing:
+        updates["email"] = email_match.group(0)
+
+    hours_match = _DURATION_HOURS_RE.search(message)
+    if hours_match and "duration_hours" in missing:
+        updates["duration_hours"] = int(float(hours_match.group(1).replace(",", ".")))
+
+    days_match = _DURATION_DAYS_RE.search(message)
+    if days_match and "duration_hours" not in updates:
+        days = int(float(days_match.group(1).replace(",", ".")))
+        if "duration_days" in missing:
+            updates["duration_days"] = days
+        elif "duration_hours" in missing:
+            updates["duration_hours"] = days * 24
+
+    lower = message.lower()
+    if "level" in missing:
+        for alias, canonical in _LEVEL_ALIASES.items():
+            if re.search(rf"\b{re.escape(alias)}\b", lower):
+                updates["level"] = canonical
+                break
+
+    if "type" in missing:
+        for alias, canonical in sorted(_PROVIDER_TYPE_ALIASES.items(), key=lambda x: -len(x[0])):
+            if alias in lower:
+                updates["type"] = canonical
+                break
+
+    oid_match = _OBJECT_ID_RE.search(message)
+    if oid_match:
+        for field in _ID_SLOT_FIELDS:
+            if field in missing:
+                updates[field] = oid_match.group(0)
+                break
+
+    code_match = _RESERVATION_CODE_RE.search(message)
+    if code_match:
+        token = code_match.group(1).upper()
+        if "code" in missing:
+            updates["code"] = token
+        elif "reservation_code" in missing:
+            updates["reservation_code"] = token
+        elif "reservation_id" in missing and "reservation_id" not in updates:
+            updates["code"] = token
+
+    leftover = _strip_slot_fillers(message)
+    remaining = [field for field in missing if field not in updates]
+    if leftover and remaining:
+        for field in remaining:
+            if field in ("full_name", "name", "description", "code", "title", "q"):
+                updates[field] = leftover
+                break
+
+    return updates
+
+
+def _clear_active_tool_slots(session: ConversationSessionDocument) -> None:
+    active = session.slot_values.get(_ACTIVE_TOOL_SLOT)
+    required = REQUIRED_FIELDS_BY_TOOL.get(str(active or ""), [])
+    for field in required:
+        session.slot_values.pop(field, None)
+    session.slot_values.pop(_ACTIVE_TOOL_SLOT, None)
+    session.pending_fields = []
+
+
+def _resume_active_admin_tool(
+    message: str,
+    session: ConversationSessionDocument,
+) -> AssistantPlan | None:
+    """Continúa un create/admin a medias sin re-inferir la intención."""
+    active_tool = session.slot_values.get(_ACTIVE_TOOL_SLOT)
+    if not isinstance(active_tool, str) or active_tool not in REQUIRED_FIELDS_BY_TOOL:
+        return None
+
+    missing = session.pending_fields or [
+        field
+        for field in REQUIRED_FIELDS_BY_TOOL[active_tool]
+        if not session.slot_values.get(field)
+    ]
+    updates = _extract_slot_updates(message, missing)
+    if not updates:
+        return None
+
+    args = ToolArgs()
+    for key, value in session.slot_values.items():
+        if key.startswith("_") or key not in ToolArgs.model_fields:
+            continue
+        if _has_value(value):
+            setattr(args, key, value)
+    for key, value in updates.items():
+        if key in ToolArgs.model_fields:
+            setattr(args, key, value)
+
+    return AssistantPlan(
+        action=AssistantAction.TOOL_CALL,
+        confidence=0.93,
+        tool_name=active_tool,
+        arguments=args,
+        user_goal=f"Completar {active_tool} con datos del turno actual.",
+        audit_summary=f"Slot filling de {active_tool}: {', '.join(updates)}",
+    )
+
+
+def _remember_active_tool(
+    session: ConversationSessionDocument,
+    tool_name: str | None,
+    missing: list[str],
+) -> None:
+    if tool_name:
+        session.slot_values[_ACTIVE_TOOL_SLOT] = tool_name
+    if missing:
+        session.pending_fields = missing
+
+
+def _summarize_tool_args(args: dict[str, Any], language: str = "es") -> str:
+    parts: list[str] = []
+    for key, value in args.items():
+        if key.startswith("_") or not _has_value(value):
+            continue
+        shown = "••••" if "password" in key else value
+        label = key.replace("_", " ")
+        parts.append(f"{label}: {shown}")
+    if not parts:
+        return ""
+    prefix = "Datos: " if language == "es" else "Details: "
+    return prefix + "; ".join(parts)
 
 
 def _extract_explicit_id(message: str, field_name: str) -> str | None:
@@ -481,7 +758,10 @@ class AssistantOrchestrator:
 
         history_turns = (
             await ConversationTurnDocument.find(
-                {"conversation_id": conversation_key, "status": "responded"},
+                {
+                    "conversation_id": conversation_key,
+                    "status": {"$in": ["responded", "completed", "tool_error"]},
+                },
             )
             .sort("-created_at")
             .limit(8)
@@ -610,47 +890,60 @@ class AssistantOrchestrator:
                 forced_plan.action.value,
                 forced_plan.audit_summary,
             )
+            if forced_plan.tool_name != session.slot_values.get(_ACTIVE_TOOL_SLOT):
+                _clear_active_tool_slots(session)
             plan = forced_plan
             token_usage = None
         else:
-            logger.info(
-                "[conversation_id=%s] Intent router no match, falling back to LLM",
-                conversation_id,
-            )
-            try:
-                token_usage: dict[str, int] | None = None
-                plan = await self._planner.plan(
-                    user_message=request.message,
-                    channel=request.channel,
-                    conversation_context=enriched_context,
-                    conversation_id=conversation_id,
-                    language=session.language,
+            resumed = _resume_active_admin_tool(request.message, session)
+            if resumed:
+                logger.info(
+                    "[conversation_id=%s] Resumed active admin tool | tool=%s | audit=%s",
+                    conversation_id,
+                    resumed.tool_name,
+                    resumed.audit_summary,
                 )
-                token_usage = getattr(self._planner, "last_token_usage", None)
-            except (GeminiResourceExhausted, LLMResourceExhausted):
-                return AskResponse(
-                    trace_id=trace_id,
-                    action=AssistantAction.FINAL_RESPONSE,
-                    planner_output={},
-                    tool_output={},
-                    response=t("resource_exhausted", session.language),
+                plan = resumed
+                token_usage = None
+            else:
+                logger.info(
+                    "[conversation_id=%s] Intent router no match, falling back to LLM",
+                    conversation_id,
                 )
-            except (GeminiModelUnavailable, LLMUnavailable):
-                return AskResponse(
-                    trace_id=trace_id,
-                    action=AssistantAction.HUMAN_HANDOFF,
-                    planner_output={},
-                    tool_output={},
-                    response=t("model_unavailable", session.language),
-                )
-            except (GeminiProviderError, LLMProviderError):
-                return AskResponse(
-                    trace_id=trace_id,
-                    action=AssistantAction.HUMAN_HANDOFF,
-                    planner_output={},
-                    tool_output={},
-                    response=t("provider_error", session.language),
-                )
+                try:
+                    token_usage: dict[str, int] | None = None
+                    plan = await self._planner.plan(
+                        user_message=request.message,
+                        channel=request.channel,
+                        conversation_context=enriched_context,
+                        conversation_id=conversation_id,
+                        language=session.language,
+                    )
+                    token_usage = getattr(self._planner, "last_token_usage", None)
+                except (GeminiResourceExhausted, LLMResourceExhausted):
+                    return AskResponse(
+                        trace_id=trace_id,
+                        action=AssistantAction.FINAL_RESPONSE,
+                        planner_output={},
+                        tool_output={},
+                        response=t("resource_exhausted", session.language),
+                    )
+                except (GeminiModelUnavailable, LLMUnavailable):
+                    return AskResponse(
+                        trace_id=trace_id,
+                        action=AssistantAction.HUMAN_HANDOFF,
+                        planner_output={},
+                        tool_output={},
+                        response=t("model_unavailable", session.language),
+                    )
+                except (GeminiProviderError, LLMProviderError):
+                    return AskResponse(
+                        trace_id=trace_id,
+                        action=AssistantAction.HUMAN_HANDOFF,
+                        planner_output={},
+                        tool_output={},
+                        response=t("provider_error", session.language),
+                    )
 
         # Fallback: if planner didn't extract date but user message has one
         if (
@@ -736,7 +1029,7 @@ class AssistantOrchestrator:
                 or t("needs_more_info", session.language)
             )
             if plan.action == AssistantAction.ASK_CLARIFYING_QUESTION:
-                session.pending_fields = plan.missing_fields
+                _remember_active_tool(session, plan.tool_name, plan.missing_fields)
             session.last_intent = plan.action.value
             session.last_trace_id = trace_id
             session.turn_count += 1
@@ -745,6 +1038,7 @@ class AssistantOrchestrator:
             return AskResponse(
                 trace_id=trace_id,
                 action=plan.action,
+                tool_name=plan.tool_name,
                 planner_output=plan.model_dump(mode="json"),
                 tool_output={},
                 response=response,
@@ -759,7 +1053,7 @@ class AssistantOrchestrator:
         _normalize_admin_plan_arguments(plan, request.message)
 
         if await self._resolve_admin_reference(plan, session.language):
-            session.pending_fields = plan.missing_fields
+            _remember_active_tool(session, plan.tool_name, plan.missing_fields)
             session.last_intent = plan.action.value
             session.last_trace_id = trace_id
             session.turn_count += 1
@@ -776,16 +1070,26 @@ class AssistantOrchestrator:
 
         policy_decision = self._policy.validate(plan, channel=request.channel)
         if not policy_decision.allowed:
+            policy_missing = _parse_missing_fields_from_policy_reason(policy_decision.reason)
             response = (
                 plan.response
-                or _build_missing_fields_response(plan.missing_fields, session.language)
+                or _build_missing_fields_response(
+                    policy_missing or plan.missing_fields, session.language
+                )
                 or t("policy_blocked", session.language)
             )
             session.last_intent = "blocked_by_policy"
+            _remember_active_tool(
+                session, plan.tool_name, policy_missing or plan.missing_fields
+            )
             session.last_trace_id = trace_id
             session.turn_count += 1
             session.updated_at = datetime.now(UTC)
             await session.save()
+            turn.response_text = response
+            turn.status = "responded"
+            turn.responded_at = datetime.now(UTC)
+            await turn.save()
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.ASK_CLARIFYING_QUESTION,
@@ -797,21 +1101,29 @@ class AssistantOrchestrator:
 
         # Confirmación pre-ejecución (constante module-level, ver arriba)
         if plan.tool_name in WRITE_TOOLS_REQUIRING_CONFIRMATION:
+            pending_args = (
+                plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
+            )
             confirm_msg = t(
                 "tool_confirmation",
                 session.language,
                 tool_name=_humanize_tool_name(plan.tool_name),
             )
+            summary = _summarize_tool_args(pending_args, session.language)
+            if summary:
+                confirm_msg = f"{confirm_msg} {summary}"
             session.slot_values["_pending_tool_name"] = plan.tool_name
-            session.slot_values["_pending_tool_args"] = (
-                plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
-            )
+            session.slot_values["_pending_tool_args"] = pending_args
             session.slot_values["_pending_tool_timestamp"] = datetime.now(UTC).isoformat()
             session.last_intent = "pending_confirmation"
             session.last_trace_id = trace_id
             session.turn_count += 1
             session.updated_at = datetime.now(UTC)
             await session.save()
+            turn.response_text = confirm_msg
+            turn.status = "responded"
+            turn.responded_at = datetime.now(UTC)
+            await turn.save()
             return AskResponse(
                 trace_id=trace_id,
                 action=AssistantAction.ASK_CLARIFYING_QUESTION,
@@ -819,7 +1131,11 @@ class AssistantOrchestrator:
                 planner_output=plan.model_dump(mode="json"),
                 tool_output={},
                 response=confirm_msg,
+                needs_confirmation=True,
             )
+
+        session.slot_values.pop(_ACTIVE_TOOL_SLOT, None)
+        session.pending_fields = []
 
         logger.info(
             "[conversation_id=%s] Executing tool | tool=%s | args=%s",
@@ -922,8 +1238,9 @@ class AssistantOrchestrator:
 
         turn.tool_output = tool_output
         turn.response_text = response
-        turn.status = "completed" if not error_code else "tool_error"
+        turn.status = "responded" if not error_code else "tool_error"
         turn.error_code = error_code
+        turn.responded_at = datetime.now(UTC)
         await turn.save()
 
         # Propagate resolved fields from tool output to session slots
@@ -943,6 +1260,12 @@ class AssistantOrchestrator:
             code = tool_output.get("code")
             if code:
                 session.slot_values["reservation_code"] = code
+            reservation_id = tool_output.get("reservation_id")
+            if reservation_id:
+                session.slot_values["reservation_id"] = reservation_id
+            payment_proof_id = tool_output.get("payment_proof_id")
+            if payment_proof_id:
+                session.slot_values["payment_proof_id"] = payment_proof_id
 
         session.last_intent = plan.action.value if plan.action else "tool_executed"
         session.last_trace_id = trace_id
@@ -1031,6 +1354,20 @@ class AssistantOrchestrator:
         session.turn_count += 1
         session.updated_at = datetime.now(UTC)
         await session.save()
+
+        await ConversationTurnDocument(
+            trace_id=trace_id,
+            channel=request.channel,
+            conversation_id=conversation_key,
+            user_message=request.message,
+            from_phone=request.from_phone,
+            planner_output={"tool_name": pending_tool_name, "confirmed": True},
+            tool_output=tool_output,
+            response_text=response,
+            status="responded" if not error_code else "tool_error",
+            error_code=error_code,
+            responded_at=datetime.now(UTC),
+        ).insert()
 
         return AskResponse(
             trace_id=trace_id,

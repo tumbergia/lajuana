@@ -59,15 +59,17 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.dark(),
-          home: Builder(
-            builder: (hostContext) {
-              return AdminVoiceSheet(
-                controller: controller,
-                hostContext: hostContext,
-                navigation: navigation,
-                onClose: () {},
-              );
-            },
+          home: Scaffold(
+            body: Builder(
+              builder: (hostContext) {
+                return AdminVoiceSheet(
+                  controller: controller,
+                  hostContext: hostContext,
+                  navigation: navigation,
+                  onClose: () {},
+                );
+              },
+            ),
           ),
         ),
       );

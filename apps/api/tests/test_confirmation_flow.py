@@ -86,8 +86,11 @@ class TestWriteToolsRequiringConfirmation:
         assert "admin_approve_payment" in WRITE_TOOLS_REQUIRING_CONFIRMATION
         assert "admin_reject_payment_proof" in WRITE_TOOLS_REQUIRING_CONFIRMATION
 
-    def test_not_empty(self) -> None:
-        assert len(WRITE_TOOLS_REQUIRING_CONFIRMATION) > 0
+    def test_contains_create_tools(self) -> None:
+        assert "admin_create_user" in WRITE_TOOLS_REQUIRING_CONFIRMATION
+        assert "admin_create_experience" in WRITE_TOOLS_REQUIRING_CONFIRMATION
+        assert "admin_create_provider" in WRITE_TOOLS_REQUIRING_CONFIRMATION
+        assert "admin_create_equine" in WRITE_TOOLS_REQUIRING_CONFIRMATION
 
     def test_confirm_words_not_empty(self) -> None:
         assert len(CONFIRM_WORDS) >= 5
