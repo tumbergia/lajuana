@@ -54,20 +54,32 @@ FIELD_LABELS: dict[str, tuple[str, str]] = {
     "reservation_code": ("¿cuál es el código de tu reserva?", "what's your reservation code?"),
     "new_date": ("¿cuál es la nueva fecha?", "what's the new date?"),
     "new_participant_count": ("¿cuántas personas serían ahora?", "how many people now?"),
-    "reservation_id": ("¿cuál es el código o ID de la reserva?", "what's the reservation code or ID?"),
+    "reservation_id": (
+        "¿cuál es el código o ID de la reserva?",
+        "what's the reservation code or ID?",
+    ),
     "payment_proof_id": ("¿cuál es el ID del comprobante de pago?", "what's the payment proof ID?"),
     "user_id": ("¿cuál es el ID del usuario?", "what's the user ID?"),
     "equine_id": ("¿cuál es el ID o nombre del equino?", "what's the equine's ID or name?"),
     "participant_id": ("¿cuál es el ID del participante?", "what's the participant ID?"),
     "name": ("¿cuál es el nombre?", "what's the name?"),
     "full_name": ("¿cuál es el nombre completo?", "what's the full name?"),
-    "slug": ("¿cuál sería el identificador corto (slug) para eso?", "what should the short identifier (slug) be?"),
+    "slug": (
+        "¿cuál sería el identificador corto (slug) para eso?",
+        "what should the short identifier (slug) be?",
+    ),
     "email": ("¿cuál es el correo electrónico?", "what's the email address?"),
     "password": ("¿cuál sería la contraseña?", "what should the password be?"),
     "type": ("¿qué tipo es?", "what type is it?"),
     "description": ("¿cuál sería la descripción?", "what should the description be?"),
-    "level": ("¿qué nivel es (básico, intermedio o avanzado)?", "what level is it (basic, intermediate, or advanced)?"),
-    "duration_hours": ("¿cuánto dura, en horas o días?", "how long does it last, in hours or days?"),
+    "level": (
+        "¿qué nivel es (básico, intermedio o avanzado)?",
+        "what level is it (basic, intermediate, or advanced)?",
+    ),
+    "duration_hours": (
+        "¿cuánto dura, en horas o días?",
+        "how long does it last, in hours or days?",
+    ),
     "event_type": ("¿qué tipo de evento es?", "what type of event is it?"),
     "title": ("¿cuál es el título del evento?", "what's the event title?"),
     "provider_id": ("¿cuál es el proveedor?", "which provider is it?"),
@@ -142,6 +154,14 @@ REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
     "admin_deactivate_experience": ["experience_id"],
     "admin_deactivate_equine": ["equine_id"],
     "admin_deactivate_provider": ["provider_id"],
+}
+
+# Campos que se dan por satisfechos si llega cualquiera de sus equivalentes.
+# La policy ya acepta "ID o código" para reservas; sin esto el chequeo de campos
+# requeridos pediría el ID aunque el usuario ya haya dado el código.
+FIELD_ALTERNATIVES: dict[str, tuple[str, ...]] = {
+    "reservation_id": ("reservation_id", "reservation_code", "code"),
+    "code": ("code", "reservation_code", "reservation_id"),
 }
 
 # Tools requiring user confirmation before execution
@@ -442,6 +462,16 @@ def _has_value(value: object) -> bool:
     if isinstance(value, (dict, list, tuple, set)) and len(value) == 0:
         return False
     return True
+
+
+def _satisfied_by_alternative(field: str, *sources: dict[str, Any]) -> bool:
+    """True si un equivalente de `field` ya trae valor en alguna fuente."""
+    alternatives = FIELD_ALTERNATIVES.get(field)
+    if not alternatives:
+        return False
+    return any(
+        _has_value(source.get(alt)) for alt in alternatives if alt != field for source in sources
+    )
 
 
 def _parse_missing_fields_from_policy_reason(reason: str | None) -> list[str]:
@@ -977,6 +1007,27 @@ class AssistantOrchestrator:
                 if _has_value(value):
                     session.slot_values[key] = value
 
+        # Resolver referencias por nombre ("el proveedor patio central") ANTES de exigir
+        # campos requeridos: de lo contrario pediríamos el *_id que el resolver puede
+        # deducir solo, y el flujo de slots cortaría la conversación de más.
+        _normalize_admin_plan_arguments(plan, request.message)
+
+        if await self._resolve_admin_reference(plan, session.language):
+            _remember_active_tool(session, plan.tool_name, plan.missing_fields)
+            session.last_intent = plan.action.value
+            session.last_trace_id = trace_id
+            session.turn_count += 1
+            session.updated_at = datetime.now(UTC)
+            await session.save()
+            return AskResponse(
+                trace_id=trace_id,
+                action=plan.action,
+                tool_name=plan.tool_name,
+                planner_output=plan.model_dump(mode="json"),
+                tool_output={},
+                response=plan.response or t("needs_more_info", session.language),
+            )
+
         # Session merge: fill null plan args from session slots
         # REQUIRED_FIELDS_BY_TOOL definido a nivel módulo (ver arriba)
         if (
@@ -1002,15 +1053,18 @@ class AssistantOrchestrator:
                 for key, value in merge.merged.items():
                     if key in valid_keys:
                         setattr(plan.arguments, key, value)
-                if not merge.still_missing:
+                still_missing = [
+                    field
+                    for field in merge.still_missing
+                    if not _satisfied_by_alternative(field, merge.merged, slots_for_merge)
+                ]
+                if not still_missing:
                     plan.action = AssistantAction.TOOL_CALL
                     plan.missing_fields = []
                 else:
                     plan.action = AssistantAction.ASK_CLARIFYING_QUESTION
-                    plan.missing_fields = merge.still_missing
-                    plan.response = _build_missing_fields_response(
-                        merge.still_missing, session.language
-                    )
+                    plan.missing_fields = still_missing
+                    plan.response = _build_missing_fields_response(still_missing, session.language)
 
         if plan.action in {
             AssistantAction.FINAL_RESPONSE,
@@ -1050,24 +1104,6 @@ class AssistantOrchestrator:
                     session.slot_values[key] = value
         session.pending_fields = []
 
-        _normalize_admin_plan_arguments(plan, request.message)
-
-        if await self._resolve_admin_reference(plan, session.language):
-            _remember_active_tool(session, plan.tool_name, plan.missing_fields)
-            session.last_intent = plan.action.value
-            session.last_trace_id = trace_id
-            session.turn_count += 1
-            session.updated_at = datetime.now(UTC)
-            await session.save()
-            return AskResponse(
-                trace_id=trace_id,
-                action=plan.action,
-                tool_name=plan.tool_name,
-                planner_output=plan.model_dump(mode="json"),
-                tool_output={},
-                response=plan.response or t("needs_more_info", session.language),
-            )
-
         policy_decision = self._policy.validate(plan, channel=request.channel)
         if not policy_decision.allowed:
             policy_missing = _parse_missing_fields_from_policy_reason(policy_decision.reason)
@@ -1079,9 +1115,7 @@ class AssistantOrchestrator:
                 or t("policy_blocked", session.language)
             )
             session.last_intent = "blocked_by_policy"
-            _remember_active_tool(
-                session, plan.tool_name, policy_missing or plan.missing_fields
-            )
+            _remember_active_tool(session, plan.tool_name, policy_missing or plan.missing_fields)
             session.last_trace_id = trace_id
             session.turn_count += 1
             session.updated_at = datetime.now(UTC)
@@ -1101,9 +1135,7 @@ class AssistantOrchestrator:
 
         # Confirmación pre-ejecución (constante module-level, ver arriba)
         if plan.tool_name in WRITE_TOOLS_REQUIRING_CONFIRMATION:
-            pending_args = (
-                plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
-            )
+            pending_args = plan.arguments.model_dump(exclude_none=True) if plan.arguments else {}
             confirm_msg = t(
                 "tool_confirmation",
                 session.language,
