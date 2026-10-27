@@ -8,8 +8,7 @@ enum ComparisonMode {
   NONE("none"),
   ABSOLUTE("absolute"),
   PERCENTAGE("percentage"),
-  BOTH("both"),
-;
+  BOTH("both");
 
   final String value;
   const ComparisonMode(this.value);
@@ -25,4 +24,3 @@ extension ComparisonModeParse on String {
     orElse: () => throw ArgumentError('Unknown ComparisonMode: ${this}'),
   );
 }
-

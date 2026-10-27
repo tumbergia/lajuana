@@ -376,4 +376,54 @@ void main() {
     await connectivity.dispose();
     controller.dispose();
   });
+
+  testWidgets('Login no desborda en matriz de telefonos y texto ampliado', (
+    tester,
+  ) async {
+    final scenarios = <({Size size, double textScale})>[
+      (size: const Size(320, 568), textScale: 1),
+      (size: const Size(360, 640), textScale: 1.3),
+      (size: const Size(390, 844), textScale: 2),
+      (size: const Size(412, 915), textScale: 1),
+      (size: const Size(640, 360), textScale: 1.3),
+    ];
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    for (final scenario in scenarios) {
+      await tester.binding.setSurfaceSize(scenario.size);
+      final repo = FakeAuthRepository();
+      final connectivity = FakeConnectivityService(LinkType.wifi);
+      final controller = buildController(repo, connectivity);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark(),
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(scenario.textScale)),
+            child: child!,
+          ),
+          routes: {
+            AuthRoutes.home: (_) => const Scaffold(body: Text('home-screen')),
+          },
+          home: LoginScreen(controller: controller),
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        tester.takeException(),
+        isNull,
+        reason:
+            'Fallo en ${scenario.size.width}x${scenario.size.height} '
+            'con texto ${scenario.textScale}x',
+      );
+      expect(find.byKey(const Key('login_register_link')), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await connectivity.dispose();
+      controller.dispose();
+    }
+  });
 }

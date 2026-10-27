@@ -1,0 +1,132 @@
+name: Android signed release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_name:
+        description: Semantic version, for example 1.0.0
+        required: true
+        default: 1.0.0
+      build_number:
+        description: Monotonically increasing Android version code
+        required: true
+        default: "1"
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+jobs:
+  signed-artifacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.7"
+          cache: true
+
+      - name: Validate release configuration
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          API_BASE_URL: ${{ secrets.PRODUCTION_API_BASE_URL }}
+          PRIVACY_POLICY_URL: ${{ secrets.PRIVACY_POLICY_URL }}
+        run: |
+          test -n "$KEYSTORE_BASE64" || { echo "ANDROID_KEYSTORE_BASE64 is missing"; exit 1; }
+          test -n "$STORE_PASSWORD" || { echo "ANDROID_KEYSTORE_PASSWORD is missing"; exit 1; }
+          test -n "$KEY_ALIAS" || { echo "ANDROID_KEY_ALIAS is missing"; exit 1; }
+          test -n "$KEY_PASSWORD" || { echo "ANDROID_KEY_PASSWORD is missing"; exit 1; }
+          [[ "$API_BASE_URL" == https://* ]] || { echo "PRODUCTION_API_BASE_URL must use HTTPS"; exit 1; }
+          [[ "$PRIVACY_POLICY_URL" == https://* ]] || { echo "PRIVACY_POLICY_URL must use HTTPS"; exit 1; }
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Configure release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
+          {
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyPassword=$KEY_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "storeFile=$RUNNER_TEMP/upload-keystore.jks"
+          } > apps/mobile/android/key.properties
+
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_BUILD_NAME: ${{ inputs.build_name }}
+          INPUT_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "name=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+            echo "number=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=$INPUT_BUILD_NAME" >> "$GITHUB_OUTPUT"
+            echo "number=$INPUT_BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build signed AAB and APKs
+        working-directory: apps/mobile
+        env:
+          API_BASE_URL: ${{ secrets.PRODUCTION_API_BASE_URL }}
+          PRIVACY_POLICY_URL: ${{ secrets.PRIVACY_POLICY_URL }}
+          MAP_TILE_URL: ${{ secrets.MAP_TILE_URL }}
+        run: |
+          defines=(
+            "--dart-define=API_BASE_URL=$API_BASE_URL"
+            "--dart-define=PRIVACY_POLICY_URL=$PRIVACY_POLICY_URL"
+          )
+          if [[ -n "$MAP_TILE_URL" ]]; then
+            defines+=("--dart-define=MAP_TILE_URL=$MAP_TILE_URL")
+          fi
+          flutter build appbundle --release \
+            "${defines[@]}" \
+            --build-name=${{ steps.version.outputs.name }} \
+            --build-number=${{ steps.version.outputs.number }}
+          flutter build apk --release --split-per-abi \
+            "${defines[@]}" \
+            --build-name=${{ steps.version.outputs.name }} \
+            --build-number=${{ steps.version.outputs.number }}
+
+      - name: Verify signatures and checksums
+        run: |
+          jarsigner -verify apps/mobile/build/app/outputs/bundle/release/app-release.aab
+          find apps/mobile/build/app/outputs -type f \( -name '*.aab' -o -name '*.apk' \) -print0 \
+            | sort -z \
+            | xargs -0 sha256sum > SHA256SUMS.txt
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: lajuana-android-${{ steps.version.outputs.name }}-${{ steps.version.outputs.number }}
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            apps/mobile/build/app/outputs/bundle/release/app-release.aab
+            apps/mobile/build/app/outputs/flutter-apk/*-release.apk
+            SHA256SUMS.txt
+

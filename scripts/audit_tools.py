@@ -28,7 +28,11 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "apps" / "api"))
 
+import inspect  # noqa: E402
+
+import app.ai.mcp  # noqa: E402,F401  (registra las tools: la policy valida contra sus firmas)
 from app.ai.assistant.policy import ToolPolicyDecision, ToolPolicyEngine  # noqa: E402
+from app.ai.mcp.registry import registry  # noqa: E402
 from app.schemas.assistant_plan import AssistantAction, AssistantPlan, RiskLevel, ToolArgs  # noqa: E402
 
 
@@ -224,6 +228,26 @@ class ToolAuditRunner:
         return report
 
 
+_DUMMY_BY_ANNOTATION = {"bool": True, "int": 1, "list[str]": ["test-id"]}
+
+
+def _required_signature_args(tool_name: str, provided: dict) -> dict:
+    tool = registry.get(tool_name)
+    if tool is None:
+        return {}
+    filled: dict = {}
+    for name, param in inspect.signature(tool).parameters.items():
+        if (
+            param.default is not inspect.Parameter.empty
+            or param.kind in (param.VAR_KEYWORD, param.VAR_POSITIONAL)
+            or name in ("trace_id", "conversation_turn_id")
+            or name in provided
+        ):
+            continue
+        filled[name] = _DUMMY_BY_ANNOTATION.get(str(param.annotation), "test-value")
+    return filled
+
+
 def generate_test_cases() -> list[dict]:
     """Genera todos los casos de prueba para auditoría."""
     cases: list[dict] = []
@@ -231,6 +255,10 @@ def generate_test_cases() -> list[dict]:
 
     def add(tool_name: str, channel: str, expected: bool, description: str, args: dict | None = None, **kwargs) -> None:
         nonlocal case_id
+        # Los casos "permitido" deben traer todos los obligatorios de la firma real; si no,
+        # la policy los bloquea con razón (missing_required_arguments) y el caso queda obsoleto.
+        if expected and args is not None:
+            args = {**_required_signature_args(tool_name, args), **args}
         case_id += 1
         cases.append({
             "id": case_id,
@@ -253,8 +281,6 @@ def generate_test_cases() -> list[dict]:
         # Admin tools con validación de ID
         "admin_update_experience": {"experience_id": "test-id"},
         "admin_deactivate_experience": {"experience_id": "test-id"},
-        "admin_update_schedule": {"schedule_id": "test-id"},
-        "admin_deactivate_schedule": {"schedule_id": "test-id"},
         "admin_update_user": {"user_id": "test-id"},
         "admin_deactivate_user": {"user_id": "test-id"},
         "admin_update_equine": {"equine_id": "test-id"},
@@ -274,10 +300,17 @@ def generate_test_cases() -> list[dict]:
         "admin_unverify_payment_proof": {"payment_proof_id": "test-id"},
         "admin_unreject_payment_proof": {"payment_proof_id": "test-id"},
         # Admin tools con validación de creación
-        "admin_create_experience": {"name": "Test", "slug": "test"},
-        "admin_create_user": {"email": "test@test.com", "password": "123456"},
-        "admin_create_schedule": {"experience_id": "test-id", "date": "2026-06-15"},
+        "admin_create_experience": {
+            "name": "Test",
+            "slug": "test",
+            "description": "Recorrido de prueba",
+            "level": "basic",
+            "duration_hours": 3,
+        },
+        "admin_create_user": {"email": "test@test.com", "password": "123456", "full_name": "Test"},
         "admin_create_equine": {"name": "Tornado"},
+        "admin_create_provider": {"name": "Finca El Roble", "type": "lodging"},
+        "admin_create_saddle": {"code": "S-01"},
         "admin_update_reservation_rules": {"min_days_in_advance": 3},
     }
 
@@ -285,20 +318,20 @@ def generate_test_cases() -> list[dict]:
     # 1. TOOLS CLIENTE (canal whatsapp)
     # -----------------------------------------------
     for tool in sorted(engine.CLIENT_TOOLS):
-        add(tool, "whatsapp", True, f"Tool cliente permitida en whatsapp", _MINIMAL_ARGS.get(tool))
+        add(tool, "whatsapp", True, f"Tool cliente permitida en whatsapp", _MINIMAL_ARGS.get(tool, {}))
 
     # -----------------------------------------------
     # 2. TOOLS GUIA (canal mobile_api)
     # -----------------------------------------------
     for tool in sorted(engine.GUIDE_TOOLS):
-        add(tool, "mobile_api", True, f"Tool guia permitida en mobile_api", _MINIMAL_ARGS.get(tool))
+        add(tool, "mobile_api", True, f"Tool guia permitida en mobile_api", _MINIMAL_ARGS.get(tool, {}))
         add(tool, "whatsapp", False, f"Tool guia bloqueada en whatsapp")
 
     # -----------------------------------------------
     # 3. TOOLS ADMIN (canal admin_api)
     # -----------------------------------------------
     for tool in sorted(engine.ADMIN_TOOLS):
-        add(tool, "admin_api", True, f"Tool admin permitida en admin_api", _MINIMAL_ARGS.get(tool))
+        add(tool, "admin_api", True, f"Tool admin permitida en admin_api", _MINIMAL_ARGS.get(tool, {}))
         add(tool, "whatsapp", False, f"Tool admin bloqueada en whatsapp")
 
     # -----------------------------------------------
@@ -378,8 +411,14 @@ def generate_test_cases() -> list[dict]:
         "admin_create_experience",
         "admin_api",
         True,
-        "Crear experiencia con name y slug -> permitido",
-        {"name": "Cabalgata", "slug": "cabalgata"},
+        "Crear experiencia completa -> permitido",
+        {
+            "name": "Cabalgata",
+            "slug": "cabalgata",
+            "description": "Recorrido por la montaña",
+            "level": "basic",
+            "duration_hours": 3,
+        },
     )
 
     # admin_create_user sin email
@@ -395,25 +434,8 @@ def generate_test_cases() -> list[dict]:
         "admin_create_user",
         "admin_api",
         True,
-        "Crear usuario con email y password -> permitido",
-        {"email": "test@lajuana.com", "password": "123456"},
-    )
-
-    # admin_create_schedule sin experience_id
-    add(
-        "admin_create_schedule",
-        "admin_api",
-        False,
-        "Crear schedule sin experience_id -> bloqueado",
-        {"date": "2026-06-15"},
-    )
-    # admin_create_schedule completo
-    add(
-        "admin_create_schedule",
-        "admin_api",
-        True,
-        "Crear schedule completo -> permitido",
-        {"experience_id": "exp_123", "date": "2026-06-15"},
+        "Crear usuario con email, nombre y password -> permitido",
+        {"email": "test@lajuana.com", "password": "123456", "full_name": "Ana Pérez"},
     )
 
     # admin_create_equine sin name
@@ -454,8 +476,6 @@ def generate_test_cases() -> list[dict]:
     id_required_tests = [
         ("admin_update_experience", "experience_id"),
         ("admin_deactivate_experience", "experience_id"),
-        ("admin_update_schedule", "schedule_id"),
-        ("admin_deactivate_schedule", "schedule_id"),
         ("admin_update_user", "user_id"),
         ("admin_deactivate_user", "user_id"),
         ("admin_update_equine", "equine_id"),
@@ -522,7 +542,9 @@ def generate_test_cases() -> list[dict]:
 
     # Autocorrección de typo
     add("admin_list_equins", "admin_api", True, "Typo autocorregido -> permitido")
-    add("admin_upate_user", "admin_api", True, "Typo autocorregido -> permitido", {"user_id": "test-id"})
+    # Nunca se autocorrige hacia una escritura (admin_update_schedule acabaría en admin_update_saddle)
+    add("admin_upate_user", "admin_api", True, "Typo no se corrige a escritura (solo a lectura)", {"user_id": "test-id"})
+    add("admin_update_schedule", "admin_api", False, "Tool inexistente parecida a escritura -> bloqueada", {"saddle_id": "test-id"})
 
     # No autocorregir tool conocida que está en CRITICAL
     add("confirm_reservation", "admin_api", False, "CRITICAL no se autocorrige -> bloqueado")

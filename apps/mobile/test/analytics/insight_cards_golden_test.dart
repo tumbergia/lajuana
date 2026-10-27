@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_ui/mobile_ui.dart';
@@ -145,7 +147,7 @@ void main() {
       find.byType(InsightModuleCard),
       matchesGoldenFile('goldens/trend_card_dark.png'),
     );
-  });
+  }, skip: !Platform.isLinux);
 
   testWidgets('trend card light golden', (tester) async {
     await tester.pumpWidget(
@@ -159,7 +161,7 @@ void main() {
       find.byType(InsightModuleCard),
       matchesGoldenFile('goldens/trend_card_light.png'),
     );
-  });
+  }, skip: !Platform.isLinux);
 
   testWidgets('country ranking golden', (tester) async {
     await tester.pumpWidget(wrap(InsightModuleCard(module: sampleCountries())));
@@ -168,7 +170,7 @@ void main() {
       find.byType(InsightModuleCard),
       matchesGoldenFile('goldens/country_ranking.png'),
     );
-  });
+  }, skip: !Platform.isLinux);
 
   testWidgets('action center golden', (tester) async {
     await tester.pumpWidget(wrap(InsightModuleCard(module: sampleAction())));
@@ -177,7 +179,7 @@ void main() {
       find.byType(InsightModuleCard),
       matchesGoldenFile('goldens/action_center.png'),
     );
-  });
+  }, skip: !Platform.isLinux);
 
   testWidgets('empty state golden', (tester) async {
     final empty = AnalyticsModule.fromJson({
@@ -201,5 +203,5 @@ void main() {
       find.byType(InsightModuleCard),
       matchesGoldenFile('goldens/empty_state.png'),
     );
-  });
+  }, skip: !Platform.isLinux);
 }

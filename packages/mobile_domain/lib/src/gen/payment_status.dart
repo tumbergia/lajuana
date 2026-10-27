@@ -8,8 +8,7 @@ enum PaymentStatus {
   PENDING("pending"),
   RECEIVED("received"),
   VERIFIED("verified"),
-  REJECTED("rejected"),
-;
+  REJECTED("rejected");
 
   final String value;
   const PaymentStatus(this.value);
@@ -25,4 +24,3 @@ extension PaymentStatusParse on String {
     orElse: () => throw ArgumentError('Unknown PaymentStatus: ${this}'),
   );
 }
-

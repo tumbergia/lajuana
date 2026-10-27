@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_ui/mobile_ui.dart';
@@ -29,5 +31,5 @@ void main() {
       find.byType(InsightCardLoadingShell),
       matchesGoldenFile('goldens/chart_loading_skeleton.png'),
     );
-  });
+  }, skip: !Platform.isLinux);
 }

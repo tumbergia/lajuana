@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `AssignmentBoardParticipantSchema`.
 
 class AssignmentBoardParticipant {
-
   final String participantId;
   final String fullName;
   final String? ageYears;
@@ -15,8 +14,7 @@ class AssignmentBoardParticipant {
   final String? assignment;
   final List<String>? blockingReasons;
 
-  const AssignmentBoardParticipant(
-    {
+  const AssignmentBoardParticipant({
     required this.participantId,
     required this.fullName,
     this.ageYears,
@@ -25,8 +23,7 @@ class AssignmentBoardParticipant {
     this.experienceLevel,
     this.assignment,
     this.blockingReasons,
-    }
-  );
+  });
 
   factory AssignmentBoardParticipant.fromJson(Map<String, dynamic> json) {
     return AssignmentBoardParticipant(
@@ -38,7 +35,7 @@ class AssignmentBoardParticipant {
       experienceLevel: json['experience_level'] as String?,
       assignment: json['assignment'] as String?,
       blockingReasons: (json['blocking_reasons'] as List<dynamic>?)
-        ?.cast<String>(),
+          ?.cast<String>(),
     );
   }
 
@@ -52,5 +49,4 @@ class AssignmentBoardParticipant {
     'assignment': assignment,
     'blocking_reasons': blockingReasons,
   };
-
 }

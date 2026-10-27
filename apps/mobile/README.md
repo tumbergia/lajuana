@@ -54,7 +54,18 @@ no coordenadas crudas.
 cd apps/api && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Android e iOS permiten HTTP en claro para desarrollo local vía `network_security_config` y ATS (`NSAllowsLocalNetworking`). En producción conviene HTTPS.
+Android permite HTTP en claro solamente en las variantes debug/profile. Un
+release exige `API_BASE_URL` HTTPS y desactiva cleartext. También exige una URL
+HTTPS de privacidad:
+
+```bash
+flutter build appbundle --release \
+  --dart-define=API_BASE_URL=https://api.example.com/api/v1 \
+  --dart-define=PRIVACY_POLICY_URL=https://example.com/privacidad
+```
+
+La firma y el proceso completo están documentados en
+[`docs/guides/HOW_TO_DEPLOY.md`](../../docs/guides/HOW_TO_DEPLOY.md).
 
 ## Objetivo actual
 

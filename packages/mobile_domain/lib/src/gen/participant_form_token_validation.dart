@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `ParticipantFormTokenValidationResponse`.
 
 class ParticipantFormTokenValidation {
-
   final bool valid;
   final String? reservationCode;
   final String? experienceName;
@@ -17,8 +16,7 @@ class ParticipantFormTokenValidation {
   final String? participantsRegistered;
   final String? participantsRemaining;
 
-  const ParticipantFormTokenValidation(
-    {
+  const ParticipantFormTokenValidation({
     required this.valid,
     this.reservationCode,
     this.experienceName,
@@ -29,8 +27,7 @@ class ParticipantFormTokenValidation {
     this.participantLimit,
     this.participantsRegistered,
     this.participantsRemaining,
-    }
-  );
+  });
 
   factory ParticipantFormTokenValidation.fromJson(Map<String, dynamic> json) {
     return ParticipantFormTokenValidation(
@@ -59,5 +56,4 @@ class ParticipantFormTokenValidation {
     'participants_registered': participantsRegistered,
     'participants_remaining': participantsRemaining,
   };
-
 }

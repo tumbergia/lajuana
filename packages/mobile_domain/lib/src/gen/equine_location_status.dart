@@ -7,8 +7,7 @@
 enum EquineLocationStatus {
   LA_JUANA("la_juana"),
   OTHER("other"),
-  UNKNOWN("unknown"),
-;
+  UNKNOWN("unknown");
 
   final String value;
   const EquineLocationStatus(this.value);
@@ -19,9 +18,10 @@ extension EquineLocationStatusX on EquineLocationStatus {
 }
 
 extension EquineLocationStatusParse on String {
-  EquineLocationStatus toEquineLocationStatus() => EquineLocationStatus.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown EquineLocationStatus: ${this}'),
-  );
+  EquineLocationStatus toEquineLocationStatus() =>
+      EquineLocationStatus.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown EquineLocationStatus: ${this}'),
+      );
 }
-

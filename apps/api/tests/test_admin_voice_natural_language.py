@@ -18,7 +18,6 @@ from app.ai.assistant.policy import ToolPolicyEngine
 from app.schemas.ask import AskRequest
 from app.schemas.assistant_plan import AssistantAction, AssistantPlan, RiskLevel, ToolArgs
 
-
 # ── Catálogo de entradas de voz (como las diría un admin) ─────────────────
 
 NL_LIST_CASES: list[tuple[str, str]] = [
@@ -67,7 +66,11 @@ SLOT_PAUSE_CASES: list[tuple[str, list[str], dict[str, Any]]] = [
     ("alojamiento", ["type", "name"], {"type": "lodging"}),
     ("Ana Pérez", ["full_name", "email"], {"full_name": "Ana Pérez"}),
     ("el código es PR-20260601-ABC", ["code"], {"code": "PR-20260601-ABC"}),
-    ("507f1f77bcf86cd799439011", ["reservation_id"], {"reservation_id": "507f1f77bcf86cd799439011"}),
+    (
+        "507f1f77bcf86cd799439011",
+        ["reservation_id"],
+        {"reservation_id": "507f1f77bcf86cd799439011"},
+    ),
 ]
 
 
@@ -96,7 +99,9 @@ class FindableFakeDoc(FakeDoc):
     @classmethod
     def find(cls, *args: Any, **kwargs: Any) -> SimpleNamespace:
         return SimpleNamespace(
-            sort=lambda _: SimpleNamespace(limit=lambda _: SimpleNamespace(to_list=_empty_turn_list))
+            sort=lambda _: SimpleNamespace(
+                limit=lambda _: SimpleNamespace(to_list=_empty_turn_list)
+            )
         )
 
 
@@ -270,9 +275,7 @@ def test_policy_asks_email_not_password_for_create_user() -> None:
 
 
 def test_policy_create_user_complete_without_password() -> None:
-    plan = _make_create_plan(
-        "admin_create_user", full_name="Ana Pérez", email="ana@lajuana.co"
-    )
+    plan = _make_create_plan("admin_create_user", full_name="Ana Pérez", email="ana@lajuana.co")
     decision = ToolPolicyEngine().validate(plan, channel="admin_api")
     assert decision.allowed is True
 

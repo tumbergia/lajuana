@@ -1,6 +1,5 @@
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile/features/reservations/presentation/helpers/reservation_status_labels.dart';
-import 'package:mobile/features/providers/presentation/models/provider_view_models.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 
 /// Convierte snake_case técnico en texto legible como último recurso.

@@ -7,8 +7,7 @@
 enum SyncChangeChangeType {
   UPSERT("upsert"),
   DELETE("delete"),
-  PURGE("purge"),
-;
+  PURGE("purge");
 
   final String value;
   const SyncChangeChangeType(this.value);
@@ -19,9 +18,10 @@ extension SyncChangeChangeTypeX on SyncChangeChangeType {
 }
 
 extension SyncChangeChangeTypeParse on String {
-  SyncChangeChangeType toSyncChangeChangeType() => SyncChangeChangeType.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown SyncChangeChangeType: ${this}'),
-  );
+  SyncChangeChangeType toSyncChangeChangeType() =>
+      SyncChangeChangeType.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown SyncChangeChangeType: ${this}'),
+      );
 }
-

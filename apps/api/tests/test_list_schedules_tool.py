@@ -27,6 +27,15 @@ class FakeToolLogDoc:
         self.id = "log-fake"
 
 
+@pytest.fixture(autouse=True)
+def _freeze_business_date(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep schedule expectations independent from the wall-clock date."""
+    monkeypatch.setattr(
+        "app.ai.mcp.tools.schedules.today_colombia",
+        lambda: date(2026, 6, 1),
+    )
+
+
 async def _run_returns_schedules_when_experience_found(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

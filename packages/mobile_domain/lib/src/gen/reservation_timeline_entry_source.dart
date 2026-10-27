@@ -7,8 +7,7 @@
 enum ReservationTimelineEntrySource {
   SERVICE_LOG("service_log"),
   AUDIT_LOG("audit_log"),
-  DERIVED("derived"),
-;
+  DERIVED("derived");
 
   final String value;
   const ReservationTimelineEntrySource(this.value);
@@ -19,9 +18,11 @@ extension ReservationTimelineEntrySourceX on ReservationTimelineEntrySource {
 }
 
 extension ReservationTimelineEntrySourceParse on String {
-  ReservationTimelineEntrySource toReservationTimelineEntrySource() => ReservationTimelineEntrySource.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown ReservationTimelineEntrySource: ${this}'),
-  );
+  ReservationTimelineEntrySource toReservationTimelineEntrySource() =>
+      ReservationTimelineEntrySource.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () => throw ArgumentError(
+          'Unknown ReservationTimelineEntrySource: ${this}',
+        ),
+      );
 }
-

@@ -46,6 +46,8 @@ export 'visualization_type.dart';
 export 'ai_configuration.dart';
 export 'ai_configuration_update.dart';
 export 'ai_env_provider.dart';
+export 'ai_model_catalog.dart';
+export 'ai_model_item.dart';
 export 'ai_route.dart';
 export 'ai_route_update.dart';
 export 'analytics_module.dart';

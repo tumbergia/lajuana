@@ -8,7 +8,6 @@ import 'provider_status.dart';
 import 'provider_type.dart';
 
 class Provider {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -29,8 +28,7 @@ class Provider {
   final String sourceNotes;
   final bool isActive;
 
-  const Provider(
-    {
+  const Provider({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -50,8 +48,7 @@ class Provider {
     required this.tariffNotes,
     required this.sourceNotes,
     required this.isActive,
-    }
-  );
+  });
 
   factory Provider.fromJson(Map<String, dynamic> json) {
     return Provider(
@@ -65,7 +62,7 @@ class Provider {
       type: (json['type'] as String).toProviderType(),
       status: (json['status'] as String).toProviderStatus(),
       serviceCategories: (json['service_categories'] as List<dynamic>)
-        .cast<String>(),
+          .cast<String>(),
       contactName: json['contact_name'] as String,
       email: json['email'] as String,
       whatsappPhone: json['whatsapp_phone'] as String,
@@ -99,5 +96,4 @@ class Provider {
     'source_notes': sourceNotes,
     'is_active': isActive,
   };
-
 }

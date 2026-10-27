@@ -5,16 +5,13 @@
 /// AUTO-GENERATED from OpenAPI schema `UserChangePasswordSchema`.
 
 class UserChangePassword {
-
   final String currentPassword;
   final String newPassword;
 
-  const UserChangePassword(
-    {
+  const UserChangePassword({
     required this.currentPassword,
     required this.newPassword,
-    }
-  );
+  });
 
   factory UserChangePassword.fromJson(Map<String, dynamic> json) {
     return UserChangePassword(
@@ -27,5 +24,4 @@ class UserChangePassword {
     'current_password': currentPassword,
     'new_password': newPassword,
   };
-
 }

@@ -1,9 +1,16 @@
 import difflib
+import inspect
+import re
 from dataclasses import dataclass
 
 from app.core.config import settings
 from app.core.logging import logger
 from app.schemas.assistant_plan import AssistantAction, AssistantPlan, RiskLevel
+
+_WRITE_TOOL_RE = re.compile(
+    r"(?:^|_)(create|update|deactivate|delete|cancel|confirm|approve|reject|unverify|unreject"
+    r"|finalize|close|add|attach|mark|report|send|request)_"
+)
 
 
 @dataclass(frozen=True)
@@ -237,7 +244,13 @@ class ToolPolicyEngine:
             return tool_name  # Es una tool conocida, no un typo
 
         # Solo autocorregir si la tool original parece un typo (no está en ningún set conocido)
-        matches = difflib.get_close_matches(tool_name, allowed, n=1, cutoff=0.75)
+        # Nunca se autocorrige hacia (ni desde) una tool de escritura: un nombre
+        # inexistente como admin_update_schedule terminaría en admin_update_saddle y
+        # modificaría otra entidad. Solo lecturas con typos evidentes.
+        if _WRITE_TOOL_RE.search(tool_name):
+            return tool_name
+        read_only = {name for name in allowed if not _WRITE_TOOL_RE.search(name)}
+        matches = difflib.get_close_matches(tool_name, read_only, n=1, cutoff=0.75)
         if matches:
             return matches[0]
         return tool_name
@@ -290,9 +303,7 @@ class ToolPolicyEngine:
 
         # Tools que requieren datos de creación
         if plan.tool_name == "admin_create_experience":
-            missing = [
-                f for f in ("name", "description", "level") if not args.get(f)
-            ]
+            missing = [f for f in ("name", "description", "level") if not args.get(f)]
             if not args.get("duration_hours") and not args.get("duration_days"):
                 missing.append("duration_hours")
             if missing:
@@ -302,9 +313,7 @@ class ToolPolicyEngine:
                 )
 
         if plan.tool_name == "admin_create_user":
-            missing = [
-                f for f in ("email", "full_name") if not args.get(f)
-            ]
+            missing = [f for f in ("email", "full_name") if not args.get(f)]
             if missing:
                 return ToolPolicyDecision(
                     allowed=False,
@@ -334,11 +343,13 @@ class ToolPolicyEngine:
 
         if plan.tool_name == "admin_update_reservation_rules":
             if not any(
-                k in args
+                args.get(k) is not None
                 for k in (
                     "min_days_in_advance",
                     "require_payment_proof_for_confirmation",
                     "reservation_draft_ttl_minutes",
+                    "min_age",
+                    "max_age",
                 )
             ):
                 return ToolPolicyDecision(
@@ -446,4 +457,36 @@ class ToolPolicyEngine:
         if args_validation is not None:
             return args_validation
 
+        signature_validation = self._validate_signature_args(plan)
+        if signature_validation is not None:
+            return signature_validation
+
         return ToolPolicyDecision(allowed=True)
+
+    @staticmethod
+    def _validate_signature_args(plan: AssistantPlan) -> ToolPolicyDecision | None:
+        """Bloquea si falta un argumento obligatorio de la firma real de la tool.
+
+        Red de seguridad general: sin esto la tool se ejecuta y revienta con TypeError
+        (tool.execution_failed) en lugar de pedir el dato al usuario.
+        """
+        from app.ai.mcp.registry import registry
+
+        tool = registry.get(plan.tool_name or "")
+        if tool is None:
+            return None
+        args = plan.arguments.model_dump() if plan.arguments else {}
+        missing = [
+            name
+            for name, param in inspect.signature(tool).parameters.items()
+            if param.default is inspect.Parameter.empty
+            and param.kind not in (param.VAR_KEYWORD, param.VAR_POSITIONAL)
+            and name not in ("trace_id", "conversation_turn_id")
+            and (args.get(name) is None or args.get(name) == "")
+        ]
+        if missing:
+            return ToolPolicyDecision(
+                allowed=False,
+                reason=f"missing_required_arguments:{','.join(missing)}",
+            )
+        return None

@@ -5,8 +5,11 @@ No escribe en Mongo de producción: sesión, turns y tools van en memoria.
 
 Correr (desde apps/api, con red):
 
-    .venv/bin/pytest --noconftest tests/test_admin_voice_gemini_integration.py -s --tb=short
+    RUN_LIVE_INTEGRATION=1 .venv/bin/pytest --noconftest tests/test_admin_voice_gemini_integration.py -s --tb=short
 """
+
+# These imports must happen after the faster_whisper test double is registered.
+# ruff: noqa: E402
 
 from __future__ import annotations
 
@@ -37,7 +40,6 @@ from app.ai.providers.gemini_provider import (
 from app.core.config import settings
 from app.schemas.ask import AskResponse
 from app.schemas.assistant_plan import AssistantAction, AssistantPlan, ToolArgs
-
 
 pytestmark = pytest.mark.integration
 
@@ -128,7 +130,11 @@ GEMINI_NL_CASES: list[tuple[str, str, set[str]]] = [
     (
         "necesito las reglas de anticipación y si piden comprobante",
         "config / reglas de reserva",
-        {"admin_get_system_config", "admin_update_reservation_rules", "admin_get_payment_instructions"},
+        {
+            "admin_get_system_config",
+            "admin_update_reservation_rules",
+            "admin_get_payment_instructions",
+        },
     ),
     (
         "anótale a Trueno que ya lo herraron ayer",
@@ -168,12 +174,13 @@ _load_env_file()
 
 
 def _gemini_configured() -> bool:
-    return bool((settings.gemini_api_key or "").strip())
+    enabled = os.getenv("RUN_LIVE_INTEGRATION", "").strip().lower()
+    return enabled in {"1", "true", "yes"} and bool((settings.gemini_api_key or "").strip())
 
 
 requires_gemini = pytest.mark.skipif(
     not _gemini_configured(),
-    reason="GEMINI_API_KEY no configurada",
+    reason="Requiere RUN_LIVE_INTEGRATION=1 y GEMINI_API_KEY",
 )
 
 
@@ -238,8 +245,7 @@ class MemoryTurn:
         matched = [
             doc
             for doc in cls.store
-            if doc.conversation_id == conversation_id
-            and (not statuses or doc.status in statuses)
+            if doc.conversation_id == conversation_id and (not statuses or doc.status in statuses)
         ]
         matched.sort(key=lambda doc: doc.created_at, reverse=True)
 

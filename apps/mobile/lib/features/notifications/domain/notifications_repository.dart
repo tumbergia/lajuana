@@ -77,7 +77,7 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
       return items;
     } catch (_) {
       if (_local == null) rethrow;
-      return _local!.listAll(
+      return _local.listAll(
         limit: limit,
         beforeId: beforeId,
         unreadOnly: unreadOnly,
@@ -93,7 +93,7 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
       return count;
     } catch (_) {
       if (_local == null) rethrow;
-      return _local!.unreadCount();
+      return _local.unreadCount();
     }
   }
 

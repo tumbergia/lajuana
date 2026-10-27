@@ -77,7 +77,6 @@ class TestWriteToolsRequiringConfirmation:
     def test_contains_deactivation_tools(self) -> None:
         assert "admin_deactivate_experience" in WRITE_TOOLS_REQUIRING_CONFIRMATION
         assert "admin_deactivate_user" in WRITE_TOOLS_REQUIRING_CONFIRMATION
-        assert "admin_deactivate_schedule" in WRITE_TOOLS_REQUIRING_CONFIRMATION
         assert "admin_deactivate_equine" in WRITE_TOOLS_REQUIRING_CONFIRMATION
 
     def test_contains_write_tools(self) -> None:

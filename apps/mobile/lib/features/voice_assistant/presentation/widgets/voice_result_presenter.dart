@@ -454,7 +454,6 @@ class VoiceResultPresenter {
       items: items.map((item) {
         final summary = voiceString(item, 'summary') ?? 'Revisión humana';
         final priority = voiceString(item, 'priority');
-        final status = voiceString(item, 'status');
         final createdAt = formatVoiceDateTime(voiceString(item, 'created_at'));
 
         return VoiceResultItem(

@@ -5,22 +5,19 @@
 /// AUTO-GENERATED from OpenAPI schema `SeriesPoint`.
 
 class SeriesPoint {
-
   final double raw;
   final String? unit;
   final String label;
   final String? pointDate;
   final String? category;
 
-  const SeriesPoint(
-    {
+  const SeriesPoint({
     required this.raw,
     this.unit,
     required this.label,
     this.pointDate,
     this.category,
-    }
-  );
+  });
 
   factory SeriesPoint.fromJson(Map<String, dynamic> json) {
     return SeriesPoint(
@@ -39,5 +36,4 @@ class SeriesPoint {
     'point_date': pointDate,
     'category': category,
   };
-
 }

@@ -11,8 +11,7 @@ enum EquineOperationalStatus {
   INJURED("injured"),
   RETIRED("retired"),
   UNAVAILABLE("unavailable"),
-  RESTRICTED("restricted"),
-;
+  RESTRICTED("restricted");
 
   final String value;
   const EquineOperationalStatus(this.value);
@@ -23,9 +22,10 @@ extension EquineOperationalStatusX on EquineOperationalStatus {
 }
 
 extension EquineOperationalStatusParse on String {
-  EquineOperationalStatus toEquineOperationalStatus() => EquineOperationalStatus.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown EquineOperationalStatus: ${this}'),
-  );
+  EquineOperationalStatus toEquineOperationalStatus() =>
+      EquineOperationalStatus.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown EquineOperationalStatus: ${this}'),
+      );
 }
-

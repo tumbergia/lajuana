@@ -9,8 +9,7 @@ enum ParticipantFormStatus {
   SENT("sent"),
   PARTIAL("partial"),
   COMPLETE("complete"),
-  REVOKED("revoked"),
-;
+  REVOKED("revoked");
 
   final String value;
   const ParticipantFormStatus(this.value);
@@ -21,9 +20,10 @@ extension ParticipantFormStatusX on ParticipantFormStatus {
 }
 
 extension ParticipantFormStatusParse on String {
-  ParticipantFormStatus toParticipantFormStatus() => ParticipantFormStatus.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown ParticipantFormStatus: ${this}'),
-  );
+  ParticipantFormStatus toParticipantFormStatus() =>
+      ParticipantFormStatus.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown ParticipantFormStatus: ${this}'),
+      );
 }
-

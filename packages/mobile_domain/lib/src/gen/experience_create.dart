@@ -10,7 +10,6 @@ import 'experience_level.dart';
 import 'experience_status.dart';
 
 class ExperienceCreate {
-
   final String name;
   final String slug;
   final String? subtitle;
@@ -33,8 +32,7 @@ class ExperienceCreate {
   final List<String>? aliases;
   final bool? isActive;
 
-  const ExperienceCreate(
-    {
+  const ExperienceCreate({
     required this.name,
     required this.slug,
     this.subtitle,
@@ -56,8 +54,7 @@ class ExperienceCreate {
     this.tags,
     this.aliases,
     this.isActive,
-    }
-  );
+  });
 
   factory ExperienceCreate.fromJson(Map<String, dynamic> json) {
     return ExperienceCreate(
@@ -67,9 +64,15 @@ class ExperienceCreate {
       description: json['description'] as String,
       imageUrl: json['image_url'] as String?,
       level: (json['level'] as String).toExperienceLevel(),
-      difficulty: json['difficulty'] != null ? (json['difficulty'] as String).toExperienceDifficulty() : null,
-      category: json['category'] != null ? (json['category'] as String).toExperienceCategory() : null,
-      status: json['status'] != null ? (json['status'] as String).toExperienceStatus() : null,
+      difficulty: json['difficulty'] != null
+          ? (json['difficulty'] as String).toExperienceDifficulty()
+          : null,
+      category: json['category'] != null
+          ? (json['category'] as String).toExperienceCategory()
+          : null,
+      status: json['status'] != null
+          ? (json['status'] as String).toExperienceStatus()
+          : null,
       durationHours: json['duration_hours'] as String?,
       durationDays: json['duration_days'] as String?,
       baseCapacity: json['base_capacity'] as String?,
@@ -79,10 +82,8 @@ class ExperienceCreate {
       inclusions: json['inclusions'] as String?,
       standardMaxParticipants: json['standard_max_participants'] as String?,
       minParticipants: json['min_participants'] as String?,
-      tags: (json['tags'] as List<dynamic>?)
-        ?.cast<String>(),
-      aliases: (json['aliases'] as List<dynamic>?)
-        ?.cast<String>(),
+      tags: (json['tags'] as List<dynamic>?)?.cast<String>(),
+      aliases: (json['aliases'] as List<dynamic>?)?.cast<String>(),
       isActive: json['is_active'] as bool?,
     );
   }
@@ -110,5 +111,4 @@ class ExperienceCreate {
     'aliases': aliases,
     'is_active': isActive,
   };
-
 }

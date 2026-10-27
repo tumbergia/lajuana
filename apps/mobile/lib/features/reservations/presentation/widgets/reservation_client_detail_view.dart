@@ -37,7 +37,7 @@ class _ClientDetailViewState extends State<ClientDetailView>
   Future<void> onRefresh() async {
     final repo = widget.repository;
     final id = widget.reservationId ?? _detail.id;
-    if (repo == null || id == null) return;
+    if (repo == null) return;
 
     setState(() => _isRefreshing = true);
     try {

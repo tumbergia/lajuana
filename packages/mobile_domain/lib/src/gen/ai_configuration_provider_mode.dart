@@ -6,8 +6,7 @@
 
 enum AiConfigurationProviderMode {
   ENV("env"),
-  MANUAL("manual"),
-;
+  MANUAL("manual");
 
   final String value;
   const AiConfigurationProviderMode(this.value);
@@ -18,9 +17,10 @@ extension AiConfigurationProviderModeX on AiConfigurationProviderMode {
 }
 
 extension AiConfigurationProviderModeParse on String {
-  AiConfigurationProviderMode toAiConfigurationProviderMode() => AiConfigurationProviderMode.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown AiConfigurationProviderMode: ${this}'),
-  );
+  AiConfigurationProviderMode toAiConfigurationProviderMode() =>
+      AiConfigurationProviderMode.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown AiConfigurationProviderMode: ${this}'),
+      );
 }
-

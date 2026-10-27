@@ -12,8 +12,9 @@ import 'package:mobile/features/reservations/presentation/controllers/reservatio
 const _maxPhotosPerNote = 10;
 
 class _PendingPhoto {
-  _PendingPhoto.existing({required this.input, this.previewBytes})
-    : localFile = null;
+  _PendingPhoto.existing({required this.input})
+    : localFile = null,
+      previewBytes = null;
 
   _PendingPhoto.local({required this.localFile, required this.previewBytes})
     : input = null;

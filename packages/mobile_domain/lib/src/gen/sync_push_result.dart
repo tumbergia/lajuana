@@ -7,7 +7,6 @@
 import 'sync_push_result_status.dart';
 
 class SyncPushResult {
-
   final String operationId;
   final SyncPushResultStatus status;
   final String entityType;
@@ -18,8 +17,7 @@ class SyncPushResult {
   final String? payload;
   final String? error;
 
-  const SyncPushResult(
-    {
+  const SyncPushResult({
     required this.operationId,
     required this.status,
     required this.entityType,
@@ -29,8 +27,7 @@ class SyncPushResult {
     this.updatedAt,
     this.payload,
     this.error,
-    }
-  );
+  });
 
   factory SyncPushResult.fromJson(Map<String, dynamic> json) {
     return SyncPushResult(
@@ -57,5 +54,4 @@ class SyncPushResult {
     'payload': payload,
     'error': error,
   };
-
 }

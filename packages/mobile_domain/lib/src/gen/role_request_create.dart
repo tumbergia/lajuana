@@ -7,14 +7,9 @@
 import 'user_role.dart';
 
 class RoleRequestCreate {
-
   final UserRole requestedRole;
 
-  const RoleRequestCreate(
-    {
-    required this.requestedRole,
-    }
-  );
+  const RoleRequestCreate({required this.requestedRole});
 
   factory RoleRequestCreate.fromJson(Map<String, dynamic> json) {
     return RoleRequestCreate(
@@ -22,8 +17,5 @@ class RoleRequestCreate {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'requested_role': requestedRole.toJson(),
-  };
-
+  Map<String, dynamic> toJson() => {'requested_role': requestedRole.toJson()};
 }

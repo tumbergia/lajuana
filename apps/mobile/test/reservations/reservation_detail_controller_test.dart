@@ -867,15 +867,7 @@ void main() {
         status: 'payment_received',
         paymentStatus: 'verified',
       );
-      // Use a controller with success repo to load, then switch
-      final successRepo = _FakeSuccessRepository(detail);
-      final loaded = await successRepo.getReservationById('r1');
-      // But we can't switch repos, so let's use an approach where
-      // confirm is called on a controller that has detail loaded
-      // but the repo fails on confirm.
-      // Actually, let's use a repo that succeeds on get but fails on confirm.
-      // The _FakeErrorRepository fails on everything, so we'll use it directly.
-      // But we need detail to be non-null. Let's set it manually.
+      // Seed the loaded state directly so confirmation reaches the failing repo.
       controller.detail = detail;
       controller.state = ReservationDetailLoadState.success;
 

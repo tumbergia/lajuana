@@ -192,7 +192,8 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
 
   Widget _leadingIcon(IconData icon, {Color? brand}) {
     final scheme = Theme.of(context).colorScheme;
-    final fill = brand?.withValues(alpha: 0.14) ?? scheme.surfaceContainerHighest;
+    final fill =
+        brand?.withValues(alpha: 0.14) ?? scheme.surfaceContainerHighest;
     final iconColor = brand ?? scheme.onSurfaceVariant;
     return Container(
       width: 40,
@@ -218,9 +219,7 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
         decoration: brand == null
             ? const BoxDecoration()
             : BoxDecoration(
-                border: Border(
-                  left: BorderSide(color: brand, width: 3),
-                ),
+                border: Border(left: BorderSide(color: brand, width: 3)),
               ),
         child: Padding(
           padding: brand == null
@@ -344,11 +343,11 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
         context,
         _showCop
             ? 'Estimado mensual en COP: personas × msgs/día × días '
-                '(~${AiCostEstimate.tokensPerMessage} tokens/mensaje). '
-                'Tasa ~${AiCostEstimate.usdToCop.toStringAsFixed(0)} COP/USD. '
-                'Informativo; valida siempre contra el proveedor.'
+                  '(~${AiCostEstimate.tokensPerMessage} tokens/mensaje). '
+                  'Tasa ~${AiCostEstimate.usdToCop.toStringAsFixed(0)} COP/USD. '
+                  'Informativo; valida siempre contra el proveedor.'
             : 'USD por millón de tokens. Combinado = 1M entrada + 1M salida. '
-                'Pueden diferir de los reales; valida siempre contra el proveedor.',
+                  'Pueden diferir de los reales; valida siempre contra el proveedor.',
       ),
       SizedBox(height: tokens.spaceMd),
       Row(
@@ -411,9 +410,7 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
                   ? Icons.check_circle_rounded
                   : Icons.circle_outlined,
               size: 22,
-              color: matched == preset
-                  ? scheme.primary
-                  : scheme.outlineVariant,
+              color: matched == preset ? scheme.primary : scheme.outlineVariant,
             ),
             onTap: () => _applyPreset(preset),
           ),
@@ -456,8 +453,7 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
   Widget _providerKeysSection(BuildContext context, AiModelCatalog catalog) {
     final tokens = Theme.of(context).appTokens;
     final urls = Map<String, String>.from(catalog.providerBuyUrls);
-    final openRouterUrl =
-        urls['openrouter'] ?? 'https://openrouter.ai/keys';
+    final openRouterUrl = urls['openrouter'] ?? 'https://openrouter.ai/keys';
 
     // OpenRouter primero; luego providers nativos.
     final nativeOrder = ['google', 'anthropic', 'openai', 'groq'];
@@ -511,8 +507,8 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
         SizedBox(height: tokens.spaceMd),
         for (var i = 0; i < nativeEntries.length; i++) ...[
           AppEntityRowCard(
-            title: _providerLabels[nativeEntries[i].key] ??
-                nativeEntries[i].key,
+            title:
+                _providerLabels[nativeEntries[i].key] ?? nativeEntries[i].key,
             subtitle: 'API key directa de la marca',
             leading: _leadingIcon(
               Symbols.storefront,
@@ -521,8 +517,7 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
             trailing: const Icon(Icons.open_in_new_rounded, size: 18),
             onTap: () => _openBuyKey(nativeEntries[i].value),
           ),
-          if (i < nativeEntries.length - 1)
-            SizedBox(height: tokens.spaceSm),
+          if (i < nativeEntries.length - 1) SizedBox(height: tokens.spaceSm),
         ],
       ],
     ]);
@@ -576,9 +571,9 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
         SizedBox(height: tokens.spaceSm),
         Text(
           item.valueNote,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
       ],
       SizedBox(height: tokens.spaceMd),
@@ -589,12 +584,7 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
         color: brand,
       ),
       SizedBox(height: tokens.spaceXs),
-      _ratingLine(
-        context,
-        label: 'Velocidad',
-        level: item.speed,
-        color: brand,
-      ),
+      _ratingLine(context, label: 'Velocidad', level: item.speed, color: brand),
       SizedBox(height: tokens.spaceMd),
       AppEntityRowCard(
         title: _showCop ? 'Costo estimado' : 'Precio',
@@ -659,9 +649,7 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
       );
       children.add(SizedBox(height: tokens.spaceLg));
       for (final item in recommended) {
-        children.add(
-          _modelCard(context, item, openRouterUrl: openRouterUrl),
-        );
+        children.add(_modelCard(context, item, openRouterUrl: openRouterUrl));
         children.add(SizedBox(height: tokens.spaceLg));
       }
       children.add(SizedBox(height: tokens.spaceMd));
@@ -679,9 +667,7 @@ class _AiModelCatalogPageState extends State<AiModelCatalogPage>
       );
       children.add(SizedBox(height: tokens.spaceLg));
       for (final item in rest) {
-        children.add(
-          _modelCard(context, item, openRouterUrl: openRouterUrl),
-        );
+        children.add(_modelCard(context, item, openRouterUrl: openRouterUrl));
         children.add(SizedBox(height: tokens.spaceLg));
       }
     }

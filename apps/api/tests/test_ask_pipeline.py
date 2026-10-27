@@ -189,7 +189,7 @@ def test_ask_next_turn_merges_slots_and_calls_availability(monkeypatch: pytest.M
         tool_name="check_experience_availability",
         arguments={
             "experience_query": "los chorros",
-            "requested_date": "2026-08-20",
+            "requested_date": "2099-08-20",
             "participant_count": 4,
         },
     )
@@ -198,7 +198,7 @@ def test_ask_next_turn_merges_slots_and_calls_availability(monkeypatch: pytest.M
     async def run() -> Any:
         return await orch.ask(
             AskRequest(
-                message="4 personas el 20 de agosto de 2026",
+                message="4 personas el 20 de agosto de 2099",
                 channel="test",
                 conversation_id="demo-003",
             )

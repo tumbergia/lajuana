@@ -5,20 +5,17 @@
 /// AUTO-GENERATED from OpenAPI schema `Freshness`.
 
 class Freshness {
-
   final DateTime generatedAt;
   final String label;
   final bool? isStale;
   final bool? isLocal;
 
-  const Freshness(
-    {
+  const Freshness({
     required this.generatedAt,
     required this.label,
     this.isStale,
     this.isLocal,
-    }
-  );
+  });
 
   factory Freshness.fromJson(Map<String, dynamic> json) {
     return Freshness(
@@ -35,5 +32,4 @@ class Freshness {
     'is_stale': isStale,
     'is_local': isLocal,
   };
-
 }

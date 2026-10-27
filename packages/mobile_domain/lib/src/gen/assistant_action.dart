@@ -8,8 +8,7 @@ enum AssistantAction {
   FINAL_RESPONSE("final_response"),
   TOOL_CALL("tool_call"),
   ASK_CLARIFYING_QUESTION("ask_clarifying_question"),
-  HUMAN_HANDOFF("human_handoff"),
-;
+  HUMAN_HANDOFF("human_handoff");
 
   final String value;
   const AssistantAction(this.value);
@@ -25,4 +24,3 @@ extension AssistantActionParse on String {
     orElse: () => throw ArgumentError('Unknown AssistantAction: ${this}'),
   );
 }
-

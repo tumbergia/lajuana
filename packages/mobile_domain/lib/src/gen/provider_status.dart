@@ -8,8 +8,7 @@ enum ProviderStatus {
   ACTIVE("active"),
   INACTIVE("inactive"),
   NEEDS_REVIEW("needs_review"),
-  BLOCKED("blocked"),
-;
+  BLOCKED("blocked");
 
   final String value;
   const ProviderStatus(this.value);
@@ -25,4 +24,3 @@ extension ProviderStatusParse on String {
     orElse: () => throw ArgumentError('Unknown ProviderStatus: ${this}'),
   );
 }
-

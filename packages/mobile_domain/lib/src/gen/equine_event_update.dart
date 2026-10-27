@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `EquineEventUpdateSchema`.
 
 class EquineEventUpdate {
-
   final String? eventType;
   final String? happenedAt;
   final String? title;
@@ -26,8 +25,7 @@ class EquineEventUpdate {
   final String? restUntil;
   final String? source;
 
-  const EquineEventUpdate(
-    {
+  const EquineEventUpdate({
     this.eventType,
     this.happenedAt,
     this.title,
@@ -47,8 +45,7 @@ class EquineEventUpdate {
     this.resultingOperationalStatus,
     this.restUntil,
     this.source,
-    }
-  );
+  });
 
   factory EquineEventUpdate.fromJson(Map<String, dynamic> json) {
     return EquineEventUpdate(
@@ -68,7 +65,8 @@ class EquineEventUpdate {
       dosage: json['dosage'] as String?,
       labResultSummary: json['lab_result_summary'] as String?,
       affectsAvailability: json['affects_availability'] as String?,
-      resultingOperationalStatus: json['resulting_operational_status'] as String?,
+      resultingOperationalStatus:
+          json['resulting_operational_status'] as String?,
       restUntil: json['rest_until'] as String?,
       source: json['source'] as String?,
     );
@@ -95,5 +93,4 @@ class EquineEventUpdate {
     'rest_until': restUntil,
     'source': source,
   };
-
 }

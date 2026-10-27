@@ -12,8 +12,7 @@ enum VisualizationType {
   DONUT("donut"),
   PROGRESS("progress"),
   RANKING("ranking"),
-  ACTION_LIST("action_list"),
-;
+  ACTION_LIST("action_list");
 
   final String value;
   const VisualizationType(this.value);
@@ -24,9 +23,9 @@ extension VisualizationTypeX on VisualizationType {
 }
 
 extension VisualizationTypeParse on String {
-  VisualizationType toVisualizationType() => VisualizationType.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown VisualizationType: ${this}'),
-  );
+  VisualizationType toVisualizationType() =>
+      VisualizationType.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () => throw ArgumentError('Unknown VisualizationType: ${this}'),
+      );
 }
-

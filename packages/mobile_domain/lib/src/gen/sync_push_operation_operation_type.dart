@@ -16,8 +16,7 @@ enum SyncPushOperationOperationType {
   CANCEL_RESERVATION("cancel_reservation"),
   MARK_READ("mark_read"),
   MARK_ALL_READ("mark_all_read"),
-  CLEAR_INBOX("clear_inbox"),
-;
+  CLEAR_INBOX("clear_inbox");
 
   final String value;
   const SyncPushOperationOperationType(this.value);
@@ -28,9 +27,11 @@ extension SyncPushOperationOperationTypeX on SyncPushOperationOperationType {
 }
 
 extension SyncPushOperationOperationTypeParse on String {
-  SyncPushOperationOperationType toSyncPushOperationOperationType() => SyncPushOperationOperationType.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown SyncPushOperationOperationType: ${this}'),
-  );
+  SyncPushOperationOperationType toSyncPushOperationOperationType() =>
+      SyncPushOperationOperationType.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () => throw ArgumentError(
+          'Unknown SyncPushOperationOperationType: ${this}',
+        ),
+      );
 }
-

@@ -1,9 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_domain/src/reservations/reservation_detail.dart';
-import 'package:mobile_domain/src/reservations/reservation_participant_detail.dart';
-import 'package:mobile_domain/src/reservations/reservation_payment_proof_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_timeline_entry.dart';
-import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile/features/reservations/infrastructure/mappers/reservation_mapper.dart';
 import 'package:mobile/features/reservations/infrastructure/remote/reservation_dtos.dart';
 

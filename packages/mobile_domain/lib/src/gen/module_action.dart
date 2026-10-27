@@ -5,18 +5,15 @@
 /// AUTO-GENERATED from OpenAPI schema `ModuleAction`.
 
 class ModuleAction {
-
   final String label;
   final String target;
   final String? routeHint;
 
-  const ModuleAction(
-    {
+  const ModuleAction({
     required this.label,
     required this.target,
     this.routeHint,
-    }
-  );
+  });
 
   factory ModuleAction.fromJson(Map<String, dynamic> json) {
     return ModuleAction(
@@ -31,5 +28,4 @@ class ModuleAction {
     'target': target,
     'route_hint': routeHint,
   };
-
 }

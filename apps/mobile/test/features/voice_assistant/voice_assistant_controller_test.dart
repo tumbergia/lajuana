@@ -123,34 +123,37 @@ void main() {
       expect(controller.result?.needsConfirmation, isTrue);
     });
 
-    test('maps missing-fields clarifying to needsInput not confirmation', () async {
-      controller = VoiceAssistantController(
-        apiClient: VoiceAssistantApiClient(
-          baseUrl: 'http://localhost:8000/api/v1',
-          readAccessToken: () async => 'token',
-          refreshSession: () async => false,
-          httpClient: MockClient(
-            (_) async => http.Response(
-              jsonEncode({
-                'trace_id': 't2',
-                'action': 'ask_clarifying_question',
-                'tool_name': 'admin_create_user',
-                'response': '¿cuál es el correo electrónico?',
-                'planner_output': {},
-                'tool_output': {},
-                'needs_confirmation': false,
-              }),
-              200,
+    test(
+      'maps missing-fields clarifying to needsInput not confirmation',
+      () async {
+        controller = VoiceAssistantController(
+          apiClient: VoiceAssistantApiClient(
+            baseUrl: 'http://localhost:8000/api/v1',
+            readAccessToken: () async => 'token',
+            refreshSession: () async => false,
+            httpClient: MockClient(
+              (_) async => http.Response(
+                jsonEncode({
+                  'trace_id': 't2',
+                  'action': 'ask_clarifying_question',
+                  'tool_name': 'admin_create_user',
+                  'response': '¿cuál es el correo electrónico?',
+                  'planner_output': {},
+                  'tool_output': {},
+                  'needs_confirmation': false,
+                }),
+                200,
+              ),
             ),
           ),
-        ),
-      );
-      controller.transcript = 'crea un usuario llamado Ana';
-      await controller.sendTranscript();
+        );
+        controller.transcript = 'crea un usuario llamado Ana';
+        await controller.sendTranscript();
 
-      expect(controller.phase, VoicePhase.needsInput);
-      expect(controller.result?.needsConfirmation, isFalse);
-    });
+        expect(controller.phase, VoicePhase.needsInput);
+        expect(controller.result?.needsConfirmation, isFalse);
+      },
+    );
 
     test('keeps conversationId after cleanup pause', () async {
       controller = VoiceAssistantController(

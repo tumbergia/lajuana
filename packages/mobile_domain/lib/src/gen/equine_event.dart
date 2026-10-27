@@ -8,7 +8,6 @@ import 'equine_event_source.dart';
 import 'equine_event_type.dart';
 
 class EquineEvent {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -35,8 +34,7 @@ class EquineEvent {
   final String? restUntil;
   final EquineEventSource? source;
 
-  const EquineEvent(
-    {
+  const EquineEvent({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -62,8 +60,7 @@ class EquineEvent {
     this.resultingOperationalStatus,
     this.restUntil,
     this.source,
-    }
-  );
+  });
 
   factory EquineEvent.fromJson(Map<String, dynamic> json) {
     return EquineEvent(
@@ -89,9 +86,12 @@ class EquineEvent {
       dosage: json['dosage'] as String?,
       labResultSummary: json['lab_result_summary'] as String?,
       affectsAvailability: json['affects_availability'] as bool?,
-      resultingOperationalStatus: json['resulting_operational_status'] as String?,
+      resultingOperationalStatus:
+          json['resulting_operational_status'] as String?,
       restUntil: json['rest_until'] as String?,
-      source: json['source'] != null ? (json['source'] as String).toEquineEventSource() : null,
+      source: json['source'] != null
+          ? (json['source'] as String).toEquineEventSource()
+          : null,
     );
   }
 
@@ -122,5 +122,4 @@ class EquineEvent {
     'rest_until': restUntil,
     'source': source?.toJson(),
   };
-
 }

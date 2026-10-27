@@ -45,10 +45,7 @@ class EquineImageProvider extends StatelessWidget {
         width: width,
         color: scheme.surfaceContainerHigh,
         alignment: Alignment.center,
-        child: AppEquineIcon(
-          size: 48,
-          color: scheme.onSurfaceVariant,
-        ),
+        child: AppEquineIcon(size: 48, color: scheme.onSurfaceVariant),
       ),
     );
   }

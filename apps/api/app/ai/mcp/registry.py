@@ -1,3 +1,4 @@
+import inspect
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -5,6 +6,18 @@ from typing import Any
 from app.core.logging import logger
 
 ToolCallable = Callable[..., Awaitable[dict[str, Any]]]
+
+# El planner solo conoce los nombres de ToolArgs; algunas tools usan otro nombre para
+# el mismo dato. Se renombra únicamente si la tool acepta el destino y no el origen.
+_ARG_ALIASES: dict[str, str] = {"notes": "note"}
+
+
+def _apply_arg_aliases(tool: ToolCallable, kwargs: dict[str, Any]) -> dict[str, Any]:
+    params = inspect.signature(tool).parameters
+    for source, target in _ARG_ALIASES.items():
+        if source in kwargs and source not in params and target in params:
+            kwargs.setdefault(target, kwargs.pop(source))
+    return kwargs
 
 
 class ToolRegistry:
@@ -36,7 +49,7 @@ class ToolRegistry:
         )
 
         started = time.perf_counter()
-        result = await tool(**kwargs)
+        result = await tool(**_apply_arg_aliases(tool, kwargs))
         elapsed_ms = int((time.perf_counter() - started) * 1000)
 
         logger.info(
@@ -48,6 +61,9 @@ class ToolRegistry:
         )
 
         return result
+
+    def get(self, tool_name: str) -> ToolCallable | None:
+        return self._tools.get(tool_name)
 
     def names(self) -> list[str]:
         return sorted(self._tools)

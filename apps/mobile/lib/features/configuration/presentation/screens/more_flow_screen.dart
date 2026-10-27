@@ -13,6 +13,7 @@ import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/app_toast.dart';
+import 'package:mobile/app/release_config.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
@@ -303,6 +304,16 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.sillas),
         ),
+        if (privacyPolicyUrl.isNotEmpty) ...[
+          SizedBox(height: tokens.spaceMd),
+          AppEntityRowCard(
+            title: 'Privacidad',
+            subtitle: 'Consulta cómo se manejan tus datos',
+            leading: _menuLeadingIcon(Symbols.privacy_tip),
+            trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+            onTap: _openPrivacyPolicy,
+          ),
+        ],
         if (widget.catalogsModule != null &&
             widget.configurationModule != null &&
             widget.controller.currentUser?.role == 'admin') ...[
@@ -806,6 +817,17 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
     final uri = Uri(scheme: 'tel', path: phone);
     if (!await canLaunchUrl(uri)) return false;
     return launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _openPrivacyPolicy() async {
+    final uri = Uri.parse(privacyPolicyUrl);
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!mounted || launched) return;
+    showAppToast(
+      context,
+      message: 'No se pudo abrir la política de privacidad',
+      isError: true,
+    );
   }
 
   _EmergencyContact _mapEmergencyContact(EmergencyCatalogContactDto contact) {

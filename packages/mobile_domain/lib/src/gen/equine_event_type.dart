@@ -21,8 +21,7 @@ enum EquineEventType {
   REST("rest"),
   AVAILABILITY_CHANGE("availability_change"),
   ROUTE_ACTIVITY("route_activity"),
-  NOTE("note"),
-;
+  NOTE("note");
 
   final String value;
   const EquineEventType(this.value);
@@ -38,4 +37,3 @@ extension EquineEventTypeParse on String {
     orElse: () => throw ArgumentError('Unknown EquineEventType: ${this}'),
   );
 }
-

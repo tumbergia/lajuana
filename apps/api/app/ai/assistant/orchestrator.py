@@ -84,6 +84,17 @@ FIELD_LABELS: dict[str, tuple[str, str]] = {
     "title": ("¿cuál es el título del evento?", "what's the event title?"),
     "provider_id": ("¿cuál es el proveedor?", "which provider is it?"),
     "saddle_id": ("¿cuál es la silla?", "which saddle is it?"),
+    "is_available": (
+        "¿debe quedar disponible o no disponible?",
+        "should it be available or unavailable?",
+    ),
+    "reason": ("¿cuál es el motivo?", "what's the reason?"),
+    "severity": (
+        "¿qué gravedad tiene (baja, media, alta o crítica)?",
+        "how severe is it (low, medium, high or critical)?",
+    ),
+    "assignment_id": ("¿cuál es el ID de la asignación?", "what's the assignment ID?"),
+    "event_id": ("¿cuál es el ID del evento?", "what's the event ID?"),
 }
 
 # Constants extracted for testability (W3.6, conv. #6: no lógica en métodos)
@@ -113,8 +124,6 @@ CANCEL_WORDS: set[str] = {
 }
 
 REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
-    "check_availability": ["experience_id", "requested_date", "participant_count"],
-    "create_reservation": ["experience_id", "requested_date", "participant_count"],
     "suggest_alternative_dates": ["experience_id"],
     "create_reservation_draft": [
         "experience_id",
@@ -154,6 +163,11 @@ REQUIRED_FIELDS_BY_TOOL: dict[str, list[str]] = {
     "admin_deactivate_experience": ["experience_id"],
     "admin_deactivate_equine": ["equine_id"],
     "admin_deactivate_provider": ["provider_id"],
+    # Argumentos obligatorios en la firma: sin ellos la tool lanza TypeError al ejecutarse.
+    "admin_update_equine_availability": ["equine_id", "is_available", "reason"],
+    "admin_add_equine_health_event": ["equine_id", "event_type", "description"],
+    "guide_report_incident": ["reservation_id", "severity", "description"],
+    "guide_create_service_log": ["reservation_id", "event_type"],
 }
 
 # Campos que se dan por satisfechos si llega cualquiera de sus equivalentes.
@@ -168,7 +182,6 @@ FIELD_ALTERNATIVES: dict[str, tuple[str, ...]] = {
 WRITE_TOOLS_REQUIRING_CONFIRMATION: set[str] = {
     "admin_deactivate_experience",
     "admin_deactivate_user",
-    "admin_deactivate_schedule",
     "admin_deactivate_equine",
     "admin_close_service_execution",
     "admin_cancel_reservation",
@@ -187,6 +200,19 @@ WRITE_TOOLS_REQUIRING_CONFIRMATION: set[str] = {
     "admin_create_experience",
     "admin_create_provider",
     "admin_create_equine",
+    "admin_create_saddle",
+    "admin_create_assignment",
+    "admin_create_equine_event",
+    "admin_add_equine_health_event",
+    "admin_update_user",
+    "admin_update_experience",
+    "admin_update_provider",
+    "admin_update_equine",
+    "admin_update_saddle",
+    "admin_update_participant",
+    "admin_update_assignment",
+    "admin_update_equine_event",
+    "admin_finalize_assignment",
 }
 
 _ACTIVE_TOOL_SLOT = "_active_tool_name"
@@ -199,6 +225,24 @@ _DURATION_DAYS_RE = re.compile(
     r"(\d+(?:[.,]\d+)?)\s*(?:d[ií]a|d[ií]as)\b",
     re.IGNORECASE,
 )
+_SEVERITY_ALIASES = {
+    "critica": "critical",
+    "crítica": "critical",
+    "critico": "critical",
+    "crítico": "critical",
+    "critical": "critical",
+    "alta": "high",
+    "alto": "high",
+    "high": "high",
+    "media": "medium",
+    "medio": "medium",
+    "medium": "medium",
+    "baja": "low",
+    "bajo": "low",
+    "leve": "low",
+    "low": "low",
+}
+
 _LEVEL_ALIASES = {
     "basico": "basic",
     "básico": "basic",
@@ -545,6 +589,20 @@ def _extract_slot_updates(message: str, missing: list[str]) -> dict[str, Any]:
                 updates["level"] = canonical
                 break
 
+    if "is_available" in missing:
+        if re.search(
+            r"\b(no disponible|indisponible|unavailable|not available|fuera de servicio)\b", lower
+        ):
+            updates["is_available"] = False
+        elif re.search(r"\b(disponible|available|habilitad[oa])\b", lower):
+            updates["is_available"] = True
+
+    if "severity" in missing:
+        for alias, canonical in _SEVERITY_ALIASES.items():
+            if re.search(rf"\b{re.escape(alias)}\b", lower):
+                updates["severity"] = canonical
+                break
+
     if "type" in missing:
         for alias, canonical in sorted(_PROVIDER_TYPE_ALIASES.items(), key=lambda x: -len(x[0])):
             if alias in lower:
@@ -572,7 +630,7 @@ def _extract_slot_updates(message: str, missing: list[str]) -> dict[str, Any]:
     remaining = [field for field in missing if field not in updates]
     if leftover and remaining:
         for field in remaining:
-            if field in ("full_name", "name", "description", "code", "title", "q"):
+            if field in ("full_name", "name", "description", "reason", "code", "title", "q"):
                 updates[field] = leftover
                 break
 
@@ -600,7 +658,7 @@ def _resume_active_admin_tool(
     missing = session.pending_fields or [
         field
         for field in REQUIRED_FIELDS_BY_TOOL[active_tool]
-        if not session.slot_values.get(field)
+        if not _has_value(session.slot_values.get(field))
     ]
     updates = _extract_slot_updates(message, missing)
     if not updates:
@@ -1451,6 +1509,16 @@ class AssistantOrchestrator:
                 "exact_hint": "nombre o slug" if language == "es" else "name or slug",
             },
         }
+        # El resto de tools que operan sobre un equino resuelven igual ("marca a Lucero...").
+        for equine_tool in (
+            "admin_get_equine",
+            "admin_update_equine",
+            "admin_update_equine_availability",
+            "admin_add_equine_health_event",
+            "admin_create_equine_event",
+            "admin_list_equine_events",
+        ):
+            configs[equine_tool] = configs["admin_deactivate_equine"]
 
         config = configs.get(plan.tool_name or "")
         if not config:

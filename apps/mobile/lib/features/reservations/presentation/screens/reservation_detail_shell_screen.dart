@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:mobile_core/mobile_core.dart';
 
-import 'package:mobile_ui/src/theme/app_colors.dart';
 import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
@@ -18,7 +17,6 @@ import 'package:mobile_ui/src/widgets/app_scaffold.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 import 'package:mobile_ui/src/widgets/app_switch_row.dart';
-import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_ui/src/widgets/app_timeline.dart';
 import 'package:mobile/features/reservations/presentation/dialogs/reservation_approve_dialog.dart';
@@ -701,8 +699,6 @@ class _ReservationDetailShellScreenState
   }
 
   Widget _buildPaymentContent(ReservationPaymentProofsSectionController ctrl) {
-    final actionState = _controller.paymentProofActionState;
-
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [

@@ -11,8 +11,7 @@ enum ModuleCategory {
   EXPERIENCES("experiences"),
   PARTICIPANTS("participants"),
   EQUINES("equines"),
-  OPERATIONS("operations"),
-;
+  OPERATIONS("operations");
 
   final String value;
   const ModuleCategory(this.value);
@@ -28,4 +27,3 @@ extension ModuleCategoryParse on String {
     orElse: () => throw ArgumentError('Unknown ModuleCategory: ${this}'),
   );
 }
-
