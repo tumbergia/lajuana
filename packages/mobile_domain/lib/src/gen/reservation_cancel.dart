@@ -5,23 +5,13 @@
 /// AUTO-GENERATED from OpenAPI schema `ReservationCancelSchema`.
 
 class ReservationCancel {
-
   final String? reason;
 
-  const ReservationCancel(
-    {
-    this.reason,
-    }
-  );
+  const ReservationCancel({this.reason});
 
   factory ReservationCancel.fromJson(Map<String, dynamic> json) {
-    return ReservationCancel(
-      reason: json['reason'] as String?,
-    );
+    return ReservationCancel(reason: json['reason'] as String?);
   }
 
-  Map<String, dynamic> toJson() => {
-    'reason': reason,
-  };
-
+  Map<String, dynamic> toJson() => {'reason': reason};
 }

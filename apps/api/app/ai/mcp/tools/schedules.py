@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, timedelta
 from typing import Any
 from uuid import uuid4
 
@@ -12,6 +12,7 @@ from app.ai.mcp.tool_contracts import (
     ToolBlockingReason,
 )
 from app.core.di import Container
+from app.core.time import today_colombia
 from app.documents.experience_document import ExperienceDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
 from app.services.experience_catalog_resolver import (
@@ -62,7 +63,7 @@ def _generate_date_range(
     date_to: date,
     min_notice_days: int = 7,
 ) -> list[date]:
-    today = datetime.now(UTC).date()
+    today = today_colombia()
     min_date = today + timedelta(days=min_notice_days)
     start = max(date_from, min_date)
     dates: list[date] = []
@@ -87,7 +88,7 @@ async def list_available_schedules(
     trace_id = trace_id or str(uuid4())
 
     if requested_date is None:
-        date_from = datetime.now(UTC).date() + timedelta(days=7)
+        date_from = today_colombia() + timedelta(days=7)
     elif isinstance(requested_date, date):
         date_from = requested_date
     else:
@@ -214,7 +215,7 @@ async def suggest_alternative_dates(
     started = time.perf_counter()
     trace_id = trace_id or str(uuid4())
 
-    today = datetime.now(UTC).date()
+    today = today_colombia()
 
     if requested_date is None:
         requested_date = today + timedelta(days=60)

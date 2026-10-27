@@ -405,13 +405,14 @@ class DashboardController extends ChangeNotifier {
         }
       }
     } finally {
-      if (!_isCurrent(generation)) return;
-      for (final id in moduleIds) {
-        slotFor(id).finishRefreshing();
+      if (_isCurrent(generation)) {
+        for (final id in moduleIds) {
+          slotFor(id).finishRefreshing();
+        }
+        _blockingUi = false;
+        _refreshing = false;
+        notifyListeners();
       }
-      _blockingUi = false;
-      _refreshing = false;
-      notifyListeners();
     }
   }
 

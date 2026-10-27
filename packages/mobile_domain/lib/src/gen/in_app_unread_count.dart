@@ -5,23 +5,13 @@
 /// AUTO-GENERATED from OpenAPI schema `InAppUnreadCountSchema`.
 
 class InAppUnreadCount {
-
   final int unreadCount;
 
-  const InAppUnreadCount(
-    {
-    required this.unreadCount,
-    }
-  );
+  const InAppUnreadCount({required this.unreadCount});
 
   factory InAppUnreadCount.fromJson(Map<String, dynamic> json) {
-    return InAppUnreadCount(
-      unreadCount: json['unread_count'] as int,
-    );
+    return InAppUnreadCount(unreadCount: json['unread_count'] as int);
   }
 
-  Map<String, dynamic> toJson() => {
-    'unread_count': unreadCount,
-  };
-
+  Map<String, dynamic> toJson() => {'unread_count': unreadCount};
 }

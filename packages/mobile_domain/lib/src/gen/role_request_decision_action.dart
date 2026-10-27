@@ -6,8 +6,7 @@
 
 enum RoleRequestDecisionAction {
   APPROVE("approve"),
-  REJECT("reject"),
-;
+  REJECT("reject");
 
   final String value;
   const RoleRequestDecisionAction(this.value);
@@ -18,9 +17,10 @@ extension RoleRequestDecisionActionX on RoleRequestDecisionAction {
 }
 
 extension RoleRequestDecisionActionParse on String {
-  RoleRequestDecisionAction toRoleRequestDecisionAction() => RoleRequestDecisionAction.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown RoleRequestDecisionAction: ${this}'),
-  );
+  RoleRequestDecisionAction toRoleRequestDecisionAction() =>
+      RoleRequestDecisionAction.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown RoleRequestDecisionAction: ${this}'),
+      );
 }
-

@@ -5,16 +5,10 @@
 /// AUTO-GENERATED from OpenAPI schema `ReservationConfirmSchema`.
 
 class ReservationConfirm {
-
   final String? notes;
   final String? startTime;
 
-  const ReservationConfirm(
-    {
-    this.notes,
-    this.startTime,
-    }
-  );
+  const ReservationConfirm({this.notes, this.startTime});
 
   factory ReservationConfirm.fromJson(Map<String, dynamic> json) {
     return ReservationConfirm(
@@ -23,9 +17,5 @@ class ReservationConfirm {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'notes': notes,
-    'start_time': startTime,
-  };
-
+  Map<String, dynamic> toJson() => {'notes': notes, 'start_time': startTime};
 }

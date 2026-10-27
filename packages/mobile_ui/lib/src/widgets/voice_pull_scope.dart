@@ -16,6 +16,7 @@ class VoicePullScope extends StatefulWidget {
     required this.enabled,
     required this.onTriggered,
     this.displacement = 48,
+
     /// Zona muerta antes de mostrar el círculo (overscroll accidental no lo revela).
     this.activationDistance = 80,
     this.triggerDistance = 100,
@@ -258,10 +259,8 @@ class _VoicePullScopeState extends State<VoicePullScope>
   double get _visibleDrag =>
       math.max(0.0, _effectiveDrag - widget.activationDistance);
 
-  double get _pullRange => math.max(
-    1.0,
-    widget.triggerDistance - widget.activationDistance,
-  );
+  double get _pullRange =>
+      math.max(1.0, widget.triggerDistance - widget.activationDistance);
 
   @override
   Widget build(BuildContext context) {

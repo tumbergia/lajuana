@@ -7,8 +7,7 @@
 enum AssignmentSource {
   MANUAL_ADMIN("manual_admin"),
   MANUAL_GUIDE("manual_guide"),
-  SYSTEM_SUGGESTED("system_suggested"),
-;
+  SYSTEM_SUGGESTED("system_suggested");
 
   final String value;
   const AssignmentSource(this.value);
@@ -24,4 +23,3 @@ extension AssignmentSourceParse on String {
     orElse: () => throw ArgumentError('Unknown AssignmentSource: ${this}'),
   );
 }
-

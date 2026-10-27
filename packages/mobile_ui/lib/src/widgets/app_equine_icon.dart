@@ -3,11 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 /// Brand horse mark used wherever equines are represented (replaces the chess knight).
 class AppEquineIcon extends StatelessWidget {
-  const AppEquineIcon({
-    super.key,
-    this.size = 24,
-    this.color,
-  });
+  const AppEquineIcon({super.key, this.size = 24, this.color});
 
   static const String assetPath = 'assets/icons/equine.svg';
 
@@ -17,7 +13,9 @@ class AppEquineIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolved =
-        color ?? IconTheme.of(context).color ?? Theme.of(context).iconTheme.color;
+        color ??
+        IconTheme.of(context).color ??
+        Theme.of(context).iconTheme.color;
 
     return SvgPicture.asset(
       assetPath,

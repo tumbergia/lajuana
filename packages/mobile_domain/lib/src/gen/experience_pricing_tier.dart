@@ -5,18 +5,15 @@
 /// AUTO-GENERATED from OpenAPI schema `ExperiencePricingTierSchema`.
 
 class ExperiencePricingTier {
-
   final int minParticipants;
   final int maxParticipants;
   final int pricePerPerson;
 
-  const ExperiencePricingTier(
-    {
+  const ExperiencePricingTier({
     required this.minParticipants,
     required this.maxParticipants,
     required this.pricePerPerson,
-    }
-  );
+  });
 
   factory ExperiencePricingTier.fromJson(Map<String, dynamic> json) {
     return ExperiencePricingTier(
@@ -31,5 +28,4 @@ class ExperiencePricingTier {
     'max_participants': maxParticipants,
     'price_per_person': pricePerPerson,
   };
-
 }

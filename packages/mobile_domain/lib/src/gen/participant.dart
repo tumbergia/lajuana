@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `ParticipantResponseSchema`.
 
 class Participant {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -14,7 +13,7 @@ class Participant {
   final String reservationId;
   final String firstName;
   final String lastName;
-  final DateTime birthDate;  // date-only (no time)
+  final DateTime birthDate; // date-only (no time)
   final String documentType;
   final String documentNumber;
   final String phone;
@@ -37,8 +36,7 @@ class Participant {
   final String riskReleaseTextVersion;
   final bool isCompleted;
 
-  const Participant(
-    {
+  const Participant({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -69,8 +67,7 @@ class Participant {
     required this.acceptedRiskRelease,
     required this.riskReleaseTextVersion,
     required this.isCompleted,
-    }
-  );
+  });
 
   factory Participant.fromJson(Map<String, dynamic> json) {
     return Participant(
@@ -139,5 +136,4 @@ class Participant {
     'risk_release_text_version': riskReleaseTextVersion,
     'is_completed': isCompleted,
   };
-
 }

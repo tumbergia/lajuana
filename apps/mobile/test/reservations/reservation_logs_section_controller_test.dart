@@ -118,6 +118,16 @@ void main() {
       expect(controller.entries.first.title, 'Pago aprobado');
     });
 
+    test('load exposes repository errors', () async {
+      final repo = _FakeTimelineRepository(throwOnLoad: true);
+      final controller = ReservationLogsSectionController(repository: repo);
+
+      await controller.load('res-1');
+
+      expect(controller.state, ReservationLogsLoadState.error);
+      expect(controller.errorMessage, contains('Timeline error'));
+    });
+
     test('createNote reloads timeline', () async {
       final repo = _FakeTimelineRepository();
       final controller = ReservationLogsSectionController(repository: repo);

@@ -413,13 +413,11 @@ NotificationContent _paymentProof(String body, String title, String? phone) {
     final holder = match.group(1)!.trim();
     final code = match.group(2)!.trim();
     final rest = match.group(3)!.trim();
-    String filename = rest;
     String? proofId;
     final pipe = rest.lastIndexOf('|');
     if (pipe > 0 && pipe < rest.length - 1) {
       final maybeId = rest.substring(pipe + 1).trim();
       if (RegExp(r'^[a-fA-F0-9]{24}$').hasMatch(maybeId)) {
-        filename = rest.substring(0, pipe).trim();
         proofId = maybeId;
       }
     }

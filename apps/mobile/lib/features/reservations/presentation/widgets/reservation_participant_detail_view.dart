@@ -25,8 +25,6 @@ class _ParticipantDetailViewState extends State<ParticipantDetailView>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final p = widget.participant;
 
     return Scaffold(

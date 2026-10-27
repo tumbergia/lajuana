@@ -25,8 +25,7 @@ from app.schemas.config import AiModelCatalogSchema, AiModelItemSchema
 
 OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
 LITELLM_COST_MAP_URL = (
-    "https://raw.githubusercontent.com/BerriAI/litellm/"
-    "main/model_prices_and_context_window.json"
+    "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json"
 )
 
 CACHE_TTL_SECONDS = 6 * 60 * 60
@@ -127,9 +126,7 @@ def _normalize_litellm_groq(payload: dict[str, Any]) -> dict[str, _PriceEntry]:
         result[model_id] = _PriceEntry(
             input_usd_per_million=input_price,
             output_usd_per_million=output_price,
-            cached_input_usd_per_million=_per_million(
-                model.get("cache_read_input_token_cost")
-            ),
+            cached_input_usd_per_million=_per_million(model.get("cache_read_input_token_cost")),
             context_length=context_length,
             source="litellm",
         )
@@ -201,9 +198,7 @@ async def _load_live_prices() -> tuple[dict[str, _PriceEntry], datetime | None, 
                     source_name,
                     type(result).__name__,
                 )
-                warnings.append(
-                    f"No se pudo actualizar {source_name}: {type(result).__name__}"
-                )
+                warnings.append(f"No se pudo actualizar {source_name}: {type(result).__name__}")
                 continue
             combined.update(result)
 
@@ -293,9 +288,7 @@ class ModelCatalogService:
                     speed=curated["speed"],
                     recommended=curated["recommended"],
                     value_note=curated["value_note"],
-                    brand_color=PROVIDER_BRAND_COLORS.get(
-                        curated["provider"], "#5B5B5B"
-                    ),
+                    brand_color=PROVIDER_BRAND_COLORS.get(curated["provider"], "#5B5B5B"),
                     input_usd_per_million=input_usd,
                     output_usd_per_million=output_usd,
                     cached_input_usd_per_million=cached_usd,
@@ -318,4 +311,3 @@ class ModelCatalogService:
             provider_buy_urls=dict(PROVIDER_BUY_URLS),
             provider_brand_colors=dict(PROVIDER_BRAND_COLORS),
         )
-

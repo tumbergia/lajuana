@@ -5,23 +5,17 @@
 /// AUTO-GENERATED from OpenAPI schema `LeadsPreferencesSchema`.
 
 class LeadsPreferences {
-
   final List<String>? pinnedLeadIds;
   final List<String>? excludedLeadIds;
 
-  const LeadsPreferences(
-    {
-    this.pinnedLeadIds,
-    this.excludedLeadIds,
-    }
-  );
+  const LeadsPreferences({this.pinnedLeadIds, this.excludedLeadIds});
 
   factory LeadsPreferences.fromJson(Map<String, dynamic> json) {
     return LeadsPreferences(
       pinnedLeadIds: (json['pinned_lead_ids'] as List<dynamic>?)
-        ?.cast<String>(),
+          ?.cast<String>(),
       excludedLeadIds: (json['excluded_lead_ids'] as List<dynamic>?)
-        ?.cast<String>(),
+          ?.cast<String>(),
     );
   }
 
@@ -29,5 +23,4 @@ class LeadsPreferences {
     'pinned_lead_ids': pinnedLeadIds,
     'excluded_lead_ids': excludedLeadIds,
   };
-
 }

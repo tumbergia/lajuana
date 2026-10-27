@@ -41,7 +41,7 @@ la-juana/
 
 ### Requisitos previos
 
-- Flutter 3.x
+- Flutter 3.41.7
 - Python 3.11+
 - MongoDB 7.x (local o Atlas)
 

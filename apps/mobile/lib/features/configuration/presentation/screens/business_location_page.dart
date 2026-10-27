@@ -593,10 +593,7 @@ class _MapPin extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               child: const Center(
-                child: AppEquineIcon(
-                  size: 20,
-                  color: Colors.white,
-                ),
+                child: AppEquineIcon(size: 20, color: Colors.white),
               ),
             ),
           ),

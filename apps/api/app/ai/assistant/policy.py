@@ -290,9 +290,7 @@ class ToolPolicyEngine:
 
         # Tools que requieren datos de creación
         if plan.tool_name == "admin_create_experience":
-            missing = [
-                f for f in ("name", "description", "level") if not args.get(f)
-            ]
+            missing = [f for f in ("name", "description", "level") if not args.get(f)]
             if not args.get("duration_hours") and not args.get("duration_days"):
                 missing.append("duration_hours")
             if missing:
@@ -302,9 +300,7 @@ class ToolPolicyEngine:
                 )
 
         if plan.tool_name == "admin_create_user":
-            missing = [
-                f for f in ("email", "full_name") if not args.get(f)
-            ]
+            missing = [f for f in ("email", "full_name") if not args.get(f)]
             if missing:
                 return ToolPolicyDecision(
                     allowed=False,

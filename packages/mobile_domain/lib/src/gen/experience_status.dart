@@ -7,8 +7,7 @@
 enum ExperienceStatus {
   DRAFT("draft"),
   PUBLISHED("published"),
-  ARCHIVED("archived"),
-;
+  ARCHIVED("archived");
 
   final String value;
   const ExperienceStatus(this.value);
@@ -24,4 +23,3 @@ extension ExperienceStatusParse on String {
     orElse: () => throw ArgumentError('Unknown ExperienceStatus: ${this}'),
   );
 }
-

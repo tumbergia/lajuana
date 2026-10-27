@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `SaddleListItemSchema`.
 
 class SaddleListItem {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -17,8 +16,7 @@ class SaddleListItem {
   final String? notes;
   final String? blockReason;
 
-  const SaddleListItem(
-    {
+  const SaddleListItem({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -29,8 +27,7 @@ class SaddleListItem {
     this.isAvailable,
     this.notes,
     this.blockReason,
-    }
-  );
+  });
 
   factory SaddleListItem.fromJson(Map<String, dynamic> json) {
     return SaddleListItem(
@@ -59,5 +56,4 @@ class SaddleListItem {
     'notes': notes,
     'block_reason': blockReason,
   };
-
 }

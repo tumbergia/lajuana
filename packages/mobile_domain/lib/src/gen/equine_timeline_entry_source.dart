@@ -6,8 +6,7 @@
 
 enum EquineTimelineEntrySource {
   SERVICE_LOG("service_log"),
-  EQUINE_EVENT("equine_event"),
-;
+  EQUINE_EVENT("equine_event");
 
   final String value;
   const EquineTimelineEntrySource(this.value);
@@ -18,9 +17,10 @@ extension EquineTimelineEntrySourceX on EquineTimelineEntrySource {
 }
 
 extension EquineTimelineEntrySourceParse on String {
-  EquineTimelineEntrySource toEquineTimelineEntrySource() => EquineTimelineEntrySource.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown EquineTimelineEntrySource: ${this}'),
-  );
+  EquineTimelineEntrySource toEquineTimelineEntrySource() =>
+      EquineTimelineEntrySource.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown EquineTimelineEntrySource: ${this}'),
+      );
 }
-

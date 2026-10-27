@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'package:mobile/features/auth/presentation/auth_routes.dart';
 import 'dependency_injection.dart';
 import 'navigation/app_router.dart';
 import 'package:mobile_ui/mobile_ui.dart';

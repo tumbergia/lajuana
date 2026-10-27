@@ -5,20 +5,17 @@
 /// AUTO-GENERATED from OpenAPI schema `Period`.
 
 class Period {
-
-  final DateTime start;  // date-only (no time)
-  final DateTime end;  // date-only (no time)
+  final DateTime start; // date-only (no time)
+  final DateTime end; // date-only (no time)
   final String label;
   final String? preset;
 
-  const Period(
-    {
+  const Period({
     required this.start,
     required this.end,
     required this.label,
     this.preset,
-    }
-  );
+  });
 
   factory Period.fromJson(Map<String, dynamic> json) {
     return Period(
@@ -35,5 +32,4 @@ class Period {
     'label': label,
     'preset': preset,
   };
-
 }

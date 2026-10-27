@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `BreakdownItem`.
 
 class BreakdownItem {
-
   final String dimension;
   final String key;
   final String label;
@@ -16,8 +15,7 @@ class BreakdownItem {
   final String? rank;
   final String? countryCode;
 
-  const BreakdownItem(
-    {
+  const BreakdownItem({
     required this.dimension,
     required this.key,
     required this.label,
@@ -27,8 +25,7 @@ class BreakdownItem {
     this.sharePercentage,
     this.rank,
     this.countryCode,
-    }
-  );
+  });
 
   factory BreakdownItem.fromJson(Map<String, dynamic> json) {
     return BreakdownItem(
@@ -55,5 +52,4 @@ class BreakdownItem {
     'rank': rank,
     'country_code': countryCode,
   };
-
 }

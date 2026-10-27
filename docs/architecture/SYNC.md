@@ -35,6 +35,10 @@ SyncService dividido en 4 handlers especializados:
 | `ReservationSyncHandler` | reservation, participant, payment_proof, assignment, service_log | Operaciones |
 | `ResourceSyncHandler` | provider, policy | Recursos |
 | `ConfigSyncHandler` | config | Configuración |
+| `NotificationSyncHandler` | notification_mutation | Comandos push-only del buzón local |
+
+`notification_mutation` confirma operaciones offline de lectura y eliminación,
+pero no representa una entidad del change feed y por eso no tiene stream de pull.
 
 ## Key documents
 

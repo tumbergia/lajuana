@@ -547,10 +547,7 @@ class _EquineThumb extends StatelessWidget {
         color: scheme.surfaceContainerHigh,
         child: image != null
             ? Image(image: image!, fit: BoxFit.cover)
-            : AppEquineIcon(
-                size: 24,
-                color: scheme.onSurfaceVariant,
-              ),
+            : AppEquineIcon(size: 24, color: scheme.onSurfaceVariant),
       ),
     );
   }

@@ -97,7 +97,9 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
 
         message = f"Usuario '{doc.email}' creado exitosamente con rol {doc.role}."
         if generated_password:
-            message += f" Contraseña temporal: {generated_password}. Pídele que la cambie al entrar."
+            message += (
+                f" Contraseña temporal: {generated_password}. Pídele que la cambie al entrar."
+            )
 
         output = AdminCreateUserOutput(
             created=True,

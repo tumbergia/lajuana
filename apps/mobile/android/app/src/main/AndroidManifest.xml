@@ -36,7 +36,7 @@
         </activity>
         <!-- Keep notification small-icon referenced from Dart (resource shrinker). -->
         <meta-data
-            android:name="com.example.mobile.default_notification_icon"
+            android:name="co.lajuana.app.default_notification_icon"
             android:resource="@drawable/ic_notification" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

@@ -1,0 +1,79 @@
+name: Android release check
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "apps/mobile/**"
+      - "packages/mobile_*/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - ".github/workflows/android-release-check.yml"
+  push:
+    branches: [main, develop]
+    paths:
+      - "apps/mobile/**"
+      - "packages/mobile_*/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+      - ".github/workflows/android-release-check.yml"
+
+concurrency:
+  group: android-release-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.41.7"
+          cache: true
+
+      - name: Install dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Create ephemeral CI signing key
+        env:
+          STORE_PASSWORD: ci-release-check
+          KEY_PASSWORD: ci-release-check
+        run: |
+          keytool -genkeypair -v \
+            -keystore "$RUNNER_TEMP/ci-release-check.jks" \
+            -storepass "$STORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            -alias ci-release-check \
+            -keyalg RSA -keysize 2048 -validity 2 \
+            -dname "CN=CI Release Check,OU=Engineering,O=La Juana,L=Medellin,ST=Antioquia,C=CO"
+          {
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyPassword=$KEY_PASSWORD"
+            echo "keyAlias=ci-release-check"
+            echo "storeFile=$RUNNER_TEMP/ci-release-check.jks"
+          } > apps/mobile/android/key.properties
+
+      - name: Compile production bundle
+        working-directory: apps/mobile
+        run: >-
+          flutter build appbundle --release
+          --dart-define=API_BASE_URL=https://release-check.invalid/api/v1
+          --dart-define=PRIVACY_POLICY_URL=https://release-check.invalid/privacy
+          --build-name=0.0.0 --build-number=${{ github.run_number }}
+
+      - name: Verify bundle signature
+        run: jarsigner -verify apps/mobile/build/app/outputs/bundle/release/app-release.aab
+

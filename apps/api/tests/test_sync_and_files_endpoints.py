@@ -329,7 +329,9 @@ def test_sync_push_accepts_notification_mutation_operation_types() -> None:
         op = SyncPushOperationSchema(
             operation_id=f"op-{op_type}",
             entity_type="notification_mutation",
-            entity_local_id="notif-1" if op_type not in ("mark_all_read", "clear_inbox") else "__all__",
+            entity_local_id="notif-1"
+            if op_type not in ("mark_all_read", "clear_inbox")
+            else "__all__",
             operation_type=op_type,
             idempotency_key=f"idem-{op_type}",
             payload={"read_only": True} if op_type == "clear_inbox" else {},

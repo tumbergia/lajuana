@@ -9,8 +9,7 @@ enum ValueType {
   CURRENCY("currency"),
   PERCENT("percent"),
   RATIO("ratio"),
-  TEXT("text"),
-;
+  TEXT("text");
 
   final String value;
   const ValueType(this.value);
@@ -26,4 +25,3 @@ extension ValueTypeParse on String {
     orElse: () => throw ArgumentError('Unknown ValueType: ${this}'),
   );
 }
-

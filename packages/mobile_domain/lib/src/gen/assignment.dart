@@ -8,7 +8,6 @@ import 'assignment_source.dart';
 import 'assignment_status.dart';
 
 class Assignment {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -32,8 +31,7 @@ class Assignment {
   final String? assignedAt;
   final String? finalizedAt;
 
-  const Assignment(
-    {
+  const Assignment({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -56,8 +54,7 @@ class Assignment {
     this.finalizedByUserId,
     this.assignedAt,
     this.finalizedAt,
-    }
-  );
+  });
 
   factory Assignment.fromJson(Map<String, dynamic> json) {
     return Assignment(
@@ -75,10 +72,9 @@ class Assignment {
       saddleLabel: json['saddle_label'] as String?,
       status: (json['status'] as String).toAssignmentStatus(),
       source: (json['source'] as String).toAssignmentSource(),
-      safetyFlags: (json['safety_flags'] as List<dynamic>?)
-        ?.cast<String>(),
+      safetyFlags: (json['safety_flags'] as List<dynamic>?)?.cast<String>(),
       validationWarnings: (json['validation_warnings'] as List<dynamic>?)
-        ?.cast<String>(),
+          ?.cast<String>(),
       notes: json['notes'] as String?,
       isActive: json['is_active'] as bool?,
       assignedByUserId: json['assigned_by_user_id'] as String?,
@@ -112,5 +108,4 @@ class Assignment {
     'assigned_at': assignedAt,
     'finalized_at': finalizedAt,
   };
-
 }

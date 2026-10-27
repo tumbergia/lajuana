@@ -4,8 +4,11 @@ Lista usuarios de Atlas y crea uno de prueba por voz, luego lo borra.
 Misma ruta que el móvil. Requiere red, GEMINI_API_KEY y MONGODB_URI.
 
     cd apps/api
-    .venv/bin/pytest --noconftest tests/test_admin_ask_live_mongo.py -s --tb=short
+    RUN_LIVE_INTEGRATION=1 .venv/bin/pytest --noconftest tests/test_admin_ask_live_mongo.py -s --tb=short
 """
+
+# These imports must happen after the faster_whisper test double is registered.
+# ruff: noqa: E402
 
 from __future__ import annotations
 
@@ -27,7 +30,6 @@ from app.core.config import settings
 from app.schemas.ask import AskResponse
 from app.schemas.assistant_plan import AssistantAction
 
-
 pytestmark = [pytest.mark.integration, pytest.mark.llm]
 
 ADMIN_ASK_PATH = "/api/v1/admin/ask"
@@ -36,12 +38,13 @@ _PASSWORD_RE = re.compile(r"Contraseña temporal: \S+", re.IGNORECASE)
 
 
 def _gemini_ok() -> bool:
-    return bool((settings.gemini_api_key or "").strip())
+    enabled = os.getenv("RUN_LIVE_INTEGRATION", "").strip().lower()
+    return enabled in {"1", "true", "yes"} and bool((settings.gemini_api_key or "").strip())
 
 
 requires_live = pytest.mark.skipif(
     not _gemini_ok(),
-    reason="GEMINI_API_KEY no configurada",
+    reason="Requiere RUN_LIVE_INTEGRATION=1 y GEMINI_API_KEY",
 )
 
 
@@ -128,9 +131,7 @@ async def _purge_orphans(conversation_ids: list[str]) -> None:
 
     if not conversation_ids:
         return
-    await ConversationSessionDocument.find(
-        {"conversation_key": {"$in": conversation_ids}}
-    ).delete()
+    await ConversationSessionDocument.find({"conversation_key": {"$in": conversation_ids}}).delete()
     await ConversationTurnDocument.find({"conversation_id": {"$in": conversation_ids}}).delete()
 
 

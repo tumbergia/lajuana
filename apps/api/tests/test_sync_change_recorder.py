@@ -8,12 +8,16 @@ from types import SimpleNamespace
 os.environ["APP_SKIP_DB_INIT"] = "true"
 
 from app.services import sync_change_recorder as rec
-from app.services.sync_service import SYNC_REQUIRED_PERMISSION
+from app.services.sync_service import SYNC_PUSH_ONLY_ENTITIES, SYNC_REQUIRED_PERMISSION
 
 
 def test_stream_map_covers_all_pushable_entities() -> None:
-    """Toda entidad que se puede pushear debe tener un stream de pull."""
-    pushable = {entity for (entity, _op) in SYNC_REQUIRED_PERMISSION}
+    """Toda entidad sincronizable, excepto comandos push-only, tiene stream."""
+    pushable = {
+        entity
+        for (entity, _op) in SYNC_REQUIRED_PERMISSION
+        if entity not in SYNC_PUSH_ONLY_ENTITIES
+    }
     missing = pushable - set(rec.STREAM_BY_ENTITY)
     assert missing == set(), f"streams faltantes para: {missing}"
 

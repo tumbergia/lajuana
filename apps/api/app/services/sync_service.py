@@ -95,6 +95,10 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("notification_mutation", "clear_inbox"): Permission.NOTIFICATION_READ,
 }
 
+# Command-like outbox entries that are acknowledged by push but do not
+# represent a domain entity exposed through the pull change feed.
+SYNC_PUSH_ONLY_ENTITIES = frozenset({"notification_mutation"})
+
 
 def _ensure_operation_permission(
     *, current_user: UserDocument, operation: SyncPushOperationSchema

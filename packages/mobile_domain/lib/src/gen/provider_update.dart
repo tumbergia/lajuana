@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `ProviderUpdateSchema`.
 
 class ProviderUpdate {
-
   final String? name;
   final String? slug;
   final String? type;
@@ -21,8 +20,7 @@ class ProviderUpdate {
   final String? sourceNotes;
   final String? isActive;
 
-  const ProviderUpdate(
-    {
+  const ProviderUpdate({
     this.name,
     this.slug,
     this.type,
@@ -37,8 +35,7 @@ class ProviderUpdate {
     this.tariffNotes,
     this.sourceNotes,
     this.isActive,
-    }
-  );
+  });
 
   factory ProviderUpdate.fromJson(Map<String, dynamic> json) {
     return ProviderUpdate(
@@ -75,5 +72,4 @@ class ProviderUpdate {
     'source_notes': sourceNotes,
     'is_active': isActive,
   };
-
 }

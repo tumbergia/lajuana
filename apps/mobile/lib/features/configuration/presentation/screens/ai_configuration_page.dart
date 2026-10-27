@@ -251,8 +251,7 @@ class _AiConfigurationPageState extends State<AiConfigurationPage>
     if (selection == null || !mounted) return;
 
     final previousEnabled = _enabled;
-    final alreadyOpenRouter =
-        _services[0] == 'openrouter' && _configured[0];
+    final alreadyOpenRouter = _services[0] == 'openrouter' && _configured[0];
     setState(() {
       _providerMode = 'manual';
       _services[0] = 'openrouter';

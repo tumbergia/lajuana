@@ -9,8 +9,7 @@ enum ModuleStatus {
   EMPTY("empty"),
   DEGRADED("degraded"),
   BLOCKED("blocked"),
-  ERROR("error"),
-;
+  ERROR("error");
 
   final String value;
   const ModuleStatus(this.value);
@@ -26,4 +25,3 @@ extension ModuleStatusParse on String {
     orElse: () => throw ArgumentError('Unknown ModuleStatus: ${this}'),
   );
 }
-

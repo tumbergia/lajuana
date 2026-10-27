@@ -30,6 +30,8 @@ import argparse
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Optional
@@ -719,6 +721,14 @@ def openapi_to_dart():
             if file_name not in seen_files:
                 seen_files.add(file_name)
                 f.write(f"export '{file_name}';\n")
+
+    # Keep generated output reproducible with the repository's pinned Dart SDK.
+    # Resolve the executable explicitly because Windows' CreateProcess does not
+    # expand the .bat wrapper when only "dart" is passed to subprocess.
+    dart_executable = shutil.which("dart")
+    if dart_executable is None:
+        raise RuntimeError("Dart SDK not found in PATH; install it before generating models")
+    subprocess.run([dart_executable, "format", str(out_dir)], check=True)
 
     print(f"\n-- Summary --")
     print(f"  Output: {out_dir}")

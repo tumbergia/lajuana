@@ -7,7 +7,6 @@
 import 'equine_timeline_entry_source.dart';
 
 class EquineTimelineEntry {
-
   final String id;
   final EquineTimelineEntrySource source;
   final String eventType;
@@ -29,8 +28,7 @@ class EquineTimelineEntry {
   final String? resultingOperationalStatus;
   final String? restUntil;
 
-  const EquineTimelineEntry(
-    {
+  const EquineTimelineEntry({
     required this.id,
     required this.source,
     required this.eventType,
@@ -51,8 +49,7 @@ class EquineTimelineEntry {
     this.labResultSummary,
     this.resultingOperationalStatus,
     this.restUntil,
-    }
-  );
+  });
 
   factory EquineTimelineEntry.fromJson(Map<String, dynamic> json) {
     return EquineTimelineEntry(
@@ -74,7 +71,8 @@ class EquineTimelineEntry {
       medicationName: json['medication_name'] as String?,
       dosage: json['dosage'] as String?,
       labResultSummary: json['lab_result_summary'] as String?,
-      resultingOperationalStatus: json['resulting_operational_status'] as String?,
+      resultingOperationalStatus:
+          json['resulting_operational_status'] as String?,
       restUntil: json['rest_until'] as String?,
     );
   }
@@ -101,5 +99,4 @@ class EquineTimelineEntry {
     'resulting_operational_status': resultingOperationalStatus,
     'rest_until': restUntil,
   };
-
 }

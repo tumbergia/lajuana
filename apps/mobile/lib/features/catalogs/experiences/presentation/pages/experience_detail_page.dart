@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
@@ -359,10 +358,6 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
   }
 
   Widget _spacer() => const SizedBox(height: 2);
-
-  void _spacerIf(bool condition) {
-    // no-op, spacer added inline
-  }
 
   Widget _buildDurationSection(CatalogExperience e) {
     final parts = <String>[];

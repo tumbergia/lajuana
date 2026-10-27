@@ -7,8 +7,7 @@
 enum ExperienceDifficulty {
   BASIC("basic"),
   INTERMEDIATE("intermediate"),
-  ADVANCED("advanced"),
-;
+  ADVANCED("advanced");
 
   final String value;
   const ExperienceDifficulty(this.value);
@@ -19,9 +18,10 @@ extension ExperienceDifficultyX on ExperienceDifficulty {
 }
 
 extension ExperienceDifficultyParse on String {
-  ExperienceDifficulty toExperienceDifficulty() => ExperienceDifficulty.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown ExperienceDifficulty: ${this}'),
-  );
+  ExperienceDifficulty toExperienceDifficulty() =>
+      ExperienceDifficulty.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown ExperienceDifficulty: ${this}'),
+      );
 }
-

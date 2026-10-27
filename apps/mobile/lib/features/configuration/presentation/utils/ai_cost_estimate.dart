@@ -42,8 +42,7 @@ class AiLoadConfig {
     messagesPerPersonPerDay: 10,
   );
 
-  int get messagesPerMonth =>
-      people * messagesPerPersonPerDay * daysPerMonth;
+  int get messagesPerMonth => people * messagesPerPersonPerDay * daysPerMonth;
 
   String get summaryLabel =>
       '$people pers · $messagesPerPersonPerDay/día · $messagesPerMonth msgs/mes';

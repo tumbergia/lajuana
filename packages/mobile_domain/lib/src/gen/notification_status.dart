@@ -11,8 +11,7 @@ enum NotificationStatus {
   SENT("sent"),
   FAILED("failed"),
   CANCELLED("cancelled"),
-  SKIPPED("skipped"),
-;
+  SKIPPED("skipped");
 
   final String value;
   const NotificationStatus(this.value);
@@ -23,9 +22,10 @@ extension NotificationStatusX on NotificationStatus {
 }
 
 extension NotificationStatusParse on String {
-  NotificationStatus toNotificationStatus() => NotificationStatus.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown NotificationStatus: ${this}'),
-  );
+  NotificationStatus toNotificationStatus() =>
+      NotificationStatus.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown NotificationStatus: ${this}'),
+      );
 }
-

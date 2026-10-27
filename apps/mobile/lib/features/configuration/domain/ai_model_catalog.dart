@@ -118,9 +118,7 @@ class AiModelCatalog {
           .map((e) => e.toString())
           .toList(growable: false),
       items: (json['items'] as List? ?? const [])
-          .map(
-            (e) => AiModelItem.fromJson(Map<String, dynamic>.from(e as Map)),
-          )
+          .map((e) => AiModelItem.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(growable: false),
       providerBuyUrls: mapString(json['provider_buy_urls']),
       providerBrandColors: mapString(json['provider_brand_colors']),

@@ -5,16 +5,10 @@
 /// AUTO-GENERATED from OpenAPI schema `SendWhatsAppRequest`.
 
 class SendWhatsApp {
-
   final String toPhone;
   final String message;
 
-  const SendWhatsApp(
-    {
-    required this.toPhone,
-    required this.message,
-    }
-  );
+  const SendWhatsApp({required this.toPhone, required this.message});
 
   factory SendWhatsApp.fromJson(Map<String, dynamic> json) {
     return SendWhatsApp(
@@ -23,9 +17,5 @@ class SendWhatsApp {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'to_phone': toPhone,
-    'message': message,
-  };
-
+  Map<String, dynamic> toJson() => {'to_phone': toPhone, 'message': message};
 }

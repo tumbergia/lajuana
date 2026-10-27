@@ -8,8 +8,7 @@ enum ReservationProviderStatus {
   PENDING("pending"),
   CONTACTED("contacted"),
   CONFIRMED("confirmed"),
-  CANCELLED("cancelled"),
-;
+  CANCELLED("cancelled");
 
   final String value;
   const ReservationProviderStatus(this.value);
@@ -20,9 +19,10 @@ extension ReservationProviderStatusX on ReservationProviderStatus {
 }
 
 extension ReservationProviderStatusParse on String {
-  ReservationProviderStatus toReservationProviderStatus() => ReservationProviderStatus.values.firstWhere(
-    (e) => e.value == this,
-    orElse: () => throw ArgumentError('Unknown ReservationProviderStatus: ${this}'),
-  );
+  ReservationProviderStatus toReservationProviderStatus() =>
+      ReservationProviderStatus.values.firstWhere(
+        (e) => e.value == this,
+        orElse: () =>
+            throw ArgumentError('Unknown ReservationProviderStatus: ${this}'),
+      );
 }
-

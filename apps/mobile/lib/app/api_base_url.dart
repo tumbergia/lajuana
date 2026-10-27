@@ -12,11 +12,37 @@ String normalizeApiBaseUrl(String raw) {
   return 'http://$trimmed';
 }
 
+/// Valida la URL incorporada a un artefacto de producción.
+///
+/// Un release nunca debe apuntar silenciosamente al propio teléfono ni enviar
+/// credenciales por HTTP. Se mantiene como función pura para poder probar el
+/// contrato sin compilar el test en modo release.
+String requireProductionApiBaseUrl(String raw) {
+  final normalized = normalizeApiBaseUrl(raw);
+  final uri = Uri.tryParse(normalized);
+  if (raw.trim().isEmpty) {
+    throw StateError(
+      'API_BASE_URL es obligatorio en release. Compila con '
+      '--dart-define=API_BASE_URL=https://<dominio>/api/v1.',
+    );
+  }
+  if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+    throw StateError('API_BASE_URL debe ser una URL HTTPS válida en release.');
+  }
+  if (uri.host == 'localhost' || uri.host == '127.0.0.1') {
+    throw StateError('API_BASE_URL no puede apuntar a loopback en release.');
+  }
+  return normalized.replaceFirst(RegExp(r'/+$'), '');
+}
+
 /// Resuelve la URL base del API para desarrollo local.
 ///
 /// Prioridad: [API_BASE_URL] (`--dart-define`) > heurística por plataforma.
 Future<String> resolveApiBaseUrl() async {
   const env = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+  if (kReleaseMode) {
+    return requireProductionApiBaseUrl(env);
+  }
   if (env.isNotEmpty) {
     if (kIsWeb && _isWebUnsafeHost(env)) {
       debugPrint(

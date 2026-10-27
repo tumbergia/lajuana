@@ -10,7 +10,7 @@ from app.ai.language.messages import build_language_instruction
 from app.ai.providers.factory import get_llm_provider
 from app.core.logging import logger
 from app.core.time import format_colombia_today_es, now_colombia
-from app.schemas.assistant_plan import AssistantAction, AssistantPlan
+from app.schemas.assistant_plan import AssistantPlan
 
 # Mapa de keywords → tools administrativas relevantes
 # Si el mensaje del usuario contiene alguna keyword, solo mostramos esa categoría

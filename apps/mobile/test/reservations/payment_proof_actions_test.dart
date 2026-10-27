@@ -1084,7 +1084,6 @@ void main() {
     );
 
     test('approvePaymentProof maps 403 error correctly', () async {
-      final detail = _makeDetail();
       final repo = _FakePermissionErrorRepository();
       final controller = ReservationDetailController(repository: repo);
 
@@ -1099,7 +1098,6 @@ void main() {
     });
 
     test('rejectPaymentProof maps 409 conflict correctly', () async {
-      final detail = _makeDetail();
       final repo = _FakeConflictErrorRepository();
       final controller = ReservationDetailController(repository: repo);
 

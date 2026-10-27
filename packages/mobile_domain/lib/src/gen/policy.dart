@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `PolicyResponseSchema`.
 
 class Policy {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -18,8 +17,7 @@ class Policy {
   final String expiresAt;
   final String notes;
 
-  const Policy(
-    {
+  const Policy({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -31,8 +29,7 @@ class Policy {
     required this.issuedAt,
     required this.expiresAt,
     required this.notes,
-    }
-  );
+  });
 
   factory Policy.fromJson(Map<String, dynamic> json) {
     return Policy(
@@ -63,5 +60,4 @@ class Policy {
     'expires_at': expiresAt,
     'notes': notes,
   };
-
 }

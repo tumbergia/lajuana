@@ -169,7 +169,6 @@ class _AppBottomNavState extends State<AppBottomNav>
       AppNavItem.none => '',
     };
   }
-
 }
 
 class _NavButton extends StatelessWidget {
