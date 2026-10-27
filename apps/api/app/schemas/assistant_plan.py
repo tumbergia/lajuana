@@ -66,6 +66,21 @@ class ToolArgs(BaseModel):
     reason: str | None = None
     enabled: bool | None = None
     is_active: bool | None = None
+    # Gemini solo emite campos declarados aquí (el schema se envía sin
+    # additionalProperties), así que todo parámetro de tool debe existir en ToolArgs.
+    is_available: bool | None = None
+    only_available: bool | None = None
+    equine_ids: list[str] | None = None
+    severity: str | None = None
+    happened_at: str | None = None
+    checkpoint_name: str | None = None
+    related_participant_id: str | None = None
+    related_equine_id: str | None = None
+    min_days_in_advance: int | None = None
+    require_payment_proof_for_confirmation: bool | None = None
+    reservation_draft_ttl_minutes: int | None = None
+    min_age: int | None = None
+    max_age: int | None = None
     bold_requested: bool = False
 
 

@@ -312,16 +312,20 @@ def test_reject_payment_asks_id_then_continue_then_confirm(
     orch = AssistantOrchestrator(planner=MockPlanner())
     cid = "mod-rej"
 
-    async def run() -> tuple[Any, Any, Any]:
+    async def run() -> tuple[Any, Any, Any, Any]:
         first = await _ask(orch, "rechaza el comprobante", cid)
         second = await _ask(orch, OID_PAY, cid)
-        third = await _ask(orch, "sí", cid)
-        return first, second, third
+        third = await _ask(orch, "el monto no coincide", cid)
+        fourth = await _ask(orch, "sí", cid)
+        return first, second, third, fourth
 
-    first, second, third = asyncio.run(run())
+    first, second, third, fourth = asyncio.run(run())
     assert first.tool_name == "admin_reject_payment_proof"
-    assert second.needs_confirmation is True
-    assert third.action == AssistantAction.TOOL_CALL
+    # `reason` es obligatorio en la firma real de la tool: se pide antes de confirmar.
+    assert second.needs_confirmation is False
+    assert "motivo" in second.response.lower()
+    assert third.needs_confirmation is True
+    assert fourth.action == AssistantAction.TOOL_CALL
     assert calls == ["admin_reject_payment_proof"]
 
 
@@ -355,16 +359,18 @@ def test_equine_event_asks_id_then_continues(monkeypatch: pytest.MonkeyPatch) ->
     orch = AssistantOrchestrator(planner=MockPlanner())
     cid = "mod-ee"
 
-    async def run() -> tuple[Any, Any]:
+    async def run() -> tuple[Any, Any, Any]:
         first = await _ask(orch, "registra un evento de equino", cid)
         second = await _ask(orch, OID, cid)
-        return first, second
+        third = await _ask(orch, "sí", cid)
+        return first, second, third
 
-    first, second = asyncio.run(run())
+    first, second, third = asyncio.run(run())
     assert first.tool_name == "admin_create_equine_event"
     assert first.action == AssistantAction.ASK_CLARIFYING_QUESTION
     assert second.tool_name == "admin_create_equine_event"
-    assert second.action == AssistantAction.TOOL_CALL
+    assert second.needs_confirmation is True
+    assert third.action == AssistantAction.TOOL_CALL
     assert calls == ["admin_create_equine_event"]
 
 
@@ -486,17 +492,19 @@ def test_saddle_create_incomplete_then_continue(monkeypatch: pytest.MonkeyPatch)
     )
     cid = "mod-sad"
 
-    async def run() -> tuple[Any, Any]:
+    async def run() -> tuple[Any, Any, Any]:
         first = await _ask(orch, "mete una montura nueva al inventario", cid)
         second = await _ask(orch, "el código es SL-99", cid)
-        return first, second
+        third = await _ask(orch, "sí", cid)
+        return first, second, third
 
-    first, second = asyncio.run(run())
+    first, second, third = asyncio.run(run())
     assert first.tool_name == "admin_create_saddle"
     assert first.action == AssistantAction.ASK_CLARIFYING_QUESTION
     assert first.needs_confirmation is False
     assert second.tool_name == "admin_create_saddle"
-    assert second.action == AssistantAction.TOOL_CALL
+    assert second.needs_confirmation is True
+    assert third.action == AssistantAction.TOOL_CALL
     assert calls == ["admin_create_saddle"]
 
 

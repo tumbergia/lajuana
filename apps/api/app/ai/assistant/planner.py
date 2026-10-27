@@ -15,6 +15,9 @@ from app.schemas.assistant_plan import AssistantPlan
 # Mapa de keywords → tools administrativas relevantes
 # Si el mensaje del usuario contiene alguna keyword, solo mostramos esa categoría
 _ADMIN_TOOL_CATEGORIES: dict[str, list[str]] = {
+    "incidente": ["guide_report_incident", "admin_add_equine_health_event"],
+    "bitácora": ["guide_create_service_log"],
+    "bitacora": ["guide_create_service_log"],
     "usuario": [
         "admin_list_users",
         "admin_create_user",
@@ -399,22 +402,27 @@ _ADMIN_TOOL_DESCRIPTIONS: dict[str, str] = {
     "admin_get_equine_workload_report": "Carga equina",
     "admin_get_logistics_checklist": "Checklist logístico",
     "admin_close_service_execution": "Cerrar servicio",
-    "admin_add_equine_health_event": "Evento salud equino",
-    "admin_update_equine_availability": "Disponibilidad equino",
+    "admin_add_equine_health_event": (
+        "Evento salud equino (q=nombre del equino o equine_id, event_type, description, "
+        "severity=low|medium|high, happened_at ISO opcional)"
+    ),
+    "admin_update_equine_availability": (
+        "Disponibilidad equino (q=nombre del equino o equine_id, is_available=true|false, reason)"
+    ),
     "admin_get_system_config": "Config sistema",
     "admin_update_reservation_rules": "Reglas reserva",
     "admin_get_payment_instructions": "Instrucciones pago",
     "admin_list_human_review_requests": "Revisiones humanas",
     "admin_get_payment_proof": "Ver comprobante",
-    "admin_approve_payment": "Aprobar pago",
+    "admin_approve_payment": "Aprobar pago (payment_proof_id, notes opcional)",
     "admin_reject_payment_proof": "Rechazar comprobante",
-    "admin_unverify_payment_proof": "Des-verificar",
-    "admin_unreject_payment_proof": "Des-rechazar",
+    "admin_unverify_payment_proof": "Des-verificar comprobante (payment_proof_id, notes opcional)",
+    "admin_unreject_payment_proof": "Des-rechazar comprobante (payment_proof_id, notes opcional)",
     "admin_list_reservations": "Listar reservas",
     "admin_get_reservation_detail": "Detalle reserva",
     "admin_confirm_reservation": "Confirmar reserva",
     "admin_cancel_reservation": "Cancelar reserva",
-    "admin_list_equines": "Listar equinos",
+    "admin_list_equines": "Listar equinos (only_available=true para solo disponibles)",
     "admin_get_equine": "Detalle equino",
     "admin_create_equine": "Crear equino (usa el campo name)",
     "admin_update_equine": "Actualizar equino",
@@ -448,6 +456,16 @@ _ADMIN_TOOL_DESCRIPTIONS: dict[str, str] = {
     "admin_create_equine_event": "Crear evento equino",
     "admin_update_equine_event": "Actualizar evento equino",
     "admin_get_emergency_contacts": "Contactos emergencia",
+    "guide_report_incident": (
+        "Reportar incidente en un servicio (reservation_id o code, severity=low|medium|high|critical, "
+        "description, happened_at ISO opcional)"
+    ),
+    "guide_create_service_log": (
+        "Registrar bitácora del servicio (reservation_id o code, event_type, checkpoint_name, notes)"
+    ),
+    "admin_get_equine_workload": (
+        "Carga y disponibilidad de equinos (equine_ids opcional, only_available)"
+    ),
 }
 
 
