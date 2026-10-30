@@ -45,12 +45,8 @@ class Migration:
 
     async def apply(self) -> None:
         """Execute migration. Must be idempotent."""
-        raise NotImplementedError(
-            f"Migration {self.qualified_name} must implement apply()"
-        )
+        raise NotImplementedError(f"Migration {self.qualified_name} must implement apply()")
 
     async def rollback(self) -> None:
         """Reverse migration (optional). Default: no-op."""
-        logger.warning(
-            "Migration %s has no rollback defined", self.qualified_name
-        )
+        logger.warning("Migration %s has no rollback defined", self.qualified_name)

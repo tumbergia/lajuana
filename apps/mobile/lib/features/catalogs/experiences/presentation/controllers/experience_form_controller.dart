@@ -260,7 +260,8 @@ class ExperienceFormController extends ChangeNotifier {
 
   CatalogExperienceInclusions? buildInclusions() {
     final hasItems = incluye.isNotEmpty;
-    final hasDisplayText = textoIncluyeVisible != null && textoIncluyeVisible!.isNotEmpty;
+    final hasDisplayText =
+        textoIncluyeVisible != null && textoIncluyeVisible!.isNotEmpty;
     if (!hasItems && !hasDisplayText) return null;
     return CatalogExperienceInclusions(
       items: hasItems ? List<String>.from(incluye) : <String>[],

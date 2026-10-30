@@ -2,11 +2,9 @@
 
 import asyncio
 from datetime import UTC, datetime
-
-from beanie import PydanticObjectId
-
 from typing import Any
 
+from beanie import PydanticObjectId
 from pymongo import UpdateOne
 
 from app.common.enums import AssignmentSource, AssignmentStatus, ReservationStatus, UserRole
@@ -49,8 +47,10 @@ def _age_from_birth_date(birth_date) -> int | None:
     if birth_date is None:
         return None
     today = datetime.now(UTC).date()
-    return today.year - birth_date.year - (
-        (today.month, today.day) < (birth_date.month, birth_date.day)
+    return (
+        today.year
+        - birth_date.year
+        - ((today.month, today.day) < (birth_date.month, birth_date.day))
     )
 
 
@@ -149,7 +149,9 @@ class AssignmentService:
             equine = await EquineDocument.get(updates["equine_id"])
             self._validate_equine(equine)
             await self._validate_equine_not_duplicate(
-                doc.reservation_id, equine.id, exclude_assignment_id=doc.id,
+                doc.reservation_id,
+                equine.id,
+                exclude_assignment_id=doc.id,
             )
             doc.equine_id = equine.id
 
@@ -158,7 +160,9 @@ class AssignmentService:
                 saddle = await SaddleDocument.get(updates["saddle_id"])
                 self._validate_saddle(saddle)
                 await self._validate_saddle_not_duplicate(
-                    doc.reservation_id, saddle.id, exclude_assignment_id=doc.id,
+                    doc.reservation_id,
+                    saddle.id,
+                    exclude_assignment_id=doc.id,
                 )
                 doc.saddle_id = saddle.id
             else:
@@ -259,7 +263,11 @@ class AssignmentService:
         Returns the updated board.
         """
         assignments = await AssignmentDocument.find(
-            {"reservation_id": reservation_id, "is_active": True, "status": AssignmentStatus.CONFIRMED.value},
+            {
+                "reservation_id": reservation_id,
+                "is_active": True,
+                "status": AssignmentStatus.CONFIRMED.value,
+            },
         ).to_list()
 
         now = datetime.now(UTC)
@@ -268,11 +276,13 @@ class AssignmentService:
             operations = [
                 UpdateOne(
                     {"_id": doc.id},
-                    {"$set": {
-                        "status": AssignmentStatus.FINAL.value,
-                        "finalized_by_user_id": actor_id,
-                        "finalized_at": now,
-                    }},
+                    {
+                        "$set": {
+                            "status": AssignmentStatus.FINAL.value,
+                            "finalized_by_user_id": actor_id,
+                            "finalized_at": now,
+                        }
+                    },
                 )
                 for doc in assignments
             ]
@@ -320,7 +330,11 @@ class AssignmentService:
         Returns the updated board.
         """
         assignments = await AssignmentDocument.find(
-            {"reservation_id": reservation_id, "is_active": True, "status": AssignmentStatus.FINAL.value},
+            {
+                "reservation_id": reservation_id,
+                "is_active": True,
+                "status": AssignmentStatus.FINAL.value,
+            },
         ).to_list()
 
         now = datetime.now(UTC)
@@ -329,11 +343,13 @@ class AssignmentService:
             operations = [
                 UpdateOne(
                     {"_id": doc.id},
-                    {"$set": {
-                        "status": AssignmentStatus.CONFIRMED.value,
-                        "finalized_by_user_id": None,
-                        "finalized_at": None,
-                    }},
+                    {
+                        "$set": {
+                            "status": AssignmentStatus.CONFIRMED.value,
+                            "finalized_by_user_id": None,
+                            "finalized_at": None,
+                        }
+                    },
                 )
                 for doc in assignments
             ]
@@ -432,12 +448,16 @@ class AssignmentService:
                 continue
 
             # Check if participant already has an active assignment
-            existing = await AssignmentDocument.find_one({
-                "reservation_id": reservation.id,
-                "participant_id": participant.id,
-                "is_active": True,
-                "status": {"$nin": [AssignmentStatus.CANCELLED.value, AssignmentStatus.REPLACED.value]},
-            })
+            existing = await AssignmentDocument.find_one(
+                {
+                    "reservation_id": reservation.id,
+                    "participant_id": participant.id,
+                    "is_active": True,
+                    "status": {
+                        "$nin": [AssignmentStatus.CANCELLED.value, AssignmentStatus.REPLACED.value]
+                    },
+                }
+            )
 
             if existing:
                 # Update existing → validate saddle, then patch equine/saddle + set FINAL
@@ -445,7 +465,9 @@ class AssignmentService:
                     saddle_obj = await SaddleDocument.get(sid)
                     self._validate_saddle(saddle_obj)
                     await self._validate_saddle_not_duplicate(
-                        reservation.id, saddle_obj.id, exclude_assignment_id=existing.id,
+                        reservation.id,
+                        saddle_obj.id,
+                        exclude_assignment_id=existing.id,
                     )
 
                 existing.equine_id = equine.id
@@ -637,28 +659,36 @@ class AssignmentService:
         available_equines: list = []
         if self._equine_service:
             for eq_doc, reason in await self._equine_service.list_available_for_reservation(
-                reservation_id, limit=200, skip=0,
+                reservation_id,
+                limit=200,
+                skip=0,
             ):
-                available_equines.append({
-                    "id": _safe_str(eq_doc.id) or "",
-                    "name": getattr(eq_doc, "name", ""),
-                    "max_rider_weight_kg": getattr(eq_doc, "max_rider_weight_kg", None),
-                    "image_base64": getattr(eq_doc, "image_base64", None),
-                    "block_reason": reason,
-                })
+                available_equines.append(
+                    {
+                        "id": _safe_str(eq_doc.id) or "",
+                        "name": getattr(eq_doc, "name", ""),
+                        "max_rider_weight_kg": getattr(eq_doc, "max_rider_weight_kg", None),
+                        "image_base64": getattr(eq_doc, "image_base64", None),
+                        "block_reason": reason,
+                    }
+                )
 
         # Sillas disponibles — version minimalista para el board
         available_saddles: list = []
         if self._saddle_service:
             for sa_doc, reason in await self._saddle_service.list_available_for_reservation(
-                reservation_id, limit=200, skip=0,
+                reservation_id,
+                limit=200,
+                skip=0,
             ):
-                available_saddles.append({
-                    "id": _safe_str(sa_doc.id) or "",
-                    "code": getattr(sa_doc, "code", ""),
-                    "name": getattr(sa_doc, "name", None),
-                    "block_reason": reason,
-                })
+                available_saddles.append(
+                    {
+                        "id": _safe_str(sa_doc.id) or "",
+                        "code": getattr(sa_doc, "code", ""),
+                        "name": getattr(sa_doc, "name", None),
+                        "block_reason": reason,
+                    }
+                )
 
         # Armar participantes del board
         board_participants = []
@@ -685,8 +715,16 @@ class AssignmentService:
 
             assignment_on_board = None
             if assignment_doc:
-                equine = equine_map.get(str(assignment_doc.equine_id)) if assignment_doc.equine_id else None
-                saddle = saddle_map.get(str(assignment_doc.saddle_id)) if assignment_doc.saddle_id else None
+                equine = (
+                    equine_map.get(str(assignment_doc.equine_id))
+                    if assignment_doc.equine_id
+                    else None
+                )
+                saddle = (
+                    saddle_map.get(str(assignment_doc.saddle_id))
+                    if assignment_doc.saddle_id
+                    else None
+                )
 
                 assignment_on_board = AssignmentOnBoardSchema(
                     assignment_id=_safe_str(assignment_doc.id),
@@ -778,7 +816,9 @@ class AssignmentService:
         self._validate_participant_data(participant)
         self._validate_equine(equine)
         await self._validate_equine_not_duplicate(
-            reservation.id, equine.id, exclude_assignment_id=exclude_assignment_id,
+            reservation.id,
+            equine.id,
+            exclude_assignment_id=exclude_assignment_id,
         )
 
         saddle_obj = None
@@ -786,7 +826,9 @@ class AssignmentService:
             saddle_obj = await SaddleDocument.get(saddle_id)
             self._validate_saddle(saddle_obj)
             await self._validate_saddle_not_duplicate(
-                reservation.id, saddle_obj.id, exclude_assignment_id=exclude_assignment_id,
+                reservation.id,
+                saddle_obj.id,
+                exclude_assignment_id=exclude_assignment_id,
             )
 
         self._validate_rider_weight(participant, equine)
@@ -857,7 +899,9 @@ class AssignmentService:
                 },
             )
 
-    def _validate_participant_belongs(self, participant: object | None, reservation: object) -> None:
+    def _validate_participant_belongs(
+        self, participant: object | None, reservation: object
+    ) -> None:
         if participant is None:
             raise ApiError(
                 status_code=404,
@@ -999,17 +1043,19 @@ class AssignmentService:
         participant_id: object,
         reservation_id: object,
     ) -> None:
-        existing = await AssignmentDocument.find_one({
-            "participant_id": participant_id,
-            "reservation_id": reservation_id,
-            "is_active": True,
-            "status": {
-                "$nin": [
-                    AssignmentStatus.CANCELLED.value,
-                    AssignmentStatus.REPLACED.value,
-                ],
-            },
-        })
+        existing = await AssignmentDocument.find_one(
+            {
+                "participant_id": participant_id,
+                "reservation_id": reservation_id,
+                "is_active": True,
+                "status": {
+                    "$nin": [
+                        AssignmentStatus.CANCELLED.value,
+                        AssignmentStatus.REPLACED.value,
+                    ],
+                },
+            }
+        )
         if existing is not None:
             raise ApiError(
                 status_code=409,
@@ -1078,11 +1124,7 @@ class AssignmentService:
                 if reservation is not None and reservation.holder_name
                 else "Cliente"
             )
-            code = (
-                reservation.code
-                if reservation is not None
-                else reservation_id
-            )
+            code = reservation.code if reservation is not None else reservation_id
             await Container.get_instance().notification_service.enqueue_admin_in_app(
                 event_type=NotificationEventType.ASSIGNMENT_CHANGED,
                 title="Asignaciones actualizadas",

@@ -277,7 +277,11 @@ def test_admin_api_can_access_all_client_tools() -> None:
             action=AssistantAction.TOOL_CALL,
             confidence=0.95,
             tool_name=tool,
-            arguments={"experience_query": "test", "requested_date": "2026-06-20", "participant_count": 4},
+            arguments={
+                "experience_query": "test",
+                "requested_date": "2026-06-20",
+                "participant_count": 4,
+            },
             risk_level=RiskLevel.LOW,
             user_goal="test",
             audit_summary="test",

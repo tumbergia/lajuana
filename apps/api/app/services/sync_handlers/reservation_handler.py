@@ -71,10 +71,14 @@ class ReservationSyncHandler:
     async def _handle_reservation(self, operation, op_type, current_user):
         if op_type == "create":
             schema = ReservationCreateSchema(**operation.payload)
-            return await self.reservation_service.create(schema.model_dump(), actor_id=current_user.id)
+            return await self.reservation_service.create(
+                schema.model_dump(), actor_id=current_user.id
+            )
         if op_type == "update":
             require_remote_id(operation)
-            await ensure_base_version(ReservationDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                ReservationDocument, operation.entity_remote_id, operation.base_version
+            )
             schema = ReservationUpdateSchema(**operation.payload)
             return await self.reservation_service.update(
                 operation.entity_remote_id,
@@ -90,7 +94,9 @@ class ReservationSyncHandler:
             return await self.participant_service.create(reservation_id, schema)
         if op_type == "update":
             require_remote_id(operation)
-            await ensure_base_version(ParticipantDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                ParticipantDocument, operation.entity_remote_id, operation.base_version
+            )
             schema = ParticipantUpdateSchema(**operation.payload)
             return await self.participant_service.update(operation.entity_remote_id, schema)
         return None
@@ -99,10 +105,14 @@ class ReservationSyncHandler:
         if op_type == "create":
             reservation_id = require_field(operation.payload, "reservation_id")
             schema = PaymentProofCreateSchema(**operation.payload)
-            return await self.payment_proof_service.create(reservation_id, schema, actor_id=current_user.id)
+            return await self.payment_proof_service.create(
+                reservation_id, schema, actor_id=current_user.id
+            )
         if op_type == "update":
             require_remote_id(operation)
-            await ensure_base_version(PaymentProofDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                PaymentProofDocument, operation.entity_remote_id, operation.base_version
+            )
             schema = PaymentProofUpdateSchema(**operation.payload)
             return await self.payment_proof_service.update(operation.entity_remote_id, schema)
         return None
@@ -111,20 +121,29 @@ class ReservationSyncHandler:
         if op_type == "create":
             schema = AssignmentCreateSchema(**operation.payload)
             return await self.assignment_service.create(
-                schema, actor_id=current_user.id, actor_role=current_user.role,
+                schema,
+                actor_id=current_user.id,
+                actor_role=current_user.role,
             )
         if op_type == "update":
             require_remote_id(operation)
-            await ensure_base_version(AssignmentDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                AssignmentDocument, operation.entity_remote_id, operation.base_version
+            )
             schema = AssignmentUpdateSchema(**operation.payload)
             return await self.assignment_service.update(
-                operation.entity_remote_id, schema, actor_id=current_user.id,
+                operation.entity_remote_id,
+                schema,
+                actor_id=current_user.id,
             )
         if op_type == "delete":
             require_remote_id(operation)
-            await ensure_base_version(AssignmentDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                AssignmentDocument, operation.entity_remote_id, operation.base_version
+            )
             return await self.assignment_service.remove(
-                operation.entity_remote_id, actor_id=current_user.id,
+                operation.entity_remote_id,
+                actor_id=current_user.id,
             )
         return None
 
@@ -137,7 +156,9 @@ class ReservationSyncHandler:
             )
         if op_type == "update":
             require_remote_id(operation)
-            await ensure_base_version(ServiceLogDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                ServiceLogDocument, operation.entity_remote_id, operation.base_version
+            )
             schema = ServiceLogUpdateSchema(**operation.payload)
             return await self.service_log_service.update(
                 operation.entity_remote_id,

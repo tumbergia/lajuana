@@ -12,10 +12,7 @@ import 'presentation/controllers/reservation_detail_controller.dart';
 import 'presentation/controllers/reservations_list_controller.dart';
 
 class ReservationsModule {
-  ReservationsModule({
-    required this.repository,
-    required this.listController,
-  });
+  ReservationsModule({required this.repository, required this.listController});
 
   final ReservationsRepository repository;
   final ReservationsListController listController;
@@ -51,9 +48,7 @@ class ReservationsModule {
       syncCoordinator: syncCoordinator,
     );
 
-    final listController = ReservationsListController(
-      repository: repository,
-    );
+    final listController = ReservationsListController(repository: repository);
 
     return ReservationsModule(
       repository: repository,

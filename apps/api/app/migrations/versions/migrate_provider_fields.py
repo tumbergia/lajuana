@@ -118,8 +118,8 @@ async def migrate_provider_fields() -> int:
 
 
 async def remove_provider_ids_from_reservations() -> int:
-    from app.core.db import db
     from app.common.collections import Collections
+    from app.core.db import db
 
     if db.client is None:
         raise RuntimeError("Database not initialized")
@@ -147,9 +147,7 @@ class MigrateProviderFieldsMigration(Migration):
             raise RuntimeError("Database not initialized")
 
         database = db.client.get_default_database()
-        provider_count = await migrate_provider_fields_collection(
-            database[Collections.PROVIDERS]
-        )
+        provider_count = await migrate_provider_fields_collection(database[Collections.PROVIDERS])
         reservation_count = await remove_provider_ids_from_reservations()
         logger.info(
             "[migration 004] Migrated %d providers; cleaned provider_ids on %d reservations",

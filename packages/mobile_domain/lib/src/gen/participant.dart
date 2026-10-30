@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `ParticipantResponseSchema`.
 
 class Participant {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -14,11 +13,13 @@ class Participant {
   final String reservationId;
   final String firstName;
   final String lastName;
-  final DateTime birthDate;  // date-only (no time)
+  final DateTime birthDate; // date-only (no time)
   final String documentType;
   final String documentNumber;
   final String phone;
   final String country;
+  final String? countryCode;
+  final String? countryName;
   final String city;
   final String heightCm;
   final String weightKg;
@@ -35,8 +36,7 @@ class Participant {
   final String riskReleaseTextVersion;
   final bool isCompleted;
 
-  const Participant(
-    {
+  const Participant({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -50,6 +50,8 @@ class Participant {
     required this.documentNumber,
     required this.phone,
     required this.country,
+    this.countryCode,
+    this.countryName,
     required this.city,
     required this.heightCm,
     required this.weightKg,
@@ -65,8 +67,7 @@ class Participant {
     required this.acceptedRiskRelease,
     required this.riskReleaseTextVersion,
     required this.isCompleted,
-    }
-  );
+  });
 
   factory Participant.fromJson(Map<String, dynamic> json) {
     return Participant(
@@ -83,6 +84,8 @@ class Participant {
       documentNumber: json['document_number'] as String,
       phone: json['phone'] as String,
       country: json['country'] as String,
+      countryCode: json['country_code'] as String?,
+      countryName: json['country_name'] as String?,
       city: json['city'] as String,
       heightCm: json['height_cm'] as String,
       weightKg: json['weight_kg'] as String,
@@ -115,6 +118,8 @@ class Participant {
     'document_number': documentNumber,
     'phone': phone,
     'country': country,
+    'country_code': countryCode,
+    'country_name': countryName,
     'city': city,
     'height_cm': heightCm,
     'weight_kg': weightKg,
@@ -131,5 +136,4 @@ class Participant {
     'risk_release_text_version': riskReleaseTextVersion,
     'is_completed': isCompleted,
   };
-
 }

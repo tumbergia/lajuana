@@ -10,7 +10,6 @@ import 'experience_level.dart';
 import 'experience_status.dart';
 
 class Experience {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -38,8 +37,7 @@ class Experience {
   final List<String> aliases;
   final bool isActive;
 
-  const Experience(
-    {
+  const Experience({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -66,8 +64,7 @@ class Experience {
     required this.tags,
     required this.aliases,
     required this.isActive,
-    }
-  );
+  });
 
   factory Experience.fromJson(Map<String, dynamic> json) {
     return Experience(
@@ -94,10 +91,8 @@ class Experience {
       inclusions: json['inclusions'] as String,
       standardMaxParticipants: json['standard_max_participants'] as String,
       minParticipants: json['min_participants'] as String,
-      tags: (json['tags'] as List<dynamic>?)
-        ?.cast<String>() ?? [],
-      aliases: (json['aliases'] as List<dynamic>?)
-        ?.cast<String>() ?? [],
+      tags: (json['tags'] as List<dynamic>).cast<String>(),
+      aliases: (json['aliases'] as List<dynamic>).cast<String>(),
       isActive: json['is_active'] as bool,
     );
   }
@@ -130,5 +125,4 @@ class Experience {
     'aliases': aliases,
     'is_active': isActive,
   };
-
 }

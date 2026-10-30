@@ -6,6 +6,7 @@ class AssistantAskResult {
     this.toolName,
     this.toolOutput = const {},
     this.plannerOutput = const {},
+    this.needsConfirmation = false,
   });
 
   final String traceId;
@@ -14,14 +15,12 @@ class AssistantAskResult {
   final String response;
   final Map<String, dynamic> toolOutput;
   final Map<String, dynamic> plannerOutput;
+  final bool needsConfirmation;
 
   bool get isToolCall => action == 'tool_call';
   bool get isFinalResponse => action == 'final_response';
   bool get isClarifying => action == 'ask_clarifying_question';
   bool get isHandoff => action == 'human_handoff';
-
-  /// Destructive tool pending explicit sí/no confirmation from orchestrator.
-  bool get needsConfirmation => isClarifying && (toolName?.isNotEmpty ?? false);
 
   factory AssistantAskResult.fromJson(Map<String, dynamic> json) {
     return AssistantAskResult(
@@ -31,6 +30,7 @@ class AssistantAskResult {
       response: json['response'] as String? ?? '',
       toolOutput: _mapOrEmpty(json['tool_output']),
       plannerOutput: _mapOrEmpty(json['planner_output']),
+      needsConfirmation: json['needs_confirmation'] == true,
     );
   }
 

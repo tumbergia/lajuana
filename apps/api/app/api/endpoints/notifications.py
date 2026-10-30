@@ -243,12 +243,7 @@ async def list_in_app(
         except Exception as exc:
             raise HTTPException(status_code=400, detail="Invalid before_id") from exc
 
-    docs = (
-        await InAppNotificationDocument.find(query)
-        .sort("-created_at")
-        .limit(limit)
-        .to_list()
-    )
+    docs = await InAppNotificationDocument.find(query).sort("-created_at").limit(limit).to_list()
     return [_to_in_app_schema(d) for d in docs]
 
 
@@ -333,9 +328,7 @@ async def clear_in_app_notifications(
     if read_only:
         query["read"] = True
     now = datetime.now(UTC)
-    result = await InAppNotificationDocument.find(query).update_many(
-        {"$set": {"deleted_at": now}}
-    )
+    result = await InAppNotificationDocument.find(query).update_many({"$set": {"deleted_at": now}})
     cleared = getattr(result, "modified_count", 0) or 0
     return InAppClearResultSchema(cleared_count=cleared)
 
@@ -351,9 +344,7 @@ async def get_notification_preferences(
         Depends(require_permissions(Permission.NOTIFICATION_READ)),
     ],
 ) -> NotificationPreferencesSchema:
-    return NotificationPreferencesSchema.from_user_prefs(
-        current_user.notification_preferences
-    )
+    return NotificationPreferencesSchema.from_user_prefs(current_user.notification_preferences)
 
 
 @router.put(

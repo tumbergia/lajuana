@@ -15,10 +15,7 @@ import 'package:mobile_ui/src/widgets/app_status_banner.dart';
 /// no banners que ocupen espacio — ambos significan lo mismo para el usuario:
 /// "no hay conexión completa con el servidor ahora mismo".
 class ShellStatusRegion extends StatelessWidget {
-  const ShellStatusRegion({
-    super.key,
-    required this.controller,
-  });
+  const ShellStatusRegion({super.key, required this.controller});
 
   final AuthController controller;
 

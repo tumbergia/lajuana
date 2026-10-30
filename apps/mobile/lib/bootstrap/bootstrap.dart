@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../app/api_base_url.dart';
+import '../app/release_config.dart';
 import '../app/app.dart';
 import '../features/notifications/infrastructure/notification_background_service.dart';
 
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
+  validateReleaseConfiguration();
   final apiBaseUrl = await resolveApiBaseUrl();
   if (kDebugMode) {
     debugPrint('API base URL: $apiBaseUrl');

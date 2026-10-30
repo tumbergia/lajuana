@@ -9,10 +9,7 @@ import 'package:mobile_domain/src/reservations/reservations_repository.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservation_logs_section_controller.dart';
 
 class _FakeTimelineRepository implements ReservationsRepository {
-  _FakeTimelineRepository({
-    this.timeline = const [],
-    this.throwOnLoad = false,
-  });
+  _FakeTimelineRepository({this.timeline = const [], this.throwOnLoad = false});
 
   List<ReservationTimelineEntry> timeline;
   bool throwOnLoad;
@@ -119,6 +116,16 @@ void main() {
       expect(controller.state, ReservationLogsLoadState.loaded);
       expect(controller.entries, hasLength(1));
       expect(controller.entries.first.title, 'Pago aprobado');
+    });
+
+    test('load exposes repository errors', () async {
+      final repo = _FakeTimelineRepository(throwOnLoad: true);
+      final controller = ReservationLogsSectionController(repository: repo);
+
+      await controller.load('res-1');
+
+      expect(controller.state, ReservationLogsLoadState.error);
+      expect(controller.errorMessage, contains('Timeline error'));
     });
 
     test('createNote reloads timeline', () async {

@@ -3,8 +3,6 @@
 import asyncio
 import logging
 
-from beanie import PydanticObjectId
-
 from app.documents import (
     AssignmentDocument,
     EquineDocument,
@@ -17,6 +15,7 @@ from app.documents import (
 from app.schemas.assignment import AssignmentResponseSchema
 from app.schemas.auth import UserResponseSchema
 from app.schemas.equine import EquineListItemSchema, EquineResponseSchema
+from app.schemas.equine_event import EquineEventResponseSchema
 from app.schemas.experience import ExperienceResponseSchema
 from app.schemas.participant import ParticipantResponseSchema
 from app.schemas.participant_form_link import ParticipantFormLinkStatusResponse
@@ -25,7 +24,6 @@ from app.schemas.policy import PolicyResponseSchema
 from app.schemas.provider import ProviderListItemSchema, ProviderResponseSchema
 from app.schemas.reservation import ReservationListItemSchema, ReservationResponseSchema
 from app.schemas.saddle import SaddleListItemSchema, SaddleResponseSchema
-from app.schemas.equine_event import EquineEventResponseSchema
 from app.schemas.service_log import ServiceLogPhotoSchema, ServiceLogResponseSchema
 
 logger = logging.getLogger(__name__)
@@ -34,6 +32,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Core helper
 # ---------------------------------------------------------------------------
+
 
 def document_to_schema(
     doc: object,
@@ -73,12 +72,24 @@ def document_to_schema(
 # ---------------------------------------------------------------------------
 
 user_to_response = lambda u: document_to_schema(u, UserResponseSchema, scalar_fields={"id": "id"})
-experience_to_response = lambda d: document_to_schema(d, ExperienceResponseSchema, scalar_fields={"id": "id"})
-payment_proof_to_response = lambda d: document_to_schema(d, PaymentProofResponseSchema, scalar_fields={"id": "id", "reservation_id": "reservation_id"})
-equine_to_response = lambda d: document_to_schema(d, EquineResponseSchema, scalar_fields={"id": "id"})
-equine_to_list_item = lambda d: document_to_schema(d, EquineListItemSchema, scalar_fields={"id": "id"})
-saddle_to_response = lambda d: document_to_schema(d, SaddleResponseSchema, scalar_fields={"id": "id"})
-saddle_to_list_item = lambda d: document_to_schema(d, SaddleListItemSchema, scalar_fields={"id": "id"})
+experience_to_response = lambda d: document_to_schema(
+    d, ExperienceResponseSchema, scalar_fields={"id": "id"}
+)
+payment_proof_to_response = lambda d: document_to_schema(
+    d, PaymentProofResponseSchema, scalar_fields={"id": "id", "reservation_id": "reservation_id"}
+)
+equine_to_response = lambda d: document_to_schema(
+    d, EquineResponseSchema, scalar_fields={"id": "id"}
+)
+equine_to_list_item = lambda d: document_to_schema(
+    d, EquineListItemSchema, scalar_fields={"id": "id"}
+)
+saddle_to_response = lambda d: document_to_schema(
+    d, SaddleResponseSchema, scalar_fields={"id": "id"}
+)
+saddle_to_list_item = lambda d: document_to_schema(
+    d, SaddleListItemSchema, scalar_fields={"id": "id"}
+)
 
 
 async def batch_assignments_to_response(
@@ -92,15 +103,9 @@ async def batch_assignments_to_response(
         return []
 
     # Colectar IDs únicos
-    p_ids = list({
-        a.participant_id for a in assignments if a.participant_id
-    })
-    e_ids = list({
-        a.equine_id for a in assignments if a.equine_id
-    })
-    s_ids = list({
-        a.saddle_id for a in assignments if a.saddle_id
-    })
+    p_ids = list({a.participant_id for a in assignments if a.participant_id})
+    e_ids = list({a.equine_id for a in assignments if a.equine_id})
+    s_ids = list({a.saddle_id for a in assignments if a.saddle_id})
 
     # 3 queries $in en paralelo
     participants, equines, saddles = await asyncio.gather(
@@ -131,7 +136,9 @@ def _map_assignment(
     data["equine_id"] = str(doc.equine_id) if doc.equine_id else None
     data["saddle_id"] = str(doc.saddle_id) if doc.saddle_id else None
     data["assigned_by_user_id"] = str(doc.assigned_by_user_id) if doc.assigned_by_user_id else None
-    data["finalized_by_user_id"] = str(doc.finalized_by_user_id) if doc.finalized_by_user_id else None
+    data["finalized_by_user_id"] = (
+        str(doc.finalized_by_user_id) if doc.finalized_by_user_id else None
+    )
 
     # Resolve names from lookup maps
     if doc.participant_id:
@@ -142,9 +149,7 @@ def _map_assignment(
         data["equine_name"] = e.name if e else None
     if doc.saddle_id:
         s = s_map.get(str(doc.saddle_id))
-        data["saddle_label"] = (
-            f"{s.code} - {s.name}" if s and s.code else (s.name if s else None)
-        )
+        data["saddle_label"] = f"{s.code} - {s.name}" if s and s.code else (s.name if s else None)
 
     return AssignmentResponseSchema(**data)
 
@@ -152,6 +157,8 @@ def _map_assignment(
 async def assignment_to_response(doc: AssignmentDocument) -> AssignmentResponseSchema:
     """Delega a batch (1 assignment → misma lógica, sin N+1)."""
     return (await batch_assignments_to_response([doc]))[0]
+
+
 equine_event_to_response = lambda d: document_to_schema(
     d,
     EquineEventResponseSchema,
@@ -162,6 +169,8 @@ equine_event_to_response = lambda d: document_to_schema(
         "participant_id": "participant_id",
     },
 )
+
+
 def service_log_to_response(doc) -> ServiceLogResponseSchema:
     base = document_to_schema(
         doc,
@@ -185,10 +194,17 @@ def service_log_to_response(doc) -> ServiceLogResponseSchema:
         for index, photo in enumerate(getattr(doc, "photos", []) or [])
     ]
     return base.model_copy(update={"photos": photos})
-provider_to_response = lambda d: document_to_schema(d, ProviderResponseSchema, scalar_fields={"id": "id"})
-provider_to_list_item = lambda d: document_to_schema(d, ProviderListItemSchema, scalar_fields={"id": "id"})
+
+
+provider_to_response = lambda d: document_to_schema(
+    d, ProviderResponseSchema, scalar_fields={"id": "id"}
+)
+provider_to_list_item = lambda d: document_to_schema(
+    d, ProviderListItemSchema, scalar_fields={"id": "id"}
+)
 policy_to_response = lambda d: document_to_schema(
-    d, PolicyResponseSchema,
+    d,
+    PolicyResponseSchema,
     scalar_fields={"id": "id", "reservation_id": "reservation_id"},
     optional_scalar_fields={"provider_id": "provider_id"},
 )
@@ -197,6 +213,7 @@ policy_to_response = lambda d: document_to_schema(
 # ---------------------------------------------------------------------------
 # Complex mappers — custom resolution or nested structures
 # ---------------------------------------------------------------------------
+
 
 async def reservation_to_response(doc: ReservationDocument) -> ReservationResponseSchema:
     participants: list[ParticipantResponseSchema] = []
@@ -211,7 +228,9 @@ async def reservation_to_response(doc: ReservationDocument) -> ReservationRespon
         except Exception:
             logger.warning(
                 "[mapper] Failed to map participant | reservation=%s | participant=%s",
-                doc.id, p.id, exc_info=True,
+                doc.id,
+                p.id,
+                exc_info=True,
             )
 
     payment_proofs: list[PaymentProofResponseSchema] = []

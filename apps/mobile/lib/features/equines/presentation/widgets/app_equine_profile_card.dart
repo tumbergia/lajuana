@@ -141,9 +141,7 @@ class AppEquineProfileCard extends StatelessWidget {
       children: [
         for (int i = 0; i < metricPanels.length; i++)
           Padding(
-            padding: EdgeInsets.only(
-              top: i == 0 ? 0 : tokens.spaceSm,
-            ),
+            padding: EdgeInsets.only(top: i == 0 ? 0 : tokens.spaceSm),
             child: metricPanels[i],
           ),
       ],
@@ -252,7 +250,8 @@ class AppEquineProfileCard extends StatelessWidget {
               context: theme,
               scheme: scheme,
               label: equineLastServiceLabel(),
-              value: '${d.lastServiceAt!.day.toString().padLeft(2, '0')}/${d.lastServiceAt!.month.toString().padLeft(2, '0')}/${d.lastServiceAt!.year}',
+              value:
+                  '${d.lastServiceAt!.day.toString().padLeft(2, '0')}/${d.lastServiceAt!.month.toString().padLeft(2, '0')}/${d.lastServiceAt!.year}',
             ),
           if (hasWorkload)
             Padding(
@@ -290,11 +289,9 @@ class AppEquineProfileCard extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: trailing ??
-              Text(
-                value ?? '',
-                style: context.textTheme.bodyMedium,
-              ),
+          child:
+              trailing ??
+              Text(value ?? '', style: context.textTheme.bodyMedium),
         ),
       ],
     );

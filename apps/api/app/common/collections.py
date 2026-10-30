@@ -24,4 +24,5 @@ class Collections:
     PARTICIPANT_FORM_LINKS = "participant_form_links"
     RESERVATION_AUDIT_LOGS = "reservation_audit_logs"
     HUMAN_REVIEW_REQUESTS = "human_review_requests"
+    ROLE_REQUESTS = "role_requests"
     MIGRATION_TRACKER = "migration_tracker"

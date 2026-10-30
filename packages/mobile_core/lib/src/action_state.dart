@@ -28,20 +28,17 @@ class ActionState<T> {
 
   factory ActionState.idle() => const ActionState._();
 
-  factory ActionState.loading() => const ActionState._(
-        status: ActionStatus.loading,
-      );
+  factory ActionState.loading() =>
+      const ActionState._(status: ActionStatus.loading);
 
-  factory ActionState.success([T? data]) => ActionState._(
-        status: ActionStatus.success,
-        data: data,
-      );
+  factory ActionState.success([T? data]) =>
+      ActionState._(status: ActionStatus.success, data: data);
 
   factory ActionState.error(String code, String message) => ActionState._(
-        status: ActionStatus.error,
-        errorCode: code,
-        errorMessage: message,
-      );
+    status: ActionStatus.error,
+    errorCode: code,
+    errorMessage: message,
+  );
 
   bool get isIdle => status == ActionStatus.idle;
   bool get isLoading => status == ActionStatus.loading;

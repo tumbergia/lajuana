@@ -5,18 +5,11 @@
 /// AUTO-GENERATED from OpenAPI schema `ReservationProviderUpdateSchema`.
 
 class ReservationProviderUpdate {
-
   final String? serviceLabel;
   final String? notes;
   final String? status;
 
-  const ReservationProviderUpdate(
-    {
-    this.serviceLabel,
-    this.notes,
-    this.status,
-    }
-  );
+  const ReservationProviderUpdate({this.serviceLabel, this.notes, this.status});
 
   factory ReservationProviderUpdate.fromJson(Map<String, dynamic> json) {
     return ReservationProviderUpdate(
@@ -31,5 +24,4 @@ class ReservationProviderUpdate {
     'notes': notes,
     'status': status,
   };
-
 }

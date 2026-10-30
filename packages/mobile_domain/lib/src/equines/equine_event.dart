@@ -79,8 +79,7 @@ class EquineEventCreatePayload {
       'affects_availability': affectsAvailability,
       if (resultingOperationalStatus != null)
         'resulting_operational_status': resultingOperationalStatus,
-      if (restUntil != null)
-        'rest_until': restUntil!.toUtc().toIso8601String(),
+      if (restUntil != null) 'rest_until': restUntil!.toUtc().toIso8601String(),
       'source': 'mobile_app',
     };
   }

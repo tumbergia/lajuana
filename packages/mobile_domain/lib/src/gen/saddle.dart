@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `SaddleResponseSchema`.
 
 class Saddle {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -16,8 +15,7 @@ class Saddle {
   final bool isAvailable;
   final String notes;
 
-  const Saddle(
-    {
+  const Saddle({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -27,8 +25,7 @@ class Saddle {
     required this.name,
     required this.isAvailable,
     required this.notes,
-    }
-  );
+  });
 
   factory Saddle.fromJson(Map<String, dynamic> json) {
     return Saddle(
@@ -55,5 +52,4 @@ class Saddle {
     'is_available': isAvailable,
     'notes': notes,
   };
-
 }

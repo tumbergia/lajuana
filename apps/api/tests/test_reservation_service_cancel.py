@@ -38,9 +38,7 @@ def _reservation(**overrides: object) -> SimpleNamespace:
 class TestCancelReservation:
     """cancel_reservation — state machine + day-lock sync."""
 
-    def test_cancel_from_confirmed_releases_day_lock(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_cancel_from_confirmed_releases_day_lock(self, monkeypatch: pytest.MonkeyPatch) -> None:
         res = _reservation()
         sync_calls: list[object] = []
 
@@ -88,9 +86,7 @@ class TestCancelReservation:
 
         asyncio.run(run())
 
-    def test_cancel_from_pre_reserved(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_cancel_from_pre_reserved(self, monkeypatch: pytest.MonkeyPatch) -> None:
         res = _reservation(
             status=ReservationStatus.PRE_RESERVED,
             blocks_day=False,
@@ -121,9 +117,7 @@ class TestCancelReservation:
 
         asyncio.run(run())
 
-    def test_cancel_from_cancelled_raises(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_cancel_from_cancelled_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Terminal state: CANCELLED → CANCELLED is not allowed."""
         res = _reservation(status=ReservationStatus.CANCELLED)
 
@@ -148,9 +142,7 @@ class TestCancelReservation:
 
         asyncio.run(run())
 
-    def test_cancel_from_completed_raises(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_cancel_from_completed_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Terminal state: COMPLETED → CANCELLED is not allowed."""
         res = _reservation(status=ReservationStatus.COMPLETED)
 

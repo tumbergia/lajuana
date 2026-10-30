@@ -22,13 +22,14 @@ from app.schemas.equine_event import (
 )
 from app.services.base_service import BaseService
 
-
-_AVAILABILITY_BLOCKING_TYPES = frozenset({
-    EquineEventType.INJURY,
-    EquineEventType.TREATMENT,
-    EquineEventType.REST,
-    EquineEventType.AVAILABILITY_CHANGE,
-})
+_AVAILABILITY_BLOCKING_TYPES = frozenset(
+    {
+        EquineEventType.INJURY,
+        EquineEventType.TREATMENT,
+        EquineEventType.REST,
+        EquineEventType.AVAILABILITY_CHANGE,
+    }
+)
 
 _DEFAULT_BLOCKING_STATUS: dict[EquineEventType, EquineOperationalStatus] = {
     EquineEventType.INJURY: EquineOperationalStatus.INJURED,
@@ -252,9 +253,7 @@ class EquineEventService(
                 message="measured_height_m es obligatorio para event_type height.",
             )
 
-        if affects_availability and (
-            resulting_operational_status is None and rest_until is None
-        ):
+        if affects_availability and (resulting_operational_status is None and rest_until is None):
             raise ApiError(
                 status_code=400,
                 code=ErrorCode.EQUINE_EVENT_AVAILABILITY_FIELDS_REQUIRED,
@@ -344,8 +343,7 @@ class EquineEventService(
 
         equine.is_available = False
         equine.operational_status = (
-            doc.resulting_operational_status
-            or _DEFAULT_BLOCKING_STATUS[doc.event_type]
+            doc.resulting_operational_status or _DEFAULT_BLOCKING_STATUS[doc.event_type]
         )
         if doc.rest_until is not None:
             equine.rest_until = doc.rest_until

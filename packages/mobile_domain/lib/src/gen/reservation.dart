@@ -12,7 +12,6 @@ import 'payment_status.dart';
 import 'reservation_status.dart';
 
 class Reservation {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -50,8 +49,7 @@ class Reservation {
   final int? assignmentsPending;
   final List<String>? assignmentBlockingReasons;
 
-  const Reservation(
-    {
+  const Reservation({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -88,8 +86,7 @@ class Reservation {
     this.assignmentsTotal,
     this.assignmentsPending,
     this.assignmentBlockingReasons,
-    }
-  );
+  });
 
   factory Reservation.fromJson(Map<String, dynamic> json) {
     return Reservation(
@@ -113,25 +110,30 @@ class Reservation {
       currency: json['currency'] as String,
       expectedParticipantsCount: json['expected_participants_count'] as String,
       participantsCompletedCount: json['participants_completed_count'] as int,
-      participantFormStatus: (json['participant_form_status'] as String).toParticipantFormStatus(),
+      participantFormStatus: (json['participant_form_status'] as String)
+          .toParticipantFormStatus(),
       formUrl: json['form_url'] as String,
       participantFormSentAt: json['participant_form_sent_at'] as String?,
       participantFormSendCount: json['participant_form_send_count'] as int?,
       formSent: json['form_sent'] as bool?,
-      confirmationMessageSentAt: json['confirmation_message_sent_at'] as String?,
+      confirmationMessageSentAt:
+          json['confirmation_message_sent_at'] as String?,
       confirmationMessageSent: json['confirmation_message_sent'] as bool?,
       confirmedAt: json['confirmed_at'] as String,
       cancelledAt: json['cancelled_at'] as String,
       completedAt: json['completed_at'] as String,
       participants: (json['participants'] as List<dynamic>?)
-        ?.map((e) => Participant.fromJson(e as Map<String, dynamic>)).toList(),
+          ?.map((e) => Participant.fromJson(e as Map<String, dynamic>))
+          .toList(),
       paymentProofs: (json['payment_proofs'] as List<dynamic>?)
-        ?.map((e) => PaymentProof.fromJson(e as Map<String, dynamic>)).toList(),
+          ?.map((e) => PaymentProof.fromJson(e as Map<String, dynamic>))
+          .toList(),
       assignmentStatus: json['assignment_status'] as String?,
       assignmentsTotal: json['assignments_total'] as int?,
       assignmentsPending: json['assignments_pending'] as int?,
-      assignmentBlockingReasons: (json['assignment_blocking_reasons'] as List<dynamic>?)
-        ?.cast<String>(),
+      assignmentBlockingReasons:
+          (json['assignment_blocking_reasons'] as List<dynamic>?)
+              ?.cast<String>(),
     );
   }
 
@@ -166,12 +168,11 @@ class Reservation {
     'confirmed_at': confirmedAt,
     'cancelled_at': cancelledAt,
     'completed_at': completedAt,
-    'participants': participants,
-    'payment_proofs': paymentProofs,
+    'participants': participants?.map((e) => e.toJson()).toList(),
+    'payment_proofs': paymentProofs?.map((e) => e.toJson()).toList(),
     'assignment_status': assignmentStatus,
     'assignments_total': assignmentsTotal,
     'assignments_pending': assignmentsPending,
     'assignment_blocking_reasons': assignmentBlockingReasons,
   };
-
 }

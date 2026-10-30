@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
@@ -79,6 +78,12 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
     await _load();
   }
 
+  Future<void> _activate() async {
+    if (_experience == null) return;
+    await widget.module.experiences.activate(_experience!.id);
+    await _load();
+  }
+
   @override
   Widget build(BuildContext context) {
     final experience = _experience;
@@ -127,9 +132,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
                           icon: experience.isActive
                               ? Icons.check_circle_rounded
                               : Icons.cancel_rounded,
-                          title: experience.isActive
-                              ? 'Activa'
-                              : 'Inactiva',
+                          title: experience.isActive ? 'Activa' : 'Inactiva',
                           subtitle: experience.isActive
                               ? 'Disponible para reservas'
                               : 'Desactivada del catalogo',
@@ -225,8 +228,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
                             _infoRow(
                               icon: Icons.inventory_2_rounded,
                               title: 'Capacidad base',
-                              subtitle:
-                                  '${experience.baseCapacity}',
+                              subtitle: '${experience.baseCapacity}',
                             ),
                           _spacer(),
                         ],
@@ -270,8 +272,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
                           _infoRow(
                             icon: Icons.checklist_rounded,
                             title: 'Incluye',
-                            subtitle:
-                                experience.inclusions!.items.join(', '),
+                            subtitle: experience.inclusions!.items.join(', '),
                           ),
                           if (experience.inclusions!.displayText != null &&
                               experience.inclusions!.displayText!.isNotEmpty)
@@ -313,13 +314,22 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
                             },
                           ),
                           const SizedBox(height: 8),
-                          AppButton(
-                            label: 'Desactivar',
-                            icon: Icons.block_rounded,
-                            variant: AppButtonVariant.secondary,
-                            expanded: true,
-                            onPressed: _deactivate,
-                          ),
+                          if (experience.isActive)
+                            AppButton(
+                              label: 'Desactivar',
+                              icon: Icons.block_rounded,
+                              variant: AppButtonVariant.secondary,
+                              expanded: true,
+                              onPressed: _deactivate,
+                            )
+                          else
+                            AppButton(
+                              label: 'Reactivar',
+                              icon: Icons.restart_alt_rounded,
+                              variant: AppButtonVariant.secondary,
+                              expanded: true,
+                              onPressed: _activate,
+                            ),
                         ],
                       ],
                     ],
@@ -348,10 +358,6 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
   }
 
   Widget _spacer() => const SizedBox(height: 2);
-
-  void _spacerIf(bool condition) {
-    // no-op, spacer added inline
-  }
 
   Widget _buildDurationSection(CatalogExperience e) {
     final parts = <String>[];
@@ -415,10 +421,7 @@ class _ExperienceDetailPageState extends State<ExperienceDetailPage>
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: imageWidget,
-      ),
+      child: AspectRatio(aspectRatio: 16 / 9, child: imageWidget),
     );
   }
 

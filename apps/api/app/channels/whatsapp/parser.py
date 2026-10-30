@@ -121,4 +121,11 @@ def _parse_single_message(raw: dict[str, Any]) -> ParsedMessage | None:
             raw_payload=raw,
         )
 
-    return None
+    return ParsedMessage(
+        wa_message_id=wa_message_id,
+        from_phone=from_phone,
+        normalized_phone=normalized,
+        message_type="unsupported",
+        provider_timestamp=raw.get("timestamp"),
+        raw_payload=raw,
+    )

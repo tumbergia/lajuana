@@ -96,6 +96,8 @@ class ParticipantResponseSchema(AuditMetadataSchema):
     document_number: str
     phone: str
     country: str
+    country_code: str | None = None
+    country_name: str | None = None
     city: str
     height_cm: Decimal
     weight_kg: Decimal

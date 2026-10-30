@@ -50,4 +50,7 @@ class FakeExperienceRepository extends ExperienceRepository {
   Future<void> deactivate(String id) async {
     if (throwOnDeactivate) throw Exception('Deactivate error');
   }
+
+  @override
+  Future<void> activate(String id) async {}
 }

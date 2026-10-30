@@ -4,10 +4,11 @@
 
 /// AUTO-GENERATED from OpenAPI schema `SyncPushResultSchema`.
 
-class SyncPushResult {
+import 'sync_push_result_status.dart';
 
+class SyncPushResult {
   final String operationId;
-  final status status;
+  final SyncPushResultStatus status;
   final String entityType;
   final String entityLocalId;
   final String? entityRemoteId;
@@ -16,8 +17,7 @@ class SyncPushResult {
   final String? payload;
   final String? error;
 
-  const SyncPushResult(
-    {
+  const SyncPushResult({
     required this.operationId,
     required this.status,
     required this.entityType,
@@ -27,13 +27,12 @@ class SyncPushResult {
     this.updatedAt,
     this.payload,
     this.error,
-    }
-  );
+  });
 
   factory SyncPushResult.fromJson(Map<String, dynamic> json) {
     return SyncPushResult(
       operationId: json['operation_id'] as String,
-      status: status.fromJson(json['status'] as Map<String, dynamic>),
+      status: (json['status'] as String).toSyncPushResultStatus(),
       entityType: json['entity_type'] as String,
       entityLocalId: json['entity_local_id'] as String,
       entityRemoteId: json['entity_remote_id'] as String?,
@@ -46,7 +45,7 @@ class SyncPushResult {
 
   Map<String, dynamic> toJson() => {
     'operation_id': operationId,
-    'status': status,
+    'status': status.toJson(),
     'entity_type': entityType,
     'entity_local_id': entityLocalId,
     'entity_remote_id': entityRemoteId,
@@ -55,5 +54,4 @@ class SyncPushResult {
     'payload': payload,
     'error': error,
   };
-
 }

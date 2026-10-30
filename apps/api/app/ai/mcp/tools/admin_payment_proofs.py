@@ -22,13 +22,13 @@ from app.schemas.payment_proof import (
     PaymentProofRejectSchema,
     PaymentProofUnrejectSchema,
     PaymentProofUnverifySchema,
-    PaymentProofVerifySchema,
 )
 from app.services.payment_proof_service import PaymentProofService
 
 
 def _get_service() -> PaymentProofService:
     from app.core.di import Container
+
     return Container.get_instance().payment_proof_service
 
 
@@ -56,9 +56,7 @@ async def admin_get_payment_proof(
             proof = await PaymentProofDocument.get(payment_proof_id)
         elif reservation_id:
             # Get the latest proof for this reservation
-            proofs = await PaymentProofDocument.find(
-                {"reservation_id": reservation_id}
-            ).to_list()
+            proofs = await PaymentProofDocument.find({"reservation_id": reservation_id}).to_list()
             if proofs:
                 proof = max(proofs, key=lambda p: p.uploaded_at)
         else:

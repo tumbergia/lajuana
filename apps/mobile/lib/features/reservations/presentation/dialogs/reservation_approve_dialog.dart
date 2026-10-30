@@ -15,7 +15,8 @@ Future<void> showApproveConfirmationDialog(
     context: context,
     icon: Icons.check_circle_outline_rounded,
     title: 'Aprobar comprobante',
-    message: 'El pago quedará validado, pero la reserva no se '
+    message:
+        'El pago quedará validado, pero la reserva no se '
         'confirmará automáticamente.',
     confirmLabel: 'Aprobar',
     height: 280,

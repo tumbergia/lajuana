@@ -16,7 +16,8 @@ Architecture
                ├── ExperienceSyncHandler  (experience, schedule)
                ├── ReservationSyncHandler (reservation, participant, …)
                ├── ResourceSyncHandler    (provider, policy)
-               └── ConfigSyncHandler      (reservation_rules)
+               ├── ConfigSyncHandler      (reservation_rules)
+               └── NotificationSyncHandler (notification_mutation)
 """
 
 from datetime import UTC, datetime
@@ -53,6 +54,7 @@ from app.services.sync_change_recorder import entity_to_response_dict
 from app.services.sync_handlers import (
     ConfigSyncHandler,
     ExperienceSyncHandler,
+    NotificationSyncHandler,
     ReservationSyncHandler,
     ResourceSyncHandler,
 )
@@ -65,6 +67,7 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("experience", "create"): Permission.EXPERIENCE_CREATE,
     ("experience", "update"): Permission.EXPERIENCE_UPDATE,
     ("experience", "delete"): Permission.EXPERIENCE_DELETE,
+    ("experience", "purge"): Permission.EXPERIENCE_DELETE,
     ("reservation_rules", "update"): Permission.CONFIG_UPDATE,
     ("reservation", "create"): Permission.RESERVATION_CREATE,
     ("reservation", "update"): Permission.RESERVATION_UPDATE,
@@ -86,7 +89,15 @@ SYNC_REQUIRED_PERMISSION: dict[tuple[str, str], Permission] = {
     ("saddle", "update"): Permission.SADDLE_UPDATE,
     ("saddle", "delete"): Permission.SADDLE_DELETE,
     ("saddle", "restore"): Permission.SADDLE_DELETE,
+    ("notification_mutation", "mark_read"): Permission.NOTIFICATION_READ,
+    ("notification_mutation", "mark_all_read"): Permission.NOTIFICATION_READ,
+    ("notification_mutation", "delete"): Permission.NOTIFICATION_READ,
+    ("notification_mutation", "clear_inbox"): Permission.NOTIFICATION_READ,
 }
+
+# Command-like outbox entries that are acknowledged by push but do not
+# represent a domain entity exposed through the pull change feed.
+SYNC_PUSH_ONLY_ENTITIES = frozenset({"notification_mutation"})
 
 
 def _ensure_operation_permission(
@@ -119,17 +130,21 @@ async def _entity_to_response_dict(entity_type: str, doc) -> dict:
 async def _latest_stream_cursors() -> dict[str, str]:
     """Return the latest cursor for every tracked change stream."""
     streams = (
-        "reservations", "participants", "payment_proofs", "assignments",
-        "logs", "experiences", "config", "equines",
-        "providers", "policies", "saddles",
+        "reservations",
+        "participants",
+        "payment_proofs",
+        "assignments",
+        "logs",
+        "experiences",
+        "config",
+        "equines",
+        "providers",
+        "policies",
+        "saddles",
     )
     cursors: dict[str, str] = {}
     for stream in streams:
-        latest = (
-            await SyncChangeDocument.find({"stream": stream})
-            .sort("-id")
-            .first_or_none()
-        )
+        latest = await SyncChangeDocument.find({"stream": stream}).sort("-id").first_or_none()
         cursors[stream] = str(latest.id) if latest else ""
     return cursors
 
@@ -152,12 +167,14 @@ class SyncOperationExecutor:
         reservation_handler: ReservationSyncHandler,
         resource_handler: ResourceSyncHandler,
         config_handler: ConfigSyncHandler,
+        notification_handler: NotificationSyncHandler,
     ) -> None:
         self._handlers = [
             experience_handler,
             reservation_handler,
             resource_handler,
             config_handler,
+            notification_handler,
         ]
 
     async def execute(
@@ -210,9 +227,7 @@ class SyncOperationExecutor:
                 },
             )
 
-    async def _execute_doc(
-        self, *, current_user: UserDocument, operation: SyncPushOperationSchema
-    ):
+    async def _execute_doc(self, *, current_user: UserDocument, operation: SyncPushOperationSchema):
         entity = operation.entity_type
         op_type = operation.operation_type
 
@@ -220,7 +235,10 @@ class SyncOperationExecutor:
         # returns a document, others return None.
         for handler in self._handlers:
             doc = await handler.handle(
-                entity=entity, op_type=op_type, operation=operation, current_user=current_user,
+                entity=entity,
+                op_type=op_type,
+                operation=operation,
+                current_user=current_user,
             )
             if doc is not None:
                 return doc
@@ -278,6 +296,7 @@ class SyncService:
             saddle_service=saddle_service,
         )
         self._config_handler = ConfigSyncHandler(config_service=config_service)
+        self._notification_handler = NotificationSyncHandler()
 
         # Keep references needed by build_bootstrap (read operations)
         self._experience_service = experience_service
@@ -290,6 +309,7 @@ class SyncService:
             reservation_handler=self._reservation_handler,
             resource_handler=self._resource_handler,
             config_handler=self._config_handler,
+            notification_handler=self._notification_handler,
         )
 
     async def build_bootstrap(self, *, current_user: UserDocument) -> dict:

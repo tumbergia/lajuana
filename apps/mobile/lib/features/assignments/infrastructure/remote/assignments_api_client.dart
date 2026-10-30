@@ -10,10 +10,10 @@ class AssignmentsApiClient {
     required Future<String?> Function() readAccessToken,
     required Future<bool> Function() refreshSession,
     http.Client? httpClient,
-  })  : _baseUrl = baseUrl,
-        _readAccessToken = readAccessToken,
-        _refreshSession = refreshSession,
-        _http = httpClient ?? http.Client();
+  }) : _baseUrl = baseUrl,
+       _readAccessToken = readAccessToken,
+       _refreshSession = refreshSession,
+       _http = httpClient ?? http.Client();
 
   final String _baseUrl;
   final Future<String?> Function() _readAccessToken;
@@ -70,7 +70,10 @@ class AssignmentsApiClient {
   }
 
   /// PATCH /api/v1/assignments/{id}
-  Future<Map<String, dynamic>> update(String id, Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> update(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
     final response = await _authorizedRequest(
       method: 'PATCH',
       path: '/assignments/$id',
@@ -135,7 +138,10 @@ class AssignmentsApiClient {
   }
 
   /// POST /api/v1/assignments/{id}/replace
-  Future<Map<String, dynamic>> replace(String id, Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> replace(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
     final response = await _authorizedRequest(
       method: 'POST',
       path: '/assignments/$id/replace',
@@ -264,11 +270,13 @@ class AssignmentsApiClient {
 
     late http.Response response;
     try {
-      response = await _http.send(
-        http.Request(method.toUpperCase(), uri)
-          ..headers.addAll(headers)
-          ..body = body != null ? jsonEncode(body) : '',
-      ).then((streamed) => http.Response.fromStream(streamed));
+      response = await _http
+          .send(
+            http.Request(method.toUpperCase(), uri)
+              ..headers.addAll(headers)
+              ..body = body != null ? jsonEncode(body) : '',
+          )
+          .then((streamed) => http.Response.fromStream(streamed));
     } catch (e) {
       throw AssignmentsApiFailure(
         code: 'network.unreachable',
@@ -283,11 +291,13 @@ class AssignmentsApiClient {
         if (newToken != null) {
           headers[HttpHeaders.authorizationHeader] = 'Bearer $newToken';
         }
-        response = await _http.send(
-          http.Request(method.toUpperCase(), uri)
-            ..headers.addAll(headers)
-            ..body = body != null ? jsonEncode(body) : '',
-        ).then((streamed) => http.Response.fromStream(streamed));
+        response = await _http
+            .send(
+              http.Request(method.toUpperCase(), uri)
+                ..headers.addAll(headers)
+                ..body = body != null ? jsonEncode(body) : '',
+            )
+            .then((streamed) => http.Response.fromStream(streamed));
       } else {
         throw AssignmentsApiFailure(
           code: 'auth.session_expired',
@@ -300,7 +310,9 @@ class AssignmentsApiClient {
       final decoded = _tryDecode(response.body);
       throw AssignmentsApiFailure(
         code: decoded['code'] as String? ?? 'network.error',
-        message: decoded['message'] as String? ?? 'Error HTTP ${response.statusCode}',
+        message:
+            decoded['message'] as String? ??
+            'Error HTTP ${response.statusCode}',
       );
     }
 

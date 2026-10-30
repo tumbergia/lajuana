@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 
 enum AppSectionHeaderVariant { hero, compact }
 
@@ -24,6 +25,7 @@ class AppSectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = theme.appTokens;
     final bool isHero = variant == AppSectionHeaderVariant.hero;
 
     final TextStyle? titleStyle = isHero
@@ -44,7 +46,9 @@ class AppSectionHeader extends StatelessWidget {
         children: [
           if (eyebrow != null)
             Padding(
-              padding: EdgeInsets.only(bottom: isHero ? 6 : 4),
+              padding: EdgeInsets.only(
+                bottom: isHero ? tokens.spaceSm - 2 : tokens.spaceXs,
+              ),
               child: Text(
                 eyebrow!.toUpperCase(),
                 style: theme.textTheme.labelMedium?.copyWith(
@@ -57,7 +61,7 @@ class AppSectionHeader extends StatelessWidget {
           Text(title.toUpperCase(), style: titleStyle),
           if (subtitle != null)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: EdgeInsets.only(top: tokens.spaceSm),
               child: Text(
                 subtitle!,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -81,7 +85,7 @@ class AppSectionHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 titleBlock(),
-                const SizedBox(height: 12),
+                SizedBox(height: tokens.spaceMd),
                 Align(alignment: Alignment.centerLeft, child: trailing!),
               ],
             );
@@ -92,7 +96,7 @@ class AppSectionHeader extends StatelessWidget {
             children: [
               Expanded(child: titleBlock()),
               if (trailing != null) ...[
-                const SizedBox(width: 16),
+                SizedBox(width: tokens.spaceLg),
                 Flexible(
                   fit: FlexFit.loose,
                   child: Align(

@@ -7,7 +7,6 @@
 import 'payment_status.dart';
 
 class PaymentProof {
-
   final int version;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -22,8 +21,7 @@ class PaymentProof {
   final PaymentStatus status;
   final DateTime uploadedAt;
 
-  const PaymentProof(
-    {
+  const PaymentProof({
     required this.version,
     required this.createdAt,
     required this.updatedAt,
@@ -37,8 +35,7 @@ class PaymentProof {
     required this.sha256,
     required this.status,
     required this.uploadedAt,
-    }
-  );
+  });
 
   factory PaymentProof.fromJson(Map<String, dynamic> json) {
     return PaymentProof(
@@ -73,5 +70,4 @@ class PaymentProof {
     'status': status.toJson(),
     'uploaded_at': uploadedAt.toIso8601String(),
   };
-
 }

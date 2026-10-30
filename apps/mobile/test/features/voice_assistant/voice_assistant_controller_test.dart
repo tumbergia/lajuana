@@ -9,16 +9,29 @@ import 'package:mobile/features/voice_assistant/infrastructure/remote/voice_assi
 import 'package:mobile/features/voice_assistant/presentation/controllers/voice_assistant_controller.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('AssistantAskResult', () {
-    test('needsConfirmation when clarifying with tool name', () {
+    test('needsConfirmation only when API flag is true', () {
       const result = AssistantAskResult(
         traceId: 't1',
         action: 'ask_clarifying_question',
         toolName: 'admin_cancel_reservation',
         response: '¿Confirmas?',
+        needsConfirmation: true,
       );
       expect(result.needsConfirmation, isTrue);
       expect(result.isClarifying, isTrue);
+    });
+
+    test('clarifying with tool name is not confirmation without flag', () {
+      const result = AssistantAskResult(
+        traceId: 't1',
+        action: 'ask_clarifying_question',
+        toolName: 'admin_create_user',
+        response: '¿Cuál es el correo?',
+      );
+      expect(result.needsConfirmation, isFalse);
     });
 
     test('clarifying without tool is not confirmation', () {
@@ -30,17 +43,30 @@ void main() {
       expect(result.needsConfirmation, isFalse);
     });
 
-    test('fromJson parses tool and planner output maps', () {
+    test('fromJson needs_confirmation false by default', () {
       final result = AssistantAskResult.fromJson({
         'trace_id': 'abc',
-        'action': 'tool_call',
-        'tool_name': 'admin_list_equines',
-        'response': 'Listo',
-        'tool_output': {'total': 3},
-        'planner_output': {'confidence': 0.9},
+        'action': 'ask_clarifying_question',
+        'tool_name': 'admin_create_user',
+        'response': '¿cuál es el correo electrónico?',
+        'tool_output': {},
+        'planner_output': {},
       });
-      expect(result.toolOutput['total'], 3);
-      expect(result.plannerOutput['confidence'], 0.9);
+      expect(result.needsConfirmation, isFalse);
+      expect(result.isClarifying, isTrue);
+    });
+
+    test('fromJson reads needs_confirmation true', () {
+      final result = AssistantAskResult.fromJson({
+        'trace_id': 'abc',
+        'action': 'ask_clarifying_question',
+        'tool_name': 'admin_create_user',
+        'response': '¿Confirmas?',
+        'needs_confirmation': true,
+        'tool_output': {},
+        'planner_output': {},
+      });
+      expect(result.needsConfirmation, isTrue);
     });
   });
 
@@ -83,6 +109,7 @@ void main() {
                 'response': '¿Confirmas cancelar la reserva?',
                 'planner_output': {},
                 'tool_output': {},
+                'needs_confirmation': true,
               }),
               200,
             ),
@@ -94,6 +121,56 @@ void main() {
 
       expect(controller.phase, VoicePhase.awaitingConfirmation);
       expect(controller.result?.needsConfirmation, isTrue);
+    });
+
+    test(
+      'maps missing-fields clarifying to needsInput not confirmation',
+      () async {
+        controller = VoiceAssistantController(
+          apiClient: VoiceAssistantApiClient(
+            baseUrl: 'http://localhost:8000/api/v1',
+            readAccessToken: () async => 'token',
+            refreshSession: () async => false,
+            httpClient: MockClient(
+              (_) async => http.Response(
+                jsonEncode({
+                  'trace_id': 't2',
+                  'action': 'ask_clarifying_question',
+                  'tool_name': 'admin_create_user',
+                  'response': '¿cuál es el correo electrónico?',
+                  'planner_output': {},
+                  'tool_output': {},
+                  'needs_confirmation': false,
+                }),
+                200,
+              ),
+            ),
+          ),
+        );
+        controller.transcript = 'crea un usuario llamado Ana';
+        await controller.sendTranscript();
+
+        expect(controller.phase, VoicePhase.needsInput);
+        expect(controller.result?.needsConfirmation, isFalse);
+      },
+    );
+
+    test('keeps conversationId after cleanup pause', () async {
+      controller = VoiceAssistantController(
+        apiClient: VoiceAssistantApiClient(
+          baseUrl: 'http://localhost:8000/api/v1',
+          readAccessToken: () async => 'token',
+          refreshSession: () async => false,
+          httpClient: MockClient((_) => Completer<http.Response>().future),
+        ),
+      );
+      controller.conversationId = 'mobile-voice-keep';
+      await controller.cleanup();
+      expect(controller.conversationId, 'mobile-voice-keep');
+      expect(controller.phase, VoicePhase.idle);
+
+      await controller.startNewConversation();
+      expect(controller.conversationId, isNot('mobile-voice-keep'));
     });
   });
 }

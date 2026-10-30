@@ -6,6 +6,7 @@ from app.ai.assistant.orchestrator import (
     WRITE_TOOLS_REQUIRING_CONFIRMATION,
     AssistantOrchestrator,
 )
+from app.ai.language.messages import t
 
 
 class TestIsConfirmation:
@@ -76,7 +77,6 @@ class TestWriteToolsRequiringConfirmation:
     def test_contains_deactivation_tools(self) -> None:
         assert "admin_deactivate_experience" in WRITE_TOOLS_REQUIRING_CONFIRMATION
         assert "admin_deactivate_user" in WRITE_TOOLS_REQUIRING_CONFIRMATION
-        assert "admin_deactivate_schedule" in WRITE_TOOLS_REQUIRING_CONFIRMATION
         assert "admin_deactivate_equine" in WRITE_TOOLS_REQUIRING_CONFIRMATION
 
     def test_contains_write_tools(self) -> None:
@@ -85,11 +85,21 @@ class TestWriteToolsRequiringConfirmation:
         assert "admin_approve_payment" in WRITE_TOOLS_REQUIRING_CONFIRMATION
         assert "admin_reject_payment_proof" in WRITE_TOOLS_REQUIRING_CONFIRMATION
 
-    def test_not_empty(self) -> None:
-        assert len(WRITE_TOOLS_REQUIRING_CONFIRMATION) > 0
+    def test_contains_create_tools(self) -> None:
+        assert "admin_create_user" in WRITE_TOOLS_REQUIRING_CONFIRMATION
+        assert "admin_create_experience" in WRITE_TOOLS_REQUIRING_CONFIRMATION
+        assert "admin_create_provider" in WRITE_TOOLS_REQUIRING_CONFIRMATION
+        assert "admin_create_equine" in WRITE_TOOLS_REQUIRING_CONFIRMATION
 
     def test_confirm_words_not_empty(self) -> None:
         assert len(CONFIRM_WORDS) >= 5
 
     def test_cancel_words_not_empty(self) -> None:
         assert len(CANCEL_WORDS) >= 5
+
+
+def test_tool_confirmation_message_is_explicit() -> None:
+    message = t("tool_confirmation", "es", tool_name="admin_cancel_reservation")
+    assert "está lista" in message
+    assert "solo necesita tu confirmación" in message
+    assert "Responde 'sí'" in message

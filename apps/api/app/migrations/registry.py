@@ -9,8 +9,8 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 
-from app.core.db import db
 from app.common.collections import Collections
+from app.core.db import db
 
 logger = logging.getLogger(__name__)
 
@@ -47,17 +47,17 @@ async def mark_applied(
     """Record a migration as applied."""
     coll = await _collection()
     try:
-        await coll.insert_one({
-            "version": version,
-            "name": name,
-            "checksum": checksum,
-            "applied_at": datetime.now(UTC),
-            "execution_seconds": round(execution_seconds, 3),
-        })
-    except Exception:
-        logger.exception(
-            "Failed to record migration %s_%s", version, name
+        await coll.insert_one(
+            {
+                "version": version,
+                "name": name,
+                "checksum": checksum,
+                "applied_at": datetime.now(UTC),
+                "execution_seconds": round(execution_seconds, 3),
+            }
         )
+    except Exception:
+        logger.exception("Failed to record migration %s_%s", version, name)
 
 
 async def get_all_applied() -> list[dict]:

@@ -4,10 +4,10 @@ import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
+import 'package:mobile_ui/src/widgets/app_search_field.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
-import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/app_toast.dart';
 import 'package:mobile_domain/src/saddles/saddles_repository.dart';
@@ -23,10 +23,14 @@ class SaddlesModuleScreen extends StatefulWidget {
     super.key,
     this.showHeader = true,
     this.saddlesModule,
+    this.canManage = true,
   });
 
   final bool showHeader;
   final SaddlesModule? saddlesModule;
+
+  /// When false (e.g. guide), hide create/edit/delete actions.
+  final bool canManage;
 
   @override
   State<SaddlesModuleScreen> createState() => _SaddlesModuleScreenState();
@@ -45,7 +49,8 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
   @override
   void initState() {
     super.initState();
-    _repository = widget.saddlesModule?.repository ?? FallbackSaddlesRepository();
+    _repository =
+        widget.saddlesModule?.repository ?? FallbackSaddlesRepository();
     if (widget.saddlesModule != null) {
       _listController = widget.saddlesModule!.listController;
       _ownsListController = false;
@@ -98,7 +103,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         }
       } catch (e) {
         if (mounted) {
-          showAppToast(context, message: 'Error al registrar la silla', isError: true);
+          showAppToast(
+            context,
+            message: 'Error al registrar la silla',
+            isError: true,
+          );
         }
       }
     }
@@ -126,7 +135,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         }
       } catch (e) {
         if (mounted) {
-          showAppToast(context, message: 'Error al actualizar la silla', isError: true);
+          showAppToast(
+            context,
+            message: 'Error al actualizar la silla',
+            isError: true,
+          );
         }
       }
     }
@@ -162,7 +175,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         }
       } catch (e) {
         if (mounted) {
-          showAppToast(context, message: 'Error al eliminar la silla', isError: true);
+          showAppToast(
+            context,
+            message: 'Error al eliminar la silla',
+            isError: true,
+          );
         }
       }
     }
@@ -177,7 +194,11 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
       }
     } catch (e) {
       if (mounted) {
-        showAppToast(context, message: 'Error al restaurar la silla', isError: true);
+        showAppToast(
+          context,
+          message: 'Error al restaurar la silla',
+          isError: true,
+        );
       }
     }
   }
@@ -213,16 +234,16 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
               const SizedBox(height: 12),
               Text(
                 saddle.code,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 4),
               Text(
                 saddle.name,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 8),
               AppBadge(
@@ -235,51 +256,53 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
                 Text(
                   saddle.notes!,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: AppButton(
-                  label: 'Editar',
-                  icon: Icons.edit_rounded,
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    _openEditSheet(saddle);
-                  },
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (saddle.isDeleted)
+              if (widget.canManage) ...[
                 SizedBox(
                   width: double.infinity,
                   child: AppButton(
-                    label: 'Restaurar',
-                    icon: Icons.restore_rounded,
-                    variant: AppButtonVariant.secondary,
+                    label: 'Editar',
+                    icon: Icons.edit_rounded,
                     onPressed: () {
                       Navigator.of(ctx).pop();
-                      _confirmRestoreSaddle(saddle);
-                    },
-                  ),
-                )
-              else
-                SizedBox(
-                  width: double.infinity,
-                  child: AppButton(
-                    label: 'Eliminar',
-                    icon: Icons.delete_outline_rounded,
-                    variant: AppButtonVariant.secondary,
-                    onPressed: () {
-                      Navigator.of(ctx).pop();
-                      _confirmDeleteSaddle(saddle);
+                      _openEditSheet(saddle);
                     },
                   ),
                 ),
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
+                if (saddle.isDeleted)
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Restaurar',
+                      icon: Icons.restore_rounded,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _confirmRestoreSaddle(saddle);
+                      },
+                    ),
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Eliminar',
+                      icon: Icons.delete_outline_rounded,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        _confirmDeleteSaddle(saddle);
+                      },
+                    ),
+                  ),
+                const SizedBox(height: 10),
+              ],
               SizedBox(
                 width: double.infinity,
                 child: AppButton(
@@ -305,10 +328,7 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppSectionHeader(
-            eyebrow: 'Gestion',
-            title: 'Sillas',
-          ),
+          AppSectionHeader(eyebrow: 'Gestion', title: 'Sillas'),
           const SizedBox(height: 20),
           Expanded(child: body),
         ],
@@ -350,11 +370,9 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Search
-        AppTextField(
+        AppSearchField(
           controller: _searchController,
-          hintText: 'Buscar por código o nombre...',
-          variant: AppTextFieldVariant.filled,
-          suffix: const Icon(Icons.search_rounded, size: 20),
+          hintText: 'Buscar por codigo o nombre...',
         ),
         const SizedBox(height: 12),
 
@@ -377,25 +395,32 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
               _listController.setShowOnlyAvailable(null);
             }
           },
-          items: const [
-            AppSegmentedFilterItem(label: 'Activas', value: 'active'),
-            AppSegmentedFilterItem(label: 'Disponibles', value: 'available'),
-            AppSegmentedFilterItem(
+          items: [
+            const AppSegmentedFilterItem(label: 'Activas', value: 'active'),
+            const AppSegmentedFilterItem(
+              label: 'Disponibles',
+              value: 'available',
+            ),
+            const AppSegmentedFilterItem(
               label: 'No disponibles',
               value: 'unavailable',
             ),
-            AppSegmentedFilterItem(label: 'Eliminadas', value: 'deleted'),
+            if (widget.canManage)
+              const AppSegmentedFilterItem(
+                label: 'Eliminadas',
+                value: 'deleted',
+              ),
           ],
         ),
-        const SizedBox(height: 12),
-
-        // Add button
-        AppButton(
-          label: 'Registrar silla',
-          icon: Icons.add,
-          expanded: true,
-          onPressed: _openCreateSheet,
-        ),
+        if (widget.canManage) ...[
+          const SizedBox(height: 12),
+          AppButton(
+            label: 'Registrar silla',
+            icon: Icons.add,
+            expanded: true,
+            onPressed: _openCreateSheet,
+          ),
+        ],
         const SizedBox(height: 16),
 
         // Error banner
@@ -427,15 +452,17 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search_off_rounded,
-                size: 40,
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.search_off_rounded,
+              size: 40,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 8),
             Text(
               'No hay sillas con ese filtro',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -449,18 +476,22 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Symbols.airline_seat_legroom_extra,
-                size: 48,
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            Icon(
+              Symbols.airline_seat_legroom_extra,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 12),
-            Text('No hay sillas registradas',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'No hay sillas registradas',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 4),
             Text(
               'Registra la primera silla usando el boton de arriba',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -507,22 +538,27 @@ class _SaddlesModuleScreenState extends State<SaddlesModuleScreen>
           Text(
             'No hay sillas',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Registra una nueva silla usando el boton de abajo',
+            widget.canManage
+                ? 'Registra una nueva silla usando el boton de abajo'
+                : 'Aun no hay sillas en el inventario',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          AppButton(
-            label: 'Registrar silla',
-            icon: Icons.add,
-            onPressed: _openCreateSheet,
-          ),
+          if (widget.canManage) ...[
+            const SizedBox(height: 24),
+            AppButton(
+              label: 'Registrar silla',
+              icon: Icons.add,
+              onPressed: _openCreateSheet,
+            ),
+          ],
         ],
       ),
     );

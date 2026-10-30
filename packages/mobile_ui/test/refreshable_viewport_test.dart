@@ -10,10 +10,7 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: RefreshableViewport(
-            child: SizedBox(
-              height: 100,
-              child: Center(child: Text('content')),
-            ),
+            child: SizedBox(height: 100, child: Center(child: Text('content'))),
           ),
         ),
       ),
@@ -22,10 +19,7 @@ void main() {
     final scrollView = tester.widget<SingleChildScrollView>(
       find.byType(SingleChildScrollView),
     );
-    expect(
-      scrollView.physics,
-      isA<AlwaysScrollableScrollPhysics>(),
-    );
+    expect(scrollView.physics, isA<AlwaysScrollableScrollPhysics>());
   });
 
   testWidgets('RefreshableViewport enforces minimum viewport height', (

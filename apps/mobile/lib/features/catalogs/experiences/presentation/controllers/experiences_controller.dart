@@ -76,4 +76,9 @@ class ExperiencesController extends ChangeNotifier {
     await _repository.deactivate(id);
     await loadLocalThenRefresh(refreshServer: false);
   }
+
+  Future<void> activate(String id) async {
+    await _repository.activate(id);
+    await loadLocalThenRefresh(refreshServer: false);
+  }
 }

@@ -79,11 +79,7 @@ void main() {
     });
 
     test('parses Decimal weight from string', () {
-      final dto = EquineDto(
-        id: 'e6',
-        name: 'Decimal',
-        weightKg: 350.5,
-      );
+      final dto = EquineDto(id: 'e6', name: 'Decimal', weightKg: 350.5);
       final result = EquineMapper.dtoToDomain(dto);
       expect(result.weightKg, 350.5);
     });

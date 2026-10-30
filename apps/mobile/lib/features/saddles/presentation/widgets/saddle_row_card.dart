@@ -6,11 +6,7 @@ import 'package:mobile_ui/src/widgets/app_entity_row_card.dart';
 import 'package:mobile/features/saddles/presentation/models/saddle_view_models.dart';
 
 class SaddleRowCard extends StatelessWidget {
-  const SaddleRowCard({
-    super.key,
-    required this.saddle,
-    required this.onTap,
-  });
+  const SaddleRowCard({super.key, required this.saddle, required this.onTap});
 
   final SaddleRecord saddle;
   final VoidCallback? onTap;

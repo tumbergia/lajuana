@@ -117,11 +117,14 @@ class _TopToastState extends State<_TopToast>
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final bgColor =
-        widget.isError ? scheme.errorContainer : scheme.secondaryContainer;
-    final fgColor =
-        widget.isError ? scheme.onErrorContainer : scheme.onSecondaryContainer;
-    final icon = widget.icon ??
+    final bgColor = widget.isError
+        ? scheme.errorContainer
+        : scheme.secondaryContainer;
+    final fgColor = widget.isError
+        ? scheme.onErrorContainer
+        : scheme.onSecondaryContainer;
+    final icon =
+        widget.icon ??
         (widget.isError ? Icons.error_outline : Icons.check_circle_outline);
 
     return Positioned(

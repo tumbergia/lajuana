@@ -18,7 +18,7 @@ from app.schemas.notification import NotificationPreferencesSchema
 
 
 class _FakeOutboxDoc:
-    inserted: list["_FakeOutboxDoc"] = []
+    inserted: list[_FakeOutboxDoc] = []
 
     def __init__(self, **kwargs: object) -> None:
         self.id = kwargs.get("id", "outbox-1")
@@ -57,8 +57,7 @@ def test_user_prefers_notification_respects_false() -> None:
         },
     )
     assert (
-        user.prefers_notification(NotificationEventType.WHATSAPP_MESSAGE_UNATTENDED.value)
-        is False
+        user.prefers_notification(NotificationEventType.WHATSAPP_MESSAGE_UNATTENDED.value) is False
     )
     assert user.prefers_notification(NotificationEventType.RESERVATION_CREATED.value) is True
 
@@ -84,8 +83,9 @@ async def test_enqueue_admin_in_app_excludes_actor_and_prefs(
     )
     muted = SimpleNamespace(
         id="bbbbbbbbbbbbbbbbbbbbbbbb",
-        prefers_notification=lambda event: event
-        != NotificationEventType.PAYMENT_PROOF_REGISTERED.value,
+        prefers_notification=lambda event: (
+            event != NotificationEventType.PAYMENT_PROOF_REGISTERED.value
+        ),
     )
     eligible = SimpleNamespace(
         id="cccccccccccccccccccccccc",
@@ -94,9 +94,7 @@ async def test_enqueue_admin_in_app_excludes_actor_and_prefs(
 
     monkeypatch.setattr(
         "app.services.notification_service.UserDocument.find",
-        lambda *_a, **_k: SimpleNamespace(
-            to_list=AsyncMock(return_value=[actor, muted, eligible])
-        ),
+        lambda *_a, **_k: SimpleNamespace(to_list=AsyncMock(return_value=[actor, muted, eligible])),
     )
 
     enqueued: list[dict] = []
@@ -280,10 +278,10 @@ async def test_clear_in_app_soft_deletes_and_excludes_from_list(
                     setattr(doc, key, value)
             return SimpleNamespace(modified_count=len(self._matched))
 
-        def sort(self, *_a: object, **_k: object) -> "_FindResult":
+        def sort(self, *_a: object, **_k: object) -> _FindResult:
             return self
 
-        def limit(self, *_a: object, **_k: object) -> "_FindResult":
+        def limit(self, *_a: object, **_k: object) -> _FindResult:
             return self
 
         async def to_list(self) -> list[_FakeDoc]:

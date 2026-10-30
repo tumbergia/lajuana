@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
@@ -12,6 +13,7 @@ import 'package:mobile_ui/src/widgets/app_section_header.dart';
 import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile_ui/src/widgets/app_toast.dart';
+import 'package:mobile/app/release_config.dart';
 import 'package:mobile/features/auth/domain/auth_enums.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
 import 'package:mobile/features/auth/infrastructure/remote/auth_api_client.dart';
@@ -30,6 +32,7 @@ import 'package:mobile/features/providers/providers_module.dart';
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/notifications/notifications_module.dart';
 import 'package:mobile/features/notifications/presentation/screens/notifications_settings_page.dart';
+import 'package:mobile/features/users/users_module.dart';
 
 enum _MoreDestination {
   menu,
@@ -39,6 +42,8 @@ enum _MoreDestination {
   providers,
   sillas,
   experiencias,
+  notificaciones,
+  configuracion,
 }
 
 class MoreFlowScreen extends StatefulWidget {
@@ -53,6 +58,7 @@ class MoreFlowScreen extends StatefulWidget {
     this.configurationModule,
     this.reservationsModule,
     this.notificationsModule,
+    this.usersModule,
   });
 
   final AuthController controller;
@@ -64,6 +70,7 @@ class MoreFlowScreen extends StatefulWidget {
   final LaJuanaConfigurationModule? configurationModule;
   final ReservationsModule? reservationsModule;
   final NotificationsModule? notificationsModule;
+  final UsersModule? usersModule;
 
   @override
   State<MoreFlowScreen> createState() => _MoreFlowScreenState();
@@ -157,17 +164,20 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
       case _MoreDestination.providers:
       case _MoreDestination.sillas:
       case _MoreDestination.experiencias:
+      case _MoreDestination.notificaciones:
+      case _MoreDestination.configuracion:
         return;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final tokens = Theme.of(context).appTokens;
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, _) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+          padding: EdgeInsets.all(tokens.spaceXl),
           child: LayoutBuilder(
             builder: (context, constraints) {
               final body = KeyedSubtree(
@@ -178,7 +188,9 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
               // Sub-vistas con lista propia (Expanded) necesitan altura acotada.
               if (_destination == _MoreDestination.providers ||
                   _destination == _MoreDestination.sillas ||
-                  _destination == _MoreDestination.experiencias) {
+                  _destination == _MoreDestination.experiencias ||
+                  _destination == _MoreDestination.notificaciones ||
+                  _destination == _MoreDestination.configuracion) {
                 final height = constraints.hasBoundedHeight
                     ? constraints.maxHeight
                     : MediaQuery.sizeOf(context).height;
@@ -213,26 +225,29 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
         return _buildSillasEmbedded();
       case _MoreDestination.experiencias:
         return _buildExperienciasEmbedded();
+      case _MoreDestination.notificaciones:
+        return _buildNotificacionesEmbedded();
+      case _MoreDestination.configuracion:
+        return _buildConfiguracionEmbedded();
     }
   }
 
   Widget _menuLeadingIcon(IconData icon) {
+    final scheme = Theme.of(context).colorScheme;
+    final tokens = Theme.of(context).appTokens;
     return Container(
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(4),
+        color: scheme.surfaceContainerHighest,
+        borderRadius: tokens.radiusMd,
       ),
-      child: Icon(
-        icon,
-        size: 22,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
+      child: Icon(icon, size: 22, color: scheme.onSurfaceVariant),
     );
   }
 
   Widget _buildMenu() {
+    final tokens = Theme.of(context).appTokens;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -245,24 +260,16 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.profile),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spaceMd),
         if (widget.notificationsModule != null) ...[
           AppEntityRowCard(
             title: 'Notificaciones',
             subtitle: 'Preferencias y alertas en segundo plano',
             leading: _menuLeadingIcon(Symbols.notifications),
             trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => NotificationsSettingsPage(
-                    controller: widget.notificationsModule!.controller,
-                  ),
-                ),
-              );
-            },
+            onTap: () => _open(_MoreDestination.notificaciones),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: tokens.spaceMd),
         ],
         AppEntityRowCard(
           title: 'Números',
@@ -271,7 +278,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.contacts),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: tokens.spaceMd),
         AppEntityRowCard(
           title: 'Experiencias',
           subtitle: 'Catálogo de productos',
@@ -279,15 +286,17 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.experiencias),
         ),
-        const SizedBox(height: 12),
-        AppEntityRowCard(
-          title: 'Proveedores',
-          subtitle: 'Catálogo operativo',
-          leading: _menuLeadingIcon(Symbols.handshake),
-          trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-          onTap: () => _open(_MoreDestination.providers),
-        ),
-        const SizedBox(height: 12),
+        if (widget.controller.currentUser?.role == 'admin') ...[
+          SizedBox(height: tokens.spaceMd),
+          AppEntityRowCard(
+            title: 'Proveedores',
+            subtitle: 'Catálogo operativo',
+            leading: _menuLeadingIcon(Symbols.handshake),
+            trailing: const Icon(Icons.chevron_right_rounded, size: 18),
+            onTap: () => _open(_MoreDestination.providers),
+          ),
+        ],
+        SizedBox(height: tokens.spaceMd),
         AppEntityRowCard(
           title: 'Sillas',
           subtitle: 'Inventario de montura',
@@ -295,28 +304,26 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
           trailing: const Icon(Icons.chevron_right_rounded, size: 18),
           onTap: () => _open(_MoreDestination.sillas),
         ),
+        if (privacyPolicyUrl.isNotEmpty) ...[
+          SizedBox(height: tokens.spaceMd),
+          AppEntityRowCard(
+            title: 'Privacidad',
+            subtitle: 'Consulta cómo se manejan tus datos',
+            leading: _menuLeadingIcon(Symbols.privacy_tip),
+            trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+            onTap: _openPrivacyPolicy,
+          ),
+        ],
         if (widget.catalogsModule != null &&
             widget.configurationModule != null &&
             widget.controller.currentUser?.role == 'admin') ...[
-          const SizedBox(height: 12),
+          SizedBox(height: tokens.spaceMd),
           AppEntityRowCard(
             title: 'Configuración',
             subtitle: 'De la Juana',
             leading: _menuLeadingIcon(Symbols.settings),
             trailing: const Icon(Icons.chevron_right_rounded, size: 18),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => LaJuanaConfigurationPage(
-                    module: widget.configurationModule!,
-                    catalogsModule: widget.catalogsModule!,
-                    authController: widget.controller,
-                    reservationsRepository:
-                        widget.reservationsModule?.repository,
-                  ),
-                ),
-              );
-            },
+            onTap: () => _open(_MoreDestination.configuracion),
           ),
         ],
       ],
@@ -337,11 +344,12 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
             onPressed: () => _open(_MoreDestination.menu),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 20),
         Expanded(
           child: ProvidersModuleScreen(
             providersModule: widget.providersModule,
             showHeader: false,
+            canManage: widget.controller.currentUser?.role == 'admin',
           ),
         ),
       ],
@@ -362,11 +370,12 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
             onPressed: () => _open(_MoreDestination.menu),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 20),
         Expanded(
           child: SaddlesModuleScreen(
             saddlesModule: widget.saddlesModule,
             showHeader: false,
+            canManage: widget.controller.currentUser?.role == 'admin',
           ),
         ),
       ],
@@ -387,12 +396,68 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
             onPressed: () => _open(_MoreDestination.menu),
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 20),
         Expanded(
           child: ExperiencesModuleScreen(
             catalogsModule: widget.catalogsModule,
             authController: widget.controller,
             showHeader: false,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNotificacionesEmbedded() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSectionHeader(
+          eyebrow: 'Más',
+          title: 'Notificaciones',
+          trailing: AppButton(
+            label: 'Volver',
+            icon: Icons.arrow_back_rounded,
+            variant: AppButtonVariant.ghost,
+            onPressed: () => _open(_MoreDestination.menu),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Expanded(
+          child: NotificationsSettingsPage(
+            controller: widget.notificationsModule!.controller,
+            showScaffold: false,
+            isAdmin: widget.controller.currentUser?.role == 'admin',
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConfiguracionEmbedded() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppSectionHeader(
+          eyebrow: 'Más',
+          title: 'Configuración',
+          trailing: AppButton(
+            label: 'Volver',
+            icon: Icons.arrow_back_rounded,
+            variant: AppButtonVariant.ghost,
+            onPressed: () => _open(_MoreDestination.menu),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Expanded(
+          child: LaJuanaConfigurationPage(
+            module: widget.configurationModule!,
+            catalogsModule: widget.catalogsModule!,
+            authController: widget.controller,
+            reservationsRepository: widget.reservationsModule?.repository,
+            usersModule: widget.usersModule,
+            showHeader: false,
+            onBack: () => _open(_MoreDestination.menu),
           ),
         ),
       ],
@@ -422,7 +487,7 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
             onPressed: () => _open(_MoreDestination.menu),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         if (user == null)
           const AppEntityRowCard(
             title: 'Perfil no disponible',
@@ -752,6 +817,17 @@ class _MoreFlowScreenState extends State<MoreFlowScreen> with RefreshableState {
     final uri = Uri(scheme: 'tel', path: phone);
     if (!await canLaunchUrl(uri)) return false;
     return launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _openPrivacyPolicy() async {
+    final uri = Uri.parse(privacyPolicyUrl);
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!mounted || launched) return;
+    showAppToast(
+      context,
+      message: 'No se pudo abrir la política de privacidad',
+      isError: true,
+    );
   }
 
   _EmergencyContact _mapEmergencyContact(EmergencyCatalogContactDto contact) {

@@ -13,27 +13,26 @@ class SaddlesApiClient {
     required Future<String?> Function() readAccessToken,
     required Future<bool> Function() refreshSession,
     http.Client? httpClient,
-  })  : _baseUrl = baseUrl,
-        _readAccessToken = readAccessToken,
-        _refreshSession = refreshSession,
-        _http = httpClient ?? http.Client();
+  }) : _baseUrl = baseUrl,
+       _readAccessToken = readAccessToken,
+       _refreshSession = refreshSession,
+       _http = httpClient ?? http.Client();
 
   final String _baseUrl;
   final Future<String?> Function() _readAccessToken;
   final Future<bool> Function() _refreshSession;
   final http.Client _http;
 
-  Future<List<SaddleListItem>> listSaddles({bool includeDeleted = false}) async {
+  Future<List<SaddleListItem>> listSaddles({
+    bool includeDeleted = false,
+  }) async {
     final queryParams = <String, String>{};
     if (includeDeleted) {
       queryParams['include_deleted'] = 'true';
     }
     final path =
         '/saddles${queryParams.isNotEmpty ? '?${Uri(queryParameters: queryParams).query}' : ''}';
-    final response = await _authorizedRequest(
-      method: 'GET',
-      path: path,
-    );
+    final response = await _authorizedRequest(method: 'GET', path: path);
     final decoded = jsonDecode(response.body);
     if (decoded is! List) {
       throw SaddlesApiFailure(
@@ -162,9 +161,7 @@ class SaddlesApiClient {
     };
   }
 
-  Future<http.Response> _execute(
-    Future<http.Response> Function() block,
-  ) async {
+  Future<http.Response> _execute(Future<http.Response> Function() block) async {
     try {
       return await block().timeout(const Duration(seconds: 12));
     } on TimeoutException {

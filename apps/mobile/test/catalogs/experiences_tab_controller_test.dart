@@ -34,48 +34,50 @@ void main() {
       expect(experienceRepo.listCallCount, 1);
     });
 
-    test('uses syncing state when local is empty and server refresh runs',
-        () async {
-      experienceRepo = FakeExperienceRepository(
-        emptyListCallsBeforeData: 1,
-      );
-      catalogsRepo = FakeCatalogsRepository()
-        ..refreshCompleter = Completer<void>();
-      controller = ExperiencesTabController(
-        repository: experienceRepo,
-        catalogsRepository: catalogsRepo,
-      );
+    test(
+      'uses syncing state when local is empty and server refresh runs',
+      () async {
+        experienceRepo = FakeExperienceRepository(emptyListCallsBeforeData: 1);
+        catalogsRepo = FakeCatalogsRepository()
+          ..refreshCompleter = Completer<void>();
+        controller = ExperiencesTabController(
+          repository: experienceRepo,
+          catalogsRepository: catalogsRepo,
+        );
 
-      final loadFuture = controller.loadLocalThenRefresh(refreshServer: true);
-      await Future<void>.delayed(Duration.zero);
-
-      expect(controller.loadState, ExperiencesTabLoadState.syncing);
-      expect(controller.items, isEmpty);
-
-      catalogsRepo.refreshCompleter!.complete();
-      while (controller.isRefreshing) {
+        final loadFuture = controller.loadLocalThenRefresh(refreshServer: true);
         await Future<void>.delayed(Duration.zero);
-      }
-      await loadFuture;
 
-      expect(controller.loadState, ExperiencesTabLoadState.success);
-      expect(controller.items, isNotEmpty);
-      expect(catalogsRepo.refreshExperiencesCallCount, 1);
-    });
+        expect(controller.loadState, ExperiencesTabLoadState.syncing);
+        expect(controller.items, isEmpty);
 
-    test('uses empty state when local is empty and refresh is disabled',
-        () async {
-      experienceRepo = FakeExperienceRepository(returnEmpty: true);
-      controller = ExperiencesTabController(
-        repository: experienceRepo,
-        catalogsRepository: catalogsRepo,
-      );
+        catalogsRepo.refreshCompleter!.complete();
+        while (controller.isRefreshing) {
+          await Future<void>.delayed(Duration.zero);
+        }
+        await loadFuture;
 
-      await controller.loadLocalThenRefresh(refreshServer: false);
+        expect(controller.loadState, ExperiencesTabLoadState.success);
+        expect(controller.items, isNotEmpty);
+        expect(catalogsRepo.refreshExperiencesCallCount, 1);
+      },
+    );
 
-      expect(controller.loadState, ExperiencesTabLoadState.empty);
-      expect(controller.items, isEmpty);
-    });
+    test(
+      'uses empty state when local is empty and refresh is disabled',
+      () async {
+        experienceRepo = FakeExperienceRepository(returnEmpty: true);
+        controller = ExperiencesTabController(
+          repository: experienceRepo,
+          catalogsRepository: catalogsRepo,
+        );
+
+        await controller.loadLocalThenRefresh(refreshServer: false);
+
+        expect(controller.loadState, ExperiencesTabLoadState.empty);
+        expect(controller.items, isEmpty);
+      },
+    );
 
     test('handles error during local load', () async {
       experienceRepo = FakeExperienceRepository(throwOnList: true);

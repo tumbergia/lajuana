@@ -14,10 +14,10 @@ from app.ai.mcp.tool_contracts import (
     UpdateReservationParticipantsOutput,
 )
 from app.common.enums import PaymentStatus, ReservationStatus
+from app.core.di import Container
 from app.core.errors import ApiError
 from app.documents import ReservationDocument
 from app.documents.tool_call_log_document import ToolCallLogDocument
-from app.core.di import Container
 
 
 async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
@@ -30,9 +30,7 @@ async def cancel_reservation(**kwargs: Any) -> dict[str, Any]:
     error_code: str | None = None
 
     try:
-        filtered = {
-            k: v for k, v in kwargs.items() if k in CancelReservationInput.model_fields
-        }
+        filtered = {k: v for k, v in kwargs.items() if k in CancelReservationInput.model_fields}
         payload = CancelReservationInput.model_validate(filtered)
 
         reservation = await ReservationDocument.find_one(
@@ -140,9 +138,7 @@ async def update_reservation_date(**kwargs: Any) -> dict[str, Any]:
     error_code: str | None = None
 
     try:
-        filtered = {
-            k: v for k, v in kwargs.items() if k in UpdateReservationDateInput.model_fields
-        }
+        filtered = {k: v for k, v in kwargs.items() if k in UpdateReservationDateInput.model_fields}
         payload = UpdateReservationDateInput.model_validate(filtered)
 
         reservation = await ReservationDocument.find_one(

@@ -8,10 +8,7 @@ import 'infrastructure/repositories/saddles_repository_impl.dart';
 import 'presentation/controllers/saddles_list_controller.dart';
 
 class SaddlesModule {
-  SaddlesModule({
-    required this.repository,
-    required this.listController,
-  });
+  SaddlesModule({required this.repository, required this.listController});
 
   final SaddlesRepository repository;
   final SaddlesListController listController;
@@ -38,9 +35,7 @@ class SaddlesModule {
       outbox: outbox,
     );
 
-    final listController = SaddlesListController(
-      repository: repository,
-    );
+    final listController = SaddlesListController(repository: repository);
 
     return SaddlesModule(
       repository: repository,

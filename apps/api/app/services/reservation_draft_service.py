@@ -135,5 +135,3 @@ class ReservationDraftService:
             count += 1
 
         return count
-
-

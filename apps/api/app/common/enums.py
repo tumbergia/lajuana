@@ -26,6 +26,13 @@ class UserRole(StrEnum):
     UNASSIGNED = "unassigned"
 
 
+class RoleRequestStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"
+
+
 class ReservationStatus(StrEnum):
     CONTACT = "contact"
     QUOTED = "quoted"
@@ -133,6 +140,10 @@ class Permission(StrEnum):
     USER_UPDATE = "user.update"
     USER_DELETE = "user.delete"
 
+    ROLE_REQUEST_CREATE_SELF = "role_request.create_self"
+    ROLE_REQUEST_READ = "role_request.read"
+    ROLE_REQUEST_MANAGE = "role_request.manage"
+
     EXPERIENCE_READ = "experience.read"
     EXPERIENCE_CREATE = "experience.create"
     EXPERIENCE_UPDATE = "experience.update"
@@ -217,6 +228,8 @@ class NotificationEventType(StrEnum):
     ASSIGNMENT_CHANGED = "assignment_changed"
     TOMORROW_SERVICES_SUMMARY = "tomorrow_services_summary"
     WHATSAPP_DELIVERY_FAILED = "whatsapp_delivery_failed"
+    ROLE_REQUEST_CREATED = "role_request_created"
+    ROLE_REQUEST_DECIDED = "role_request_decided"
 
 
 # Preference keys for in-app notification toggles (grouped for UI).
@@ -234,6 +247,7 @@ NOTIFICATION_PREFERENCE_KEYS: tuple[str, ...] = (
     NotificationEventType.ASSIGNMENT_CHANGED.value,
     NotificationEventType.TOMORROW_SERVICES_SUMMARY.value,
     NotificationEventType.WHATSAPP_DELIVERY_FAILED.value,
+    NotificationEventType.ROLE_REQUEST_CREATED.value,
 )
 
 
@@ -274,5 +288,7 @@ ROLE_PERMISSIONS: dict[UserRole, set[Permission]] = {
     UserRole.UNASSIGNED: {
         Permission.AUTH_SELF_READ,
         Permission.AUTH_SELF_UPDATE_PASSWORD,
+        Permission.ROLE_REQUEST_CREATE_SELF,
+        Permission.NOTIFICATION_READ,
     },
 }

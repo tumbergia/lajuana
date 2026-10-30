@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
+import 'package:mobile_ui/src/widgets/app_equine_icon.dart';
 
 import 'package:mobile_domain/src/assignments/assignment_board.dart';
 
@@ -85,8 +85,7 @@ class _EquineCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Symbols.chess_knight,
+              AppEquineIcon(
                 size: 16,
                 color: isAvailable
                     ? const Color(0xFF2E7D32)
@@ -162,10 +161,9 @@ class _BoardEmptyState extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             message,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: scheme.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),

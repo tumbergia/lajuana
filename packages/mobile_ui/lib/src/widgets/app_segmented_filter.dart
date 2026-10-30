@@ -89,7 +89,8 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
       final position = _scrollController.position;
       if (position.maxScrollExtent <= 0) return;
 
-      final target = (index / widget.items.length) * position.maxScrollExtent -
+      final target =
+          (index / widget.items.length) * position.maxScrollExtent -
           position.viewportDimension / 2 +
           (position.viewportDimension / widget.items.length / 2);
 
@@ -183,11 +184,7 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
                     final overflows = totalWidth > innerWidth;
 
                     if (overflows) {
-                      return _buildScrollable(
-                        theme,
-                        scheme,
-                        showFade: true,
-                      );
+                      return _buildScrollable(theme, scheme, showFade: true);
                     }
                     if (_canDistributeEqually(itemWidths, innerWidth)) {
                       return _buildDistributed(theme, scheme);
@@ -323,33 +320,30 @@ class _AppSegmentedFilterState<T> extends State<AppSegmentedFilter<T>> {
             physics: const BouncingScrollPhysics(
               decelerationRate: ScrollDecelerationRate.fast,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: children,
-            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: children),
           ),
         ),
         if (showFade)
           Positioned(
-          right: 0,
-          top: 0,
-          bottom: 0,
-          width: _AppSegmentedFilterMetrics.fadeWidth,
-          child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerRight,
-                  end: Alignment.centerLeft,
-                  colors: [
-                    scheme.surfaceContainerLow,
-                    scheme.surfaceContainerLow.withValues(alpha: 0.0),
-                  ],
+            right: 0,
+            top: 0,
+            bottom: 0,
+            width: _AppSegmentedFilterMetrics.fadeWidth,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerRight,
+                    end: Alignment.centerLeft,
+                    colors: [
+                      scheme.surfaceContainerLow,
+                      scheme.surfaceContainerLow.withValues(alpha: 0.0),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

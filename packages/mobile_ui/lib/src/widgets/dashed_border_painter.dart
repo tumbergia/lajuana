@@ -28,7 +28,12 @@ class DashedBorderPainter extends CustomPainter {
 
     final half = strokeWidth / 2;
     final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(half, half, size.width - strokeWidth, size.height - strokeWidth),
+      Rect.fromLTWH(
+        half,
+        half,
+        size.width - strokeWidth,
+        size.height - strokeWidth,
+      ),
       Radius.circular(cornerRadius),
     );
 

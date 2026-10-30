@@ -1,9 +1,16 @@
 import difflib
+import inspect
+import re
 from dataclasses import dataclass
 
 from app.core.config import settings
 from app.core.logging import logger
 from app.schemas.assistant_plan import AssistantAction, AssistantPlan, RiskLevel
+
+_WRITE_TOOL_RE = re.compile(
+    r"(?:^|_)(create|update|deactivate|delete|cancel|confirm|approve|reject|unverify|unreject"
+    r"|finalize|close|add|attach|mark|report|send|request)_"
+)
 
 
 @dataclass(frozen=True)
@@ -222,7 +229,7 @@ class ToolPolicyEngine:
 
     def _autocorrect_tool_name(self, tool_name: str, allowed: set[str]) -> str:
         """Autocorrege typos en el nombre de la tool usando difflib.
-        
+
         Solo autocorrige si:
         1. La tool original no existe en ningún conjunto (typo real)
         2. La corrección está en el set de tools permitidas
@@ -230,14 +237,20 @@ class ToolPolicyEngine:
         """
         if tool_name in allowed:
             return tool_name
-        
+
         # No autocorregir si la tool existe en CRITICAL_TOOLS
         all_known = self.CLIENT_TOOLS | self.GUIDE_TOOLS | self.ADMIN_TOOLS | self.CRITICAL_TOOLS
         if tool_name in all_known:
             return tool_name  # Es una tool conocida, no un typo
-        
+
         # Solo autocorregir si la tool original parece un typo (no está en ningún set conocido)
-        matches = difflib.get_close_matches(tool_name, allowed, n=1, cutoff=0.75)
+        # Nunca se autocorrige hacia (ni desde) una tool de escritura: un nombre
+        # inexistente como admin_update_schedule terminaría en admin_update_saddle y
+        # modificaría otra entidad. Solo lecturas con typos evidentes.
+        if _WRITE_TOOL_RE.search(tool_name):
+            return tool_name
+        read_only = {name for name in allowed if not _WRITE_TOOL_RE.search(name)}
+        matches = difflib.get_close_matches(tool_name, read_only, n=1, cutoff=0.75)
         if matches:
             return matches[0]
         return tool_name
@@ -259,7 +272,6 @@ class ToolPolicyEngine:
             "admin_update_equine_availability": "equine_id",
             "admin_get_participant": "participant_id",
             "admin_update_participant": "participant_id",
-            "admin_get_reservation_detail": "reservation_id",
             "admin_confirm_reservation": "reservation_id",
             "admin_cancel_reservation": "reservation_id",
             "admin_close_service_execution": "reservation_id",
@@ -268,6 +280,10 @@ class ToolPolicyEngine:
             "admin_reject_payment_proof": "payment_proof_id",
             "admin_unverify_payment_proof": "payment_proof_id",
             "admin_unreject_payment_proof": "payment_proof_id",
+            "admin_get_assignment_board": "reservation_id",
+            "admin_list_equine_events": "equine_id",
+            "admin_create_equine_event": "equine_id",
+            "admin_list_available_saddles_for_reservation": "reservation_id",
         }
         if plan.tool_name in id_required_tools:
             required_field = id_required_tools[plan.tool_name]
@@ -278,19 +294,30 @@ class ToolPolicyEngine:
                     reason=f"missing_required_arguments:{required_field}",
                 )
 
-        # Tools que requieren datos de creación
-        if plan.tool_name == "admin_create_experience":
-            if not args.get("name") or not args.get("slug"):
+        if plan.tool_name == "admin_get_reservation_detail":
+            if not args.get("reservation_id") and not args.get("code"):
                 return ToolPolicyDecision(
                     allowed=False,
-                    reason="missing_required_arguments:name,slug",
+                    reason="missing_required_arguments:code",
+                )
+
+        # Tools que requieren datos de creación
+        if plan.tool_name == "admin_create_experience":
+            missing = [f for f in ("name", "description", "level") if not args.get(f)]
+            if not args.get("duration_hours") and not args.get("duration_days"):
+                missing.append("duration_hours")
+            if missing:
+                return ToolPolicyDecision(
+                    allowed=False,
+                    reason=f"missing_required_arguments:{','.join(missing)}",
                 )
 
         if plan.tool_name == "admin_create_user":
-            if not args.get("email") or not args.get("password"):
+            missing = [f for f in ("email", "full_name") if not args.get(f)]
+            if missing:
                 return ToolPolicyDecision(
                     allowed=False,
-                    reason="missing_required_arguments:email,password",
+                    reason=f"missing_required_arguments:{','.join(missing)}",
                 )
 
         if plan.tool_name == "admin_create_equine":
@@ -300,8 +327,31 @@ class ToolPolicyEngine:
                     reason="missing_required_arguments:name",
                 )
 
+        if plan.tool_name == "admin_create_provider":
+            if not args.get("name") or not args.get("type"):
+                return ToolPolicyDecision(
+                    allowed=False,
+                    reason="missing_required_arguments:name,type",
+                )
+
+        if plan.tool_name == "admin_create_saddle":
+            if not args.get("code"):
+                return ToolPolicyDecision(
+                    allowed=False,
+                    reason="missing_required_arguments:code",
+                )
+
         if plan.tool_name == "admin_update_reservation_rules":
-            if not any(k in args for k in ("min_days_in_advance", "require_payment_proof_for_confirmation", "reservation_draft_ttl_minutes")):
+            if not any(
+                args.get(k) is not None
+                for k in (
+                    "min_days_in_advance",
+                    "require_payment_proof_for_confirmation",
+                    "reservation_draft_ttl_minutes",
+                    "min_age",
+                    "max_age",
+                )
+            ):
                 return ToolPolicyDecision(
                     allowed=False,
                     reason="missing_required_arguments:min_days_in_advance_or_require_payment_proof_or_ttl",
@@ -407,4 +457,36 @@ class ToolPolicyEngine:
         if args_validation is not None:
             return args_validation
 
+        signature_validation = self._validate_signature_args(plan)
+        if signature_validation is not None:
+            return signature_validation
+
         return ToolPolicyDecision(allowed=True)
+
+    @staticmethod
+    def _validate_signature_args(plan: AssistantPlan) -> ToolPolicyDecision | None:
+        """Bloquea si falta un argumento obligatorio de la firma real de la tool.
+
+        Red de seguridad general: sin esto la tool se ejecuta y revienta con TypeError
+        (tool.execution_failed) en lugar de pedir el dato al usuario.
+        """
+        from app.ai.mcp.registry import registry
+
+        tool = registry.get(plan.tool_name or "")
+        if tool is None:
+            return None
+        args = plan.arguments.model_dump() if plan.arguments else {}
+        missing = [
+            name
+            for name, param in inspect.signature(tool).parameters.items()
+            if param.default is inspect.Parameter.empty
+            and param.kind not in (param.VAR_KEYWORD, param.VAR_POSITIONAL)
+            and name not in ("trace_id", "conversation_turn_id")
+            and (args.get(name) is None or args.get(name) == "")
+        ]
+        if missing:
+            return ToolPolicyDecision(
+                allowed=False,
+                reason=f"missing_required_arguments:{','.join(missing)}",
+            )
+        return None

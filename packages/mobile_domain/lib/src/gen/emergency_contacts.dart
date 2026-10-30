@@ -7,24 +7,21 @@
 import 'emergency_catalog_contact.dart';
 
 class EmergencyContacts {
-
   final List<EmergencyCatalogContact> items;
 
-  const EmergencyContacts(
-    {
-    required this.items,
-    }
-  );
+  const EmergencyContacts({required this.items});
 
   factory EmergencyContacts.fromJson(Map<String, dynamic> json) {
     return EmergencyContacts(
-      items: (json['items'] as List<dynamic>?)
-        ?.map((e) => EmergencyCatalogContact.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      items: (json['items'] as List<dynamic>)
+          .map(
+            (e) => EmergencyCatalogContact.fromJson(e as Map<String, dynamic>),
+          )
+          .toList(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'items': items,
+    'items': items.map((e) => e.toJson()).toList(),
   };
-
 }

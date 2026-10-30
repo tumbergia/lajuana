@@ -4,6 +4,9 @@ Add new migrations at the end. Never reorder or remove applied versions.
 """
 
 from app.migrations.base import Migration
+from app.migrations.versions.backfill_participant_country_codes import (
+    BackfillParticipantCountryCodesMigration,
+)
 from app.migrations.versions.backfill_schedule_is_active import (
     BackfillScheduleIsActiveMigration,
 )
@@ -12,6 +15,9 @@ from app.migrations.versions.backfill_sync_metadata import (
 )
 from app.migrations.versions.configure_lajuana_settings import (
     ConfigureLaJuanaSettingsMigration,
+)
+from app.migrations.versions.fix_notification_template_natural_key_index import (
+    FixNotificationTemplateNaturalKeyIndexMigration,
 )
 from app.migrations.versions.migrate_provider_fields import (
     MigrateProviderFieldsMigration,
@@ -26,4 +32,6 @@ MIGRATIONS: list[Migration] = [
     BackfillSyncMetadataMigration(),
     MigrateProviderFieldsMigration(),
     ConfigureLaJuanaSettingsMigration(),
+    BackfillParticipantCountryCodesMigration(),
+    FixNotificationTemplateNaturalKeyIndexMigration(),
 ]

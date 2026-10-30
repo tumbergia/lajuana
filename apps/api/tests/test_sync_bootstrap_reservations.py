@@ -31,9 +31,7 @@ class _FakeReservationService:
         self._items = items
         self.last_actor_role: UserRole | None = None
 
-    async def list_for_bootstrap(
-        self, actor_role: UserRole, **_kwargs: object
-    ) -> list[object]:
+    async def list_for_bootstrap(self, actor_role: UserRole, **_kwargs: object) -> list[object]:
         self.last_actor_role = actor_role
         return self._items
 
@@ -102,9 +100,7 @@ def test_bootstrap_includes_reservations_from_list_for_bootstrap(
     monkeypatch.setattr(
         sync_service_module, "reservation_to_response", _fake_reservation_to_response
     )
-    monkeypatch.setattr(
-        sync_service_module, "SyncChangeDocument", _FakeSyncChangeDocumentFind
-    )
+    monkeypatch.setattr(sync_service_module, "SyncChangeDocument", _FakeSyncChangeDocumentFind)
 
     reservation_service = _FakeReservationService([fake_reservation])
     service = SyncService(
@@ -143,9 +139,7 @@ def test_bootstrap_guide_role_propagates_to_reservation_window(
     monkeypatch.setattr(
         sync_service_module, "reservation_to_response", _fake_reservation_to_response
     )
-    monkeypatch.setattr(
-        sync_service_module, "SyncChangeDocument", _FakeSyncChangeDocumentFind
-    )
+    monkeypatch.setattr(sync_service_module, "SyncChangeDocument", _FakeSyncChangeDocumentFind)
 
     reservation_service = _FakeReservationService([])
     service = SyncService(
@@ -168,9 +162,7 @@ def test_bootstrap_without_reservation_service_returns_empty_list(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Si no hay reservation_service configurado (DI parcial), no debe romper."""
-    monkeypatch.setattr(
-        sync_service_module, "SyncChangeDocument", _FakeSyncChangeDocumentFind
-    )
+    monkeypatch.setattr(sync_service_module, "SyncChangeDocument", _FakeSyncChangeDocumentFind)
 
     service = SyncService(
         config_service=_fake_config_service(monkeypatch),

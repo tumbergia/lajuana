@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 import time
 from typing import Any
 from uuid import uuid4
@@ -20,6 +21,7 @@ from app.services.user_service import UserService
 
 def _get_service() -> UserService:
     from app.core.di import Container
+
     return Container.get_instance().user_service
 
 
@@ -85,13 +87,19 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
     output: AdminCreateUserOutput | None = None
 
     try:
-        filtered = {
-            k: v
-            for k, v in kwargs.items()
-            if k in UserCreateSchema.model_fields
-        }
+        filtered = {k: v for k, v in kwargs.items() if k in UserCreateSchema.model_fields}
+        generated_password = None
+        if not filtered.get("password"):
+            generated_password = secrets.token_urlsafe(10)
+            filtered["password"] = generated_password
         payload = UserCreateSchema.model_validate(filtered)
         doc = await _get_service().create_user(payload)
+
+        message = f"Usuario '{doc.email}' creado exitosamente con rol {doc.role}."
+        if generated_password:
+            message += (
+                f" Contraseña temporal: {generated_password}. Pídele que la cambie al entrar."
+            )
 
         output = AdminCreateUserOutput(
             created=True,
@@ -99,7 +107,7 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
             user_id=str(doc.id),
             email=doc.email,
             role=str(doc.role),
-            message=f"Usuario '{doc.email}' creado exitosamente con rol {doc.role}.",
+            message=message,
         )
         return output.model_dump(mode="json")
 
@@ -108,6 +116,7 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
         output = AdminCreateUserOutput(
             created=False,
             trace_id=trace_id,
+            message=exc.message,
             blocking_reasons=[
                 ToolBlockingReason(code=exc.code, message=exc.message, details=exc.details or {})
             ],
@@ -119,6 +128,7 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
         output = AdminCreateUserOutput(
             created=False,
             trace_id=trace_id,
+            message=str(exc),
             blocking_reasons=[ToolBlockingReason(code=error_code, message=str(exc))],
         )
         return output.model_dump(mode="json")
@@ -131,7 +141,9 @@ async def admin_create_user(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_user",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -162,9 +174,7 @@ async def admin_update_user(**kwargs: Any) -> dict[str, Any]:
             return output.model_dump(mode="json")
 
         filtered = {
-            k: v
-            for k, v in kwargs.items()
-            if k in UserUpdateSchema.model_fields and v is not None
+            k: v for k, v in kwargs.items() if k in UserUpdateSchema.model_fields and v is not None
         }
         payload = UserUpdateSchema.model_validate(filtered)
         doc = await _get_service().update_user(user_id, payload)
@@ -207,7 +217,9 @@ async def admin_update_user(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_user",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -225,10 +237,57 @@ async def admin_deactivate_user(**kwargs: Any) -> dict[str, Any]:
     try:
         user_id = kwargs.get("user_id")
         actor_id = kwargs.get("actor_id", "system")
+        if not user_id and kwargs.get("q"):
+            resolution = await _get_service().resolve_user_reference(str(kwargs["q"]))
+            if resolution.get("status") == "resolved":
+                user_id = resolution.get("user_id")
+            elif resolution.get("status") == "ambiguous":
+                matches = resolution.get("matches", [])
+                match_list = ", ".join(
+                    f"{item.get('full_name')} <{item.get('email')}>"
+                    for item in matches
+                    if isinstance(item, dict)
+                )
+                message = (
+                    f"Encontré varios usuarios para '{resolution.get('reference', kwargs['q'])}': "
+                    f"{match_list}. Indícame el correo o el user_id exacto."
+                )
+                output = AdminDeactivateUserOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    message=message,
+                    blocking_reasons=[
+                        ToolBlockingReason(
+                            code="user.reference_ambiguous",
+                            message=message,
+                            details={"matches": matches},
+                        )
+                    ],
+                )
+                return output.model_dump(mode="json")
+            else:
+                message = (
+                    f"No encontré un usuario que coincida con '{resolution.get('reference', kwargs['q'])}'. "
+                    "Indícame el correo o el user_id exacto."
+                )
+                output = AdminDeactivateUserOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    message=message,
+                    blocking_reasons=[
+                        ToolBlockingReason(
+                            code="user.reference_not_found",
+                            message=message,
+                        )
+                    ],
+                )
+                return output.model_dump(mode="json")
+
         if not user_id:
             output = AdminDeactivateUserOutput(
                 deactivated=False,
                 trace_id=trace_id,
+                message="El campo user_id es obligatorio.",
                 blocking_reasons=[
                     ToolBlockingReason(
                         code="user.id_required",
@@ -252,6 +311,7 @@ async def admin_deactivate_user(**kwargs: Any) -> dict[str, Any]:
         output = AdminDeactivateUserOutput(
             deactivated=False,
             trace_id=trace_id,
+            message=exc.message,
             blocking_reasons=[
                 ToolBlockingReason(code=exc.code, message=exc.message, details=exc.details or {})
             ],
@@ -263,6 +323,7 @@ async def admin_deactivate_user(**kwargs: Any) -> dict[str, Any]:
         output = AdminDeactivateUserOutput(
             deactivated=False,
             trace_id=trace_id,
+            message=str(exc),
             blocking_reasons=[ToolBlockingReason(code=error_code, message=str(exc))],
         )
         return output.model_dump(mode="json")
@@ -275,7 +336,9 @@ async def admin_deactivate_user(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_deactivate_user",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,

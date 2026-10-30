@@ -175,9 +175,7 @@ class ParticipantService:
             eps_or_travel_insurance=payload.eps_or_travel_insurance,
             health_conditions=payload.health_conditions,
             sensory_disabilities=payload.sensory_disabilities,
-            emergency_contact=EmergencyContact(
-                **payload.emergency_contact.model_dump()
-            ),
+            emergency_contact=EmergencyContact(**payload.emergency_contact.model_dump()),
             accepted_data_processing=payload.accepted_data_processing,
             accepted_media_usage=payload.accepted_media_usage,
             accepted_risk_release=payload.accepted_risk_release,

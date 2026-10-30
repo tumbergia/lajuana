@@ -167,6 +167,7 @@ class TestUserServiceGet:
 
     def test_get_user_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Getting a non-existent user should raise ApiError 404."""
+
         async def _mock_get(_: str) -> None:
             return None
 
@@ -192,10 +193,10 @@ class FakeFindQuery:
     def __init__(self, items: list) -> None:
         self._items = items
 
-    def skip(self, n: int) -> "FakeFindQuery":
+    def skip(self, n: int) -> FakeFindQuery:
         return self
 
-    def limit(self, n: int) -> "FakeFindQuery":
+    def limit(self, n: int) -> FakeFindQuery:
         return self
 
     async def to_list(self) -> list:
@@ -244,6 +245,68 @@ class TestUserServiceList:
         async def run() -> None:
             results = await service.list_users()
             assert len(results) == 0
+
+        asyncio.run(run())
+
+
+class TestUserServiceResolveReference:
+    def test_resolve_user_reference_unique_token_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake_users = [
+            _fake_user_doc(
+                id="660000000000000000000055",
+                email="eduardo@example.com",
+                full_name="Eduardo Perez",
+            ),
+            _fake_user_doc(
+                id="660000000000000000000099",
+                email="maria@example.com",
+                full_name="Maria Lopez",
+            ),
+        ]
+
+        def _fake_find_all() -> FakeFindQuery:
+            return FakeFindQuery(fake_users)
+
+        monkeypatch.setattr("app.services.user_service.UserDocument.find_all", _fake_find_all)
+        service = UserService()
+
+        async def run() -> None:
+            result = await service.resolve_user_reference("eduardo")
+            assert result["status"] == "resolved"
+            assert result["user_id"] == "660000000000000000000055"
+
+        asyncio.run(run())
+
+    def test_resolve_user_reference_ambiguous_token_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake_users = [
+            _fake_user_doc(
+                id="660000000000000000000055",
+                email="eduardo@example.com",
+                full_name="Eduardo Perez",
+            ),
+            _fake_user_doc(
+                id="660000000000000000000056",
+                email="eduardo.gomez@example.com",
+                full_name="Eduardo Gomez",
+            ),
+        ]
+
+        def _fake_find_all() -> FakeFindQuery:
+            return FakeFindQuery(fake_users)
+
+        monkeypatch.setattr("app.services.user_service.UserDocument.find_all", _fake_find_all)
+        service = UserService()
+
+        async def run() -> None:
+            result = await service.resolve_user_reference("eduardo")
+            assert result["status"] == "ambiguous"
+            assert len(result["matches"]) == 2
 
         asyncio.run(run())
 
@@ -315,6 +378,7 @@ class TestUserServiceUpdate:
 
     def test_update_user_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Updating a non-existent user should raise ApiError 404."""
+
         async def _mock_get(_: str) -> None:
             return None
 
@@ -385,6 +449,7 @@ class TestUserServiceSoftDelete:
 
     def test_soft_delete_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Soft-deleting a non-existent user should raise ApiError 404."""
+
         async def _mock_get(_: str) -> None:
             return None
 

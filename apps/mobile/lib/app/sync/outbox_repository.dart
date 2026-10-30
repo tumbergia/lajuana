@@ -45,7 +45,11 @@ class OutboxFailed {
 
 /// Hooks que cada feature registra para su tipo de entidad.
 class OutboxEntityHandler {
-  const OutboxEntityHandler({this.preparePayload, this.onApplied, this.onFailed});
+  const OutboxEntityHandler({
+    this.preparePayload,
+    this.onApplied,
+    this.onFailed,
+  });
 
   /// Ultima oportunidad de transformar el payload antes de enviarlo (p. ej.
   /// resolver FKs locales -> remotos). Devolver `null` deja la operacion
@@ -53,7 +57,8 @@ class OutboxEntityHandler {
   final Future<Map<String, dynamic>?> Function(
     SyncQueueOperation op,
     Map<String, dynamic> payload,
-  )? preparePayload;
+  )?
+  preparePayload;
 
   final Future<void> Function(OutboxApplied applied)? onApplied;
   final Future<void> Function(OutboxFailed failed)? onFailed;
@@ -64,9 +69,11 @@ class OutboxEntityHandler {
 /// de `CatalogsRepository` (flushQueue/_enqueue/_resolveRemoteId) pero
 /// agnostica de feature.
 class OutboxRepository extends ChangeNotifier {
-  OutboxRepository({required SyncDatabase database, required SyncOutboxClient api})
-    : _database = database,
-      _api = api;
+  OutboxRepository({
+    required SyncDatabase database,
+    required SyncOutboxClient api,
+  }) : _database = database,
+       _api = api;
 
   final SyncDatabase _database;
   final SyncOutboxClient _api;
@@ -138,7 +145,9 @@ class OutboxRepository extends ChangeNotifier {
   Future<int> pendingCount() async {
     final db = await _database.database;
     final count = Sqflite.firstIntValue(
-      await db.rawQuery("SELECT COUNT(*) FROM sync_queue WHERE status = 'pending'"),
+      await db.rawQuery(
+        "SELECT COUNT(*) FROM sync_queue WHERE status = 'pending'",
+      ),
     );
     return count ?? 0;
   }
@@ -236,9 +245,7 @@ class OutboxRepository extends ChangeNotifier {
             entityLocalId: op.entityLocalId,
             entityRemoteId: remoteId,
             version: result['version'] as int?,
-            payload: payload is Map
-                ? Map<String, dynamic>.from(payload)
-                : null,
+            payload: payload is Map ? Map<String, dynamic>.from(payload) : null,
           ),
         );
         await db.delete(

@@ -18,6 +18,7 @@ import os
 os.environ.setdefault("APP_ENV", "production")
 
 from motor.motor_asyncio import AsyncIOMotorClient
+
 from app.core.config import settings
 
 
@@ -52,7 +53,9 @@ async def main() -> None:
             {"$set": {"assigned_at": "$created_at"}},
         ],
     )
-    print(f"[migration] Phase 2: backfilled assigned_at from created_at for {result2.modified_count} documents")
+    print(
+        f"[migration] Phase 2: backfilled assigned_at from created_at for {result2.modified_count} documents"
+    )
 
     print("[migration] Done — priority and assigned_manually kept as deprecated fields")
 

@@ -5,20 +5,17 @@
 /// AUTO-GENERATED from OpenAPI schema `SaddleCreateSchema`.
 
 class SaddleCreate {
-
   final String code;
   final String? name;
   final bool? isAvailable;
   final String? notes;
 
-  const SaddleCreate(
-    {
+  const SaddleCreate({
     required this.code,
     this.name,
     this.isAvailable,
     this.notes,
-    }
-  );
+  });
 
   factory SaddleCreate.fromJson(Map<String, dynamic> json) {
     return SaddleCreate(
@@ -35,5 +32,4 @@ class SaddleCreate {
     'is_available': isAvailable,
     'notes': notes,
   };
-
 }

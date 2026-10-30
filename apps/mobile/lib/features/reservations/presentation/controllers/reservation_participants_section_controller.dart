@@ -16,8 +16,7 @@ class ReservationParticipantsSectionController extends ChangeNotifier {
   /// Actualiza el estado desde el detalle de la reserva.
   void updateFromDetail(ReservationDetail detail) {
     participants = detail.participants;
-    totalExpected =
-        detail.expectedParticipantsCount ?? detail.participantCount;
+    totalExpected = detail.expectedParticipantsCount ?? detail.participantCount;
     totalCompleted = detail.participantsCompletedCount;
     hasMedicalAlert = participants.any((p) => p.hasMedicalAlert);
     hasFoodRestriction = participants.any((p) => p.hasFoodRestriction);

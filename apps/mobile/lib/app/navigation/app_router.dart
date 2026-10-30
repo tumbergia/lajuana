@@ -77,6 +77,7 @@ class AppRouter {
             ? AuthenticatedShell(
                 authController: deps.authController,
                 contactsApiClient: deps.apiClient,
+                analyticsApiClient: deps.analyticsApiClient,
                 catalogsModule: deps.catalogsModule,
                 reservationsModule: deps.reservationsModule,
                 saddlesModule: deps.saddlesModule,
@@ -88,6 +89,7 @@ class AppRouter {
                 voiceAssistantModule: deps.voiceAssistantModule,
                 configurationModule: deps.configurationModule,
                 notificationsModule: deps.notificationsModule,
+                usersModule: deps.usersModule,
               )
             : LoginScreen(controller: deps.authController);
         break;

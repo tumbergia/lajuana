@@ -34,7 +34,9 @@ router = APIRouter(prefix="/assignments", tags=["Asignaciones"])
 )
 async def create_assignment(
     payload: AssignmentCreateSchema,
-    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_CREATE))],
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_CREATE))
+    ],
     service: AssignmentService = Depends(get_assignment_service),
 ) -> AssignmentResponseSchema:
     return await assignment_to_response(
@@ -69,7 +71,9 @@ async def get_assignment(
 async def update_assignment(
     assignment_id: str,
     payload: AssignmentUpdateSchema,
-    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))],
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))
+    ],
     service: AssignmentService = Depends(get_assignment_service),
 ) -> AssignmentResponseSchema:
     return await assignment_to_response(
@@ -88,7 +92,9 @@ async def update_assignment(
 )
 async def finalize_assignment(
     assignment_id: str,
-    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))],
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))
+    ],
     service: AssignmentService = Depends(get_assignment_service),
 ) -> AssignmentResponseSchema:
     return await assignment_to_response(
@@ -107,7 +113,9 @@ async def finalize_assignment(
 )
 async def unfinalize_assignment(
     assignment_id: str,
-    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))],
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))
+    ],
     service: AssignmentService = Depends(get_assignment_service),
 ) -> AssignmentResponseSchema:
     return await assignment_to_response(
@@ -126,7 +134,9 @@ async def unfinalize_assignment(
 )
 async def delete_assignment(
     assignment_id: str,
-    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))],
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))
+    ],
     service: AssignmentService = Depends(get_assignment_service),
 ) -> AssignmentResponseSchema:
     return await assignment_to_response(
@@ -146,11 +156,16 @@ async def delete_assignment(
 async def replace_assignment(
     assignment_id: str,
     payload: AssignmentReplaceSchema,
-    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_CREATE, Permission.ASSIGNMENT_UPDATE))],
+    current_user: Annotated[
+        UserDocument,
+        Depends(require_permissions(Permission.ASSIGNMENT_CREATE, Permission.ASSIGNMENT_UPDATE)),
+    ],
     service: AssignmentService = Depends(get_assignment_service),
 ) -> AssignmentResponseSchema:
     return await assignment_to_response(
-        await service.replace(assignment_id, payload, actor_id=current_user.id, actor_role=current_user.role),
+        await service.replace(
+            assignment_id, payload, actor_id=current_user.id, actor_role=current_user.role
+        ),
     )
 
 
@@ -181,7 +196,9 @@ async def get_assignment_board(
 async def finalize_all_assignments(
     reservation_id: str,
     payload: BulkActionSchema,
-    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))],
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))
+    ],
     service: AssignmentService = Depends(get_assignment_service),
 ) -> AssignmentBoardResponseSchema:
     return await service.finalize_all(
@@ -202,7 +219,9 @@ async def finalize_all_assignments(
 async def unfinalize_all_assignments(
     reservation_id: str,
     payload: BulkActionSchema,
-    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))],
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))
+    ],
     service: AssignmentService = Depends(get_assignment_service),
 ) -> AssignmentBoardResponseSchema:
     return await service.unfinalize_all(
@@ -223,7 +242,9 @@ async def unfinalize_all_assignments(
 async def batch_update_assignments(
     reservation_id: str,
     payload: BatchUpdateSchema,
-    current_user: Annotated[UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))],
+    current_user: Annotated[
+        UserDocument, Depends(require_permissions(Permission.ASSIGNMENT_UPDATE))
+    ],
     service: AssignmentService = Depends(get_assignment_service),
 ) -> AssignmentBoardResponseSchema:
     return await service.batch_update(

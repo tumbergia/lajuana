@@ -2,7 +2,9 @@ import traceback
 
 from fastapi import APIRouter
 
+from app.ai.assistant.assistant_gate import AssistantGate
 from app.ai.assistant.orchestrator import AssistantOrchestrator
+from app.core.errors import ApiError
 from app.core.logging import logger
 from app.schemas.ask import AskRequest, AskResponse
 
@@ -19,6 +21,15 @@ router = APIRouter(tags=["Assistant"])
     ),
 )
 async def ask(request: AskRequest) -> AskResponse:
+    gate = AssistantGate()
+    decision = await gate.evaluate()
+    if not decision.allowed:
+        raise ApiError(
+            status_code=409,
+            code="assistant.disabled",
+            message="El asistente está deshabilitado globalmente.",
+        )
+
     orchestrator = AssistantOrchestrator()
     try:
         public_request = request.model_copy(update={"channel": "test"})

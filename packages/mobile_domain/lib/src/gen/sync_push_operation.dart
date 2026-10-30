@@ -4,19 +4,19 @@
 
 /// AUTO-GENERATED from OpenAPI schema `SyncPushOperationSchema`.
 
-class SyncPushOperation {
+import 'sync_push_operation_operation_type.dart';
 
+class SyncPushOperation {
   final String operationId;
   final String entityType;
   final String entityLocalId;
   final String? entityRemoteId;
-  final operation_type operationType;
+  final SyncPushOperationOperationType operationType;
   final String? baseVersion;
   final String idempotencyKey;
   final Map<String, dynamic> payload;
 
-  const SyncPushOperation(
-    {
+  const SyncPushOperation({
     required this.operationId,
     required this.entityType,
     required this.entityLocalId,
@@ -25,8 +25,7 @@ class SyncPushOperation {
     this.baseVersion,
     required this.idempotencyKey,
     required this.payload,
-    }
-  );
+  });
 
   factory SyncPushOperation.fromJson(Map<String, dynamic> json) {
     return SyncPushOperation(
@@ -34,7 +33,8 @@ class SyncPushOperation {
       entityType: json['entity_type'] as String,
       entityLocalId: json['entity_local_id'] as String,
       entityRemoteId: json['entity_remote_id'] as String?,
-      operationType: operation_type.fromJson(json['operation_type'] as Map<String, dynamic>),
+      operationType: (json['operation_type'] as String)
+          .toSyncPushOperationOperationType(),
       baseVersion: json['base_version'] as String?,
       idempotencyKey: json['idempotency_key'] as String,
       payload: json['payload'] as Map<String, dynamic>,
@@ -46,10 +46,9 @@ class SyncPushOperation {
     'entity_type': entityType,
     'entity_local_id': entityLocalId,
     'entity_remote_id': entityRemoteId,
-    'operation_type': operationType,
+    'operation_type': operationType.toJson(),
     'base_version': baseVersion,
     'idempotency_key': idempotencyKey,
     'payload': payload,
   };
-
 }

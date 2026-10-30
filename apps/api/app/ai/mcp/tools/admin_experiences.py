@@ -13,6 +13,7 @@ from app.ai.mcp.tool_contracts import (
     AdminUpdateExperienceOutput,
     ToolBlockingReason,
 )
+from app.ai.mcp.tools.slug_utils import slugify, unique_slug
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument
 from app.schemas.experience import ExperienceCreateSchema, ExperienceUpdateSchema
@@ -21,7 +22,16 @@ from app.services.experience_service import ExperienceService
 
 def _get_service() -> ExperienceService:
     from app.core.di import Container
+
     return Container.get_instance().experience_service
+
+
+def _format_experience_matches(matches: list[dict[str, Any]]) -> str:
+    return ", ".join(
+        str(item.get("label") or item.get("name") or item.get("experience_id"))
+        for item in matches[:5]
+        if isinstance(item, dict)
+    )
 
 
 async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
@@ -32,11 +42,9 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
     output: AdminCreateExperienceOutput | None = None
 
     try:
-        filtered = {
-            k: v
-            for k, v in kwargs.items()
-            if k in ExperienceCreateSchema.model_fields
-        }
+        filtered = {k: v for k, v in kwargs.items() if k in ExperienceCreateSchema.model_fields}
+        if not filtered.get("slug") and filtered.get("name"):
+            filtered["slug"] = await unique_slug(ExperienceDocument, slugify(filtered["name"]))
         payload = ExperienceCreateSchema.model_validate(filtered)
         doc = await _get_service().create(payload)
 
@@ -54,6 +62,7 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
         output = AdminCreateExperienceOutput(
             created=False,
             trace_id=trace_id,
+            message=exc.message,
             blocking_reasons=[
                 ToolBlockingReason(code=exc.code, message=exc.message, details=exc.details or {})
             ],
@@ -65,6 +74,7 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
         output = AdminCreateExperienceOutput(
             created=False,
             trace_id=trace_id,
+            message=str(exc),
             blocking_reasons=[ToolBlockingReason(code=error_code, message=str(exc))],
         )
         return output.model_dump(mode="json")
@@ -77,7 +87,9 @@ async def admin_create_experience(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_experience",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -152,7 +164,9 @@ async def admin_update_experience(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_experience",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -219,7 +233,9 @@ async def admin_list_experiences_admin(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_list_experiences_admin",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,
@@ -236,6 +252,42 @@ async def admin_deactivate_experience(**kwargs: Any) -> dict[str, Any]:
 
     try:
         experience_id = kwargs.get("experience_id")
+        if not experience_id and kwargs.get("q"):
+            resolution = await _get_service().resolve_experience_reference(str(kwargs["q"]))
+            if resolution.get("status") == "resolved":
+                experience_id = str(resolution.get("experience_id"))
+            elif resolution.get("matches"):
+                matches = resolution.get("matches", [])
+                message = (
+                    f"Encontré estas coincidencias para experiencia '{resolution.get('reference', kwargs['q'])}': "
+                    f"{_format_experience_matches(matches)}. Indícame el experience_id exacto o copia una de estas opciones."
+                )
+                output = AdminDeactivateExperienceOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    blocking_reasons=[
+                        ToolBlockingReason(
+                            code="experience.reference_ambiguous",
+                            message=message,
+                            details={"matches": matches},
+                        )
+                    ],
+                )
+                return output.model_dump(mode="json")
+            else:
+                message = (
+                    f"No encontré coincidencias para experiencia '{resolution.get('reference', kwargs['q'])}'. "
+                    "Indícame el experience_id exacto o el nombre/slug exacto."
+                )
+                output = AdminDeactivateExperienceOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    blocking_reasons=[
+                        ToolBlockingReason(code="experience.reference_not_found", message=message)
+                    ],
+                )
+                return output.model_dump(mode="json")
+
         if not experience_id:
             output = AdminDeactivateExperienceOutput(
                 deactivated=False,
@@ -287,7 +339,9 @@ async def admin_deactivate_experience(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_deactivate_experience",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,

@@ -9,8 +9,10 @@ import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/app_voice_fab.dart';
 
 import '../../domain/voice_platform_support.dart';
+import '../../domain/voice_chart_spec.dart';
 import '../controllers/voice_assistant_controller.dart';
 import '../navigation/voice_assistant_navigation.dart';
+import 'voice_chart_card.dart';
 import 'voice_result_presenter.dart';
 
 class AdminVoiceSheet extends StatefulWidget {
@@ -105,15 +107,21 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
         final scheme = theme.colorScheme;
         final isDark = theme.brightness == Brightness.dark;
         final visualizerColor = isDark ? Colors.white : scheme.primary;
-        final isAnsweredPhase = controller.phase == VoicePhase.answered ||
+        final isAnsweredPhase =
+            controller.phase == VoicePhase.answered ||
             controller.phase == VoicePhase.handoff;
         final structuredResult = _structuredResult(controller);
-        final showManualInput = !isAnsweredPhase &&
+        final chartSpec = _chartSpec(controller);
+        final showManualInput =
+            !isAnsweredPhase &&
             (controller.allowsManualInput ||
                 !controller.speechSupported ||
                 controller.phase == VoicePhase.error ||
-                controller.phase == VoicePhase.needsInput);
-        final showVisualizer = controller.speechSupported &&
+                controller.phase == VoicePhase.needsInput ||
+                controller.phase == VoicePhase.idle ||
+                controller.phase == VoicePhase.listening);
+        final showVisualizer =
+            controller.speechSupported &&
             !isAnsweredPhase &&
             (controller.phase == VoicePhase.listening ||
                 controller.phase == VoicePhase.processing ||
@@ -133,19 +141,48 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                   ? constraints.maxHeight
                   : fallbackMaxHeight;
               final chromeHeight = _chromeHeight(controller.phase);
-              final bodyMaxHeight =
-                  (maxHeight - chromeHeight).clamp(120.0, maxHeight);
+              final bodyMaxHeight = (maxHeight - chromeHeight).clamp(
+                120.0,
+                maxHeight,
+              );
 
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const AppSectionHeader(
-                    eyebrow: 'Asistente',
-                    title: 'Comando de voz',
-                    subtitle:
-                        'Di una instrucción de gestión y el asistente ejecutará la acción.',
-                    variant: AppSectionHeaderVariant.compact,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Expanded(
+                        child: AppSectionHeader(
+                          eyebrow: 'Asistente',
+                          title: 'Comando de voz',
+                          subtitle:
+                              'Di una instrucción de gestión y el asistente ejecutará la acción.',
+                          variant: AppSectionHeaderVariant.compact,
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Nueva conversación',
+                        icon: Icon(
+                          Icons.add_comment_rounded,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        onPressed: controller.startNewConversation,
+                      ),
+                      IconButton(
+                        tooltip: controller.speechOutputEnabled
+                            ? 'Silenciar respuesta hablada'
+                            : 'Activar respuesta hablada',
+                        icon: Icon(
+                          controller.speechOutputEnabled
+                              ? Icons.volume_up_rounded
+                              : Icons.volume_off_rounded,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        onPressed: controller.toggleSpeechOutput,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   ConstrainedBox(
@@ -188,6 +225,10 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                                 items: structuredResult.items,
                               ),
                             ],
+                            if (chartSpec != null) ...[
+                              const SizedBox(height: 12),
+                              VoiceChartCard(spec: chartSpec),
+                            ],
                             if (showManualInput) ...[
                               const SizedBox(height: 16),
                               AppTextField(
@@ -201,8 +242,7 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                                   padding: const EdgeInsets.only(top: 8),
                                   child: Text(
                                     VoicePlatformSupport.unsupportedSpeechHint,
-                                    style:
-                                        theme.textTheme.labelSmall?.copyWith(
+                                    style: theme.textTheme.labelSmall?.copyWith(
                                       color: scheme.onSurfaceVariant,
                                     ),
                                   ),
@@ -212,7 +252,8 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                               const SizedBox(height: 24),
                               Center(
                                 child: AnimatedScale(
-                                  scale: controller.phase ==
+                                  scale:
+                                      controller.phase ==
                                               VoicePhase.listening ||
                                           controller.phase ==
                                               VoicePhase.processing
@@ -220,7 +261,8 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                                       : 0.96,
                                   duration: const Duration(milliseconds: 250),
                                   child: VoiceVisualizer(
-                                    isActive: controller.phase ==
+                                    isActive:
+                                        controller.phase ==
                                             VoicePhase.listening ||
                                         controller.phase ==
                                             VoicePhase.processing,
@@ -257,14 +299,18 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     const headerAndGaps = 130.0;
     final actionsHeight = switch (phase) {
       VoicePhase.awaitingConfirmation => 188.0,
-      VoicePhase.answered || VoicePhase.handoff => 132.0,
+      // Chart + actions: leave more room for the scrollable body.
+      VoicePhase.answered || VoicePhase.handoff => 120.0,
       VoicePhase.needsInput || VoicePhase.error => 132.0,
       _ => 88.0,
     };
     return headerAndGaps + actionsHeight;
   }
 
-  Widget _buildActions(BuildContext context, VoiceAssistantController controller) {
+  Widget _buildActions(
+    BuildContext context,
+    VoiceAssistantController controller,
+  ) {
     switch (controller.phase) {
       case VoicePhase.answered:
       case VoicePhase.handoff:
@@ -293,7 +339,9 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
             AppButton(
               label: 'Confirmar',
               icon: Icons.check_rounded,
-              onPressed: controller.isProcessing ? null : controller.confirmPendingAction,
+              onPressed: controller.isProcessing
+                  ? null
+                  : controller.confirmPendingAction,
               expanded: true,
             ),
             const SizedBox(height: 12),
@@ -301,7 +349,9 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
               label: 'Cancelar acción',
               variant: AppButtonVariant.secondary,
               icon: Icons.close_rounded,
-              onPressed: controller.isProcessing ? null : controller.cancelPendingAction,
+              onPressed: controller.isProcessing
+                  ? null
+                  : controller.cancelPendingAction,
               expanded: true,
             ),
             const SizedBox(height: 12),
@@ -373,8 +423,8 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
                 onTap: controller.isProcessing
                     ? null
                     : (controller.isListening
-                        ? controller.stopListening
-                        : controller.startListening),
+                          ? controller.stopListening
+                          : controller.startListening),
               ),
             ],
             const SizedBox(width: 12),
@@ -382,10 +432,9 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
               child: AppButton(
                 label: controller.isProcessing ? 'Procesando' : 'Enviar',
                 icon: Icons.send_rounded,
-                onPressed:
-                    controller.isProcessing || !controller.canSend
-                        ? null
-                        : controller.sendTranscript,
+                onPressed: controller.isProcessing || !controller.canSend
+                    ? null
+                    : controller.sendTranscript,
                 expanded: true,
               ),
             ),
@@ -407,7 +456,9 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     };
   }
 
-  VoiceStructuredResult? _structuredResult(VoiceAssistantController controller) {
+  VoiceStructuredResult? _structuredResult(
+    VoiceAssistantController controller,
+  ) {
     final result = controller.result;
     final navigation = widget.navigation;
     if (result == null || navigation == null) return null;
@@ -426,16 +477,31 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     );
   }
 
+  VoiceChartSpec? _chartSpec(VoiceAssistantController controller) {
+    final result = controller.result;
+    if (result == null) return null;
+    if (controller.phase != VoicePhase.answered &&
+        controller.phase != VoicePhase.handoff &&
+        controller.phase != VoicePhase.awaitingConfirmation &&
+        controller.phase != VoicePhase.needsInput) {
+      return null;
+    }
+    return VoiceChartSpec.tryParse(result.toolOutput['chart']);
+  }
+
   String _bodyKey(
     VoiceAssistantController controller,
     VoiceStructuredResult? structuredResult,
   ) {
-    if (controller.errorMessage != null) return 'error:${controller.errorMessage}';
+    if (controller.errorMessage != null)
+      return 'error:${controller.errorMessage}';
     if (controller.phase == VoicePhase.processing) {
       return 'processing:${controller.processingStage.name}';
     }
-    if (structuredResult != null) {
-      return 'structured:${controller.result!.traceId}:${structuredResult.summary}';
+    final chart = _chartSpec(controller);
+    if (structuredResult != null || chart != null) {
+      return 'structured:${controller.result!.traceId}:'
+          '${structuredResult?.summary ?? ''}:${chart?.title ?? ''}';
     }
     if (controller.result != null &&
         (controller.phase == VoicePhase.answered ||
@@ -459,6 +525,17 @@ class _AdminVoiceSheetState extends State<AdminVoiceSheet> {
     }
     if (structuredResult != null) {
       return structuredResult.summary;
+    }
+    final chart = _chartSpec(controller);
+    if (chart != null &&
+        controller.result != null &&
+        controller.result!.response.trim().isNotEmpty) {
+      return controller.result!.response;
+    }
+    if (chart != null) {
+      return chart.subtitle == null
+          ? chart.title
+          : '${chart.title}. ${chart.subtitle}';
     }
     if (controller.result != null &&
         (controller.phase == VoicePhase.answered ||
@@ -495,10 +572,7 @@ class _VoiceCard extends StatelessWidget {
 }
 
 class _ToolChip extends StatelessWidget {
-  const _ToolChip({
-    required this.action,
-    required this.toolName,
-  });
+  const _ToolChip({required this.action, required this.toolName});
 
   final String action;
   final String toolName;
@@ -518,9 +592,9 @@ class _ToolChip extends StatelessWidget {
         child: Text(
           '$action · $toolName',
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                letterSpacing: 0.4,
-              ),
+            color: scheme.onSurfaceVariant,
+            letterSpacing: 0.4,
+          ),
         ),
       ),
     );

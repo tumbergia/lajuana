@@ -8,13 +8,13 @@ from app.conversations.services.conversation_scheduler import (
     ConversationScheduler,
 )
 from app.core.db import close_db, init_db
-from app.migrations import run_migrations
 from app.core.di import Container
 from app.core.logging import logger, reconfigure_logger
 from app.jobs.expire_reservation_drafts import ReservationDraftExpireWorker
 from app.jobs.notification_outbox_worker import NotificationOutboxWorker
 from app.jobs.pre_service_reminder_scheduler import PreServiceReminderScheduler
 from app.jobs.whatsapp_media_worker import WhatsAppMediaWorker
+from app.migrations import run_migrations
 from app.migrations.seed_notification_templates import seed_notification_templates
 
 # Module-level references; actual init happens inside lifespan() after DI is ready

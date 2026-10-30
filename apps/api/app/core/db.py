@@ -35,6 +35,7 @@ from app.documents import (
     ReservationAuditLogDocument,
     ReservationDocument,
     ReservationProviderDocument,
+    RoleRequestDocument,
     SaddleDocument,
     ServiceLogDocument,
     SyncChangeDocument,
@@ -44,6 +45,12 @@ from app.documents import (
 )
 
 logger = logging.getLogger(__name__)
+
+LEGACY_NOTIFICATION_TEMPLATE_INDEX_KEYS = [("template_key", 1)]
+NOTIFICATION_TEMPLATE_COMPOUND_INDEX_KEYS = [
+    ("template_key", 1),
+    ("channel", 1),
+]
 
 
 def _resolve_srv_uri(uri: str) -> str:
@@ -106,6 +113,71 @@ class Database:
 db = Database()
 
 
+async def preflight_notification_template_natural_key(collection) -> tuple[list[str], int]:
+    dropped_indexes: list[str] = []
+
+    indexes = await collection.list_indexes()
+
+    async for index in indexes:
+        key = list(index.get("key", {}).items())
+        if key == LEGACY_NOTIFICATION_TEMPLATE_INDEX_KEYS and index.get("unique"):
+            dropped_indexes.append(index["name"])
+
+    for index_name in dropped_indexes:
+        await collection.drop_index(index_name)
+
+    removed_documents = 0
+    duplicate_groups = await collection.aggregate(
+        [
+            {
+                "$match": {
+                    "template_key": {"$exists": True},
+                    "channel": {"$exists": True},
+                }
+            },
+            {
+                "$sort": {
+                    "template_key": 1,
+                    "channel": 1,
+                    "updated_at": -1,
+                    "created_at": -1,
+                    "_id": 1,
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "template_key": "$template_key",
+                        "channel": "$channel",
+                    },
+                    "ids": {"$push": "$_id"},
+                    "count": {"$sum": 1},
+                }
+            },
+            {"$match": {"count": {"$gt": 1}}},
+        ]
+    )
+
+    async for duplicate_group in duplicate_groups:
+        ids = duplicate_group.get("ids", [])
+        duplicate_ids = ids[1:]
+        if not duplicate_ids:
+            continue
+
+        result = await collection.delete_many({"_id": {"$in": duplicate_ids}})
+        removed_documents += result.deleted_count
+
+        logger.warning(
+            "[db] Removed %d duplicate notification templates for %s/%s; kept %s",
+            result.deleted_count,
+            duplicate_group["_id"].get("template_key"),
+            duplicate_group["_id"].get("channel"),
+            ids[0],
+        )
+
+    return dropped_indexes, removed_documents
+
+
 async def init_db() -> None:
     if settings.app_skip_db_init:
         return
@@ -125,6 +197,19 @@ async def init_db() -> None:
         logger.warning("[db] Provider slug backfill failed — continuing", exc_info=True)
 
     # Staff→guide migration handled by 001_staff_to_guide in app.migrations
+
+    dropped_indexes, removed_duplicates = await preflight_notification_template_natural_key(
+        database[Collections.NOTIFICATION_TEMPLATES]
+    )
+    if dropped_indexes or removed_duplicates:
+        logger.info(
+            (
+                "[db] Notification template preflight dropped %d legacy indexes "
+                "and removed %d duplicates"
+            ),
+            len(dropped_indexes),
+            removed_duplicates,
+        )
 
     from beanie import init_beanie
 
@@ -156,6 +241,7 @@ async def init_db() -> None:
         MessageBufferDocument,
         OutboundMessageDocument,
         HumanReviewRequestDocument,
+        RoleRequestDocument,
         NotificationTemplateDocument,
         NotificationOutboxDocument,
         InAppNotificationDocument,

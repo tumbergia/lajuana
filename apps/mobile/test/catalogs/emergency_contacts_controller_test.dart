@@ -85,7 +85,10 @@ void main() {
       expect(controller.isRefreshing, false);
       expect(controller.items, isNotEmpty);
       expect(catalogsRepo.refreshContactsCallCount, 1);
-      expect(contactsRepo.listCallCount, 1); // list() called once during refresh
+      expect(
+        contactsRepo.listCallCount,
+        1,
+      ); // list() called once during refresh
     });
 
     test('guards against double refresh', () async {

@@ -8,7 +8,7 @@ lead to unsafe or incomplete ride preparations.
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
@@ -39,10 +39,10 @@ class FakeFindQuery:
     def __init__(self, items: list) -> None:
         self._items = items
 
-    def skip(self, n: int) -> "FakeFindQuery":
+    def skip(self, n: int) -> FakeFindQuery:
         return self
 
-    def limit(self, n: int) -> "FakeFindQuery":
+    def limit(self, n: int) -> FakeFindQuery:
         return self
 
     async def to_list(self) -> list:
@@ -98,8 +98,6 @@ def make_fake_saddle_doc(**overrides: object) -> SimpleNamespace:
     )
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
-
-
 
 
 class TestGetBoard:
@@ -237,14 +235,18 @@ class TestGetBoard:
         reservation = created["reservation"]
 
         # Mock equine service
-        async def mock_equine_list(_rid: str, limit: int = 200, skip: int = 0) -> list[tuple[SimpleNamespace, str | None]]:
+        async def mock_equine_list(
+            _rid: str, limit: int = 200, skip: int = 0
+        ) -> list[tuple[SimpleNamespace, str | None]]:
             return [
                 (make_fake_equine_doc(), None),
                 (make_fake_equine_doc(id=FAKE_EQ_ID_2, name="Relámpago"), "Equino inactivo"),
             ]
 
         # Mock saddle service
-        async def mock_saddle_list(_rid: str, limit: int = 200, skip: int = 0) -> list[tuple[SimpleNamespace, str | None]]:
+        async def mock_saddle_list(
+            _rid: str, limit: int = 200, skip: int = 0
+        ) -> list[tuple[SimpleNamespace, str | None]]:
             return [
                 (make_fake_saddle_doc(), None),
             ]
@@ -320,7 +322,8 @@ class TestGetBoard:
         asyncio.run(run())
 
     def test_get_board_no_equine_saddle_services(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Without equine/saddle services, those lists are empty."""
         self._patch_documents(monkeypatch)
@@ -336,6 +339,7 @@ class TestGetBoard:
 
     def test_get_board_reservation_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Non-existent reservation → 404."""
+
         async def _mock_get_none(_rid: str) -> None:
             return None
 
@@ -347,8 +351,9 @@ class TestGetBoard:
         service = AssignmentService()
 
         async def run() -> None:
-            from app.core.errors import ApiError
             from app.common.labels import ErrorCode
+            from app.core.errors import ApiError
+
             with pytest.raises(ApiError) as exc:
                 await service.get_board(FAKE_ID_3)
             assert exc.value.status_code == 404
@@ -357,7 +362,8 @@ class TestGetBoard:
         asyncio.run(run())
 
     def test_get_board_with_child_and_senior_blocking_reasons(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Participants < 12 or > 65 get appropriate blocking reasons."""
         reservation = SimpleNamespace(

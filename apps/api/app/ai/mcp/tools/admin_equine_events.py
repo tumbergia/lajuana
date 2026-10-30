@@ -25,6 +25,7 @@ from app.services.equine_event_service import EquineEventService
 
 def _get_service() -> EquineEventService:
     from app.core.di import Container
+
     return Container.get_instance().equine_event_service
 
 
@@ -176,7 +177,10 @@ async def admin_create_equine_event(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_equine_event",
-            input_data={"equine_id": equine_id, **{k: v for k, v in kwargs.items() if k in EquineEventCreateSchema.model_fields}},
+            input_data={
+                "equine_id": equine_id,
+                **{k: v for k, v in kwargs.items() if k in EquineEventCreateSchema.model_fields},
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,
@@ -232,7 +236,10 @@ async def admin_update_equine_event(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_equine_event",
-            input_data={"event_id": event_id, **{k: v for k, v in kwargs.items() if k in EquineEventUpdateSchema.model_fields}},
+            input_data={
+                "event_id": event_id,
+                **{k: v for k, v in kwargs.items() if k in EquineEventUpdateSchema.model_fields},
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,

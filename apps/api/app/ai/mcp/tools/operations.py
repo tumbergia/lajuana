@@ -115,9 +115,7 @@ async def admin_get_logistics_checklist(
             )
         )
 
-        participants = await ParticipantDocument.find(
-            {"reservation_id": reservation.id}
-        ).to_list()
+        participants = await ParticipantDocument.find({"reservation_id": reservation.id}).to_list()
         completed_participants = sum(1 for p in participants if p.is_completed)
         items.append(
             LogisticsChecklistItem(
@@ -139,7 +137,9 @@ async def admin_get_logistics_checklist(
         expected_participants = len(participants)
 
         # Asignaciones completas (todos los participantes tienen asignación)
-        all_assigned = assigned_participants >= expected_participants if expected_participants > 0 else False
+        all_assigned = (
+            assigned_participants >= expected_participants if expected_participants > 0 else False
+        )
         assignment_details = (
             f"{assigned_participants}/{expected_participants} participantes asignados"
             if expected_participants > 0
@@ -155,7 +155,9 @@ async def admin_get_logistics_checklist(
         )
 
         # Sillas asignadas — verificar que cada asignación tenga silla
-        all_saddles_assigned = all(a.saddle_id is not None for a in assignments) if assignments else False
+        all_saddles_assigned = (
+            all(a.saddle_id is not None for a in assignments) if assignments else False
+        )
         saddles_detail = None
         if assignments:
             missing_saddles = sum(1 for a in assignments if a.saddle_id is None)
@@ -178,7 +180,9 @@ async def admin_get_logistics_checklist(
                 if equine is None or not equine.is_available or not equine.is_active:
                     equines_unavailable += 1
         equine_availability_detail = (
-            f"{equines_unavailable} equino(s) asignado(s) no disponible(s)" if equines_unavailable > 0 else None
+            f"{equines_unavailable} equino(s) asignado(s) no disponible(s)"
+            if equines_unavailable > 0
+            else None
         )
         items.append(
             LogisticsChecklistItem(
@@ -189,9 +193,7 @@ async def admin_get_logistics_checklist(
             )
         )
 
-        policies = await PolicyDocument.find(
-            {"reservation_id": reservation.id}
-        ).to_list()
+        policies = await PolicyDocument.find({"reservation_id": reservation.id}).to_list()
         items.append(
             LogisticsChecklistItem(
                 category="polizas",
@@ -201,9 +203,7 @@ async def admin_get_logistics_checklist(
             )
         )
 
-        logs = await ServiceLogDocument.find(
-            {"reservation_id": reservation.id}
-        ).to_list()
+        logs = await ServiceLogDocument.find({"reservation_id": reservation.id}).to_list()
         has_arrival = any(
             getattr(log, "event_type", None) == ServiceLogEventType.ARRIVAL for log in logs
         )

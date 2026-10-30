@@ -2,7 +2,9 @@
 /// apostrophe for millions, dot for thousands, comma for decimals.
 /// Example: 1'234.567,89 | 500.000,00 | 999,00
 String formatColombianPrice(String value) {
-  final number = double.tryParse(value.replaceAll(',', '.').replaceAll("'", ''));
+  final number = double.tryParse(
+    value.replaceAll(',', '.').replaceAll("'", ''),
+  );
   if (number == null) return value;
   final formatted = number.toStringAsFixed(2);
   final dotPos = formatted.indexOf('.');

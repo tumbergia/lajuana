@@ -1,5 +1,4 @@
-"""P1: Equine CRUD — create, read, list, update, soft-delete.
-"""
+"""P1: Equine CRUD — create, read, list, update, soft-delete."""
 
 from __future__ import annotations
 
@@ -7,7 +6,6 @@ import asyncio
 from datetime import date, datetime
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
 
 import pytest
 
@@ -117,6 +115,7 @@ class TestEquineServiceGet:
 
     def test_get_equine_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Getting a non-existent equine should raise ApiError 404."""
+
         async def _mock_get(_: str) -> None:
             return None
 
@@ -172,9 +171,51 @@ class TestEquineServiceList:
 
         asyncio.run(run())
 
-    def test_list_equines_filtered_by_status(
-        self, monkeypatch: pytest.MonkeyPatch
+    def test_resolve_equine_reference_unique_name_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        fake_list = [
+            _fake_equine_doc(id="660000000000000000000203", name="Relampago"),
+            _fake_equine_doc(id="660000000000000000000204", name="Pegaso"),
+        ]
+
+        async def fake_list_fn(*args: object, **kwargs: object) -> list[SimpleNamespace]:
+            return fake_list
+
+        monkeypatch.setattr(EquineService, "list", fake_list_fn)
+        service = EquineService()
+
+        async def run() -> None:
+            result = await service.resolve_equine_reference("relampago")
+            assert result["status"] == "resolved"
+            assert result["equine_id"] == "660000000000000000000203"
+
+        asyncio.run(run())
+
+    def test_resolve_equine_reference_ambiguous_token_match(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        fake_list = [
+            _fake_equine_doc(id="660000000000000000000203", name="Relampago Azul"),
+            _fake_equine_doc(id="660000000000000000000204", name="Relampago Negro"),
+        ]
+
+        async def fake_list_fn(*args: object, **kwargs: object) -> list[SimpleNamespace]:
+            return fake_list
+
+        monkeypatch.setattr(EquineService, "list", fake_list_fn)
+        service = EquineService()
+
+        async def run() -> None:
+            result = await service.resolve_equine_reference("relampago")
+            assert result["status"] == "ambiguous"
+            assert len(result["matches"]) == 2
+
+        asyncio.run(run())
+
+    def test_list_equines_filtered_by_status(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Listing equines with a status filter should pass the filter."""
         captured_query: list[dict] = []
 
@@ -243,6 +284,7 @@ class TestEquineServiceUpdate:
 
     def test_update_equine_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Updating a non-existent equine should raise ApiError 404."""
+
         async def _mock_get(_: str) -> None:
             return None
 
@@ -288,6 +330,7 @@ class TestEquineServiceDeactivate:
 
     def test_deactivate_equine_not_found(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Deactivating a non-existent equine should raise ApiError 404."""
+
         async def _mock_get(_: str) -> None:
             return None
 
@@ -313,10 +356,10 @@ class FakeFindQuery:
     def __init__(self, items: list) -> None:
         self._items = items
 
-    def skip(self, n: int) -> "FakeFindQuery":
+    def skip(self, n: int) -> FakeFindQuery:
         return self
 
-    def limit(self, n: int) -> "FakeFindQuery":
+    def limit(self, n: int) -> FakeFindQuery:
         return self
 
     async def to_list(self) -> list:
@@ -340,7 +383,8 @@ class TestEquineServiceAvailableForReservation:
 
         async def _mock_get_reservation(_rid: str) -> SimpleNamespace:
             return SimpleNamespace(
-                id=VALID_OID, requested_date=requested_date,
+                id=VALID_OID,
+                requested_date=requested_date,
             )
 
         monkeypatch.setattr(
@@ -373,11 +417,14 @@ class TestEquineServiceAvailableForReservation:
         )
 
     def test_available_returns_all_equines_with_block_reason(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Should return ALL equines, each with a block_reason (None if assignable)."""
         active = _fake_equine_doc(id=VALID_OID, name="Active", is_active=True, is_available=True)
-        inactive = _fake_equine_doc(id=VALID_OID_2, name="Inactive", is_active=False, is_available=False)
+        inactive = _fake_equine_doc(
+            id=VALID_OID_2, name="Inactive", is_active=False, is_available=False
+        )
 
         self._patch_beanie(monkeypatch, equines=[active, inactive])
 
@@ -397,7 +444,8 @@ class TestEquineServiceAvailableForReservation:
         asyncio.run(run())
 
     def test_available_excludes_already_assigned_to_this_reservation(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Equinos ya asignados a esta reserva deben tener block_reason."""
         equine = _fake_equine_doc(id=VALID_OID, name="Asignado", is_active=True, is_available=True)
@@ -421,7 +469,8 @@ class TestEquineServiceAvailableForReservation:
         asyncio.run(run())
 
     def test_available_excludes_assigned_to_other_reservation_same_date(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Equinos asignados a otra reserva en la misma fecha deben tener block_reason."""
         equine = _fake_equine_doc(id=VALID_OID, name="Ocupado", is_active=True, is_available=True)
@@ -444,7 +493,8 @@ class TestEquineServiceAvailableForReservation:
         asyncio.run(run())
 
     def test_available_no_requested_date_returns_no_date_conflicts(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Reserva sin requested_date no debe filtrar por fecha."""
         equine = _fake_equine_doc(id=VALID_OID, name="SinFecha", is_active=True, is_available=True)

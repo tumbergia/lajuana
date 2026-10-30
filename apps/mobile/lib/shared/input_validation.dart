@@ -1,8 +1,6 @@
 /// Lightweight submit-time input helpers (no UI).
 abstract final class InputValidation {
-  static final RegExp _emailPattern = RegExp(
-    r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
-  );
+  static final RegExp _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
   static bool isValidEmail(String value) {
     final trimmed = value.trim();

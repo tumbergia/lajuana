@@ -35,12 +35,12 @@ class ReservationRowCard extends StatelessWidget {
             uppercase: false,
           )
         : reservation.hasPendingSync
-            ? const AppBadge(
-                label: 'Pendiente',
-                tone: AppBadgeTone.warning,
-                uppercase: false,
-              )
-            : null;
+        ? const AppBadge(
+            label: 'Pendiente',
+            tone: AppBadgeTone.warning,
+            uppercase: false,
+          )
+        : null;
 
     // Build subtitle with extra info if available
     String displaySubtitle = subtitle;

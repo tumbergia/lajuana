@@ -1,22 +1,41 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 import 'package:mobile_ui/src/voice/voice_context.dart';
 import 'package:mobile_ui/src/voice/voice_route.dart';
+import 'package:mobile_ui/src/widgets/app_equine_icon.dart';
 
 enum AppNavItem { none, inicio, reservas, equinos, experiencias, mas }
+
+/// Default bottom-nav tabs for administrators (full shell).
+const kDefaultAdminNavItems = <AppNavItem>[
+  AppNavItem.inicio,
+  AppNavItem.reservas,
+  AppNavItem.equinos,
+  AppNavItem.mas,
+];
+
+/// Bottom-nav tabs for guides (no analytics / Inicio).
+const kGuideNavItems = <AppNavItem>[
+  AppNavItem.reservas,
+  AppNavItem.equinos,
+  AppNavItem.mas,
+];
 
 class AppBottomNav extends StatefulWidget {
   final AppNavItem current;
   final ValueChanged<AppNavItem>? onTap;
   final Future<void> Function(BuildContext context, VoiceContext voiceContext)?
-      onVoiceLongPress;
+  onVoiceLongPress;
+
+  /// Tabs to render. Defaults to the full admin set.
+  final List<AppNavItem> visibleItems;
 
   const AppBottomNav({
     super.key,
     required this.current,
     this.onTap,
     this.onVoiceLongPress,
+    this.visibleItems = kDefaultAdminNavItems,
   });
 
   @override
@@ -119,58 +138,19 @@ class _AppBottomNavState extends State<AppBottomNav>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Expanded(
-                  child: _NavButton(
-                    item: AppNavItem.inicio,
-                    current: widget.current,
-                    label: 'Inicio',
-                    icon: Icons.grid_view_rounded,
-                    onTap: _handleTap,
-                    onHoldStart: _onLongPressStart,
-                    onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.inicio,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.inicio,
+                for (final item in widget.visibleItems)
+                  Expanded(
+                    child: _NavButton(
+                      item: item,
+                      current: widget.current,
+                      label: _labelFor(item),
+                      onTap: _handleTap,
+                      onHoldStart: _onLongPressStart,
+                      onHoldEnd: _onLongPressEnd,
+                      pressed: _pressedItem == item,
+                      launchingVoice: _voiceLaunchingItem == item,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: _NavButton(
-                    item: AppNavItem.reservas,
-                    current: widget.current,
-                    label: 'Reservas',
-                    icon: Icons.calendar_today_rounded,
-                    onTap: _handleTap,
-                    onHoldStart: _onLongPressStart,
-                    onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.reservas,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.reservas,
-                  ),
-                ),
-                Expanded(
-                  child: _NavButton(
-                    item: AppNavItem.equinos,
-                    current: widget.current,
-                    label: 'Equinos',
-                    icon: Symbols.chess_knight,
-                    onTap: _handleTap,
-                    onHoldStart: _onLongPressStart,
-                    onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.equinos,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.equinos,
-                  ),
-                ),
-                Expanded(
-                  child: _NavButton(
-                    item: AppNavItem.mas,
-                    current: widget.current,
-                    label: 'Más',
-                    icon: Icons.menu_rounded,
-                    onTap: _handleTap,
-                    onHoldStart: _onLongPressStart,
-                    onHoldEnd: _onLongPressEnd,
-                    pressed: _pressedItem == AppNavItem.mas,
-                    launchingVoice: _voiceLaunchingItem == AppNavItem.mas,
-                  ),
-                ),
               ],
             ),
           ),
@@ -178,13 +158,23 @@ class _AppBottomNavState extends State<AppBottomNav>
       ),
     );
   }
+
+  String _labelFor(AppNavItem item) {
+    return switch (item) {
+      AppNavItem.inicio => 'Inicio',
+      AppNavItem.reservas => 'Reservas',
+      AppNavItem.equinos => 'Equinos',
+      AppNavItem.experiencias => 'Experiencias',
+      AppNavItem.mas => 'Más',
+      AppNavItem.none => '',
+    };
+  }
 }
 
 class _NavButton extends StatelessWidget {
   final AppNavItem item;
   final AppNavItem current;
   final String label;
-  final IconData icon;
   final ValueChanged<AppNavItem>? onTap;
   final ValueChanged<AppNavItem>? onHoldStart;
   final VoidCallback? onHoldEnd;
@@ -195,13 +185,34 @@ class _NavButton extends StatelessWidget {
     required this.item,
     required this.current,
     required this.label,
-    required this.icon,
     required this.onTap,
     required this.onHoldStart,
     required this.onHoldEnd,
     required this.pressed,
     required this.launchingVoice,
   });
+
+  Widget _buildIcon({
+    required double size,
+    required Color color,
+    required bool voiceMode,
+  }) {
+    if (voiceMode) {
+      return Icon(Icons.mic_rounded, size: size, color: color);
+    }
+    if (item == AppNavItem.equinos) {
+      return AppEquineIcon(size: size, color: color);
+    }
+    final icon = switch (item) {
+      AppNavItem.inicio => Icons.grid_view_rounded,
+      AppNavItem.reservas => Icons.calendar_today_rounded,
+      AppNavItem.equinos => Icons.circle, // unreachable; handled above
+      AppNavItem.experiencias => Icons.explore_rounded,
+      AppNavItem.mas => Icons.menu_rounded,
+      AppNavItem.none => Icons.circle,
+    };
+    return Icon(icon, size: size, color: color);
+  }
 
   bool get isActive => item == current;
 
@@ -307,15 +318,17 @@ class _NavButton extends StatelessWidget {
                           ),
                         );
                       },
-                      child: Icon(
-                        voiceMode ? Icons.mic_rounded : icon,
+                      child: KeyedSubtree(
                         key: ValueKey('${item.name}-$voiceMode'),
-                        size: voiceMode ? 20 : 18,
-                        color: voiceMode
-                            ? (isDark
-                                  ? const Color(0xFF131313)
-                                  : theme.colorScheme.onPrimary)
-                            : fg,
+                        child: _buildIcon(
+                          size: voiceMode ? 20 : 18,
+                          color: voiceMode
+                              ? (isDark
+                                    ? const Color(0xFF131313)
+                                    : theme.colorScheme.onPrimary)
+                              : fg,
+                          voiceMode: voiceMode,
+                        ),
                       ),
                     ),
                     if (!voiceMode) ...[

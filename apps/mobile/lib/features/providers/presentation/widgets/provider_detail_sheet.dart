@@ -14,16 +14,16 @@ class ProviderDetailSheet extends StatefulWidget {
     super.key,
     required this.provider,
     required this.loadDetails,
-    required this.onEdit,
-    required this.onDeactivate,
-    required this.onReactivate,
+    this.onEdit,
+    this.onDeactivate,
+    this.onReactivate,
   });
 
   final ProviderRecord provider;
   final Future<ProviderRecord> Function() loadDetails;
-  final VoidCallback onEdit;
-  final VoidCallback onDeactivate;
-  final VoidCallback onReactivate;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDeactivate;
+  final VoidCallback? onReactivate;
 
   @override
   State<ProviderDetailSheet> createState() => _ProviderDetailSheetState();
@@ -102,15 +102,15 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
                       Text(
                         provider.name,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         provider.subtitle,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -128,9 +128,9 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
               if (_error != null) ...[
                 Text(
                   _error!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.error,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: scheme.error),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -175,17 +175,19 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
                 ],
               ),
               const SizedBox(height: 24),
-              AppButton(
-                label: 'Editar',
-                icon: Icons.edit_rounded,
-                expanded: true,
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  widget.onEdit();
-                },
-              ),
-              const SizedBox(height: 10),
-              if (provider.isInactive)
+              if (widget.onEdit != null) ...[
+                AppButton(
+                  label: 'Editar',
+                  icon: Icons.edit_rounded,
+                  expanded: true,
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    widget.onEdit!();
+                  },
+                ),
+                const SizedBox(height: 10),
+              ],
+              if (provider.isInactive && widget.onReactivate != null)
                 AppButton(
                   label: 'Reactivar',
                   icon: Icons.restore_rounded,
@@ -193,10 +195,10 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
                   expanded: true,
                   onPressed: () {
                     Navigator.of(context).pop();
-                    widget.onReactivate();
+                    widget.onReactivate!();
                   },
                 )
-              else
+              else if (!provider.isInactive && widget.onDeactivate != null)
                 AppButton(
                   label: 'Desactivar',
                   icon: Icons.delete_outline_rounded,
@@ -204,10 +206,13 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
                   expanded: true,
                   onPressed: () {
                     Navigator.of(context).pop();
-                    widget.onDeactivate();
+                    widget.onDeactivate!();
                   },
                 ),
-              const SizedBox(height: 10),
+              if (widget.onEdit != null ||
+                  widget.onDeactivate != null ||
+                  widget.onReactivate != null)
+                const SizedBox(height: 10),
               AppButton(
                 label: 'Cerrar',
                 icon: Icons.close_rounded,
@@ -228,19 +233,13 @@ class _ProviderDetailSheetState extends State<ProviderDetailSheet> {
     }
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: AppEntityRowCard(
-        title: label,
-        subtitle: value,
-      ),
+      child: AppEntityRowCard(title: label, subtitle: value),
     );
   }
 }
 
 class _DetailSection extends StatelessWidget {
-  const _DetailSection({
-    required this.title,
-    required this.children,
-  });
+  const _DetailSection({required this.title, required this.children});
 
   final String title;
   final List<Widget?> children;
@@ -256,9 +255,9 @@ class _DetailSection extends StatelessWidget {
         Text(
           title.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                letterSpacing: 1.2,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            letterSpacing: 1.2,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 8),
         ...visible,

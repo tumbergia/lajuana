@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
@@ -33,6 +34,11 @@ class FallbackRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw Exception('ReservationsModule no inyectado');
+  }
+
+  @override
   Future<ReservationDetail> updateReservation({
     required String reservationId,
     bool? assistantDisabled,
@@ -58,16 +64,16 @@ class FallbackRepository implements ReservationsRepository {
   }
 
   @override
-  Future<ReservationDetail> approvePaymentProof({
-    required String paymentProofId,
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
     String? note,
   }) async {
     throw Exception('ReservationsModule no inyectado');
   }
 
   @override
-  Future<ReservationDetail> approvePaymentWithoutProof({
-    required String reservationId,
+  Future<ReservationDetail> approvePaymentProof({
+    required String paymentProofId,
     String? note,
   }) async {
     throw Exception('ReservationsModule no inyectado');
@@ -101,6 +107,7 @@ class FallbackRepository implements ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw Exception('ReservationsModule no inyectado');
   }
@@ -157,9 +164,7 @@ class FallbackRepository implements ReservationsRepository {
   }
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {
+  Future<void> deleteReservationLogEntry({required String logId}) async {
     throw Exception('ReservationsModule no inyectado');
   }
 

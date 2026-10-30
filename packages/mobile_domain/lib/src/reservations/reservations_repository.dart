@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/reservation_status.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
@@ -24,6 +25,9 @@ abstract class ReservationsRepository {
   });
 
   Future<ReservationDetail> getReservationById(String reservationId);
+
+  /// Crea una reserva manualmente (online-only).
+  Future<ReservationDetail> createReservation(ReservationCreate payload);
 
   /// Actualiza campos editables de la reserva (p. ej. assistant_disabled).
   Future<ReservationDetail> updateReservation({
@@ -81,23 +85,18 @@ abstract class ReservationsRepository {
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   });
 
   /// Cancels a reservation (online-only, admin-only).
   /// Returns the full updated reservation detail.
-  Future<ReservationDetail> cancelReservation({
-    required String reservationId,
-  });
+  Future<ReservationDetail> cancelReservation({required String reservationId});
 
   /// Soft-deletes a reservation (sets deleted_at).
-  Future<ReservationDetail> deleteReservation({
-    required String reservationId,
-  });
+  Future<ReservationDetail> deleteReservation({required String reservationId});
 
   /// Restores a soft-deleted reservation.
-  Future<ReservationDetail> restoreReservation({
-    required String reservationId,
-  });
+  Future<ReservationDetail> restoreReservation({required String reservationId});
 
   /// Bitácora unificada de la reserva (más reciente primero).
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
@@ -119,9 +118,7 @@ abstract class ReservationsRepository {
   });
 
   /// Elimina una entrada de bitácora (soft delete).
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  });
+  Future<void> deleteReservationLogEntry({required String logId});
 
   /// Obtiene una nota manual con todas sus fotos (para edición).
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId);

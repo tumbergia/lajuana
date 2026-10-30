@@ -13,10 +13,10 @@ class VoiceAssistantApiClient {
     required Future<String?> Function() readAccessToken,
     required Future<bool> Function() refreshSession,
     http.Client? httpClient,
-  })  : _baseUrl = baseUrl,
-        _readAccessToken = readAccessToken,
-        _refreshSession = refreshSession,
-        _http = httpClient ?? http.Client();
+  }) : _baseUrl = baseUrl,
+       _readAccessToken = readAccessToken,
+       _refreshSession = refreshSession,
+       _http = httpClient ?? http.Client();
 
   final String _baseUrl;
   final Future<String?> Function() _readAccessToken;
@@ -88,9 +88,7 @@ class VoiceAssistantApiClient {
     };
   }
 
-  Future<http.Response> _execute(
-    Future<http.Response> Function() block,
-  ) async {
+  Future<http.Response> _execute(Future<http.Response> Function() block) async {
     try {
       return await block().timeout(const Duration(seconds: 60));
     } on TimeoutException {

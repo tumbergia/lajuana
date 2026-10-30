@@ -23,7 +23,7 @@ class _FakeAuthRepository implements AuthRepository {
   final bool _hasLocalSession;
 
   _FakeAuthRepository(this._snapshot, {bool hasLocalSession = true})
-      : _hasLocalSession = hasLocalSession;
+    : _hasLocalSession = hasLocalSession;
 
   /// The next repository call will throw [failure] (or a default failure).
   void failNext({AuthFailure? failure}) {
@@ -186,10 +186,12 @@ void main() {
   group('initial state', () {
     test('starts signedOut and bootstrapping', () {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -202,10 +204,12 @@ void main() {
 
     test('state fields have correct defaults', () {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -225,10 +229,12 @@ void main() {
 
     test('error is null', () {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -241,35 +247,41 @@ void main() {
   });
 
   group('appStarted', () {
-    test('success transitions to signedInVerified and stops bootstrapping',
-        () async {
-      final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
-      final controller = AuthController(
-        authRepository: fakeRepo,
-        networkStatusResolver: netResolver,
-      );
+    test(
+      'success transitions to signedInVerified and stops bootstrapping',
+      () async {
+        final fakeRepo = _FakeAuthRepository(defaultSnapshot);
+        final netResolver = _FakeNetworkStatusResolver(
+          const NetworkStatus(
+            linkType: LinkType.wifi,
+            backendReachability: BackendReachability.reachable,
+          ),
+        );
+        final controller = AuthController(
+          authRepository: fakeRepo,
+          networkStatusResolver: netResolver,
+        );
 
-      await controller.appStarted();
+        await controller.appStarted();
 
-      expect(controller.authState, LocalAuthState.signedInVerified);
-      expect(controller.currentUser, isNotNull);
-      expect(controller.currentUser!.localId, '1');
-      expect(controller.isBootstrapping, isFalse);
-      expect(controller.errorCode, isNull);
-      expect(controller.errorMessage, isNull);
-      controller.dispose();
-    });
+        expect(controller.authState, LocalAuthState.signedInVerified);
+        expect(controller.currentUser, isNotNull);
+        expect(controller.currentUser!.localId, '1');
+        expect(controller.isBootstrapping, isFalse);
+        expect(controller.errorCode, isNull);
+        expect(controller.errorMessage, isNull);
+        controller.dispose();
+      },
+    );
 
     test('failure sets signedOut and error code', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -288,10 +300,12 @@ void main() {
 
     test('idempotent — second call does not re-execute', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -316,10 +330,12 @@ void main() {
   group('loginSubmitted', () {
     test('success transitions to signedInVerified', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -340,10 +356,12 @@ void main() {
 
     test('failure sets error code', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -367,10 +385,12 @@ void main() {
   group('logoutRequested', () {
     test('success clears state to signedOut', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -394,10 +414,12 @@ void main() {
 
     test('failure sets error code and keeps prior state', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -422,10 +444,12 @@ void main() {
   group('registerSubmitted', () {
     test('success sets noticeCode', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -448,10 +472,12 @@ void main() {
   group('changePasswordSubmitted', () {
     test('success sets noticeCode', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -471,10 +497,12 @@ void main() {
 
     test('401 triggers sessionExpired', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -506,10 +534,12 @@ void main() {
   group('sessionExpired', () {
     test('sets invalid state and error', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -530,10 +560,12 @@ void main() {
   group('refreshRequested', () {
     test('success applies snapshot', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -550,10 +582,12 @@ void main() {
 
     test('failure sets error code', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -572,10 +606,12 @@ void main() {
   group('profileRefreshRequested', () {
     test('offline is no-op', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.offline,
-        backendReachability: BackendReachability.unknown,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.offline,
+          backendReachability: BackendReachability.unknown,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -620,10 +656,12 @@ void main() {
         isOfflineRestricted: true,
       );
       final fakeRepo = _FakeAuthRepository(localSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -645,10 +683,12 @@ void main() {
   group('messageForCode', () {
     test('known codes return expected messages', () {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -707,10 +747,12 @@ void main() {
 
     test('unknown code returns null', () {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,
@@ -726,10 +768,12 @@ void main() {
   group('dispose', () {
     test('cancels subscription without error', () async {
       final fakeRepo = _FakeAuthRepository(defaultSnapshot);
-      final netResolver = _FakeNetworkStatusResolver(const NetworkStatus(
-        linkType: LinkType.wifi,
-        backendReachability: BackendReachability.reachable,
-      ));
+      final netResolver = _FakeNetworkStatusResolver(
+        const NetworkStatus(
+          linkType: LinkType.wifi,
+          backendReachability: BackendReachability.reachable,
+        ),
+      );
       final controller = AuthController(
         authRepository: fakeRepo,
         networkStatusResolver: netResolver,

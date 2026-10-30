@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_centered_loader.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
+import 'package:mobile_ui/src/widgets/app_search_field.dart';
 import 'package:mobile_ui/src/widgets/app_segmented_filter.dart';
 import 'package:mobile_ui/src/widgets/app_status_banner.dart';
-import 'package:mobile_ui/src/widgets/app_text_field.dart';
 import 'package:mobile_ui/src/widgets/refresh_scope.dart';
 import 'package:mobile/features/assignments/assignments_module.dart';
 import 'package:mobile/features/auth/presentation/auth_controller.dart';
@@ -16,6 +16,7 @@ import 'package:mobile/features/reservations/infrastructure/repositories/fallbac
 import 'package:mobile/features/reservations/reservations_module.dart';
 import 'package:mobile/features/reservations/presentation/controllers/reservations_list_controller.dart';
 import 'package:mobile/features/reservations/presentation/widgets/reservation_row_card.dart';
+import 'reservation_create_page.dart';
 import 'reservation_detail_shell_screen.dart';
 
 class ReservationsModuleScreen extends StatefulWidget {
@@ -46,6 +47,32 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
   Future<void> onRefresh() => _listController.refresh();
   final TextEditingController _searchController = TextEditingController();
 
+  bool get _canCreateReservation {
+    final role = widget.authController?.currentUser?.role;
+    return role == 'admin' &&
+        widget.reservationsModule != null &&
+        widget.catalogsModule != null;
+  }
+
+  bool get _isGuide {
+    final role = widget.authController?.currentUser?.role.trim().toLowerCase();
+    return role == 'guide';
+  }
+
+  List<AppSegmentedFilterItem<String?>> get _statusFilterItems {
+    if (_isGuide) {
+      return const [
+        AppSegmentedFilterItem(label: 'Confirmadas', value: 'confirmadas'),
+      ];
+    }
+    return const [
+      AppSegmentedFilterItem(label: 'Pendientes', value: 'pendientes'),
+      AppSegmentedFilterItem(label: 'Confirmadas', value: 'confirmadas'),
+      AppSegmentedFilterItem(label: 'Cerradas', value: 'cerradas'),
+      AppSegmentedFilterItem(label: 'Eliminadas', value: 'eliminadas'),
+    ];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -59,6 +86,9 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
       _ownsListController = true;
     }
     _listController.addListener(_onListChanged);
+    if (_isGuide && _listController.filterGroup != 'confirmadas') {
+      _listController.setFilterGroup('confirmadas');
+    }
     if (_listController.state == ReservationsLoadState.idle) {
       _listController.loadInitial();
     }
@@ -84,6 +114,27 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
 
   void _onListChanged() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _openCreateReservation() async {
+    final reservationsModule = widget.reservationsModule;
+    final catalogsModule = widget.catalogsModule;
+    if (reservationsModule == null || catalogsModule == null) return;
+
+    final createdId = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ReservationCreatePage(
+          reservationsModule: reservationsModule,
+          catalogsModule: catalogsModule,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    await _listController.refresh();
+    if (createdId != null && createdId.isNotEmpty && mounted) {
+      _openReservationDetail(createdId);
+    }
   }
 
   void _openReservationDetail(String reservationId) {
@@ -129,10 +180,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppSectionHeader(
-                  eyebrow: 'Gestion',
-                  title: 'Reservas',
-                ),
+                AppSectionHeader(eyebrow: 'Gestion', title: 'Reservas'),
                 const SizedBox(height: 20),
 
                 // Search + calendar row
@@ -140,12 +188,9 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: AppTextField(
+                      child: AppSearchField(
                         controller: _searchController,
                         hintText: 'Buscar por titular, codigo...',
-                        variant: AppTextFieldVariant.filled,
-                        suffix:
-                            const Icon(Icons.search_rounded, size: 20),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -153,12 +198,12 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                       height: 44,
                       width: 44,
                       child: Material(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(8),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(2),
                         child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(2),
                           onTap: _openReservationCalendar,
                           child: Center(
                             child: Icon(
@@ -178,21 +223,22 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                 AppSegmentedFilter<String?>(
                   value: _listController.filterGroup,
                   onChanged: _listController.setFilterGroup,
-                  items: const [
-                    AppSegmentedFilterItem(
-                        label: 'Pendientes', value: 'pendientes'),
-                    AppSegmentedFilterItem(
-                        label: 'Confirmadas', value: 'confirmadas'),
-                    AppSegmentedFilterItem(
-                        label: 'Cerradas', value: 'cerradas'),
-                    AppSegmentedFilterItem(
-                        label: 'Eliminadas', value: 'eliminadas'),
-                  ],
+                  allowDeselect: !_isGuide,
+                  items: _statusFilterItems,
                 ),
 
+                if (_canCreateReservation) ...[
+                  const SizedBox(height: 12),
+                  AppButton(
+                    label: 'Crear reserva',
+                    icon: Icons.add,
+                    expanded: true,
+                    onPressed: _openCreateReservation,
+                  ),
+                ],
+
                 // Offline banner
-                if (state ==
-                    ReservationsLoadState.offlineFromCache) ...[
+                if (state == ReservationsLoadState.offlineFromCache) ...[
                   const SizedBox(height: 12),
                   AppStatusBanner(
                     title: 'Sin conexion',
@@ -271,8 +317,7 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
                 const Icon(Icons.error_outline_rounded, size: 48),
                 const SizedBox(height: 16),
                 Text(
-                  _listController.errorMessage ??
-                      'Error al cargar reservas.',
+                  _listController.errorMessage ?? 'Error al cargar reservas.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -303,29 +348,25 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
     }
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, i) {
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-              24,
-              0,
-              24,
-              i < items.length - 1 ? 10 : 24,
-            ),
-            child: ReservationRowCard(
-              reservation: items[i],
-              subtitle:
-                  items[i].experienceName ?? items[i].equineName,
-              highlightIfPending: items[i].status == 'pendientes',
-              openDetailsOnTap: true,
-              showRequestedDate: true,
-              onOpenDetail: () =>
-                  _openReservationDetail(items[i].id ?? items[i].code),
-            ),
-          );
-        },
-        childCount: items.length,
-      ),
+      delegate: SliverChildBuilderDelegate((context, i) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            0,
+            24,
+            i < items.length - 1 ? 10 : 24,
+          ),
+          child: ReservationRowCard(
+            reservation: items[i],
+            subtitle: items[i].experienceName ?? items[i].equineName,
+            highlightIfPending: items[i].status == 'pendientes',
+            openDetailsOnTap: true,
+            showRequestedDate: true,
+            onOpenDetail: () =>
+                _openReservationDetail(items[i].id ?? items[i].code),
+          ),
+        );
+      }, childCount: items.length),
     );
   }
 
@@ -340,13 +381,13 @@ class _ReservationsModuleScreenState extends State<ReservationsModuleScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48,
-              color: Theme.of(context).colorScheme.onSurfaceVariant),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium,
+          Icon(
+            icon,
+            size: 48,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
+          const SizedBox(height: 16),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
             message,

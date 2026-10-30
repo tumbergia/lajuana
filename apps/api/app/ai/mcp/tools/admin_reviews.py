@@ -76,7 +76,9 @@ async def admin_list_human_review_requests(**kwargs: Any) -> dict[str, Any]:
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_list_human_review_requests",
-            input={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else {},
             status="error" if error_code else "success",
             error_code=error_code,

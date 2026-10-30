@@ -24,11 +24,7 @@ class PaymentStatusCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.receipt_long_rounded,
-            size: 18,
-            color: foregroundColor,
-          ),
+          Icon(Icons.receipt_long_rounded, size: 18, color: foregroundColor),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

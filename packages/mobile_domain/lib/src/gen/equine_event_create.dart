@@ -4,10 +4,10 @@
 
 /// AUTO-GENERATED from OpenAPI schema `EquineEventCreateSchema`.
 
+import 'equine_event_create_source.dart';
 import 'equine_event_type.dart';
 
 class EquineEventCreate {
-
   final EquineEventType eventType;
   final DateTime happenedAt;
   final String title;
@@ -26,10 +26,9 @@ class EquineEventCreate {
   final bool? affectsAvailability;
   final String? resultingOperationalStatus;
   final String? restUntil;
-  final source? source;
+  final EquineEventCreateSource? source;
 
-  const EquineEventCreate(
-    {
+  const EquineEventCreate({
     required this.eventType,
     required this.happenedAt,
     required this.title,
@@ -49,8 +48,7 @@ class EquineEventCreate {
     this.resultingOperationalStatus,
     this.restUntil,
     this.source,
-    }
-  );
+  });
 
   factory EquineEventCreate.fromJson(Map<String, dynamic> json) {
     return EquineEventCreate(
@@ -70,9 +68,12 @@ class EquineEventCreate {
       dosage: json['dosage'] as String?,
       labResultSummary: json['lab_result_summary'] as String?,
       affectsAvailability: json['affects_availability'] as bool?,
-      resultingOperationalStatus: json['resulting_operational_status'] as String?,
+      resultingOperationalStatus:
+          json['resulting_operational_status'] as String?,
       restUntil: json['rest_until'] as String?,
-      source: json['source'] != null ? source.fromJson(json['source'] as Map<String, dynamic>) : null,
+      source: json['source'] != null
+          ? (json['source'] as String).toEquineEventCreateSource()
+          : null,
     );
   }
 
@@ -95,7 +96,6 @@ class EquineEventCreate {
     'affects_availability': affectsAvailability,
     'resulting_operational_status': resultingOperationalStatus,
     'rest_until': restUntil,
-    'source': source,
+    'source': source?.toJson(),
   };
-
 }

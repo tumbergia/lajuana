@@ -1,6 +1,5 @@
 import 'package:mobile/features/reservations/domain/models/reservation_status.dart';
 import 'package:mobile/features/reservations/presentation/helpers/reservation_status_labels.dart';
-import 'package:mobile/features/providers/presentation/models/provider_view_models.dart';
 import 'package:mobile_ui/src/widgets/app_badge.dart';
 
 /// Convierte snake_case técnico en texto legible como último recurso.
@@ -26,22 +25,18 @@ AppBadgeTone voiceReservationStatusTone(String? status) {
   final parsed = parseReservationStatus(status);
   return switch (parsed) {
     ReservationStatus.confirmed ||
-    ReservationStatus.completed =>
-      AppBadgeTone.success,
+    ReservationStatus.completed => AppBadgeTone.success,
     ReservationStatus.pendingPayment ||
     ReservationStatus.preReserved ||
-    ReservationStatus.quoted =>
-      AppBadgeTone.warning,
+    ReservationStatus.quoted => AppBadgeTone.warning,
     ReservationStatus.cancelled ||
-    ReservationStatus.expired =>
-      AppBadgeTone.danger,
+    ReservationStatus.expired => AppBadgeTone.danger,
     ReservationStatus.paymentReceived => AppBadgeTone.primary,
     _ => AppBadgeTone.neutral,
   };
 }
 
-String voicePaymentStatusLabel(String? status) =>
-    paymentStatusLabel(status);
+String voicePaymentStatusLabel(String? status) => paymentStatusLabel(status);
 
 String voiceAvailabilityLabel(bool isAvailable) =>
     isAvailable ? 'Disponible' : 'No disponible';
@@ -139,8 +134,8 @@ String? voiceString(Map<String, dynamic> map, String key) {
 String voiceMoneyCop(int? amount) {
   if (amount == null) return '';
   final text = amount.toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]}.',
-      );
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (m) => '${m[1]}.',
+  );
   return 'Desde \$$text';
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:material_symbols_icons/material_symbols_icons.dart';
 
 import 'package:mobile_ui/src/widgets/app_button.dart';
 import 'package:mobile_ui/src/widgets/app_section_header.dart';
@@ -41,8 +40,7 @@ class _SaddleFormSheetState extends State<SaddleFormSheet> {
     super.dispose();
   }
 
-  bool get _canSubmit =>
-      _codeCtrl.text.trim().isNotEmpty;
+  bool get _canSubmit => _codeCtrl.text.trim().isNotEmpty;
 
   void _submit() {
     if (!_canSubmit) return;
@@ -103,10 +101,7 @@ class _SaddleFormSheetState extends State<SaddleFormSheet> {
           // Availability toggle
           Row(
             children: [
-              Text(
-                'Disponible',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              Text('Disponible', style: Theme.of(context).textTheme.bodyMedium),
               const Spacer(),
               Switch(
                 value: _isAvailable,
@@ -124,9 +119,7 @@ class _SaddleFormSheetState extends State<SaddleFormSheet> {
           const SizedBox(height: 20),
           AppButton(
             label: widget.isEditing ? 'Guardar cambios' : 'Registrar silla',
-            icon: widget.isEditing
-                ? Icons.save_rounded
-                : Icons.add,
+            icon: widget.isEditing ? Icons.save_rounded : Icons.add,
             expanded: true,
             onPressed: _canSubmit ? _submit : null,
           ),

@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `EquineUpdateSchema`.
 
 class EquineUpdate {
-
   final String? name;
   final String? inventoryNumber;
   final String? species;
@@ -44,8 +43,7 @@ class EquineUpdate {
   final String? sourceRowNumber;
   final String? sourceUpdatedAtLabel;
 
-  const EquineUpdate(
-    {
+  const EquineUpdate({
     this.name,
     this.inventoryNumber,
     this.species,
@@ -83,8 +81,7 @@ class EquineUpdate {
     this.sourceSheet,
     this.sourceRowNumber,
     this.sourceUpdatedAtLabel,
-    }
-  );
+  });
 
   factory EquineUpdate.fromJson(Map<String, dynamic> json) {
     return EquineUpdate(
@@ -167,5 +164,4 @@ class EquineUpdate {
     'source_row_number': sourceRowNumber,
     'source_updated_at_label': sourceUpdatedAtLabel,
   };
-
 }

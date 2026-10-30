@@ -24,7 +24,16 @@ from app.services.saddle_service import SaddleService
 
 def _get_service() -> SaddleService:
     from app.core.di import Container
+
     return Container.get_instance().saddle_service
+
+
+def _format_saddle_matches(matches: list[dict[str, Any]]) -> str:
+    return ", ".join(
+        str(item.get("label") or item.get("code") or item.get("saddle_id"))
+        for item in matches[:5]
+        if isinstance(item, dict)
+    )
 
 
 async def _log(
@@ -202,7 +211,9 @@ async def admin_create_saddle(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_create_saddle",
-            input_data={k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}},
+            input_data={
+                k: v for k, v in kwargs.items() if k not in {"trace_id", "conversation_turn_id"}
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,
@@ -258,7 +269,10 @@ async def admin_update_saddle(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_update_saddle",
-            input_data={"saddle_id": saddle_id, **{k: v for k, v in kwargs.items() if k in SaddleUpdateSchema.model_fields}},
+            input_data={
+                "saddle_id": saddle_id,
+                **{k: v for k, v in kwargs.items() if k in SaddleUpdateSchema.model_fields},
+            },
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,
@@ -266,7 +280,7 @@ async def admin_update_saddle(
 
 
 async def admin_deactivate_saddle(
-    saddle_id: str,
+    saddle_id: str | None = None,
     trace_id: str | None = None,
     conversation_turn_id: str | None = None,
     **kwargs: Any,
@@ -277,6 +291,55 @@ async def admin_deactivate_saddle(
     output: AdminDeactivateSaddleOutput | None = None
 
     try:
+        if not saddle_id and kwargs.get("q"):
+            resolution = await _get_service().resolve_saddle_reference(str(kwargs["q"]))
+            if resolution.get("status") == "resolved":
+                saddle_id = str(resolution.get("saddle_id"))
+            elif resolution.get("matches"):
+                matches = resolution.get("matches", [])
+                message = (
+                    f"Encontré estas coincidencias para silla '{resolution.get('reference', kwargs['q'])}': "
+                    f"{_format_saddle_matches(matches)}. Indícame el saddle_id exacto o copia una de estas opciones."
+                )
+                output = AdminDeactivateSaddleOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    blocking_reasons=[
+                        ToolBlockingReason(
+                            code="saddle.reference_ambiguous",
+                            message=message,
+                            details={"matches": matches},
+                        )
+                    ],
+                )
+                return output.model_dump(mode="json")
+            else:
+                message = (
+                    f"No encontré coincidencias para silla '{resolution.get('reference', kwargs['q'])}'. "
+                    "Indícame el saddle_id exacto o el código/nombre exacto."
+                )
+                output = AdminDeactivateSaddleOutput(
+                    deactivated=False,
+                    trace_id=trace_id,
+                    blocking_reasons=[
+                        ToolBlockingReason(code="saddle.reference_not_found", message=message)
+                    ],
+                )
+                return output.model_dump(mode="json")
+
+        if not saddle_id:
+            output = AdminDeactivateSaddleOutput(
+                deactivated=False,
+                trace_id=trace_id,
+                blocking_reasons=[
+                    ToolBlockingReason(
+                        code="saddle.id_required",
+                        message="El campo saddle_id es obligatorio.",
+                    )
+                ],
+            )
+            return output.model_dump(mode="json")
+
         doc = await _get_service().get(saddle_id)
         code = doc.code
         await _get_service().soft_delete(saddle_id)
@@ -314,7 +377,7 @@ async def admin_deactivate_saddle(
             trace_id=trace_id,
             conversation_turn_id=conversation_turn_id,
             tool_name="admin_deactivate_saddle",
-            input_data={"saddle_id": saddle_id},
+            input_data={"saddle_id": saddle_id, "q": kwargs.get("q")},
             output=output.model_dump(mode="json") if output else None,
             error_code=error_code,
             started=started,
@@ -335,7 +398,8 @@ async def admin_list_available_saddles_for_reservation(
 
     try:
         pairs = await _get_service().list_available_for_reservation(
-            reservation_id, limit=limit,
+            reservation_id,
+            limit=limit,
         )
         items = [
             AdminListAvailableSaddlesItem(

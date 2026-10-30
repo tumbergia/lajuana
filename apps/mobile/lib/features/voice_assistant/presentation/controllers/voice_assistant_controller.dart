@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -25,10 +26,11 @@ enum VoiceProcessingStage { analyzing, planning, executing }
 
 class VoiceAssistantController extends ChangeNotifier {
   VoiceAssistantController({required VoiceAssistantApiClient apiClient})
-      : _apiClient = apiClient;
+    : _apiClient = apiClient;
 
   final VoiceAssistantApiClient _apiClient;
   final SpeechToText _speech = SpeechToText();
+  final FlutterTts _tts = FlutterTts();
 
   VoicePhase phase = VoicePhase.idle;
   VoiceProcessingStage processingStage = VoiceProcessingStage.analyzing;
@@ -38,9 +40,11 @@ class VoiceAssistantController extends ChangeNotifier {
   String? conversationId;
   bool _speechReady = false;
   bool _isListening = false;
+  bool _ttsReady = false;
   Timer? _processingTimer;
   DateTime? _processingStartedAt;
   bool speechSupported = VoicePlatformSupport.supportsNativeSpeech;
+  bool speechOutputEnabled = true;
   bool get allowsManualInput =>
       !speechSupported || VoicePlatformSupport.requiresExplicitListenGesture;
 
@@ -56,10 +60,10 @@ class VoiceAssistantController extends ChangeNotifier {
   bool get isListening => _isListening;
 
   String get processingStatusLabel => switch (processingStage) {
-        VoiceProcessingStage.analyzing => 'Analizando instrucción…',
-        VoiceProcessingStage.planning => 'Planificando acción…',
-        VoiceProcessingStage.executing => 'Ejecutando herramienta…',
-      };
+    VoiceProcessingStage.analyzing => 'Analizando instrucción…',
+    VoiceProcessingStage.planning => 'Planificando acción…',
+    VoiceProcessingStage.executing => 'Ejecutando herramienta…',
+  };
 
   Future<void> beginSession() async {
     conversationId ??=
@@ -69,6 +73,8 @@ class VoiceAssistantController extends ChangeNotifier {
     errorMessage = null;
     phase = VoicePhase.idle;
     notifyListeners();
+
+    await _ensureTtsReady();
 
     if (!speechSupported) {
       return;
@@ -119,6 +125,7 @@ class VoiceAssistantController extends ChangeNotifier {
 
     if (_isListening) return;
 
+    await _stopSpeaking();
     errorMessage = null;
     if (phase == VoicePhase.answered ||
         phase == VoicePhase.needsInput ||
@@ -176,6 +183,7 @@ class VoiceAssistantController extends ChangeNotifier {
 
   Future<void> _sendMessage(String message) async {
     _stopProcessingTimer();
+    await _stopSpeaking();
     phase = VoicePhase.processing;
     processingStage = VoiceProcessingStage.analyzing;
     _processingStartedAt = DateTime.now();
@@ -203,17 +211,14 @@ class VoiceAssistantController extends ChangeNotifier {
     result = response;
     if (response.isHandoff) {
       phase = VoicePhase.handoff;
-      return;
-    }
-    if (response.needsConfirmation) {
+    } else if (response.needsConfirmation) {
       phase = VoicePhase.awaitingConfirmation;
-      return;
-    }
-    if (response.isClarifying) {
+    } else if (response.isClarifying) {
       phase = VoicePhase.needsInput;
-      return;
+    } else {
+      phase = VoicePhase.answered;
     }
-    phase = VoicePhase.answered;
+    unawaited(_speakResponse(response.response));
   }
 
   void _startProcessingTimer() {
@@ -226,8 +231,8 @@ class VoiceAssistantController extends ChangeNotifier {
       final nextStage = elapsed.inMilliseconds < 1200
           ? VoiceProcessingStage.analyzing
           : elapsed.inMilliseconds < 3500
-              ? VoiceProcessingStage.planning
-              : VoiceProcessingStage.executing;
+          ? VoiceProcessingStage.planning
+          : VoiceProcessingStage.executing;
 
       if (nextStage != processingStage) {
         processingStage = nextStage;
@@ -249,6 +254,14 @@ class VoiceAssistantController extends ChangeNotifier {
     await startListening();
   }
 
+  Future<void> toggleSpeechOutput() async {
+    speechOutputEnabled = !speechOutputEnabled;
+    if (!speechOutputEnabled) {
+      await _stopSpeaking();
+    }
+    notifyListeners();
+  }
+
   Future<void> endSession() async {
     await cleanup();
     notifyListeners();
@@ -257,11 +270,50 @@ class VoiceAssistantController extends ChangeNotifier {
   Future<void> cleanup() async {
     _stopProcessingTimer();
     await stopListening();
-    conversationId = null;
+    await _stopSpeaking();
     transcript = '';
     result = null;
     errorMessage = null;
     phase = VoicePhase.idle;
+  }
+
+  Future<void> startNewConversation() async {
+    await cleanup();
+    conversationId =
+        'mobile-voice-${DateTime.now().toUtc().millisecondsSinceEpoch}';
+    notifyListeners();
+  }
+
+  Future<void> _ensureTtsReady() async {
+    if (_ttsReady) return;
+    try {
+      await _tts.setLanguage('es-CO');
+      await _tts.setSpeechRate(0.48);
+      await _tts.awaitSpeakCompletion(true);
+      _ttsReady = true;
+    } catch (_) {
+      speechOutputEnabled = false;
+    }
+  }
+
+  Future<void> _speakResponse(String text) async {
+    if (!speechOutputEnabled || text.trim().isEmpty) return;
+    await _ensureTtsReady();
+    if (!_ttsReady) return;
+    try {
+      await _tts.speak(text);
+    } catch (_) {
+      speechOutputEnabled = false;
+    }
+  }
+
+  Future<void> _stopSpeaking() async {
+    if (!_ttsReady) return;
+    try {
+      await _tts.stop();
+    } catch (_) {
+      // Canal TTS no disponible (tests o plataforma sin plugin).
+    }
   }
 
   Future<String> _resolveSpanishLocaleId() async {
@@ -306,6 +358,7 @@ class VoiceAssistantController extends ChangeNotifier {
   void dispose() {
     _stopProcessingTimer();
     unawaited(_speech.stop());
+    unawaited(_stopSpeaking());
     super.dispose();
   }
 }

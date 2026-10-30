@@ -16,7 +16,7 @@ enum SaddlesLoadState {
 
 class SaddlesListController extends ChangeNotifier {
   SaddlesListController({required SaddlesRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final SaddlesRepository _repository;
   bool _disposed = false;
@@ -70,9 +70,7 @@ class SaddlesListController extends ChangeNotifier {
   }
 
   Future<void> _fetchFromRemote({required bool isRefresh}) async {
-    final domainItems = await _repository.listSaddles(
-      includeDeleted: true,
-    );
+    final domainItems = await _repository.listSaddles(includeDeleted: true);
     lastSyncAt = DateTime.now();
 
     if (domainItems.isEmpty) {
@@ -113,13 +111,9 @@ class SaddlesListController extends ChangeNotifier {
     var result = _allItems;
 
     if (includeDeleted) {
-      result = result
-          .where((item) => item.isDeleted)
-          .toList(growable: false);
+      result = result.where((item) => item.isDeleted).toList(growable: false);
     } else {
-      result = result
-          .where((item) => !item.isDeleted)
-          .toList(growable: false);
+      result = result.where((item) => !item.isDeleted).toList(growable: false);
     }
 
     // Apply availability filter
@@ -133,9 +127,11 @@ class SaddlesListController extends ChangeNotifier {
     if (searchQuery.trim().isNotEmpty) {
       final q = searchQuery.toLowerCase().trim();
       result = result
-          .where((item) =>
-              item.code.toLowerCase().contains(q) ||
-              item.name.toLowerCase().contains(q))
+          .where(
+            (item) =>
+                item.code.toLowerCase().contains(q) ||
+                item.name.toLowerCase().contains(q),
+          )
           .toList(growable: false);
     }
 

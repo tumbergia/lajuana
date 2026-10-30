@@ -14,7 +14,7 @@ class SyncPullRequestSchema(BaseModel):
 
 
 class SyncChangeSchema(BaseModel):
-    change_type: Literal["upsert", "delete"]
+    change_type: Literal["upsert", "delete", "purge"]
     entity_id: str
     version: int
     updated_at: datetime
@@ -41,11 +41,15 @@ class SyncPushOperationSchema(BaseModel):
         "create",
         "update",
         "delete",
+        "purge",
         "restore",
         "upload_file",
         "transition_status",
         "confirm_reservation",
         "cancel_reservation",
+        "mark_read",
+        "mark_all_read",
+        "clear_inbox",
     ]
     base_version: int | None = None
     idempotency_key: str

@@ -363,9 +363,7 @@ PROVIDERS_SEED: list[dict[str, object]] = [
         "status": ProviderStatus.ACTIVE,
         "location_label": "Villamaría / Termales del Ruiz",
         "service_categories": ["alojamiento", "alimentacion", "termalismo"],
-        "source_notes": (
-            "Aparece en 10D 9N como alojamiento y alimentación en Termales del Ruiz."
-        ),
+        "source_notes": ("Aparece en 10D 9N como alojamiento y alimentación en Termales del Ruiz."),
         "tariff_notes": "Tarifas tomadas del Excel de costos cuando aplique.",
     },
     {
@@ -458,9 +456,7 @@ PROVIDERS_SEED: list[dict[str, object]] = [
             "El Excel menciona Jeep Willys #1, Jeep Willys #2, Jeep pasajeros y Jeep logística, "
             "pero no identifica proveedor."
         ),
-        "capacity_notes": (
-            "Capacidades vistas en Excel: 2, 4, 6, 8 y 8-12 pax según tramo."
-        ),
+        "capacity_notes": ("Capacidades vistas en Excel: 2, 4, 6, 8 y 8-12 pax según tramo."),
         "tariff_notes": "Pendiente asociar proveedor real y tarifas por tramo.",
     },
     {
@@ -640,20 +636,21 @@ async def seed_reservations(
 
 def _make_placeholder_png() -> bytes:
     """Return a minimal valid 1x1 white pixel PNG (~68 bytes)."""
-    import struct, zlib  # noqa: PLC0415 — inline for clarity
+    import struct
+    import zlib  # noqa: PLC0415 — inline for clarity
 
-    sig = b'\x89PNG\r\n\x1a\n'
+    sig = b"\x89PNG\r\n\x1a\n"
     # IHDR: 1x1 pixel, 8-bit RGB
-    ihdr_data = struct.pack('>IIBBBBB', 1, 1, 8, 2, 0, 0, 0)
-    ihdr_crc = zlib.crc32(b'IHDR' + ihdr_data) & 0xffffffff
-    ihdr = struct.pack('>I', 13) + b'IHDR' + ihdr_data + struct.pack('>I', ihdr_crc)
+    ihdr_data = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
+    ihdr_crc = zlib.crc32(b"IHDR" + ihdr_data) & 0xFFFFFFFF
+    ihdr = struct.pack(">I", 13) + b"IHDR" + ihdr_data + struct.pack(">I", ihdr_crc)
     # IDAT: filter byte (0) + white pixel (255,255,255)
-    raw = zlib.compress(b'\x00\xff\xff\xff')
-    idat_crc = zlib.crc32(b'IDAT' + raw) & 0xffffffff
-    idat = struct.pack('>I', len(raw)) + b'IDAT' + raw + struct.pack('>I', idat_crc)
+    raw = zlib.compress(b"\x00\xff\xff\xff")
+    idat_crc = zlib.crc32(b"IDAT" + raw) & 0xFFFFFFFF
+    idat = struct.pack(">I", len(raw)) + b"IDAT" + raw + struct.pack(">I", idat_crc)
     # IEND
-    iend_crc = zlib.crc32(b'IEND') & 0xffffffff
-    iend = struct.pack('>I', 0) + b'IEND' + struct.pack('>I', iend_crc)
+    iend_crc = zlib.crc32(b"IEND") & 0xFFFFFFFF
+    iend = struct.pack(">I", 0) + b"IEND" + struct.pack(">I", iend_crc)
     return sig + ihdr + idat + iend
 
 

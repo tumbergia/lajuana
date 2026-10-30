@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:mobile/app/sync/outbox_repository.dart';
 import 'package:mobile/features/auth/infrastructure/connectivity/network_models.dart';
+import 'package:mobile/features/assignments/infrastructure/remote/assignments_api_client.dart';
 import 'package:mobile_domain/src/assignments/assignment_board.dart';
 import 'package:mobile_domain/mobile_domain.dart';
 import 'package:mobile_domain/src/assignments/assignments_repository.dart';
@@ -31,8 +32,8 @@ class AssignmentBoardController extends ChangeNotifier {
     this.isAdmin = false,
     this.networkStatus,
     OutboxRepository? outbox,
-  })  : _repository = repository,
-        _outbox = outbox;
+  }) : _repository = repository,
+       _outbox = outbox;
 
   final bool isAdmin;
   final NetworkStatus? networkStatus;
@@ -181,11 +182,12 @@ class AssignmentBoardController extends ChangeNotifier {
       return;
     }
 
-    final participant =
-        _board?.participants.cast<BoardParticipant?>().firstWhere(
-      (p) => p?.assignment?.assignmentId == assignmentId,
-      orElse: () => null,
-    );
+    final participant = _board?.participants
+        .cast<BoardParticipant?>()
+        .firstWhere(
+          (p) => p?.assignment?.assignmentId == assignmentId,
+          orElse: () => null,
+        );
     if (participant == null) return;
 
     final pid = participant.participantId;
@@ -213,11 +215,12 @@ class AssignmentBoardController extends ChangeNotifier {
       return;
     }
 
-    final participant =
-        _board?.participants.cast<BoardParticipant?>().firstWhere(
-      (p) => p?.assignment?.assignmentId == assignmentId,
-      orElse: () => null,
-    );
+    final participant = _board?.participants
+        .cast<BoardParticipant?>()
+        .firstWhere(
+          (p) => p?.assignment?.assignmentId == assignmentId,
+          orElse: () => null,
+        );
     if (participant == null) return;
 
     final pid = participant.participantId;
@@ -244,11 +247,12 @@ class AssignmentBoardController extends ChangeNotifier {
       return;
     }
 
-    final participant =
-        _board?.participants.cast<BoardParticipant?>().firstWhere(
-      (p) => p?.assignment?.assignmentId == assignmentId,
-      orElse: () => null,
-    );
+    final participant = _board?.participants
+        .cast<BoardParticipant?>()
+        .firstWhere(
+          (p) => p?.assignment?.assignmentId == assignmentId,
+          orElse: () => null,
+        );
     if (participant == null) return;
 
     final pid = participant.participantId;
@@ -334,6 +338,12 @@ class AssignmentBoardController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       await _handleFinalizeFailure(e, notes: notes);
+      _isFinalizing = false;
+      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionErrorCode = e is AssignmentsApiFailure
+          ? e.code
+          : 'batchUpdate.failed';
+      notifyListeners();
     }
   }
 
@@ -341,10 +351,7 @@ class AssignmentBoardController extends ChangeNotifier {
   /// outbox, se encolan las operaciones individuales (asignaciones +
   /// remociones) para enviarse al reconectar; la vista local optimista se
   /// conserva. Para errores que no son de red, se reporta el fallo.
-  Future<void> _handleFinalizeFailure(
-    Object error, {
-    String? notes,
-  }) async {
+  Future<void> _handleFinalizeFailure(Object error, {String? notes}) async {
     final outbox = _outbox;
     if (_backendUnreachable && outbox != null && _reservationId != null) {
       await _enqueuePendingAssignments(outbox, notes: notes);
@@ -429,15 +436,20 @@ class AssignmentBoardController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _board = await _repository.unfinalizeAll(reservationId: rid, notes: notes);
+      _board = await _repository.unfinalizeAll(
+        reservationId: rid,
+        notes: notes,
+      );
       _clearPendingState();
       _isRevertingFinalize = false;
       _state = BoardLoadState.loaded;
       notifyListeners();
     } catch (e) {
       _isRevertingFinalize = false;
-      _actionError = e.toString();
-      _actionErrorCode = 'unfinalizeAll.failed';
+      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionErrorCode = e is AssignmentsApiFailure
+          ? e.code
+          : 'unfinalizeAll.failed';
       notifyListeners();
     }
   }
@@ -466,8 +478,10 @@ class AssignmentBoardController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isRevertingFinalize = false;
-      _actionError = e.toString();
-      _actionErrorCode = 'unfinalize.failed';
+      _actionError = e is AssignmentsApiFailure ? e.message : e.toString();
+      _actionErrorCode = e is AssignmentsApiFailure
+          ? e.code
+          : 'unfinalize.failed';
       notifyListeners();
     }
   }
@@ -578,6 +592,37 @@ class AssignmentBoardController extends ChangeNotifier {
     );
   }
 
+  /// Assign a saddle to a pending (draft) assignment by participant id.
+  /// For server-tracked assignments, use [update] with [assignmentId] instead.
+  void assignSaddle({required String participantId, String? saddleId}) {
+    if (!canMutate) {
+      _actionError = 'Sin permisos o sin conexión para asignar silla.';
+      _actionErrorCode = 'permission.denied';
+      notifyListeners();
+      return;
+    }
+
+    final existingPending = _pendingAssignments[participantId];
+    if (existingPending == null) {
+      _actionError = 'Primero asigna un equino.';
+      _actionErrorCode = 'assignment.equine_required';
+      notifyListeners();
+      return;
+    }
+
+    _pendingAssignments[participantId] = _PendingAssignment(
+      assignmentId: existingPending.assignmentId,
+      equineId: existingPending.equineId,
+      saddleId: saddleId,
+    );
+
+    _patchLocalBoardAfterAssign(
+      participantId: participantId,
+      equineId: existingPending.equineId,
+      saddleId: saddleId,
+    );
+  }
+
   /// Remove a pending (draft) assignment that has no server id.
   void removePending(String participantId) {
     if (!canMutate) {
@@ -618,14 +663,13 @@ class AssignmentBoardController extends ChangeNotifier {
           )
         : null;
 
-    final existingAssignment =
-        _board!.participants
-            .cast<BoardParticipant?>()
-            .firstWhere(
-              (p) => p?.participantId == participantId,
-              orElse: () => null,
-            )
-            ?.assignment;
+    final existingAssignment = _board!.participants
+        .cast<BoardParticipant?>()
+        .firstWhere(
+          (p) => p?.participantId == participantId,
+          orElse: () => null,
+        )
+        ?.assignment;
 
     final updatedParticipants = _board!.participants.map((p) {
       if (p.participantId != participantId) return p;
@@ -702,9 +746,7 @@ class AssignmentBoardController extends ChangeNotifier {
     );
   }
 
-  void _patchLocalBoardAfterRemove({
-    required String participantId,
-  }) {
+  void _patchLocalBoardAfterRemove({required String participantId}) {
     if (_board == null) return;
 
     final updatedParticipants = _board!.participants.map((p) {

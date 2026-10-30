@@ -9,11 +9,10 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, time
+from datetime import UTC, datetime
 
 from beanie import init_beanie
 from pymongo import AsyncMongoClient
-from pymongo.errors import DuplicateKeyError
 
 from app.common.enums import (
     ExperienceDifficulty,

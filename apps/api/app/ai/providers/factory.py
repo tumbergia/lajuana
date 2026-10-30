@@ -12,7 +12,10 @@ from app.services.config_service import ConfigService
 async def get_llm_provider() -> StructuredLLMProvider:
     config = await ConfigService().get_ai_configuration_document()
     ai = config.ai_configuration if config else None
-    if ai and ai.enabled:
+    if ai is not None:
+        if not ai.enabled:
+            raise LLMProviderError("No hay una configuración de IA activa.")
+
         mode = getattr(ai, "provider_mode", None) or "env"
         if mode == "env":
             if settings.llm_provider == "gemini" and settings.gemini_api_key:

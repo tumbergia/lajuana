@@ -21,10 +21,12 @@ class EquineMapper {
   static Equine dtoToDomain(EquineDto dto) {
     final json = dto.toJson();
     // Asegurar fechas no vacías para gen.Equine.fromJson (DateTime.parse).
-    if (json['created_at'] is String && (json['created_at'] as String).isEmpty) {
+    if (json['created_at'] is String &&
+        (json['created_at'] as String).isEmpty) {
       json['created_at'] = '1970-01-01T00:00:00Z';
     }
-    if (json['updated_at'] is String && (json['updated_at'] as String).isEmpty) {
+    if (json['updated_at'] is String &&
+        (json['updated_at'] as String).isEmpty) {
       json['updated_at'] = '1970-01-01T00:00:00Z';
     }
     // Sanitizar operational_status: el gen model lanza excepción para valores
@@ -97,7 +99,9 @@ class EquineMapper {
     );
   }
 
-  static EquineTimelineEntry timelineEntryDtoToDomain(EquineTimelineEntryDto dto) {
+  static EquineTimelineEntry timelineEntryDtoToDomain(
+    EquineTimelineEntryDto dto,
+  ) {
     // Si la fecha no se puede parsear, usar epoch como centinela.
     // La UI ocultará entradas con happenedAt en 1970.
     final happenedAt =
@@ -163,7 +167,10 @@ class EquineMapper {
     // Detalle estructurado: profundiza la bitácora mostrando cada dato del
     // evento de cuidado sin necesidad de abrirlo.
     final details = <AppLogbookDetail>[
-      AppLogbookDetail(label: 'Tipo', value: equineEventTypeLabel(entry.eventType)),
+      AppLogbookDetail(
+        label: 'Tipo',
+        value: equineEventTypeLabel(entry.eventType),
+      ),
       if (entry.severity != null)
         AppLogbookDetail(
           label: 'Severidad',
@@ -249,7 +256,9 @@ class EquineMapper {
     }
   }
 
-  static AppLogbookEntryState _logbookStateFromEntry(EquineTimelineEntry entry) {
+  static AppLogbookEntryState _logbookStateFromEntry(
+    EquineTimelineEntry entry,
+  ) {
     if (entry.syncPending) return AppLogbookEntryState.warning;
     if (entry.affectsAvailability) return AppLogbookEntryState.warning;
     return _logbookStateFromEventType(entry.eventType, entry.severity);
@@ -333,8 +342,13 @@ class EquineMapper {
 
 /// Valores de operational_status aceptados por el gen model.
 const _validOpStatuses = {
-  'available', 'resting', 'in_service', 'injured', 'retired',
-  'unavailable', 'restricted',
+  'available',
+  'resting',
+  'in_service',
+  'injured',
+  'retired',
+  'unavailable',
+  'restricted',
 };
 
 AppBadgeTone _statusTone(EquineOperationalStatus status) {

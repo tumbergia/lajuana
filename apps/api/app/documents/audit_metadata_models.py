@@ -42,10 +42,7 @@ class ParticipantMetadata(BaseModel):
 # Union of all known metadata shapes.
 # Add new variants here as actions evolve.
 AuditMetadata = (
-    AssignmentMetadata
-    | ReplacementMetadata
-    | NotificationMetadata
-    | ParticipantMetadata
+    AssignmentMetadata | ReplacementMetadata | NotificationMetadata | ParticipantMetadata
 )
 
 _METADATA_MODELS: tuple[type[BaseModel], ...] = (

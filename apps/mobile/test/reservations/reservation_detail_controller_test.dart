@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
@@ -37,7 +38,6 @@ class _FakeSuccessRepository implements ReservationsRepository {
     throw UnimplementedError();
   }
 
-
   @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
@@ -55,7 +55,8 @@ class _FakeSuccessRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail?> getCachedReservationDetail(
-      String reservationId) async {
+    String reservationId,
+  ) async {
     return detail;
   }
 
@@ -67,6 +68,14 @@ class _FakeSuccessRepository implements ReservationsRepository {
   @override
   Future<ReservationDetail> approvePaymentProof({
     required String paymentProofId,
+    String? note,
+  }) async {
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
     String? note,
   }) async {
     return detail;
@@ -97,9 +106,15 @@ class _FakeSuccessRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     return detail;
   }
@@ -132,8 +147,7 @@ class _FakeSuccessRepository implements ReservationsRepository {
   @override
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<void> createReservationLogNote({
@@ -150,9 +164,7 @@ class _FakeSuccessRepository implements ReservationsRepository {
   }) async {}
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {}
+  Future<void> deleteReservationLogEntry({required String logId}) async {}
 
   @override
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
@@ -185,15 +197,13 @@ class _FakeSuccessRepository implements ReservationsRepository {
   @override
   Future<List<ReservationProviderItem>> getReservationProviders(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<List<ProviderCatalogItem>> listProviders({
     String? query,
     bool isActive = true,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<ReservationProviderItem> createReservationProvider({
@@ -202,8 +212,7 @@ class _FakeSuccessRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String status = 'pending',
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<ReservationProviderItem> updateReservationProvider({
@@ -212,8 +221,7 @@ class _FakeSuccessRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String? status,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<void> deleteReservationProvider({
@@ -240,7 +248,6 @@ class _FakeErrorRepository implements ReservationsRepository {
     throw UnimplementedError();
   }
 
-
   @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
@@ -258,7 +265,8 @@ class _FakeErrorRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail?> getCachedReservationDetail(
-      String reservationId) async {
+    String reservationId,
+  ) async {
     return null; // No cache fallback
   }
 
@@ -270,6 +278,14 @@ class _FakeErrorRepository implements ReservationsRepository {
   @override
   Future<ReservationDetail> approvePaymentProof({
     required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
     String? note,
   }) async {
     throw Exception('Network error');
@@ -300,9 +316,15 @@ class _FakeErrorRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw Exception('Network error');
   }
@@ -335,8 +357,7 @@ class _FakeErrorRepository implements ReservationsRepository {
   @override
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<void> createReservationLogNote({
@@ -353,9 +374,7 @@ class _FakeErrorRepository implements ReservationsRepository {
   }) async {}
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {}
+  Future<void> deleteReservationLogEntry({required String logId}) async {}
 
   @override
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
@@ -388,15 +407,13 @@ class _FakeErrorRepository implements ReservationsRepository {
   @override
   Future<List<ReservationProviderItem>> getReservationProviders(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<List<ProviderCatalogItem>> listProviders({
     String? query,
     bool isActive = true,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<ReservationProviderItem> createReservationProvider({
@@ -405,8 +422,7 @@ class _FakeErrorRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String status = 'pending',
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<ReservationProviderItem> updateReservationProvider({
@@ -415,8 +431,7 @@ class _FakeErrorRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String? status,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<void> deleteReservationProvider({
@@ -447,7 +462,6 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
     throw UnimplementedError();
   }
 
-
   @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
@@ -465,7 +479,8 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail?> getCachedReservationDetail(
-      String reservationId) async {
+    String reservationId,
+  ) async {
     return cachedDetail;
   }
 
@@ -477,6 +492,14 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   @override
   Future<ReservationDetail> approvePaymentProof({
     required String paymentProofId,
+    String? note,
+  }) async {
+    throw Exception('Network error');
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
     String? note,
   }) async {
     throw Exception('Network error');
@@ -507,9 +530,15 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw Exception('Network error');
   }
@@ -542,8 +571,7 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   @override
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<void> createReservationLogNote({
@@ -560,9 +588,7 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   }) async {}
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {}
+  Future<void> deleteReservationLogEntry({required String logId}) async {}
 
   @override
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
@@ -595,15 +621,13 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
   @override
   Future<List<ReservationProviderItem>> getReservationProviders(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<List<ProviderCatalogItem>> listProviders({
     String? query,
     bool isActive = true,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<ReservationProviderItem> createReservationProvider({
@@ -612,8 +636,7 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String status = 'pending',
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<ReservationProviderItem> updateReservationProvider({
@@ -622,8 +645,7 @@ class _FakeOfflineWithCacheRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String? status,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<void> deleteReservationProvider({
@@ -672,76 +694,77 @@ ReservationDetail _makeDetail({
 
 void main() {
   group('ReservationDetailController', () {
-    test('loadDetail sets success state and populates detail with participants',
-        () async {
-      final detail = _makeDetail(
-        participants: [
-          {
-            'id': 'p1',
-            'reservation_id': 'r1',
-            'first_name': 'Carlos',
-            'last_name': 'Mejia',
-            'birth_date': '1990-05-15',
-            'document_type': 'cc',
-            'document_number': '80000001',
-            'phone': '3110000001',
-            'country': 'Colombia',
-            'city': 'Manizales',
-            'height_cm': '175.0',
-            'weight_kg': '70.0',
-            'experience_level': 'intermediate',
-            'dietary_restrictions': null,
-            'health_conditions': null,
-            'sensory_disabilities': null,
-            'emergency_contact': {
-              'name': 'Contacto',
-              'phone': '3200000001',
+    test(
+      'loadDetail sets success state and populates detail with participants',
+      () async {
+        final detail = _makeDetail(
+          participants: [
+            {
+              'id': 'p1',
+              'reservation_id': 'r1',
+              'first_name': 'Carlos',
+              'last_name': 'Mejia',
+              'birth_date': '1990-05-15',
+              'document_type': 'cc',
+              'document_number': '80000001',
+              'phone': '3110000001',
+              'country': 'Colombia',
+              'city': 'Manizales',
+              'height_cm': '175.0',
+              'weight_kg': '70.0',
+              'experience_level': 'intermediate',
+              'dietary_restrictions': null,
+              'health_conditions': null,
+              'sensory_disabilities': null,
+              'emergency_contact': {'name': 'Contacto', 'phone': '3200000001'},
+              'accepted_data_processing': true,
+              'accepted_media_usage': true,
+              'accepted_risk_release': true,
+              'is_completed': true,
             },
-            'accepted_data_processing': true,
-            'accepted_media_usage': true,
-            'accepted_risk_release': true,
-            'is_completed': true,
-          },
-        ],
-      );
-      final repo = _FakeSuccessRepository(detail);
-      final controller = ReservationDetailController(repository: repo);
+          ],
+        );
+        final repo = _FakeSuccessRepository(detail);
+        final controller = ReservationDetailController(repository: repo);
 
-      await controller.loadDetail('r1');
+        await controller.loadDetail('r1');
 
-      expect(controller.state, ReservationDetailLoadState.success);
-      expect(controller.detail, isNotNull);
-      expect(controller.detail!.participants, hasLength(1));
-      expect(controller.detail!.participants[0].fullName, 'Carlos Mejia');
-      expect(controller.detail!.participants[0].isCompleted, true);
-    });
+        expect(controller.state, ReservationDetailLoadState.success);
+        expect(controller.detail, isNotNull);
+        expect(controller.detail!.participants, hasLength(1));
+        expect(controller.detail!.participants[0].fullName, 'Carlos Mejia');
+        expect(controller.detail!.participants[0].isCompleted, true);
+      },
+    );
 
-    test('loadDetail sets success state and populates payment proofs',
-        () async {
-      final detail = _makeDetail(
-        paymentProofs: [
-          {
-            'id': 'proof1',
-            'reservation_id': 'r1',
-            'storage_key': 'seed/RES-001.pdf',
-            'filename': 'RES-001.pdf',
-            'content_type': 'application/pdf',
-            'size_bytes': 2048,
-            'sha256': 'abc123',
-            'status': 'verified',
-            'uploaded_at': '2026-05-25T12:00:00Z',
-          },
-        ],
-      );
-      final repo = _FakeSuccessRepository(detail);
-      final controller = ReservationDetailController(repository: repo);
+    test(
+      'loadDetail sets success state and populates payment proofs',
+      () async {
+        final detail = _makeDetail(
+          paymentProofs: [
+            {
+              'id': 'proof1',
+              'reservation_id': 'r1',
+              'storage_key': 'seed/RES-001.pdf',
+              'filename': 'RES-001.pdf',
+              'content_type': 'application/pdf',
+              'size_bytes': 2048,
+              'sha256': 'abc123',
+              'status': 'verified',
+              'uploaded_at': '2026-05-25T12:00:00Z',
+            },
+          ],
+        );
+        final repo = _FakeSuccessRepository(detail);
+        final controller = ReservationDetailController(repository: repo);
 
-      await controller.loadDetail('r1');
+        await controller.loadDetail('r1');
 
-      expect(controller.state, ReservationDetailLoadState.success);
-      expect(controller.detail!.paymentProofs, hasLength(1));
-      expect(controller.detail!.paymentProofs[0].status, 'verified');
-    });
+        expect(controller.state, ReservationDetailLoadState.success);
+        expect(controller.detail!.paymentProofs, hasLength(1));
+        expect(controller.detail!.paymentProofs[0].status, 'verified');
+      },
+    );
 
     test('loadDetail sets error state on API failure', () async {
       final repo = _FakeErrorRepository();
@@ -777,16 +800,18 @@ void main() {
       expect(controller.detail!.participants, isEmpty);
     });
 
-    test('loadDetail shows empty payment proofs when detail has none',
-        () async {
-      final detail = _makeDetail(); // no proofs added
-      final repo = _FakeSuccessRepository(detail);
-      final controller = ReservationDetailController(repository: repo);
+    test(
+      'loadDetail shows empty payment proofs when detail has none',
+      () async {
+        final detail = _makeDetail(); // no proofs added
+        final repo = _FakeSuccessRepository(detail);
+        final controller = ReservationDetailController(repository: repo);
 
-      await controller.loadDetail('r1');
+        await controller.loadDetail('r1');
 
-      expect(controller.detail!.paymentProofs, isEmpty);
-    });
+        expect(controller.detail!.paymentProofs, isEmpty);
+      },
+    );
 
     test('reset clears state and detail', () {
       final detail = _makeDetail();
@@ -842,15 +867,7 @@ void main() {
         status: 'payment_received',
         paymentStatus: 'verified',
       );
-      // Use a controller with success repo to load, then switch
-      final successRepo = _FakeSuccessRepository(detail);
-      final loaded = await successRepo.getReservationById('r1');
-      // But we can't switch repos, so let's use an approach where
-      // confirm is called on a controller that has detail loaded
-      // but the repo fails on confirm.
-      // Actually, let's use a repo that succeeds on get but fails on confirm.
-      // The _FakeErrorRepository fails on everything, so we'll use it directly.
-      // But we need detail to be non-null. Let's set it manually.
+      // Seed the loaded state directly so confirmation reaches the failing repo.
       controller.detail = detail;
       controller.state = ReservationDetailLoadState.success;
 

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_domain/src/reservations/reservation_detail.dart';
+import 'package:mobile_domain/src/gen/reservation_create.dart';
 import 'package:mobile_domain/src/reservations/reservation_list_item.dart';
 import 'package:mobile_domain/src/reservations/reservation_rules.dart';
 import 'package:mobile_domain/src/reservations/reservation_log_note_detail.dart';
@@ -39,7 +40,6 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
     throw UnimplementedError();
   }
 
-
   @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
@@ -57,7 +57,8 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail?> getCachedReservationDetail(
-      String reservationId) async {
+    String reservationId,
+  ) async {
     return detail;
   }
 
@@ -69,6 +70,14 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   @override
   Future<ReservationDetail> approvePaymentProof({
     required String paymentProofId,
+    String? note,
+  }) async {
+    return detail;
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
     String? note,
   }) async {
     return detail;
@@ -99,9 +108,15 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     return detail;
   }
@@ -134,8 +149,7 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   @override
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<void> createReservationLogNote({
@@ -152,9 +166,7 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   }) async {}
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {}
+  Future<void> deleteReservationLogEntry({required String logId}) async {}
 
   @override
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
@@ -187,15 +199,13 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
   @override
   Future<List<ReservationProviderItem>> getReservationProviders(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<List<ProviderCatalogItem>> listProviders({
     String? query,
     bool isActive = true,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<ReservationProviderItem> createReservationProvider({
@@ -204,8 +214,7 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String status = 'pending',
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<ReservationProviderItem> updateReservationProvider({
@@ -214,8 +223,7 @@ class _FakeSuccessActionRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String? status,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<void> deleteReservationProvider({
@@ -242,7 +250,6 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
     throw UnimplementedError();
   }
 
-
   @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
@@ -260,7 +267,8 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail?> getCachedReservationDetail(
-      String reservationId) async {
+    String reservationId,
+  ) async {
     return null;
   }
 
@@ -277,6 +285,18 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
     throw ReservationsApiFailure(
       code: 'auth.forbidden',
       message: 'No tienes permisos para aprobar comprobantes.',
+      statusCode: 403,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
+    String? note,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'auth.forbidden',
+      message: 'No tienes permisos para aprobar pagos.',
       statusCode: 403,
     );
   }
@@ -318,9 +338,15 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw ReservationsApiFailure(
       code: 'auth.forbidden',
@@ -369,8 +395,7 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
   @override
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<void> createReservationLogNote({
@@ -387,9 +412,7 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
   }) async {}
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {}
+  Future<void> deleteReservationLogEntry({required String logId}) async {}
 
   @override
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
@@ -422,15 +445,13 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
   @override
   Future<List<ReservationProviderItem>> getReservationProviders(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<List<ProviderCatalogItem>> listProviders({
     String? query,
     bool isActive = true,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<ReservationProviderItem> createReservationProvider({
@@ -439,8 +460,7 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String status = 'pending',
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<ReservationProviderItem> updateReservationProvider({
@@ -449,8 +469,7 @@ class _FakePermissionErrorRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String? status,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<void> deleteReservationProvider({
@@ -477,7 +496,6 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
     throw UnimplementedError();
   }
 
-
   @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
@@ -495,7 +513,8 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail?> getCachedReservationDetail(
-      String reservationId) async {
+    String reservationId,
+  ) async {
     return null;
   }
 
@@ -512,6 +531,18 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
     throw ReservationsApiFailure(
       code: 'reservation.invalid_status_transition',
       message: 'El comprobante ya cambió de estado.',
+      statusCode: 409,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
+    String? note,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'reservation.invalid_status_transition',
+      message: 'El pago ya cambió de estado.',
       statusCode: 409,
     );
   }
@@ -553,9 +584,15 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw ReservationsApiFailure(
       code: 'reservation.invalid_status_transition',
@@ -604,8 +641,7 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
   @override
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<void> createReservationLogNote({
@@ -622,9 +658,7 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
   }) async {}
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {}
+  Future<void> deleteReservationLogEntry({required String logId}) async {}
 
   @override
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
@@ -657,15 +691,13 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
   @override
   Future<List<ReservationProviderItem>> getReservationProviders(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<List<ProviderCatalogItem>> listProviders({
     String? query,
     bool isActive = true,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<ReservationProviderItem> createReservationProvider({
@@ -674,8 +706,7 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String status = 'pending',
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<ReservationProviderItem> updateReservationProvider({
@@ -684,8 +715,7 @@ class _FakeConflictErrorRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String? status,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<void> deleteReservationProvider({
@@ -712,7 +742,6 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
     throw UnimplementedError();
   }
 
-
   @override
   Future<List<ReservationListItem>> listReservations({
     ReservationStatus? status,
@@ -730,7 +759,8 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
 
   @override
   Future<ReservationDetail?> getCachedReservationDetail(
-      String reservationId) async {
+    String reservationId,
+  ) async {
     return null;
   }
 
@@ -742,6 +772,18 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
   @override
   Future<ReservationDetail> approvePaymentProof({
     required String paymentProofId,
+    String? note,
+  }) async {
+    throw ReservationsApiFailure(
+      code: 'network.unavailable',
+      message: 'No hay conexión con el servidor.',
+      statusCode: 0,
+    );
+  }
+
+  @override
+  Future<ReservationDetail> approvePaymentWithoutProof({
+    required String reservationId,
     String? note,
   }) async {
     throw ReservationsApiFailure(
@@ -788,9 +830,15 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
   }
 
   @override
+  Future<ReservationDetail> createReservation(ReservationCreate payload) async {
+    throw UnimplementedError();
+  }
+
+  @override
   Future<ReservationDetail> confirmReservation({
     required String reservationId,
     String? notes,
+    String? startTime,
   }) async {
     throw ReservationsApiFailure(
       code: 'network.unavailable',
@@ -839,8 +887,7 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
   @override
   Future<List<ReservationTimelineEntry>> getReservationTimeline(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<void> createReservationLogNote({
@@ -857,9 +904,7 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
   }) async {}
 
   @override
-  Future<void> deleteReservationLogEntry({
-    required String logId,
-  }) async {}
+  Future<void> deleteReservationLogEntry({required String logId}) async {}
 
   @override
   Future<ReservationLogNoteDetail> getReservationLogNote(String logId) async {
@@ -892,15 +937,13 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
   @override
   Future<List<ReservationProviderItem>> getReservationProviders(
     String reservationId,
-  ) async =>
-      const [];
+  ) async => const [];
 
   @override
   Future<List<ProviderCatalogItem>> listProviders({
     String? query,
     bool isActive = true,
-  }) async =>
-      const [];
+  }) async => const [];
 
   @override
   Future<ReservationProviderItem> createReservationProvider({
@@ -909,8 +952,7 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String status = 'pending',
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<ReservationProviderItem> updateReservationProvider({
@@ -919,8 +961,7 @@ class _FakeNetworkErrorRepository implements ReservationsRepository {
     String? serviceLabel,
     String? notes,
     String? status,
-  }) async =>
-      throw UnimplementedError();
+  }) async => throw UnimplementedError();
 
   @override
   Future<void> deleteReservationProvider({
@@ -1017,30 +1058,32 @@ void main() {
       expect(controller.actionErrorCode, 'permission.denied');
     });
 
-    test('approvePaymentProof double-tap guard blocks concurrent calls', () async {
-      final detail = _makeDetail();
-      final repo = _FakeSuccessActionRepository(detail);
-      final controller = ReservationDetailController(repository: repo);
+    test(
+      'approvePaymentProof double-tap guard blocks concurrent calls',
+      () async {
+        final detail = _makeDetail();
+        final repo = _FakeSuccessActionRepository(detail);
+        final controller = ReservationDetailController(repository: repo);
 
-      await controller.loadDetail('r1');
+        await controller.loadDetail('r1');
 
-      // Set state to approving manually to simulate in-progress action
-      controller.approveProofState = ActionState.loading();
-      controller.actingPaymentProofId = 'proof1';
+        // Set state to approving manually to simulate in-progress action
+        controller.approveProofState = ActionState.loading();
+        controller.actingPaymentProofId = 'proof1';
 
-      // Second call while in approving state should be no-op
-      await controller.approvePaymentProof(
-        paymentProofId: 'proof2',
-        isAdmin: true,
-      );
+        // Second call while in approving state should be no-op
+        await controller.approvePaymentProof(
+          paymentProofId: 'proof2',
+          isAdmin: true,
+        );
 
-      // State should still be loading with the original proof ID
-      expect(controller.paymentProofActionState.isLoading, isTrue);
-      expect(controller.actingPaymentProofId, 'proof1');
-    });
+        // State should still be loading with the original proof ID
+        expect(controller.paymentProofActionState.isLoading, isTrue);
+        expect(controller.actingPaymentProofId, 'proof1');
+      },
+    );
 
     test('approvePaymentProof maps 403 error correctly', () async {
-      final detail = _makeDetail();
       final repo = _FakePermissionErrorRepository();
       final controller = ReservationDetailController(repository: repo);
 
@@ -1051,12 +1094,10 @@ void main() {
 
       expect(controller.paymentProofActionState.isError, isTrue);
       expect(controller.actionErrorCode, 'auth.forbidden');
-      expect(controller.actionErrorMessage,
-          contains('No tienes permisos'));
+      expect(controller.actionErrorMessage, contains('No tienes permisos'));
     });
 
     test('rejectPaymentProof maps 409 conflict correctly', () async {
-      final detail = _makeDetail();
       final repo = _FakeConflictErrorRepository();
       final controller = ReservationDetailController(repository: repo);
 
@@ -1067,8 +1108,10 @@ void main() {
       );
 
       expect(controller.paymentProofActionState.isError, isTrue);
-      expect(controller.actionErrorCode,
-          'reservation.invalid_status_transition');
+      expect(
+        controller.actionErrorCode,
+        'reservation.invalid_status_transition',
+      );
     });
 
     test('approvePaymentProof maps network error', () async {

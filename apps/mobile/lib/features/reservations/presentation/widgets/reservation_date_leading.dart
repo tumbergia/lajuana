@@ -22,10 +22,7 @@ String _normalizeDate(String date) {
 }
 
 class ReservationDateLeading extends StatelessWidget {
-  const ReservationDateLeading({
-    super.key,
-    required this.requestedDate,
-  });
+  const ReservationDateLeading({super.key, required this.requestedDate});
 
   final String? requestedDate;
 

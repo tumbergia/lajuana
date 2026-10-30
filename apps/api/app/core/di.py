@@ -95,6 +95,13 @@ class Container:
         )
         self._services["auth_service"] = AuthService()
 
+        from app.services.role_request_service import RoleRequestService
+
+        self._services["role_request_service"] = RoleRequestService(
+            user_service=self._services["user_service"],
+            notification_service=self._services["notification_service"],
+        )
+
         # ── Services that depend on NotificationService ──
         from app.services.booking_service import BookingService
         from app.services.reservation_draft_service import ReservationDraftService
@@ -140,12 +147,18 @@ class Container:
             saddle_service=self._services["saddle_service"],
         )
 
+        # ── Analytics service (stateless, no dependencies) ──
+        from app.services.analytics_service import AnalyticsService
+
+        self._services["analytics_service"] = AnalyticsService()
+
         # ── WhatsApp ingestion (depends on resolver + buffer) ──
         from app.channels.whatsapp.ingestion_service import WhatsAppIngestionService
 
         self._services["whatsapp_ingestion_service"] = WhatsAppIngestionService(
             resolver=self._services["conversation_resolver"],
             buffer_service=self._services["message_buffer_service"],
+            outbound_service=self._services["whatsapp_outbound_service"],
         )
 
     # ------------------------------------------------------------------
@@ -179,6 +192,10 @@ class Container:
     @property
     def user_service(self) -> Any:
         return self._services["user_service"]
+
+    @property
+    def role_request_service(self) -> Any:
+        return self._services["role_request_service"]
 
     @property
     def experience_service(self) -> Any:
@@ -255,6 +272,10 @@ class Container:
     @property
     def conversation_resolver(self) -> Any:
         return self._services["conversation_resolver"]
+
+    @property
+    def analytics_service(self) -> Any:
+        return self._services["analytics_service"]
 
     @property
     def message_buffer_service(self) -> Any:

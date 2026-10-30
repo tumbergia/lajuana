@@ -5,7 +5,6 @@
 /// AUTO-GENERATED from OpenAPI schema `BusinessLocationSchema`.
 
 class BusinessLocation {
-
   final String name;
   final String address;
   final String municipality;
@@ -14,8 +13,7 @@ class BusinessLocation {
   final double longitude;
   final String googleMapsUrl;
 
-  const BusinessLocation(
-    {
+  const BusinessLocation({
     required this.name,
     required this.address,
     required this.municipality,
@@ -23,8 +21,7 @@ class BusinessLocation {
     required this.latitude,
     required this.longitude,
     required this.googleMapsUrl,
-    }
-  );
+  });
 
   factory BusinessLocation.fromJson(Map<String, dynamic> json) {
     return BusinessLocation(
@@ -47,5 +44,4 @@ class BusinessLocation {
     'longitude': longitude,
     'google_maps_url': googleMapsUrl,
   };
-
 }

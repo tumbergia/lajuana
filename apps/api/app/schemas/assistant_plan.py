@@ -22,8 +22,19 @@ class ToolArgs(BaseModel):
 
     experience_query: str | None = None
     experience_id: str | None = None
+    user_id: str | None = None
+    reservation_id: str | None = None
+    participant_id: str | None = None
+    payment_proof_id: str | None = None
+    equine_id: str | None = None
+    provider_id: str | None = None
+    saddle_id: str | None = None
+    assignment_id: str | None = None
+    event_id: str | None = None
     schedule_id: str | None = None
     requested_date: str | None = None
+    date_from: str | None = None
+    date_to: str | None = None
     participant_count: int | None = None
     holder_phone: str | None = None
     holder_name: str | None = None
@@ -37,7 +48,39 @@ class ToolArgs(BaseModel):
     exclude_dates: list[str] | None = None
     search_days_before: int | None = None
     search_days_after: int | None = None
+    name: str | None = None
+    full_name: str | None = None
+    email: str | None = None
+    password: str | None = None
+    type: str | None = None
+    description: str | None = None
+    level: str | None = None
+    duration_hours: int | None = None
+    duration_days: int | None = None
     limit: int | None = None
+    q: str | None = None
+    provider_type: str | None = None
+    event_type: str | None = None
+    status: str | None = None
+    notes: str | None = None
+    reason: str | None = None
+    enabled: bool | None = None
+    is_active: bool | None = None
+    # Gemini solo emite campos declarados aquí (el schema se envía sin
+    # additionalProperties), así que todo parámetro de tool debe existir en ToolArgs.
+    is_available: bool | None = None
+    only_available: bool | None = None
+    equine_ids: list[str] | None = None
+    severity: str | None = None
+    happened_at: str | None = None
+    checkpoint_name: str | None = None
+    related_participant_id: str | None = None
+    related_equine_id: str | None = None
+    min_days_in_advance: int | None = None
+    require_payment_proof_for_confirmation: bool | None = None
+    reservation_draft_ttl_minutes: int | None = None
+    min_age: int | None = None
+    max_age: int | None = None
     bold_requested: bool = False
 
 

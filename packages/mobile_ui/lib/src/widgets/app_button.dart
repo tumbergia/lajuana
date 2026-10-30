@@ -105,9 +105,7 @@ class _AppButtonState extends State<AppButton> {
       bg = isDisabled
           ? scheme.onSurface.withValues(alpha: 0.12)
           : AppColors.danger;
-      fg = isDisabled
-          ? scheme.onSurface.withValues(alpha: 0.38)
-          : Colors.white;
+      fg = isDisabled ? scheme.onSurface.withValues(alpha: 0.38) : Colors.white;
       side = null;
     } else {
       // ghost
@@ -121,7 +119,9 @@ class _AppButtonState extends State<AppButton> {
     final iconSize = 18.0 * scale;
     final horizontalPadding = tokens.spaceLg * scale;
     final iconGap = tokens.spaceSm * scale;
-    final borderRadius = BorderRadius.circular(tokens.radiusMd.topLeft.x * scale);
+    final borderRadius = BorderRadius.circular(
+      tokens.radiusMd.topLeft.x * scale,
+    );
     final labelStyle = theme.textTheme.labelLarge?.copyWith(
       color: fg,
       fontWeight: FontWeight.w800,

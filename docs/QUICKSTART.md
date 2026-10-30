@@ -3,7 +3,7 @@
 ## Prerequisitos
 
 - Python 3.11+
-- Flutter 3.29+ (channel stable)
+- Flutter 3.41.7
 - Dart 3.11+
 - MongoDB (local o Atlas)
 - JDK 17 (para Flutter Android)
@@ -58,6 +58,10 @@ python -m app.cli seed -t experiences    # experiencias
 make api-quality    # ruff lint + format check + pytest
 make mobile-quality # dart format + flutter analyze + flutter test
 ```
+
+Las pruebas que llaman Gemini o MongoDB reales se omiten por defecto. Para
+ejecutarlas de forma explícita, configura las credenciales y usa
+`RUN_LIVE_INTEGRATION=1`.
 
 ## 5. Verification
 

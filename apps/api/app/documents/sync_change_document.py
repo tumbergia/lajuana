@@ -12,7 +12,7 @@ class SyncChangeDocument(AuditDocument):
     stream: str
     entity_type: str
     entity_id: Indexed(str)  # type: ignore[valid-type]
-    change_type: Literal["upsert", "delete"] = "upsert"
+    change_type: Literal["upsert", "delete", "purge"] = "upsert"
     version: int
     entity_updated_at: datetime
     payload: dict[str, Any] | None = None

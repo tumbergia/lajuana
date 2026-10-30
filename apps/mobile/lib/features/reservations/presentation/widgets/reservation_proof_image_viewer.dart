@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:pdfrx/pdfrx.dart';
 
 import 'package:mobile_ui/src/widgets/app_toast.dart';
 
@@ -15,6 +16,7 @@ import 'package:mobile/features/reservations/presentation/helpers/reservation_st
 ///
 /// Downloads the file via streaming (or uses cached bytes) and renders it:
 /// - images (PNG/JPEG): zoomable + pannable via [InteractiveViewer]
+/// - PDFs: in-app preview via [PdfViewer]
 /// - other types: shows a message
 /// - errors: shows retry button
 class ProofImageViewer extends StatefulWidget {
@@ -91,6 +93,13 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
         ct.contains('image/jpg');
   }
 
+  bool get _isPdf {
+    final ct = widget.proof.contentType?.toLowerCase() ?? '';
+    if (ct.contains('application/pdf') || ct.contains('pdf')) return true;
+    final name = widget.proof.filename?.toLowerCase() ?? '';
+    return name.endsWith('.pdf');
+  }
+
   Future<void> _saveToDevice(Uint8List bytes) async {
     final filename = widget.proof.filename ?? 'comprobante-${widget.proof.id}';
     final contentType = widget.proof.contentType ?? 'application/octet-stream';
@@ -100,11 +109,7 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
       showAppToast(context, message: 'Descargado: $filename');
     } catch (e) {
       if (!mounted) return;
-      showAppToast(
-        context,
-        message: 'Error al descargar: $e',
-        isError: true,
-      );
+      showAppToast(context, message: 'Error al descargar: $e', isError: true);
     }
   }
 
@@ -149,8 +154,11 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 48,
-                  color: theme.colorScheme.error),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: theme.colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(_error!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
@@ -183,8 +191,11 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.broken_image_outlined, size: 48,
-                      color: theme.colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.broken_image_outlined,
+                    size: 48,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 16),
                   const Text('No se pudo renderizar la imagen.'),
                 ],
@@ -195,15 +206,26 @@ class _ProofImageViewerState extends State<ProofImageViewer> {
       );
     }
 
-    // Non-image types
+    if (_isPdf && _bytes != null) {
+      return PdfViewer.data(
+        _bytes!,
+        sourceName: widget.proof.filename ?? 'proof-${widget.proof.id}.pdf',
+        params: const PdfViewerParams(margin: 8),
+      );
+    }
+
+    // Non-previewable types
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.description_outlined, size: 48,
-                color: theme.colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.description_outlined,
+              size: 48,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 16),
             Text(
               'Vista previa no disponible para ${widget.proof.contentType ?? 'este tipo de archivo'}.',

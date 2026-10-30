@@ -36,8 +36,9 @@ class ReservationLogPhotoPreviewRow extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxSlots = _maxSlotsForWidth(constraints.maxWidth);
-        final totalPhotos =
-            entry.photosTotal > 0 ? entry.photosTotal : photos.length;
+        final totalPhotos = entry.photosTotal > 0
+            ? entry.photosTotal
+            : photos.length;
         final visibleCount = totalPhotos < maxSlots ? totalPhotos : maxSlots;
         final hiddenCount = totalPhotos - visibleCount;
         final previewPhotos = photos.take(visibleCount).toList(growable: false);

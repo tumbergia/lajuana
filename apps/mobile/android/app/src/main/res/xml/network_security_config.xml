@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- HTTP en claro para API local (emulador, localhost, IP LAN vía dart-define).
-     En producción usar HTTPS y restringir cleartext (p. ej. solo dominios conocidos). -->
+<!-- Producción: todo el tráfico debe usar TLS. Los recursos de debug/profile
+     reemplazan este archivo para permitir desarrollo contra una API local. -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="true">
+    <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>

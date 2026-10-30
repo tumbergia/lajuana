@@ -11,11 +11,33 @@ RESPONSE_LANGUAGES: set[str] = {"es", "en"}
 
 # Strong Spanish indicators — if any match, prefer Spanish over similar languages (pt, fr, it)
 _SPANISH_INDICATORS = [
-    r"\bes\b", r"\bla\b", r"\blos\b", r"\blas\b", r"\bun\b", r"\buna\b", r"\bunos\b", r"\bunas\b",
-    r"\busted\b", r"\bestá\b", r"\bestán\b", r"\bhay\b", r"\bser\b", r"\bestar\b",
-    r"\bqué\b", r"\bcuál\b", r"\bcómo\b", r"\bcuándo\b", r"\bcuánto\b",
-    r"\bhola\b", r"\bgracias\b", r"\bpor favor\b", r"\bbueno\b",
-    r"\bquería\b", r"\bquisiera\b", r"\bpuedes\b", r"\bpuedo\b",
+    r"\bes\b",
+    r"\bla\b",
+    r"\blos\b",
+    r"\blas\b",
+    r"\bun\b",
+    r"\buna\b",
+    r"\bunos\b",
+    r"\bunas\b",
+    r"\busted\b",
+    r"\bestá\b",
+    r"\bestán\b",
+    r"\bhay\b",
+    r"\bser\b",
+    r"\bestar\b",
+    r"\bqué\b",
+    r"\bcuál\b",
+    r"\bcómo\b",
+    r"\bcuándo\b",
+    r"\bcuánto\b",
+    r"\bhola\b",
+    r"\bgracias\b",
+    r"\bpor favor\b",
+    r"\bbueno\b",
+    r"\bquería\b",
+    r"\bquisiera\b",
+    r"\bpuedes\b",
+    r"\bpuedo\b",
 ]
 
 _MIN_LENGTH_FOR_DETECT = 4
@@ -23,9 +45,33 @@ _MIN_LENGTH_FOR_DETECT = 4
 # Tokens de mensajería comunes que NO deben disparar detección de idioma: son
 # ambiguos o se usan por convención independiente del idioma.
 _NEUTRAL_TOKENS = {
-    "ok", "okay", "ok.", "ok!", "si", "sí", "no", "yes", "yeah", "vale",
-    "dale", "listo", "👍", "y", "mhm", "mm", "jaja", "haha",
-    "si?", "sí?", "no?", "ok?", "k", "kk", "thx", "thanks", "gracias",
+    "ok",
+    "okay",
+    "ok.",
+    "ok!",
+    "si",
+    "sí",
+    "no",
+    "yes",
+    "yeah",
+    "vale",
+    "dale",
+    "listo",
+    "👍",
+    "y",
+    "mhm",
+    "mm",
+    "jaja",
+    "haha",
+    "si?",
+    "sí?",
+    "no?",
+    "ok?",
+    "k",
+    "kk",
+    "thx",
+    "thanks",
+    "gracias",
 }
 
 
@@ -148,7 +194,6 @@ _EXPLICIT_LANGUAGE_REQUESTS: list[tuple[str, str]] = [
         "es",
     ),
     (r"(?:^|\s)/(español|espanol|spanish)\b", "es"),
-
     # Inglés explícito.
     (
         r"\b(reply|respond|talk|write|answer|speak|chat)\b[^.\n]{0,40}"

@@ -33,6 +33,9 @@ async def test_gate_blocks_when_globally_disabled(monkeypatch: pytest.MonkeyPatc
     config = SimpleNamespace(get_ai_configuration=AsyncMock(return_value=_ai(enabled=False)))
     gate = AssistantGate(config_service=config)  # type: ignore[arg-type]
     assert await gate.is_allowed("+573001112233") is False
+    decision = await gate.evaluate("+573001112233")
+    assert decision.allowed is False
+    assert decision.reason == "global_disabled"
 
 
 @pytest.mark.asyncio
@@ -46,6 +49,8 @@ async def test_gate_blocks_muted_phone(monkeypatch: pytest.MonkeyPatch) -> None:
     gate = AssistantGate(config_service=config)  # type: ignore[arg-type]
     assert await gate.is_allowed("+573001112233") is False
     assert await gate.is_allowed("+573009998887") is True
+    decision = await gate.evaluate("+573001112233")
+    assert decision.reason == "muted_phone"
 
 
 @pytest.mark.asyncio
@@ -54,3 +59,30 @@ async def test_gate_blocks_when_reservation_disabled(monkeypatch: pytest.MonkeyP
     config = SimpleNamespace(get_ai_configuration=AsyncMock(return_value=_ai(enabled=True)))
     gate = AssistantGate(config_service=config)  # type: ignore[arg-type]
     assert await gate.is_allowed("+573001112233") is False
+    decision = await gate.evaluate("+573001112233")
+    assert decision.allowed is False
+    assert decision.reason == "reservation_disabled"
+
+
+@pytest.mark.asyncio
+async def test_gate_allows_global_probe_without_phone(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_reservations(monkeypatch, [SimpleNamespace(holder_phone="+573001112233")])
+    config = SimpleNamespace(get_ai_configuration=AsyncMock(return_value=_ai(enabled=True)))
+    gate = AssistantGate(config_service=config)  # type: ignore[arg-type]
+
+    decision = await gate.evaluate()
+
+    assert decision.allowed is True
+    assert decision.reason == "allowed"
+
+
+@pytest.mark.asyncio
+async def test_gate_marks_invalid_phone_explicitly(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_reservations(monkeypatch, [])
+    config = SimpleNamespace(get_ai_configuration=AsyncMock(return_value=_ai(enabled=True)))
+    gate = AssistantGate(config_service=config)  # type: ignore[arg-type]
+
+    decision = await gate.evaluate("not-a-phone")
+
+    assert decision.allowed is False
+    assert decision.reason == "invalid_phone"

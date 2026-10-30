@@ -48,7 +48,11 @@ class AuthApiClient {
     required String accessToken,
     Duration timeout = const Duration(seconds: 12),
   }) async {
-    final response = await _get('/auth/me', bearer: accessToken, timeout: timeout);
+    final response = await _get(
+      '/auth/me',
+      bearer: accessToken,
+      timeout: timeout,
+    );
     final data = _decodeBody(response.body);
     return UserDto.fromJson(data);
   }

@@ -54,7 +54,9 @@ class ReservationDetail {
       assistantDisabled: source.assistantDisabled ?? false,
       experienceId: source.experienceId,
       experienceName: null,
-      requestedDate: source.requestedDate.isNotEmpty ? source.requestedDate : null,
+      requestedDate: source.requestedDate.isNotEmpty
+          ? source.requestedDate
+          : null,
       participantCount: source.participantCount,
       expectedParticipantsCount: int.tryParse(source.expectedParticipantsCount),
       participantsCompletedCount: source.participantsCompletedCount,
@@ -62,8 +64,9 @@ class ReservationDetail {
       participantFormStatus: source.participantFormStatus.value,
       formUrl: source.formUrl.isNotEmpty ? source.formUrl : null,
       channel: source.channel.value,
-      quotedTotalAmount:
-          source.quotedTotalAmount.isNotEmpty ? source.quotedTotalAmount : null,
+      quotedTotalAmount: source.quotedTotalAmount.isNotEmpty
+          ? source.quotedTotalAmount
+          : null,
       currency: source.currency.isNotEmpty ? source.currency : null,
       confirmedAt: source.confirmedAt.isNotEmpty ? source.confirmedAt : null,
       cancelledAt: source.cancelledAt.isNotEmpty ? source.cancelledAt : null,
@@ -74,11 +77,13 @@ class ReservationDetail {
       paymentSummary: null,
       timeline: const [],
       operationalAlerts: const [],
-      participants: source.participants
+      participants:
+          source.participants
               ?.map((p) => ReservationParticipantDetail.fromGen(p))
               .toList() ??
           [],
-      paymentProofs: source.paymentProofs
+      paymentProofs:
+          source.paymentProofs
               ?.map((p) => ReservationPaymentProofDetail.fromGen(p))
               .toList() ??
           [],

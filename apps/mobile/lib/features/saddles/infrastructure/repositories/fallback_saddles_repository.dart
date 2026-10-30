@@ -3,7 +3,9 @@ import 'package:mobile_domain/src/saddles/saddles_repository.dart';
 
 class FallbackSaddlesRepository implements SaddlesRepository {
   @override
-  Future<List<SaddleListItem>> listSaddles({bool includeDeleted = false}) async {
+  Future<List<SaddleListItem>> listSaddles({
+    bool includeDeleted = false,
+  }) async {
     return const <SaddleListItem>[];
   }
 

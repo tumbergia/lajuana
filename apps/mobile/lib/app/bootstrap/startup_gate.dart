@@ -41,7 +41,10 @@ class _StartupGateState extends State<StartupGate> {
           });
         }
 
-        return const AppScaffold(scrollable: false, child: SessionLoadingView());
+        return const AppScaffold(
+          scrollable: false,
+          child: SessionLoadingView(),
+        );
       },
     );
   }

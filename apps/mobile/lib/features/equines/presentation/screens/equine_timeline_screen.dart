@@ -23,6 +23,7 @@ class EquineTimelineScreen extends StatefulWidget {
   final String equineName;
   final EquineRepository repository;
   final EquineEventRepository eventRepository;
+  final bool canEdit;
 
   const EquineTimelineScreen({
     super.key,
@@ -30,6 +31,7 @@ class EquineTimelineScreen extends StatefulWidget {
     required this.equineName,
     required this.repository,
     required this.eventRepository,
+    this.canEdit = true,
   });
 
   @override
@@ -46,12 +48,17 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
   // Categorías para filtrar la bitácora. Agrupan los tipos de evento en cubos
   // navegables sin saturar la barra de filtros.
   static const _healthTypes = <String>{
-    'health_check', 'injury', 'treatment', 'medication', 'vaccination',
-    'farrier', 'hoof_care', 'dentistry', 'lab_test',
+    'health_check',
+    'injury',
+    'treatment',
+    'medication',
+    'vaccination',
+    'farrier',
+    'hoof_care',
+    'dentistry',
+    'lab_test',
   };
-  static const _availabilityTypes = <String>{
-    'rest', 'availability_change',
-  };
+  static const _availabilityTypes = <String>{'rest', 'availability_change'};
 
   String _categoryOf(EquineTimelineEntry e) {
     if (e.source != 'equine_event') return 'servicio';
@@ -122,21 +129,23 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
       appBar: AppBar(
         title: Text(
           widget.equineName,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      floatingActionButton: FloatingActionButton.small(
-        onPressed: _onAddEntry,
-        backgroundColor: scheme.primary,
-        foregroundColor: scheme.onPrimary,
-        child: const Icon(Icons.add_rounded),
-      ),
+      floatingActionButton: widget.canEdit
+          ? FloatingActionButton.small(
+              onPressed: _onAddEntry,
+              backgroundColor: scheme.primary,
+              foregroundColor: scheme.onPrimary,
+              child: const Icon(Icons.add_rounded),
+            )
+          : null,
       child: _buildBody(),
     );
   }
@@ -188,70 +197,73 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Filtro por categoría de la bitácora.
-        Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: _buildCategoryFilter(),
-        ),
-
-        // Timeline header
-        Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Row(
-            children: [
-              Text(
-                'HISTORIAL COMPLETO',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: scheme.secondaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${entries.length}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                'Últimos 30 días',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
-          ),
-        ),
-
-        // Timeline entries (o aviso si el filtro no tiene registros).
-        if (entries.isEmpty)
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Filtro por categoría de la bitácora.
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 48),
-            child: Center(
-              child: Text(
-                'Sin registros en esta categoría',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-              ),
-            ),
-          )
-        else
-          AppLogbookTimeline(entries: entries),
+            padding: const EdgeInsets.only(bottom: 16),
+            child: _buildCategoryFilter(),
+          ),
 
-        const SizedBox(height: 80), // Space for FAB
-      ],
-    ),
+          // Timeline header
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              children: [
+                Text(
+                  'HISTORIAL COMPLETO',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.secondaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${entries.length}',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  'Últimos 30 días',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Timeline entries (o aviso si el filtro no tiene registros).
+          if (entries.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48),
+              child: Center(
+                child: Text(
+                  'Sin registros en esta categoría',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            )
+          else
+            AppLogbookTimeline(entries: entries),
+
+          const SizedBox(height: 80), // Space for FAB
+        ],
+      ),
     );
   }
 
@@ -262,7 +274,10 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
       items: const [
         AppSegmentedFilterItem(label: 'TODOS', value: null),
         AppSegmentedFilterItem(label: 'SALUD', value: 'salud'),
-        AppSegmentedFilterItem(label: 'DISPONIBILIDAD', value: 'disponibilidad'),
+        AppSegmentedFilterItem(
+          label: 'DISPONIBILIDAD',
+          value: 'disponibilidad',
+        ),
         AppSegmentedFilterItem(label: 'MANEJO', value: 'manejo'),
         AppSegmentedFilterItem(label: 'SERVICIO', value: 'servicio'),
       ],
@@ -283,22 +298,27 @@ class _EquineTimelineScreenState extends State<EquineTimelineScreen>
           Text(
             'No hay registros en el timeline',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Agregá el primer registro de actividad',
+            widget.canEdit
+                ? 'Agregá el primer registro de actividad'
+                : 'Todavía no hay actividad registrada',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          AppButton(
-            label: 'Agregar registro',
-            icon: Icons.add_rounded,
-            onPressed: _onAddEntry,
-          ),
+          if (widget.canEdit) ...[
+            const SizedBox(height: 24),
+            AppButton(
+              label: 'Agregar registro',
+              icon: Icons.add_rounded,
+              onPressed: _onAddEntry,
+            ),
+          ],
         ],
       ),
     );

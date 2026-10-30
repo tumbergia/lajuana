@@ -175,7 +175,8 @@ class ReservationParticipantDto {
       sensoryDisabilities: json['sensory_disabilities'] as String?,
       emergencyContact: json['emergency_contact'] != null
           ? EmergencyContactDto.fromJson(
-              json['emergency_contact'] as Map<String, dynamic>)
+              json['emergency_contact'] as Map<String, dynamic>,
+            )
           : EmergencyContactDto(name: '', phone: ''),
       acceptedDataProcessing:
           json['accepted_data_processing'] as bool? ?? false,
@@ -330,15 +331,21 @@ class ReservationDetailDto {
           : DateTime.parse(json['deleted_at'] as String).toUtc(),
       participants: rawParticipants != null
           ? rawParticipants
-              .map((e) => ReservationParticipantDto.fromJson(
-                  e as Map<String, dynamic>))
-              .toList(growable: false)
+                .map(
+                  (e) => ReservationParticipantDto.fromJson(
+                    e as Map<String, dynamic>,
+                  ),
+                )
+                .toList(growable: false)
           : const [],
       paymentProofs: rawProofs != null
           ? rawProofs
-              .map((e) => ReservationPaymentProofDto.fromJson(
-                  e as Map<String, dynamic>))
-              .toList(growable: false)
+                .map(
+                  (e) => ReservationPaymentProofDto.fromJson(
+                    e as Map<String, dynamic>,
+                  ),
+                )
+                .toList(growable: false)
           : const [],
     );
   }
@@ -411,10 +418,12 @@ class ReservationLogNoteDetailDto {
       notes: json['notes'] as String? ?? '',
       photos: rawPhotos != null
           ? rawPhotos
-              .map((item) => ReservationTimelinePhotoDto.fromJson(
+                .map(
+                  (item) => ReservationTimelinePhotoDto.fromJson(
                     Map<String, dynamic>.from(item as Map),
-                  ))
-              .toList(growable: false)
+                  ),
+                )
+                .toList(growable: false)
           : const [],
     );
   }
@@ -470,10 +479,12 @@ class ReservationTimelineEntryDto {
       serviceLogId: json['service_log_id'] as String?,
       photos: rawPhotos != null
           ? rawPhotos
-              .map((item) => ReservationTimelinePhotoDto.fromJson(
+                .map(
+                  (item) => ReservationTimelinePhotoDto.fromJson(
                     Map<String, dynamic>.from(item as Map),
-                  ))
-              .toList(growable: false)
+                  ),
+                )
+                .toList(growable: false)
           : const [],
       photosTotal: json['photos_total'] as int? ?? 0,
     );

@@ -1,5 +1,11 @@
 """Servicios administrativos para usuarios internos."""
 
+from __future__ import annotations
+
+import re
+import unicodedata
+from typing import Any
+
 from app.common.enums import UserRole
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
@@ -8,8 +14,97 @@ from app.documents import UserDocument
 from app.schemas.auth import UserCreateSchema, UserUpdateSchema
 
 
+def _normalize_lookup_text(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_text = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    cleaned = re.sub(r"[^a-z0-9@._-]+", " ", ascii_text.lower()).strip()
+    return re.sub(r"\s+", " ", cleaned)
+
+
+def _build_user_label(user: UserDocument) -> str:
+    return f"{user.full_name} <{user.email}>"
+
+
 class UserService:
     """CRUD administrativo de usuarios."""
+
+    async def resolve_user_reference(self, reference: str) -> dict[str, Any]:
+        query = reference.strip()
+        if not query:
+            return {"status": "missing"}
+
+        normalized_query = _normalize_lookup_text(query)
+        query_has_email = "@" in normalized_query
+        query_has_multiple_tokens = " " in normalized_query
+        users = await self.list_users(limit=200)
+        candidates: list[dict[str, Any]] = []
+
+        for user in users:
+            email = _normalize_lookup_text(user.email)
+            email_local = email.split("@", 1)[0]
+            full_name = _normalize_lookup_text(user.full_name)
+            tokens = [token for token in full_name.split(" ") if token]
+            score = 0
+
+            if query_has_email and normalized_query == email:
+                score = 100
+            elif query_has_multiple_tokens and normalized_query == full_name:
+                score = 95
+            elif normalized_query == email_local:
+                score = 88 if not query_has_email and not query_has_multiple_tokens else 92
+            elif normalized_query in tokens:
+                score = 88
+            elif any(token.startswith(normalized_query) for token in tokens):
+                score = 78
+            elif full_name.startswith(normalized_query) or email_local.startswith(normalized_query):
+                score = 72
+            elif normalized_query in full_name or normalized_query in email_local:
+                score = 60
+
+            if score == 0:
+                continue
+
+            candidates.append(
+                {
+                    "score": score,
+                    "user": user,
+                    "summary": {
+                        "user_id": str(user.id),
+                        "email": user.email,
+                        "full_name": user.full_name,
+                        "is_active": user.is_active,
+                    },
+                }
+            )
+
+        if not candidates:
+            return {"status": "not_found", "reference": query, "matches": []}
+
+        candidates.sort(
+            key=lambda item: (
+                -item["score"],
+                not item["user"].is_active,
+                len(item["user"].full_name),
+            )
+        )
+        top_score = candidates[0]["score"]
+        top_candidates = [item for item in candidates if item["score"] == top_score]
+
+        if len(top_candidates) == 1 and top_score >= 72:
+            user = top_candidates[0]["user"]
+            return {
+                "status": "resolved",
+                "reference": query,
+                "user_id": str(user.id),
+                "label": _build_user_label(user),
+                "match_score": top_score,
+            }
+
+        return {
+            "status": "ambiguous",
+            "reference": query,
+            "matches": [item["summary"] for item in top_candidates[:5]],
+        }
 
     async def create_user(self, payload: UserCreateSchema) -> UserDocument:
         existing = await UserDocument.find_one({"email": payload.email})

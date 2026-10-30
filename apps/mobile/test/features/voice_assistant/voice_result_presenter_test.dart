@@ -51,8 +51,9 @@ void main() {
     navigation = _buildNavigation();
   });
 
-  testWidgets('admin_list_reservations produces Spanish summary and row',
-      (tester) async {
+  testWidgets('admin_list_reservations produces Spanish summary and row', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -139,10 +140,7 @@ void main() {
 
   group('voice_display_labels', () {
     test('voiceReservationStatusLabel maps snake_case', () {
-      expect(
-        voiceReservationStatusLabel('payment_received'),
-        'Pago recibido',
-      );
+      expect(voiceReservationStatusLabel('payment_received'), 'Pago recibido');
     });
   });
 }

@@ -8,10 +8,7 @@ void main() {
     });
 
     test('formats ISO datetime string', () {
-      expect(
-        formatDate('2026-05-20T21:18:30.748000'),
-        '20 de mayo de 2026',
-      );
+      expect(formatDate('2026-05-20T21:18:30.748000'), '20 de mayo de 2026');
     });
 
     test('returns fallback for null input', () {
@@ -45,8 +42,18 @@ void main() {
 
     test('handles all months correctly', () {
       const expected = [
-        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+        'enero',
+        'febrero',
+        'marzo',
+        'abril',
+        'mayo',
+        'junio',
+        'julio',
+        'agosto',
+        'septiembre',
+        'octubre',
+        'noviembre',
+        'diciembre',
       ];
       for (int i = 1; i <= 12; i++) {
         final monthStr = i.toString().padLeft(2, '0');

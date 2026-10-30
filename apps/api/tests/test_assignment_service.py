@@ -93,10 +93,10 @@ class FakeFindQuery:
     def __init__(self, items: list) -> None:
         self._items = items
 
-    def skip(self, n: int) -> "FakeFindQuery":
+    def skip(self, n: int) -> FakeFindQuery:
         return self
 
-    def limit(self, n: int) -> "FakeFindQuery":
+    def limit(self, n: int) -> FakeFindQuery:
         return self
 
     async def to_list(self) -> list:
@@ -289,7 +289,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -308,7 +310,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -326,7 +330,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -345,7 +351,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -364,7 +372,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -384,7 +394,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -393,7 +405,8 @@ class TestCreate:
         asyncio.run(run())
 
     def test_create_participant_missing_experience_level(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """experience_level=None → ASSIGNMENT_PARTICIPANT_MISSING_REQUIRED_DATA."""
         self._patch_base(
@@ -404,7 +417,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -421,7 +436,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -440,7 +457,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -459,7 +478,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -524,7 +545,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -557,7 +580,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             with pytest.raises(ApiError) as exc:
                 await service.create(payload)
@@ -576,7 +601,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             result = await service.create(payload)
             assert "child_rider" in result.safety_flags
@@ -592,7 +619,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             result = await service.create(payload)
             assert "senior_rider" in result.safety_flags
@@ -608,7 +637,9 @@ class TestCreate:
 
         async def run() -> None:
             payload = AssignmentCreateSchema(
-                reservation_id=FAKE_ID, participant_id=FAKE_ID, equine_id=FAKE_ID,
+                reservation_id=FAKE_ID,
+                participant_id=FAKE_ID,
+                equine_id=FAKE_ID,
             )
             result = await service.create(payload)
             assert "límite de peso" in str(result.validation_warnings).lower()
@@ -676,11 +707,14 @@ class TestUpdate:
     """AssignmentService.update — field updates with validation."""
 
     def _patch_update_base(
-        self, monkeypatch: pytest.MonkeyPatch, **overrides: object,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        **overrides: object,
     ) -> SimpleNamespace:
         """Set up a fake assignment document with save tracking."""
         defaults = dict(
             id=FAKE_ID,
+            version=1,
             reservation_id=FAKE_ID,
             participant_id=FAKE_ID,
             equine_id=FAKE_ID,
@@ -1142,7 +1176,9 @@ class TestValidateAssignmentCandidate:
 
         async def run() -> None:
             flags, warnings = await service.validate_assignment_candidate(
-                FAKE_ID, FAKE_ID, FAKE_ID,
+                FAKE_ID,
+                FAKE_ID,
+                FAKE_ID,
             )
             assert flags == []
             assert warnings == []
@@ -1156,7 +1192,10 @@ class TestValidateAssignmentCandidate:
 
         async def run() -> None:
             flags, warnings = await service.validate_assignment_candidate(
-                FAKE_ID, FAKE_ID, FAKE_ID, saddle_id=FAKE_ID_2,
+                FAKE_ID,
+                FAKE_ID,
+                FAKE_ID,
+                saddle_id=FAKE_ID_2,
             )
             assert flags == []
             assert warnings == []
@@ -1206,7 +1245,10 @@ class TestValidateAssignmentCandidate:
         async def run() -> None:
             with pytest.raises(ApiError) as exc:
                 await service.validate_assignment_candidate(
-                    FAKE_ID, FAKE_ID, FAKE_ID, saddle_id=FAKE_ID_2,
+                    FAKE_ID,
+                    FAKE_ID,
+                    FAKE_ID,
+                    saddle_id=FAKE_ID_2,
                 )
             assert exc.value.code == ErrorCode.SADDLE_NOT_FOUND
 
@@ -1234,7 +1276,9 @@ class TestValidateAssignmentCandidate:
 
         async def run() -> None:
             flags, warnings = await service.validate_assignment_candidate(
-                FAKE_ID, FAKE_ID, FAKE_ID,
+                FAKE_ID,
+                FAKE_ID,
+                FAKE_ID,
             )
             assert "child_rider" in flags
             assert any("menor" in w.lower() for w in warnings)
@@ -1248,7 +1292,9 @@ class TestValidateAssignmentCandidate:
 
         async def run() -> None:
             flags, warnings = await service.validate_assignment_candidate(
-                FAKE_ID, FAKE_ID, FAKE_ID,
+                FAKE_ID,
+                FAKE_ID,
+                FAKE_ID,
             )
             assert flags == []
             assert any("límite de peso" in w.lower() for w in warnings)

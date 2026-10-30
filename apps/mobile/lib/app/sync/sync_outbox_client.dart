@@ -9,11 +9,7 @@ import 'package:http/http.dart' as http;
 /// Los codigos `network.*` se tratan como "sin conexion" (la operacion queda
 /// pendiente y se reintenta luego); el resto se propaga.
 class SyncApiFailure implements Exception {
-  SyncApiFailure({
-    required this.code,
-    required this.message,
-    this.statusCode,
-  });
+  SyncApiFailure({required this.code, required this.message, this.statusCode});
 
   final String code;
   final String message;

@@ -19,7 +19,7 @@ enum ReservationDetailLoadState {
 /// Cada acción tiene su propio ActionState<void> — no comparten estado.
 class ReservationDetailController extends ChangeNotifier {
   ReservationDetailController({required ReservationsRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final ReservationsRepository _repository;
 
@@ -118,8 +118,7 @@ class ReservationDetailController extends ChangeNotifier {
       state = ReservationDetailLoadState.success;
     } catch (_) {
       try {
-        detail =
-            await _repository.getCachedReservationDetail(reservationId);
+        detail = await _repository.getCachedReservationDetail(reservationId);
         if (_disposed) return;
         if (detail != null) {
           state = ReservationDetailLoadState.offlineFromCache;
@@ -298,6 +297,7 @@ class ReservationDetailController extends ChangeNotifier {
   Future<void> confirmReservation({
     required bool isAdmin,
     String? notes,
+    String? startTime,
   }) async {
     if (!isAdmin) {
       confirmationState = ActionState.error(
@@ -316,6 +316,7 @@ class ReservationDetailController extends ChangeNotifier {
       detail = await _repository.confirmReservation(
         reservationId: detail!.id,
         notes: notes,
+        startTime: startTime,
       );
       confirmationState = ActionState.success();
     } on ReservationsApiFailure catch (e) {
@@ -330,9 +331,7 @@ class ReservationDetailController extends ChangeNotifier {
     }
   }
 
-  Future<void> cancelReservation({
-    required bool isAdmin,
-  }) async {
+  Future<void> cancelReservation({required bool isAdmin}) async {
     if (!isAdmin) {
       cancellationState = ActionState.error(
         'permission.denied',
@@ -347,9 +346,7 @@ class ReservationDetailController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      detail = await _repository.cancelReservation(
-        reservationId: detail!.id,
-      );
+      detail = await _repository.cancelReservation(reservationId: detail!.id);
       cancellationState = ActionState.success();
     } on ReservationsApiFailure catch (e) {
       cancellationState = ActionState.error(e.code, e.message);
@@ -363,9 +360,7 @@ class ReservationDetailController extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteReservation({
-    required bool isAdmin,
-  }) async {
+  Future<void> deleteReservation({required bool isAdmin}) async {
     if (!isAdmin) {
       deleteState = ActionState.error(
         'permission.denied',
@@ -380,9 +375,7 @@ class ReservationDetailController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      detail = await _repository.deleteReservation(
-        reservationId: detail!.id,
-      );
+      detail = await _repository.deleteReservation(reservationId: detail!.id);
       deleteState = ActionState.success();
     } on ReservationsApiFailure catch (e) {
       deleteState = ActionState.error(e.code, e.message);
@@ -396,9 +389,7 @@ class ReservationDetailController extends ChangeNotifier {
     }
   }
 
-  Future<void> restoreReservation({
-    required bool isAdmin,
-  }) async {
+  Future<void> restoreReservation({required bool isAdmin}) async {
     if (!isAdmin) {
       restoreState = ActionState.error(
         'permission.denied',
@@ -413,9 +404,7 @@ class ReservationDetailController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      detail = await _repository.restoreReservation(
-        reservationId: detail!.id,
-      );
+      detail = await _repository.restoreReservation(reservationId: detail!.id);
       restoreState = ActionState.success();
     } on ReservationsApiFailure catch (e) {
       restoreState = ActionState.error(e.code, e.message);

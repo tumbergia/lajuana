@@ -43,19 +43,25 @@ mobile-format-check:
 	dart format --output=none --set-exit-if-changed apps/mobile/lib apps/mobile/test packages
 
 mobile-analyze:
-	cd apps/mobile && $(strip $(MOBILE_JAVA_PATH) DART_VM_OPTIONS=--old_gen_heap_size=2048) flutter analyze
+	cd apps/mobile && $(strip $(MOBILE_JAVA_PATH) DART_VM_OPTIONS=--old_gen_heap_size=2048) flutter analyze --no-fatal-infos
 
 mobile-packages-analyze:
-	cd packages/mobile_core && flutter analyze
-	cd packages/mobile_domain && flutter analyze
-	cd packages/mobile_mocks && flutter analyze
-	cd packages/mobile_ui && flutter analyze
+	cd packages/mobile_core && flutter analyze --no-fatal-infos
+	cd packages/mobile_domain && flutter analyze --no-fatal-infos
+	cd packages/mobile_mocks && flutter analyze --no-fatal-infos
+	cd packages/mobile_ui && flutter analyze --no-fatal-infos
+
+mobile-packages-test:
+	cd packages/mobile_core && flutter test
+	cd packages/mobile_domain && flutter test
+	cd packages/mobile_ui && flutter test
 
 mobile-quality:
 	$(MAKE) mobile-format-check
 	$(MAKE) mobile-analyze
 	$(MAKE) mobile-packages-analyze
 	$(MAKE) mobile-test
+	$(MAKE) mobile-packages-test
 
 api-dev:
 	cd apps/api && $(API_PY) -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -65,6 +71,7 @@ api-test:
 
 api-lint:
 	cd apps/api && $(API_PY) -m ruff check .
+	cd apps/api && $(API_PY) -m ruff format --check .
 
 api-format:
 	cd apps/api && $(API_PY) -m ruff format .

@@ -1,3 +1,4 @@
+import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 
 import 'package:mobile_ui/src/input/app_input_formatters.dart';
@@ -115,7 +116,10 @@ class ProviderPhoneFieldState extends State<ProviderPhoneField> {
               borderSide: BorderSide(color: scheme.primary, width: 1.2),
             ),
             border: outlineBorder,
-            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 0,
+              minHeight: 0,
+            ),
             prefixIcon: _CountryPrefix(
               country: _selectedCountry,
               onTap: _pickCountry,
@@ -128,10 +132,7 @@ class ProviderPhoneFieldState extends State<ProviderPhoneField> {
 }
 
 class _CountryPrefix extends StatelessWidget {
-  const _CountryPrefix({
-    required this.country,
-    required this.onTap,
-  });
+  const _CountryPrefix({required this.country, required this.onTap});
 
   final PhoneCountry country;
   final VoidCallback onTap;
@@ -148,9 +149,13 @@ class _CountryPrefix extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              country.flagEmoji,
-              style: const TextStyle(fontSize: 20),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: CountryFlag.fromCountryCode(
+                country.iso,
+                width: 22,
+                height: 16,
+              ),
             ),
             const SizedBox(width: 6),
             Text(
@@ -251,9 +256,9 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
             const SizedBox(height: 16),
             Text(
               'Seleccionar pais',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             AppTextField(
@@ -270,16 +275,21 @@ class _CountryPickerSheetState extends State<_CountryPickerSheet> {
                   final country = _filtered[index];
                   final selected = country.iso == widget.selected.iso;
                   return ListTile(
-                    leading: Text(
-                      country.flagEmoji,
-                      style: const TextStyle(fontSize: 24),
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: CountryFlag.fromCountryCode(
+                        country.iso,
+                        width: 28,
+                        height: 20,
+                      ),
                     ),
                     title: Text(country.name),
                     trailing: Text(
                       country.displayCode,
                       style: TextStyle(
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         color: selected ? scheme.primary : scheme.onSurface,
                       ),
                     ),

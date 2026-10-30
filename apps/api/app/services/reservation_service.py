@@ -1,12 +1,13 @@
-from __future__ import annotations
-
 """Servicio de negocio para el agregado Reservation."""
+
+from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
 
 from beanie import PydanticObjectId
 from pymongo.errors import DuplicateKeyError
 
+from app.common.constants import build_code
 from app.common.enums import (
     Channel,
     NotificationEventType,
@@ -15,7 +16,6 @@ from app.common.enums import (
     ReservationStatus,
     UserRole,
 )
-from app.common.constants import build_code
 from app.common.labels import ErrorCode
 from app.core.errors import ApiError
 from app.core.logging import logger
@@ -32,6 +32,15 @@ from app.services.participant_form_link_service import ParticipantFormLinkServic
 from app.services.sync_change_recorder import record_change
 
 ACTIVE_RESERVATION_STATUSES = {
+    ReservationStatus.QUOTED,
+    ReservationStatus.PRE_RESERVED,
+    ReservationStatus.PENDING_PAYMENT,
+    ReservationStatus.PAYMENT_RECEIVED,
+    ReservationStatus.CONFIRMED,
+}
+
+ASSISTANT_GATE_RESERVATION_STATUSES = {
+    ReservationStatus.CONTACT,
     ReservationStatus.QUOTED,
     ReservationStatus.PRE_RESERVED,
     ReservationStatus.PENDING_PAYMENT,
@@ -316,12 +325,7 @@ class ReservationService:
         if actor_role == UserRole.GUIDE:
             # Un guía solo ve reservas confirmadas, igual que en list().
             query = {"deleted_at": None, "status": ReservationStatus.CONFIRMED}
-        return (
-            await ReservationDocument.find(query)
-            .sort("-updated_at")
-            .limit(limit)
-            .to_list()
-        )
+        return await ReservationDocument.find(query).sort("-updated_at").limit(limit).to_list()
 
     async def count(
         self,
@@ -390,6 +394,26 @@ class ReservationService:
         actor_id: PydanticObjectId | None = None,
     ) -> ReservationDocument:
         doc = await self.get(reservation_id)
+        if "assistant_disabled" in payload:
+            if not doc.holder_phone:
+                raise ApiError(
+                    status_code=400,
+                    code=ErrorCode.VALIDATION_ERROR,
+                    message=(
+                        "assistant_disabled solo puede actualizarse en reservas con teléfono"
+                        " del titular."
+                    ),
+                )
+            if doc.status not in ASSISTANT_GATE_RESERVATION_STATUSES:
+                raise ApiError(
+                    status_code=400,
+                    code=ErrorCode.VALIDATION_ERROR,
+                    message=(
+                        "assistant_disabled solo puede actualizarse en reservas con estados"
+                        " que afectan el gate de WhatsApp."
+                    ),
+                    details={"status": doc.status.value},
+                )
         changed_fields = [field for field in payload if getattr(doc, field, None) != payload[field]]
         for field, value in payload.items():
             setattr(doc, field, value)
@@ -437,6 +461,7 @@ class ReservationService:
         self,
         reservation_id: str,
         actor_id: PydanticObjectId | None = None,
+        start_time: str | None = None,
     ) -> ReservationDocument:
         """Confirma una reserva validando estado, anticipación, pago y disponibilidad por fecha."""
         reservation = await self.get(reservation_id)
@@ -505,9 +530,7 @@ class ReservationService:
         )
         from app.core.config import settings
 
-        reservation.form_url = (
-            f"{settings.participant_form_base_url}/?token={raw_token}"
-        )
+        reservation.form_url = f"{settings.participant_form_base_url}/?token={raw_token}"
         await reservation.save()
         await record_change(entity_type="reservation", doc=reservation)
 
@@ -519,6 +542,7 @@ class ReservationService:
                 reservation=reservation,
                 experience_name=experience_name,
                 scheduled_date=scheduled_date,
+                start_time=start_time,
             )
         except Exception:
             logger.exception(
@@ -586,10 +610,7 @@ class ReservationService:
                 await self.notification_service.enqueue_admin_in_app(
                     event_type=NotificationEventType.RESERVATION_STATUS_CHANGED,
                     title="Estado de reserva actualizado",
-                    body=(
-                        f"{holder} — {code}: "
-                        f"{previous_status.value} → {target_status.value}"
-                    ),
+                    body=(f"{holder} — {code}: {previous_status.value} → {target_status.value}"),
                     reservation_id=str(reservation.id),
                     actor_user_id=str(actor_id) if actor_id else None,
                     dedup_suffix=f"{previous_status.value}->{target_status.value}",
@@ -672,9 +693,7 @@ class ReservationService:
         await record_change(entity_type="reservation", doc=doc)
         return doc
 
-    async def validate_participant_forms_completed(
-        self, reservation: ReservationDocument
-    ) -> None:
+    async def validate_participant_forms_completed(self, reservation: ReservationDocument) -> None:
         if reservation.participant_form_status != ParticipantFormStatus.COMPLETE:
             raise ApiError(
                 status_code=409,
@@ -724,6 +743,7 @@ class ReservationService:
         ).to_list()
 
         from collections import defaultdict
+
         per_res: dict[str, list[object]] = defaultdict(list)
         for a in all_assignments:
             per_res[str(a.reservation_id)].append(a)
@@ -751,7 +771,9 @@ class ReservationService:
             else:
                 incomplete = [p for p in res_participants if not getattr(p, "is_completed", False)]
                 no_weight = [p for p in res_participants if not getattr(p, "weight_kg", None)]
-                no_experience = [p for p in res_participants if not getattr(p, "experience_level", None)]
+                no_experience = [
+                    p for p in res_participants if not getattr(p, "experience_level", None)
+                ]
 
                 if incomplete:
                     blocking_reasons.append(
@@ -785,5 +807,3 @@ class ReservationService:
             }
 
         return result
-
-

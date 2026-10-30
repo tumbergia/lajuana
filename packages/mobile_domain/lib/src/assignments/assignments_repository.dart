@@ -58,10 +58,7 @@ abstract class AssignmentsRepository {
   });
 
   /// POST /api/v1/assignments/reservation/{reservationId}/finalize-all
-  Future<void> finalizeAll({
-    required String reservationId,
-    String? notes,
-  });
+  Future<void> finalizeAll({required String reservationId, String? notes});
 
   /// POST /api/v1/assignments/reservation/{reservationId}/unfinalize-all
   /// Returns the updated board.

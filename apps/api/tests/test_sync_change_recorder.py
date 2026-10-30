@@ -8,12 +8,16 @@ from types import SimpleNamespace
 os.environ["APP_SKIP_DB_INIT"] = "true"
 
 from app.services import sync_change_recorder as rec
-from app.services.sync_service import SYNC_REQUIRED_PERMISSION
+from app.services.sync_service import SYNC_PUSH_ONLY_ENTITIES, SYNC_REQUIRED_PERMISSION
 
 
 def test_stream_map_covers_all_pushable_entities() -> None:
-    """Toda entidad que se puede pushear debe tener un stream de pull."""
-    pushable = {entity for (entity, _op) in SYNC_REQUIRED_PERMISSION}
+    """Toda entidad sincronizable, excepto comandos push-only, tiene stream."""
+    pushable = {
+        entity
+        for (entity, _op) in SYNC_REQUIRED_PERMISSION
+        if entity not in SYNC_PUSH_ONLY_ENTITIES
+    }
     missing = pushable - set(rec.STREAM_BY_ENTITY)
     assert missing == set(), f"streams faltantes para: {missing}"
 
@@ -29,9 +33,7 @@ def test_record_change_unknown_entity_is_noop(monkeypatch) -> None:
             return self
 
     monkeypatch.setattr(rec, "SyncChangeDocument", _FakeChange)
-    asyncio.run(
-        rec.record_change(entity_type="not_a_real_entity", doc=SimpleNamespace(id="x"))
-    )
+    asyncio.run(rec.record_change(entity_type="not_a_real_entity", doc=SimpleNamespace(id="x")))
     assert inserted == []
 
 
@@ -70,9 +72,7 @@ def test_record_change_swallows_errors(monkeypatch) -> None:
 
     monkeypatch.setattr(rec, "_build_payload", _boom)
     # No debe lanzar.
-    asyncio.run(
-        rec.record_change(entity_type="experience", doc=SimpleNamespace(id="e1"))
-    )
+    asyncio.run(rec.record_change(entity_type="experience", doc=SimpleNamespace(id="e1")))
 
 
 def test_config_payload_shape() -> None:

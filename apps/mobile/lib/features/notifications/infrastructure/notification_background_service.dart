@@ -79,8 +79,10 @@ class NotificationBackgroundService {
 
   static Future<void> _ensureAndroidChannel() async {
     if (!Platform.isAndroid) return;
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await android?.createNotificationChannel(
       const AndroidNotificationChannel(
         _androidChannelId,
@@ -95,14 +97,18 @@ class NotificationBackgroundService {
   static Future<bool> requestPermissions() async {
     if (!supportsBackgroundNotifications) return false;
     if (Platform.isAndroid) {
-      final android = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       final granted = await android?.requestNotificationsPermission();
       return granted ?? false;
     }
     if (Platform.isIOS) {
-      final ios = _plugin.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>();
+      final ios = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
       final granted = await ios?.requestPermissions(
         alert: true,
         badge: true,
@@ -235,14 +241,18 @@ Future<void> _pollAndNotify() async {
   final token = await _readAccessTokenFromSqlite();
   if (token == null || token.isEmpty) return;
 
-  final uri = Uri.parse('$baseUrl/notifications/in-app?unread_only=true&limit=20');
-  final response = await http.get(
-    uri,
-    headers: {
-      HttpHeaders.authorizationHeader: 'Bearer $token',
-      HttpHeaders.contentTypeHeader: 'application/json',
-    },
-  ).timeout(const Duration(seconds: 20));
+  final uri = Uri.parse(
+    '$baseUrl/notifications/in-app?unread_only=true&limit=20',
+  );
+  final response = await http
+      .get(
+        uri,
+        headers: {
+          HttpHeaders.authorizationHeader: 'Bearer $token',
+          HttpHeaders.contentTypeHeader: 'application/json',
+        },
+      )
+      .timeout(const Duration(seconds: 20));
   if (response.statusCode < 200 || response.statusCode >= 300) return;
 
   final decoded = jsonDecode(response.body);

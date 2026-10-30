@@ -68,9 +68,7 @@ async def download_payment_proof(
     return StreamingResponse(
         io.BytesIO(file_bytes),
         media_type=content_type,
-        headers={
-            "Content-Disposition": f'inline; filename="comprobante-{payment_proof_id}"'
-        },
+        headers={"Content-Disposition": f'inline; filename="comprobante-{payment_proof_id}"'},
     )
 
 

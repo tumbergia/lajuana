@@ -11,7 +11,6 @@ from app.documents import (
     ReservationProviderDocument,
 )
 from app.documents.provider_document import ProviderStatus
-from app.documents.reservation_provider_document import ReservationProviderStatus
 from app.schemas.reservation_provider import (
     ReservationProviderCreateSchema,
     ReservationProviderTabItemSchema,
@@ -144,9 +143,7 @@ class ReservationProviderService(
             provider = await ProviderDocument.get(link.provider_id)
             if provider is None:
                 continue
-            items.append(
-                await self._to_tab_item(link, reservation, provider, experience_name)
-            )
+            items.append(await self._to_tab_item(link, reservation, provider, experience_name))
         return items
 
     async def create_for_reservation(

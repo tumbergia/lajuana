@@ -5,10 +5,7 @@ import 'infrastructure/remote/voice_assistant_api_client.dart';
 import 'presentation/controllers/voice_assistant_controller.dart';
 
 class VoiceAssistantModule {
-  VoiceAssistantModule({
-    required this.apiClient,
-    required this.controller,
-  });
+  VoiceAssistantModule({required this.apiClient, required this.controller});
 
   final VoiceAssistantApiClient apiClient;
   final VoiceAssistantController controller;
@@ -31,9 +28,6 @@ class VoiceAssistantModule {
 
     final controller = VoiceAssistantController(apiClient: apiClient);
 
-    return VoiceAssistantModule(
-      apiClient: apiClient,
-      controller: controller,
-    );
+    return VoiceAssistantModule(apiClient: apiClient, controller: controller);
   }
 }

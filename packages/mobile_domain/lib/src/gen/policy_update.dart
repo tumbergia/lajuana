@@ -5,22 +5,19 @@
 /// AUTO-GENERATED from OpenAPI schema `PolicyUpdateSchema`.
 
 class PolicyUpdate {
-
   final String? providerId;
   final String? policyNumber;
   final String? issuedAt;
   final String? expiresAt;
   final String? notes;
 
-  const PolicyUpdate(
-    {
+  const PolicyUpdate({
     this.providerId,
     this.policyNumber,
     this.issuedAt,
     this.expiresAt,
     this.notes,
-    }
-  );
+  });
 
   factory PolicyUpdate.fromJson(Map<String, dynamic> json) {
     return PolicyUpdate(
@@ -39,5 +36,4 @@ class PolicyUpdate {
     'expires_at': expiresAt,
     'notes': notes,
   };
-
 }

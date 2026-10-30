@@ -29,7 +29,6 @@ class _DummyMigration(Migration):
 
 
 class TestMigrationBase:
-
     def test_qualified_name(self) -> None:
         m = _DummyMigration()
         assert m.qualified_name == "999_dummy"
@@ -60,6 +59,7 @@ class TestMigrationBase:
             await m.apply()
 
         import asyncio
+
         asyncio.run(run())
         assert m.applied is True
 
@@ -70,6 +70,7 @@ class TestMigrationBase:
             await m.rollback()  # should not raise
 
         import asyncio
+
         asyncio.run(run())
 
     def test_version_required(self) -> None:
@@ -82,7 +83,6 @@ class TestMigrationBase:
 
 
 class TestMigrationVersions:
-
     def test_all_migrations_have_valid_properties(self) -> None:
         from app.migrations.versions import MIGRATIONS
 
@@ -103,7 +103,6 @@ class TestMigrationVersions:
 
 
 class TestMigrationRunner:
-
     def test_runner_skipped_when_app_skip_db_init(self) -> None:
         """run_migrations returns early when APP_SKIP_DB_INIT is set."""
 
@@ -112,4 +111,5 @@ class TestMigrationRunner:
             await run_migrations()
 
         import asyncio
+
         asyncio.run(run())

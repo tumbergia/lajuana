@@ -10,6 +10,8 @@ MAX_MESSAGES_PER_BUFFER = 15
 
 
 class MessageBufferService:
+    MAX_STALE_SECONDS = 120
+
     async def add_message(
         self,
         *,
@@ -29,6 +31,26 @@ class MessageBufferService:
         )
 
         if existing:
+            first_at = existing.first_message_at
+            if first_at and first_at.tzinfo is None:
+                first_at = first_at.replace(tzinfo=UTC)
+            elapsed = (now - (first_at or now)).total_seconds()
+
+            # If buffer is too old, close it as stale and create a new one
+            if elapsed >= self.MAX_STALE_SECONDS:
+                collection = MessageBufferDocument.get_motor_collection()
+                await collection.find_one_and_update(
+                    {"buffer_id": existing.buffer_id},
+                    {"$set": {"status": "stale"}},
+                )
+                logger.info(
+                    "[conversation_id=%s] Buffer stale after %.0fs, creating new buffer",
+                    conversation_id,
+                    elapsed,
+                )
+                existing = None
+
+        if existing:
             existing.message_ids.append(message_id)
             existing.last_message_at = now
             existing.version += 1
@@ -36,15 +58,12 @@ class MessageBufferService:
                 (existing.combined_preview + f"\n{body}") if existing.combined_preview else body
             )
 
-            first_at = existing.first_message_at
-            if first_at and first_at.tzinfo is None:
-                first_at = first_at.replace(tzinfo=UTC)
             elapsed = (now - (first_at or now)).total_seconds()
 
             if (
                 elapsed >= MAX_BUFFER_SECONDS
                 or len(existing.message_ids) >= MAX_MESSAGES_PER_BUFFER
-            ):  # noqa: E501
+            ):
                 existing.scheduled_for = now
                 existing.status = "scheduled"
             else:

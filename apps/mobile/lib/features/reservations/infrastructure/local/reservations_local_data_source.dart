@@ -15,15 +15,11 @@ class ReservationsLocalDataSource {
     final now = DateTime.now().toUtc().toIso8601String();
     final batch = db.batch();
     for (final item in items) {
-      batch.insert(
-        'reservations_list_cache',
-        {
-          'id': item['id'] as String,
-          'payload_json': jsonEncode(item),
-          'cached_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      batch.insert('reservations_list_cache', {
+        'id': item['id'] as String,
+        'payload_json': jsonEncode(item),
+        'cached_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
   }
@@ -37,7 +33,8 @@ class ReservationsLocalDataSource {
     return rows.map((row) {
       return CachedReservationListRecord(
         id: row['id'] as String,
-        payload: jsonDecode(row['payload_json'] as String) as Map<String, dynamic>,
+        payload:
+            jsonDecode(row['payload_json'] as String) as Map<String, dynamic>,
         cachedAt: DateTime.parse(row['cached_at'] as String),
       );
     }).toList();
@@ -49,16 +46,12 @@ class ReservationsLocalDataSource {
     String? updatedAt,
   ) async {
     final db = await _database.database;
-    await db.insert(
-      'reservation_detail_cache',
-      {
-        'id': id,
-        'payload_json': jsonEncode(payload),
-        'updated_at': updatedAt,
-        'cached_at': DateTime.now().toUtc().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('reservation_detail_cache', {
+      'id': id,
+      'payload_json': jsonEncode(payload),
+      'updated_at': updatedAt,
+      'cached_at': DateTime.now().toUtc().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<CachedReservationDetailRecord?> getCachedDetail(String id) async {
@@ -73,11 +66,11 @@ class ReservationsLocalDataSource {
     final row = rows.first;
     return CachedReservationDetailRecord(
       id: row['id'] as String,
-      payload: jsonDecode(row['payload_json'] as String) as Map<String, dynamic>,
-      updatedAt:
-          row['updated_at'] != null
-              ? DateTime.parse(row['updated_at'] as String)
-              : null,
+      payload:
+          jsonDecode(row['payload_json'] as String) as Map<String, dynamic>,
+      updatedAt: row['updated_at'] != null
+          ? DateTime.parse(row['updated_at'] as String)
+          : null,
       cachedAt: DateTime.parse(row['cached_at'] as String),
     );
   }
@@ -106,11 +99,10 @@ class ReservationsLocalDataSource {
 
   Future<void> setSyncCursor(String stream, String cursor) async {
     final db = await _database.database;
-    await db.insert(
-      'sync_cursors',
-      {'stream': stream, 'cursor': cursor},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('sync_cursors', {
+      'stream': stream,
+      'cursor': cursor,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<DateTime?> getLastSyncAt() async {
@@ -127,13 +119,9 @@ class ReservationsLocalDataSource {
 
   Future<void> setLastSyncAt(DateTime time) async {
     final db = await _database.database;
-    await db.insert(
-      'reservations_sync_meta',
-      {
-        'key': 'last_sync_at',
-        'value': time.toUtc().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('reservations_sync_meta', {
+      'key': 'last_sync_at',
+      'value': time.toUtc().toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }

@@ -13,8 +13,8 @@ class AuthController extends ChangeNotifier {
   AuthController({
     required AuthRepository authRepository,
     required NetworkStatusResolver networkStatusResolver,
-  })  : _authRepository = authRepository,
-        _networkStatusResolver = networkStatusResolver;
+  }) : _authRepository = authRepository,
+       _networkStatusResolver = networkStatusResolver;
 
   final AuthRepository _authRepository;
   final NetworkStatusResolver _networkStatusResolver;
@@ -99,7 +99,10 @@ class AuthController extends ChangeNotifier {
   }) async {
     _startLoading();
     try {
-      final snapshot = await _authRepository.signIn(email: email, password: password);
+      final snapshot = await _authRepository.signIn(
+        email: email,
+        password: password,
+      );
       _applySnapshot(snapshot);
       _clearError();
       noticeCode = null;

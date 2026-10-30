@@ -98,25 +98,25 @@ class ProviderDetailActionsBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasWhatsApp = _whatsappDigits(item.whatsappPhone).isNotEmpty;
     final hasEmail = item.email != null && item.email!.trim().isNotEmpty;
-    final buttonCount = (hasEmail ? 1 : 0) +
-        (hasWhatsApp ? 1 : 0) +
-        (isAdmin ? 2 : 0);
+    final buttonCount =
+        (hasEmail ? 1 : 0) + (hasWhatsApp ? 1 : 0) + (isAdmin ? 2 : 0);
 
     if (buttonCount == 0) {
       return Text(
         'Sin acciones disponibles',
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       );
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final widthScale = (constraints.maxWidth /
-                (buttonCount * _designSlotWidth + (buttonCount - 1) * 8))
-            .clamp(_minWidthScale, 1.0);
+        final widthScale =
+            (constraints.maxWidth /
+                    (buttonCount * _designSlotWidth + (buttonCount - 1) * 8))
+                .clamp(_minWidthScale, 1.0);
         final gap = 8.0 * widthScale;
         final height = buttonHeight * widthScale;
         final brandIconSize = 24.0 * widthScale;
@@ -241,7 +241,9 @@ class _BrandIconButtonState extends State<_BrandIconButton> {
           onTap: widget.onPressed,
           onTapDown: isDisabled ? null : (_) => setState(() => _pressed = true),
           onTapUp: isDisabled ? null : (_) => setState(() => _pressed = false),
-          onTapCancel: isDisabled ? null : () => setState(() => _pressed = false),
+          onTapCancel: isDisabled
+              ? null
+              : () => setState(() => _pressed = false),
           splashColor: widget.iconColor.withValues(alpha: 0.12),
           highlightColor: widget.iconColor.withValues(alpha: 0.06),
           child: Center(

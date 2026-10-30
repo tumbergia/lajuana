@@ -55,12 +55,16 @@ class ResourceSyncHandler:
             return await self.saddle_service.create(schema)
         if op_type == "update":
             require_remote_id(operation)
-            await ensure_base_version(SaddleDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                SaddleDocument, operation.entity_remote_id, operation.base_version
+            )
             schema = SaddleUpdateSchema(**operation.payload)
             return await self.saddle_service.update(operation.entity_remote_id, schema)
         if op_type == "delete":
             require_remote_id(operation)
-            await ensure_base_version(SaddleDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                SaddleDocument, operation.entity_remote_id, operation.base_version
+            )
             return await self.saddle_service.soft_delete(operation.entity_remote_id)
         if op_type == "restore":
             require_remote_id(operation)
@@ -73,7 +77,9 @@ class ResourceSyncHandler:
             return await self.provider_service.create(schema)
         if op_type == "update":
             require_remote_id(operation)
-            await ensure_base_version(ProviderDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                ProviderDocument, operation.entity_remote_id, operation.base_version
+            )
             schema = ProviderUpdateSchema(**operation.payload)
             return await self.provider_service.update(operation.entity_remote_id, schema)
         return None
@@ -84,7 +90,9 @@ class ResourceSyncHandler:
             return await self.policy_service.create(schema)
         if op_type == "update":
             require_remote_id(operation)
-            await ensure_base_version(PolicyDocument, operation.entity_remote_id, operation.base_version)
+            await ensure_base_version(
+                PolicyDocument, operation.entity_remote_id, operation.base_version
+            )
             schema = PolicyUpdateSchema(**operation.payload)
             return await self.policy_service.update(operation.entity_remote_id, schema)
         return None

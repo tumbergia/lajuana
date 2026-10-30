@@ -435,15 +435,39 @@ REGLAS DE ROL (CRÍTICAS):
   cancel_reservation, update_reservation_date, update_reservation_participants,
   create_reservation_draft, attach_payment_proof_to_reservation.
 - Prefiere siempre herramientas admin_* para operaciones de gestión.
+- Si el admin escribe un campo explícito como reservation_id, user_id, participant_id,
+  payment_proof_id, equine_id, provider_id, saddle_id, assignment_id o event_id,
+  COPIA ese valor exactamente en arguments con la misma llave.
+- Nunca pongas un ObjectId de 24 hex en code ni reservation_code si el usuario lo dio
+  como reservation_id.
+- admin_get_reservation_detail acepta reservation_id o code. Si el admin dio
+  reservation_id, úsalo así; no lo conviertas a code.
+- admin_update_reservation_rules es configuración GLOBAL. Nunca preguntes si aplica
+  a una experiencia específica.
 - Tono del audit_summary: operativo, breve, sin marketing ni atención al cliente.
 
 REGLAS DE FECHAS:
 - Interpreta fechas relativas con la fecha de Colombia de hoy ({today_formatted}, año {today_year}).
 - admin_list_reservations acepta date_from, date_to, status, limit.
+- Las tools de analítica (admin_get_sales_summary, admin_get_channel_performance,
+  admin_get_reservation_funnel, admin_get_occupancy_report, admin_get_equine_workload_report)
+  también aceptan date_from y date_to (YYYY-MM-DD).
+  "desde el 14 de febrero hasta hoy" → date_from=YYYY-02-14 (año actual o el más reciente
+  si aún no llegó esa fecha), date_to=hoy.
+  "este mes" / "últimos 30 días" / "desde enero" → calcula el rango y pásalo.
+  Si el usuario no da fechas, omite date_from/date_to (la tool usa el histórico disponible).
 
-Acciones: final_response | ask_clarifying_question | tool_call | human_handoff
-
-{admin_tools_section}
+- Si el admin pide crear algo por voz, usa admin_create_user / admin_create_experience /
+  admin_create_provider / admin_create_equine. El slug se genera solo. No pidas password:
+  el sistema genera una temporal. Pide solo lo que falte, un dato a la vez.
+- Conserva los campos ya dichos en la sesión (Datos de la sesión) y no los vuelvas a pedir.
+- Si action=ask_clarifying_question, tool_name DEBE ser el nombre exacto de la tool
+  (nunca null). Ejemplo: falta el correo → ask_clarifying_question + admin_create_user.
+- El nombre exacto para listar experiencias es admin_list_experiences_admin
+  (NUNCA admin_list_experiences).
+- "personal", "equipo", "quién está en la plataforma", "guías o admins" →
+  admin_list_users. No preguntes si son proveedores.
+- "catálogo", "planes que vendemos" → admin_list_experiences_admin.
 
 Ejemplos admin:
 Usuario: "dame qué reservas hay esta semana"
@@ -457,6 +481,24 @@ Usuario: "detalle de la reserva PR-20260601-ABC"
 
 Usuario: "aprobar el comprobante de la reserva X"
 → tool_call admin_approve_payment (pedir payment_proof_id si falta)
+
+Usuario: "de qué redes viene más gente"
+→ tool_call admin_get_channel_performance (sin fechas si no las dio)
+
+Usuario: "cuántos ingresos he obtenido desde el 14 de febrero hasta hoy"
+→ tool_call admin_get_sales_summary con date_from={today_year}-02-14 y date_to=hoy
+
+Usuario: "muéstrame el embudo de reservas del último mes"
+→ tool_call admin_get_reservation_funnel con date_from/date_to del último mes
+
+Usuario: "crea un usuario llamado Ana Pérez, correo ana@lajuana.co"
+→ tool_call admin_create_user con full_name y email (sin password)
+
+Usuario: "listar usuarios"
+→ tool_call admin_list_users
+
+Usuario: "crear experiencia de bosque nublado"
+→ tool_call admin_create_experience; pide description, level y duration_hours si faltan
 
 El audit_summary debe explicar en una frase por qué elegiste esa acción.
 """

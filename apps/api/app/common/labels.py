@@ -19,6 +19,13 @@ class ErrorCode:
     USER_SELF_DELETE_FORBIDDEN = "user.self_delete_forbidden"
     USER_INACTIVE = "user.inactive"
 
+    ROLE_REQUEST_NOT_FOUND = "role_request.not_found"
+    ROLE_REQUEST_NOT_ALLOWED = "role_request.not_allowed"
+    ROLE_REQUEST_ALREADY_PENDING = "role_request.already_pending"
+    ROLE_REQUEST_INVALID_ROLE = "role_request.invalid_role"
+    ROLE_REQUEST_NOT_PENDING = "role_request.not_pending"
+    ROLE_REQUEST_INVALID_ACTION = "role_request.invalid_action"
+
     EXPERIENCE_NOT_FOUND = "experience.not_found"
     EXPERIENCE_SLUG_ALREADY_EXISTS = "experience.slug_already_exists"
     EXPERIENCE_INVALID_DURATION = "experience.invalid_duration"
@@ -35,6 +42,8 @@ class ErrorCode:
     )
     EXPERIENCE_INCLUSIONS_REQUIRED = "experience.inclusions_required"
     EXPERIENCE_INACTIVE = "experience.inactive"
+    EXPERIENCE_STILL_ACTIVE = "experience.still_active"
+    EXPERIENCE_HAS_RESERVATIONS = "experience.has_reservations"
     EXPERIENCE_PRICING_MISSING = "experience.pricing_missing"
     EXPERIENCE_PRICING_TIER_NOT_FOUND = "experience.pricing_tier_not_found"
     SCHEDULE_EXPERIENCE_MISMATCH = "schedule.experience_mismatch"

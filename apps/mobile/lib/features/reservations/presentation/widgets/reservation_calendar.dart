@@ -9,8 +9,18 @@ import 'package:mobile/features/reservations/presentation/widgets/reservation_ro
 // ── Locale constants ──
 
 const _monthNames = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
 ];
 
 const _weekdayLabels = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM'];
@@ -161,7 +171,10 @@ class _ReservationCalendarSheetState extends State<ReservationCalendarSheet> {
                 // ── Monthly calendar ──
                 Padding(
                   padding: EdgeInsets.fromLTRB(
-                    tokens.spaceLg, tokens.spaceSm, tokens.spaceLg, 0,
+                    tokens.spaceLg,
+                    tokens.spaceSm,
+                    tokens.spaceLg,
+                    0,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -267,11 +280,17 @@ class _ReservationCalendarSheetState extends State<ReservationCalendarSheet> {
     TextTheme textTheme,
     AppThemeTokens tokens,
   ) {
-    final firstWeekday =
-        DateTime(_currentMonth.year, _currentMonth.month, 1).weekday;
+    final firstWeekday = DateTime(
+      _currentMonth.year,
+      _currentMonth.month,
+      1,
+    ).weekday;
     final offset = firstWeekday - 1; // 0 = Mon
-    final daysInMonth =
-        DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
+    final daysInMonth = DateTime(
+      _currentMonth.year,
+      _currentMonth.month + 1,
+      0,
+    ).day;
     final totalCells = offset + daysInMonth;
     final weeks = (totalCells / 7).ceil();
 
@@ -294,7 +313,9 @@ class _ReservationCalendarSheetState extends State<ReservationCalendarSheet> {
                   }
 
                   final date = DateTime(
-                    _currentMonth.year, _currentMonth.month, day,
+                    _currentMonth.year,
+                    _currentMonth.month,
+                    day,
                   );
                   final hasRes = _hasReservations(date);
                   final isSelected =
@@ -377,7 +398,10 @@ class _ReservationCalendarSheetState extends State<ReservationCalendarSheet> {
 
     return ListView(
       padding: EdgeInsets.fromLTRB(
-        tokens.spaceLg, tokens.spaceSm, tokens.spaceLg, tokens.spaceXl,
+        tokens.spaceLg,
+        tokens.spaceSm,
+        tokens.spaceLg,
+        tokens.spaceXl,
       ),
       children: [
         Padding(

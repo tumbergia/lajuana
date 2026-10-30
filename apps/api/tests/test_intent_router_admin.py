@@ -15,12 +15,13 @@ def test_admin_channel_lists_reservations_this_week() -> None:
     assert plan.arguments.date_to is not None  # type: ignore[attr-defined]
 
 
-def test_admin_channel_does_not_use_client_experience_list() -> None:
+def test_admin_channel_lists_experiences() -> None:
     plan = detect_and_build_plan(
         user_message="listame las experiencias",
         channel="admin_api",
     )
-    assert plan is None
+    assert plan is not None
+    assert plan.tool_name == "admin_list_experiences_admin"
 
 
 def test_admin_channel_lists_reservations() -> None:
@@ -64,6 +65,26 @@ def test_admin_keyword_without_channel() -> None:
     plan = detect_and_build_plan(user_message="listar proveedores activos")
     assert plan is not None
     assert plan.tool_name == "admin_list_providers"
+
+
+def test_admin_create_user_intent() -> None:
+    plan = detect_and_build_plan(
+        user_message="crea un usuario llamado Ana Pérez correo ana@lajuana.co",
+        channel="admin_api",
+    )
+    assert plan is not None
+    assert plan.tool_name == "admin_create_user"
+    assert plan.arguments.email == "ana@lajuana.co"
+    assert plan.arguments.full_name is not None
+
+
+def test_admin_list_users_intent() -> None:
+    plan = detect_and_build_plan(
+        user_message="listar usuarios",
+        channel="admin_api",
+    )
+    assert plan is not None
+    assert plan.tool_name == "admin_list_users"
 
 
 def test_client_channel_does_not_force_admin_list() -> None:

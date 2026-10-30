@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.endpoints.admin_ask import router as admin_ask_router
+from app.api.endpoints.analytics import router as analytics_router
 from app.api.endpoints.ask import router as ask_router
 from app.api.endpoints.assignments import router as assignments_router
 from app.api.endpoints.auth import router as auth_router
@@ -20,6 +21,7 @@ from app.api.endpoints.payment_proofs import router as payment_proofs_router
 from app.api.endpoints.policies import router as policies_router
 from app.api.endpoints.providers import router as providers_router
 from app.api.endpoints.reservations import router as reservations_router
+from app.api.endpoints.role_requests import router as role_requests_router
 from app.api.endpoints.saddles import router as saddles_router
 from app.api.endpoints.sync import router as sync_router
 from app.api.endpoints.users import router as users_router
@@ -27,12 +29,14 @@ from app.api.endpoints.whatsapp import router as whatsapp_router
 from app.core.config import settings
 
 api_router = APIRouter(prefix=f"{settings.api_prefix}/{settings.api_version}")
+api_router.include_router(analytics_router)
 api_router.include_router(health_router)
 api_router.include_router(diagnostics_router)
 api_router.include_router(auth_router)
 api_router.include_router(ask_router)
 api_router.include_router(admin_ask_router)
 api_router.include_router(users_router)
+api_router.include_router(role_requests_router)
 api_router.include_router(experiences_router)
 api_router.include_router(reservations_router)
 api_router.include_router(payment_proofs_router)

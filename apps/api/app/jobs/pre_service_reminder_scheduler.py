@@ -62,10 +62,12 @@ class PreServiceReminderScheduler:
 
         reservations = await ReservationDocument.find(
             {
-                "status": {"$in": [
-                    ReservationStatus.CONFIRMED.value,
-                    ReservationStatus.PAYMENT_RECEIVED.value,
-                ]},
+                "status": {
+                    "$in": [
+                        ReservationStatus.CONFIRMED.value,
+                        ReservationStatus.PAYMENT_RECEIVED.value,
+                    ]
+                },
                 "requested_date": {"$gte": today, "$lte": tomorrow},
             }
         ).to_list()
@@ -95,10 +97,12 @@ class PreServiceReminderScheduler:
         tomorrow = today + timedelta(days=1)
         reservations = await ReservationDocument.find(
             {
-                "status": {"$in": [
-                    ReservationStatus.CONFIRMED.value,
-                    ReservationStatus.PAYMENT_RECEIVED.value,
-                ]},
+                "status": {
+                    "$in": [
+                        ReservationStatus.CONFIRMED.value,
+                        ReservationStatus.PAYMENT_RECEIVED.value,
+                    ]
+                },
                 "requested_date": tomorrow,
             }
         ).to_list()
@@ -111,9 +115,7 @@ class PreServiceReminderScheduler:
         for reservation in reservations[:20]:
             holder = reservation.holder_name or "Cliente"
             code = reservation.code or str(reservation.id)
-            lines.append(
-                f"• {code}|{reservation.id}: {holder} ({reservation.participant_count})"
-            )
+            lines.append(f"• {code}|{reservation.id}: {holder} ({reservation.participant_count})")
         extra = len(reservations) - len(lines)
         if extra > 0:
             lines.append(f"… y {extra} más")
@@ -138,11 +140,13 @@ class PreServiceReminderScheduler:
             {
                 "reservation_id": reservation.id,
                 "event_type": NotificationEventType.PRE_SERVICE_REMINDER.value,
-                "status": {"$in": [
-                    NotificationStatus.PENDING.value,
-                    NotificationStatus.SCHEDULED.value,
-                    NotificationStatus.FAILED.value,
-                ]},
+                "status": {
+                    "$in": [
+                        NotificationStatus.PENDING.value,
+                        NotificationStatus.SCHEDULED.value,
+                        NotificationStatus.FAILED.value,
+                    ]
+                },
             }
         ).to_list()
         for entry in existing:

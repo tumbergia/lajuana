@@ -15,15 +15,18 @@ class AssignmentBoard {
       reservationId: source.reservationId,
       reservationStatus: source.reservationStatus,
       scheduledDate: source.scheduledDate,
-      participants: source.participants
+      participants:
+          source.participants
               ?.map((p) => BoardParticipant.fromGen(p))
               .toList() ??
           [],
-      availableEquines: source.availableEquines
+      availableEquines:
+          source.availableEquines
               ?.map((e) => AvailableEquine.fromGen(e))
               .toList() ??
           [],
-      availableSaddles: source.availableSaddles
+      availableSaddles:
+          source.availableSaddles
               ?.map((s) => AvailableSaddle.fromGen(s))
               .toList() ??
           [],
@@ -83,10 +86,15 @@ class BoardParticipant {
       participantId: source.participantId,
       fullName: source.fullName,
       ageYears: source.ageYears != null ? int.tryParse(source.ageYears!) : null,
-      weightKg: source.weightKg != null ? double.tryParse(source.weightKg!) : null,
-      heightCm: source.heightCm != null ? double.tryParse(source.heightCm!) : null,
+      weightKg: source.weightKg != null
+          ? double.tryParse(source.weightKg!)
+          : null,
+      heightCm: source.heightCm != null
+          ? double.tryParse(source.heightCm!)
+          : null,
       experienceLevel: source.experienceLevel,
-      assignment: null, // gen model has assignment as String?, not BoardAssignment
+      assignment:
+          null, // gen model has assignment as String?, not BoardAssignment
       blockingReasons: source.blockingReasons ?? [],
     );
   }
@@ -168,8 +176,9 @@ class AvailableEquine {
       id: source.id,
       name: source.name,
       blockReason: source.blockReason,
-      maxRiderWeightKg:
-          source.maxRiderWeightKg != null ? double.tryParse(source.maxRiderWeightKg!) : null,
+      maxRiderWeightKg: source.maxRiderWeightKg != null
+          ? double.tryParse(source.maxRiderWeightKg!)
+          : null,
       imageBase64: source.imageBase64,
     );
   }

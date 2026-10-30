@@ -50,9 +50,7 @@ class BaseService(Generic[DocT, CreateSchemaT, UpdateSchemaT]):
         # Import diferido para evitar ciclos en el arranque.
         from app.services.sync_change_recorder import record_change
 
-        await record_change(
-            entity_type=self.sync_entity_type, doc=doc, change_type=change_type
-        )
+        await record_change(entity_type=self.sync_entity_type, doc=doc, change_type=change_type)
 
     # ── READ ──
 

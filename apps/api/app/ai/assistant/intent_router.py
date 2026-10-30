@@ -12,7 +12,7 @@ _EXPERIENCE_KEYWORDS = [
 
 _DETAIL_KEYWORDS = [
     r"\b(detalles?|descripcion|informacion|en.que.consiste|como.es|que.incluye|que.se.hace)\b",
-    r"\b(hablame|cuentame|dime.mas|cuentame|explicame|mas.sobre)\b",
+    r"\b(hablame|cuentame|dime.mas|cuentame|explicame|mas.sobre|quiero.saber)\b",
 ]
 
 _PRICE_KEYWORDS = [
@@ -72,7 +72,7 @@ _ADMIN_LIST_RESERVATIONS = [
 ]
 
 _ADMIN_LIST_EQUINES = [
-    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(equinos?|mulas?)\b",
+    r"\b(lista(r|me|r)?|mu[eé]stra(r|me)?|dime|ver)\b.*\b(equinos?|mulas?)\b",
 ]
 
 _ADMIN_APPROVE_PAYMENT = [
@@ -83,13 +83,51 @@ _ADMIN_REJECT_PAYMENT = [
     r"\b(rechaza(r|me)?|rechazar)\b.*\b(pago|comprobante)\b",
 ]
 
+_ADMIN_DEACTIVATE_USER = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(usuario)\b",
+    r"\b(usuario)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
+_ADMIN_DEACTIVATE_PROVIDER = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(proveedor)\b",
+    r"\b(proveedor)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
+_ADMIN_DEACTIVATE_EQUINE = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(equino|mula)\b",
+    r"\b(equino|mula)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
+_ADMIN_DEACTIVATE_SADDLE = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(silla|montura)\b",
+    r"\b(silla|montura)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
+_ADMIN_DEACTIVATE_EXPERIENCE = [
+    r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b.*\b(experiencia)\b",
+    r"\b(experiencia)\b.*\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+]
+
 _ADMIN_SALES_REPORT = [
     r"\b(reporte|resumen)\b.*\b(ventas?)\b",
     r"\b(ventas?)\b.*\b(reporte|resumen)\b",
+    r"\b(ingresos?|facturacion|facturación)\b",
+    r"\bcuantos?\s+ingresos?\b",
+    r"\bcuántos?\s+ingresos?\b",
+]
+
+_ADMIN_CHANNEL_PERFORMANCE = [
+    r"\b(redes?|canales?|canal|origen|origenes|orígenes)\b",
+    r"\b(de\s+donde|de\s+dónde)\b.*\b(viene|vienen|gente|clientes?)\b",
+    r"\bwhatsapp\b.*\b(facebook|instagram|email)\b",
+]
+
+_ADMIN_FUNNEL_REPORT = [
+    r"\b(embudo|funnel|conversion|conversión)\b",
 ]
 
 _ADMIN_OCCUPANCY_REPORT = [
-    r"\b(reporte|ocupacion)\b",
+    r"\b(reporte|ocupacion|ocupación)\b",
 ]
 
 _ADMIN_EQUINE_WORKLOAD = [
@@ -102,15 +140,62 @@ _ADMIN_ASSIGNMENT_BOARD = [
 ]
 
 _ADMIN_LIST_PROVIDERS = [
-    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(proveedores?)\b",
+    r"\b(lista(r|me|r)?|mu[eé]stra(r|me)?|dime|ver)\b.*\b(proveedores?)\b",
 ]
 
 _ADMIN_LIST_SADDLES = [
-    r"\b(lista(r|me|r)?|muestra(r|me)?|dime|ver)\b.*\b(sillas?|monturas?)\b",
+    r"\b(lista(r|me|r)?|mu[eé]stra(r|me)?|dime|ver)\b.*\b(sillas?|monturas?)\b",
+]
+
+_ADMIN_SADDLES_AVAILABLE = [
+    r"\b(sillas?|monturas?)\b.*\b(disponibles?)\b.*\b(reserva)\b",
+    r"\b(reserva)\b.*\b(sillas?|monturas?)\b.*\b(disponibles?)\b",
+]
+
+_ADMIN_LIST_EQUINE_EVENTS = [
+    r"\b(eventos?)\b.*\b(equino|equinos?|mula|mulas)\b",
+    r"\b(equino|equinos?|mula|mulas)\b.*\b(eventos?)\b",
+]
+
+_ADMIN_CREATE_EQUINE_EVENT = [
+    r"\b(crea(r)?|registra(r)?|agrega(r)?)\b.*\b(eventos?)\b.*\b(equino|equinos?|mula|mulas)\b",
+]
+
+_ADMIN_UPDATE_EQUINE_EVENT = [
+    r"\b(actualiza(r)?|edita(r)?|modifica(r)?)\b.*\b(eventos?)\b",
+]
+
+_ADMIN_FINALIZE_ALL_ASSIGNMENTS = [
+    r"\b(finaliza(r)?|cerra(r)?)\b.*\b(todas)\b.*\b(asignaciones?)\b",
 ]
 
 _ADMIN_EMERGENCY_CONTACTS = [
     r"\b(contactos?.de.?emergencia|emergencias?|numeros?.de.?emergencia)\b",
+]
+
+
+_ADMIN_LIST_USERS = [
+    r"\b(lista(r|me)?|mu[eé]stra(r|me)?|dime|ver|cu[aá]les)\b.*\b(usuarios?)\b",
+]
+
+_ADMIN_LIST_EXPERIENCES = [
+    r"\b(lista(r|me)?|mu[eé]stra(r|me)?|dime|ver|cu[aá]les)\b.*\b(experiencias?)\b",
+]
+
+_ADMIN_CREATE_USER = [
+    r"\b(crea(r)?|agrega(r)?|registra(r)?|alta)\b.*\b(usuario|cuenta)\b",
+]
+
+_ADMIN_CREATE_EXPERIENCE = [
+    r"\b(crea(r)?|agrega(r)?|registra(r)?)\b.*\b(experiencia)\b",
+]
+
+_ADMIN_CREATE_PROVIDER = [
+    r"\b(crea(r)?|agrega(r)?|registra(r)?)\b.*\b(proveedor)\b",
+]
+
+_ADMIN_CREATE_EQUINE = [
+    r"\b(crea(r)?|agrega(r)?|registra(r)?)\b.*\b(equino|mula)\b",
 ]
 
 
@@ -122,6 +207,47 @@ def _extract_reservation_code(text: str) -> str | None:
     if m:
         return m.group(2).upper()
     return None
+
+
+def _extract_named_label(text: str) -> str | None:
+    match = re.search(
+        r"\b(?:llamad[oa]|nombre(?:\s+es)?)\s+(.+)$",
+        text.strip(),
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    value = re.sub(r"\s+", " ", match.group(1)).strip(" .,!?:;")
+    value = re.split(r"\b(?:correo|email|mail)\b", value, maxsplit=1, flags=re.IGNORECASE)[0]
+    value = re.sub(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}", "", value)
+    return value.strip(" .,!?:;") or None
+
+
+def _extract_object_id(text: str, field_name: str) -> str | None:
+    pattern = rf"\b{re.escape(field_name)}\b\s*[:=]?\s*([a-f0-9]{{24}})"
+    match = re.search(pattern, text, flags=re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return None
+
+
+def _extract_admin_user_reference(text: str) -> str | None:
+    return _extract_admin_entity_reference(text, ["usuario"])
+
+
+def _extract_admin_entity_reference(text: str, entity_terms: list[str]) -> str | None:
+    cleaned = text.strip()
+    cleaned = re.sub(
+        r"\b(borra(r)?|elimina(r)?|desactiva(r)?|inhabilita(r)?|deshabilita(r)?)\b",
+        " ",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    for entity_term in entity_terms:
+        cleaned = re.sub(rf"\b{re.escape(entity_term)}s?\b", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\b(el|la|al|a|de|del|por favor)\b", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,.!?:;\n\r\t")
+    return cleaned or None
 
 
 def _is_admin_context(channel: str | None, msg_lower: str) -> bool:
@@ -162,6 +288,121 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
     if date_str:
         args.requested_date = date_str
 
+    if _matches_any(msg_lower, _ADMIN_LIST_USERS):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.92,
+            tool_name="admin_list_users",
+            arguments=ToolArgs(limit=50),
+            user_goal="El admin quiere listar usuarios.",
+            audit_summary="Intent admin: listar usuarios.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_LIST_EXPERIENCES):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.92,
+            tool_name="admin_list_experiences_admin",
+            arguments=ToolArgs(limit=50),
+            user_goal="El admin quiere listar experiencias.",
+            audit_summary="Intent admin: listar experiencias.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CREATE_USER):
+        email_match = re.search(
+            r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
+            msg_lower,
+        )
+        create_args = ToolArgs()
+        if email_match:
+            create_args.email = email_match.group(0)
+        named = _extract_named_label(msg_lower)
+        if named:
+            create_args.full_name = named
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_create_user",
+            arguments=create_args,
+            user_goal="El admin quiere crear un usuario.",
+            audit_summary="Intent admin: crear usuario.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CREATE_EXPERIENCE):
+        create_args = ToolArgs()
+        named = _extract_named_label(msg_lower)
+        if named:
+            create_args.name = named
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_create_experience",
+            arguments=create_args,
+            user_goal="El admin quiere crear una experiencia.",
+            audit_summary="Intent admin: crear experiencia.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CREATE_PROVIDER):
+        create_args = ToolArgs()
+        named = _extract_named_label(msg_lower)
+        if named:
+            create_args.name = named
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_create_provider",
+            arguments=create_args,
+            user_goal="El admin quiere crear un proveedor.",
+            audit_summary="Intent admin: crear proveedor.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CREATE_EQUINE_EVENT):
+        equine_id = _extract_object_id(msg_lower, "equine_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_create_equine_event",
+            arguments=ToolArgs(equine_id=equine_id) if equine_id else ToolArgs(),
+            user_goal="El admin quiere registrar un evento de equino.",
+            audit_summary="Intent admin: crear evento equino.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_UPDATE_EQUINE_EVENT):
+        event_id = _extract_object_id(msg_lower, "event_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_update_equine_event",
+            arguments=ToolArgs(event_id=event_id) if event_id else ToolArgs(),
+            user_goal="El admin quiere actualizar un evento de equino.",
+            audit_summary="Intent admin: actualizar evento equino.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_LIST_EQUINE_EVENTS):
+        equine_id = _extract_object_id(msg_lower, "equine_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_list_equine_events",
+            arguments=ToolArgs(equine_id=equine_id) if equine_id else ToolArgs(),
+            user_goal="El admin quiere ver eventos de un equino.",
+            audit_summary="Intent admin: listar eventos equinos.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CREATE_EQUINE):
+        create_args = ToolArgs()
+        named = _extract_named_label(msg_lower)
+        if named:
+            create_args.name = named
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_create_equine",
+            arguments=create_args,
+            user_goal="El admin quiere crear un equino.",
+            audit_summary="Intent admin: crear equino.",
+        )
+
     if _matches_any(msg_lower, _ADMIN_EMERGENCY_CONTACTS):
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
@@ -172,9 +413,57 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
             audit_summary="Intent admin: contactos de emergencia.",
         )
 
+    if _matches_any(msg_lower, _ADMIN_FINALIZE_ALL_ASSIGNMENTS):
+        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_finalize_all_assignments",
+            arguments=ToolArgs(reservation_id=reservation_id) if reservation_id else ToolArgs(),
+            user_goal="El admin quiere finalizar todas las asignaciones de una reserva.",
+            audit_summary="Intent admin: finalizar todas las asignaciones.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_SADDLES_AVAILABLE):
+        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_list_available_saddles_for_reservation",
+            arguments=ToolArgs(reservation_id=reservation_id) if reservation_id else ToolArgs(),
+            user_goal="El admin quiere ver sillas disponibles para una reserva.",
+            audit_summary="Intent admin: sillas disponibles por reserva.",
+        )
+
+    saddle_id = _extract_object_id(msg_lower, "saddle_id")
+    if saddle_id and re.search(r"\b(detalle|detalles|info|informacion|ver)\b", msg_lower):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_saddle",
+            arguments=ToolArgs(saddle_id=saddle_id),
+            user_goal="El admin quiere ver detalle de una silla.",
+            audit_summary="Intent admin: detalle de silla.",
+        )
+
+    provider_id = _extract_object_id(msg_lower, "provider_id")
+    if provider_id and re.search(r"\b(detalle|detalles|info|informacion|ver)\b", msg_lower):
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_provider",
+            arguments=ToolArgs(provider_id=provider_id),
+            user_goal="El admin quiere ver detalle de un proveedor.",
+            audit_summary="Intent admin: detalle de proveedor.",
+        )
+
     if _matches_any(msg_lower, _ADMIN_ASSIGNMENT_BOARD):
         code = _extract_reservation_code(msg_lower)
-        plan_args = ToolArgs(reservation_code=code) if code else ToolArgs()
+        reservation_id = _extract_object_id(msg_lower, "reservation_id")
+        if reservation_id:
+            plan_args = ToolArgs(reservation_id=reservation_id)
+        else:
+            plan_args = ToolArgs(reservation_code=code) if code else ToolArgs()
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.9,
@@ -224,14 +513,132 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
             audit_summary="Intent admin: rechazar comprobante.",
         )
 
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_USER):
+        user_id = _extract_object_id(msg_lower, "user_id")
+        user_reference = None if user_id else _extract_admin_user_reference(msg_lower)
+        plan_args = ToolArgs(user_id=user_id) if user_id else ToolArgs()
+        if user_reference:
+            plan_args.q = user_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_user",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar un usuario.",
+            audit_summary="Intent admin: desactivar usuario.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_PROVIDER):
+        provider_id = _extract_object_id(msg_lower, "provider_id")
+        provider_reference = (
+            None if provider_id else _extract_admin_entity_reference(msg_lower, ["proveedor"])
+        )
+        plan_args = ToolArgs(provider_id=provider_id) if provider_id else ToolArgs()
+        if provider_reference:
+            plan_args.q = provider_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_provider",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar un proveedor.",
+            audit_summary="Intent admin: desactivar proveedor.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_EQUINE):
+        equine_id = _extract_object_id(msg_lower, "equine_id")
+        equine_reference = (
+            None if equine_id else _extract_admin_entity_reference(msg_lower, ["equino", "mula"])
+        )
+        plan_args = ToolArgs(equine_id=equine_id) if equine_id else ToolArgs()
+        if equine_reference:
+            plan_args.q = equine_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_equine",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar un equino.",
+            audit_summary="Intent admin: desactivar equino.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_SADDLE):
+        saddle_id = _extract_object_id(msg_lower, "saddle_id")
+        saddle_reference = (
+            None if saddle_id else _extract_admin_entity_reference(msg_lower, ["silla", "montura"])
+        )
+        plan_args = ToolArgs(saddle_id=saddle_id) if saddle_id else ToolArgs()
+        if saddle_reference:
+            plan_args.q = saddle_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_saddle",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar una silla.",
+            audit_summary="Intent admin: desactivar silla.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_DEACTIVATE_EXPERIENCE):
+        experience_id = _extract_object_id(msg_lower, "experience_id")
+        experience_reference = (
+            None if experience_id else _extract_admin_entity_reference(msg_lower, ["experiencia"])
+        )
+        plan_args = ToolArgs(experience_id=experience_id) if experience_id else ToolArgs()
+        if experience_reference:
+            plan_args.q = experience_reference  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_deactivate_experience",
+            arguments=plan_args,
+            user_goal="El admin quiere desactivar una experiencia.",
+            audit_summary="Intent admin: desactivar experiencia.",
+        )
+
     if _matches_any(msg_lower, _ADMIN_SALES_REPORT):
+        report_args = ToolArgs()
+        date_range = _extract_date_range(msg_lower)
+        if date_range:
+            report_args.date_from = date_range[0]  # type: ignore[attr-defined]
+            report_args.date_to = date_range[1]  # type: ignore[attr-defined]
         return AssistantPlan(
             action=AssistantAction.TOOL_CALL,
             confidence=0.9,
             tool_name="admin_get_sales_summary",
-            arguments=args,
-            user_goal="El admin quiere un reporte de ventas.",
+            arguments=report_args,
+            user_goal="El admin quiere un reporte de ventas / ingresos.",
             audit_summary="Intent admin: reporte de ventas.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_CHANNEL_PERFORMANCE):
+        report_args = ToolArgs()
+        date_range = _extract_date_range(msg_lower)
+        if date_range:
+            report_args.date_from = date_range[0]  # type: ignore[attr-defined]
+            report_args.date_to = date_range[1]  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_channel_performance",
+            arguments=report_args,
+            user_goal="El admin quiere ver de qué canales/redes viene la gente.",
+            audit_summary="Intent admin: rendimiento por canal.",
+        )
+
+    if _matches_any(msg_lower, _ADMIN_FUNNEL_REPORT):
+        report_args = ToolArgs()
+        date_range = _extract_date_range(msg_lower)
+        if date_range:
+            report_args.date_from = date_range[0]  # type: ignore[attr-defined]
+            report_args.date_to = date_range[1]  # type: ignore[attr-defined]
+        return AssistantPlan(
+            action=AssistantAction.TOOL_CALL,
+            confidence=0.9,
+            tool_name="admin_get_reservation_funnel",
+            arguments=report_args,
+            user_goal="El admin quiere ver el embudo de reservas.",
+            audit_summary="Intent admin: embudo de conversión.",
         )
 
     if _matches_any(msg_lower, _ADMIN_OCCUPANCY_REPORT):
@@ -288,8 +695,16 @@ def _detect_admin_plan(msg_lower: str) -> AssistantPlan | None:
     return None
 
 
+_GREETINGS = [
+    r"^(buen(?:os)?\s*d[ií][aá]s?|buenas\s*(tardes|noches)|hola|buenas|saludos|que\s*hay|que\s*mas)\b\s*[,.!?]?\s*",
+]
+
+
 def _extract_experience_name(text: str) -> str | None:
     cleaned = text.strip()
+    # Strip common greetings first
+    for greeting in _GREETINGS:
+        cleaned = re.sub(greeting, "", cleaned, flags=re.IGNORECASE).strip()
     # Remove leading intent phrases
     for prefix in [
         r"dame\s+(los\s+)?(detalles?\s+)?(de\s+)?(la\s+)?(para\s+)?(esta\s+)?(de\s+)?",
@@ -297,10 +712,13 @@ def _extract_experience_name(text: str) -> str | None:
         r"cuentame\s+de\s+",
         r"hablame\s+de\s+",
         r"dime\s+mas\s+(sobre|de)\s+",
+        r"quiero\s+saber\s+(de|sobre)\s+",
     ]:
         cleaned = re.sub(f"^{prefix}", "", cleaned, flags=re.IGNORECASE).strip()
     # Strip leading articles
     cleaned = re.sub(r"^(el|la|los|las|un|una)\s+", "", cleaned, flags=re.IGNORECASE).strip()
+    # Strip trailing punctuation
+    cleaned = cleaned.rstrip(",.!?;:.\n\r ")
     if len(cleaned) > 2 and not any(
         w in cleaned.lower()
         for w in ["experiencias", "actividades", "planes", "precio", "tienes", "ofrecen"]

@@ -9,13 +9,14 @@ from beanie import PydanticObjectId
 from app.ai.assistant.policy import ToolPolicyEngine
 from app.common.enums import ReservationStatus
 from app.common.labels import ErrorCode
-from app.core.di import Container
 from app.core.errors import ApiError
 from app.documents import ExperienceDocument, ReservationDocument
 from app.schemas.assistant_plan import AssistantAction, AssistantPlan, ToolArgs
 from app.services.config_service import ConfigService
 from app.services.reservation_draft_service import ReservationDraftService
 from app.services.reservation_service import ReservationService
+
+FUTURE_DATE = (datetime.now(UTC).date() + timedelta(days=30)).isoformat()
 
 
 class FakeReservationDoc:
@@ -58,7 +59,6 @@ def _patch_base_deps(
         pass
 
     # Build fresh service WITHOUT touching the shared container singleton
-    from app.services.config_service import ConfigService
     from app.services.reservation_service import ReservationService
 
     cfg = ConfigService()
@@ -109,7 +109,7 @@ async def _run_create_sets_status_pre_reserved(
         participant_count=2,
         holder_phone="+573001234567",
         holder_name="Test User",
-        requested_date="2026-07-15",
+        requested_date=FUTURE_DATE,
         quote_snapshot={"total": 100000},
     )
 
@@ -137,13 +137,17 @@ async def _run_create_experience_not_found(
 
     monkeypatch.setattr(ExperienceDocument, "get", fake_get)
 
-    from app.services.config_service import ConfigService
     from app.services.reservation_service import ReservationService
 
     cfg = ConfigService()
-    monkeypatch.setattr(cfg, "get_reservation_rules", lambda *a, **kw: SimpleNamespace(
-        min_days_in_advance=0, reservation_draft_ttl_minutes=30,
-    ))
+    monkeypatch.setattr(
+        cfg,
+        "get_reservation_rules",
+        lambda *a, **kw: SimpleNamespace(
+            min_days_in_advance=0,
+            reservation_draft_ttl_minutes=30,
+        ),
+    )
 
     res_svc = ReservationService(
         notification_service=SimpleNamespace(
@@ -166,7 +170,7 @@ async def _run_create_experience_not_found(
             participant_count=2,
             holder_phone="+573001234567",
             holder_name="Test User",
-            requested_date="2026-07-15",
+            requested_date=FUTURE_DATE,
             quote_snapshot={"total": 100000},
         )
 
@@ -214,7 +218,7 @@ async def _run_create_rejects_more_than_8_participants(
             participant_count=9,
             holder_phone="+573001234567",
             holder_name="Test User",
-            requested_date="2026-07-15",
+            requested_date=FUTURE_DATE,
             quote_snapshot={"total": 100000},
         )
 
@@ -247,7 +251,7 @@ async def _run_create_guards_duplicate_date(
             participant_count=2,
             holder_phone="+573001234567",
             holder_name="Test User",
-            requested_date="2026-07-15",
+            requested_date=FUTURE_DATE,
             quote_snapshot={"total": 100000},
         )
 
@@ -271,7 +275,7 @@ async def _run_create_guards_quote_snapshot(
             participant_count=2,
             holder_phone="+573001234567",
             holder_name="Test User",
-            requested_date="2026-07-15",
+            requested_date=FUTURE_DATE,
             quote_snapshot={},
         )
 
@@ -302,7 +306,7 @@ async def _run_create_does_not_confirm(
         participant_count=2,
         holder_phone="+573001234567",
         holder_name="Test User",
-        requested_date="2026-07-15",
+        requested_date=FUTURE_DATE,
         quote_snapshot={"total": 100000},
     )
 
@@ -328,7 +332,6 @@ async def _run_expire_changes_to_expired(
     async def fake_noop(*args, **kwargs):
         pass
 
-    from app.services.config_service import ConfigService
     from app.services.reservation_service import ReservationService
 
     cfg = ConfigService()

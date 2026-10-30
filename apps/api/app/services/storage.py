@@ -69,7 +69,9 @@ class S3StorageAdapter:
             buf = io.BytesIO()
             await asyncio.to_thread(
                 self._client.download_fileobj,
-                Bucket=self.bucket, Key=storage_key, Fileobj=buf,
+                Bucket=self.bucket,
+                Key=storage_key,
+                Fileobj=buf,
             )
             return buf.getvalue()
         except Exception:
@@ -78,7 +80,9 @@ class S3StorageAdapter:
     async def write_bytes(self, storage_key: str, data: bytes) -> str:
         await asyncio.to_thread(
             self._client.put_object,
-            Bucket=self.bucket, Key=storage_key, Body=data,
+            Bucket=self.bucket,
+            Key=storage_key,
+            Body=data,
         )
         return storage_key
 
@@ -86,7 +90,8 @@ class S3StorageAdapter:
         try:
             await asyncio.to_thread(
                 self._client.delete_object,
-                Bucket=self.bucket, Key=storage_key,
+                Bucket=self.bucket,
+                Key=storage_key,
             )
         except Exception:
             logger.warning(

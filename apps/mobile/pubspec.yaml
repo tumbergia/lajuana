@@ -32,6 +32,9 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   flutter_svg: ^2.0.10+1
   auto_size_text: ^3.0.0
@@ -54,20 +57,21 @@ dependencies:
   material_symbols_icons: ^4.2928.1
   image_picker: ^1.2.2
   speech_to_text: ^7.0.0
+  flutter_tts: ^4.2.0
   flutter_map: ^8.3.1
   latlong2: ^0.10.1
   workmanager: ^0.9.0+3
   flutter_local_notifications: ^19.4.0
   shared_preferences: ^2.5.3
+  fl_chart: ^0.70.2
+  country_flags: ^3.2.0
+  pdfrx: ^2.4.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   integration_test:
     sdk: flutter
-
-  # Permite abrir bases SQLite en la VM de tests (outbox offline).
-  sqflite_common_ffi: ^2.3.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

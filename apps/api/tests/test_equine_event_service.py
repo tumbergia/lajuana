@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
@@ -17,7 +16,6 @@ from app.documents.equine_event_document import EquineEventType
 from app.schemas.equine_event import EquineEventCreateSchema, EquineEventListFilters
 from app.services.equine_event_service import EquineEventService
 from app.services.equine_service import EquineService
-
 
 EQUINE_ID = "660000000000000000000001"
 OTHER_EQUINE_ID = "660000000000000000000002"
@@ -41,9 +39,9 @@ def _fake_equine(**overrides: object) -> SimpleNamespace:
 
 
 class TestEquineEventServiceCreate:
-
     def test_create_vaccination_without_reservation(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import equine_event_service as mod
 
@@ -82,7 +80,8 @@ class TestEquineEventServiceCreate:
         asyncio.run(run())
 
     def test_create_farrier_without_reservation(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import equine_event_service as mod
 
@@ -118,7 +117,8 @@ class TestEquineEventServiceCreate:
         asyncio.run(run())
 
     def test_create_note_without_reservation(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import equine_event_service as mod
 
@@ -154,7 +154,8 @@ class TestEquineEventServiceCreate:
         asyncio.run(run())
 
     def test_create_weight_without_measurement_raises_400(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import equine_event_service as mod
 
@@ -178,7 +179,8 @@ class TestEquineEventServiceCreate:
         asyncio.run(run())
 
     def test_create_rest_blocks_until_date(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import equine_event_service as mod
 
@@ -227,7 +229,8 @@ class TestEquineEventServiceCreate:
         asyncio.run(run())
 
     def test_create_availability_recovery(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import equine_event_service as mod
 
@@ -278,7 +281,8 @@ class TestEquineEventServiceCreate:
         asyncio.run(run())
 
     def test_create_injury_blocks_availability(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import equine_event_service as mod
 
@@ -328,7 +332,8 @@ class TestEquineEventServiceCreate:
         asyncio.run(run())
 
     def test_assignment_equine_mismatch_raises_400(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import equine_event_service as mod
 
@@ -363,7 +368,6 @@ class TestEquineEventServiceCreate:
 
 
 class TestEquineEventServiceList:
-
     def test_list_with_filters(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from app.services import equine_event_service as mod
 
@@ -414,9 +418,9 @@ class TestEquineEventServiceList:
 
 
 class TestEquineTimelineMerge:
-
     def test_timeline_merges_both_sources_sorted(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.documents.service_log_document import ServiceLogEventType
         from app.services import equine_service as mod
@@ -503,7 +507,8 @@ class TestEquineTimelineMerge:
         asyncio.run(run())
 
     def test_timeline_future_happened_at_rejected(
-        self, monkeypatch: pytest.MonkeyPatch,
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from app.services import equine_event_service as mod
 

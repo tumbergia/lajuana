@@ -111,6 +111,23 @@ async def deactivate_experience(
     return experience_to_response(doc)
 
 
+@router.delete(
+    "/{experience_id}/permanent",
+    response_model=ExperienceResponseSchema,
+    summary=ENDPOINT_DOCS["experiences_purge"]["summary"],
+    description=endpoint_description("experiences_purge"),
+    operation_id="purgeExperienceById",
+    responses=endpoint_responses("experiences_purge"),
+)
+async def purge_experience(
+    experience_id: str,
+    _: Annotated[UserDocument, Depends(require_permissions(Permission.EXPERIENCE_DELETE))],
+    service: ExperienceService = Depends(get_experience_service),
+) -> ExperienceResponseSchema:
+    doc = await service.purge(experience_id)
+    return experience_to_response(doc)
+
+
 @router.post(
     "/{experience_id}/quote",
     response_model=ExperienceQuoteResponseSchema,

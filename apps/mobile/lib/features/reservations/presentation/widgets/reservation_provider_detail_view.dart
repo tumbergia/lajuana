@@ -26,7 +26,8 @@ class ReservationProviderDetailView extends StatefulWidget {
 }
 
 class _ReservationProviderDetailViewState
-    extends State<ReservationProviderDetailView> with RefreshableState {
+    extends State<ReservationProviderDetailView>
+    with RefreshableState {
   @override
   Future<void> onRefresh() async {}
 
@@ -85,11 +86,7 @@ class _ReservationProviderDetailViewState
             _fieldRow(context, 'Notas de coordinacion', item.notes),
             const SizedBox(height: 16),
             _sectionHeader(context, 'PROVEEDOR'),
-            _fieldRow(
-              context,
-              'Tipo',
-              providerTypeLabel(item.providerType),
-            ),
+            _fieldRow(context, 'Tipo', providerTypeLabel(item.providerType)),
             _fieldRow(context, 'Ubicacion', item.locationLabel),
             _fieldRow(context, 'Contacto', item.contactName),
             _fieldRow(context, 'Correo', item.email),
@@ -120,10 +117,10 @@ class _ReservationProviderDetailViewState
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.8,
+          color: Theme.of(context).colorScheme.primary,
+        ),
       ),
     );
   }

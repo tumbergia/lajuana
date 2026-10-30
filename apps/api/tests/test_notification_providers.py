@@ -47,6 +47,7 @@ def test_in_app_provider_creates_document(monkeypatch: pytest.MonkeyPatch) -> No
         rendered_body="Test body content",
         status="pending",
         reservation_id=None,
+        contact_phone=None,
     )
     result = asyncio.run(provider.send(entry))
     assert result.success

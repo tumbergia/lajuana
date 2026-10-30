@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_ui/src/theme/theme_extensions.dart';
 import 'app_badge.dart';
 
 class AppEntityRowCard extends StatefulWidget {
@@ -36,17 +37,28 @@ class AppEntityRowCard extends StatefulWidget {
 class _AppEntityRowCardState extends State<AppEntityRowCard> {
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tokens = theme.appTokens;
     final Color background = widget.selected
         ? scheme.surfaceContainerHighest
         : scheme.surfaceContainerLow;
 
     final showAccent = widget.accentColor != null;
-    final titleStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: scheme.onSurface,
-          height: 1.2,
-        );
+    final radius = tokens.radiusLg;
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w800,
+      color: scheme.onSurface,
+      height: 1.2,
+      // Long wrapped labels look too airy with tracking; keep spacing for short titles.
+      letterSpacing: widget.wrapTitle ? 0 : 0.4,
+    );
+    final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w500,
+      height: 1.25,
+      letterSpacing: 0.3,
+    );
 
     final Widget titleText = widget.wrapTitle
         ? AutoSizeText(
@@ -65,16 +77,13 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
           );
 
     final body = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: EdgeInsets.all(tokens.spaceLg),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           if (widget.leading != null) ...[
-            Align(
-              alignment: Alignment.center,
-              child: widget.leading!,
-            ),
-            const SizedBox(width: 12),
+            Align(alignment: Alignment.center, child: widget.leading!),
+            SizedBox(width: tokens.spaceMd),
           ],
           Expanded(
             child: Column(
@@ -86,38 +95,28 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
                   children: [
                     Expanded(child: titleText),
                     if (widget.badge != null) ...[
-                      const SizedBox(width: 8),
+                      SizedBox(width: tokens.spaceSm),
                       widget.badge!,
                     ],
                   ],
                 ),
                 if (widget.subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.subtitle.toUpperCase(),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
-                          height: 1.25,
-                        ),
-                  ),
+                  SizedBox(height: tokens.spaceXs),
+                  Text(widget.subtitle.toUpperCase(), style: subtitleStyle),
                 ],
               ],
             ),
           ),
           if (widget.trailing != null) ...[
-            const SizedBox(width: 12),
-            Align(
-              alignment: Alignment.center,
-              child: widget.trailing!,
-            ),
+            SizedBox(width: tokens.spaceMd),
+            Align(alignment: Alignment.center, child: widget.trailing!),
           ],
         ],
       ),
     );
 
     final content = ClipRRect(
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: radius,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 600),
         curve: Curves.easeInOut,
@@ -147,11 +146,8 @@ class _AppEntityRowCardState extends State<AppEntityRowCard> {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(4),
-        onTap: widget.onTap,
-        child: content,
-      ),
+      borderRadius: radius,
+      child: InkWell(borderRadius: radius, onTap: widget.onTap, child: content),
     );
   }
 }

@@ -108,6 +108,7 @@ __all__ = [
     "PolicyResponseSchema",
     "PolicyUpdateSchema",
     "ProviderCreateSchema",
+    "ProviderListItemSchema",
     "ProviderResponseSchema",
     "ProviderUpdateSchema",
     "ReservationCancelSchema",

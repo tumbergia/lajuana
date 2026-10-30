@@ -90,12 +90,12 @@ class _ReservationLogPhotoThumbnailState
               ),
             )
           : _bytes != null
-              ? Image.memory(_bytes!, fit: BoxFit.cover)
-              : Icon(
-                  Icons.broken_image_outlined,
-                  size: widget.size * 0.5,
-                  color: scheme.onSurfaceVariant,
-                ),
+          ? Image.memory(_bytes!, fit: BoxFit.cover)
+          : Icon(
+              Icons.broken_image_outlined,
+              size: widget.size * 0.5,
+              color: scheme.onSurfaceVariant,
+            ),
     );
 
     if (widget.moreCount > 0) {
@@ -109,9 +109,9 @@ class _ReservationLogPhotoThumbnailState
                 child: Text(
                   '+${widget.moreCount}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                      ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ),

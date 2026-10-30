@@ -7,7 +7,7 @@ Dependencies
 
 from app.schemas.config import ReservationRulesUpdateSchema
 from app.schemas.sync import SyncPushOperationSchema
-from app.services.config_service import RESERVATION_RULES_KEY, ConfigService
+from app.services.config_service import ConfigService
 from app.services.sync_handlers._shared import ensure_reservation_rules_base_version
 
 

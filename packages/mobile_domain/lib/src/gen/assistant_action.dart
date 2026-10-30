@@ -2,20 +2,13 @@
 // GENERATED CODE -- DO NOT EDIT MANUALLY
 // Generated from OpenAPI spec
 
-import 'package:json_annotation/json_annotation.dart';
-
 /// AUTO-GENERATED from OpenAPI schema `AssistantAction`.
 
 enum AssistantAction {
-  @JsonValue('final_response')
   FINAL_RESPONSE("final_response"),
-  @JsonValue('tool_call')
   TOOL_CALL("tool_call"),
-  @JsonValue('ask_clarifying_question')
   ASK_CLARIFYING_QUESTION("ask_clarifying_question"),
-  @JsonValue('human_handoff')
-  HUMAN_HANDOFF("human_handoff"),
-;
+  HUMAN_HANDOFF("human_handoff");
 
   final String value;
   const AssistantAction(this.value);
@@ -31,4 +24,3 @@ extension AssistantActionParse on String {
     orElse: () => throw ArgumentError('Unknown AssistantAction: ${this}'),
   );
 }
-

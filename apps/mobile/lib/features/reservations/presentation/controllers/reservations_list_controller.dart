@@ -13,7 +13,7 @@ export 'reservations_list_state.dart';
 /// idéntica a la versión anterior (W3.7).
 class ReservationsListController extends ChangeNotifier {
   ReservationsListController({required ReservationsRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final ReservationsRepository _repository;
   ReservationsListState _state = const ReservationsListState();
@@ -49,20 +49,20 @@ class ReservationsListController extends ChangeNotifier {
             .toList(growable: false);
       }
     } else {
-      result = result
-          .where((item) => !item.isDeleted)
-          .toList(growable: false);
+      result = result.where((item) => !item.isDeleted).toList(growable: false);
     }
 
     // Apply search query
     final sq = _state.searchQuery.trim();
     if (sq.isNotEmpty) {
       final q = sq.toLowerCase();
-      result = result.where((item) {
-        return item.clientName.toLowerCase().contains(q) ||
-            item.code.toLowerCase().contains(q) ||
-            (item.experienceName?.toLowerCase().contains(q) ?? false);
-      }).toList(growable: false);
+      result = result
+          .where((item) {
+            return item.clientName.toLowerCase().contains(q) ||
+                item.code.toLowerCase().contains(q) ||
+                (item.experienceName?.toLowerCase().contains(q) ?? false);
+          })
+          .toList(growable: false);
     }
 
     _state = _state.copyWith(items: result);
@@ -72,10 +72,12 @@ class ReservationsListController extends ChangeNotifier {
 
   /// Carga inicial: primero cache local, luego refresh remoto.
   Future<void> loadInitial() async {
-    _emit(_state.copyWith(
-      loadState: ReservationsLoadState.loading,
-      clearError: true,
-    ));
+    _emit(
+      _state.copyWith(
+        loadState: ReservationsLoadState.loading,
+        clearError: true,
+      ),
+    );
 
     try {
       final cached = await _repository.getCachedReservations();
@@ -92,15 +94,17 @@ class ReservationsListController extends ChangeNotifier {
       await _fetchFromRemote(isRefresh: false);
     } catch (e) {
       if (_state.allItems.isNotEmpty) {
-        _emit(_state.copyWith(
-          loadState: ReservationsLoadState.offlineFromCache,
-        ));
+        _emit(
+          _state.copyWith(loadState: ReservationsLoadState.offlineFromCache),
+        );
       } else {
-        _emit(_state.copyWith(
-          loadState: ReservationsLoadState.error,
-          errorCode: 'network.unavailable',
-          errorMessage: 'No se pudieron cargar las reservas.',
-        ));
+        _emit(
+          _state.copyWith(
+            loadState: ReservationsLoadState.error,
+            errorCode: 'network.unavailable',
+            errorMessage: 'No se pudieron cargar las reservas.',
+          ),
+        );
       }
     }
   }
@@ -108,10 +112,12 @@ class ReservationsListController extends ChangeNotifier {
   /// Pull-to-refresh.
   Future<void> refresh() async {
     if (_state.loadState == ReservationsLoadState.loading) return;
-    _emit(_state.copyWith(
-      loadState: ReservationsLoadState.refreshing,
-      clearError: true,
-    ));
+    _emit(
+      _state.copyWith(
+        loadState: ReservationsLoadState.refreshing,
+        clearError: true,
+      ),
+    );
 
     try {
       await _fetchFromRemote(isRefresh: true);
@@ -119,9 +125,9 @@ class ReservationsListController extends ChangeNotifier {
       if (_state.allItems.isEmpty) {
         _emit(_state.copyWith(loadState: ReservationsLoadState.error));
       } else {
-        _emit(_state.copyWith(
-          loadState: ReservationsLoadState.offlineFromCache,
-        ));
+        _emit(
+          _state.copyWith(loadState: ReservationsLoadState.offlineFromCache),
+        );
       }
     }
   }
@@ -133,12 +139,14 @@ class ReservationsListController extends ChangeNotifier {
     final now = DateTime.now();
 
     if (domainItems.isEmpty) {
-      _emit(_state.copyWith(
-        loadState: ReservationsLoadState.empty,
-        items: const [],
-        allItems: const [],
-        lastSyncAt: now,
-      ));
+      _emit(
+        _state.copyWith(
+          loadState: ReservationsLoadState.empty,
+          items: const [],
+          allItems: const [],
+          lastSyncAt: now,
+        ),
+      );
       return;
     }
 
